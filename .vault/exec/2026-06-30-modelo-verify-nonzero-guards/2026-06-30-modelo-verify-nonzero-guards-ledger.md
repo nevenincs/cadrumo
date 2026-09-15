@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
-modified: '2026-08-26'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:66c30b6b97d5b112a3a1d4ea4eb9df18bddf859b8831fb87319a100c74c77104'
+body_hash: 'sha256:01b02477b1b29646fb4606f766be815b507bb5e8258162448fc5b5fea69d41b1'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"
 ---
@@ -46,3 +46,6 @@ related:
 - `S30` `T` `.vault/exec/2026-06-30-modelo-verify-nonzero-guards/`
 - `S31` `T` `.vault/index/modelo-verify-nonzero-guards.index.md`
 - `S32` `T` `.vault/`
+- `S29` `T`
+- `S29` `T`
+

@@ -1,0 +1,235 @@
+---
+tags:
+  - '#exec'
+  - '#registry-authority-artifact-boundary'
+date: '2026-09-10'
+modified: '2026-09-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:42917dc18df710276fe8f5910af0bde98d07e9337d161d015452c9cf44d1db8d'
+related:
+  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `registry-authority-artifact-boundary` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+- `S01` `A` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py`
+- `S01` `verify:` `uv run pytest src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py -q` -> `pass`
+- `S01` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/authority_artifact.py src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py` -> `pass`
+- `S01` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/authority_artifact.py` -> `pass`
+- `S02` `M` `dev/registry/pipeline/authority_publication.py`
+- `S02` `M` `dev/registry/pipeline/cli.py`
+- `S02` `M` `dev/registry/tests/test_authority_publication.py`
+- `S02` `verify:` `uv run pytest dev/registry/tests/test_authority_publication.py -q` -> `pass`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S03` `D` `src/cadrumo/domain/calculations/registry/loader.py`
+- `S03` `A` `dev/registry/compiler/authority.py`
+- `S03` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py` -> `pass`
+- `S04` `D` `src/cadrumo/domain/calculations/registry/loader.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S04` `A` `dev/registry/compiler/`
+- `S04` `M` `dev/registry/pipeline/authority_publication.py`
+- `S04` `M` `dev/registry/pipeline/cli.py`
+- `S04` `M` `src/cadrumo/domain/iva/_grounding.py`
+- `S04` `M` `src/cadrumo/domain/iva/catalogue.py`
+- `S04` `A` `src/cadrumo/domain/iva/tests/test_artifact_backed_grounding.py`
+- `S04` `verify:` `uv run pytest src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py dev/registry/tests/test_authority_publication.py src/cadrumo/domain/iva/tests/test_artifact_backed_grounding.py -q` -> `pass`
+- `S05` `M` `pyproject.toml`
+- `S05` `M` `src/cadrumo/tests/test_wheel_content_boundary.py`
+- `S05` `A` `.vault/audit/2026-09-12-registry-authority-artifact-boundary-package-boundary-audit.md`
+- `S05` `M` `.vault/plan/2026-09-10-registry-authority-artifact-boundary-plan.md`
+- `S05` `verify:` `uv run pytest -n 0 --confcutdir=src/cadrumo/tests src/cadrumo/tests/test_wheel_content_boundary.py -q` -> `pass`
+- `S06` `M` `dev/packaging/tests/test_authority_runtime_boundary.py`
+- `S06` `M` `src/cadrumo/application/aggregation/tests/test_ledger_income_chain_aeat_exempt_worked_example.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/_registry_scenarios_support.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/scenarios.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_deduccion_madrid_nacimiento_adopcion.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_m100_2024_final_settlement_chain_wiring.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_reduccion_art_84_conjunta.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_registry_scenarios.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_renta_chain_behaviour.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema.py`
+- `S06` `M` `dev/registry/tests/test_m100_2020_estimacion_directa_manual_worked_example.py`
+- `S06` `M` `dev/registry/tests/test_m100_2020_rendimientos_trabajo_despido_manual_worked_example.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_continuidad_completeness_ratchet.py` -> `dev/registry/tests/test_continuidad_completeness_ratchet.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_bracket_accumulated_cuota_continuity.py` -> `dev/registry/tests/test_bracket_accumulated_cuota_continuity.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_export_header_key_naming.py` -> `dev/registry/tests/test_export_header_key_naming.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_123_registry.py` -> `dev/registry/tests/test_modelo_123_registry.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_130_registry.py` -> `dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_180_registry.py` -> `dev/registry/tests/test_modelo_180_registry.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_190_registry.py` -> `dev/registry/tests/test_modelo_190_registry.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_193_registry.py` -> `dev/registry/tests/test_modelo_193_registry.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_registry.py` -> `dev/registry/tests/test_modelo_200_registry.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_216_registry.py` -> `dev/registry/tests/test_modelo_216_registry.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_rate_box_export_offsets.py` -> `dev/registry/tests/test_modelo_390_rate_box_export_offsets.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_unmodelled_regimen_rate_box_preconditions.py` -> `dev/registry/tests/test_modelo_390_unmodelled_regimen_rate_box_preconditions.py`
+- `S06` `R` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_volumen_operaciones.py` -> `dev/registry/tests/test_modelo_390_volumen_operaciones.py`
+- `S06` `D` `src/cadrumo/domain/calculations/registry/tests/record_design_xsd_support.py`
+- `S06` `D` `src/cadrumo/domain/calculations/registry/tests/test_legal_anchor_verification_ratchet.py`
+- `S06` `D` `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_regulatory_floor_predicate.py`
+- `S06` `D` `src/cadrumo/domain/calculations/registry/tests/test_modelo_145_registry_foundation.py`
+- `S06` `D` `src/cadrumo/domain/calculations/registry/tests/test_record_design_xsd_repair.py`
+- `S06` `A` `dev/registry/tests/test_modelo_200_revision_source_tiering.py`
+- `S06` `A` `dev/registry/tests/test_verification_rounding_registry_vocabulary.py`
+- `S06` `R` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00394__c00400.toml` -> `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00394__cDP200010+00399.toml`
+- `S06` `R` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00548__c00554.toml` -> `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00548__cDP200010+00552.toml`
+- `S06` `R` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00604__c00610.toml` -> `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00604__cDP200010+00605.toml`
+- `S06` `R` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00618__c00624.toml` -> `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00618__cDP200010+00619.toml`
+- `S06` `R` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/casillas/civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml` -> `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/casillas/civa.anual.regularizacion-prorrata-definitiva.toml`
+- `S06` `verify:` `uv run pytest -n 0 --confcutdir=dev/packaging/tests dev/packaging/tests/test_authority_runtime_boundary.py -q` -> `pass`
+- `S06` `verify:` `uv run pytest -n 0 --noconftest -q dev/registry/tests/test_verification_rounding_registry_vocabulary.py dev/registry/tests/test_record_design_xsd_repair.py dev/registry/tests/test_modelo_200_revision_source_tiering.py` -> `pass`
+- `S06` `verify:` `uv run ruff format --check dev/packaging/tests/test_authority_runtime_boundary.py dev/registry/tests/test_export_header_key_naming.py` -> `pass`
+- `S06` `verify:` `uv run ruff check dev/packaging/tests/test_authority_runtime_boundary.py dev/registry/tests/test_export_header_key_naming.py` -> `pass`
+- `S06` `verify:` `uv run python -m py_compile dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py dev/registry/tests/test_modelo_390_rate_box_export_offsets.py` -> `pass`
+- `S06` `verify:` `git diff --check -- dev/packaging/tests/test_authority_runtime_boundary.py dev/registry/tests src/cadrumo/domain/calculations/registry/tests` -> `pass`
+- `S07` `M` `dev/registry/tests/test_authority_publication.py`
+- `S07` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S08` `M` `docs/how-to/publish-runtime-authority.md`
+- `S08` `M` `docs/reference/registry-legal-api.md`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S09` `M` `dev/registry/pipeline/authority_publication.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S09` `M` `src/cadrumo/application/corpus_search/citation_lookup.py`
+- `S09` `M` `src/cadrumo/application/filing/_export_xml_dictionary.py`
+- `S09` `M` `src/cadrumo/application/filing/export_verification.py`
+- `S09` `M` `src/cadrumo/application/filing/runtime.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py`
+- `S09` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py` -> `pass`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/static_inspection.py`
+- `S10` `M` `src/cadrumo/application/filing/_export_parity.py`
+- `S10` `M` `src/cadrumo/application/modelo/_work_review_assembly.py`
+- `S10` `A` `src/cadrumo/application/filing/tests/test_signed_evidence_xml_components.py`
+- `S10` `verify:` `uv run pytest -n 0 src/cadrumo/application/filing/tests/test_signed_evidence_xml_components.py src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py` -> `pass`
+- `S11` `M` `src/cadrumo/core/modelo.py`
+- `S11` `M` `src/cadrumo/core/tax_domain.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_filed_observation_storage_context.py`
+- `S11` `M` `dev/registry/tests/test_modelo_applicability.py`
+- `S11` `verify:` `rg -n "\bModelo\.[A-Z][A-Z0-9_]*\b|\bTaxDomain\.[A-Z][A-Z0-9_]*\b" src dev -g "*.py"` -> `pass`
+- `S11` `verify:` `uv run pytest -q -n0 -m "" src/cadrumo/core/tests/test_fact_backed_bootstrap_validation.py dev/registry/tests/test_tax_domain.py dev/registry/tests/test_modelo_specific_embed_scan.py` -> `pass`
+- `S11` `verify:` `uv run pytest -q -n0 -m "" dev/registry/tests/test_modelo_applicability.py` -> `pass`
+- `S12` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S12` `M` `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py`
+- `S12` `M` `dev/registry/tests/test_authority_artifact_round_trip.py`
+- `S12` `M` `dev/registry/pipeline/cli.py`
+- `S12` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S12` `M` `src/cadrumo/_data/registry/authority/authority.json`
+- `S12` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/authority_artifact.py src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py dev/registry/pipeline/cli.py` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py` -> `pass`
+- `S12` `verify:` `uv run --no-sync python -c "from cadrumo.domain.calculations.registry.authority import bundled_authority; a=bundled_authority(); print(len(a.modelos), len(a.catalogues.facts.facts))"` -> `pass`
+- `S12` `verify:` `uv run --no-sync python -m dev.registry.pipeline --help` -> `pass`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/runtime_catalogues.py`
+- `S13` `M` `dev/registry/compiler/runtime_catalogues.py`
+- `S13` `M` `dev/registry/compiler/validator.py`
+- `S13` `M` `dev/registry/compiler/tests/test_iva_runtime_catalogues.py`
+- `S13` `verify:` `uv run --no-sync pytest -q dev/registry/compiler/tests/test_iva_runtime_catalogues.py -k "not compiler_refuses_an_unknown_legal_reference and not compiler_refuses_a_verified_quotation_absent_from_the_corpus"` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q dev/registry/compiler/tests/test_iva_runtime_catalogues.py::test_the_compiler_refuses_a_verified_quotation_absent_from_the_corpus -n 0` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py` -> `pass`
+- `S13` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/runtime_catalogues.py dev/registry/compiler/runtime_catalogues.py dev/registry/compiler/validator.py dev/registry/compiler/tests/test_iva_runtime_catalogues.py` -> `pass`
+- `S14` `M` `src/cadrumo/domain/resources/_repos/iva_catalogues.py`
+- `S14` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S14` `M` `src/cadrumo/domain/deadlines/tests/test_recargo.py`
+- `S14` `M` `src/cadrumo/domain/resources/_repos/tests/test_year_keyed.py`
+- `S14` `M` `src/cadrumo/domain/resources/_repos/tests/test_singletons.py`
+- `S14` `M` `src/cadrumo/domain/resources/tests/test_registry.py`
+- `S14` `M` `src/cadrumo/domain/iva/tests/test_catalogue_period_keyed.py`
+- `S14` `M` `src/cadrumo/domain/iva/tests/test_artifact_backed_grounding.py`
+- `S14` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/deadlines/tests/test_recargo.py src/cadrumo/domain/auth/apoderamientos/tests/test_catalogue.py src/cadrumo/domain/resources/_repos/tests/test_year_keyed.py src/cadrumo/domain/resources/_repos/tests/test_singletons.py src/cadrumo/domain/resources/tests/test_registry.py src/cadrumo/domain/iva/tests/test_catalogue_period_keyed.py src/cadrumo/domain/iva/tests/test_artifact_backed_grounding.py --deselect src/cadrumo/domain/resources/tests/test_registry.py::test_resources_factory_composes_every_repository` -> `pass`
+- `S14` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/resources/_repos/iva_catalogues.py src/cadrumo/domain/deadlines/tests/test_recargo.py src/cadrumo/domain/resources/_repos/tests/test_year_keyed.py src/cadrumo/domain/resources/_repos/tests/test_singletons.py src/cadrumo/domain/resources/tests/test_registry.py src/cadrumo/domain/iva/tests/test_catalogue_period_keyed.py src/cadrumo/domain/iva/tests/test_artifact_backed_grounding.py` -> `pass`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py`
+- `S15` `M` `src/cadrumo/application/filing/draft_construction.py`
+- `S15` `M` `src/cadrumo/application/filing/runtime.py`
+- `S15` `M` `src/cadrumo/application/filing/tests/test_registry_snapshot_freshness.py`
+- `S15` `M` `src/cadrumo/application/filing/tests/test_unsupported_filing_year_refusal.py`
+- `S15` `M` `src/cadrumo/application/filing/tests/test_runtime.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/application/filing/tests/test_unsupported_filing_year_refusal.py src/cadrumo/application/filing/tests/test_registry_snapshot_freshness.py src/cadrumo/application/filing/tests/test_runtime.py::test_runtime_provider_exposes_no_application_layer_cache` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m py_compile src/cadrumo/domain/calculations/registry/authority.py src/cadrumo/application/filing/draft_construction.py src/cadrumo/application/filing/runtime.py` -> `pass`
+- `S15` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/authority.py src/cadrumo/application/filing/runtime.py src/cadrumo/application/filing/tests/test_registry_snapshot_freshness.py src/cadrumo/application/filing/tests/test_unsupported_filing_year_refusal.py src/cadrumo/application/filing/tests/test_runtime.py src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py` -> `pass`
+- `S16` `M` `dev/registry/tests/test_authority_artifact_round_trip.py`
+- `S16` `M` `src/cadrumo/_data/registry/authority/authority.json`
+- `S16` `verify:` `uv run --no-sync python -m dev.registry.pipeline publish-authority` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest -q -n 0 dev/registry/tests/test_authority_artifact_round_trip.py::test_the_full_bundled_registry_round_trips_through_a_publication` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff check dev/registry/tests/test_authority_artifact_round_trip.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync python -m py_compile dev/registry/tests/test_authority_artifact_round_trip.py` -> `pass`
+- `S16` `verify:` `git diff --check -- dev/registry/tests/test_authority_artifact_round_trip.py src/cadrumo/_data/registry/authority/authority.json` -> `pass`
+- `S17` `M` `dev/packaging/installed_mcp_oracle.py`
+- `S17` `M` `dev/packaging/installed_tax_oracle.py`
+- `S17` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S17` `A` `dev/packaging/tests/test_installed_mcp_oracle_stderr.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/_command_runtime.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/config/profile_command_specs.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/config/tests/test_config_command_specs.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/tests/test_command_runtime.py`
+- `S17` `A` `src/cadrumo_harness/mcp/_cli_executable.py`
+- `S17` `M` `src/cadrumo_harness/mcp/command_surface.py`
+- `S17` `M` `src/cadrumo_harness/mcp/inprocess.py`
+- `S17` `M` `src/cadrumo_harness/mcp/server.py`
+- `S17` `A` `src/cadrumo_harness/mcp/tests/test_cli_executable.py`
+- `S17` `A` `src/cadrumo_harness/mcp/tests/test_server_profile_secret_composition.py`
+- `S17` `verify:` `uv run --no-sync pytest -q -n 0 -m "" --timeout=1800 <S17 exact-wheel selection>` -> `pass`
+- `S17` `verify:` `uv run --no-sync pytest -q -n 0 -m "" dev/packaging/tests/test_authority_runtime_boundary.py` -> `pass`
+- `S18` `M` `docs/how-to/publish-runtime-authority.md`
+- `S18` `M` `docs/reference/registry-legal-api.md`
+- `S18` `A` `.vault/audit/2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit.md`
+- `S19` `M` `dev/registry/compiler/authority.py`
+- `S19` `M` `dev/registry/pipeline/authority_publication.py`
+- `S20` `A` `dev/registry/compiler/build_identity.py`
+- `S20` `M` `dev/registry/pipeline/authority_publication.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S21` `M` `dev/registry/tests/test_authority_artifact_currency.py`
+- `S21` `M` `dev/registry/tests/test_authority_publication.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/binding_temporal.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S23` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S23` `M` `src/cadrumo/domain/iva/flow.py`
+- `S23` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/governed_fact_scope.py`
+- `S25` `A` `dev/registry/benchmark_authority.py`
+- `S26` `A` `dev/registry/compiler/build_identity.py`
+- `S26` `M` `dev/registry/compiler/source_evidence_fingerprint.py`
+- `S26` `M` `dev/registry/compiler/loader_fingerprints.py`
+- `S26` `M` `dev/registry/pipeline/authority_publication.py`
+- `S27` `M` `dev/registry/pipeline/authority_publication.py`
+- `S27` `M` `dev/registry/tests/test_authority_publication.py`
+- `S27` `M` `dev/registry/tests/test_authority_artifact_currency.py`
+- `S28` `M` `.vault/adr/2026-09-10-registry-authority-artifact-boundary-adr.md`
+- `S28` `A` `.vault/reference/2026-09-14-registry-authority-artifact-boundary-remediation-result-reference.md`
+
+## Notes
+
+- `S06` Broad scenario collection currently reaches the migrated callers but fails in unrelated in-progress W04 code: the tracked authority artifact does not yet contain the new IVA catalogue entries required by typed reconstruction, and `IvaRate` does not yet provide Pydantic schema support. The S06 static migration, isolated authored-source tests, and packaging boundary are independently green.
+- `S15` A later focused pytest rerun was blocked during import by the concurrently authored untracked `src/cadrumo/domain/calculations/registry/keyed_families.py`, before S15 code or tests executed. The earlier focused S15 run passed 11 tests; the concurrent file was left untouched.
+- `S16` The remaining atom-focused tests in the same module currently encounter unrelated concurrent Modelo 100 continuity-grounding refusals while constructing their shared compiler fixture. The S16 full canonical publication, tracked typed-equality, integrity, currentness, and 64 MiB budget gate passed independently.

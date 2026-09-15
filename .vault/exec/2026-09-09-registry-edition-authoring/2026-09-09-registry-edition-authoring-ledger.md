@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-14'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea5aaf730d41808f514b44008ce607ef9a2a724e7c9de9f11ef0e5abb314e804'
+body_hash: 'sha256:bfe113572df33aa832acbefd58c73d5069ae03459633b9eedc4feafe73c42b8a'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
@@ -21518,6 +21518,552 @@ related:
 - `S71` `A` `dev/registry/tests/test_record_design_provenance.py`
 - `S71` `A` `.logs/audit-runs/2026-09-14/registry-tooling-retirement-backup.json`
 - `S71` `A` `.logs/audit-runs/2026-09-14/registry-tooling-retirement.md`
+- `S01` `T`
+- `S01` `verify:` `just registry verify` -> `pass`
+- `S01` `verify:` `just test-dev-ci` -> `fail`
+- `S01` `verify:` `just test-dev-tooling` -> `fail`
+- `S01` `verify:` `just closure` -> `pass`
+- `S02` `M` `.vault/plan/2026-09-09-registry-edition-authoring-plan.md`
+- `S03` `M` `dev/registry/tests/test_capability_continuity.py`
+- `S03` `M` `dev/registry/tests/test_continuity_integrity.py`
+- `S03` `M` `dev/registry/tests/test_casilla_id_grammar.py`
+- `S03` `M` `dev/registry/tests/test_monetary_scale.py`
+- `S03` `verify:` `just test-dev-tooling` -> `4e7e1113` -> `139 failed` -> `138 failed` -> `3696`
+- `S03` `verify:` `just dev-ci` -> `878b49d7` -> `21074665` -> `33 failed` -> `1199`
+- `S04` `A` `dev/registry/analysis/delta_minimality.py`
+- `S04` `A` `dev/registry/tests/test_delta_minimality.py`
+- `S04` `M` `dev/registry/analysis/screens.py`
+- `S04` `M` `dev/registry/README.md`
+- `S04` `verify:` `uv run --no-sync pytest dev/registry/tests/test_delta_minimality.py dev/registry/tests/test_declaration_invariant_gates.py` -> `fail`
+- `S05` `M` `.vault/plan/2026-09-09-registry-edition-authoring-plan.md`
+- `S06` `A` `src/cadrumo/domain/calculations/registry/casilla_lineage.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/schema_surfaces.py`
+- `S06` `A` `src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_origin.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_continuidad_completeness_ratchet.py`
+- `S06` `A` `dev/registry/analysis/casilla_lineage_seed.py`
+- `S06` `A` `dev/registry/analysis/casilla_lineage_rulings.toml`
+- `S06` `A` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S06` `A` `dev/registry/tests/test_casilla_lineage_seed.py`
+- `S06` `M` `dev/registry/tests/test_continuity_integrity.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2024-desde-06/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2019-2023/casillas/c01__c08.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/casillas/c01__c14.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/casillas/cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/casillas/cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/casillas/cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cdecl.ejercicio__cimpatriado.cuota-diferencial.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp01.tipo-de-declaracion__cp01.numero-de-justificante.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp02.tipo-de-renta-1-01__cp02.datos-adicionales-de-l-referencia-catastral-14-04.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp03.tipo-de-renta-1-01__cp03.total-retenciones-o-ingresos-a-cuenta-16.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp04.tipo-de-renta-1-01__cp04.total-retenciones-o-ingresos-a-cuenta-9.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp05.tipo-de-renta-1-01__cp05.total-retenciones-o-ingresos-a-cuenta-5.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp06.tipo-de-renta-1-01__cp06.total-retenciones-o-ingresos-a-cuenta-13.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp07.tipo-de-renta-1-01__cp07.ganancia-patrimonial-5-05.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/casillas/cp08.tipo-de-renta-1-01__cp08.resultado-de-la-declaracion-43.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__cimpatriado.cuota-diferencial.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cdid.devolucion-renuncia-a-la-devolucion-a-favor-del-tesoro-publi__cdid.cuota-cero.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cimpatriado.anexo-transmision-iic.tipo-renta__cimpatriado.anexo-transmision-iic.total-retenciones.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp01.tipo-de-declaracion__cp01.numero-de-justificante-25.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp02.tipo-de-renta-01__cp02.datos-adicionales-de-las-rentas-derivadas-de-bienes-e-14-04.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp03.tipo-de-renta-01__cp03.total-retenciones-o-ingresos-a-cuenta-16.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp04.tipo-de-renta-01__cp04.total-retenciones-o-ingresos-a-cuenta-09.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp05.tipo-de-renta-01__cp05.datos-adicionales-actividad-emprendedora-impuesto-sati-13-05.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp06.tipo-de-renta-01__cp06.total-retenciones-o-ingresos-a-cuenta-09.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp07.tipo-de-renta-01__cp07.total-retenciones-o-ingresos-a-cuenta-05.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp08.tipo-de-renta-01__cp08.total-retenciones-o-ingresos-a-cuenta-13.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp09.tipo-de-renta-01__cp09.ganancia-patrimonial-05-08.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/casillas/cp10.tipo-de-renta-01__cp10.devoluciones-acordadas-por-la-administracion-42.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2013-2015/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/cdecl.base-total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/cdecl.retenciones-total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/cperc.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/casillas/cperc.retenciones.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/casillas/cdecl.base-total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/casillas/cdecl.retenciones-total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/casillas/cperc.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/casillas/cperc.retenciones.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2015/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2016-2018/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2019-2021/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/cdecl.ejercicio__ctipo2.renta-atribuible-importe.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/cdecl.tipo-soporte__cdecl.representante-nombre.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/ctipo2.tipo-hoja__ctipo3.rendimiento-neto-minorado-agricola-eo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__ctipo2.renta-atribuible-importe.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/cdecl.tipo-soporte__cdecl.total-registros-entidad.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/ctipo2.tipo-hoja__ctipo3.rendimiento-neto-minorado-agricola-eo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2003-2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cdecl.persona-contacto-telefono__cdecl.correo-electronico.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cdecl.total-percepciones__cdecl.retenciones-total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.descendientes-menores-3-total__cperc.prestamos-vivienda-clave.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.excesos-acciones-emergentes.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.incapacidad-dineraria-percepcion__cperc.retenciones-forales-bizkaia.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.nif-representante-legal__cperc.movilidad-geografica.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.nif__cperc.ingresos-a-cuenta.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.provincia__cperc.situacion-familiar.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/casillas/cperc.reducciones-aplicables__cperc.anualidades-alimentos.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cdecl.persona-contacto-telefono__cdecl.correo-electronico.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cdecl.total-percepciones__cdecl.retenciones-total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.descendientes-menores-3-total__cperc.prestamos-vivienda-clave.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.excesos-acciones-emergentes.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.incapacidad-dineraria-percepcion__cperc.retenciones-forales-bizkaia.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.nif-representante-legal__cperc.movilidad-geografica.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.nif__cperc.ingresos-a-cuenta.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.provincia__cperc.situacion-familiar.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/casillas/cperc.reducciones-aplicables__cperc.anualidades-alimentos.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cdecl.persona-contacto-telefono__cdecl.naturaleza-declarante.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cdecl.total-perceptores__cdecl.retenciones-total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cgasto.nif__cgasto.importe.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cperc.nif__cperc.clave-mercado.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cdecl.persona-contacto-telefono__cdecl.naturaleza-declarante.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cdecl.total-perceptores__cdecl.retenciones-total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cgasto.nif__cgasto.importe.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cperc.nif__cperc.clave-mercado.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/casillas/c01__c05.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2023/casillas/c01__c05.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2024/casillas/c01__c05.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/casillas/c22.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/casillas/c25.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/casillas/c22.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/casillas/c25.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c22.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c25.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c61.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c62.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c63.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c64.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c65.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c66.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/c67.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/casillas/cbase_imponible_directa_i__cingreso_devolucion_anterior.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/casillas/ctipo_renta__ccuota_diferencial.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/casillas/cbase_imponible_directa_i__cingreso_devolucion_anterior.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/casillas/ctipo_renta__ccuota_diferencial.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/casillas/cdecl.tipo-ejercicio.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/casillas/cvinculada-1-nif__cvinculada-5-importe.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/casillas/cdecl.tipo-ejercicio.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/casillas/cvinculada-1-nif__cvinculada-5-importe.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2013-2022/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2013-2022/casillas/cdecl.persona-contacto-telefono__cdecl.total-retenciones.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2013-2022/casillas/cperc.nif__cperc.pais-residencia.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/casillas/cdecl.persona-contacto-telefono__cdecl.total-retenciones.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/casillas/cperc.nif__cperc.pais-residencia.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/c23__c71.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/civa.repercutido.general__c22.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/casillas/c22__c71.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/casillas/civa.repercutido.general__c21.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/casillas/c22__c111.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/casillas/civa.repercutido.general__c21.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/casillas/c22__c71.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/casillas/civa.repercutido.general__c21.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/casillas/c22__c111.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/casillas/civa.repercutido.general__c21.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/casillas/c22__c112.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/casillas/civa.repercutido.general__c21.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/c01__c27.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/c28__c62.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/c63__c91.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/casillas/civa.repercutido.general__civa.resultado-regimen-general.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/c01__c27.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/c28__c62.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/c63__c91.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/casillas/civa.repercutido.general__civa.resultado-regimen-general.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/c01__c27.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/c28__c62.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/c63__c91.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/casillas/civa.repercutido.general__civa.resultado-regimen-general.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/c01__c50.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/c125__c521.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/c51__c124.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/c522__c735.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/casillas/civa.repercutido.general__civa.resultado-regimen-general.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/casillas/c01__c10.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/casillas/cdecl.ejercicio__cwire.observaciones.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2016-y-siguientes/casillas/c01__c10.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2016-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/ccontraparte.representante-legal-nif__ccontraparte.nif-operador-comunitario.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/cdecl.ejercicio__ccontraparte.pais-codigo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/cdecl.numero-justificante__cdecl.tipo-soporte.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/cinmueble.arrendatario-nif__cinmueble.direccion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/ccontraparte.representante-legal-nif__ccontraparte.numero-convocatoria-bdns.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/cdecl.ejercicio__ccontraparte.pais-codigo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/cdecl.numero-justificante__cdecl.tipo-soporte.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/casillas/cinmueble.arrendatario-nif__cinmueble.direccion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/casillas/c01__c05.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/casillas/civa.reconciliacion.devengada-322__civa.reconciliacion.resultado-322.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/casillas/c01__c05.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/casillas/civa.reconciliacion.devengada-322__civa.reconciliacion.resultado-322.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.aic.bienes.zero.base__civa.anual.aic.servicios.general.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.autorepercutido.interior.base__civa.anual.autorepercutido.interior.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.deducible.aic-corrientes.tipo-21.cuota__civa.anual.deducible.rectificacion-intragrupo.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.deducible.interiores-corrientes.tipo-4.base__civa.anual.deducible.intragrupo-inversion.tipo-5.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.deducible.intragrupo-inversion.tipo-10.base__civa.anual.deducible.aic-corrientes.tipo-21.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.especificas.adquisiciones-interiores-exentas__civa.anual.especificas.criterio-caja-adquisiciones.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.iva-importacion-diferimiento__civa.anual.territorio.resultado-anual-atribuible-comun.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.regimen-simplificado.cuota-resultante-no-agricola__civa.anual.regimen-simplificado.resultado.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.regularizacion-cuotas-art-80-cinco-5__civa.anual.volumen.total.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.general.base__civa.anual.soportado.interiores.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.intragrupo.tipo-0.base__civa.anual.modificacion.recargo-concurso.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.recargo.tipo-5-2.cuota__civa.anual.repercutido.recargo.tipo-0-5.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.repercutido.tipo-21.base__civa.anual.repercutido.tipo-0.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.sector-diferenciado-1.interiores-corrientes.base__civa.anual.sector-diferenciado-3.suma-deducciones.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/casillas/civa.anual.volumen.entregas-intracomunitarias__civa.anual.volumen.exportaciones-exentas.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0-62.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-5-2.cuota__civa.anual.repercutido.recargo.tipo-0-5.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.deducible.aic-inversion.tipo-2.base__civa.anual.deducible.aic-servicios.tipo-7-5.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.intragrupo.tipo-2.base__civa.anual.deducible.aic-corrientes.tipo-7-5.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-0-26.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-1.base.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-5-2.cuota__civa.anual.repercutido.recargo.tipo-0-26.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.tipo-21.base__civa.anual.repercutido.tipo-0.cuota.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/c490-01-indicador-pagina-complementaria-12__creg-cuota-positiva-53.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/creg-ajuste-total-estado-331__creg-total-cuota-estado-364.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/creg-base-negativa-113__cterr-comun-per-172.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/creg-cuota-positiva-74__creg-base-positiva-175.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/cterr-comun-per-193__cterr-guipuzcoa-per-271.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/casillas/cterr-guipuzcoa-con-reg-209__creg-ajuste-total-estado-310.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/c490-01-indicador-pagina-complementaria-12__creg-tipo-52.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/creg-cuota-negativa-264__creg-base-declarada-300.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/creg-tipo-73__cterr-comun-per-67.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/cterr-guipuzcoa-per-145__creg-cuota-negativa-243.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/casillas/cterr-vizcaya-per-336__creg-total-cuota-estado-364.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2007/casillas/cdecl.ejercicio.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2008-y-siguientes/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2021-2023/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/casillas/cdecl.idioma__cterr.estado.importe-operaciones-exentas.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2021/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2021/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/casillas/cdeclaracion-01__cdeclaracion-48.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/casillas/cdeclaracion-49__cidentificacion.sexo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2023/casillas/cejercicio__cmoneda.saldo-inicio.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2024/casillas/cejercicio__cmoneda.saldo-inicio.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2012-2t-3t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2013-2014/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2015-2017/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2018-1t-3t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2018-4t/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2019-y-siguientes/casillas/cdecl.ejercicio__cdecl.periodo.toml`
+- `S06` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/casillas/cdecl.ejercicio__cwire.observaciones.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/casillas/cdecl.rg-base-01__cdecl.resultado-24.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/casillas/cdecl.periodo__cdecl.resultado-24.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/casillas/cdecl.periodo__cdecl.resultado-24.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/casillas/cdecl.periodo__cdecl.resultado-24.toml`
+- `S07` `A` `dev/registry/analysis/casilla_lineage_rulings.toml`
+- `S07` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_origin.py` -> `pass`
+- `S07` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S08` `A` `src/cadrumo/domain/calculations/registry/casilla_lineage_totality.py`
+- `S08` `A` `src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_totality.py`
+- `S08` `A` `dev/registry/analysis/casilla_lineage_ledger.py`
+- `S08` `A` `dev/registry/tests/test_casilla_lineage_totality_gate.py`
+- `S08` `M` `dev/registry/analysis/casilla_lineage_seed.py`
+- `S08` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S08` `M` `dev/registry/tests/test_casilla_lineage_seed.py`
+- `S08` `verify:` `uv run --no-sync pytest dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_casilla_lineage_seed.py src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_totality.py src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_continuity.py src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_origin.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_predecessor_declaration.py`
+- `S09` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S09` `verify:` `pytest test_revision_predecessor_declaration.py` -> `pass`
+- `S09` `verify:`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/_loader_internals.py`
+- `S10` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_materialisation.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_predecessor_declaration.py`
+- `S10` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_revision_edition_materialisation.py src/cadrumo/domain/calculations/registry/tests/test_revision_predecessor_declaration.py src/cadrumo/domain/calculations/registry/tests/test_revision_predecessor_forest.py` -> `pass`
+- `S10` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S11` `A` `src/cadrumo/domain/calculations/registry/tests/test_delta_edition_cache_fingerprint.py`
+- `S11` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_delta_edition_cache_fingerprint.py src/cadrumo/domain/calculations/registry/tests/test_revision_edition_materialisation.py src/cadrumo/domain/calculations/registry/tests/test_mutable_tree_fingerprint_invalidation.py` -> `pass`
+- `S11` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S12` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_round_trip.py`
+- `S12` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_revision_edition_round_trip.py` -> `pass`
+- `S12` `verify:` `uv run --no-sync ruff check` -> `ruff format` -> `ty check` -> `pass`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/_loader_internals.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_manifest_only_placement.py`
+- `S13` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_reference_defaults.py`
+- `S13` `verify:` `uv run --no-sync pytest` -> `dev/registry/tests/test_delta_minimality.py` -> `pass`
+- `S13` `verify:` `pass`
+- `S13` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S13` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S14` `A` `src/cadrumo/domain/calculations/registry/export_field_casilla.py`
+- `S14` `A` `src/cadrumo/domain/calculations/registry/tests/test_casilla_export_refs_derivation.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/_loader_internals.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/_validate_exports.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/_validate_record_sections.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/_validate_revision_context.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/export.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_projection_refs.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part2.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_round_trip.py`
+- `S14` `D` `dev/registry/pipeline/_casilla_export_refs.py`
+- `S14` `M` `dev/registry/pipeline/_tree_publication.py`
+- `S14` `M` `dev/registry/pipeline/candidate_staging.py`
+- `S14` `M` `dev/registry/pipeline/cli.py`
+- `S14` `M` `dev/registry/tests/test_delta_target_publication.py`
+- `S14` `M` `dev/registry/tests/test_export_tree.py`
+- `S14` `M` `dev/registry/tests/test_generated_tree_cli.py`
+- `S14` `M` `src/cadrumo/_data/registry/aeat/modelos/**/*.toml` -> `export_refs`
+- `S14` `verify:` `pass`
+- `S14` `verify:` `uv run --no-sync pytest test_casilla_export_refs_derivation.py` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest test_delta_target_publication.py` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest test_revision_edition_round_trip.py` -> `pass`
+- `S14` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S14` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests` -> `fail`
+- `S14` `verify:` `uv run --no-sync pytest dev/registry/tests` -> `fail`
+- `S15` `A` `dev/registry/rename_formula_binding_identifiers.py`
+- `S15` `M` `100` -> `131` -> `200` -> `202` -> `210` -> `353` -> `714` -> `export_layouts` -> `dev/registry/mappings/modelo_390`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_round_trip.py`
+- `S15` `verify:` `dev/registry/rename_formula_binding_identifiers.py` -> `pass`
+- `S15` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest test_revision_inherited_reference_resolution.py test_revision_edition_round_trip.py test_casilla_export_refs_derivation.py` -> `pass`
+- `S15` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `dev/registry/rename_formula_binding_identifiers.py` -> `pass`
+- `S16` `A` `src/cadrumo/domain/calculations/registry/identifier_lineage.py`
+- `S16` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_inherited_reference_resolution.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/_loader_internals.py`
+- `S16` `M` `dev/registry/analysis/delta_minimality.py`
+- `S16` `verify:` `pass`
+- `S16` `verify:` `uv run --no-sync pytest test_revision_inherited_reference_resolution.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest test_revision_edition_round_trip.py` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest` -> `pass`
+- `S16` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S16` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S17` `A` `dev/registry/edition_delta_migration.py`
+- `S17` `A` `dev/registry/tests/test_edition_delta_migration.py`
+- `S17` `verify:` `uv run --no-sync pytest -n 0 dev/registry/tests/test_edition_delta_migration.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/domain/calculations/registry/tests/test_revision_edition_round_trip.py dev/registry/tests/test_delta_minimality.py` -> `pass`
+- `S17` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `pass`
+- `S24` `A` `src/cadrumo/domain/calculations/registry/casilla_legal_citation_period.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/_snapshot_internals.py`
+- `S24` `A` `dev/registry/analysis/legal_citation_period_ledger.py`
+- `S24` `A` `dev/registry/analysis/legal_citation_period_ledger.toml`
+- `S24` `A` `dev/registry/tests/test_casilla_legal_citation_period_gate.py`
+- `S24` `verify:` `uv run --no-sync pytest dev/registry/tests/test_casilla_legal_citation_period_gate.py` -> `pass`
+- `S24` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S24` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S31` `A` `src/cadrumo/application/registry/edition.py`
+- `S31` `M` `src/cadrumo/application/registry/errors.py`
+- `S31` `M` `src/cadrumo/application/registry/tests/test_terminal_preconditions.py`
+- `S31` `M` `src/cadrumo/core/toml.py`
+- `S31` `M` `src/cadrumo/core/tests/test_toml.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/registry.py`
+- `S31` `A` `src/cadrumo/entrypoints/cli/_registry_edition_payloads.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/_registry_command_specs.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S31` `A` `src/cadrumo/entrypoints/cli/tests/test_registry_view_edition_cli.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/tests/test_registry_command_specs.py`
+- `S31` `M` `src/cadrumo/locales/en/cli.yml`
+- `S31` `M` `src/cadrumo/locales/es/cli.yml`
+- `S31` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S31` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S31` `M` `src/cadrumo/locales/en/application.yml`
+- `S31` `M` `src/cadrumo/locales/es/application.yml`
+- `S31` `M` `src/cadrumo/locales/ca/application.yml`
+- `S31` `M` `src/cadrumo/locales/hu/application.yml`
+- `S31` `verify:` `pytest -m integration test_registry_view_edition_cli.py` -> `pass`
+- `S31` `verify:` `pytest test_toml.py test_registry_command_specs.py test_terminal_preconditions.py` -> `pass`
+- `S31` `verify:` `aeat app registry verify` -> `pass`
+- `S31` `verify:` `ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S31` `verify:` `python -m dev.locales audit` -> `fail`
+- `S34` `M` `.vault/plan/2026-09-09-registry-edition-authoring-plan.md`
+- `S35` `A` `src/cadrumo/domain/calculations/registry/revision_predecessor_forest.py`
+- `S35` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_predecessor_forest.py`
+- `S35` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S35` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_manifest_only_placement.py`
+- `S35` `verify:` `pytest test_revision_predecessor_forest.py` -> `pass`
+- `S35` `verify:` `pytest` -> `pass` -> `test_legal_parameters_only_preserves_valid_parameter_key_identity`
+- `S35` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S35` `verify:` `ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S36` `M` `src/cadrumo/domain/calculations/registry/_loader_internals.py`
+- `S36` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_predecessor_grade_refusal.py`
+- `S36` `verify:` `uv run --no-sync pytest test_revision_predecessor_grade_refusal.py test_revision_edition_materialisation.py test_revision_label_inheritance.py test_revision_predecessor_forest.py test_revision_predecessor_date_agreement.py test_revision_predecessor_declaration.py test_materialisation_excludes_non_casilla_families.py test_casilla_label_spanish_source_coverage.py dev/registry/tests/test_delta_minimality.py` -> `pass`
+- `S36` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S36` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S37` `M` `src/cadrumo/domain/calculations/registry/_loader_internals.py`
+- `S37` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_label_inheritance.py`
+- `S37` `verify:` `uv run --no-sync pytest test_casilla_label_spanish_source_coverage.py test_localization_continuity_tier_is_reached.py test_revision_edition_materialisation.py test_revision_predecessor_declaration.py test_revision_predecessor_forest.py test_revision_label_inheritance.py` -> `pass`
+- `S37` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S37` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S40` `A` `src/cadrumo/domain/calculations/registry/_validate_cross_revision_lineage_origin.py`
+- `S40` `M` `src/cadrumo/domain/calculations/registry/_validate_cross_revision.py`
+- `S40` `M` `src/cadrumo/domain/calculations/registry/validate_registry_scope.py`
+- `S40` `A` `src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_continuity.py`
+- `S40` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_continuity.py src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_origin.py` -> `pass`
+- `S40` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S41` `M` `dev/registry/analysis/casilla_lineage_seed.py`
+- `S41` `M` `dev/registry/analysis/delta_minimality.py`
+- `S41` `verify:` `uv run --no-sync ruff check dev/registry/analysis/casilla_lineage_seed.py dev/registry/analysis/delta_minimality.py` -> `pass`
+- `S41` `verify:` `uv run --no-sync ruff format dev/registry/analysis/casilla_lineage_seed.py dev/registry/analysis/delta_minimality.py` -> `pass`
+- `S41` `verify:` `uv run --no-sync ty check dev/registry/analysis/casilla_lineage_seed.py dev/registry/analysis/delta_minimality.py` -> `pass`
+- `S41` `verify:` `uv run --no-sync pytest dev/registry/tests/test_casilla_lineage_seed.py dev/registry/tests/test_casilla_lineage_totality_gate.py dev/registry/tests/test_delta_minimality.py -q` -> `pass`
+- `S42` `T`
+- `S42` `verify:` `pytest src/cadrumo/domain/calculations/registry/tests/test_modelo_184_registry.py::test_modelo_184_raw_boe_design_eras_are_hash_pinned_and_explicitly_not_mapped` -> `pass`
+- `S42` `verify:` `pass`
+- `S43` `M` `.vault/adr/2026-09-09-registry-edition-authoring-adr.md`
+- `S45` `M` `.vault/adr/2026-09-09-registry-edition-authoring-adr.md`
+- `S45` `M` `.vault/plan/2026-09-09-registry-edition-authoring-plan.md`
+- `S46` `M` `.vault/adr/2026-09-09-registry-edition-authoring-adr.md`
+- `S46` `M` `.vault/plan/2026-09-09-registry-edition-authoring-plan.md`
+- `S47` `M` `.vault/adr/2026-09-09-registry-edition-authoring-adr.md`
+- `S47` `M` `.vault/plan/2026-09-09-registry-edition-authoring-plan.md`
+- `S48` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S48` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_predecessor_declaration.py`
+- `S48` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/revision.toml`
+- `S48` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/revision.toml`
+- `S48` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/revision.toml`
+- `S48` `verify:` `uv run --no-sync aeat app registry verify` -> `pass` -> `85ef41e47b`
+- `S48` `verify:` `pytest test_revision_predecessor_declaration.py test_modelo_369_registry.py test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable` -> `pass`
+- `S48` `verify:`
+- `S48` `verify:` `ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S49` `M` `.vault/plan/2026-09-09-registry-edition-authoring-plan.md`
+- `S51` `M` `dev/registry/pipeline/candidate_staging.py`
+- `S51` `M` `dev/registry/pipeline/cli.py`
+- `S51` `A` `dev/registry/tests/test_delta_target_publication.py`
+- `S51` `verify:` `uv run --no-sync pytest test_delta_target_publication.py` -> `pass`
+- `S51` `verify:` `uv run --no-sync pytest test_delta_target_publication.py` -> `cli.py` -> `candidate_staging.py` -> `fail`
+- `S51` `verify:` `uv run --no-sync pytest test_delta_target_publication.py test_continuity_witness_staging.py test_isolated_edition_staging.py test_generated_tree_cli.py test_generated_export_trees.py test_m303_generated_envelope_proof.py test_export_tree.py test_generated_export_tree_validation.py` -> `fail`
+- `S51` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S51` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S52` `M` `dev/registry/pipeline/candidate_staging.py`
+- `S52` `A` `dev/registry/tests/test_continuity_witness_staging.py`
+- `S52` `verify:` `uv run --no-sync pytest test_continuity_witness_staging.py` -> `pass`
+- `S52` `verify:` `uv run --no-sync pytest test_continuity_witness_staging.py` -> `candidate_staging.py` -> `fail`
+- `S52` `verify:` `stage_continuity_metadata` -> `pass`
+- `S52` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S52` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S52` `verify:` `uv run --no-sync pytest test_continuity_witness_staging.py test_isolated_edition_staging.py test_generated_tree_cli.py test_generated_export_trees.py test_m303_generated_envelope_proof.py` -> `fail`
+- `S53` `M` `dev/registry/conformance/_stamp.py`
+- `S53` `A` `dev/registry/conformance/tests/test_stamp_delta_review_scope.py`
+- `S53` `M` `dev/registry/conformance/tests/test_stamp_refusal_diagnostics.py`
+- `S53` `A` `dev/registry/analysis/type_column_coverage.py`
+- `S53` `A` `dev/registry/tests/test_type_column_coverage.py`
+- `S53` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S53` `M` `src/cadrumo/domain/calculations/registry/_schema_governance.py`
+- `S53` `M` `src/cadrumo/domain/calculations/registry/edition_materialisation.py`
+- `S53` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_review_scope.py`
+- `S53` `M` `src/cadrumo/domain/calculations/registry/tests/test_edition_materialisation_entry_point.py`
+- `S53` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_round_trip.py`
+- `S53` `M` `src/cadrumo/domain/calculations/registry/tests/test_governance_stamp.py`
+- `S53` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_manifest_only_placement.py`
+- `S53` `verify:` `aeat app registry verify` -> `pass`
+- `S53` `verify:`
+- `S53` `verify:` `pytest` -> `pass`
+- `S53` `verify:` `ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S54` `T`
+- `S54` `verify:` `pytest src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py::test_committed_m100_continuity_surface_for_1038_retirement_is_loaded` -> `pass`
+- `S55` `A` `src/cadrumo/domain/calculations/registry/tests/test_materialisation_excludes_non_casilla_families.py`
+- `S55` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry/tests/test_materialisation_excludes_non_casilla_families.py src/cadrumo/domain/calculations/registry/tests/test_revision_edition_materialisation.py src/cadrumo/domain/calculations/registry/tests/test_loader_directory_fragments.py src/cadrumo/domain/calculations/registry/tests/test_completeness_manifest_authoring_shape.py` -> `pass`
+- `S55` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/tests/test_materialisation_excludes_non_casilla_families.py` -> `pass`
+- `S55` `verify:` `uv run --no-sync ruff format --check src/cadrumo/domain/calculations/registry/tests/test_materialisation_excludes_non_casilla_families.py` -> `pass`
+- `S55` `verify:` `uv run --no-sync ty check src/cadrumo/domain/calculations/registry/tests/test_materialisation_excludes_non_casilla_families.py` -> `pass`
+- `S56` `A` `src/cadrumo/domain/calculations/registry/edition_materialisation.py`
+- `S56` `A` `src/cadrumo/domain/calculations/registry/tests/test_edition_materialisation_entry_point.py`
+- `S56` `M` `dev/registry/pipeline/cli.py`
+- `S56` `A` `dev/registry/tests/test_isolated_edition_staging.py`
+- `S56` `verify:` `uv run --no-sync pytest test_edition_materialisation_entry_point.py test_isolated_edition_staging.py` -> `pass`
+- `S56` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S56` `verify:` `uv run --no-sync ruff check` -> `ruff format --check` -> `ty check` -> `pass`
+- `S56` `verify:` `uv run --no-sync pytest test_isolated_edition_staging.py` -> `fail`
+- `S56` `verify:` `uv run --no-sync pytest test_generated_tree_cli.py` -> `fail`
+- `S57` `M` `.vault/adr/2026-09-09-registry-edition-authoring-adr.md`
+- `S57` `M` `.vault/plan/2026-09-09-registry-edition-authoring-plan.md`
+- `S61` `A` `src/cadrumo/domain/calculations/registry/period_selector_overlap.py`
+- `S61` `A` `src/cadrumo/domain/calculations/registry/revision_predecessor_date_agreement.py`
+- `S61` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_predecessor_date_agreement.py`
+- `S61` `M` `src/cadrumo/domain/calculations/registry/revision_order.py`
+- `S61` `M` `src/cadrumo/domain/calculations/registry/revision_predecessor_forest.py`
+- `S61` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S61` `M` `src/cadrumo/domain/calculations/registry/casilla_lineage_totality.py`
+- `S61` `M` `src/cadrumo/domain/calculations/registry/tests/test_casilla_lineage_totality.py`
+- `S61` `verify:` `pytest` -> `pass`
+- `S61` `verify:` `fail`
+- `S61` `verify:` `pytest` -> `pass`
+- `S61` `verify:` `uv run --no-sync aeat app registry verify` -> `pass`
+- `S61` `verify:` `ruff format` -> `ruff check` -> `ty check` -> `pass`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/_loader_internals.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/schema_surfaces.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_round_trip.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_materialisation.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_edition_reference_defaults.py`
+- `S62` `M` `dev/registry/analysis/delta_minimality.py`
+- `S62` `M` `dev/registry/tests/test_delta_minimality.py`
+- `S62` `M` `dev/registry/edition_delta_migration.py`
+- `S62` `M` `dev/registry/tests/test_edition_delta_migration.py`
+- `S62` `verify:` `pytest -n 0` -> `pass`
+- `S62` `verify:` `pytest -n 0 dev/registry/tests/test_edition_delta_migration.py dev/registry/tests/test_delta_minimality.py` -> `fail`
+- `S62` `verify:` `ruff check` -> `ruff format --check` -> `pass`
+- `S62` `verify:` `ty check` -> `pass` -> `fail`
+- `S63` `M` `dev/registry/analysis/casilla_lineage_rulings.toml`
+- `S63` `M` `dev/registry/analysis/casilla_lineage_ledger.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/casillas/cdecl.ejercicio__cwire.observaciones.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2016-y-siguientes/revision.toml`
+- `S63` `A` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2016-y-siguientes/casilla_continuidad_evolutions/0001-2005-2015-2016-y-siguientes-retired.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0-62.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/casillas/civa.anual.repercutido.recargo.tipo-0.cuota.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-0-26.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-0-62.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-0.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-0.cuota.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/casillas/civa.anual.repercutido.recargo.tipo-1.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/casillas/civa.anual.repercutido.recargo.tipo-0-26.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/casillas/civa.anual.repercutido.recargo.tipo-0-62.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/casillas/civa.anual.repercutido.recargo.tipo-0.base.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/casillas/civa.anual.repercutido.recargo.tipo-0.cuota.toml`
+- `S63` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/casillas/civa.anual.repercutido.recargo.tipo-1.base.toml`
+- `S63` `verify:` `python -m dev.registry.analysis.casilla_lineage_seed --apply` -> `pass`
+- `S63` `verify:` `pytest -n 0 -m "(unit or integration) and not resident_service and not external_tool"` -> `pass`
+- `S63` `verify:` `--apply` -> `pass`
+- `S63` `verify:` `pass`
+- `S63` `verify:` `pytest dev/registry/tests/test_edition_delta_migration.py` -> `fail`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/100.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/180.yml`
+- `S64` `M` `src/cadrumo/locales/ca/modelo/schema/303.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/100.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S64` `M` `src/cadrumo/locales/en/modelo/schema/303.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/100.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S64` `M` `src/cadrumo/locales/hu/modelo/schema/303.yml`
+- `S64` `M` `dev/locales/tests/test_locale_translation_honesty.py`
+- `S64` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `pass`
+- `S64` `verify:` `pytest test_casilla_label_spanish_source_coverage.py` -> `git archive f7e5d56096` -> `pass`
+- `S64` `verify:` `ruff check` -> `ruff format --check` -> `ty check` -> `pass`
 
 ## Notes
 
@@ -21528,3 +22074,254 @@ related:
 - `S68` 11 focused tests passed; the combined focused run passed 27 tests.
 - `S68` 229128e3d8 added the failed-preflight matrix; ec34052bcc typed the planted registry-validation failure.
 - `S68` Lane runner remains domain-agnostic; typed error identity is asserted at the registry lifecycle producer.
+- `S01` No tracked path changed. The step records a baseline; its output is the captured exit codes and counts above, held in session scratch rather than committed. dev-ci and dev-tooling were already failing at the commit described, so no green baseline exists and every later proof is stated as "no new failure against these numbers".
+- `S02` Classification only; no source file changed. The step's finding — that the flagged lines are anti-vacuity guards rather than removable assertions — was carried into the S03 Step row, which now says REPLACE and never delete.
+- `S03` Seven of the twelve guards were left untouched by ruling, not by omission: their populations are read
+- `S03` from AEAT's own record-design transcriptions, which no repair here can empty. The owning lane
+- `S03` confirmed all seven. Three guards beyond the twelve were also converted: capability_continuity line 99
+- `S03` at the owning lane's request, casilla_id_grammar line 83 as a disclosed sibling in the same test, and
+- `S03` monetary_scale line 126, whose non-empty guard was removed while its `<= 6` ceiling was kept and shown
+- `S03` to fire on seven planted modelos. dev-ci cannot reach `dev/registry` and so cannot observe this step.
+- `S03` The live test-dev-tooling pair is not a valid comparison because another session changed the tree
+- `S03` during it; the isolated same-state pair is the acceptance evidence.
+- `S04` The one failing test is `test_no_registry_source_or_declaration_cites_a_vault_record`, triggered by committed `facts_*` files this Step did not touch; the other 51 pass.
+- `S04` The `screens.py` import block carried a pre-existing ruff I001 at HEAD; it was re-sorted as part of enrolling the new screen.
+- `S04` The reviewer persona could not be launched; the orchestrating session reviewed the diff against the ADR (casilla rows only, reporting mode, public imports, unjudged rows counted apart from minimal ones). `test_delta_minimality.py` 10 passed; ruff and ty clean.
+- `S04` The screen imports `NoPredecessor` from `schema.py`, which S48 introduces, so this Step commits with or after S48.
+- `S05` Measurement only; the chaining tool was a scratch script, not a committed one. Its coverage figures were superseded by S49 and S57 before any of them reached the corpus.
+- `S06` Measured at HEAD `1775d81a00cc928f2bde5ea7554301f891ff8c23`; the first apply ran at `9dc3acaed7` and was withdrawn by copy from HEAD and re-applied after the partial-stamp rule was added; the grounded chains were written after the load gate excused fully grounded rows from `semantic_role`.
+- `S06` Code review: the executing agent could not launch the reviewer persona; the orchestrating session verified the schema tests, the seeder's zero-contradiction check, insert-only casilla edits, no evidence on seeded rows, and the excluded modelos untouched. A private cross-package import in the seeder was relocated to a public module before commit.
+- `S06` Excluded by instruction: modelos 100, 200, 309, 369.
+- `S06` Written: 830 seeded, 482 grounded (151: 476, 123: 6), 531 new_on_form, 245 predecessor_edition_silent, 22 not_on_form; seeder contradiction and registry-gate regression checks both 0.
+- `S06` Refused and recorded in `dev/registry/analysis/casilla_lineage_ledger.toml`: 1,782 successor rows. All 8 proven 490 continuations stay refused: 2 predecessor boxes print on two paginas of the design (no single locus), 5 wire fields have no design locus, 1 would leave `reg-total-cuota-101` partly stamped.
+- `S06` Deviations from written adjudications, all conservative: 390 writes 245 `predecessor_edition_silent` of the ruled 248 (boxes 84, 658 and 659 print on several lines of the 2022 design); 123 writes 6 of 7 grounded chains (the 2019 design prints no own box for campo 06); 151 writes 121 of 123 new (two unsegmented rows carry no design locus); 490 writes 232 of 233 new (`490-03-indicador-pagina-complementaria-12` has no design locus).
+- `S06` `test_continuidad_completeness_ratchet` now diverges on modelo 200 only (+13, another session's tree); 309's baseline was lowered to 12, the result of this campaign's step S07; `test_no_registry_source_or_declaration_cites_a_vault_record` and four `test_corpus`/`test_registry_schema_part1`/`test_terminal_preconditions` failures reproduce at pristine HEAD.
+- `S06` The totality gate (S08) is left to decide how the unset origin is read; it ruled no split is needed because an id resolved against the adjacent predecessor carries lineage whatever its origin.
+- `S07` Counts: 47 chains; 70 `grounded` rows (41 at 2004-2015>2016-2017, 29 at 2018-2022>2023-y-siguientes); 61 `seeded` middle rows; 47 chain-start rows carrying `continuidad_id` with no origin; 0 chains blocked by the semantic-linkage gate.
+- `S07` Withheld: `decl.transmitente-apellidos` 2004-2015>2016-2017, a split of 2004 campo 9 into 2016 campi 13 and 14.
+- `S07` Skipped work: `decl.transmitente-pais` 2004-2015>2016-2017 is held, not chained. It diverges on `data_type` and `semantic_role`; `CasillaEvolutionKind` has no representation-change member, and `repurposed` asserts a different meaning. No evolution record was written.
+- `S07` Measured on HEAD `9dc3acaed7f2c4ca53c1143ab449641e1a0e1f03`.
+- `S07` Follow-on for a later step: chaining `decl.transmitente-pais` needs a representation-change member in `CasillaEvolutionKind`, a schema decision outside this step.
+- `S08` The rule reads `NoPredecessor` and modelo 369's `predecessor.none` declarations, which landed with S48 in `ab60f19d4c`.
+- `S08` The reviewer persona could not be launched; the orchestrating session reviewed the rule, the ledger reader and the gate against the ADR. Exceptions are keyed per row and the gate never reads the per-modelo `[[excluded]]` seeder metadata. No private imports. The orchestrating session re-ran the four lineage test files (52 passed), `registry verify` (exit 0), and ruff and ty (clean).
+- `S08` The rule consults the adjacent edition and does not yet read a named `DeclaredPredecessor`; once an edition names its predecessor, the rule must follow the declared edge.
+- `S08` One `aeat app registry verify` run exited 1 with no stderr while other sessions edited the tree; two following unpiped runs exited 0.
+- `S09` The executing agent could not launch the reviewer persona; the orchestrating session reviewed the diff against the ADR's format section instead.
+- `S10` The fixture in `test_revision_predecessor_declaration.py` repeated a casilla without `continuidad_id` in both editions while declaring a predecessor, and the materialiser refuses that as a collision with no lineage key. The fixture casilla now carries one lineage in both editions.
+- `S10` Three registry tests fail both with and without this change: `test_legal_parameters_only_preserves_valid_parameter_key_identity`, `test_modelo_309_2004_country_role_mutation_reopens_typed_semantic_drift` and `test_both_occupancy_directions_have_a_positive_case_in_the_corpus`.
+- `S10` The reviewer persona could not be launched from this session, so the review is still outstanding.
+- `S10` The reviewer persona could not be launched; the orchestrating session reviewed the S10 and S35 diffs together against the ADR. Only a named predecessor edge triggers inheritance, casillas are the only family that inherits (the manifest is excluded explicitly), the forest check runs before recursion, and each merge ambiguity is refused naming both sides. Verification: 99 tests passed across materialisation, forest, declaration, placement, 369, minimality and totality; `registry verify` exit 0; ruff and ty clean. Inherited rows still carry predecessor-edition tokens until restatement is lifted.
+- `S11` The tests drive `load_modelo_directory` and `load_registry_tree`, not `ValidatedRegistryAuthority.load`. At this HEAD the authority refuses any minimal temporary tree: it needs `categories/profiles.toml`, `iva/rates.toml`, `iva/recargo-rates.toml` and the full bundled global legal-parameter id set. The existing `test_authority.py::test_authority_cache_invalidates_when_fragmented_revision_changes` fails the same way (`CategoryValidationError`). `construct_authority` compiles through `load_registry_tree`, keyed on the same tree fingerprint the tests pin.
+- `S11` Detector teeth were proven out of tree. A scratch pytest plugin, run in its own process, planted three defective collectors. Leaving out the predecessor edition's files failed 2 of 3 tests. Leaving out casilla fragments failed 3 of 3. Adding a row keyed on the expanded output failed 3 of 3. With no defect planted, 3 of 3 passed.
+- `S11` No fingerprint defect found: predecessor and successor are editions of one modelo directory, and both collectors fingerprint every `revisions/**/*.toml`.
+- `S11` Code review is still outstanding.
+- `S11` The reviewer persona could not be launched. The orchestrating session reviewed the test against the ADR's physical-files cache constraint and re-ran it: 3 passed, ruff and ty clean, no mocks or monkeypatching.
+- `S12` Mandatory code review not yet run; the executor had no reviewer dispatch available.
+- `S12` CI checkouts are depth 1; the first baseline entry fails closed there until the unit lane fetches the base commit.
+- `S12` `build_draft` calculates from the bundled authority regardless of the schema provider, so byte comparison judges the export surface only.
+- `S12` The reviewer persona could not be launched. The orchestrating session reviewed the gate against the ADR's proof obligations: the equality is explicit and not pydantic `==`, a separate order assertion, bytes only where an export scenario exists, the reference read from the base commit, and a fail-closed on a delta-authored reference. Re-run: 66 passed, ruff and ty clean. Follow-on: CI checkouts are shallow, so the job running this gate needs full history before the first migration entry lands.
+- `S13` A migrated edition that declares `casilla_source_refs` dumps the field, so the edition round-trip gate will report it as a changed edition field until the gate's equality exclusions admit it beside `predecessor`. No edition declares it yet.
+- `S13` The reviewer persona could not be launched from this session, so the review is still outstanding.
+- `S13` The reviewer persona could not be launched; the orchestrating session reviewed the contract against the ADR. `casilla_source_refs` is one manifest-only field, orden references reuse `orden_aplicabilidad`, a stated value replaces the default, and defaults apply after inheritance so an inherited row takes the successor's. The orchestrating session added `casilla_source_refs` to the round-trip gate's equality exclusions (every filled row is still compared). Re-run: 124 passed including the round-trip gate, `registry verify` exit 0, ruff and ty clean.
+- `S14` The declarado record of modelo 347 is the only `binding_rows` record without `binding_record`, so its 18 row-mapped binding fields are the only edges derived through the record row mapping. Whether those back-references should exist is open for the export lane; it does not block this Step.
+- `S14` The check that casilla files differ only on their `export_refs` line had no standalone site; it lived inside the deleted writer module.
+- `S14` The code review is outstanding: the reviewer persona could not be launched from this session.
+- `S14` The export lane (REGISTRY-TYPE) reviewed the resolver and approved it. Their gates ran against the tree: 95 passed, exit 0, covering generated-tree reproduction, the modelo 200 own-sheet bindings, design sign positions, the hand-authored type column, design agreement, and the derivation tests. The orchestrating session re-ran the derivation, delta-publication and materialisation tests (23 passed) and `registry verify` (exit 0). Landed in c1df8e45a5.
+- `S15` Modelo 390 is excluded from this rewrite by design, not oversight: its generated `revisions/*/export/` trees (2022-2025) copy the pre-rename binding ids into field and provenance records, and `registry verify` refuses a renamed source map sitting beside a not-yet-regenerated tree (confirmed empirically: exactly 707 "unknown binding" failures, one per renamed reference, all in modelo 390). The tool measures and reports modelo 390's 707 embedding bindings but never writes them; its rename and the export lane's republish of those four trees must land in the same change. That list is handed to the export lane rather than regenerated here.
+- `S15` Another session committed an equivalent rename (`562fcb9848 refactor(registry): normalize binding and formula identifiers`) to this shared worktree's branch while this Step was in progress; the two converged on byte-identical output for the 7 applied modelos and the rewrite script. That commit's copy of `test_revision_edition_round_trip.py` still carried the stale hardcoded modelo-131 binding-id literals fixed here; that fix remains uncommitted, as this persona never stages or commits.
+- `S15` Modelos 100, 131, 200, 202, 210, 353 and 714 landed in 562fcb9848 (6,390 identifiers, 2,765 files, no collisions; uniqueness is per revision). Modelo 390's 707 binding ids are copied into generated trees, so they landed together with their republish, by the export lane, in 15845cd069; all four 390 trees reproduce exactly. Modelos 185, 222 and 347 keep their ids by agreement with the export lane. The reviewer persona could not be launched; the orchestrating session reviewed the rename rule, which shares `identifier_lineage`'s whole-segment span, and the collision and uniqueness evidence.
+- `S16` `test_no_registry_module_exports_a_symbol_it_does_not_define` fails on `_REVISION_SECTION_FIELDS` in `_loader_internals.py`. The alias is already at HEAD; this Step does not touch it.
+- `S16` `test_no_revision_spans_a_design_relayout` fails with `registry directory changed during cache fingerprinting` while the export lane republishes the live tree.
+- `S16` The code review is outstanding: the reviewer persona could not be launched from this session.
+- `S16` The reviewer persona could not be launched; the orchestrating session reviewed the resolver against the ADR. There is one canonical lineage function; the delta-minimality screen's private copy was deleted in favour of it. The lineage is taken against the edition that stated the row, an unresolved inherited reference is refused, and S15 turns the function into the identity. The boundary was widened from hyphen to all four identifier separators; that changes nothing in the corpus. Re-run: 45 fixture tests passed; `registry verify` exit 0; ruff and ty clean. Nine live-corpus tests errored with 'registry directory changed during cache fingerprinting' while the export lane republished trees; they are not attributable to this Step.
+- `S17` Skipped work: dry run only. Nothing was written under `modelos/303` or any `export/` tree, no `_MIGRATIONS` entry was added, and the Step stays open. The input was modelo 303 at HEAD `2604ddaf21`, read by `git archive` into a temporary registry, because the live `export/` tree was being rewritten at the time.
+- `S17` Per-edition results (`--declare-blocked-roots`):
+- `S17` | edition | basis | rows before | stated after | inherited | lifted row source_refs | lifted constraint source_refs | lifted constraint orden legal_refs |
+- `S17` | --- | --- | --- | --- | --- | --- | --- | --- |
+- `S17` | 2022 | first (root) | 184 | 184 | 0 | 0 (tie 88/88, no default) | 0 | 5 |
+- `S17` | 2023 | blocked: row_order | 198 | 198 | 0 | 99 | 81 | 5 |
+- `S17` | 2024-hasta-08-y-2t | blocked: row_order | 199 | 199 | 0 | 100 | 81 | 5 |
+- `S17` | 2024-desde-09-y-3t | blocked: row_order | 207 | 207 | 0 | 108 | 81 | 5 |
+- `S17` | 2025 | adjacent to 2024-desde-09-y-3t | 207 | 105 | 102 | 8 | 81 | 5 |
+- `S17` | 2026-y-siguientes | blocked: row_order | 208 | 208 | 0 | 109 | 81 | 5 |
+- `S17` No row's top-level `legal_refs` equal its edition's orden, so no row-level orden lift happened.
+- `S17` In 2025, every one of the 105 stated rows passes the screen but is not exact: 97 differ in `source_refs` (they cite the design plus the procedure) and 8 differ in `continuidad_evidence` or `continuidad_origin`. The 79 comment lines that leave 2025 with its inherited rows are all present verbatim in 2024-desde-09-y-3t.
+- `S17` Order diagnosis: 2022 to 2023 reorders shared rows because the fragments were restructured. The 2023 to 2024-hasta, 2024-hasta to 2024-desde, and 2025 to 2026 edges insert new rows mid-sequence, and the materialiser can only append. Across the corpus, 23 of 70 successor edges are order-expressible.
+- `S17` Proofs:
+- `S17` Round-trip gate, staged tree against the unmigrated copy, the same way the planted-migration tests run it: the only finding is `export_unchecked` on 2025. Typed equality, row order and locale identity are clean for all six editions, and no bytes were compared. The CLI exits 1 without the flag (refused at 2023) and 1 with it (the gate finding blocks `--apply`).
+- `S17` A 303 byte proof cannot run today. The gate's `EditionExportScenario` carries no prior-domiciliation election or product software identity, and the 303 export path refuses to run without them.
+- `S17` Delta-minimality for 303: 971 `restated_unchanged` before. After, the screen reads materialised rows as stated and reports 207. Over stated rows only it reports 105, the not-exact rows above. So it is not clean.
+- `S17` S42 pin `test_modelo_184_raw_boe_design_eras_are_hash_pinned_and_explicitly_not_mapped`: before, 5 of 5 pass on the live tree (exit 0). After, its assertions hold for all five eras over a registry holding migrated 303 plus 184 (exit 0).
+- `S17` S54 `test_committed_m100_continuity_surface_for_1038_retirement_is_loaded`: passes before and after (exit 0). It has no teeth here, because no 303 edition retires a lineage and modelo 100 is not migrated. Retirement is exercised instead by a planted 303 retirement in the tests.
+- `S17` S50: the left-pad resolver finds 656 exact tokens, 0 left-padded, 0 ambiguous, and 6 of 6 maps resolved, before and after. That check is vacuous for 303. Export-ref symmetry reports 0 findings before and after.
+- `S17` Determinism: two runs write byte-identical trees (290 files). Idempotency: a re-run on the migrated tree is a no-op.
+- `S17` Export bytes proof, closed after the first dry run:
+- `S17` `A` `dev/registry/edition_export_scenarios.py` declares the 303 and 131 export scenarios with synthetic identities and facts from each edition's own resolvers. The migration command reads it; tests no longer supply scenarios.
+- `S17` `A` `dev/registry/edition_round_trip.py` is the gate engine. It is no longer imported from a src test, and staged copies now carry the target modelo's dependency closure.
+- `S17` The dry run on the live tree, without `--apply`, now exits 0 with `gate_findings=0`. It byte-compares 2023, 2024-hasta-08-y-2t, 2024-desde-09-y-3t, 2025 and 2026-y-siguientes, and every one is equal. Teeth: planting one changed character in the migrated 2025 resultados record yields exactly one content finding and one export_bytes finding.
+- `S17` `verify:` `pytest dev/registry/tests/test_revision_edition_round_trip.py` -> `pass` (71 passed)
+- `S17` `verify:` `pytest dev/registry/tests/test_edition_delta_migration.py` -> `pass`
+- `S17` 2022, the root edition, cannot be exported: the export path refuses its layout with "regimen-simplificado projection record must repeat projection_rows". It is a root, so the gate does not require its bytes.
+- `S17` The gate turns only a ValueError into a finding. A scenario that `build_draft` rejects (ModeloApplicationError) crashes the tool instead. This is an S18 hardening item.
+- `S17` `test_m303_generated_envelope_proof.py` fails on the migrated-fact gate for an isolated authority, e.g. `lirpf-art-101:retencion-administrador-general`. That comes from another lane's in-flight fact-provider work, not from this Step.
+- `S17` Applied on the live tree:
+- `S17` Once row order became expressible, every successor migrated adjacent. The inherited and stated rows per edition are: 2023, 165 inherited, 33 stated; 2024-hasta-08-y-2t, 192 and 7; 2024-desde-09-y-3t, 192 and 15; 2025, 201 and 6; 2026-y-siguientes, 196 and 12. 2022 stays the full-copy root.
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/303` (46 files; no export tree touched)
+- `S17` `M` `dev/registry/tests/test_revision_edition_round_trip.py` (the `_MIGRATIONS` baseline for 303 at `784c7cdd3e`, the last full-copy commit)
+- `S17` `M` `dev/registry/tests/test_delta_minimality.py` (the live-corpus screen now names 131 but not 303, which restates nothing)
+- `S17` `M` `src/cadrumo/_data/registry/authority/authority.json` (republished)
+- `S17` `verify:` `python -m dev.registry.edition_delta_migration --modelo 303 --apply` -> `pass` (gate_findings=0; export bytes equal on all five successors; applied=True)
+- `S17` `verify:` `python -m dev.registry.conformance integrity` -> `pass`
+- `S17` `verify:` corpus round-trip gate for 303, 390 and 131 -> `pass` (3 passed)
+- `S17` `verify:` delta-minimality, lineage totality and continuity integrity -> `pass` (25 passed)
+- `S17` `verify:` `test_m303_did_account_wire_isolated_authority.py` -> `pass`
+- `S17` The reviewer persona could not be launched, so the orchestrating session reviewed the result against the ADR. Inheritance is keyed on lineage. Restatement is lifted to the edition, as `source_default` per edition. The loader infers no predecessor, because every edge is declared. The proof obligations hold: typed equality, merge order, locale identity and export bytes.
+- `S24` Corpus measurement: 157,265 casilla citations, judged with the snapshot's revision-scoped legal-window predicate. 1,116 are refused, all of them in modelo 100 (editions 2020 to 2023) and modelo 190 (edition 2024). Every refused reference is also listed in the modelo's own `legal_refs`, which the snapshot check exempts as cross-year authority, so no existing gate could see them. Plain window overlap gives the same 1,116. The 345 substantive and 6,704 procedural citations that overlap the edition without containing it all pass under the devengo predicate.
+- `S24` Refused groups: 100/2020-2023 `ley-35-2006:art-20` (20+3+3+3); 100/2020 `ley-35-2006:art-23` (134); 100/2021-2023 `ley-35-2006:art-23` (118+116+116, `ley-35-2006:art-23-2021` governs); 100/2020-2022 `ley-35-2006:art-32` (175+176+182); 190/2024 `orden-hac-1431-2025:art-2` (70). This includes the research's anachronistic modelo 100 casilla `0066` (2020 cites the 2024 redaction of art. 23).
+- `S24` The research's modelo 200 (13 pairs) and modelo 303 (9 pairs) drift is citation-set churn: every cited row still covers both editions. It is period-correct, so this gate does not refuse it.
+- `S24` Placement: the corpus does not pass cleanly, so the rule is enforced as a dev-lane gate with a per-citation classified ledger (350 `superseded_row_cited`, 766 `no_governing_row_catalogued`), not as a load-time validator. Registry data was not edited.
+- `S24` Persistent failure, not introduced here: `src/cadrumo/tests/test_docstring_cross_reference_targets.py` fails 4 tests, including the detector's own fixture self-tests. None of its findings names a touched file.
+- `S24` Code review is still pending. The Step is left unchecked.
+- `S24` The reviewer persona could not be launched; the orchestrating session reviewed the rule and the ledger against the ADR. The rule reuses the snapshot builder's one legal-window predicate, which is shared through the package-private `__all__`. The ledger admits refused citations per row, classified, and reports stale entries. No registry data was edited. Re-run: 14 gate tests passed, `registry verify` exit 0, ruff and ty clean. Before modelo 100 migrates, its 350 `art-23` rows for 2021-2023 can be re-cited to `ley-35-2006:art-23-2021`; the other 766 refused rows (modelo 100 `art-20`, `art-23` for 2020 and `art-32`, and modelo 190/2024 `orden-hac-1431-2025`) need the older redactions added to the legal catalogue from official BOE sources first.
+- `S31` `dev.locales` is unimportable at HEAD (`_registry_scanner.py` imports the removed `profile_schema_locale_keys`). The new keys were written through `dev.locales set-batch` and audited, from a scratch runner that restores the removed function in memory only. The tool itself was not repaired.
+- `S31` Pre-existing failures, all outside the touched surfaces: inspect/diff CLI strict tuple validation, `_modelo_discovery_cli` facade import, modelo legacy selector calls, corpus refusal contract, `flows.*` surplus kwargs, output-language and `tr`-binding gates, and OS-keychain refusals in the `app ledger` subprocess tests. The first six also fail on a detached HEAD worktree.
+- `S31` The reviewer persona could not be launched from this session, so the review is still outstanding.
+- `S31` The reviewer persona could not be launched. The orchestrating session reviewed the diff against the CLI contract and the ADR. The command extends `aeat app registry`, with positional subjects and one application service, and the service reads only through `materialise_edition`. The bootstrap exemption entry classifies the command as read-only; it is not a suppression. Locale keys are added in all four locales. Re-run: the reader, TOML, command-spec and precondition tests pass except `test_corpus_refusals_classify_selection_and_missing_extraction_state`, which this Step did not touch and which fails on clean HEAD. `registry verify` exit 0; ruff and ty clean.
+- `S34` Disposition ruling only; no test file changed. Each of the twelve floors was ruled corpus-fact or intended-repair, and the dispositions are held in session scratch pending the harness conversion that precedes every gate.
+- `S35` The rule binds a modelo only once one of its editions declares the key. Today that is modelo 369 alone.
+- `S35` The ADR's date-agreement clause is not built: a declared predecessor must agree with date order where the pair does not overlap. The S35 row does not assign it.
+- `S35` `test_legal_parameters_only_preserves_valid_parameter_key_identity` fails with a legal-catalogue refusal, "missing supported_filing_years catalogue declaration". The failure does not involve the predecessor or the schema, and it was not re-run against a baseline.
+- `S35` The reviewer persona was not launched from this session, so the mandatory code review is still outstanding.
+- `S35` The reviewer persona could not be launched; the orchestrating session reviewed the S10 and S35 diffs together against the ADR. Only a named predecessor edge triggers inheritance, casillas are the only family that inherits (the manifest is excluded explicitly), the forest check runs before recursion, and each merge ambiguity is refused naming both sides. Verification: 99 tests passed across materialisation, forest, declaration, placement, 369, minimality and totality; `registry verify` exit 0; ruff and ty clean. Inherited rows still carry predecessor-edition tokens until restatement is lifted.
+- `S36` Partial step: the proof on modelo 220 does not hold. Its `2024` edition declares 1985 casillas and `2025` declares 2, and both are graded `applicability`, the lowest rung, so no grade comparison can refuse the pair. In a temporary copy with `predecessor = "2024"` declared on `2025`, the loader accepts it and `2025` materialises 1985 casillas. Without the declaration it loads unchanged, as 1985 and 2.
+- `S36` The schema declares no header-only or withholding field. The "declaration header only" fact is recorded only in `revision.toml` comments and `reviewed_by` prose, so the refusal is keyed on the grade condition alone, and no field was authored. Closing the modelo 220 case needs a declared withholding field, which has to be decided first.
+- `S36` The reviewer persona has not been run, so the review is still outstanding.
+- `S36` The reviewer persona could not be launched. The orchestrating session reviewed the grade refusal: one ladder, declared fields only, and it runs before inheritance. Re-run: 37 passed, `registry verify` exit 0, ruff and ty clean. The Step stays OPEN, because the header-only withholding case (modelo 220: 1985 then 2 rows at equal grade) is not caught and needs a declared withholding field. That is an operator decision.
+- `S36` The equal-grade case was grounded and needs no new field. Orden HAC/529/2026 (BOE-A-2026-11583) approves the full 2025 Modelo 220, and the AEAT record design DR220e25 is published and bundled as `aeat-dr-220-2025`. So 220/2025 is an authoring backlog across a measured design re-layout, not withholding by design. The one live withholding successor (165/2023-2025, filing to applicability) is refused by the grade rule. The ADR paragraph was corrected to match. Follow-ons: a derived re-layout guard, if the residual delta-first risk needs closing; the 220 comment at `revisions/2024/revision.toml:10-12` is stale; the catalogue `published_at` for Orden HAC/529/2026 (2026-05-13) should be checked against the BOE date (29 May 2026).
+- `S37` An inherited casilla carrying aliases is refused at load, because an alias label resolves through one key with no fallback chain. No corpus casilla declares aliases today.
+- `S37` Inherited rows gain one key in `localization_keys`, the stated edition's occurrence key, between the row's own occurrence key and its continuity key. A typed-equality round-trip gate over a migrated edition sees that extra key, because the field is excluded from dumps but pydantic equality still compares it.
+- `S37` The reviewer persona could not be launched from this session, so the review is still outstanding.
+- `S37` The reviewer persona could not be launched; the orchestrating session reviewed the loader diff against the ADR. Each inherited row's label origin is carried beside the closed raw shape, and it is the edition that last stated the row, not the adjacent one. The shipped cascade resolves the fallback, which still raises when no key resolves. Re-run: the materialisation, label-inheritance, forest, date-agreement and cache tests (39 passed); the historical-epoch label sweep `test_casilla_label_spanish_source_coverage.py` (2 passed); `registry verify` exit 0; ruff and ty clean.
+- `S40` Code review: the executing agent could not launch the reviewer persona; the orchestrating session reviewed the diff against the ADR's inheritance rules instead.
+- `S40` Ruling: a `grounded` row with non-empty evidence satisfies the semantic-linkage gate without a role, but only when every link it takes part in is grounded; seeded or unmarked links never lift the requirement.
+- `S40` Measured on HEAD `da3fa7249bcb20a8391dd40557aa7992ad52bdd9` with the lineage seeding uncommitted in the working tree (891 `seeded`, 76 `grounded` rows); both gates report zero refusals.
+- `S40` Persistent failure: the full `src/cadrumo/domain/calculations/registry/tests` run reports 41 failures, none of which reach the changed code.
+- `S40` Follow-on for a later step: unset `continuidad_origin` still conflates an authored declaration with an unexamined row; the totality gate needs that split.
+- `S41` Verdict against the proposed registry enum-canonicalisation ruling (one named enum per
+- `S41` closed vocabulary, no inline unions, no allowlist), scoped by that ruling's own text to
+- `S41` registry schema model fields:
+- `S41` | Enumeration | Location | Verdict | Reason |
+- `S41` | --- | --- | --- | --- |
+- `S41` | `CasillaLineageOrigin` | `src/cadrumo/domain/calculations/registry/casilla_lineage.py` | conformant | Named `StrEnum`, boundary-coerced via `BeforeValidator`, single definition imported by the schema field. |
+- `S41` | `DeclaredPredecessor` / `NoPredecessor` discriminated union | `src/cadrumo/domain/calculations/registry/schema.py` | conformant (out of scope) | The `predecessor` field is a discriminated union of two structured `RegistryModel` types, not a string literal union; the ruling's own constraints state non-string unions cannot become `StrEnum` members and are outside the gate's mechanically decidable subject by construction. The tag strings (`"revision"`, `"none"`) that route the discriminator are never authored or persisted registry data — the discriminator function returns a computed `str`, not a `Literal` union — so no closed vocabulary is spelled inline in the type system either. |
+- `S41` | Materialiser section constants (`_INHERITED_SECTION`, `_RETIREMENT_SECTION`, `_REVISION_EXPORT_LAYOUTS`, `_REVISION_CONSTRUCTS`, `_REVISION_COMPLETENESS_MANIFEST`) | `src/cadrumo/domain/calculations/registry/_loader_internals.py`, `_loader_revision_fragments.py` | conformant | These name raw TOML table keys for structural section routing, not a registry field's value set; `REVISION_SECTION_FIELDS` is computed from `ModeloRevision.model_fields` itself, so there is exactly one definition (the pydantic model) and no independent vocabulary to duplicate. |
+- `S41` | Ledger `category` strings | `dev/registry/analysis/casilla_lineage_seed.py` | divergent, fixed | Sixteen refusal reasons were spelled as bare string literals repeated across `_pair`, `_classify_absence`, `_apply_ruling` and `residual_plan`. Consolidated into `LineageRefusalCategory(StrEnum)` in the same defining module; `Refusal.category`, `ExcludedModelo.residual_category`, `LineagePlan.refuse`, `admit_bare_chain`'s return type and every call site now reference the enum. The ledger reader (`dev/registry/analysis/casilla_lineage_ledger.py`) still reads `category` as a plain `str` from the persisted TOML log — left untouched as reading an artifact file rather than declaring a vocabulary, and out of the small/local/mechanical bound for this Step. |
+- `S41` | Delta-minimality verdict/basis strings | `dev/registry/analysis/delta_minimality.py` | divergent, fixed | `kind` (row verdict) and `basis` (predecessor establishment) were plain `str` fields backed by module-level `Final` string constants, not enum members, and the sibling test file re-spelled several of the same tokens as bare literals rather than importing the constants. Consolidated into `MinimalityVerdict(StrEnum)` and `PredecessorBasis(StrEnum)`; `RowJudgement.kind`, `EditionPredecessor.basis` and `MinimalityCensus.verdicts` now carry the enum types. `test_delta_minimality.py` needed no changes: `StrEnum` members compare equal to their string value, so its existing raw-string assertions still pass. |
+- `S41` Both fixed modules are dev-only analysis tooling outside `src/cadrumo/domain/calculations/registry` and `src/cadrumo/domain/calculations/registry/_loader_internals.py`/`schema.py` were not touched, per the Step's scope guard.
+- `S41` The reviewer persona could not be launched. The orchestrating session re-ran the seed, totality-gate and minimality tests (41 passed) and ruff and ty (clean). The ledger TOML is byte-unchanged, so the new StrEnums keep the prior values.
+- `S43` Ruling only. The manifest family does not inherit, which scoped the minimality screen to casilla rows and is stated in the ADR.
+- `S45` Audit only; no loader file changed. The caller inventory grounds the materialiser step and is held in session scratch.
+- `S46` Adjudication only; no registry data changed. One suspected blocker was refuted and one confirmed and made recoverable from evidence already in the corpus.
+- `S47` Adjudication only; no registry data changed. Four rulings held in session scratch, one per modelo,
+- `S47` each carried into the ADR and into the S06 and S19 Step rows. Two rows of the corpus have no legal
+- `S47` authority anywhere in this repository and are recorded as ungrounded rather than inferred. One live
+- `S47` defect was found outside this campaign's surface and reported to the owning lane: 33 wire slots in
+- `S47` one modelo's shipped layout are bound to the wrong-page casilla, because its printed box number is
+- `S47` unique per pagina rather than per modelo.
+- `S48` The working tree was briefly unloadable while this Step ran. Other sessions saw the registry refuse 369's new `predecessor.none` tables with "predecessor must be the revision id of a sibling edition, got dict". That is the message of the schema before this change. The `schema.py` edits were saved before the manifest writes, but nobody confirmed that the new schema accepted the form across the whole corpus before the data landed. A process that had already imported the old schema could therefore read the new manifests. The order to follow from now on: change the schema, confirm every existing revision still loads with the new form accepted, and only then write data that uses it. Try data shapes in a scratch copy, not under `src/`.
+- `S48` The half of the proof that says the forest rule accepts 369 without inventing an order moves to S35 as a required proof, because no forest validator exists yet. For 369, S35 must accept three roots, each declaring `NoPredecessor`, sharing one `valid_from`, with no edges between them. It must treat that as a legal parallel set, not refuse it as "more than one root". It must also still refuse a second root that merely lacks the key. The ADR's forest paragraph currently says that all three 369 editions "declare the same predecessor". That does not match the corpus: 369 has no earlier edition for them to share. S35 or an ADR amendment has to settle the wording.
+- `S48` The references in a none declaration are pattern-typed and must not be empty, but they are not resolved against the legal and source catalogues at load time, the same as `family_dispositions`. The corpus test resolves 369's references.
+- `S48` In the full registry suite, 42 tests failed. One was this change (the TOML review line-length gate) and it is now fixed. The other 41 do not involve the predecessor, `schema.py` or modelo 369. They were not re-run against a control baseline.
+- `S48` The reviewer persona could not be launched. The orchestrating session reviewed the `schema.py` diff against the ADR: the three states are distinct types, the discriminator refuses every other shape, there is no reserved string, and the loader infers nothing. It then re-ran the predecessor and minimality tests (30 passed) and `registry verify` (exit 0).
+- `S49` The rewritten chaining tool is a scratch script, not a committed one. Its two corrections — box number from the dedicated printed-number field only, and a tripwire needing a substantial predecessor set — were carried into the S06 Step row.
+- `S51` Map. The raw-file comparison is the `missing` set in `write_generated_casilla_export_refs` (`dev/registry/pipeline/_casilla_export_refs.py`), which scans the revision's `casillas/*.toml` for `id` lines. Its callers are `cli._render_candidate` (check of an absent tree and republish, on the candidate), `cli._publish` (on the candidate, before cutover) and `_tree_publication._write_export_refs`, called by `publish_validated_generated_export_tree` AFTER the export directory swap and again by `_recover_interrupted_publication`. The writer exists because the loader requires the back-reference two ways: `_validate_exports.py` (field not declared by casilla), `export.py` (the same at runtime), `_validate_record_sections.py` and `validate_references.py` (ref names a field), and `validate_revision_identity.py` (one owner per field). The loader's inheritance (`_inherit_casillas`) copies the predecessor's `export_refs` onto inherited rows verbatim, and those ids embed the edition (`m232-2016...`, `m210-2026...`).
+- `S51` Decision. There is no write path for `export_refs`. The loader derives them from the edition's layout back-pointer, the writer and every caller are deleted, and the comparison that remains is the loader's existing unknown-casilla check on the materialised edition. This Step does not edit either peer module.
+- `S51` What S14 must build, atomically: derive `export_refs` per casilla from the edition's fixed-width layout fields whose endpoint casilla is that row, in layout emission order, excluding binding record-template fields (the exemption in `_validate_exports.py`), before reference, identity and export validation run. It must derive rather than inherit on inherited rows, and refuse an authored `export_refs` key. It must strip every authored line from the corpus in the same change and prove the result byte for byte against today's values. It must delete `_casilla_export_refs.py`, `_tree_publication._write_export_refs` and its recovery call, both writer calls in `cli.py`, the new pre-write refusal in `cli.py`, the writer tests in `test_export_tree.py`, and the `_remove_candidate_export_refs` defect injection in `test_generated_tree_cli.py`. The two-way checks then become tautological and go too.
+- `S51` What breaks in between. If the writer is removed before derivation lands, every check and publication fails on field-not-declared. If derivation lands while the writer stays, every publication writes an authored value the loader refuses. Neither half lands alone.
+- `S51` Sequencing hazard, measured on the probe. Once inherited rows cite the successor's source references (S13), a delta target's absent-tree check passes, and before this change publication then swapped the export tree in live and only afterwards refused in the writer. The refusal added to `cli.py` compares the rendered layout's addressed casillas against the materialised target edition, and refuses before any write when an addressed casilla is undeclared or inherited. It is transitional and S14 deletes it.
+- `S51` Proof on modelo 210, migrated in a temporary registry (`2026-y-siguientes` names `2025` and drops its 26 rows restated unchanged; it states 8 and materialises to 34), through the real staging, render, validation and publication functions. Candidate staging produces the complete 34-row edition naming no predecessor, and a delta whose predecessor was removed is refused. With the existing tree, check refuses on the loader's field-not-declared rule for inherited casillas (S14's reason), and no target byte changes. With an absent tree, validation refuses because inherited rows cite `aeat-dr-210-2022` outside the 2026 window (S13's reason). With an absent tree and those citations aligned, check and publish refuse before any write with the inherited-casilla reason, and the target export tree stays absent. No run publishes, and none refuses because it found no file to write into.
+- `S51` Candidate staging drops `export_refs` from inherited rows only. Stated rows keep theirs, and a target that states every row stages byte for byte as before.
+- `S51` Label carry-over is not exercised here. Modelo 210's catalogue already holds successor-keyed labels for every row, and the carry-over gap recorded under S56 still applies to a genuinely migrated edition.
+- `S51` The three failures are modelo 184's seeded-lineage continuation refusals (`test_absent_tree_is_validated_then_published_through_the_canonical_authorities` and two tests in `test_generated_export_tree_validation.py`). They reproduce identically with the HEAD `cli.py` and `candidate_staging.py`.
+- `S51` The reviewer persona could not be launched from this session, so the review is still outstanding.
+- `S51` The reviewer persona could not be launched; the orchestrating session reviewed the decision and the diff. The decision is no write path: S14 derives `export_refs` and deletes the writer in one change, since neither half lands alone. Candidate staging materialises a delta target. A temporary pre-write refusal guards publish until S14. Re-run: the delta-target, witness and isolated staging tests pass; ruff and ty clean. Peer agreement from REGISTRY-TYPE is still awaited before S14 edits their modules.
+- `S52` `test_absent_tree_is_validated_then_published_through_the_canonical_authorities` fails on the modelo 184 seeded-lineage refusals recorded under S56; it predates this change.
+- `S52` `stage_generated_export_candidate` still prunes the target's siblings, so a delta target stages without its predecessor and the candidate load refuses it. Left unchanged: materialising the candidate target decides where inherited rows' generated export references are written, which is S51's decision.
+- `S52` A reviewed delta edition carrying `reviewed_against` cannot be staged standalone by either staging path: `materialise_edition` drops `predecessor` but keeps `reviewed_against`, which the governance validator refuses on an edition naming no predecessor. No live edition is affected yet.
+- `S52` The reviewer persona could not be launched from this session, so the review is still outstanding.
+- `S52` The reviewer persona could not be launched. The orchestrating session reviewed the diff: staging resolves through `materialise_edition` with no second walk, and unmigrated modelos take an unchanged path. Re-run: 10 passed, ruff and ty clean, no underscore import from `src`. Staging a delta candidate target is left to S51, and the `reviewed_against` interaction was handed to S53.
+- `S53` Ruling, stamp scope: option (a). A review stamp on an edition that names a predecessor covers the rows that edition states, judged against the named predecessor. Inherited rows are attested by the stamp of the edition that states them. Review is not redefined over the materialised edition. Under (b) every successor stamp would go stale when its predecessor changes, with nothing in the successor's file moving, and a reviewer would have to re-read inherited rows. That puts back in review the restatement the ADR removes from authoring.
+- `S53` The scope is written on the stamp as `reviewed_against`, a manifest-only governance scalar naming the predecessor the review was made against. The schema requires it on a delta edition whose status is beyond `pending_review`, requires it to equal the declared predecessor, and refuses it on an unreviewed edition and on one that names no predecessor. `stamp_revision` fills it from the compiled record's predecessor whenever the resolved stamp claims a review, drops it on a return to `pending_review`, and takes no caller argument for it. A reviewed delta edition and an unreviewed one are therefore told apart by the stamp alone, and a predecessor declared or re-pointed after the review leaves a stamp that no longer loads. The shipped 232/2018-y-siguientes stamp is refused as soon as a copy of 232 declares the predecessor without re-review.
+- `S53` A migration that the round-trip gate proves exact may carry a reviewed edition's claim forward by stating `reviewed_against`: the full-copy review saw every row the materialised edition inherits. The gate's fixture migration now does that, and the gate excludes `reviewed_against` from equality alongside `predecessor`.
+- `S53` Materialising a delta edition into a full copy withdraws its review: the table states `review_status = "pending_review"`, drops the reviewer, date and scope, keeps `engineered_by`, and reports the withdrawn status on `MaterialisedEdition.withdrawn_review_status`. The claim cannot transfer, because the full copy names no predecessor and states rows the delta's reviewer never read. An edition stating every row keeps its stamp.
+- `S53` A stamp whose scope no longer matches cannot be repaired through the writer, because the writer must load the revision first. The repair is a manifest edit.
+- `S53` Ruling, manifest-presence blind spot: coverage is partitioned over the compiled authority. Eligibility comes from the compiled record's declared export layouts, not from files on disk. The states are `generated_manifest`, `hand_authored_layouts`, `no_export_surface` and `unchecked`, and `unchecked` carries a reason and names a delta predecessor where there is one. The existing generated-tree gate and hand-authored gate were not edited. Instead, the new gate checks that each one's real input is exactly the revisions credited to it. The shipped tree reads 32, 62 and 34 of 128, with none unchecked.
+- `S53` The reviewer persona could not be launched. The orchestrating session reviewed the field, the schema check, the writer and the materialisation withdrawal against the ADR, and brought the ADR's stamp-scope paragraph up to date. Re-run: 99 passed across the scope, stamp, placement and staging tests; the round-trip gate passed; `registry verify` exit 0; ruff and ty clean.
+- `S54` The assertion holds on the live tree, but it does not exercise this pilot. No 303 edition retires a lineage and modelo 100 is not migrated, so it will not bite until modelo 100 migrates. Retirement through the materialiser is covered instead by a planted 303 retirement in the migration tests.
+- `S55` The reviewer persona could not be launched; the orchestrating session reviewed the test. Teeth for the manifest exclusion rest on the first test: a manifest-merging materialiser, run in a throwaway process, makes that load raise the duplicate-id refusal. The committed third test pins that refusal's text. Re-run: 3 passed, ruff and ty clean.
+- `S56` `test_absent_tree_is_validated_then_published_through_the_canonical_authorities` fails on modelo 184 seeded-lineage continuation refusals, identically with the HEAD `cli.py` swapped in; it predates this change. An earlier run of the same file also failed five tests on modelo 100 strict continuity drift while another session held 368 uncommitted modelo 100 casilla files; none of the tracebacks passes through the staging code.
+- `S56` Casilla labels resolve from the packaged catalogue by modelo, edition and casilla id, not from the registry tree. A staged delta therefore carries a staged catalogue: a copy of the source catalogue with each inherited row's origin text written under the row's own occurrence key through `LocaleManager.set_locale_values`, in each locale where the row has no text of its own. Its labels resolve through `override_locales_root` at the staged catalogue. The copy is written only for a delta; no staged catalogue is read today, because the published-layout witness reads export layouts only.
+- `S56` `withdrawn_review_status` is not surfaced by staging. The staged tree is a temporary check witness that publishes nothing and is discarded with its temporary root; the withdrawn review claim is already absent from the table it is written from.
+- `S56` The pre-existing unsorted `record_drift_dispositions` import in `cli.py` was reordered to clear ruff I001.
+- `S56` The reviewer persona could not be launched from this session, so the review is still outstanding.
+- `S56` The orchestrating session reviewed the entry point and staging diffs against the ADR and committed them: materialisation runs before the copy, a missing predecessor is refused, and no dev import reaches an underscore module in `src`. Re-run: 9 passed, `registry verify` exit 0, ruff and ty clean. The staged label carry-over first waited on the `dev.locales.manager` import break, which 2215d0a484 fixed.
+- `S56` The label carry-over landed in fa67c4c2bf. The orchestrating session reviewed it against the ADR: inherited rows get the stating edition's text only where the row has none, so an edition's own label wins, and an edition that states every row is unchanged. Re-run: 15 staging and entry-point tests passed, including the four-locale parity test, which fails when the catalogue write is disabled.
+- `S57` Re-measurement only. It restated the corpus to 2,509 unchainable and 273 contradicted chains and superseded every earlier figure; the restated table is held in session scratch.
+- `S61` `test_docstring_cross_reference_targets.py` and `test_qualified_docstring_references_resolve.py` fail with 8 tests, reporting defects across the whole source tree. None of the reported defects is in a file or line this Step changed. The failures were not re-run against a baseline worktree.
+- `S61` The reviewer persona could not be launched from this session, so the mandatory code review is still outstanding.
+- `S61` The reviewer persona could not be launched; the orchestrating session reviewed the diffs against the ADR. The overlap helper was moved to a public module with no shim. Enrolment sits beside the forest check, and a same-start non-overlapping pair fails closed. Re-run: 100 tests passed, `registry verify` exit 0, ruff and ty clean. None of the docstring-reference failures names a file this Step changed.
+- `S62` Exception: the proofs ran on the pre-merge snapshot, not HEAD. A shared-branch auto-commit captured most of this work as f7e5d56096. Two later merges from main then broke registry loading at HEAD:
+- `S62` ae9cf0b0c5: the corpus-catalogue validator rejects `boe-lirpf-art-101-administrator-2015-01-01`, so no registry tree loads through the authority.
+- `S62` 8543517fe7: removes `loader.load_modelo_directory`, `ValidatedRegistryAuthority.load` and the registry-root parameter of `build_runtime_schema_provider`. 86 files still use them, including every edition-authoring suite and tool.
+- `S62` So every proof ran in a scratch detached worktree at f7e5d56096, carrying this Step's uncommitted dev files. The data snapshot is `git archive f7e5d56096`, which holds S15's identifier rename. `aeat app registry verify` no longer exists (`application/registry` was removed). Its substitute was a full `ValidatedRegistryAuthority.load` of the snapshot under this Step's code: exit 0, 58 modelos, 128 revisions.
+- `S62` Additions key: `additional_source_refs` on a casilla row or its `constraints` table, following the `alternate_bindings` pattern on the canonical `source_refs` stem. The loader refuses it beside `source_refs`, when empty, or where the edition has no `casilla_source_refs`. Statement-origin marker: the typed `CasillaDefinition.inherited_from`, projected once from the loader's label origins. It is excluded from serialisation and refused when authored.
+- `S62` Modelo 303 dry run (`--declare-blocked-roots`, temporary tree, nothing written to live data):
+- `S62` | edition | basis | predecessor | rows | stated | inherited |
+- `S62` | --- | --- | --- | --- | --- | --- |
+- `S62` | 2022 | first (root) | none | 184 | 184 | 0 |
+- `S62` | 2023 | adjacent | 2022 | 198 | 33 | 165 |
+- `S62` | 2024-hasta-08-y-2t | adjacent | 2023 | 199 | 7 | 192 |
+- `S62` | 2024-desde-09-y-3t | adjacent | 2024-hasta-08-y-2t | 207 | 15 | 192 |
+- `S62` | 2025 | adjacent | 2024-desde-09-y-3t | 207 | 6 | 201 |
+- `S62` | 2026-y-siguientes | adjacent | 2025 | 208 | 12 | 196 |
+- `S62` No edition is blocked. The loaded `inherited_from` markers match the plan's inherited rows exactly.
+- `S62` Round-trip gate: typed content and merge-order row order are clean on all five successors. Export bytes are unchecked on all five, because no scenario exists.
+- `S62` Persistent failure: the gate's locale identity fails on 84 casillas per edition, 79 in 2026-y-siguientes, in ca, en and hu only. Spanish is unchanged. The cause is continuity-key catalogue entries that copy the Spanish text, while 2022's occurrence keys carry real translations. The migration's behaviour was left unchanged, per the operator's decision.
+- `S62` Delta-minimality over the migrated 303: 73 rows judged, 0 findings (49 stated_difference, 24 new_in_edition).
+- `S62` Unmigrated corpus: all 128 revisions (58 modelos) hash identically under the pre-S62 code (00b45a45cc) and this Step's code on one frozen snapshot. The candidate has 0 inherited rows.
+- `S62` Teeth: removing each rule from production code fails its tests, and restoring it passes them. Failures per removed rule: lineage-claim stripping 1, additions 6, the inheritance marker 1, gate merge order 2, stated-only judging 1.
+- `S62` Pre-existing failure: `test_restatement_is_found_through_the_edition_tokens_not_in_spite_of_them` in `dev/registry/tests/test_delta_minimality.py`. After S15's rename (562fcb9848), no modelo 131 binding embeds an edition key, so its premise no longer exists.
+- `S62` Lineages whose inherited labels change (the continuity keys needing translation): 5 in 2023 to 2025 only (`m303-prorrata-actividad-fila-1-cnae` to `-fila-5-cnae`), the rest in all five successors.
+- `S62` m303-deducciones-sector-1-domestic-current-base, m303-deducciones-sector-1-domestic-current-cuota, m303-deducciones-sector-1-domestic-investment-base, m303-deducciones-sector-1-domestic-investment-cuota, m303-deducciones-sector-1-import-current-base, m303-deducciones-sector-1-import-current-cuota, m303-deducciones-sector-1-import-investment-base, m303-deducciones-sector-1-import-investment-cuota, m303-deducciones-sector-1-intra-eu-current-base, m303-deducciones-sector-1-intra-eu-current-cuota, m303-deducciones-sector-1-intra-eu-investment-base, m303-deducciones-sector-1-intra-eu-investment-cuota, m303-deducciones-sector-1-investment-regularisation, m303-deducciones-sector-1-reagp-base, m303-deducciones-sector-1-reagp-cuota, m303-deducciones-sector-1-rectification-base, m303-deducciones-sector-1-rectification-cuota, m303-deducciones-sector-1-total, m303-deducciones-sector-2-domestic-current-base, m303-deducciones-sector-2-domestic-current-cuota, m303-deducciones-sector-2-domestic-investment-base, m303-deducciones-sector-2-domestic-investment-cuota, m303-deducciones-sector-2-import-current-base, m303-deducciones-sector-2-import-current-cuota, m303-deducciones-sector-2-import-investment-base, m303-deducciones-sector-2-import-investment-cuota, m303-deducciones-sector-2-intra-eu-current-base, m303-deducciones-sector-2-intra-eu-current-cuota, m303-deducciones-sector-2-intra-eu-investment-base, m303-deducciones-sector-2-intra-eu-investment-cuota, m303-deducciones-sector-2-investment-regularisation, m303-deducciones-sector-2-reagp-base, m303-deducciones-sector-2-reagp-cuota, m303-deducciones-sector-2-rectification-base, m303-deducciones-sector-2-rectification-cuota, m303-deducciones-sector-2-total, m303-exonerado-390-79, m303-exonerado-390-80, m303-exonerado-390-81, m303-exonerado-390-83, m303-exonerado-390-84, m303-exonerado-390-86, m303-exonerado-390-88 to m303-exonerado-390-99, m303-exonerado-390-107, m303-exonerado-390-125 to m303-exonerado-390-128, m303-prorrata-actividad-fila-1 to -fila-5, each with -cnae, -operaciones-con-derecho, -operaciones-total, -porcentaje and -tipo.
+- `S62` The reviewer persona could not be launched; the orchestrating session reviewed the design against the amended ADR. Merge-order rearrangement is built from the pre-migration rows and the predecessor declaration only. `additional_source_refs` follows the `alternate_bindings` naming pattern. Lineage claims are stripped on inherit. `inherited_from` is one typed statement-origin marker, derived from the existing label origins. Closed on its contract; the only gate failure was locale identity, which S64 fixed in the catalogue, so S17's live run re-proves the full gate once the registry loads again. The auto-commit captured the code. One migration test, whose premise was an edition-keyed 131 binding that S15 removed, needs restating in S18.
+- `S63` Unblocked (migration planner basis `adjacent`, no blocked cause):
+- `S63` 341 2005-2015 -> 2016-y-siguientes: three retirement evolutions. The 2005-2015 design (aeat-dr-341-2005-2015) prints Letras etiqueta at 14, C.C.C. at 130 and Observaciones at 270. The 2016 design (aeat-dr-341-2016) prints none of them. The three predecessor rows carry role-derived chain ids as the retirement's handle. The 2016 manifest's empty-family disposition for evolutions was removed, because the loader refuses a disposition beside content.
+- `S63` 390 2023 -> 2024 and 2024 -> 2025: two grounded rulings covering 8 rows. The campo descriptions are identical across the three pinned designs, for example Recargo de equivalencia Tipo 0% Base imponible [663]. The seeder wrote the evidence loci, and nothing was seeded.
+- `S63` Gate on the staged migrations: 341 has only `export_unchecked` on 2016-y-siguientes. The CLI refuses 390, because its single-modelo copy leaves out 303, which 390 depends on. A scratch stage that kept 303 ran the real gate: only `export_unchecked` on 2022, 2024 and 2025, with typed equality, merge order and locale identity clean. In that stage 2024 inherits 323 rows and 2025 inherits 331.
+- `S63` Still blocked, with the reason:
+- `S63` 100 (5 edges), 200 and 309 (3 edges): excluded modelos, outside the seeder's scope.
+- `S63` 123: `06>12` is ruled grounded but cannot be localised, because the 2019-2023 design prints row 06 only as the formula campo `[03] + [05]`. Predecessor row 01 is discontinued and has no chain id.
+- `S63` 131 2025 -> 2026: not a withdrawal. Orden HAC/1425/2025 Anexo II keeps the indices correctores that 2025 models. The 2026 edition left them out as a modelling slice.
+- `S63` 151: 49 predecessor rows are absent from the successor, and the 2015-2022 design does not print 40 of the declared boxes. Four role_absent rows can only be located by a byte span.
+- `S63` 180 (3 rows), 202 (11 per edge, 2 edges), 322 (22 per edge, 3 edges), 490 (2021 -> 2022-1t: 72; 2022-2t-4t -> 2023: 20), 604 (35) and 714 (24 per edge, 4 edges): no design line or record campo localises these rows, so a ruling would be refused as grounded_unlocalised.
+- `S63` 220 2024 -> 2025: the successor declares 2 rows against 1983. This is incomplete authoring, not a withdrawal.
+- `S63` 308 (2 edges): partial_stamp and contradicted rows, and the 2011-2015 design has no extract.
+- `S63` 353: the 8 absent rows are product aggregate members that the design never printed, so no official-design retirement exists.
+- `S63` 490 2022-1t -> 2022-2t-4t: 124 absent rows and 27 rows that cannot be localised.
+- `S63` Blocked, but not by lineage (unchanged): 165 (lower_grade), 308 2009 (overlapping) and 390 2022 -> 2023 (row_order).
+- `S63` Persistent failures not caused by this Step:
+- `S63` The migration module cannot be imported without the signed artifact, because its round-trip import reaches `export_draft`. The proofs ran through a scratch-only shim that routes `bundled_authority` to the dev-compiled sources and empties the category profiles built at import time.
+- `S63` `src/cadrumo/domain/categories/registry.py` calls `frozenset.intersection` with `set` operands, which breaks collection of `test_edition_delta_migration.py`.
+- `S63` `test_delta_target_publication.py` and `test_isolated_edition_staging.py` have 4 failures: modelo 210 and `_stage_isolated_edition` signature drift, in code another lane is editing under `dev/registry/pipeline`.
+- `S63` Regenerating the ledger also rewrote modelo 308's reason text, because a 308 design extract is now bundled, and reordered modelo 100's residual entries. The rows and categories are unchanged.
+- `S63` The reviewer persona could not be launched, so the orchestrating session reviewed the diff against the ADR.
+- `S63` Grounded and seeded stay apart. The 390 rows carry `continuidad_origin = "grounded"` with evidence cited at the design line, and nothing is seeded.
+- `S63` The three 341 chain ids sit on the first edition of their chain, so there is no predecessor for an origin to describe. They are authored handles, and each retirement evolution cites both pinned designs.
+- `S63` No field was authored to pass a gate. The 131 withdrawal was correctly refused as a retirement.
+- `S63` Independent re-run: the lineage, continuity, delta-minimality and materialisation suites -> `pass` (71 passed, exit 0).
+- `S64` Measurement (pre-change HEAD 8543517fe7). Stored entries equal to the Spanish source: 0 in every locale. The rendered Spanish came from unfilled (`null`) continuity labels, which `resolve_modelo_localization` resolves through Spanish. Unfilled labels with Spanish populated: ca 677, en 691, hu 691 (2,059). Per modelo: 100 582/582/582, 303 84/84/84, 131 1/16/16, 390 9/9/9, 180 1/0/0.
+- `S64` Translated: 2,032 through `dev.locales set-batch` (1,885 reused from a same-lineage occurrence key with identical Spanish; 117 derived from a same-lineage sibling differing only in embedded years, with Hungarian year suffixes re-harmonised (31 values); 30 authored in catalogue terminology). Four legitimate identicals are in the classified per-key allowlist: ca Matrícula, ca/en Total, ca NIF del perceptor.
+- `S64` Not done: modelo 390's 27 unfilled labels (9 lineages x 3 locales). They have no translation at any tier, and 390 is outside this Step's permitted surface. The new gate does not flag them, because it judges copies and stranded lineages, not lineages untranslated everywhere.
+- `S64` Environment: HEAD 8543517fe7 deletes `cadrumo.domain.calculations.registry.loader` (moved to `dev/registry/compiler/loader.py`) while `dev/locales/_registry_scanner.py` and many tests still import it, so `dev/locales` fails at collection. Gates were run with a scratch pytest plugin aliasing the module. With it, dev/locales reports 512 passed and 3 failed (`test_parity::test_codebase_to_locale_parity`, `test_audit::test_committed_catalogues_pass_production_audit`, `test_dynamic_prefix_registry_coverage::test_allowlist_entries_are_live_and_reasoned`). Those are key-set and namespace drifts present identically in es and independent of these value-only edits. The registry does not load on HEAD (missing `_data/registry/authority/authority.json`), hence the snapshot proof.
+- `S64` The reviewer persona could not be launched. The orchestrating session reviewed the translations and the guard. Translations were written through `set-batch`, reused only where the same lineage has identical Spanish, and the only other catalogue change removed `label: null`. The allowlist is per key with a reason. The orchestrating session confirmed that the 10 touched catalogues parse. The registry does not load on the current tree (the signed `authority.json` is absent, and `dev.locales` still imports the relocated loader), so the label sweep and the honesty gates were proven on a `f7e5d56096` snapshot. Modelo 390's 27 labels are untranslated at every level and are left for 390's own work.
+

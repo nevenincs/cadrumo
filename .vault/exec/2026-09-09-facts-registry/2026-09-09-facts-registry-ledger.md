@@ -1,0 +1,694 @@
+---
+tags:
+  - '#exec'
+  - '#facts-registry'
+date: '2026-09-09'
+modified: '2026-09-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:f0dcfa0315d046f059af3cfa8353d66b8403800b7aa44667d03d963de32f10e7'
+related:
+  - "[[2026-09-09-facts-registry-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `facts-registry` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+- `S01` `A` `src/cadrumo/domain/calculations/registry/facts/__init__.py`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/tests/test_facts_schema.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/facts/resolution.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/facts/tests/__init__.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_resolution.py`
+- `S02` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S02` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P01-S02.md`
+- `S02` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_resolution.py -q` -> `pass`
+- `S02` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/facts/resolution.py src/cadrumo/domain/calculations/registry/facts/tests/test_resolution.py` -> `pass`
+- `S02` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/facts/resolution.py src/cadrumo/domain/calculations/registry/facts/tests/test_resolution.py` -> `pass`
+- `S03` `A` `src/cadrumo/domain/calculations/registry/facts/loader.py`
+- `S03` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_loader.py`
+- `S03` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S03` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P01-S03.md`
+- `S03` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_loader.py -q` -> `pass`
+- `S03` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/facts/loader.py src/cadrumo/domain/calculations/registry/facts/tests/test_loader.py` -> `pass`
+- `S03` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/facts/loader.py src/cadrumo/domain/calculations/registry/facts/tests/test_loader.py` -> `pass`
+- `S04` `A` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S04` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py`
+- `S04` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S04` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P02-S04.md`
+- `S04` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py -q` -> `pass`
+- `S04` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py` -> `pass`
+- `S04` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py` -> `pass`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S05` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_authority_catalogue.py`
+- `S05` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S05` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P02-S05.md`
+- `S05` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_authority_catalogue.py -q` -> `pass`
+- `S05` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/authority.py src/cadrumo/domain/calculations/registry/schema.py src/cadrumo/domain/calculations/registry/facts/schema.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_authority_catalogue.py` -> `pass`
+- `S05` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/authority.py src/cadrumo/domain/calculations/registry/schema.py src/cadrumo/domain/calculations/registry/facts/schema.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_authority_catalogue.py` -> `pass`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/_validate.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/_validation_memoization.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S06` `A` `src/cadrumo/domain/calculations/registry/facts/validation.py`
+- `S06` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_authority_enrollment.py`
+- `S06` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S06` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P02-S06.md`
+- `S06` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_authority_enrollment.py -q` -> `pass`
+- `S06` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_authority_catalogue.py::test_validated_authority_exposes_the_attached_fact_catalogue -q` -> `pass`
+- `S06` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/authority.py src/cadrumo/domain/calculations/registry/_validate.py src/cadrumo/domain/calculations/registry/_validation_memoization.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/validation.py src/cadrumo/domain/calculations/registry/facts/tests/test_authority_enrollment.py` -> `pass`
+- `S06` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/authority.py src/cadrumo/domain/calculations/registry/_validate.py src/cadrumo/domain/calculations/registry/_validation_memoization.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/validation.py src/cadrumo/domain/calculations/registry/facts/tests/test_authority_enrollment.py` -> `pass`
+- `S07` `A` `dev/registry/analysis/facts_external_constants_retirement.toml`
+- `S07` `A` `dev/registry/tests/test_facts_external_constants_retirement.py`
+- `S07` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P03-S07.md`
+- `S07` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S07` `verify:` `.venv/Scripts/python.exe -m pytest -n 0 dev/registry/tests/test_facts_external_constants_retirement.py -q` -> `pass`
+- `S08` `A` `dev/registry/analysis/facts_iva_retirement.toml`
+- `S08` `A` `dev/registry/tests/test_facts_iva_retirement.py`
+- `S08` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S08` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P03-S08.md`
+- `S08` `verify:` `uv run pytest dev/registry/tests/test_facts_iva_retirement.py -q` -> `pass`
+- `S08` `verify:` `uv run ruff check dev/registry/tests/test_facts_iva_retirement.py` -> `pass`
+- `S08` `verify:` `uv run basedpyright dev/registry/tests/test_facts_iva_retirement.py` -> `pass`
+- `S09` `M` `dev/registry/analysis/facts_external_constants_retirement.toml`
+- `S09` `M` `dev/registry/tests/test_facts_external_constants_retirement.py`
+- `S09` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P03-S09.md`
+- `S09` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S09` `verify:` `.venv/Scripts/python.exe -m pytest -n 0 dev/registry/tests/test_facts_external_constants_retirement.py -q` -> `pass`
+- `S10` `A` `dev/registry/analysis/facts_catalogue_quality.py`
+- `S10` `A` `dev/registry/tests/test_facts_catalogue_quality.py`
+- `S10` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S10` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P04-S10.md`
+- `S10` `verify:` `uv run pytest dev/registry/tests/test_facts_catalogue_quality.py -q` -> `pass`
+- `S10` `verify:` `uv run ruff check dev/registry/analysis/facts_catalogue_quality.py dev/registry/tests/test_facts_catalogue_quality.py` -> `pass`
+- `S10` `verify:` `uv run basedpyright dev/registry/analysis/facts_catalogue_quality.py dev/registry/tests/test_facts_catalogue_quality.py` -> `pass`
+- `S11` `A` `dev/registry/analysis/governed_literal_discovery.py`
+- `S11` `A` `dev/registry/tests/test_governed_literal_discovery.py`
+- `S11` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S11` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P04-S11.md`
+- `S11` `verify:` `uv run pytest dev/registry/tests/test_governed_literal_discovery.py -q` -> `pass`
+- `S11` `verify:` `uv run ruff check dev/registry/analysis/governed_literal_discovery.py dev/registry/tests/test_governed_literal_discovery.py` -> `pass`
+- `S11` `verify:` `uv run basedpyright dev/registry/analysis/governed_literal_discovery.py dev/registry/tests/test_governed_literal_discovery.py` -> `pass`
+- `S12` `M` `dev/quality/suite.py`
+- `S12` `M` `dev/quality/tests/test_suite_gate_table.py`
+- `S12` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S12` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P04-S12.md`
+- `S12` `verify:` `uv run pytest dev/quality/tests/test_suite_gate_table.py -q` -> `pass`
+- `S12` `verify:` `uv run ruff check dev/quality/suite.py dev/quality/tests/test_suite_gate_table.py` -> `pass`
+- `S12` `verify:` `uv run basedpyright dev/quality/suite.py dev/quality/tests/test_suite_gate_table.py` -> `pass`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/facts/resolution.py`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `S13` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_iva_rate_provider.py`
+- `S13` `M` `src/cadrumo/domain/iva/rates.py`
+- `S13` `verify:` `uv run python -m pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_iva_rate_provider.py src/cadrumo/domain/iva/tests/test_rates.py -q` -> `pass`
+- `S13` `verify:` `uv run basedpyright src/cadrumo/domain/iva/rates.py src/cadrumo/domain/calculations/registry/facts/schema.py src/cadrumo/domain/calculations/registry/facts/resolution.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_iva_rate_provider.py` -> `pass`
+- `S13` `verify:` `uv run ruff check src/cadrumo/domain/iva/rates.py src/cadrumo/domain/calculations/registry/facts/schema.py src/cadrumo/domain/calculations/registry/facts/resolution.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_iva_rate_provider.py` -> `pass`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S14` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_iva_recargo_provider.py`
+- `S14` `M` `src/cadrumo/domain/iva/recargo_equivalencia.py`
+- `S14` `verify:` `uv run python -m pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_iva_recargo_provider.py src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py src/cadrumo/domain/iva/tests/test_recargo_equivalencia.py -q` -> `pass`
+- `S14` `verify:` `uv run basedpyright src/cadrumo/domain/iva/recargo_equivalencia.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_iva_recargo_provider.py` -> `pass`
+- `S14` `verify:` `uv run ruff check src/cadrumo/domain/iva/recargo_equivalencia.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_iva_recargo_provider.py` -> `pass`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/_validate.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/facts/validation.py`
+- `S15` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_iva_provider_grounding.py`
+- `S15` `M` `src/cadrumo/domain/iva/_grounding.py`
+- `S15` `verify:` `uv run python -m pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_iva_provider_grounding.py src/cadrumo/domain/calculations/registry/facts/tests/test_validation.py src/cadrumo/domain/iva/tests/test_iva_registry_grounding.py -q` -> `pass`
+- `S15` `verify:` `uv run basedpyright src/cadrumo/domain/calculations/registry/_validate.py src/cadrumo/domain/calculations/registry/facts/validation.py src/cadrumo/domain/calculations/registry/facts/tests/test_iva_provider_grounding.py src/cadrumo/domain/iva/_grounding.py` -> `pass`
+- `S15` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/_validate.py src/cadrumo/domain/calculations/registry/facts/validation.py src/cadrumo/domain/calculations/registry/facts/tests/test_iva_provider_grounding.py src/cadrumo/domain/iva/_grounding.py` -> `pass`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S16` `M` `src/cadrumo/domain/categories/registry.py`
+- `S16` `A` `src/cadrumo/domain/categories/tests/test_fact_provider.py`
+- `S16` `A` `src/cadrumo/_data/registry/aeat/legal/category-profile-sources.toml`
+- `S16` `verify:` `uv run pytest -q src/cadrumo/domain/categories/tests/test_fact_provider.py src/cadrumo/domain/categories/tests/test_registry.py src/cadrumo/domain/categories/tests/test_statutory_cap_schedule.py src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py` -> `pass`
+- `S16` `verify:` `uv run ruff check src/cadrumo/domain/categories/registry.py src/cadrumo/domain/categories/tests/test_fact_provider.py src/cadrumo/domain/calculations/registry/facts/providers.py` -> `pass`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S17` `M` `src/cadrumo/domain/deadlines/festivos.py`
+- `S17` `A` `src/cadrumo/domain/deadlines/tests/test_fact_provider.py`
+- `S17` `verify:` `uv run pytest -q src/cadrumo/domain/deadlines/tests/test_fact_provider.py src/cadrumo/domain/deadlines/tests/test_festivos.py src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py` -> `pass`
+- `S17` `verify:` `uv run ruff check src/cadrumo/domain/deadlines/festivos.py src/cadrumo/domain/deadlines/tests/test_fact_provider.py src/cadrumo/domain/calculations/registry/facts/providers.py` -> `pass`
+- `S17` `verify:` `uv run basedpyright src/cadrumo/domain/deadlines/festivos.py src/cadrumo/domain/deadlines/tests/test_fact_provider.py` -> `pass`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/convenio.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py`
+- `S18` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_convenio_provider.py`
+- `S18` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S18` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W02-P07-S18.md`
+- `S18` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_convenio_provider.py src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py src/cadrumo/domain/calculations/registry/tests/test_modelo_210_registry.py -q` -> `pass`
+- `S18` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_validation.py src/cadrumo/domain/calculations/registry/facts/tests/test_resolution.py -q` -> `pass`
+- `S18` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/convenio.py src/cadrumo/domain/calculations/registry/facts/tests/test_convenio_provider.py` -> `pass`
+- `S18` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/convenio.py src/cadrumo/domain/calculations/registry/facts/schema.py src/cadrumo/domain/calculations/registry/facts/tests/test_convenio_provider.py` -> `pass`
+- `S19` `M` `.vault/research/2026-09-09-facts-registry-discovery-blast-radius-research.md`
+- `S19` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S19` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W02-P07-S19.md`
+- `S19` `verify:` `uv run pytest -n 0 src/cadrumo/domain/auth/apoderamientos/tests/test_catalogue.py -q` -> `pass`
+- `S19` `verify:` `uv run ruff check src/cadrumo/domain/auth/apoderamientos/catalogue.py` -> `pass`
+- `S19` `verify:` `uv run ty check src/cadrumo/domain/auth/apoderamientos/catalogue.py` -> `pass`
+- `S20` `A` `src/cadrumo/domain/calculations/registry/facts/statutory_constants.py`
+- `S20` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_statutory_constants_provider.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S20` `A` `src/cadrumo/_data/registry/aeat/legal/statutory-constant-sources.toml`
+- `S20` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S20` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W02-P08-S20.md`
+- `S20` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_statutory_constants_provider.py src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py -q` -> `pass`
+- `S20` `verify:` `uv run pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_convenio_provider.py::test_convenio_provider_references_validate_through_full_authority -q` -> `pass`
+- `S20` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/facts/statutory_constants.py src/cadrumo/domain/calculations/registry/facts/tests/test_statutory_constants_provider.py src/cadrumo/domain/calculations/registry/facts/providers.py` -> `pass`
+- `S20` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/facts/statutory_constants.py src/cadrumo/domain/calculations/registry/facts/tests/test_statutory_constants_provider.py src/cadrumo/domain/calculations/registry/facts/providers.py` -> `pass`
+- `S21` `A` `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `S21` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py`
+- `S21` `verify:` `uv run python -m pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_resolution.py -q` -> `pass`
+- `S21` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/facts/legal_parameters.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/schema.py src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py` -> `pass`
+- `S22` `A` `src/cadrumo/domain/calculations/registry/facts/modelo_projections.py`
+- `S22` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_modelo_projections.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S22` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S22` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W02-P08-S22.md`
+- `S22` `verify:` `uv run pytest -q src/cadrumo/domain/calculations/registry/facts/tests/test_modelo_projections.py` -> `pass`
+- `S22` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/facts/modelo_projections.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_modelo_projections.py src/cadrumo/domain/calculations/registry/authority.py` -> `pass`
+- `S22` `verify:` `uv run basedpyright src/cadrumo/domain/calculations/registry/facts/modelo_projections.py src/cadrumo/domain/calculations/registry/facts/providers.py src/cadrumo/domain/calculations/registry/facts/tests/test_modelo_projections.py src/cadrumo/domain/calculations/registry/authority.py` -> `pass`
+- `S22` `verify:` `uv run python -c "from cadrumo.domain.calculations.registry.authority import bundled_authority; a=bundled_authority(); print(sorted(k for k in a.catalogues.facts.facts if k.startswith(('declarations.m347','renta.maternity'))))"` -> `pass`
+- `S23` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_authority_enrollment.py`
+- `S23` `A` `src/cadrumo/domain/calculations/registry/tests/test_wave2_fact_provider_handoff.py`
+- `S23` `A` `dev/registry/analysis/facts_wave2_provider_handoff.toml`
+- `S23` `A` `dev/registry/tests/test_facts_wave2_provider_handoff.py`
+- `S23` `verify:` `uv run pytest -q <focused Wave 2 provider boundary and parity tests>` -> `pass`
+- `S23` `verify:` `uv run ruff check <S23 test paths>` -> `pass`
+- `S23` `verify:` `uv run ty check <S23 test paths>` -> `pass`
+- `S23` `verify:` `uv run pytest -n 0 dev/registry/tests/test_facts_wave2_provider_handoff.py -q` -> `pass`
+- `S24` `M` `src/cadrumo/domain/renta/maritime_exemption.py`
+- `S24` `M` `src/cadrumo/application/calculations/maritime_exemption_service.py`
+- `S24` `M` `src/cadrumo/application/modelo/maritime_preview.py`
+- `S24` `M` `src/cadrumo/domain/renta/tests/test_maritime_exemption.py`
+- `S24` `M` `src/cadrumo/application/calculations/tests/test_maritime_exemption_service.py`
+- `S24` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W03-P11-S24.md`
+- `S24` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/domain/renta/tests/test_maritime_exemption.py src/cadrumo/application/calculations/tests/test_maritime_exemption_service.py -q` -> `pass`
+- `S24` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/renta/maritime_exemption.py src/cadrumo/application/calculations/maritime_exemption_service.py src/cadrumo/application/modelo/maritime_preview.py src/cadrumo/domain/renta/tests/test_maritime_exemption.py src/cadrumo/application/calculations/tests/test_maritime_exemption_service.py` -> `pass`
+- `S25` `M` `src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`
+- `S25` `M` `src/cadrumo/application/modelo/_minimo_descendientes_advisory.py`
+- `S25` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S25` `M` `src/cadrumo/application/modelo/tests/test_maternidad_cotizaciones_ceiling.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/descendant_guarderia.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/descendant_madrid.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/descendant_maternity.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/descendant_record.py`
+- `S25` `A` `src/cadrumo/domain/contribuyente/family_fact_context.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/family_profile.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/family_types.py`
+- `S25` `A` `src/cadrumo/domain/contribuyente/tests/test_family_fact_context.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/tests/test_guarderia_qualifying_meses.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_prorrateo.py`
+- `S25` `M` `src/cadrumo/domain/contribuyente/tests/test_madrid_nacimiento_adopcion.py`
+- `S25` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/domain/contribuyente/tests/test_family_fact_context.py src/cadrumo/domain/contribuyente/tests/test_guarderia_qualifying_meses.py src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_prorrateo.py src/cadrumo/domain/contribuyente/tests/test_madrid_nacimiento_adopcion.py src/cadrumo/application/modelo/tests/test_maternidad_cotizaciones_ceiling.py`
+- `S26` `M` `src/cadrumo/domain/iva/lookup.py`
+- `S26` `M` `src/cadrumo/domain/iva/recargo_equivalencia.py`
+- `S26` `M` `src/cadrumo/domain/iva/tests/test_rates_temporal.py`
+- `S26` `M` `src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py`
+- `S26` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S26` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W03-P12-S26.md`
+- `S26` `verify:` `uv run basedpyright src/cadrumo/domain/iva/lookup.py src/cadrumo/domain/iva/recargo_equivalencia.py src/cadrumo/domain/iva/tests/test_rates_temporal.py src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py` -> `pass`
+- `S26` `verify:` `uv run ruff check src/cadrumo/domain/iva/lookup.py src/cadrumo/domain/iva/recargo_equivalencia.py src/cadrumo/domain/iva/tests/test_rates_temporal.py src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py` -> `pass`
+- `S26` `verify:` `uv run pytest src/cadrumo/domain/iva/tests/test_rates.py src/cadrumo/domain/iva/tests/test_rates_temporal.py src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py -q` -> `pass`
+- `S27` `M` `src/cadrumo/domain/invoices/enums.py`
+- `S27` `M` `src/cadrumo/domain/invoices/models.py`
+- `S27` `M` `src/cadrumo/domain/invoices/tests/test_models.py`
+- `S27` `M` `src/cadrumo/domain/invoices/tests/test_rate_parity.py`
+- `S27` `M` `src/cadrumo/domain/invoices/tests/test_retencion_consistency.py`
+- `S27` `M` `src/cadrumo/domain/invoices/tests/test_retencion_persistence_invariant.py`
+- `S27` `M` `src/cadrumo/application/invoices/catalogue_creation.py`
+- `S27` `M` `src/cadrumo/application/invoices/creation_wizard.py`
+- `S27` `M` `src/cadrumo/application/invoices/tests/test_wizard_field_grammar.py`
+- `S27` `M` `src/cadrumo/application/ledger/confirmed_field_resolution.py`
+- `S27` `M` `src/cadrumo/application/ledger/invoice_confirmation.py`
+- `S27` `M` `src/cadrumo/application/ledger/tests/test_evidence_draft_rate_slot.py`
+- `S27` `M` `src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`
+- `S27` `M` `src/cadrumo/application/aggregation/tests/test_income_sales_invoice_evidence.py`
+- `S27` `M` `src/cadrumo/application/aggregation/tests/test_invoice_retencion_routing.py`
+- `S27` `M` `src/cadrumo/application/aggregation/tests/test_invoice_retencion_store_roundtrip.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/tests/test_invoice_retencion_aggregate_cli.py`
+- `S27` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S27` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W03-P12-S27.md`
+- `S27` `verify:` `uv run pytest src/cadrumo/domain/invoices/tests/test_models.py src/cadrumo/domain/invoices/tests/test_rate_parity.py src/cadrumo/application/invoices/tests/test_wizard_field_grammar.py -q` -> `pass`
+- `S27` `verify:` `uv run basedpyright src/cadrumo/domain/invoices/enums.py src/cadrumo/domain/invoices/models.py src/cadrumo/application/invoices/catalogue_creation.py src/cadrumo/application/invoices/creation_wizard.py src/cadrumo/application/ledger/confirmed_field_resolution.py src/cadrumo/application/ledger/invoice_confirmation.py src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py src/cadrumo/domain/iva/invoice_classification.py` -> `pass`
+- `S27` `verify:` `uv run ruff check src/cadrumo/domain/invoices/enums.py src/cadrumo/domain/invoices/models.py src/cadrumo/domain/invoices/tests/test_models.py src/cadrumo/domain/invoices/tests/test_rate_parity.py src/cadrumo/application/invoices/catalogue_creation.py src/cadrumo/application/invoices/creation_wizard.py src/cadrumo/application/invoices/tests/test_wizard_field_grammar.py src/cadrumo/application/ledger/confirmed_field_resolution.py src/cadrumo/application/ledger/invoice_confirmation.py src/cadrumo/application/ledger/tests/test_evidence_draft_rate_slot.py src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py` -> `pass`
+- `S29` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S29` `M` `dev/registry/analysis/facts_external_constants_retirement.toml`
+- `S29` `M` `dev/registry/analysis/facts_wave2_provider_handoff.toml`
+- `S29` `M` `dev/registry/compiler/fact_providers.py`
+- `S29` `D` `dev/registry/compiler/statutory_constants.py`
+- `S29` `M` `dev/registry/tests/test_facts_wave2_provider_handoff.py`
+- `S29` `A` `dev/registry/tests/test_statutory_authored_facts.py`
+- `S29` `D` `dev/registry/tests/test_statutory_constants_provider.py`
+- `S29` `M` `dev/registry/tests/test_wave2_fact_provider_handoff.py`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0030-m347-counterparty-declaration-threshold.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0031-m347-clave-c-beneficiary-declaration-threshold.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0032-iva-bien-inversion-escaso-valor-threshold.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0033-iae-cifra-negocios-exemption-threshold.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0034-lirpf-art-7p-exemption-cap.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0035-lirpf-multiple-pagadores-secondary-threshold.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0036-lirpf-work-income-general-declaration-limit.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0037-lis-art-40-3-incn-threshold.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0038-lirpf-art-20-trabajo-reduccion-rnt-ceiling.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0039-lirpf-art-52-individual-contribution-sublimit.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0040-rebeca-maritime-exemption-fraction.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0041-lirpf-art-81-maternity-monthly-amount.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0042-lirpf-art-81-maternity-annual-cap.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0043-lirpf-art-81-maternity-post-birth-enrollment-increment.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0045-lirpf-art-81-maternity-post-birth-enrollment-effective-year.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0046-lirpf-art-81-contribution-ceiling-retired-effective-year.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0047-lirpf-art-58-descendant-ordinary-maximum-age.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0048-lirpf-art-58-under-three-maximum-age.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0049-lirpf-art-61-shared-custody-proration-factor.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0050-lirpf-art-81-adoption-entry-window-years.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0051-madrid-birth-adoption-following-periods.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0052-lirpf-dt12-rescate-reduction-rate.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0053-lirpf-dt12-general-window-following-years.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0054-lirpf-dt12-transitional-contingency-first-year.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0055-lirpf-dt12-transitional-contingency-last-year.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0056-lirpf-dt12-transitional-window-following-years.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0057-lirpf-dt12-cliff-last-year.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0058-sal-special-reserve-allocation-rate.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0059-sal-special-reserve-capital-multiple.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0060-dehu-tacit-rejection-natural-days.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/facts/0061-lirpf-work-income-multiple-pagadores-reduced-limit.toml`
+- `S29` `verify:` `uv run pytest -q -n 0 dev/registry/tests/test_statutory_authored_facts.py dev/registry/tests/test_facts_wave2_provider_handoff.py dev/registry/tests/test_wave2_fact_provider_handoff.py dev/registry/tests/test_authored_mapping_fact_values.py` -> `pass`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `S30` `A` `src/cadrumo/_data/registry/aeat/facts/0062-iva-rate-schedule.toml`
+- `S30` `A` `src/cadrumo/_data/registry/aeat/facts/0063-iva-recargo-by-applied-rate.toml`
+- `S30` `M` `dev/registry/compiler/fact_providers.py`
+- `S30` `M` `dev/registry/analysis/facts_wave2_provider_handoff.toml`
+- `S30` `M` `dev/registry/tests/test_fact_providers.py`
+- `S30` `M` `dev/registry/tests/test_facts_wave2_provider_handoff.py`
+- `S30` `M` `dev/registry/tests/test_wave2_fact_provider_handoff.py`
+- `S30` `M` `dev/registry/tests/test_iva_provider_grounding.py`
+- `S30` `M` `dev/registry/tests/test_iva_rate_provider.py`
+- `S30` `M` `dev/registry/tests/test_iva_recargo_provider.py`
+- `S30` `verify:` `uv run pytest -q dev/registry/tests/test_fact_providers.py dev/registry/tests/test_facts_wave2_provider_handoff.py dev/registry/tests/test_wave2_fact_provider_handoff.py dev/registry/tests/test_iva_provider_grounding.py dev/registry/tests/test_iva_rate_provider.py dev/registry/tests/test_iva_recargo_provider.py` -> `pass`
+- `S30` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/facts/schema.py dev/registry/compiler/fact_providers.py dev/registry/tests/test_fact_providers.py dev/registry/tests/test_facts_wave2_provider_handoff.py dev/registry/tests/test_wave2_fact_provider_handoff.py dev/registry/tests/test_iva_provider_grounding.py dev/registry/tests/test_iva_rate_provider.py dev/registry/tests/test_iva_recargo_provider.py` -> `pass`
+- `S31` `M` `.vault/audit/2026-09-11-facts-registry-s31-external-constants-retirement-audit.md`
+- `S31` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S31` `M` `dev/registry/analysis/facts_external_constants_retirement.toml`
+- `S31` `M` `dev/registry/tests/test_facts_external_constants_retirement.py`
+- `S31` `M` `src/cadrumo/core/external_constants.py`
+- `S31` `verify:` `uv run pytest -q -n 0 dev/registry/tests/test_statutory_authored_facts.py dev/registry/tests/test_facts_wave2_provider_handoff.py dev/registry/tests/test_wave2_fact_provider_handoff.py dev/registry/tests/test_facts_external_constants_retirement.py` -> `pass`
+- `S32` `A` `.vault/audit/2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit.md`
+- `S32` `M` `.vault/index/facts-registry.index.md`
+- `S32` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S32` `M` `src/cadrumo/domain/invoices/tests/test_rate_parity.py`
+- `S32` `verify:` `uv run ruff check src/cadrumo/domain/invoices/tests/test_rate_parity.py src/cadrumo/domain/invoices/enums.py` -> `pass`
+- `S32` `verify:` `uv run python -c <direct S32 AST census invocation>` -> `pass`
+- `S32` `verify:` `uv run python -m compileall -q src/cadrumo/domain/invoices/enums.py src/cadrumo/domain/invoices/tests/test_rate_parity.py` -> `pass`
+- `S33` `A` `.vault/audit/2026-09-11-facts-registry-s33-routing-retirement-audit.md`
+- `S33` `M` `.vault/index/facts-registry.index.md`
+- `S33` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S33` `M` `dev/registry/analysis/facts_external_constants_retirement.toml`
+- `S33` `M` `dev/registry/tests/test_applicability_fragment_family.py`
+- `S33` `M` `dev/registry/tests/test_facts_external_constants_retirement.py`
+- `S33` `M` `src/cadrumo/application/aggregation/__init__.py`
+- `S33` `R` `src/cadrumo/application/aggregation/_modelo_bindings_retenciones.py` -> `src/cadrumo/application/aggregation/modelo_bindings_retenciones.py`
+- `S33` `M` `src/cadrumo/application/aggregation/_retenciones.py`
+- `S33` `M` `src/cadrumo/application/aggregation/_service.py`
+- `S33` `M` `src/cadrumo/application/aggregation/_withholding_source.py`
+- `S33` `M` `src/cadrumo/application/aggregation/tests/test_per_modelo_service.py`
+- `S33` `M` `src/cadrumo/application/aggregation/tests/test_retenciones_aggregation_resolver.py`
+- `S33` `M` `src/cadrumo/application/aggregation/tests/test_retenciones_empty_store_advisory_guard.py`
+- `S33` `M` `src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py`
+- `S33` `M` `src/cadrumo/application/calculations/tests/test_pull_path_calculate_path_casilla_parity.py`
+- `S33` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S33` `M` `src/cadrumo/application/modelo/calculation_route.py`
+- `S33` `M` `src/cadrumo/application/overview/calendar_warnings.py`
+- `S33` `M` `src/cadrumo/core/external_constants.py`
+- `S33` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S33` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S33` `verify:` `uv run ruff check <S33 scoped paths>` -> `pass`
+- `S33` `verify:` `uv run pytest -q -n 0 dev/registry/tests/test_facts_external_constants_retirement.py` -> `pass`
+- `S33` `verify:` `uv run pytest -q -n 0 dev/registry/tests/test_applicability_fragment_family.py -k iva_regime_coverage` -> `pass`
+- `S33` `verify:` `uv run python -m compileall -q <S33 production paths>` -> `pass`
+- `S35` `A` `dev/quality/tests/test_retired_fact_authority_imports.py`
+- `S35` `verify:` `uv run --no-sync ruff check dev/quality/tests/test_retired_fact_authority_imports.py` -> `pass`
+- `S35` `verify:` `uv run --no-sync pytest -n 0 dev/quality/tests/test_retired_fact_authority_imports.py` -> `pass`
+- `S36` `A` `dev/quality/tests/test_governed_fact_runtime_reads.py`
+- `S36` `verify:` `uv run --no-sync ruff check dev/quality/tests/test_governed_fact_runtime_reads.py` -> `pass`
+- `S36` `verify:` `uv run --no-sync pytest -n 0 dev/quality/tests/test_governed_fact_runtime_reads.py` -> `pass`
+- `S37` `M` `dev/registry/analysis/facts_catalogue_quality.py`
+- `S37` `M` `dev/registry/tests/test_facts_catalogue_quality.py`
+- `S37` `verify:` `uv run --no-sync ruff check dev/registry/analysis/facts_catalogue_quality.py dev/registry/tests/test_facts_catalogue_quality.py` -> `pass`
+- `S37` `verify:` `uv run --no-sync pytest -n 0 dev/registry/tests/test_facts_catalogue_quality.py` -> `pass`
+- `S37` `verify:` `uv run --no-sync python -m dev.registry.analysis.facts_catalogue_quality` -> `pass`
+- `S42` `M` `dev/registry/analysis/facts_external_constants_retirement.toml`
+- `S42` `M` `dev/registry/tests/test_facts_external_constants_retirement.py`
+- `S42` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P03-S42.md`
+- `S42` `verify:` `.venv/Scripts/python.exe -m pytest -n 0 dev/registry/tests/test_facts_external_constants_retirement.py -q` -> `pass`
+- `S43` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S43` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P23-S43.md`
+- `S43` `verify:` `just check-types` -> `fail`
+- `S44` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S44` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P23-S44.md`
+- `S44` `verify:` `just audit-dead-code` -> `pass`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `S45` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_providers.py`
+- `S45` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_resolution.py`
+- `S45` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S45` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W01-P23-S45.md`
+- `S45` `verify:` `just audit-unreachable-code` -> `fail`
+- `S46` `M` `src/cadrumo/domain/calculations/registry/convenio.py`
+- `S46` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S46` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_iva_rate_provider.py`
+- `S46` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_iva_recargo_provider.py`
+- `S46` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_modelo_projections.py`
+- `S46` `M` `src/cadrumo/domain/categories/tests/test_fact_provider.py`
+- `S46` `M` `src/cadrumo/domain/deadlines/tests/test_fact_provider.py`
+- `S46` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S46` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W02-P09-S46.md`
+- `S46` `verify:` `just check-types` -> `fail`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/convenio.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`
+- `S47` `M` `src/cadrumo/domain/calculations/registry/facts/modelo_projections.py`
+- `S47` `M` `src/cadrumo/domain/categories/registry.py`
+- `S47` `M` `src/cadrumo/domain/deadlines/festivos.py`
+- `S47` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S47` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W02-P09-S47.md`
+- `S47` `verify:` `just audit-dead-code` -> `pass`
+- `S47` `verify:` `just audit-unreachable-code` -> `fail`
+- `S48` `M` `src/cadrumo/domain/calculations/registry/_m347_threshold.py`
+- `S48` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S48` `M` `src/cadrumo/application/aggregation/_counterpart.py`
+- `S48` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S48` `M` `src/cadrumo/application/modelo/calculate_input.py`
+- `S48` `M` `src/cadrumo/domain/modelos/row_models.py`
+- `S48` `M` `src/cadrumo/domain/modelos/tests/test_row_models_m347_revision.py`
+- `S48` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S48` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W03-P10-S48.md`
+- `S48` `verify:` `uv run pytest src/cadrumo/domain/modelos/tests/test_row_models_m347_revision.py src/cadrumo/application/aggregation/tests/test_counterpart_347_cross_cohort_merge.py src/cadrumo/application/invoices/tests/test_source_resolver.py -q` -> `pass`
+- `S48` `verify:` `uv run pytest src/cadrumo/entrypoints/cli/tests/test_work_calculate_row_flag.py src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py -q` -> `pass`
+- `S48` `verify:` `uv run basedpyright src/cadrumo/domain/calculations/registry/_m347_threshold.py src/cadrumo/domain/calculations/registry/invoice_bindings.py src/cadrumo/domain/modelos/row_models.py src/cadrumo/application/aggregation/_counterpart.py src/cadrumo/application/invoices/source_resolver.py src/cadrumo/application/modelo/calculate_input.py` -> `pass`
+- `S49` `M` `src/cadrumo/domain/calculations/registry/applicability_modelo202.py`
+- `S49` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`
+- `S49` `M` `src/cadrumo/application/aggregation/_service.py`
+- `S49` `M` `src/cadrumo/application/aggregation/_modelo_bindings_retenciones.py`
+- `S49` `M` `src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py`
+- `S49` `M` `src/cadrumo/domain/transactions/tipo_actividad_partitions.py`
+- `S49` `M` `src/cadrumo/domain/transactions/tests/test_tipo_actividad_partitions.py`
+- `S49` `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
+- `S49` `A` `.vault/exec/2026-09-09-facts-registry/2026-09-09-facts-registry-W03-P10-S49.md`
+- `S49` `verify:` `uv run pytest src/cadrumo/application/aggregation/tests/test_per_modelo_service.py src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py src/cadrumo/domain/transactions/tests/test_tipo_actividad_partitions.py -q` -> `pass`
+- `S49` `verify:` `uv run pytest src/cadrumo/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py -q` -> `pass`
+- `S49` `verify:` `uv run basedpyright src/cadrumo/domain/calculations/registry/applicability_modelo202.py src/cadrumo/domain/transactions/tipo_actividad_partitions.py src/cadrumo/application/aggregation/_service.py src/cadrumo/application/aggregation/_modelo_bindings_retenciones.py src/cadrumo/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py src/cadrumo/domain/transactions/tests/test_tipo_actividad_partitions.py src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py` -> `pass`
+- `S50` `M` `src/cadrumo/application/modelo/_art20_advisory.py`
+- `S50` `M` `src/cadrumo/application/modelo/_art52_advisory.py`
+- `S50` `M` `src/cadrumo/application/modelo/calculate_input.py`
+- `S50` `M` `src/cadrumo/application/modelo/tests/test_actions.py`
+- `S50` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S50` `M` `src/cadrumo/domain/modelos/dt12_reduccion.py`
+- `S50` `M` `src/cadrumo/domain/modelos/modelo_fact_context.py`
+- `S50` `M` `src/cadrumo/domain/modelos/sal_reserva_especial.py`
+- `S50` `M` `src/cadrumo/domain/modelos/tests/test_dt12_window.py`
+- `S50` `M` `src/cadrumo/domain/modelos/tests/test_fiscal_reductions.py`
+- `S50` `A` `src/cadrumo/domain/modelos/tests/test_modelo_fact_context.py`
+- `S50` `verify:` `uv run --no-sync pytest -q -n0 <S50 domain, Art 20/52 advisory, and DT12 window nodeids>`
+- `S50` `verify:` `uv run --no-sync ruff check <S50 source and test paths>`
+- `S51` `M` `src/cadrumo/application/ledger/invoice_extraction_authority.py`
+- `S51` `M` `src/cadrumo/application/ledger/tests/test_invoice_extraction_authority.py`
+- `S51` `M` `src/cadrumo/domain/contribuyente/inventory/records.py`
+- `S51` `M` `src/cadrumo/domain/contribuyente/inventory/tests/test_acquisition_cost.py`
+- `S51` `verify:` `uv run ruff check src/cadrumo/application/ledger/invoice_extraction_authority.py src/cadrumo/application/ledger/tests/test_invoice_extraction_authority.py src/cadrumo/domain/contribuyente/inventory/records.py src/cadrumo/domain/contribuyente/inventory/tests/test_acquisition_cost.py` -> `pass`
+- `S51` `verify:` `uv run basedpyright src/cadrumo/application/ledger/invoice_extraction_authority.py src/cadrumo/domain/contribuyente/inventory/records.py` -> `pass`
+- `S52` `M` `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py`
+- `S52` `M` `src/cadrumo/domain/calculations/registry/formula_runtime.py`
+- `S52` `M` `src/cadrumo/domain/calculations/registry/tests/test_formula_runtime_m210.py`
+- `S52` `M` `src/cadrumo/entrypoints/cli/config_payloads.py`
+- `S52` `M` `src/cadrumo/entrypoints/cli/config/tests/test_apoderado_scopes_payload.py`
+- `S52` `verify:` `uv run ruff check src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py src/cadrumo/domain/calculations/registry/formula_runtime.py src/cadrumo/entrypoints/cli/config_payloads.py src/cadrumo/entrypoints/cli/config/tests/test_apoderado_scopes_payload.py` -> `pass`
+- `S52` `verify:` `uv run basedpyright src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py src/cadrumo/domain/calculations/registry/formula_runtime.py src/cadrumo/entrypoints/cli/config_payloads.py src/cadrumo/entrypoints/cli/config/tests/test_apoderado_scopes_payload.py` -> `pass`
+- `S53` `A` `src/cadrumo/domain/deadlines/fact_context.py`
+- `S53` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S53` `M` `src/cadrumo/core/notificacion_estado_servicio.py`
+- `S53` `M` `src/cadrumo/application/overview/status_report.py`
+- `S53` `M` `src/cadrumo/application/overview/calendar.py`
+- `S53` `M` `src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py`
+- `S53` `M` `src/cadrumo/domain/deadlines/tests/test_taxpayer_model.py`
+- `S53` `M` `src/cadrumo/core/tests/test_notificacion_estado_servicio.py`
+- `S53` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/domain/deadlines/tests/test_taxpayer_model.py::TestMultiplePagadoresObligation src/cadrumo/domain/deadlines/tests/test_taxpayer_model.py::TestMultiplePagadoresReducedLimitSchedule src/cadrumo/domain/deadlines/tests/test_taxpayer_model.py::TestMultiplePagadoresObligationWithTotalIncome src/cadrumo/core/tests/test_notificacion_estado_servicio.py src/cadrumo/application/overview/tests/test_calendar_notificacion_estado_servicio.py -q` -> `pass`
+- `S53` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/application/overview/tests/test_calendar.py::test_invalid_pagadores_values_are_debug_logged_without_raw_value -q` -> `pass`
+- `S53` `verify:` `uv run --no-sync python -m compileall -q src/cadrumo/domain/deadlines/fact_context.py src/cadrumo/domain/deadlines/models.py src/cadrumo/core/notificacion_estado_servicio.py src/cadrumo/application/overview/status_report.py src/cadrumo/application/overview/calendar.py src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py` -> `pass`
+- `S56` `M` `dev/registry/analysis/facts_iva_retirement.toml`
+- `S56` `D` `dev/registry/compiler/iva.py`
+- `S56` `D` `dev/registry/tests/test_iva_rate_candidate_refusals.py`
+- `S56` `M` `dev/registry/tests/test_iva_rate_provider.py`
+- `S56` `D` `src/cadrumo/_data/registry/aeat/iva/rates.toml`
+- `S56` `D` `src/cadrumo/_data/registry/aeat/iva/recargo-rates.toml`
+- `S56` `M` `src/cadrumo/application/aggregation/tests/test_oss_ioss.py`
+- `S56` `M` `src/cadrumo/core/tests/test_resources.py`
+- `S56` `M` `src/cadrumo/domain/invoices/tests/test_models.py`
+- `S56` `M` `src/cadrumo/domain/iva/lookup.py`
+- `S56` `M` `src/cadrumo/domain/iva/rates.py`
+- `S56` `M` `src/cadrumo/domain/iva/saturation.py`
+- `S56` `M` `src/cadrumo/domain/iva/tests/test_legal_basis_rate_grounding.py`
+- `S56` `M` `src/cadrumo/domain/iva/tests/test_rates.py`
+- `S56` `M` `src/cadrumo/domain/iva/tests/test_rates_temporal.py`
+- `S56` `M` `src/cadrumo/domain/iva/tests/test_recargo_rate_applied_rate_lookup.py`
+- `S56` `M` `src/cadrumo/domain/iva/tests/test_saturation.py`
+- `S56` `verify:` `uv run pytest -q dev/registry/tests/test_iva_rate_provider.py dev/registry/tests/test_iva_recargo_provider.py dev/registry/tests/test_iva_provider_grounding.py` -> `pass`
+- `S56` `verify:` `uv run ruff check src/cadrumo/domain/iva/rates.py` -> `pass`
+- `S56` `verify:` `uv run python -m compileall -q src/cadrumo/domain/iva/rates.py` -> `pass`
+- `S57` `M` `dev/registry/analysis/facts_iva_retirement.toml`
+- `S57` `D` `src/cadrumo/core/resources/_repos/iva_rate_tables.py`
+- `S57` `M` `src/cadrumo/core/resources/_repos/tests/test_singletons.py`
+- `S57` `M` `src/cadrumo/core/resources/registry.py`
+- `S57` `M` `src/cadrumo/core/resources/tests/test_registry.py`
+- `S57` `verify:` `uv run --no-sync ruff check src/cadrumo/core/resources/_repos/iva_rate_tables.py src/cadrumo/core/resources/registry.py src/cadrumo/core/resources/_repos/tests/test_singletons.py src/cadrumo/core/resources/tests/test_registry.py dev/registry/analysis/facts_iva_retirement.toml` -> `pass`
+- `S57` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_iva_rate_provider.py dev/registry/tests/test_iva_structured_table_classification.py` -> `pass`
+- `S60` `T`
+- `S60` `verify:` `uv run --no-sync python -m dev.audit.dead_code --full --json` -> `pass`
+- `S60` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --full --json` -> `fail`
+- `S66` `A` `dev/registry/tests/test_transaction_fact_coordinates.py`
+- `S66` `verify:` `uv run ruff check src/cadrumo/domain/transactions/tipo_actividad_partitions.py dev/registry/tests/test_transaction_fact_coordinates.py` -> `pass`
+- `S66` `verify:` `uv run pytest -q -n 0 dev/registry/tests/test_transaction_fact_coordinates.py` -> `2 passed`
+- `S66` `verify:` `no findings`
+- `S68` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2007-6820-a95-redaction-20070401.xml`
+- `S68` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2007-6820-a95-redaction-20150101.xml`
+- `S68` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2007-6820-a95-redaction-20150712.xml`
+- `S68` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2007-6820-a95-redaction-20181223.xml`
+- `S68` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2007-6820-a95-redaction-20230126.xml`
+- `S68` `A` `src/cadrumo/_data/registry/aeat/facts/0004-rirpf-art-95-retencion-profesionales-general.toml`
+- `S68` `A` `src/cadrumo/_data/registry/aeat/facts/0005-rirpf-art-95-retencion-profesionales-inicio.toml`
+- `S68` `A` `src/cadrumo/_data/registry/aeat/facts/0006-rirpf-art-95-retencion-agricolas-ganaderas-general.toml`
+- `S68` `A` `src/cadrumo/_data/registry/aeat/facts/0007-rirpf-art-95-retencion-ganaderas-engorde-porcino-avicultura.toml`
+- `S68` `A` `src/cadrumo/_data/registry/aeat/facts/0008-rirpf-art-95-retencion-forestales.toml`
+- `S68` `A` `src/cadrumo/_data/registry/aeat/facts/0009-rirpf-art-95-retencion-estimacion-objetiva.toml`
+- `S68` `M` `src/cadrumo/_data/registry/aeat/legal/statutory-constant-sources.toml`
+- `S68` `M` `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`
+- `S68` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_article95_retention_authored_facts.py`
+- `S68` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py`
+- `S68` `A` `.vault/audit/2026-09-10-facts-registry-s68-article95-retention-review-audit.md`
+- `S68` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/facts/tests/test_article95_retention_authored_facts.py` -> `pass`
+- `S69` `M` `dev/registry/compiler/fact_validation.py`
+- `S69` `M` `dev/registry/compiler/validator.py`
+- `S69` `A` `R` -> `dev/registry/tests/test_migrated_legal_parameter_fact_gate.py` -> `dev/registry/tests/test_retired_fact_provider_gate.py`
+- `S69` `verify:` `uv run pytest -q dev/registry/tests/test_catalogue_verification_catalogues.py dev/registry/tests/test_administrator_retention_authored_facts.py dev/registry/tests/test_retired_fact_provider_gate.py` -> `19 passed`
+- `S69` `verify:` `uv run ruff check dev/registry/compiler/fact_validation.py dev/registry/tests/test_retired_fact_provider_gate.py` -> `pass`
+- `S70` `M` `dev/corpus/fetch_boe_normative.py`
+- `S70` `M` `dev/tests/test_fetch_boe_article.py`
+- `S70` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20150101.xml`
+- `S70` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20150712.xml`
+- `S70` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20180705.xml`
+- `S70` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20181229.xml`
+- `S70` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20210101.xml`
+- `S70` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20230101.xml`
+- `S70` `A` `src/cadrumo/_data/registry/aeat/facts/0001-lirpf-art-101-retencion-administrador-general.toml`
+- `S70` `A` `src/cadrumo/_data/registry/aeat/facts/0002-lirpf-art-101-retencion-administrador-reducida.toml`
+- `S70` `A` `src/cadrumo/_data/registry/aeat/facts/0003-lirpf-art-101-retencion-administrador-incn-umbral-eur.toml`
+- `S70` `M` `src/cadrumo/_data/registry/aeat/legal/statutory-constant-sources.toml`
+- `S70` `M` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `S70` `M` `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`
+- `S70` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_administrator_retention_authored_facts.py`
+- `S70` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py`
+- `S70` `A` `.vault/audit/2026-09-10-facts-registry-s70-administrator-retention-review-audit.md`
+- `S70` `verify:` `uv run --no-sync pytest dev/tests/test_fetch_boe_article.py src/cadrumo/domain/calculations/registry/facts/tests/test_administrator_retention_authored_facts.py src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py dev/registry/tests/test_facts_wave2_provider_handoff.py` -> `pass`
+- `S71` `R` `src/cadrumo/_data/registry/aeat/facts/0016-rirpf-art-110-selector-m036-pago-fraccionado-agrario-objetiva.toml` -> `src/cadrumo/_data/registry/aeat/facts/0016-rirpf-art-110-selector-m036-pago-fraccionado-agrarias-pesqueras.toml`
+- `S71` `A` `src/cadrumo/_data/registry/aeat/facts/0017-modelo-131-selector-m036-volumen-ingresos-agrario.toml`
+- `S71` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S71` `M` `src/cadrumo/application/aggregation/_renta_income_ledger.py`
+- `S71` `M` `src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py`
+- `S71` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_article109_110_activity_selector_authored_facts.py`
+- `S71` `A` `.vault/audit/2026-09-10-facts-registry-s71-repair-review-audit.md`
+- `S71` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/facts/tests/test_article109_110_activity_selector_authored_facts.py` -> `pass`
+- `S72` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-1992-28740-art-161-redaction-19930101.xml`
+- `S72` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-1992-28740-art-161-redaction-19970101.xml`
+- `S72` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-1992-28740-art-161-redaction-20120715.xml`
+- `S72` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2012-9364-art-23-redaction-20120715.xml`
+- `S72` `A` `src/cadrumo/_data/registry/aeat/facts/0018-liva-art-161-recargo-rate-general.toml`
+- `S72` `A` `src/cadrumo/_data/registry/aeat/facts/0019-liva-art-161-recargo-rate-reducido.toml`
+- `S72` `A` `src/cadrumo/_data/registry/aeat/facts/0020-liva-art-161-recargo-rate-super-reducido.toml`
+- `S72` `A` `src/cadrumo/_data/registry/aeat/facts/0021-liva-art-161-recargo-rate-tabaco.toml`
+- `S72` `M` `src/cadrumo/_data/registry/aeat/legal/statutory-constant-sources.toml`
+- `S72` `M` `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`
+- `S72` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_article161_recargo_authored_facts.py`
+- `S72` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/facts/tests/test_article161_recargo_authored_facts.py` -> `pass`
+- `S73` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-31-redaction-20070101.xml`
+- `S73` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-31-redaction-20121031.xml`
+- `S73` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-31-redaction-20160101.xml`
+- `S73` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-dt-32-redaction-20160101.xml`
+- `S73` `A` `src/cadrumo/_data/registry/aeat/facts/0022-lirpf-dt-32-eo-exclusion-rendimientos-conjunto.toml`
+- `S73` `A` `src/cadrumo/_data/registry/aeat/facts/0023-lirpf-dt-32-eo-exclusion-rendimientos-factura.toml`
+- `S73` `A` `src/cadrumo/_data/registry/aeat/facts/0024-lirpf-art-31-eo-exclusion-rendimientos-agricolas-ganaderos-forestales.toml`
+- `S73` `A` `src/cadrumo/_data/registry/aeat/facts/0025-lirpf-dt-32-eo-exclusion-compras.toml`
+- `S73` `M` `src/cadrumo/_data/registry/aeat/legal/statutory-constant-sources.toml`
+- `S73` `M` `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`
+- `S73` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_article31_dt32_objective_exclusion_authored_facts.py`
+- `S73` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py`
+- `S73` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/domain/calculations/registry/facts/tests/test_article31_dt32_objective_exclusion_authored_facts.py` -> `pass`
+- `S74` `A` `src/cadrumo/_data/registry/aeat/facts/0010-rirpf-art-95-selector-m036-profesionales.toml`
+- `S74` `A` `src/cadrumo/_data/registry/aeat/facts/0011-rirpf-art-95-selector-m036-agricolas-ganaderas.toml`
+- `S74` `A` `src/cadrumo/_data/registry/aeat/facts/0012-rirpf-art-95-selector-m036-forestales.toml`
+- `S74` `A` `src/cadrumo/_data/registry/aeat/facts/0013-rirpf-art-95-selector-m036-ganaderas-engorde-porcino-avicultura.toml`
+- `S74` `M` `src/cadrumo/_data/registry/aeat/legal/statutory-constant-sources.toml`
+- `S74` `M` `src/cadrumo/domain/calculations/registry/facts/legal_parameters.py`
+- `S74` `M` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `S74` `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_article95_activity_selector_authored_facts.py`
+- `S74` `M` `src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py`
+- `S74` `A` `.vault/audit/2026-09-10-facts-registry-s74-activity-selector-review-audit.md`
+- `S74` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/facts/tests/test_article95_activity_selector_authored_facts.py src/cadrumo/domain/calculations/registry/facts/tests/test_legal_parameter_provider.py src/cadrumo/domain/calculations/registry/facts/tests/test_loader.py` -> `pass`
+- `S75` `A` `.vault/reference/2026-09-11-facts-registry-reference.md`
+- `S75` `M` `dev/audit/tests/test_legal_excerpt_vintage_screen.py`
+- `S75` `M` `dev/registry/compiler/_loader_internals.py`
+- `S75` `M` `dev/registry/compiler/fact_validation.py`
+- `S75` `M` `dev/registry/compiler/loader.py`
+- `S75` `M` `dev/registry/compiler/validator.py`
+- `S75` `M` `dev/registry/tests/test_loader_directory_mode.py`
+- `S75` `M` `dev/registry/tests/test_modelo_100_2024_profile_surface.py`
+- `S75` `R` `dev/registry/tests/test_migrated_legal_parameter_fact_gate.py` -> `dev/registry/tests/test_retired_fact_provider_gate.py`
+- `S75` `M` `src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-95.html`
+- `S75` `M` `src/cadrumo/core/tipos_actividad.py`
+- `S75` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S75` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S75` `M` `src/cadrumo/domain/calculations/registry/schema_references.py`
+- `S75` `M` `src/cadrumo/domain/transactions/tipo_actividad_partitions.py`
+- `S75` `verify:` `uv run pytest -q dev/registry/tests/test_loader_directory_mode.py::test_catalogue_rejects_the_retired_global_parameters_section dev/registry/tests/test_retired_fact_provider_gate.py` -> `pass`
+- `S76` `R` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20150101.xml` -> `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-101-redaction-20150101.xml`
+- `S76` `R` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20150712.xml` -> `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-101-redaction-20150712.xml`
+- `S76` `R` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20180705.xml` -> `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-101-redaction-20180705.xml`
+- `S76` `R` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20181229.xml` -> `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-101-redaction-20181229.xml`
+- `S76` `R` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20210101.xml` -> `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-101-redaction-20210101.xml`
+- `S76` `R` `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-a101-redaction-20230101.xml` -> `src/cadrumo/_data/corpus/normatives/html/boe-a-2006-20764-art-101-redaction-20230101.xml`
+- `S76` `M` `src/cadrumo/_data/registry/aeat/legal/statutory-constant-sources.toml`
+- `S76` `A` `.vault/audit/2026-09-10-facts-registry-s76-article-101-provision-path-review-audit.md`
+- `S76` `verify:` `uv run python -c "... verify_source_file(...) ..."` -> `pass`
+- `S76` `verify:` `uv run pytest -q dev/registry/tests/test_catalogue_verification_catalogues.py::test_committed_registry_tree_has_coherent_shared_catalogues` -> `pass`
+- `S77` `M` `dev/registry/analysis/facts_wave2_provider_handoff.toml`
+- `S77` `D` `dev/registry/compiler/categories.py`
+- `S77` `M` `dev/registry/compiler/fact_providers.py`
+- `S77` `M` `dev/registry/tests/test_category_holiday_compiler_behavior.py`
+- `S77` `A` `dev/registry/tests/test_facts_category_profile_retirement.py`
+- `S77` `D` `src/cadrumo/_data/registry/aeat/categories/profiles.toml`
+- `S77` `A` `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`
+- `S77` `A` `src/cadrumo/_data/registry/aeat/facts/0065-categories-statutory-cap.toml`
+- `S77` `M` `src/cadrumo/domain/categories/registry.py`
+- `S77` `verify:` `uv run pytest -q dev/registry/tests/test_category_holiday_compiler_behavior.py dev/registry/tests/test_facts_category_profile_retirement.py dev/registry/tests/test_facts_wave2_provider_handoff.py dev/registry/tests/test_wave2_fact_provider_handoff.py` -> `pass`
+- `S77` `verify:` `uv run ruff check src/cadrumo/domain/categories/registry.py dev/registry/compiler/fact_providers.py dev/registry/tests/test_category_holiday_compiler_behavior.py dev/registry/tests/test_facts_category_profile_retirement.py` -> `pass`
+- `S78` `M` `dev/registry/analysis/facts_wave2_provider_handoff.toml`
+- `S78` `M` `dev/registry/compiler/fact_providers.py`
+- `S78` `D` `dev/registry/compiler/holidays.py`
+- `S78` `D` `dev/registry/tests/test_category_holiday_compiler_behavior.py`
+- `S78` `A` `dev/registry/tests/test_facts_holiday_calendar_retirement.py`
+- `S78` `M` `dev/registry/tests/test_facts_wave2_provider_handoff.py`
+- `S78` `D` `src/cadrumo/_data/registry/aeat/calendars/festivos-2024.toml`
+- `S78` `D` `src/cadrumo/_data/registry/aeat/calendars/festivos-2025.toml`
+- `S78` `D` `src/cadrumo/_data/registry/aeat/calendars/festivos-2026.toml`
+- `S78` `A` `src/cadrumo/_data/registry/aeat/facts/0066-holiday-calendar-publication.toml`
+- `S78` `A` `src/cadrumo/_data/registry/aeat/facts/0067-public-holiday.toml`
+- `S78` `M` `src/cadrumo/application/aggregation/tests/test_structurally_unroutable_iva_base_categories.py`
+- `S78` `D` `src/cadrumo/core/resources/_repos/tests/test_every_shipped_resource_loads.py`
+- `S78` `M` `src/cadrumo/core/tests/test_resources.py`
+- `S78` `D` `src/cadrumo/domain/calculations/registry/tests/test_modelo_353_registry.py`
+- `S78` `M` `src/cadrumo/domain/deadlines/festivos.py`
+- `S78` `M` `src/cadrumo/domain/deadlines/tests/test_festivos.py`
+- `S78` `verify:` `uv run --no-sync ruff check dev/registry/compiler/fact_providers.py dev/registry/tests/test_facts_holiday_calendar_retirement.py dev/registry/tests/test_facts_wave2_provider_handoff.py src/cadrumo/domain/deadlines/festivos.py src/cadrumo/domain/deadlines/tests/test_festivos.py src/cadrumo/core/tests/test_resources.py src/cadrumo/application/aggregation/tests/test_structurally_unroutable_iva_base_categories.py` -> `pass`
+- `S78` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_facts_holiday_calendar_retirement.py dev/registry/tests/test_facts_wave2_provider_handoff.py dev/registry/tests/test_wave2_fact_provider_handoff.py` -> `pass`
+- `S79` `M` `dev/registry/analysis/facts_wave2_provider_handoff.toml`
+- `S79` `M` `dev/registry/compiler/authority.py`
+- `S79` `M` `dev/registry/compiler/convenio.py`
+- `S79` `M` `dev/registry/compiler/fact_providers.py`
+- `S79` `M` `dev/registry/tests/test_convenio.py`
+- `S79` `A` `dev/registry/tests/test_convenio_facts.py`
+- `S79` `M` `dev/registry/tests/test_fact_providers.py`
+- `S79` `M` `dev/registry/tests/test_wave2_fact_provider_handoff.py`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-ar.toml`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-be.toml`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-de.toml`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-fr.toml`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-gb.toml`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-ma.toml`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-nl.toml`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-pt.toml`
+- `S79` `D` `src/cadrumo/_data/registry/aeat/treaties/es-us.toml`
+- `S79` `A` `src/cadrumo/_data/registry/aeat/facts/0068-convenio-override.toml`
+- `S79` `verify:` `uv run --no-sync ruff check dev/registry/compiler/convenio.py dev/registry/compiler/fact_providers.py dev/registry/compiler/authority.py dev/registry/tests/test_convenio.py dev/registry/tests/test_convenio_facts.py dev/registry/tests/test_fact_providers.py dev/registry/tests/test_wave2_fact_provider_handoff.py` -> `pass`
+- `S79` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_convenio.py dev/registry/tests/test_convenio_facts.py dev/registry/tests/test_fact_providers.py dev/registry/tests/test_wave2_fact_provider_handoff.py` -> `pass`
+- `S80` `M` `dev/registry/analysis/facts_iva_retirement.toml`
+- `S80` `A` `dev/registry/tests/test_iva_structured_table_classification.py`
+- `S80` `verify:` `uv run --no-sync ruff check dev/registry/analysis/facts_iva_retirement.toml dev/registry/tests/test_iva_structured_table_classification.py` -> `pass`
+- `S80` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_iva_structured_table_classification.py` -> `pass`
+
+## Notes
+
+- `S19` The provider was not enrolled. The shipped catalogue declares an intentionally
+- `S19` bootstrap-scoped vocabulary and carries no authoritative publication identity,
+- `S19` legal references, effective dates, or source citations that confirm an
+- `S19` externally controlled legal taxonomy. The existing loader, repository cache,
+- `S19` parser, data, and public facade remain unchanged. Enrollment requires a future
+- `S19` authoritative external taxonomy with temporal provenance; Wave 3 has no
+- `S19` facts-backed apoderamientos migration or retirement condition.
+- `S21` Focused basedpyright is blocked by the concurrent modelo-projection adapter's `_compile_no_direct_facts` parameter-name mismatch in `facts/providers.py`; S21-owned files have no diagnostics.
+- `S32` The S32 code deletion predates this checkpoint: commits `b460bd8c41f` and `411f2b22e227` removed the named helpers. `pytest` cannot reach the focused tests because the global fixture requires the absent signed `src/cadrumo/_data/registry/authority/authority.json`; no artifact was fabricated.
+- `S33` `uv run pytest -q -n 0 src/cadrumo/application/aggregation/tests/test_retenciones_aggregation_resolver.py -k public_retenciones_resolver` is blocked during collection because the required signed `src/cadrumo/_data/registry/authority/authority.json` is absent. No artifact was fabricated.
+- `S35` The census forbids only already retired modules and raw convenio symbols. It permits the canonical convenio projection and pending IVA grounding, whose removal is gated by S81-S85.
+- `S36` The only raw IVA legal-table reads permitted are ledger-derived, exact-reader exceptions pending S81-S85; country vocabulary is technical and authority configuration is path wiring rather than a read.
+- `S37` S80/S85 holds are required only while their exact plan step remains open. A closed step requires the matching raw hold to be absent.
+- `S43` The boundary command reports 50 existing `ty` diagnostics outside the facts-registry surfaces; `pyrefly` and `basedpyright` report zero diagnostics. No Wave 1 facts path appears in the detailed output.
+- `S45` The first boundary run found two Wave 1 findings: unreachable `facts.resolution` and unused `fact_provider_for_directory`. Commit `f4894ac261` integrated authority resolution and removed the unused helper. The rerun contains no facts-registry finding; it still reports 31 unreachable modules and 787 unused symbols outside this campaign.
+- `S46` Wave 2's 12 type diagnostics were fixed. The final boundary run reports diagnostics outside the facts-registry campaign while concurrent repository work is active; no Wave 2 provider path remains in the detailed result.
+- `S47` The final exact reachability search reports no Wave 2 provider finding and zero unreachable shipped modules. The repository-wide command still reports 480 unused symbols outside this campaign.
+- `S52` `uv run --no-sync pytest -q -n 0 src/cadrumo/domain/calculations/registry/tests/test_formula_runtime_m210.py::test_irnr_resolve_tipo_gravamen_retains_selected_treaty_fact_provenance src/cadrumo/entrypoints/cli/config/tests/test_apoderado_scopes_payload.py` did not return within the focused 30-second runner window while concurrent suite workers were active.
+- `S53` No governed amendment-regime or foreign-asset provider fact exists, so their typed domain projections remain unchanged. Holiday event facts have no calendar-publication sentinel, so an absent event cannot distinguish a non-holiday from an unpublished year; the business-day facade remains unchanged pending that provider-contract addition.
+- `S57` `_grounding.py` remains only while `place_of_supply.py` and `establishment.py` resolve the four retained raw legal IVA tables; S85 requires their typed fact migrations and equivalent authority evidence refusal before deleting it.
+- `S57` Wider resource tests have a pre-existing stale `topics` import/expectation and the missing published authority artifact; neither is a rate-repository fallback.
+- `S60` The reachability audit reports a pre-existing general backlog but no exact facts-registry orphan. No deletion is safe or authorized from its heuristic candidates; retained IVA surfaces remain governed holds pending S81-S85.
+- `S75` `dev/registry/tests/test_modelo_100_2024_profile_surface.py` remains blocked by the pre-existing expired `ley-35-2006:art-23-2021` legal window for the 2024 revision.
+- `S78` Full deadline-domain tests remain blocked before collection by the pre-existing absence of `src/cadrumo/_data/registry/authority/authority.json`; no retired calendar source is used as a fallback.
+- `S79` A broader suite also remains blocked by the pre-existing missing published authority artifact and concurrent M210 relocation expectations; neither has a raw-treaty fallback.
+- `S80` `catalogues.toml`, `place_of_supply.toml`, `territories.toml`, and `territory_carve_outs.toml` are retained until the four added typed-fact migrations preserve their legal semantics and evidence. `country_names.toml` is retained technical interoperability vocabulary, not a legal-fact adapter.
+- `S80` Broader IVA tests remain blocked by the pre-existing missing published authority artifact; no deletion or fallback was introduced.

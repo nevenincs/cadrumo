@@ -2,6 +2,7 @@
 * text=auto eol=lf
 *.bat text eol=crlf
 *.cmd text eol=crlf
+.vault/exec/**/*-ledger.md merge=union
 # <<< vaultspec-managed <<<
 
 src/cadrumo/_data/corpus/aeat_official/** -text

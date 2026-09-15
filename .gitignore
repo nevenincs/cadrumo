@@ -455,6 +455,7 @@ cache/
 /.codex/config.toml.lock
 /.gitignore.lock
 /.mcp.json.lock
+/.pre-commit-config.yaml.lock
 # <<< vaultspec-managed <<<
 
 # Claude Code machine-local (not team-shared)

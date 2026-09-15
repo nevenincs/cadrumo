@@ -1,0 +1,1559 @@
+---
+tags:
+  - '#exec'
+  - '#cli-root-verb-homes'
+date: '2026-08-26'
+modified: '2026-09-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:6bfd658011fbbb3d243ee544ded26ab7209b2c184a1b0dfa4977e80c9c18d22d'
+related:
+  - "[[2026-08-26-cli-root-verb-homes-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `cli-root-verb-homes` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+- `S01` `A` `src/cadrumo/core/transport_locus.py`
+- `S01` `verify:` `ruff check && python -c import` -> `pass`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_command_spec.py`
+- `S02` `verify:` `COMMAND_GRAPH rebuild (294 leaves) + coherence refusal probe` -> `pass`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_registry_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_review_package_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_app_live_foundation_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_app_live_iva_wallet_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_app_ledger_invoice_intake_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_audit_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_filing_record_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_work_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_app_quickfile_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_config/_auth_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`
+- `S03` `verify:` `COMMAND_GRAPH rebuild + ruff check` -> `pass`
+- `S04` `M` `src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/_config/_google_command_specs.py`
+- `S04` `verify:` `COMMAND_GRAPH rebuild + ruff check` -> `pass`
+- `S05` `A` `src/cadrumo/entrypoints/cli/tests/test_transport_locus_declared.py`
+- `S05` `verify:` `pytest test_transport_locus_declared.py` -> `pass`
+- `S06` `R` `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py` -> `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_cli.py`
+- `S06` `A` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_payloads.py`
+- `S06` `A` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_config/_google_payloads.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_config/_google_command_specs.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/_command_specs.py`
+- `S06` `verify:` `COMMAND_GRAPH rebuild (294 leaves, 4 spreadsheet leaves mounted)` -> `pass`
+- `S07` `R` `src/cadrumo/adapters/outbound/google/_active_profile.py` -> `src/cadrumo/adapters/outbound/google/active_profile.py`
+- `S07` `R` `src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py` -> `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S07` `R` `src/cadrumo/adapters/outbound/google/_document_link_resolver.py` -> `src/cadrumo/adapters/outbound/google/document_link_resolver.py`
+- `S07` `R` `src/cadrumo/application/calculations/_cross_period_clean_state.py` -> `src/cadrumo/application/calculations/cross_period_clean_state.py`
+- `S07` `R` `src/cadrumo/application/calculations/_cross_period_models.py` -> `src/cadrumo/application/calculations/cross_period_models.py`
+- `S07` `R` `src/cadrumo/application/calculations/_iva_compensation_history.py` -> `src/cadrumo/application/calculations/iva_compensation_history.py`
+- `S07` `R` `src/cadrumo/application/calculations/_iva_wallet_balance.py` -> `src/cadrumo/application/calculations/iva_wallet_balance.py`
+- `S07` `R` `src/cadrumo/application/calculations/_m111_no_retenciones.py` -> `src/cadrumo/application/calculations/m111_no_retenciones.py`
+- `S07` `R` `src/cadrumo/application/calculations/_observations_repository.py` -> `src/cadrumo/application/calculations/observations_repository.py`
+- `S07` `R` `src/cadrumo/application/calculations/_registry_preconditions.py` -> `src/cadrumo/application/calculations/registry_preconditions.py`
+- `S07` `R` `src/cadrumo/application/calculations/_row_set_assembly.py` -> `src/cadrumo/application/calculations/row_set_assembly.py`
+- `S07` `R` `src/cadrumo/application/export/_google_operation.py` -> `src/cadrumo/application/export/google_operation.py`
+- `S07` `R` `src/cadrumo/application/export/_tabular.py` -> `src/cadrumo/application/export/tabular.py`
+- `S07` `R` `src/cadrumo/application/storage/calc_sheets/_parity_harness.py` -> `src/cadrumo/application/storage/calc_sheets/parity_harness.py`
+- `S07` `M` `dev/audit/vulture_whitelist.py`
+- `S07` `M` `dev/source_connectivity/tests/test_discovery.py`
+- `S07` `M` `dev/source_connectivity/tests/test_m182_deferral.py`
+- `S07` `M` `dev/source_connectivity/tests/test_m232_deferral.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/__init__.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/_api.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/errors.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/drive_media_server.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_active_profile.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_auth_preconditions.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_document_link_resolve_roundtrip.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_document_link_resolver.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_drive_folder_bulk_fetch_roundtrip.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_drive_folder_listing.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_verify_pull_coverage.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/storage/_factory.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_every_composing_write_is_declared.py`
+- `S07` `M` `src/cadrumo/application/calculations/__init__.py`
+- `S07` `M` `src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py`
+- `S07` `M` `src/cadrumo/application/calculations/_binding_prefill.py`
+- `S07` `M` `src/cadrumo/application/calculations/_iva_compensation_annual_partition.py`
+- `S07` `M` `src/cadrumo/application/calculations/_iva_wallet_reconciliation.py`
+- `S07` `M` `src/cadrumo/application/calculations/_m303_carry_ingress.py`
+- `S07` `M` `src/cadrumo/application/calculations/_multi_year.py`
+- `S07` `M` `src/cadrumo/application/calculations/_per_grupo_member_keys.py`
+- `S07` `M` `src/cadrumo/application/calculations/_ports.py`
+- `S07` `M` `src/cadrumo/application/calculations/_prorrata_regularizacion.py`
+- `S07` `M` `src/cadrumo/application/calculations/_relation_prefill.py`
+- `S07` `M` `src/cadrumo/application/calculations/_revision_carry_gate.py`
+- `S07` `M` `src/cadrumo/application/calculations/errors.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/_multi_year_roundtrip_support.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/_observation_lookup_support.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_bienes_inversion_regularizacion.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_binding_prefill.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_calculation_refusal_message_key_only.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_cross_period_evidence_identity_contract.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_cross_period_first_year_fractional.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_decision_b_adversarial.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_detail_record_round_trip.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_annual_summary.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_artefact_digest.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_filed_observations.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_history.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_provenance_population.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_provenance_roundtrip.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_relation_prefill.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_iva_wallet_reconciliation.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_m303_carry_ingress.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_036_censal_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_100_base_negativa_general_compensation.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_100_multiyear_renta_enrollment.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_130_carry_forward_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_130_casilla_05_carry.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_130_multiyear_renta_enrollment.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_131_carry_forward_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_180_115_reconciliation_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_184_informativa_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_193_123_reconciliation_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_200_202_pagos_fraccionados_fold.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_200_dotaciones_deterioro_carry_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_232_operaciones_vinculadas_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_303_compensacion_carry_anti_regression.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_303_compensacion_carry_forward_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_303_refunded_period_carry.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_308_adhoc_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_309_adhoc_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_347_informativa_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_349_intracomunitario_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_360_adhoc_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_369_oss_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_714_patrimonio_baseline_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_714_patrimonio_joint_limit_calculation.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_720_foreign_asset_producer_join.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_720_prior_year_baseline_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_modelo_840_iae_continuity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_observation_evidence_displacement_guard.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_observation_header_facts_roundtrip.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_observation_scan_key_identity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_observations_repository.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_observations_repository_roundtrip.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_previous_filing_absence_versus_malformed.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_previous_filing_unsatisfied_diagnostic.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_prorrata_regularizacion_source_resolver.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_pull_path_calculate_path_casilla_parity.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_pulled_history_reaches_calculate.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_registry_failure_preconditions.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_relation_prefill_source_mesh.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_revision_stamp_roundtrip.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_row_producer_default_op_detection.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_row_set_assembly.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_row_set_assembly_coercion.py`
+- `S07` `M` `src/cadrumo/application/calculations/tests/test_terminal_preconditions.py`
+- `S07` `M` `src/cadrumo/application/export/__init__.py`
+- `S07` `M` `src/cadrumo/application/export/errors.py`
+- `S07` `M` `src/cadrumo/application/export/tests/test_tabular.py`
+- `S07` `M` `src/cadrumo/application/export/tests/test_tabular_metadata_tamper.py`
+- `S07` `M` `src/cadrumo/application/modelo/_filed_revision_observation.py`
+- `S07` `M` `src/cadrumo/application/modelo/_iva_wallet_seed.py`
+- `S07` `M` `src/cadrumo/application/modelo/_local_observation_actions.py`
+- `S07` `M` `src/cadrumo/application/storage/calc_sheets/__init__.py`
+- `S07` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_parity_harness_hardening.py`
+- `S07` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py`
+- `S07` `M` `src/cadrumo/core/tests/test_external_constants_centralisation_part1.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_app_live_justificante_payloads.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_overview_evidence.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_google_payloads.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/test_google_operation.py`
+- `S07` `M` `src/cadrumo/tests/test_importlinter_ledger.py`
+- `S07` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_transport_verb_grammar.py src/cadrumo/entrypoints/cli/tests/test_local_path_spelling.py src/cadrumo/entrypoints/cli/tests/test_transport_locus_declared.py src/cadrumo/entrypoints/cli/tests/test_root_placement_criterion.py` -> `pass`
+- `S07` `verify:` `pytest --collect-only -q src/cadrumo` -> `pass`
+- `S07` `verify:` `ruff check <changed files>` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_payloads.py`
+- `S08` `verify:` `pytest operator_surface/tests + transport locus gate` -> `pass`
+- `S09` `M` `src/cadrumo/locales/en/cli.yml`
+- `S09` `M` `src/cadrumo/locales/es/cli.yml`
+- `S09` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S09` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S09` `M` `src/cadrumo/entrypoints/cli/_config/_google.py`
+- `S09` `M` `src/cadrumo/application/export/_google_operation.py`
+- `S09` `verify:` `dev.locales scaffold --check` -> `pass`
+- `S10` `R` `src/cadrumo/entrypoints/cli/_app_maintenance.py` -> `src/cadrumo/entrypoints/cli/_config/_repair_prepared_exports.py`
+- `S10` `R` `src/cadrumo/entrypoints/cli/_app_maintenance_payloads.py` -> `src/cadrumo/entrypoints/cli/_config/_repair_prepared_exports_payloads.py`
+- `S10` `D` `src/cadrumo/entrypoints/cli/_app_maintenance_command_specs.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_command_specs.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_config/_repair_command_specs.py`
+- `S10` `M` `src/cadrumo/locales/en/cli.yml`
+- `S10` `M` `src/cadrumo/locales/es/cli.yml`
+- `S10` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S10` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S10` `verify:` `dev.locales scaffold --check` -> `pass`
+- `S10` `verify:` `COMMAND_GRAPH rebuild (294 leaves, policy preserved)` -> `pass`
+- `S11` `M` `src/cadrumo/application/operator_actions/_catalogue.py`
+- `S11` `M` `src/cadrumo/application/operator_surface/_contract.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/_config/_repair_prepared_exports.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/_config/_repair_prepared_exports_payloads.py`
+- `S11` `R` `src/cadrumo/entrypoints/cli/tests/test_app_maintenance_command_specs.py` -> `src/cadrumo/entrypoints/cli/tests/test_config_repair_prepared_exports_command_specs.py`
+- `S11` `R` `src/cadrumo/entrypoints/cli/tests/test_app_maintenance_export_reconcile.py` -> `src/cadrumo/entrypoints/cli/tests/test_config_repair_prepared_exports.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_root_cli_action_producer_census.py`
+- `S11` `M` `src/cadrumo/tests/test_every_module_has_test_coverage.py`
+- `S11` `verify:` `pytest operator_surface/tests + repointed cli tests` -> `pass`
+- `S12` `A` `src/cadrumo/entrypoints/cli/tests/test_root_placement_criterion.py`
+- `S12` `verify:` `pytest test_root_placement_criterion.py` -> `pass`
+- `S13` `T`
+- `S13` `verify:` `scratchpad proof: filing-under-config, bootstrap-under-app, both-signals, empty-graph` -> `pass`
+- `S14` `M` `src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/_config/_restore_cli.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_spec_authority.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S14` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_restore_cli.py`
+- `S14` `M` `src/cadrumo/locales/en/cli.yml`
+- `S14` `M` `src/cadrumo/locales/es/cli.yml`
+- `S14` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S14` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S14` `verify:` `dev.locales scaffold --check` -> `pass`
+- `S15` `R` `src/cadrumo/entrypoints/cli/_config/_repair_prepared_exports.py` -> `src/cadrumo/entrypoints/cli/_config/_archive_reconcile.py`
+- `S15` `R` `src/cadrumo/entrypoints/cli/_config/_repair_prepared_exports_payloads.py` -> `src/cadrumo/entrypoints/cli/_config/_archive_reconcile_payloads.py`
+- `S15` `A` `src/cadrumo/entrypoints/cli/_config/_archive_push_payloads.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/_config/_google.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/_config/_google_payloads.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/_config/_google_command_specs.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/_config/_repair_command_specs.py`
+- `S15` `M` `src/cadrumo/application/operator_actions/_catalogue.py`
+- `S15` `R` `src/cadrumo/entrypoints/cli/tests/test_config_repair_prepared_exports.py` -> `src/cadrumo/entrypoints/cli/tests/test_config_profile_archive_reconcile.py`
+- `S15` `R` `src/cadrumo/entrypoints/cli/tests/test_config_repair_prepared_exports_command_specs.py` -> `src/cadrumo/entrypoints/cli/tests/test_config_profile_archive_reconcile_command_specs.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_root_cli_action_producer_census.py`
+- `S15` `M` `.vault/adr/2026-08-26-cli-root-verb-homes-adr.md`
+- `S15` `M` `src/cadrumo/locales/en/cli.yml`
+- `S15` `M` `src/cadrumo/locales/es/cli.yml`
+- `S15` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S15` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S15` `verify:` `dev.locales scaffold --check` -> `pass`
+- `S15` `verify:` `pytest operator_surface/tests + locus + placement gates` -> `pass`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_login_gated_verbs_never_exempt.py`
+- `S16` `verify:` `pytest bootstrap-exempt + login-gated gates` -> `pass`
+- `S17` `M` `src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py`
+- `S17` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S17` `M` `src/cadrumo/locales/en/cli.yml`
+- `S17` `M` `src/cadrumo/locales/es/cli.yml`
+- `S17` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S17` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S17` `verify:` `COMMAND_GRAPH rebuild + pytest locus/placement/operator-surface gates` -> `pass`
+- `S18` `M` `src/cadrumo/entrypoints/cli/_app_ledger_management_command_specs.py`
+- `S18` `verify:` `COMMAND_GRAPH rebuild (evidence pull-all mounted)` -> `pass`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_modelo_reconcile_cli.py`
+- `S19` `M` `src/cadrumo/locales/en/cli.yml`
+- `S19` `M` `src/cadrumo/locales/es/cli.yml`
+- `S19` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S19` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S19` `verify:` `COMMAND_GRAPH rebuild` -> `pass`
+- `S20` `R` `src/cadrumo/entrypoints/cli/_config/_censo_file.py` -> `src/cadrumo/entrypoints/cli/_config/_censo_transport.py`
+- `S20` `M` `src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`
+- `S20` `R` `src/cadrumo/entrypoints/cli/_config/tests/test_censo_file_fact_payload.py` -> `src/cadrumo/entrypoints/cli/_config/tests/test_censo_import_fact_payload.py`
+- `S20` `R` `src/cadrumo/entrypoints/cli/_config/tests/test_censo_file_verb.py` -> `src/cadrumo/entrypoints/cli/_config/tests/test_censo_import_verb.py`
+- `S20` `M` `src/cadrumo/entrypoints/cli/_config/tests/test_censo_pull_verb.py`
+- `S20` `verify:` `COMMAND_GRAPH rebuild (file names one leaf only)` -> `pass`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_review_package_command_specs.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_google_payloads.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_payloads.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_command_specs.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_corpus_journeys.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_config/tests/test_google_command_specs.py`
+- `S21` `R` `src/cadrumo/entrypoints/cli/_config/tests/test_google_sync_calc_pull_flag.py` -> `src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_flag.py`
+- `S21` `R` `src/cadrumo/entrypoints/cli/_config/tests/test_google_sync_calc_pull_observations.py` -> `src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_observations.py`
+- `S21` `R` `src/cadrumo/entrypoints/cli/tests/test_config_google_sync_calc_period.py` -> `src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_period.py`
+- `S21` `verify:` `pytest --co over both CLI test trees` -> `pass`
+- `S22` `T`
+- `S22` `verify:` `archive import declares --file primary, --artifact auxiliary` -> `pass`
+- `S23` `T`
+- `S23` `verify:` `read build_registry_integrity_report vs verify_registry_tree` -> `pass`
+- `S24` `M` `.vault/adr/2026-08-26-cli-root-verb-homes-adr.md`
+- `S24` `M` `.vault/audit/2026-08-25-cli-root-verb-homes-audit.md`
+- `S25` `M` `src/cadrumo/entrypoints/cli/_modelo_readiness_cli.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/_modelo_readiness_command_specs.py`
+- `S25` `verify:` `pytest test_modelo_audit_command_specs parameter-contract gate` -> `pass`
+- `S26` `M` `src/cadrumo/entrypoints/cli/_modelo_readiness_cli.py`
+- `S26` `verify:` `handler raises typer.Exit(code=2) when not ready` -> `pass`
+- `S27` `M` `src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/_config/_profile_inspect.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/_terminal_errors.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/_modelo_readiness_cli.py`
+- `S27` `M` `src/cadrumo/application/modelo/_profile_readiness_gate.py`
+- `S27` `D` `src/cadrumo/entrypoints/cli/tests/test_config_preflight_revision_default.py`
+- `S27` `D` `src/cadrumo/entrypoints/cli/_config/tests/test_preflight_revision_ambiguity_refusal.py`
+- `S27` `R` `src/cadrumo/entrypoints/cli/tests/test_config_profile_preflight_scope.py -> src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/tests/test_config_profile_validate_payload_contract.py`
+- `S27` `M` `src/cadrumo/locales/en/cli.yml`
+- `S27` `M` `src/cadrumo/locales/es/cli.yml`
+- `S27` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S27` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S27` `M` `docs/how-to/choose-modelo.md`
+- `S27` `M` `docs/how-to/censo-update.md`
+- `S27` `M` `docs/_sequences/contracts/how-to/censo-update/censo-update-preflight.seq`
+- `S27` `M` `docs/_sequences/contracts/how-to/choose-modelo/choose-modelo-applicability.seq`
+- `S27` `M` `docs/_sequences/contracts/how-to/profile-setup/profile-setup-inspect.seq`
+- `S27` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S27` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S27` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S27` `M` `docs/locales/es/LC_MESSAGES/how-to/choose-modelo.po`
+- `S27` `M` `docs/locales/ca/LC_MESSAGES/how-to/choose-modelo.po`
+- `S27` `M` `docs/locales/hu/LC_MESSAGES/how-to/choose-modelo.po`
+- `S27` `M` `docs/locales/es/LC_MESSAGES/how-to/censo-update.po`
+- `S27` `M` `docs/locales/ca/LC_MESSAGES/how-to/censo-update.po`
+- `S27` `M` `docs/locales/hu/LC_MESSAGES/how-to/censo-update.po`
+- `S27` `M` `dev/quality/registry_authority_consumer_census.v1.json`
+- `S27` `verify:` `pytest test_profile_readiness_blocks_modelo_work.py -m integration` -> `pass`
+- `S27` `verify:` `pytest test_documented_command_conformance.py -m integration` -> `pass`
+- `S27` `verify:` `python -m dev.docs.sequences check --page how-to/profile-setup` -> `pass`
+- `S27` `verify:` `python -m dev.locales scaffold --check` -> `pass`
+- `S28` `A` `src/cadrumo/entrypoints/cli/tests/test_local_path_spelling.py`
+- `S28` `M` `src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py`
+- `S28` `M` `src/cadrumo/entrypoints/cli/tests/test_transport_locus_declared.py`
+- `S28` `verify:` `pytest test_local_path_spelling.py` -> `pass`
+- `S29` `T`
+- `S29` `verify:` `scratchpad proof: eight mis-spellings, stale exemption, empty graph` -> `pass`
+- `S30` `M` `.vaultspec/rules/aeat-cli-contract.md`
+- `S30` `M` `.claude/rules/aeat-cli-contract.md`
+- `S30` `M` `.gemini/rules/aeat-cli-contract.md`
+- `S30` `M` `.agents/rules/aeat-cli-contract.md`
+- `S30` `M` `.codex/rules/aeat-cli-contract.md`
+- `S30` `verify:` `vaultspec-core sync` -> `pass`
+- `S31` `M` `src/cadrumo/locales/en/cli.yml`
+- `S31` `M` `src/cadrumo/locales/es/cli.yml`
+- `S31` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S31` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S31` `verify:` `dev.locales scaffold --check` -> `pass`
+- `S32` `M` `docs/_sequences/contracts/how-to/`
+- `S32` `R` `docs/_sequences/contracts/how-to/import-bank-statements/import-doclink.seq` -> `import-evidence-pull.seq`
+- `S32` `R` `docs/_sequences/contracts/how-to/ledger-evidence/ledger-evidence-doclink.seq` -> `ledger-evidence-pull.seq`
+- `S32` `R` `docs/_sequences/contracts/how-to/ledger-evidence/ledger-evidence-pull-folder.seq` -> `ledger-evidence-pull-all.seq`
+- `S32` `R` `docs/_sequences/contracts/how-to/reconcile/reconcile-file.seq` -> `reconcile-import.seq`
+- `S32` `R` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-export.seq` -> `sheets-push.seq`
+- `S32` `R` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-compute.seq` -> `sheets-calculate.seq`
+- `S32` `M` `docs/how-to/`
+- `S32` `M` `docs/reference/import-export-and-evidence.md`
+- `S32` `verify:` `every documented aeat invocation resolves against COMMAND_SPECS` -> `pass`
+- `S33` `M` `docs/locales/es/LC_MESSAGES/`
+- `S33` `M` `docs/locales/ca/LC_MESSAGES/`
+- `S33` `M` `docs/locales/hu/LC_MESSAGES/`
+- `S33` `verify:` `python -m dev.docs.i18n` -> `pass`
+- `S34` `M` `dev/quality/cli_action_census_dispositions.toml`
+- `S34` `M` `dev/docs/sequences/_schema.py`
+- `S34` `M` `dev/docs/tests/test_static_frame_reasons.py`
+- `S34` `M` `dev/locales/tests/test_ledger_notice_action_conformance.py`
+- `S34` `M` `dev/locales/tests/test_s89_action_conformance.py`
+- `S34` `M` `dev/tests/test_utf8_enrollment_inventory.py`
+- `S34` `M` `src/cadrumo/entrypoints/cli/_config/_archive_reconcile.py`
+- `S34` `M` `dev/benchmarks/cli/capture_baseline.py`
+- `S34` `M` `dev/benchmarks/cli/baseline.json`
+- `S34` `M` `dev/benchmarks/cli/baseline.census.json`
+- `S34` `verify:` `pytest dev/docs/tests + dev/locales/tests (sequential)` -> `pass`
+- `S34` `verify:` `capture_baseline.py --check` -> `pass`
+- `S34` `verify:` `dev.quality.cli_action_census_dispositions --current-tree` -> `69 residual, all peer-owned`
+- `S35` `M` `src/cadrumo/entrypoints/cli/_command_spec.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_app_family_command_spec_demand_loading.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_command_specs.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_nonwork_command_specs.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_flag.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_observations.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/_config/tests/test_google_command_specs.py`
+- `S35` `verify:` `pytest src/cadrumo/entrypoints/cli (sequential)` -> `1426 passed, 30 failed (all peer-owned)`
+- `S35` `verify:` `pytest <42-file evidence-linked slice> -m integration` -> `30 passed, 20 failed (all peer signature)`
+- `S35` `verify:` `pytest <42-file evidence-linked slice> (unit tier)` -> `320 passed, 54 failed, 37 errors (none campaign-owned)`
+- `S36` `M` `.vault/audit/2026-08-25-cli-root-verb-homes-audit.md`
+- `S36` `M` `.vault/audit/2026-08-26-cli-root-verb-homes-close-honesty-audit.md`
+- `S36` `verify:` `is_official_aeat accepts every filing-record import evidence kind and no observe-local kind` -> `pass`
+- `S37` `M` `src/cadrumo/locales/en/cli.yml`
+- `S37` `M` `src/cadrumo/locales/es/cli.yml`
+- `S37` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S37` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S37` `verify:` `dev.locales scaffold --check` -> `pass`
+- `S38` `M` `.vaultspec/rules/aeat-cli-contract.md`
+- `S38` `M` `.claude/rules/aeat-cli-contract.md`
+- `S38` `M` `.gemini/rules/aeat-cli-contract.md`
+- `S38` `M` `.agents/rules/aeat-cli-contract.md`
+- `S38` `M` `.codex/rules/aeat-cli-contract.md`
+- `S38` `M` `.vault/adr/2026-08-26-cli-root-verb-homes-adr.md`
+- `S38` `verify:` `vaultspec-core sync` -> `pass`
+- `S39` `A` `src/cadrumo/entrypoints/cli/tests/test_transport_verb_grammar.py`
+- `S39` `verify:` `pytest test_transport_verb_grammar.py` -> `pass`
+- `S39` `verify:` `scratchpad proof: retired token, second file leaf, locus compound, empty graph` -> `pass`
+- `S39` `A` `src/cadrumo/entrypoints/cli/tests/test_transport_verb_grammar.py`
+- `S39` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_transport_verb_grammar.py -p no:randomly -n0` -> `4 passed`
+- `S40` `M` `.vault/audit/2026-08-25-cli-root-verb-homes-audit.md`
+- `S41` `M` `src/cadrumo/entrypoints/cli/`
+- `S41` `M` `src/cadrumo/application/operator_surface/_help.py`
+- `S41` `M` `src/cadrumo/locales/en/cli.yml`
+- `S41` `M` `src/cadrumo/locales/es/cli.yml`
+- `S41` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S41` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S41` `M` `docs/how-to/`
+- `S41` `M` `docs/_sequences/contracts/how-to/`
+- `S41` `M` `docs/locales/`
+- `S41` `verify:` `dev.locales scaffold --check` -> `pass`
+- `S41` `verify:` `every documented aeat invocation resolves against COMMAND_SPECS` -> `pass`
+- `S41` `verify:` `pytest campaign gates + operator_surface/tests` -> `108 passed`
+- `S42` `M` `.vault/audit/2026-08-25-cli-root-verb-homes-audit.md`
+- `S43` `M` `src/cadrumo/entrypoints/cli/` -> `src/cadrumo/application/tests/` -> `src/cadrumo/application/user_profile/tests/`
+- `S43` `R` `src/cadrumo/entrypoints/cli/tests/test_ledger_counterparty_show_cli.py -> src/cadrumo/entrypoints/cli/tests/test_ledger_counterparty_view_cli.py`
+- `S43` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S43` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_audit_command_specs.py`
+- `S43` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_gate.py`
+- `S43` `M` `docs/_sequences/contracts/how-to/profile-setup/profile-setup-capabilities.seq`
+- `S43` `M` `docs/_sequences/how-to/profile-setup/`
+- `S43` `M` `src/cadrumo/locales/{en,es,ca,hu}/cli.yml`
+- `S43` `verify:` `pytest src/cadrumo/entrypoints/cli/ -p no:randomly -n0` -> `1426 passed, 28 peer-owned failures, none naming a CLI view or show verb`
+- `S43` `verify:` `pytest test_bootstrap_exempt_entries_resolve.py test_documented_command_conformance.py -m integration` -> `pass`
+- `S44` `M` `src/cadrumo/entrypoints/cli/_modelo_readiness_cli.py`
+- `S44` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py`
+- `S44` `verify:` `pytest test_profile_readiness_blocks_modelo_work.py -m integration` -> `pass`
+- `S45` `M` `src/cadrumo/entrypoints/cli/_config/_google_command_specs.py`
+- `S45` `M` `src/cadrumo/entrypoints/cli/_config/_google_folder.py`
+- `S45` `M` `src/cadrumo/entrypoints/cli/_config/_google_folder_payloads.py`
+- `S45` `M` `src/cadrumo/entrypoints/cli/_config/tests/test_google_command_specs.py`
+- `S45` `M` `src/cadrumo/entrypoints/cli/tests/test_transport_verb_grammar.py`
+- `S45` `M` `src/cadrumo/locales/en/cli.yml`
+- `S45` `M` `src/cadrumo/locales/es/cli.yml`
+- `S45` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S45` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S45` `M` `docs/_sequences/contracts/how-to/review-with-google-sheets/sheets-folder.seq`
+- `S45` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-folder.json`
+- `S45` `verify:` `python -c "...COMMAND_GRAPH..."` -> `294 leaves, 64 declarations, no leaf named get`
+- `S45` `verify:` `pytest four campaign gates + test_google_command_specs.py` -> `25 passed`
+- `S45` `verify:` `pytest test_documented_command_conformance.py -m integration` -> `349 passed`
+- `S45` `verify:` `python -m dev.docs.sequences check --page how-to/review-with-google-sheets` -> `clean`
+- `S45` `verify:` `python -m dev.locales scaffold --check` -> `missing=0`
+- `S46` `M` `src/cadrumo/locales/en/cli.yml`
+- `S46` `M` `src/cadrumo/locales/es/cli.yml`
+- `S46` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S46` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S46` `verify:` `python -m dev.locales scaffold --check` -> `missing=0, extra=5 (all peer-owned flows.manager.edit.shape.*)`
+- `S47` `M` `src/cadrumo/locales/en/cli.yml`
+- `S47` `M` `src/cadrumo/locales/es/cli.yml`
+- `S47` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S47` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S47` `verify:` `python -m dev.locales scaffold --check` -> `ok in all four catalogues`
+- `S47` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py test_parity.py` -> `42 passed`
+- `S47` `verify:` `pytest test_documented_command_conformance.py -m integration` -> `349 passed`
+- `S48` `M` `src/cadrumo/entrypoints/cli/tests/test_root_placement_criterion.py`
+- `S48` `verify:` `pytest four campaign gates` -> `22 passed`
+- `S48` `verify:` `ruff check` -> `clean`
+- `S49` `T`
+- `S49` `verify:` `python -c "...COMMAND_GRAPH leaf-token and family census..."` -> `no new conflation found`
+- `S50` `T`
+- `S50` `verify:` `python -c "...COMMAND_GRAPH same-subject clash scan..."` -> `verify/validate/check clean; list/history clash on four subjects, one of which is a real finding (S51)`
+- `S51` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`
+- `S51` `M` `src/cadrumo/entrypoints/cli/_modelo_reconcile_cli.py`
+- `S51` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py`
+- `S51` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_nonwork_command_specs.py`
+- `S51` `M` `src/cadrumo/entrypoints/cli/tests/test_m036_command_shape.py`
+- `S51` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py`
+- `S51` `M` `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`
+- `S51` `M` `src/cadrumo/application/modelo/reconciliation.py`
+- `S51` `M` `dev/quality/modelo_workspace_action_denominator.py`
+- `S51` `M` `src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_persona_scope.py`
+- `S51` `M` `src/cadrumo-harness/src/cadrumo_harness/_data/agent/personas/cadrumo-reconciler.md`
+- `S51` `M` `src/cadrumo-harness/src/cadrumo_harness/_data/agent/skills/cadrumo-reconciliar/SKILL.md`
+- `S51` `M` `src/cadrumo/locales/en/cli.yml`
+- `S51` `M` `src/cadrumo/locales/es/cli.yml`
+- `S51` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S51` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S51` `M` `docs/how-to/reconcile.md`
+- `S51` `R` `docs/_sequences/contracts/how-to/reconcile/reconcile-history.seq -> reconcile-list.seq`
+- `S51` `R` `docs/_sequences/how-to/reconcile/reconcile-history.json -> reconcile-list.json`
+- `S51` `verify:` `python -c "...COMMAND_GRAPH..."` -> `reconcile family is import/list/pull; 294 leaves, 64 declarations`
+- `S51` `verify:` `pytest four campaign gates` -> `22 passed`
+- `S51` `verify:` `pytest test_documented_command_conformance.py -m integration` -> `pass`
+- `S51` `verify:` `python -m dev.docs.sequences check --page how-to/reconcile` -> `clean`
+- `S51` `verify:` `python -m dev.locales scaffold --check` -> `ok`
+- `S52` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py`
+- `S52` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_natural_key.py`
+- `S52` `M` `src/cadrumo/entrypoints/cli/_modelo_reconcile_cli.py`
+- `S52` `M` `src/cadrumo/entrypoints/cli/_payloads_modelo_reconcile.py`
+- `S52` `M` `src/cadrumo/application/live/justificante.py`
+- `S52` `M` `src/cadrumo/tests/acceptance_wall_catalogue.py`
+- `S52` `M` `src/cadrumo-harness/src/cadrumo_harness/_data/agent/personas/cadrumo-reconciler.md`
+- `S52` `M` `src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md`
+- `S52` `M` `src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
+- `S52` `M` `src/cadrumo-harness/src/cadrumo_harness/_data/agent/skills/cadrumo-reconciliar/SKILL.md`
+- `S52` `verify:` `pytest test_modelo_reconcile_verb.py -m integration` -> `19 failed -> 2 failed, both peer-owned registry coverage`
+- `S53` `M` `src/cadrumo/entrypoints/cli/tests/test_storage_session_preconditions.py`
+- `S53` `M` `src/cadrumo/entrypoints/cli/tests/test_fast_path_no_state.py`
+- `S53` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_exception_propagation.py`
+- `S53` `verify:` `pytest the three modules -p no:randomly -n0` -> `12 passed`
+- `S53` `verify:` `pytest the three modules -m integration` -> `6 passed`
+- `S53` `verify:` `pytest src/cadrumo --collect-only` -> `collection errors 9 -> 6, all six now outside entrypoints/cli/`
+- `S53` `verify:` `ruff check` -> `clean`
+- `S54` `M` `.vaultspec/rules/aeat-cli-contract.md`
+- `S54` `M` `.claude/rules/aeat-cli-contract.md`
+- `S54` `M` `.agents/rules/aeat-cli-contract.md`
+- `S54` `M` `.codex/rules/aeat-cli-contract.md`
+- `S54` `M` `.gemini/rules/aeat-cli-contract.md`
+- `S54` `verify:` `vaultspec-core sync` -> `4 updated, 195 unchanged`
+- `S54` `verify:` `python -c "...every verb in the How section against COMMAND_GRAPH..."` -> `12 of 12 resolve`
+- `S55` `T`
+- `S55` `verify:` `python -c "...COMMAND_GRAPH policy and family census..."` -> `no new conflation`
+- `S56` `M` `src/cadrumo/locales/en/cli.yml`
+- `S56` `M` `src/cadrumo/locales/es/cli.yml`
+- `S56` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S56` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S56` `verify:` `python -m dev.locales scaffold --check` -> `ok`
+- `S56` `verify:` `pytest four campaign gates` -> `22 passed`
+- `S57` `M` `src/cadrumo/locales/en/cli.yml`
+- `S57` `M` `src/cadrumo/locales/es/cli.yml`
+- `S57` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S57` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S57` `verify:` `python -m dev.locales scaffold --check` -> `ok in all four`
+- `S57` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `6 passed`
+- `S57` `verify:` `pytest four campaign gates` -> `22 passed`
+- `S58` `M` `src/cadrumo/locales/en/cli.yml`
+- `S58` `M` `src/cadrumo/locales/es/cli.yml`
+- `S58` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S58` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S58` `verify:` `python -m dev.locales scaffold --check` -> `ok in all four`
+- `S58` `verify:` `pytest four campaign gates` -> `22 passed`
+- `S59` `M` `src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py`
+- `S59` `verify:` `python -c "...COMMAND_GRAPH policy.destructive..."` -> `archive False, stash False, restore False, remove True, reset True`
+- `S59` `verify:` `pytest four campaign gates + test_command_policy.py` -> `22 passed`
+- `S59` `verify:` `pytest test_command_policy.py test_app_ledger_command_specs.py -m integration` -> `pass`
+- `S59` `verify:` `python -c "...graph..."` -> `294 leaves, 64 declarations`
+- `S60` `T`
+- `S60` `verify:` `python -c "...COMMAND_GRAPH unsignalled-subject enumeration..."` -> `45 subjects, 0 mis-homed`
+- `S61` `M` `src/cadrumo/locales/en/cli.yml`
+- `S61` `M` `src/cadrumo/locales/es/cli.yml`
+- `S61` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S61` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S61` `verify:` `python -m dev.locales scaffold --check` -> `ok in all four`
+- `S61` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `6 passed`
+- `S61` `verify:` `pytest four campaign gates` -> `22 passed`
+- `S62` `T`
+- `S62` `verify:` `pytest test_bootstrap_exempt_entries_resolve.py test_login_gated_verbs_never_exempt.py application/tests/test_storage_write_policy.py` -> `7 passed unit, 61 passed integration`
+- `S63` `T`
+- `S63` `verify:` `python -c "...COMMAND_GRAPH live_write census..."` -> `0 of 294 leaves declare live_write`
+- `S63` `verify:` `python -c "...app live family..."` -> `36 leaves, none declaring a live write`
+- `S64` `T`
+- `S64` `verify:` `python -c "...completeness-claim census over leaf help..."` -> `18 claims, all checked, none overstated`
+- `S65` `A` `.vault/exec/2026-08-26-cli-root-verb-homes/2026-08-26-cli-root-verb-homes-W05-P14-S39.md`
+- `S65` `M` `.vault/exec/2026-08-26-cli-root-verb-homes/2026-08-26-cli-root-verb-homes-W05-P14-S35.md`
+- `S65` `verify:` `python -c "...closed rows vs record files..."` -> `61 closed, 0 without a record`
+- `S65` `verify:` `vaultspec-core vault check all` -> `no finding naming this feature`
+- `S66` `M` `.vault/adr/2026-08-26-cli-root-verb-homes-adr.md`
+- `S66` `verify:` `python -c "...COMMAND_GRAPH archive subject..."` -> `export, import, inspect, push, reconcile`
+- `S66` `verify:` `vaultspec-core vault check all` -> `no finding naming this feature`
+- `S67` `M` `.vault/plan/2026-08-26-cli-root-verb-homes-plan.md`
+- `S67` `verify:` `each decision checked against COMMAND_GRAPH, the shipped gates and the synced rule` -> `D5 was contradicted and is amended (S66); D1-D4, D6, D7 hold`
+- `S68` `T`
+- `S68` `verify:` `pytest test_operator_surface_contract_drift.py -m integration` -> `1 passed`
+- `S68` `verify:` `python -c "...COMMAND_GRAPH..."` -> `20 root->child families, 65 leaf subjects`
+- `S69` `T`
+- `S69` `verify:` `python -c "...COMMAND_GRAPH subject roots..."` -> `every subject inherits its root from path[1]; none differs from its family`
+- `S70` `T`
+- `S70` `verify:` `python dev/benchmarks/cli/capture_baseline.py --samples 3 --warmups 1` -> `AttributeError: 'LiveCommandNode' object has no attribute 'execution_policy'`
+
+## Notes
+
+- `S04` Four `reference` parameters are deliberately left at `TransportLocus.NONE`:
+- `S04` `app ledger evidence review show` and the three `app ledger prorrata` leaves. They
+- `S04` carry IVA prorrata and review record references, not remote handles, so a
+- `S04` remote-handle declaration there would be false.
+- `S09` The parity gate surfaced three reference classes the moved files did not carry:
+- `S09` four orphaned shared option constants in `_google_command_specs.py`, a live
+- `S09` cross-family reuse of the export capability key by `sync probe` and `sync push`
+- `S09` (rehomed to `cli.config.google.export_capability_disabled`), and two prose
+- `S09` references in `application/export/_google_operation.py`.
+- `S11` `test_every_production_module_is_exercised_by_a_test` remains red on modules
+- `S11` outside this Step's scope (`adapters/outbound/aeat/browser/health.py`,
+- `S11` `core/storage_route_guidance.py`, `domain/fincas/_source_readiness.py` and
+- `S11` siblings). The two entries this Step repointed are no longer flagged.
+- `S13` The proof runs entirely from a scratchpad script by substituting the gate's
+- `S13` subject accessor; no tracked file under `src/` is mutated, so a crashed run
+- `S13` leaves no residue and a peer sweep cannot commit the mutation.
+- `S15` The ADR's `mirror` subject was overruled by the operator: the noun is not one a
+- `S15` CLI operator would guess, and `push` beside a working `export`/`import` pair
+- `S15` makes the absent `pull` more visible than a separate subject did. The artifact
+- `S15` difference the split was protecting is carried in the payload layer instead.
+- `S15` With `push` relocated, `config google sync` held one verb and was flattened to
+- `S15` `config google probe`.
+- `S21` A full `pytest --co` over both CLI test trees surfaced five test modules still
+- `S21` importing symbols relocated in W02 and W03: the deleted `_google_sync_calc`
+- `S21` handler, the split `GoogleSyncCalc*` payloads, and the retired `doclink` verb.
+- `S21` They were swept here rather than left for W05. Three of them also belonged in a
+- `S21` different directory once their subject moved from `config` to `app modelo`.
+- `S22` No code change was required: the declaration landed correctly during the W01
+- `S22` locus sweep. `--file` is the required capsule and is primary; `--artifact` is
+- `S22` optional and its presence selects the machine-secret variant, so it configures
+- `S22` the operation rather than being its subject.
+- `S23` The proof returned the opposite of the plan's expectation. `verify_registry_tree`
+- `S23` validates the authority and runs `required_text` corpus checks;
+- `S23` `build_registry_integrity_report` additionally builds a representative `M100`
+- `S23` snapshot and so exercises the snapshot-build gate. Neither subsumes the other,
+- `S23` so the retirement in S24 does not proceed.
+- `S24` No code change. The Step is a ruling, not a deletion: `config repair integrity
+- `S24` registry` is kept on the S23 evidence, and the ADR and audit are amended. The
+- `S24` audit finding is downgraded from duplication to discoverability.
+- `S27` Both recorded blockers were refuted rather than waited out. `config profile
+- `S27` preflight` reads the active profile record through `_read_profile_record`, so it
+- `S27` required an unlocked session exactly as `app modelo readiness` does; the
+- `S27` "preflight works sessionless" claim was wrong. And the retiree needed no working
+- `S27` run to be compared, because `ModeloReadinessResult.missing` carries the same six
+- `S27` fields as the retired `ProfilePreflightMissingPayload` over the same
+- `S27` `modelo_work_profile_preflight_report` gate, plus the registry, binding and
+- `S27` ledger axes.
+- `S27` Retiring the verb exposed a live defect in its replacement: `app modelo
+- `S27` readiness --revision-id` raised `TypeError: 'typing.TypeAliasType' object is
+- `S27` not callable`, because the handler called `RevisionId(...)` on a PEP 695 alias.
+- `S27` It was the only such call site in the tree, and the flag had never worked.
+- `S27` The documented outcome changed truthfully. Preflight exited 0 on a fresh
+- `S27` sandbox profile; readiness exits 2 there, because `binding_ready` is false
+- `S27` while four source bindings are unfilled. The goldens and the prose now record
+- `S27` that, and the guide tells the operator to read the failing axis rather than the
+- `S27` overall verdict.
+- `S28` The spelling census corrected a declaration made in W01: `app ledger evidence
+- `S28` batch --file` was declared auxiliary beside a positional directory, but the
+- `S28` verb's own help says either input combines with or replaces the other. Both are
+- `S28` primary, and the one-primary invariant is re-keyed on (locus, shape) rather than
+- `S28` direction alone.
+- `S29` The proof substitutes the gate's parameter accessor from a scratchpad script; no
+- `S29` tracked file under `src/` is mutated.
+- `S30` Pulled forward out of W05. The `file` -> `import` renames in W03.P08 put the
+- `S30` tree in contradiction with the standing rule's `pull` + `file --file` mandate,
+- `S30` and the rule is always-on, so the gap was closed in the same session rather than
+- `S30` left open across two waves. Generated provider copies were propagated by
+- `S30` `vaultspec-core sync`, never hand-edited.
+- `S33` The catalogue refresh surfaced a gap in S32: that sweep replaced full command
+- `S33` forms but not the shorthand the prose uses (`reconcile file`, `doclink`,
+- `S33` `sync calc export`). Six how-to pages carried those and were corrected before
+- `S33` the catalogues were regenerated.
+- `S34` Two defects were found here, both introduced by this campaign. The S89 config
+- `S34` module scope had `_google_sync_calc.py` RENAMED to `_modelo_spreadsheet_cli.py`
+- `S34` when the file had in fact left `_config/` and needed deleting from the set; the
+- `S34` three modules the archive subject added were also absent. And moving
+- `S34` `_app_maintenance.py` into `_config/` brought it under that directory's ban on
+- `S34` `tr(..., default=...)` fallbacks, which it had carried legally outside it; the
+- `S34` three fallbacks are removed, their keys already being present in all four
+- `S34` catalogues.
+- `S34` The tracked `dev/benchmarks/cli/baseline.census.json` is NOT refreshed. It was
+- `S34` already stale before this campaign (peer verbs `evidence attachment-queue`,
+- `S34` `attachment-view`, `inventory closing-authority-record`, `modelo work run` are
+- `S34` live and absent from it), re-capture requires an uncontended tree, and
+- `S34` hand-editing it would fabricate timing provenance.
+- `S34` Completion.** Both halves of this Step are now done, and the Step is CLOSED.
+- `S34` The earlier body above described work toward it and left the benchmark goldens
+- `S34` unrefreshed; that condition no longer holds.
+- `S34` Half A, dev quality dispositions.** `dev.quality.cli_action_census_dispositions
+- `S34` current-tree` went from 77 findings to 69. The eight cleared were all
+- `S34` campaign-owned: three stale `action_identity` rows in
+- `S34` `application/operator_surface/_help.py` left by this campaign's own show->view
+- `S34` rename (`_app_help` audit, `_config_help` profile, `_config_storage_section`
+- `S34` storage), the paired "missing" rows the same rename created, and the
+- `S34` `_ledger_lifecycle_cli.py::ledger_evidence_pull` pair. The mechanical
+- `S34` `--write-current` adjudicator was deliberately NOT used: it rewrites every
+- `S34` candidate row and would have claimed roughly seventy rows of concurrent peer
+- `S34` relocation work. The residual 69 findings are exactly that peer work
+- `S34` (`_actions_*.py` -> `actions_*.py`, `_models.py` -> `models.py`, wizard,
+- `S34` workflow) and clear when its consumer sweep lands.
+- `S34` Half B, CLI benchmark goldens.** Both artifacts are re-captured:
+- `S34` `dev/benchmarks/cli/baseline.json` and its derived
+- `S34` `dev/benchmarks/cli/baseline.census.json`. The capture tool itself had to be
+- `S34` repaired first — `_policy_payload` read `node.execution_policy`, an attribute
+- `S34` deliberately removed from `LiveCommandNode` ("Policy is intentionally absent from
+- `S34` this Click census"), so the tool could not run at all. It now resolves policy
+- `S34` through `command_execution_policy_for_cli_path`, the public entrypoint boundary
+- `S34` written for cross-distribution consumers; no API was promoted and no private
+- `S34` import was added.
+- `S34` What the baseline attests, and what it does not.** The artifact is
+- `S34` captured-and-valid-at-digest. It is NOT permanently current: verification with
+- `S34` `require_current_source` compares the recorded manifest against the live tree and
+- `S34` refuses with "baseline source snapshot is stale against the current source tree",
+- `S34` and this worktree takes peer commits continuously. Read the pair as evidence of
+- `S34` the surface at its snapshot digest, not as a standing claim about HEAD.
+- `S34` Deliberately unfixed, and why.** Six dead-verb prose citations remain, all in
+- `S34` directories a concurrent peer campaign is actively restructuring, where an edit
+- `S34` would collide with in-flight work:
+- `S34` `adapters/outbound/google/tests/test_document_link_resolve_roundtrip.py:3`,
+- `S34` `adapters/outbound/google/tests/test_drive_folder_bulk_fetch_roundtrip.py:3`,
+- `S34` `application/ledger/evidence.py:13`, `domain/attachments/_enums.py:75`, and
+- `S34` `google sync calc` prose in `adapters/outbound/google/` and
+- `S34` `application/storage/calc_sheets/`. They are citations only; no runtime value
+- `S34` reads them.
+- `S34` Carried forward, not closed here.** A repair-policy row governing a retired
+- `S34` verb, and the governance regression this campaign's own D2 rename introduced, are
+- `S34` recorded in the eighth addendum of the close-honesty audit. Neither is fixed by
+- `S34` this Step.
+- `S34` Attribution note.** The file changes listed above are already in HEAD. A
+- `S34` concurrent peer's broad commits absorbed them under unrelated subjects, so they
+- `S34` cannot be found by commit message; locate them by path and timestamp.
+- `S35` The suite went 50 -> 35 -> 30 failures across three passes; all 20 failures this
+- `S35` campaign owned are fixed and the remaining 30 trace to concurrent peer work:
+- `S35` `cadrumo.application.wizard` and `cadrumo.application.modelo` inert package
+- `S35` namespaces (17), the modelo-200 `2025-y-siguientes` registry split (4),
+- `S35` `LedgerIssuePayload` gaining an `operator_action` field (1), output-surface
+- `S35` exemptions keyed to modules the peer renamed (2), and passphrase-channel
+- `S35` refusals in a non-TTY environment (3). Three further modules are excluded from
+- `S35` the run entirely because peer renames broke their imports at collection
+- `S35` (`sessionless_root_fixtures`, `cli:_errors`).
+- `S35` Two defect classes this Step exposed are worth carrying forward. First, a
+- `S35` find-and-replace sweep cannot tell a RENAME from a MOVE or a DELETION: four
+- `S35` exact-set census modules carried keys like `config_modelo_spreadsheet_cli_pull`
+- `S35` for leaves that had left the family entirely. Second, `_command_spec.py` is
+- `S35` probed by `runpy.run_path` in a bare interpreter with no package context, so the
+- `S35` relative core import added in W01.P01.S02 broke it; the absolute form satisfies
+- `S35` the probe because `core/transport_locus.py` imports nothing but `enum`.
+- `S35` `test_modelo_spreadsheet_pull_observations` asserted a relative-import DEPTH
+- `S35` (`node.level == 4`) rather than a name. Moving the handler out of `_config/`
+- `S35` necessarily invalidated it, and no rename sweep could have caught that.
+- `S35` This record covers work done TOWARD the Step; the Step itself remains OPEN, and
+- `S35` its heading promises more than this record delivers. The row has since been
+- `S35` rewritten to describe bounded per-package slices, because a single sequential
+- `S35` full-tree pass does not complete in this worktree: one died at 20 per cent after
+- `S35` fifty minutes with no summary, and a `domain`-only slice reached 7 per cent in
+- `S35` fifteen. The slices that did complete are recorded in the fourth addendum of the
+- `S35` close honesty audit -- `entrypoints/cli` 1426 passed / 28 failed, `core` 2234
+- `S35` passed / 19 failed, campaign-touched non-CLI 10 passed / 2 failed, every failure
+- `S35` traced to peer work.
+- `S35` What the standing goal still asks for that this excludes: a single pass over the
+- `S35` whole tree. It is not achievable here while six modules fail at collection from
+- `S35` the peers' in-flight relocation, since one broken import aborts the entire run.
+- `S35` Completion.** The Step is now CLOSED. The paragraph above describes the state
+- `S35` before the final slice ran; the bounded per-package slicing the row asks for is
+- `S35` done, and every area's failures are triaged.
+- `S35` What was run, and on both marker tiers.** The earlier slices —
+- `S35` `entrypoints/cli` 1426 passed / 28 failed, `core` 2234 passed / 19 failed, and
+- `S35` the campaign-touched non-CLI files 10 passed / 2 failed — are joined by a
+- `S35` 42-file slice derived from evidence rather than intuition: every residue test
+- `S35` importing this campaign's diff surface (`command_api`, `COMMAND_GRAPH`,
+- `S35` `command_spec_*`, `entrypoints.cli`, `operator_surface`,
+- `S35` `resolve_modelo_localization`, `lookup_translation_entry`, `cadrumo.locales`,
+- `S35` `cli_argv_for`, `command_execution_policy`), plus the tree-WALKING gates an
+- `S35` import scan structurally cannot see — the docstring gates,
+- `S35` `test_qualified_docstring_references_resolve`,
+- `S35` `test_locale_tr_positional_inventory`,
+- `S35` `test_every_test_module_is_lane_reachable`, `test_acceptance_wall_catalogue` and
+- `S35` `test_console_script_imports`, reachable because this campaign edited a module
+- `S35` docstring.
+- `S35` Running only `-m integration` deselected 411 tests, so the unit tier was run as
+- `S35` well. Both are recorded above.
+- `S35` Triage: zero campaign-owned failures, three non-campaign causes.**
+- `S35` First, the profile-custody KDF worker dies in this environment — 40
+- `S35` `ProfileCustodyRefusedError`, 40 `EOFError: profile KDF worker closed its pipe`
+- `S35` from `custody/_kdf_codec.py:86`, and 30 `FileNotFoundError`, concentrated in the
+- `S35` review-package recipient modules and the acceptance-wall catalogue. That is a
+- `S35` host condition, not a defect in anyone's code, and it pollutes neighbouring
+- `S35` files. Second, a concurrent peer's in-flight `app ledger ratios` specs declare
+- `S35` `value=ValueContract(int)`, which raises `AttributeError: type object 'int' has
+- `S35` no attribute 'qualname'` in any test that materialises parameter annotations;
+- `S35` all 20 integration-tier failures and 1 unit-tier failure are this. Third, four
+- `S35` docstring gates cite exactly two files, `adapters/inbound/borrador/__init__.py`
+- `S35` and `application/user_profile/bundle_encryption.py`, neither touched here.
+- `S35` Two negative checks support the attribution.** No failure output names any
+- `S35` file this campaign changed, and no failure output contains any retired verb
+- `S35` token from D5 — so no rename debris reached the results.
+- `S35` Scope stated plainly.** This is bounded per-package slicing, which is what the
+- `S35` row asks for and what this worktree can complete; it is not a single full-tree
+- `S35` pass. A full pass was measured at roughly 4.2 hours and the one attempt died at
+- `S35` 20 per cent when the backing share failed, at the same throughput, so the death
+- `S35` was the share rather than a timeout.
+- `S36` No code change. The Step is a ruling: the two verbs are not a conflation. Their
+- `S36` evidence kinds fall on opposite sides of `is_official_aeat`
+- `S36` (`_observations_repository.py:100`), which `no-silent-under-declaration` makes the
+- `S36` governing boundary for persisted observations. Merging or renaming either toward
+- `S36` the other would place an official and a non-official intake behind one verb.
+- `S37` The two duplicate-question findings were refused as retirements on proof that
+- `S37` each pair does different work, which left the discoverability half unaddressed:
+- `S37` `app registry verify` said "Verify the integrity of the local registry" and
+- `S37` `config repair integrity registry` said "Run full registry validation", so
+- `S37` nothing told an operator which to reach for.
+- `S37` Each of the four verbs now states the thing it uniquely covers and names its
+- `S37` sibling for the rest. This is a tightening rather than a resolution: both pairs
+- `S37` remain live, and the standing goal still asks for one home per question.
+- `S38` Sweeping all 294 leaves against the campaign's own grammar found a gap in the
+- `S38` grammar. D2 had a credential-enrolment carve-out that was really a special case
+- `S38` of an unstated rule: a verb that CREATES a record names the record, not the
+- `S38` transport it performs to get the content. `app ledger evidence add`,
+- `S38` `evidence batch` and `inventory closing-authority-record` are the same shape and
+- `S38` were covered by nothing. The grammar now has three categories and the arbitrary
+- `S38` carve-out is gone.
+- `S39` D6 promised a gate refusing a transport verb outside the four tokens and W05.P12
+- `S39` shipped only the spelling half. This closes it, scoped to the decidable part: a
+- `S39` leaf that DECLARES a transport locus must not wear a retired token. Whether a
+- `S39` given creating or computation verb should really have been a transport verb is
+- `S39` author judgement and is deliberately not gated -- `config google probe` and
+- `S39` `config google folder get` both carry retired tokens and both pass, because
+- `S39` neither declares a locus.
+- `S39` This record was written after the fact, and that is the finding.** The Step was
+- `S39` marked closed with no execution record, which is the one thing
+- `S39` `aeat-agent-orchestration` forbids outright: without a record,
+- `S39` delivered-as-specified, delivered-narrower and recorded-but-not-implemented wear
+- `S39` the same checkbox.
+- `S39` It was caught by auditing every closed Step against the record directory --
+- `S39` sixty-one closed, sixty with a record, this one without. The gap traces to the
+- `S39` plan repair: seven rows (S36-S42) had been lost from the plan while their
+- `S39` records survived on disk, and the rows were reconstructed from those records'
+- `S39` own headings. S39 was the single row with no record to reconstruct from, so its
+- `S39` text came from the close audit's prose instead, and nothing then created the
+- `S39` missing record.
+- `S39` The work itself is real and was verified before this record was written rather
+- `S39` than assumed from the checkbox: `test_transport_verb_grammar.py` is present, and
+- `S39` its four tests pass. The gate refuses a leaf that declares a transport locus
+- `S39` while wearing a retired token, asserts `file` still names exactly one leaf
+- `S39` (`app modelo work file`), refuses a `<token>-<locus>` compound, and carries an
+- `S39` anti-vacuity floor so a collapsed graph cannot green it.
+- `S39` W05.P12 had shipped only the option-spelling half of what D6 promised; this is
+- `S39` the verb half.
+- `S40` No code change. The finding was persisted with its evidence and left explicitly
+- `S40` marked as needing a ruling, because the accepted ADR's D2 governs data movement
+- `S40` only and says nothing about read verbs. The operator ruled on it in the following
+- `S40` session and it was executed as S41.
+- `S41` The eight `token="show"` values were flipped by exact line number with an
+- `S41` assertion that the line held the token, rather than by substitution. Four earlier
+- `S41` census failures in this campaign came from blanket replaces that could not tell a
+- `S41` rename from a move.
+- `S41` Two surfaces were only caught downstream. The deferred-target check found that
+- `S41` the spec-key replace had also hit two handler STRINGS, leaving `config profile
+- `S41` view` and `config storage view` pointing at functions that no longer existed. And
+- `S41` `operator_surface/_help.py` carried literal `command="aeat config storage show
+- `S41` AREA"` strings beside its translation keys, so renaming the keys alone would have
+- `S41` left the curated help printing three dead verbs to operators.
+- `S42` No code change. Three synonym groups were examined and all three are principled:
+- `S42` `remove` versus `delete` is membership versus entity, `status` versus `check` is
+- `S42` offline state versus authority validation, and `config auth apoderado check`
+- `S42` refuses by design because the live AEAT read at that boundary is sealed.
+- `S43` S41 swept the specs, handlers, payloads, locale catalogues and prose but not the
+- `S43` callers. Eleven `*_view_help` keys were referenced by code and absent from all
+- `S43` four catalogues, six `*_show_help` keys were left orphaned, and 98 test
+- `S43` invocations still addressed a token the graph no longer carries.
+- `S43` The locale gate did not catch the orphans on its own: `scaffold --check`
+- `S43` reported `extra=0` while ten unreferenced keys sat in the tree, and only
+- `S43` reclassified them once the `view` keys existed. Any bulk locale verb -
+- `S43` `remove`, `move-revision` - rewrites the shard from its own snapshot and drops
+- `S43` concurrent `set` values, so catalogue edits must end with the `set` pass, not
+- `S43` begin with it.
+- `S43` The bootstrap-exempt subtree for `config storage` still declared `show`. That
+- `S43` surface is named in `aeat-cli-contract` as one the gates do not scan, and it
+- `S43` fails open: a verb missing from the declared subtree drops out of the
+- `S43` profile-bound write guard.
+- `S44` `RevisionId` is declared `type RevisionId = Annotated[str, ...]`, a PEP 695
+- `S44` alias, and the handler called it as `RevisionId(revision_id)`. A
+- `S44` `typing.TypeAliasType` is not callable, so every invocation carrying
+- `S44` `--revision-id` raised `TypeError` and surfaced as exit 6, an internal error.
+- `S44` This was the only site in the tree constructing the alias; the flag had never
+- `S44` worked. The alias is `str` at runtime and the callee accepts `RevisionId |
+- `S44` None`, so the string passes through unchanged.
+- `S44` The defect survived because the test that exercised it asserted `exit_code ==
+- `S44` 0` on profiles the same test declares unready, so it could never pass and its
+- `S44` failure read as expected noise. Those assertions now match the handler's
+- `S44` documented contract: readiness exits 2 while any axis is unready.
+- `S44` Retiring `config profile preflight` is what made this load-bearing: readiness
+- `S44` is now the one home for the question, and `--revision-id` is its replay
+- `S44` override.
+- `S45` Found by reading the leaf-token census off the live graph, not by a gate. Within
+- `S45` one family, `credential-source` read with `view` while `folder` read with `get`
+- `S45` the same shape, two verbs, and `get` is on the contract's retired list.
+- `S45` The verb-grammar gate passed it correctly on its own terms: the gate only
+- `S45` refuses a retired token on a leaf that DECLARES a transport locus, and a
+- `S45` settings read declares none. That scoping is deliberate and still right, but it
+- `S45` leaves exactly this residue -- a retired token on a locus-free verb that is
+- `S45` nonetheless a synonym split. The gate's docstring now says so and names this
+- `S45` verb as the worked example, replacing the sentence that cited it as a
+- `S45` correct pass.
+- `S45` The rename also caught the recurring find-and-replace failure. Renaming the spec
+- `S45` key, help key, handler target and payload class all succeeded while the
+- `S45` positional token stayed `"get"`, because a bare `"get"` was not in the
+- `S45` replacement set. The graph still reported `config google folder get` afterwards.
+- `S45` Only a graph rebuild caught it; the string sweep looked complete.
+- `S46` Twenty `cli.*` keys were present in all four catalogues and referenced by
+- `S46` nothing: the retired `config profile preflight` family, and `show_help` leaves
+- `S46` for profile, censo, capabilities, auth diagnostics, google credential-source,
+- `S46` storage and modelo work revision. They were audited by walking the loaded
+- `S46` catalogue and diffing against every dotted `cli.` literal in the tree, then
+- `S46` spot-checked by suffix grep so a dynamically-composed key could not be mistaken
+- `S46` for a dead one.
+- `S46` Two mechanisms had kept them alive.
+- `S46` First, the shard-rewrite hazard. Every bulk locale verb -- `remove`,
+- `S46` `move-revision` -- rewrites the shard from its own snapshot, so it silently
+- `S46` resurrects keys a previous `remove` had cleared and drops values a previous
+- `S46` `set` had written. An earlier removal pass in this campaign was undone wholesale
+- `S46` by a later `move-revision`. The rule is ordering: a catalogue edit must END with
+- `S46` the `set` pass, never begin with it.
+- `S46` Second, a real gap in the gate. `scaffold --check` reported `extra=0` while all
+- `S46` twenty sat in the tree, and only reclassified the `show_help` half as `extra`
+- `S46` once the matching `view_help` keys existed. `extra=0` therefore does not mean
+- `S46` "no orphans"; it means no orphan the scaffold could pair with a live key. An
+- `S46` unreferenced key whose replacement was never authored stays invisible to it.
+- `S47` Found by walking the unsignalled-subject residue the placement gate declines to
+- `S47` judge: 45 of 65 subjects carry no policy signal in either direction, and the
+- `S47` diagnostics families sit in that set.
+- `S47` The two verbs are NOT duplicates and were not merged. `app diagnostics
+- `S47` llm-usage` reads `local-storage` through `build_llm_usage_report` and measures
+- `S47` every application LLM run by provider and model; `app ledger llm-diagnostics`
+- `S47` reads `encrypted-facts` through `build_llm_diagnostics_report` and measures
+- `S47` ledger extraction cost and classification confidence. Different populations,
+- `S47` different stores.
+- `S47` What was wrong is that both help strings opened with "Report ... LLM usage ...",
+- `S47` both take `--since` and `--until`, and neither named the other -- so an operator
+- `S47` asking what the LLM has been doing had two answers and no way to choose. This is
+- `S47` the same shape as the registry-health pair, and it takes the same remedy S37
+- `S47` established: each verb states what it uniquely covers and names its sibling. The
+- `S47` split itself is principled and stays.
+- `S47` A third family, `config auth diagnostics`, was examined and left alone: it
+- `S47` answers why an AEAT login failed, which is not the same question.
+- `S48` The gate explains why a bare `calculation` capability is not an `app` signal by
+- `S48` naming four read-only `config` verbs that declare it. One of the four,
+- `S48` `config profile preflight`, was retired into `app modelo readiness` earlier in
+- `S48` this campaign, so the gate's own justification cited a verb the graph no longer
+- `S48` carries.
+- `S48` The reasoning was never load-bearing on that verb -- the other three carry it --
+- `S48` so the fix is a correction, not a re-argument. The retirement is recorded inline
+- `S48` rather than silently dropped, because a reader comparing this docstring against
+- `S48` an older revision would otherwise wonder which verb went missing and why.
+- `S48` This is the `firmware-reference-parity` failure mode applied to a gate's prose:
+- `S48` a rename or retirement updates the mechanism and leaves the surrounding
+- `S48` explanation asserting the old state.
+- `S49` No code changed. This records six verb groups examined and cleared, each with the
+- `S49` criterion a later reader can re-check, so the campaign does not re-litigate them.
+- `S49` `create` (4) versus `add` (7): container versus member.** `create` brings a new
+- `S49` subject into being that other rows then attach to -- a profile, a work unit, an
+- `S49` inventory, an M145 record. `add` appends a member to a collection that already
+- `S49` exists -- a transaction, an evidence row, an inventory movement, an invoice, a
+- `S49` rule, a recipient, a descendiente. The pair `inventory create` /
+- `S49` `inventory movement add` shows the distinction inside one family.
+- `S49` `update` (3) versus `set` (5): record versus setting.** `update` mutates a
+- `S49` stored record addressed by id (evidence, invoice, transaction). `set` assigns a
+- `S49` configuration value (ratios, certificate secret, credential source, folder,
+- `S49` capabilities). No leaf crosses the line.
+- `S49` `configure` (2) versus `set`.** Both `config auth configure` and
+- `S49` `config auth apoderado configure` write several related fields as one operation;
+- `S49` `set` writes one value. A multi-field write named `set` would understate what it
+- `S49` touches.
+- `S49` `register` (2): enrolling an external identity.** `config auth certificate
+- `S49` register` and `config google register` both enrol a credential the operator
+- `S49` already holds. The CLI contract names the first as its worked example of a
+- `S49` CREATING verb, and the second matches it.
+- `S49` `latest` (5) is a selector, not a synonym for `view`.** Every one of the five
+- `S49` families carrying it -- borrador 100, deudas, expedientes, notifications, verify
+- `S49` also carries `list` AND `view`. `view` addresses one capture by id, `list`
+- `S49` enumerates, `latest` picks the most recent. Uniform across all five, and it
+- `S49` names which record rather than what the verb does.
+- `S49` `app modelo iva-wallet` has three write verbs and needs all three.** `seed`
+- `S49` declares a carry-forward balance to bootstrap local history; `correct` repairs a
+- `S49` wrong seed under an audit guard; `override` records a deliberate taxpayer
+- `S49` deviation releasing the M303 prior-compensación carry, and demands a reason, an
+- `S49` evidence locator and `--confirm`. Different operations, different guards.
+- `S49` Separately, `app live iva-wallet` and `app modelo iva-wallet` share the noun but
+- `S49` not the job: the first pulls from AEAT, the second is local wallet state.
+- `S49` The hunt is not exhaustive. Groups still untested are recorded in the loop
+- `S49` prompt rather than implied to be clear.
+- `S50` No code changed. Two families examined, each reduced to a criterion a later
+- `S50` reader can re-run rather than re-argue.
+- `S50` `verify` (7) / `validate` (3) / `check` (6) is principled by construction.**
+- `S50` The reading that separates them is the kind of authority each appeals to:
+- `S50` `verify` checks against an external or cryptographic authority (a signature, the
+- `S50` registry corpus, AEAT filing expectations, workbook parity); `validate` checks
+- `S50` against a declared schema or constraint (profile facts, an M145 record, ratios);
+- `S50` `check` checks whether a resource is healthy and usable (storage, a certificate,
+- `S50` config, a ledger before calculation, an audit bundle's digests).
+- `S50` That reading is soft on its own, so it was replaced by a hard test: **does any
+- `S50` subject carry two of the three?** None does. Sixteen leaves, sixteen subjects,
+- `S50` no subject offering a choice between them. An operator therefore never has to
+- `S50` decide which of the three applies to the thing in front of them, which is the
+- `S50` only place a synonym split can actually cost anything.
+- `S50` `list` (33) versus `history` (7): collection versus one subject's event
+- `S50` chain.** The hard test here is the subject argument. Zero of the 33 `list`
+- `S50` leaves take a subject argument -- the criterion holds without exception on that
+- `S50` side. On the `history` side, three take a required subject id (`app ledger
+- `S50` history` a transaction, `app modelo work history` a work unit, `config profile
+- `S50` history` a profile, the last optional and defaulting to the active one), and
+- `S50` three more address an implicit singleton scoped by coordinates (`app live
+- `S50` iva-wallet history` by year, `app modelo history` by modelo/year/period, `app
+- `S50` live notifications document history`).
+- `S50` The seventh, `app modelo reconcile history`, does not fit either side and is
+- `S50` raised separately as S51.
+- `S50` `runs` was checked in passing: `app modelo work` carries `list`, `history` and
+- `S50` `runs`, and they return three different entity types -- work units, lifecycle
+- `S50` events, and persisted workflow runs. Not a three-way split of one question.
+- `S51` Raised for a ruling rather than decided here, because a verb rename is
+- `S51` operator-facing and the campaign's precedent for that is an operator decision --
+- `S51` `mirror` became `archive push` that way, and S41's own row was written "NEEDS A
+- `S51` RULING before execution". The operator ruled for `list`.
+- `S51` The evidence was genuinely two-sided and both sides were put. FOR `list`: the
+- `S51` handler's own docstring said "List past reconciliations", it calls
+- `S51` `list_modelo_reconciliations`, it returns a count plus rows rather than an event
+- `S51` chain, `--work-unit-id` is an optional filter rather than a subject, and zero of
+- `S51` the 33 `list` leaves in the tree take a subject argument. FOR `history`: the rows
+- `S51` carry `event_id` and are genuinely past events, and the implicit subject is the
+- `S51` active profile, which would have paralleled `app live iva-wallet history`.
+- `S51` A detail that arrived after the ruling supports it: the existing translations of
+- `S51` `history_help` in all four catalogues already read "List" / "Lista" / "Llista" /
+- `S51` "Listázza". The prose had been describing a `list` for as long as the key
+- `S51` existed.
+- `S51` The payload classes keep their names. `ModeloReconciliationHistoryResult` and
+- `S51` `ModeloReconciliationHistoryRowPayload` mirror the application-layer
+- `S51` `ModeloReconciliationHistoryEntry`, which names the DATA -- a recorded
+- `S51` reconciliation -- not the verb. Renaming only the CLI half would desynchronise
+- `S51` them from the type they project.
+- `S51` The positional token was the trap again: renaming the spec key, both help keys,
+- `S51` the handler target and the envelope identity all succeeded while `token="history"`
+- `S51` sat untouched, exactly as in S45. It was flipped by line with an assertion, and
+- `S51` only the graph rebuild would have caught it otherwise.
+- `S52` Surfaced while re-running the reconcile suite after S51: nineteen tests failed
+- `S52` with `No such command 'file'`. The verb had been renamed to `import` earlier in
+- `S52` this campaign under the `--file` standard, and the callers were never swept.
+- `S52` The same lesson as S43, and it cost a second reproduction to learn properly. The
+- `S52` first pass caught six single-line invocations by grepping `"reconcile", "file"`
+- `S52` and fixed nineteen failures down to fifteen -- because fifteen more invocations
+- `S52` were multi-line argv lists where `"reconcile",` and `"file",` sit on separate
+- `S52` lines and no single-line pattern can see them. They were flipped by matching the
+- `S52` line whose predecessor is `"reconcile",`, each asserted.
+- `S52` Four harness documents under `src/cadrumo-harness/` cited the dead verb. The CLI
+- `S52` contract names that surface explicitly: a citation to a renamed verb hands the
+- `S52` agent an instruction it cannot recover from.
+- `S52` One further defect, not a rename residue: `test_reconcile_list_empty_is_instructive`
+- `S52` asserted an English string while the CLI resolved Spanish, so it could never
+- `S52` pass. A test asserting localised prose must pin `--language`; it now does.
+- `S52` Two failures remain and are NOT this rename. `m190` and `m390` declaration
+- `S52` reconciliation report `snapshot_unavailable`, which is registry coverage, and
+- `S52` three `test_modelo_work_natural_key` failures are a peer-added M111 profile
+- `S52` readiness requirement ("Is a colegio concertado").
+- `S53` These three were excluded from every suite run in this campaign, and the close
+- `S53` review recorded the reason as "peer renames break their imports at collection".
+- `S53` That was true about the cause and wrong about the remedy: both breakages were
+- `S53` repairable inside this package, and carrying them as an exclusion rather than
+- `S53` fixing them meant the campaign ran with a permanently reduced denominator.
+- `S53` Two unrelated faults, one line each.
+- `S53` `test_storage_session_preconditions` imported `cadrumo.entrypoints.cli._errors`,
+- `S53` which a peer promoted to the public `errors.py`; the symbol it wants,
+- `S53` `project_cli_boundary_error`, is exported there. The other two imported
+- `S53` `.sessionless_root_fixtures`, but the shared fixture module is
+- `S53` `_sessionless_root_fixtures` -- package-internal, which is correct for a helper
+- `S53` shared only inside one `tests/` directory, so the import was what needed to
+- `S53` move, not the module.
+- `S53` Six collection errors remain and every one is now outside `entrypoints/cli/`:
+- `S53` the justificante parser pair, the sede notifications parser, the aggregation
+- `S53` resolver enrolment gate, and two terminal-precondition modules. They belong to
+- `S53` the facade-retirement campaign that blocks S07 and are not repaired here, for
+- `S53` the reason recorded in the third addendum -- a relocation's consumer sweep has to
+- `S53` land in the same commit as its move.
+- `S53` The campaign now carries no excluded modules of its own.
+- `S54` Found while checking the `pull` compounds against the contract's own grammar.
+- `S54` The compounds themselves are all legal -- `<token>-all` is cardinality,
+- `S54` `<token>-<subject>` is sanctioned, and the verb-grammar gate already refuses a
+- `S54` locus suffix. What was wrong was the rule's worked example: it offered `aeat app
+- `S54` live justificante pull`, `pull-all`, `pull-sources` as the model to copy, and
+- `S54` `app live justificante` carries only `list`, `pull` and `view`. The family that
+- `S54` actually carries all three is `app live filed`.
+- `S54` This is the `firmware-reference-parity` failure inside a rule rather than a
+- `S54` skill: a name in always-on prose that resolves to nothing. It is worse here than
+- `S54` in a docstring, because the rule is loaded into every agent context in this
+- `S54` repository, so the dead citation was being handed to every session as the
+- `S54` example to imitate.
+- `S54` Corrected on the `.vaultspec/rules/` source and propagated with
+- `S54` `vaultspec-core sync`; the generated provider copies were never hand-edited.
+- `S54` The rest of the rule's How section was then audited rather than assumed: all
+- `S54` twelve verbs it names -- the filed pull trio, `ledger import`, both reconcile
+- `S54` transports, both censo transports, `evidence add`, `certificate register`,
+- `S54` `spreadsheet calculate` and `work file` -- resolve against the live graph.
+- `S55` No code changed.
+- `S55` `login` / `logout` (3 each) are keyed on the counterparty, like the transport
+- `S55` verbs.** `config login` unlocks the local profile (`bootstrap-root`), `config
+- `S55` auth login` authenticates to the AEAT sede, `config google login` runs Google
+- `S55` OAuth. Three counterparties, three pairs, every login matched by its logout. The
+- `S55` symmetry is complete, which is what the campaign asked of the transport axis.
+- `S55` `start` / `resume` / `status` on `config reset` is a lifecycle triple on one
+- `S55` subject**, not three names for one act. `app modelo work resume` shares only the
+- `S55` word; its subject is an interrupted work session.
+- `S55` `select` (2) and `wizard` (2) are each used consistently.** `select` chooses
+- `S55` among candidates (a work unit, a certificate); `wizard` runs interactive
+- `S55` multi-step creation (an invoice, a work unit).
+- `S55` Both `report` leaves are principled, for different reasons, and neither family
+- `S55` carries a `status` to choose against.** `config auth diagnostics report`
+- `S55` declares `write_route=profile-bound` -- it CREATES an encrypted diagnostic
+- `S55` record, so it is a creating verb naming the record it creates, sitting beside
+- `S55` `list` and `view` which read. `config provision report` is a computation verb:
+- `S55` it measures hardware, derives per-role model selection and admission. Neither is
+- `S55` the stored-state summary that the nine `status` leaves return.
+- `S55` One borderline case, named rather than resolved.** `app ledger invoice`
+- `S55` carries both `add` (scripted) and `wizard` (interactive) for creating the same
+- `S55` record, and `wizard` names the mechanism rather than the record -- which is what
+- `S55` the contract's third verb category asks a creating verb not to do. It is not a
+- `S55` conflation, because the two are different interaction modes rather than two
+- `S55` names for one act, and the tree applies `wizard` consistently in both places
+- `S55` it appears. It is recorded here so a later reader knows it was seen and not
+- `S55` missed, and that `config profile create` is itself interactive, so the tree is
+- `S55` not uniform about whether an interactive creator takes the record's name or the
+- `S55` mechanism's.
+- `S56` `app diagnostics` is not a second home for workflow runs.** `app diagnostics
+- `S56` runs` lists local LLM inference run-timing records; `app modelo work runs` lists
+- `S56` persisted `WorkflowResult` rows. Same word, different entities.
+- `S56` What the family does have is terse leaf names -- `runs`, `latency`, `errors`,
+- `S56` `run-health` -- none of which says it is scoped to on-host LLM inference. That
+- `S56` is adequately handled at the point of use: every one of those leaves states the
+- `S56` scope in its own help ("recent local LLM runs"), which is the standard S37 and
+- `S56` S47 set. The group help did not: it read "Local-only operator run-health and
+- `S56` session diagnostics", naming a shape rather than either of its two subjects. It
+- `S56` now names both -- on-host LLM inference runs, and persisted AEAT session
+- `S56` staleness -- in all four catalogues.
+- `S56` The root placement was considered and left. Observability of the app's own work
+- `S56` is neither configuration nor tax work, and with only two roots permitted, `app`
+- `S56` fits it better than `config`, which would file runtime telemetry under setup.
+- `S56` `attach` versus `link` is principled, and the parameters prove it.** Both take
+- `S56` `transaction_id` positionally, as the single-subject rule requires. `attach`
+- `S56` takes `--attachment-ids` / `--purchase-invoice-evidence-id` and binds stored
+- `S56` evidence OBJECTS; `link` takes `--invoice-id` and binds a catalogue RECORD
+- `S56` reference. Document payload versus record reference, and `AttachmentStore`
+- `S56` grounds the first word in the domain vocabulary.
+- `S56` `split`, `merge` and `classify` are structural verbs the contract already
+- `S56` carves out.** `merge` declares no positional subject, which would breach the
+- `S56` subject-is-positional rule for a single-subject verb -- but the contract exempts
+- `S56` verbs that act on a set or destroy the subject, and names `split` and `merge`
+- `S56` explicitly.
+- `S57` The sharpest same-subject collision found in the hunting phase, and the earlier
+- `S57` enumeration scan missed it because that scan only compared `list`, `history`,
+- `S57` `runs`, `queue` and `backlog`. `track` was never in the candidate set.
+- `S57` Both verbs sit under `app ledger`, both take `transaction_id` positionally, and
+- `S57` both described themselves as emitting that transaction's events:
+- `S57` `history` as "the chronological bucket-event chain", `track` as "the event
+- `S57` lineage". Nothing told an operator which to reach for.
+- `S57` They are not duplicates. `history` reads the bucket-event chain -- what happened
+- `S57` TO the row. `track` returns `participated_in`, built from the
+- `S57` `TransactionRevisionParticipationIndex`, which is the rebuildable inverse index
+- `S57` from ledger rows to finalized revisions -- where the row WENT, into which modelo
+- `S57` revisions and filings.
+- `S57` So `track`'s help was not merely ambiguous, it was wrong: it promised events, and
+- `S57` the verb returns participations. Both strings now state what their verb uniquely
+- `S57` covers and name the sibling, following S37 and S47.
+- `S57` The split itself is worth keeping. Backward lifecycle and forward participation
+- `S57` are the two halves of a ledger row's audit trail, and the participation index
+- `S57` exists precisely so the forward half can be answered.
+- `S58` The scan S57 asked for was run properly this time: group EVERY leaf by subject,
+- `S58` group those by positional signature, and flag any subject where two leaves share
+- `S58` one. Twenty-one subjects do. Most are ordinary CRUD -- `view`, `update`,
+- `S58` `remove` on one id is not a conflation -- but `app ledger` carries fifteen leaves
+- `S58` on `transaction_id`, and five of them could each be read as "make this row stop
+- `S58` counting": `archive`, `stash`, `exclude`, `remove`, `restore`.
+- `S58` They are all principled, on three separate axes. `archive` and `stash` are
+- `S58` lifecycle states, `exclude` is a review status (excluded from filing), `remove`
+- `S58` deletes, `restore` returns to active from either non-active state. The
+- `S58` distinction between the two lifecycle states is written out in full in
+- `S58` `TransactionLifecycleState`: ARCHIVED is "removed from default attention without
+- `S58` deleting", STASHED is "parked pending classification or review", and both are
+- `S58` reversible. The code even enforces the ordering -- `archived -> stashed` is
+- `S58` refused, because stash is the undecided state and archive is the decided one.
+- `S58` None of that reached the operator. `archive` said "Archive one ledger
+- `S58` transaction", `stash` said "Stash one ledger transaction" -- help that restates
+- `S58` the verb and answers nothing. The most serious case was `remove`, whose "Remove
+- `S58` one ledger transaction from the active profile" reads almost identically to
+- `S58` archive's documented "remove the row from default attention", while `remove` is
+- `S58` the only one of the five that actually deletes.
+- `S58` All four now state the state they move the row into, name `restore` as the way
+- `S58` back, and `remove` says plainly that it deletes and points at `archive` for the
+- `S58` non-deleting alternative.
+- `S58` A second finding from the same reading is raised separately as S59, and one
+- `S58` smaller inconsistency is recorded here rather than changed: `config profile`
+- `S58` spells its subject `profile_name` on `create`/`edit` and `name` on
+- `S58` `delete`/`validate`/`view`, two names for one thing inside one family.
+- `S59` `app ledger stash` declared `destructive=True` while `app ledger archive`
+- `S59` declared `False`, and nothing in the tree said which was right.
+- `S59` `TransactionLifecycleState` documents ARCHIVED and STASHED as equally
+- `S59` reversible, both verbs demand `--yes`, both carry the identical option set
+- `S59` (`reason`, `yes`, `actor`), and `restore` returns a row from either state. The
+- `S59` two declarations could not both be correct.
+- `S59` The flag has no prose definition anywhere in the codebase -- only structural
+- `S59` validation, that a destructive command must carry the `local-state` side effect
+- `S59` so its meaning was set by usage, and the usage contradicted itself. Since the
+- `S59` value is projected into the operator-facing command schema, the reading was put
+- `S59` to the operator rather than chosen here. The ruling: `destructive` means the
+- `S59` operation cannot be reversed. `remove` deletes, `reset` destroys review state,
+- `S59` and those stay true; the three lifecycle moves do not.
+- `S59` The fix was not a flag flip. `_POLICY_9` is shared by `remove`, `reset` and
+- `S59` `stash`, so editing it would have changed all three. `stash` now uses
+- `S59` `_POLICY_4`, which is what `archive` and `restore` already use and which differs
+- `S59` from `_POLICY_9` in the `destructive` field alone -- same capabilities, same
+- `S59` side effects, same performance class, same write route. Nothing but the
+- `S59` declaration moved.
+- `S59` Found by reading the same-subject scan that produced S58, from the policy column
+- `S59` rather than the help column.
+- `S60` No code changed. This is the campaign's central question answered over the part
+- `S60` of the tree no gate can reach.
+- `S60` The placement gate is a refusal criterion: it fires only where a subject's own
+- `S60` `ExecutionPolicySpec` contradicts its mount, and its docstring is explicit that
+- `S60` roughly two thirds of subjects carry no signal either way and that a green run
+- `S60` is not evidence they are correctly placed. Those 45 subjects were the largest
+- `S60` remaining residue of this campaign. Every one has now been read.
+- `S60` The criterion that separates the roots, stated positively:** `config` is where
+- `S60` the operator establishes WHO THEY ARE and WHAT THE TOOL MAY USE -- identity,
+- `S60` credentials, keys, storage, integrations, provisioning. `app` is where the
+- `S60` operator DOES TAX WORK, and observes the work being done.
+- `S60` All 45 conform. Every `config` subject is auth, certificates, apoderado, Google
+- `S60` integration, passphrase, profile facts, collaboration recipients, provisioning
+- `S60` or storage repair. Every `app` subject is ledger, live AEAT reads, modelo work,
+- `S60` overview, review, or diagnostics of those runs.
+- `S60` Three pairs sit either side of the line and demonstrate it rather than blur it.
+- `S60` `config collab recipient add` registers a trusted recipient's X25519 public key;
+- `S60` `app modelo review-package encrypt-for-recipient` seals a package to that
+- `S60` registered key. `config google folder set` records the Drive root; `app modelo
+- `S60` spreadsheet push` writes workbooks into it. `config provision` installs the
+- `S60` local models; `app diagnostics` reports on their runs. In each case config
+- `S60` establishes the capability and app spends it.
+- `S60` Two cases were considered and resolved rather than waved through.
+- `S60` `config profile descendiente` holds dependants, which are taxpayer facts feeding
+- `S60` IRPF calculations -- but they are facts about who the taxpayer is, which is what
+- `S60` `config profile` exists to hold, and it sits consistently beside `capabilities`
+- `S60` and `censo`. `app diagnostics` is neither configuration nor tax work, but with
+- `S60` only two roots permitted it is observation OF the work, and filing runtime
+- `S60` telemetry under setup would be worse.
+- `S60` The standing goal asked that every app-versus-config conflation be found and
+- `S60` tightened. On the evidence of this pass there are none left to find; what the
+- `S60` pass cannot claim is that the criterion above is enforced -- it is judgement
+- `S60` recorded in prose, not a gate, and a future subject could be mounted against it
+- `S60` without anything going red.
+- `S61` The most consequential help defect found in this campaign, and it was reached by
+- `S61` chasing a verb whose name and description disagreed.
+- `S61` The help read: "Preview undecryptable rows; active quarantine is disabled by
+- `S61` preserve-first repair policy". That is false. The handler refuses only when
+- `S61` neither `--dry-run` nor `--yes` is given; with `--yes` it falls through the
+- `S61` dry-run branch and calls `quarantine_unreadable_secure_objects`, which copies
+- `S61` each undecryptable row's metadata and still-encrypted payload into a
+- `S61` `secure_objects_quarantine` archive table and then DELETES the row from the live
+- `S61` `secure_objects` table.
+- `S61` So an operator reading `--help` on a data-safety command was told it could only
+- `S61` look, when in fact one flag makes it move their encrypted rows out of the active
+- `S61` store. The "preserve-first" policy the help invoked is real but describes
+- `S61` something else entirely: the ciphertext is preserved in the archive rather than
+- `S61` deleted, so a later recovered master key can still reach it. Preserve-first
+- `S61` means nothing is destroyed; it does not mean nothing moves.
+- `S61` The help now says what the command does, names the flag that arms it, and points
+- `S61` at `--dry-run` for the behaviour the old text wrongly claimed was the only one
+- `S61` available.
+- `S61` No code changed. The verb, its guard and its policy are all correct as written;
+- `S61` only the description was wrong. It was found by reading every remaining
+- `S61` singleton verb for agreement between its name, its help and its handler, after
+- `S61` the same-subject scan had been exhausted.
+- `S62` No code changed. This closes a risk that had been carried unexamined for the
+- `S62` whole campaign, and it was reached only by semantic search over the vault --
+- `S62` the governing record, `2026-07-28-cli-authority-verb-conformance-adr`, had not
+- `S62` been read by this campaign at all.
+- `S62` That ADR documents precisely the failure this campaign was positioned to cause.
+- `S62` The profile-bound write guard was once a hand-maintained catalogue of command
+- `S62` path prefixes, and **a verb rename left six entries naming paths the CLI no
+- `S62` longer exposed, so every invoice mutation fell out of the guard and became
+- `S62` unrefusable under any storage route.** Nothing was visible to any gate. This
+- `S62` campaign renamed or rehomed roughly forty leaves, including one the ADR names
+- `S62` directly: `maintenance reconcile`, which it lists among twenty-five leaves
+- `S62` traced to a bucket-scoped write and guarded, and which this campaign moved to
+- `S62` `config profile archive reconcile`.
+- `S62` The risk did not materialise, and the reason is structural rather than lucky.
+- `S62` The guard is no longer path-keyed: `storage_write_policy.py` derives
+- `S62` `profile_bound_write` from the spec's `write_route`, and states so -- "the
+- `S62` caller obtains the value from validated, CommandSpec-owned policy rather than
+- `S62` reconstructing a command path". A token rename cannot drop a verb out of a
+- `S62` guard that never reads the token. The ADR's amendment records that reshaping.
+- `S62` The surviving path-keyed data is in `_bootstrap_exempt.py`, whose entries carry
+- `S62` `cites_verbs` that must resolve against the live tree. None of them names a verb
+- `S62` this campaign touched, and the resolution gate is green. The one path-keyed
+- `S62` entry this campaign DID invalidate -- the `config storage` exempt subtree, which
+- `S62` still declared `show` -- was caught and fixed under S43 by that same gate.
+- `S62` Sixty-eight tests across both lanes confirm the guard and the exemption are
+- `S62` intact.
+- `S62` One caveat on the discovery itself: the code index answered every query from a
+- `S62` single file and reported 479 missing sections, warning in its own output that an
+- `S62` absent result is not evidence of absence. A rebuild was started. Searches run
+- `S62` before it completes should not be trusted for negative results.
+- `S63` No code changed. This generalises S61 from one wrong help string to the class:
+- `S63` every help string that claims a capability is ABSENT, checked against what the
+- `S63` spec actually declares. A negative claim is the kind that gets stale silently,
+- `S63` because nothing breaks when a command quietly gains the power its help denies.
+- `S63` Nineteen help strings make such a claim. Twelve are the `app live` family
+- `S63` declaring itself read-only, which is the safety-critical posture
+- `S63` `sensitive-financial-data-secure-storage-only` states as "never perform live
+- `S63` AEAT submission".
+- `S63` The first pass at checking them was wrong and is recorded here because the error
+- `S63` is instructive. Selecting `app live` leaves whose `write_route != "none"`
+- `S63` returned twelve apparent contradictions -- every `pull` verb in the family. They
+- `S63` are not contradictions: `write_route` is the LOCAL storage axis and `live_write`
+- `S63` is the AEAT axis, and a `pull` that persists what it fetched is
+- `S63` `profile-bound` by definition. The help says "Read-only AEAT", scoped to the
+- `S63` axis that matters. Reading the flag without reading which axis it names produced
+- `S63` twelve false positives.
+- `S63` On the correct axis the result is clean and worth stating plainly: **zero of 294
+- `S63` leaves declare `live_write=True`.** The prohibition holds at the declaration
+- `S63` layer across the whole operator surface, with no exception and no allowlist. All
+- `S63` thirty-six `app live` leaves confirm their own claim.
+- `S63` Seven leaves declare a filing `handoff` -- the export verbs, `modelo work file`,
+- `S63` `reconcile import` and `spreadsheet push`. Those hand a filing artefact to the
+- `S63` operator to file outside the application, which is the sanctioned shape; none of
+- `S63` them submits.
+- `S63` Two other negative claims were checked and hold: `config storage check` says it
+- `S63` verifies "without repairing" and declares `write_route=none`; `config storage
+- `S63` reclaim` names itself for the space it frees but its help says plainly that it
+- `S63` deletes regenerable contents, and it declares `destructive=True`.
+- `S64` No code changed. S61 caught help that understated a verb's power; this is the
+- `S64` opposite direction -- help promising more than the handler delivers -- run over
+- `S64` the verbs where an overstatement would matter most.
+- `S64` Led with semantic search rather than grep, which routed straight from "filing or
+- `S64` export handler that omits records" to `application/modelo/_export.py` and the
+- `S64` filing-record specs.
+- `S64` The three filing verbs under-promise rather than overstate, and their
+- `S64` preconditions are enforced.** `app modelo export` says it exports "a
+- `S64` verified-complete or filed" revision and is "local-only; never contacts AEAT";
+- `S64` that precondition is real -- `_export.py` carries
+- `S64` `ModeloExportReadinessRefusal` and `_COMPLETENESS_UNVERIFIED_MESSAGE`, and its
+- `S64` module docstring lists the refusals: non-exportable revision states,
+- `S64` cross-bucket targets, missing profile facts, unclean cross-period prerequisites,
+- `S64` unmatched IVA. `app modelo work file` says "Does NOT submit to AEAT" in the help
+- `S64` itself. `app modelo work verify` names the contract it verifies against.
+- `S64` Eighteen leaf help strings make a completeness claim** ("every", "all",
+- `S64` "complete", "entire"). Most are `list` verbs, where enumerating everything is
+- `S64` the verb. One deserved a real check and is recorded because the raw number looks
+- `S64` alarming without the reason.
+- `S64` `app modelo list` says it lists "all official tax forms (modelos) registered in
+- `S64` the system", and it lists the REGISTRY modelos -- at most 58 of the 149 members
+- `S64` of the `Modelo` enum, because **91 have no registry definition**. That is not a
+- `S64` gap and not an overstatement. `core/_modelo.py` states those 91 have no registry
+- `S64` definition BY DESIGN: modelos suppressed by a later norm (M037 under Orden
+- `S64` HAC/1526/2024, M179 from ejercicio 2024) plus obligations filed by third parties
+- `S64` or specialised filers. The enum is the closed-set identifier type -- "it tells
+- `S64` you which modelos exist; the registry tells you what (if anything) they
+- `S64` contain" -- and the help's qualifier "registered in the system" is the accurate
+- `S64` reading.
+- `S64` Calling that a defect would have been over-reach, and it is recorded as examined
+- `S64` so a later reader does not re-open it on the 58-of-149 figure alone.
+- `S65` `aeat-agent-orchestration` states that no plan step may be marked complete
+- `S65` without a matching exec record, because otherwise delivered-as-specified,
+- `S65` delivered-narrower and recorded-but-not-implemented wear the same checkbox. That
+- `S65` invariant had never been checked on this campaign. It was violated once.
+- `S65` `W05.P14.S39` was closed with no record. The cause is traceable: seven rows
+- `S65` (S36-S42) had been lost from the plan document while their records survived on
+- `S65` disk, and the repair reconstructed the rows from those records' own headings.
+- `S65` S39 was the one row with no record to reconstruct from, so its text came from
+- `S65` the close audit's prose instead -- and nothing then noticed that the record it
+- `S65` could not be reconstructed from still did not exist.
+- `S65` The work was verified present before the record was written rather than inferred
+- `S65` from the checkbox: `test_transport_verb_grammar.py` ships and its four tests
+- `S65` pass.
+- `S65` The audit also ran the inverse direction, which is not what the rule guards but
+- `S65` is the way a record can mislead: two OPEN rows carry records. S34's already ends
+- `S65` by stating the benchmark census is not refreshed and why. S35's did not say it
+- `S65` was incomplete at all, while its machine-filled heading promises "Run the full
+- `S65` suite sequentially" -- so a reader meeting the record first would have taken the
+- `S65` Step for done. It now states that the row is open, that the heading promises
+- `S65` more than the record delivers, and what the standing goal still asks for that
+- `S65` the bounded slices exclude.
+- `S66` Found by opening the close honesty review the orchestration rule requires, and
+- `S66` asking the question a fresh reviewer asks first: does the tree satisfy the
+- `S66` decisions the accepted ADR actually states?
+- `S66` It did not, on D5. The record says in five places that the whole-corpus Drive
+- `S66` mirror lives under a `mirror` subject, and says explicitly that it **does NOT
+- `S66` join** the `archive` subject, giving a reason: "`archive` implies a thing you can
+- `S66` restore, and the mirror cannot be read back — putting it under `archive` would
+- `S66` promise recoverability that does not exist." The tree ships `config profile
+- `S66` archive push`, which is precisely the arrangement that sentence forbids.
+- `S66` The operator ruled that change three days of work ago, rejecting `mirror` as a
+- `S66` subject noun. The close audit recorded the ruling. The ADR was never amended for
+- `S66` it — and this ADR carries two other amendments in exactly the right style, at D2
+- `S66` for the CREATING verb category and at D5 for the registry-integrity
+- `S66` non-retirement, so the omission is not a house-style question. Its Rationale
+- `S66` section was still arguing, at length, FOR the option that lost.
+- `S66` That is the `aeat-agent-orchestration` failure inverted. The rule warns that an
+- `S66` ADR amendment ruling on code is not self-executing; here the CODE moved and the
+- `S66` record did not, so a reader consulting the governing decision would have been
+- `S66` told that what shipped is forbidden, for a stated safety-shaped reason.
+- `S66` The amendment answers the original objection rather than overruling it, because
+- `S66` the objection was sound: the danger was that `archive` promises a round trip.
+- `S66` The answer is that the VERB carries the promise, not the subject. `push` beside a
+- `S66` working `export` / `import` pair makes the absent `pull` loud on every help
+- `S66` listing, where `mirror push` was quiet because the subject told the reader
+- `S66` nothing to expect. The declared gap is unchanged and still owes a follow-on
+- `S66` record.
+- `S66` The superseded text is retained and marked, matching the two existing
+- `S66` amendments, so the reasoning that was displaced stays readable.
+- `S66` The close review is not finished; this is its first finding.
+- `S67` The close review asks one question of each decision: is this true of the tree,
+- `S67` not of the plan. Seven decisions, checked individually.
+- `S67` D1 holds.** The placement gate refuses per subject from declared policy and is
+- `S67` silent on the subjects carrying no signal, exactly as D1 says it must be. The
+- `S67` residue that silence leaves was separately judged in S60.
+- `S67` D2 holds.** Transport verbs are keyed on the counterparty; no leaf declaring a
+- `S67` transport locus wears a retired token; `get` was the last one and went in S45.
+- `S67` D3 holds.** Option spelling is refused on the DECLARED locus rather than a
+- `S67` name list or a `Path` guess, which was the point of the precondition.
+- `S67` D4 holds.** `file` names exactly one leaf, `app modelo work file`, and the gate
+- `S67` asserts that rather than trusting it.
+- `S67` D5 did NOT hold and is amended** — recorded in full at S66. The record forbade
+- `S67` the verb the tree ships.
+- `S67` D6 holds, including the part easiest to skip.** It promises two gates and both
+- `S67` ship. Its exemption discipline is real: the spelling gate's exemptions carry a
+- `S67` stated reason, are keyed to a live parameter, and
+- `S67` `test_every_exemption_still_names_a_live_parameter` fails a stale one instead of
+- `S67` letting it linger and silently excuse a future parameter.
+- `S67` D7 holds, all four corrections verified in the synced rule**: the `config` root
+- `S67` help no longer claims diagnostics it does not own; the opening paragraph is
+- `S67` widened from AEAT to the remote counterparty; the dual-transport sentence reads
+- `S67` "subgroup of `pull` and `import --file`"; the `censo import --file` example is
+- `S67` there and the dead `_data/agent` path is gone, replaced by `src/cadrumo-harness`.
+- `S67` One inaccuracy of this campaign's own making, corrected here.** The S39 row and
+- `S67` the close audit's addendum both described the verb-grammar gate as "the gate D6
+- `S67` promised". D6 promises the placement gate and the spelling gate; it does not
+- `S67` promise a verb-grammar gate. That gate enforces D2 and is additional to what the
+- `S67` record committed to — good work, wrongly attributed. The row now says so.
+- `S67` What this review does not establish: that the criterion in S60 is enforced. It is
+- `S67` judgement recorded in prose, and a future subject could be mounted against it
+- `S67` with nothing going red.
+- `S68` No code changed. This corrects an overstatement in this campaign's own close
+- `S68` review, found while scoping the gate the review said was missing.
+- `S68` S60 and the fifth addendum both state that the app-versus-config criterion is
+- `S68` "prose in an execution record, not a gate", and that "a future subject could be
+- `S68` mounted against it with nothing going red". The first clause is true of the
+- `S68` criterion's WORDING. The second clause is too strong, and I did not check before
+- `S68` writing it.
+- `S68` `application/operator_surface/_contract.py` already declares every mounted
+- `S68` family as a `MountedCommandFamily`, and that model carries **`root:
+- `S68` RootSurfaceName`** and **`operator_question: str`** -- the two things the census
+- `S68` I was about to build would have had to invent. Twenty families are declared,
+- `S68` twelve under `config` and eight under `app`.
+- `S68` It is enforced in both directions.
+- `S68` `test_operator_surface_contract_covers_the_live_tree` is a symmetric-difference
+- `S68` assertion with no allowlist: a `root -> child` group mounted by the CLI but
+- `S68` absent from the contract fails, and so does a contract family with no live
+- `S68` mount. It carries an anti-vacuity floor because the lazy-Typer tree is a
+- `S68` documented false-green vector. It passes.
+- `S68` So a new top-level FAMILY cannot be mounted without someone declaring which root
+- `S68` it belongs to and what operator question it answers. That is most of what the
+- `S68` missing gate was supposed to buy.
+- `S68` What remains genuinely unenforced is narrower than claimed, and worth stating
+- `S68` precisely.** The contract binds families at `root -> child` granularity -- twenty
+- `S68` of them. The criterion was judged over sixty-five leaf SUBJECTS. A new subject
+- `S68` nested inside an existing family (`app ledger inventory movement`, say) is not
+- `S68` covered by the symmetric difference, because its family is already declared.
+- `S68` The correction matters more than the residue. Had this stood, the campaign would
+- `S68` have handed its successor a gate to build that largely exists, and the operator's
+- `S68` standing instruction to lead with semantic discovery is exactly what surfaced it
+- `S68` one search for a subject-classification census returned `_manifest.py` twice
+- `S68` before any code was written.
+- `S69` No code changed. This retracts a piece of guidance this campaign wrote one tick
+- `S69` earlier, before the next tick could act on it.
+- `S69` S68 described the residual gap as: the contract binds at `root -> child`
+- `S69` granularity while the criterion was judged over 65 leaf subjects, so "a new
+- `S69` subject nested inside an already-declared family is not covered". It then
+- `S69` proposed extending the contract's granularity to subjects. Both halves are
+- `S69` wrong, for different reasons.
+- `S69` The structural half is wrong.** A subject's root is `path[1]`. Checked over the
+- `S69` live tree: every one of the 65 subjects takes its root from its path, and none
+- `S69` differs from its family's. `app ledger inventory` is under `app` by
+- `S69` construction; there is no mounting that makes it otherwise. So the placement
+- `S69` decision exists only at the family level -- which the symmetric-difference gate
+- `S69` already enforces in both directions. A nested subject cannot be mis-rooted.
+- `S69` The proposed fix is worse: the codebase already removed it, deliberately.**
+- `S69` `test_operator_surface_contract_covers_the_live_tree` says so in its own
+- `S69` docstring: "The sub-verb half of this gate is gone because its subject is gone. A
+- `S69` family no longer declares a command tuple to compare against -- membership is
+- `S69` derived from the live tree -- so there is nothing left that can drift, and
+- `S69` asserting a derivation against the thing it derives from would be tautological.
+- `S69` That half caught real drift in both directions while it existed, which is the
+- `S69` argument for deriving rather than declaring, not for keeping the assertion."
+- `S69` Re-adding per-subject declaration would reintroduce exactly that, against a
+- `S69` stated reason.
+- `S69` What the real residue is, stated correctly this time.** It is semantic, not
+- `S69` structural: a config-shaped concern can be nested inside an app family -- adding
+- `S69` credential management under `app ledger`, say -- and no symmetric difference over
+- `S69` names will see it, because the family is already declared and the subject's root
+- `S69` is inherited. That needs judgement, which is what S60 supplied and what no gate
+- `S69` proposed so far would replace.
+- `S69` The pattern is worth naming: following this campaign's own written guidance would
+- `S69` have produced work the codebase rejected on stated grounds. Guidance a campaign
+- `S69` writes about itself decays the same way an ADR does, and deserves the same check
+- `S69` before being acted on.
+- `S70` No code changed. This corrects what every previous record said about S34.
+- `S70` The tree went quiet for the first time in this campaign -- zero source writes in
+- `S70` three minutes -- so the documented precondition was met and the capture ran. It
+- `S70` failed in seconds, and not because of contention:
+- `S70` `_policy_payload` reads `node.execution_policy`, and `LiveCommandNode` has no
+- `S70` such attribute.
+- `S70` The removal was deliberate and is documented on the class itself: "Policy is
+- `S70` intentionally absent from this Click census. Executable policy authority is read
+- `S70` from the immutable CommandSpec graph by its consumers." It landed three days
+- `S70` ago. `capture_baseline.py` was itself edited twenty-three hours ago by a peer
+- `S70` aligning surfaces after a public rename, and `_policy_payload` was not swept
+- `S70` then either. So the tool has been unusable for three days with a peer having
+- `S70` been inside the file since.
+- `S70` Every earlier record, including the third addendum, said S34 was blocked on an
+- `S70` uncontended tree.** That was incomplete: a perfectly quiet tree would never have
+- `S70` let it proceed. The contention was real but it was not the binding constraint,
+- `S70` and no amount of waiting would have revealed that -- only running it did.
+- `S70` The repair is not a one-line rename, which is why it is recorded rather than
+- `S70` done. `_policy_payload` needs `classification.capabilities`,
+- `S70` `classification.expanded_capabilities`, `write_route`, `destructive`, `handoff`
+- `S70` and `live_write`. The graph exposes `command_spec_for_path` and
+- `S70` `CommandExecutionPolicy` publicly through `command_api`, but the conversion that
+- `S70` builds one from a spec, `_execution_policy_from_spec`, is private to
+- `S70` `entrypoints/cli/__init__.py`. A consumer in `dev/` importing it would breach
+- `S70` the cross-package private-import rule. So the fix is one of two decisions, not a
+- `S70` repair: promote a spec-to-policy conversion onto the public `command_api`
+- `S70` surface, or drop `expanded_capabilities` from the census and read the spec's raw
+- `S70` policy fields -- which changes the schema of a provenance-stamped artifact.
+- `S70` Both belong to whoever owns the census contract. This campaign has declined to
+- `S70` sweep six `src/` modules broken the same way, on the principle that a
+- `S70` relocation's consumer sweep lands with its move; fixing this one because it
+- `S70` happens to block a campaign step would be the same inconsistency.

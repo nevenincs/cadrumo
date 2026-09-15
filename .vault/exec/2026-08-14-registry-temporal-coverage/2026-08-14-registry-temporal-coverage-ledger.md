@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-28'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:438a171fd1bc3f269d8f93497f193bb8f638c7b0f4009459a6c7b606f8c66a95'
+body_hash: 'sha256:482c0b9d0579eb81998b0437e7c176f361d0d63f2bb5d8225ff36699d52eb4ac'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
@@ -219,6 +219,11 @@ related:
 - `S25` `M` `src/cadrumo/locales/es/application.yml`
 - `S25` `M` `src/cadrumo/locales/ca/application.yml`
 - `S25` `M` `src/cadrumo/locales/hu/application.yml`
+- `S32` `A` `dev/registry/analysis/temporal_enrollment_census.py`
+- `S32` `A` `dev/registry/tests/test_temporal_enrollment_census.py`
+- `S32` `verify:` `uv run python -u -m pytest -q dev/registry/tests/test_temporal_enrollment_census.py dev/registry/tests/test_modelo_303_semantic_maps.py::test_every_authored_design_epoch_is_discoverable_and_reviewed dev/registry/tests/test_modelo_303_semantic_maps.py::test_the_reviewed_epoch_chain_reaches_every_epoch_from_one_root src/cadrumo/domain/calculations/registry/tests/test_revision_span_boundaries.py::test_no_revision_spans_a_design_relayout` -> `pass`
+- `S32` `verify:` `uv run ruff check dev/registry/analysis/temporal_enrollment_census.py dev/registry/tests/test_temporal_enrollment_census.py` -> `pass`
+- `S32` `verify:` `uv run basedpyright dev/registry/analysis/temporal_enrollment_census.py dev/registry/tests/test_temporal_enrollment_census.py` -> `pass`
 
 ## Notes
 

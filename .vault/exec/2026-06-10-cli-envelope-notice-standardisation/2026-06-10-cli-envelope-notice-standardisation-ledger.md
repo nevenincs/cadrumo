@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
-modified: '2026-08-26'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:5996415097fed2cf84fa46772e0e47935510cb3f0aa21954df3a48907546c966'
+body_hash: 'sha256:d0588523c048cfe45cc81760653758d67b2dc7a0e02bd42cc5ec916ad52e2524'
 related:
   - "[[2026-06-10-cli-envelope-notice-standardisation-plan]]"
 ---
@@ -38,3 +38,5 @@ related:
 - `S24` `T`
 - `S25` `T`
 - `S26` `T`
+- `S18` `T`
+

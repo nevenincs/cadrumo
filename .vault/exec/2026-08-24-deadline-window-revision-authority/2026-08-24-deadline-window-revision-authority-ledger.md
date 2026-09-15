@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:0e2f1570ce8a8545ef73b938c053260be8afe62f90fc63a5a67d6c7dceaa6937'
+body_hash: 'sha256:8af19dc58647ea0ce0a42355fc4a1c4ca3174477a3991ce1202e3ed4c3090aad'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
@@ -91,3 +91,7 @@ related:
 - `S50` `T` `src/cadrumo/entrypoints/cli/`
 - `S50` `T` `src/cadrumo/application/overview/`
 - `S50` `T` `src/cadrumo/entrypoints/cli/tests/test_overview_calendar_verb.py`
+- `S08` `T` `src/cadrumo/domain/calculations/registry/_validate.py`
+- `S08` `T` `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py`
+- `S08` `T` `src/cadrumo/domain/calculations/registry/tests/test_deadline_window_ownership.py`
+

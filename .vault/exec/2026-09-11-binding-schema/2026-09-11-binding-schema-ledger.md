@@ -1,0 +1,1242 @@
+---
+tags:
+  - '#exec'
+  - '#binding-schema'
+date: '2026-09-11'
+modified: '2026-09-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:8c15efd554a3a53ea828d595bc8546cd8dd21c4e5d6e20b36c19c9b1e9e713d0'
+related:
+  - "[[2026-09-11-binding-schema-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `binding-schema` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+- `S01` `A` `src/cadrumo/domain/calculations/registry/binding_value_contract.py`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/binding_temporal.py`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/binding_terminal_origin.py`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_value_contract.py`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_temporal.py`
+- `S01` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_terminal_origin.py`
+- `S01` `verify:` `uv run ruff check <new files>` -> `pass`
+- `S01` `verify:` `uv run ruff format --check <new files>` -> `pass`
+- `S01` `verify:` `uv run ty check <new modules>` -> `pass`
+- `S01` `verify:` `uv run pyrefly check <new modules>` -> `pass`
+- `S01` `verify:` `uv run basedpyright <new modules>` -> `pass`
+- `S01` `verify:` `uv run pytest <new tests> -q` -> `pass`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/binding_provider.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/profile_bindings.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/relation_prefill_bindings.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/bienes_inversion_regularizacion_bindings.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/iva_compensation_annual_partition_bindings.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/prorrata_regularizacion_bindings.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_provider.py`
+- `S02` `D` `src/cadrumo/domain/calculations/registry/tests/test_selector_shape.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/binding_temporal.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/binding_selector_utils.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/binding_aggregation.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/binding_targets.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/counterpart_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/design_constant_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/detail_record_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/donativo_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/gasto193_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/inventory_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/irnr_ledger_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/ledger_impatriado_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/ledger_oss_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/ledger_renta_gastos_estimacion_directa_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/ledger_renta_gastos_pago_fraccionado_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/manual_input_selector.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/profile_grounding.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/retenciones_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/withholding296_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_temporal.py`
+- `S02` `M` `src/cadrumo/domain/user_profile/registry_contract.py`
+- `S02` `M` `src/cadrumo/domain/iva_compensation/filed_derivation.py`
+- `S02` `verify:` `uv run ruff check` -> `uv run ruff format` -> `pass`
+- `S02` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/tests/test_binding_provider.py` -> `pass`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/schema_scalars.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/schema_base.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/queries.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/relations.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/snapshot.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/formula_initial_values.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/reference_sections.py`
+- `S03` `M` `dev/registry/compiler/_compiled_cache.py`
+- `S03` `M` `dev/registry/conformance/tests/test_catalogue_verification_coverage.py`
+- `S03` `M` `DataBindingDefinition` -> `BindingDefinition` -> `src/cadrumo/` -> `dev/`
+- `S03` `verify:` `uv run ty check src/cadrumo/domain/calculations/registry/` -> `fail`
+- `S03` `verify:` `uv run basedpyright` -> `fail` -> `schema.py`
+- `S04` `A` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S04` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_provider_registration.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/bindings.py`
+- `S04` `M` `src/cadrumo/application/modelo/calculation_route.py`
+- `S04` `verify:` `uv run --no-sync ruff check` -> `pass`
+- `S04` `verify:` `uv run --no-sync ruff format --check` -> `pass`
+- `S04` `verify:` `uv run --no-sync ty check` -> `pass`
+- `S04` `verify:` `uv run --no-sync basedpyright` -> `pass`
+- `S05` `A` `dev/registry/compiler/validate_bindings.py`
+- `S05` `M` `dev/registry/compiler/_validate_revision_sections.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/binding_targets.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S05` `A` `dev/registry/tests/test_validate_bindings.py`
+- `S05` `verify:` `uv run --no-sync pytest dev/registry/tests/test_validate_bindings.py -n 0` -> `pass`
+- `S05` `verify:` `uv run --no-sync ty check` -> `pass`
+- `S05` `verify:` `uv run --no-sync basedpyright` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check` -> `ruff format` -> `pass`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/relation_prefill_bindings.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/binding_temporal.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/schema_surfaces.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/schema_revision_members.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/schema_formula.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/runtime_graph.py`
+- `S06` `D` `src/cadrumo/domain/calculations/registry/relation_aggregation.py`
+- `S06` `A` `dev/registry/absorb_relations_into_bindings.py`
+- `S06` `A` `dev/registry/generated/relation_binding_join.json`
+- `S06` `D` `dev/registry/compiler/validate_relation_sources.py`
+- `S06` `D` `dev/registry/compiler/validate_relation_periods.py`
+- `S06` `M` `dev/registry/compiler/_validate_dependency_sections.py`
+- `S06` `M` `dev/registry/compiler/_loader_revision_fragments.py`
+- `S06` `M` `dev/registry/compiler/validate_constructs.py`
+- `S06` `M` `dev/registry/conformance/coverage.py`
+- `S06` `M` `dev/registry/edition_round_trip.py`
+- `S06` `D` `src/cadrumo/_data/registry/aeat/modelos/*/revisions/*/relations/`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/*/revisions/*/bindings/*.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/*/revisions/*/formulas/*.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/*/revisions/*/constructs/*.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/*/revisions/*/dependency_classifications/*.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/*/revisions/*/revision.toml`
+- `S06` `M` `src/cadrumo/_data/registry/authority/authority.json`
+- `S06` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_temporal_offset_by_target_period.py`
+- `S06` `A` `dev/registry/tests/test_absorb_relations_into_bindings.py`
+- `S06` `D` `dev/registry/tests/test_relation_closure.py`
+- `S06` `D` `dev/registry/tests/test_relation_consistency.py`
+- `S06` `D` `src/cadrumo/domain/calculations/registry/tests/test_relation_offset.py`
+- `S06` `verify:` `uv run --no-sync python -m dev.registry.pipeline publish-authority` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest dev/registry/tests/test_absorb_relations_into_bindings.py -n 0` -> `pass`
+- `S06` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_binding_temporal_offset_by_target_period.py -n 0` -> `pass`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/relations.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/queries.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/query_reports.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/handoffs.py`
+- `S07` `R` `src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py -> src/cadrumo/domain/calculations/registry/iva_wallet_carry_targets.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/revision_context.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/reference_checks.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/reference_checker.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/validate_revision_identity.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/snapshot.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/static_inspection.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/binding_targets.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/record_design_coverage.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/formula_runtime.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/period_offset_math.py`
+- `S07` `M` `src/cadrumo/application/calculations/relation_prefill.py`
+- `S07` `M` `src/cadrumo/application/calculations/binding_prefill.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S07` `M` `src/cadrumo/application/modelo/_calculation_source_staging.py`
+- `S07` `M` `src/cadrumo/application/modelo/_calculation_preparation.py`
+- `S07` `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S07` `M` `src/cadrumo/application/modelo/_revision_replay_inputs.py`
+- `S07` `M` `src/cadrumo/application/modelo/_work_review_assembly.py`
+- `S07` `M` `src/cadrumo/application/modelo/_m349_ledger_guard.py`
+- `S07` `M` `src/cadrumo/application/modelo/workspace.py`
+- `S07` `M` `src/cadrumo/application/modelo/calculate_input.py`
+- `S07` `M` `src/cadrumo/application/modelo/verification_cross_period.py`
+- `S07` `M` `src/cadrumo/application/filing/draft_construction.py`
+- `S07` `M` `src/cadrumo/application/aggregation/m303_arrivals.py`
+- `S07` `M` `src/cadrumo/application/storage/calc_sheets/layout.py`
+- `S07` `M` `src/cadrumo/application/storage/calc_sheets/engine.py`
+- `S07` `M` `src/cadrumo/application/storage/calc_sheets/parity_harness.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_bindings_payloads.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_discovery_rendering.py`
+- `S07` `M` `src/cadrumo/core/aggregation.py`
+- `S07` `A` `src/cadrumo/application/calculations/tests/test_relation_prefill_absorbed_provider.py`
+- `S07` `D` `src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_paths.py`
+- `S07` `verify:` `uv run --no-sync pytest src/cadrumo/application/calculations/tests/test_relation_prefill_absorbed_provider.py -n 0` -> `pass`
+- `S07` `verify:` `uv run --no-sync ruff check <touched>` -> `pass`
+- `S07` `verify:` `uv run --no-sync basedpyright <touched production>` -> `pass`
+- `S08` `M` `src/cadrumo/application/calculations/binding_prefill.py`
+- `S08` `M` `src/cadrumo/application/calculations/prorrata_regularizacion.py`
+- `S08` `M` `src/cadrumo/application/calculations/_per_grupo_member_keys.py`
+- `S08` `verify:` `uv run ruff check <touched>` -> `pass`
+- `S08` `verify:` `uv run ty check <touched>` -> `pass`
+- `S08` `verify:` `uv run basedpyright <touched>` -> `pass`
+- `S09` `M` `src/cadrumo/application/aggregation/inventory.py`
+- `S09` `M` `src/cadrumo/application/aggregation/oss_ioss.py`
+- `S09` `M` `src/cadrumo/application/aggregation/service.py`
+- `S09` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S09` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S09` `M` `src/cadrumo/application/calculations/foreign_asset_redeclaration.py`
+- `S09` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S09` `M` `src/cadrumo/application/modelo/_profile_export_binding.py`
+- `S09` `M` `src/cadrumo/application/modelo/_revision_replay_inputs.py`
+- `S09` `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S09` `M` `src/cadrumo/application/modelo/borrador_binding.py`
+- `S09` `M` `src/cadrumo/application/modelo/workspace_manifest.py`
+- `S09` `M` `src/cadrumo/application/filing/runtime.py`
+- `S09` `M` `src/cadrumo/application/filing/draft_construction.py`
+- `S09` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S09` `M` `src/cadrumo/domain/user_profile/registry_contract.py`
+- `S09` `verify:` `uv run ruff check <touched>` -> `pass`
+- `S09` `verify:` `uv run ty check <touched>` -> `pass`
+- `S09` `verify:` `uv run basedpyright <touched>` -> `pass`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/query_reports.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/queries.py`
+- `S10` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S10` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S10` `M` `dev/docs/casilla_reference.py`
+- `S10` `M` `dev/registry/compiler/_validate_export_exemption.py`
+- `S10` `verify:` `uv run ruff check <touched>` -> `pass`
+- `S10` `verify:` `uv run ty check <touched>` -> `pass`
+- `S10` `verify:` `uv run basedpyright <touched>` -> `pass`
+- `S11` `T`
+- `S12` `T`
+- `S13` `M` `dev/registry/compiler/_loader_internals.py`
+- `S13` `M` `dev/registry/compiler/loader.py`
+- `S13` `M` `dev/registry/compiler/loader_cache.py`
+- `S13` `M` `dev/registry/maintenance_support.py`
+- `S13` `M` `dev/registry/conformance/loader_directory_mode_support.py`
+- `S13` `M` `dev/registry/conformance/tests/test_registry_schema_part1.py`
+- `S13` `M` `dev/registry/tests/test_loader_directory_mode.py`
+- `S13` `M` `dev/registry/tests/test_loader_directory_fragments.py`
+- `S13` `M` `dev/registry/tests/test_deadline_window_loader.py`
+- `S13` `M` `dev/registry/tests/test_loader_fingerprint_content_collision.py`
+- `S13` `M` `dev/registry/tests/test_loader_cache_isolation.py`
+- `S13` `M` `dev/registry/tests/test_semantic_map_join.py`
+- `S13` `M` `dev/registry/pipeline/test_generated_tree_check.py`
+- `S13` `M` `dev/registry/pipeline/test_generated_export_tree_validation.py`
+- `S13` `verify:` `uv run ruff check <touched>` -> `pass`
+- `S13` `verify:` `uv run ty check <touched>` -> `pass`
+- `S13` `verify:` `uv run pytest dev/registry/tests/test_loader_directory_mode.py dev/registry/tests/test_loader_directory_fragments.py dev/registry/tests/test_deadline_window_loader.py dev/registry/tests/test_loader_fingerprint_content_collision.py -n 0` -> `fail`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_value_contract.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_provider_registration.py`
+- `S14` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_terminal_origin.py`
+- `S14` `A` `dev/registry/fix_binding_row_set_contracts.py`
+- `S14` `A` `dev/registry/tests/test_fix_binding_row_set_contracts.py`
+- `S14` `A` `dev/registry/tests/test_binding_registration_corpus_gate.py`
+- `S14` `M` `dev/registry/convert_binding_provider_shape.py`
+- `S14` `M` `dev/registry/tests/test_convert_binding_provider_shape.py`
+- `S14` `M` `justfile`
+- `S14` `verify:` `uv run --no-sync python -m dev.registry.pipeline publish-authority` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest dev/registry/tests/test_binding_registration_corpus_gate.py -n 0` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest dev/registry/tests/test_convert_binding_provider_shape.py dev/registry/tests/test_fix_binding_row_set_contracts.py -n 0` -> `pass`
+- `S14` `verify:` `uv run --no-sync ty check` -> `pass`
+- `S15` `A` `src/cadrumo/domain/calculations/registry/identifier_evolutions.py`
+- `S15` `A` `src/cadrumo/domain/calculations/registry/tests/test_identifier_evolutions.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/schema_base.py`
+- `S15` `M` `dev/registry/compiler/loader_grammar.py`
+- `S15` `M` `dev/registry/conformance/schema_family_support.py`
+- `S15` `verify:` `uv run pytest dev/registry/tests/test_revision_inherited_reference_resolution.py dev/registry/tests/test_applicability_fragment_family.py src/cadrumo/domain/calculations/registry/tests/test_identifier_evolutions.py -n 0` -> `pass`
+- `S16` `T`
+- `S17` `M` `dev/registry/tests/test_casilla_field_kind_enrollment.py`
+- `S17` `M` `dev/registry/tests/test_formula_operand_casilla_refs.py`
+- `S17` `M` `dev/registry/tests/test_ledger_renta_income_binding.py`
+- `S17` `M` `dev/registry/tests/test_referential_integrity_part1.py`
+- `S17` `M` `dev/registry/tests/test_referential_integrity_part3.py`
+- `S17` `M` `dev/registry/tests/test_resolved_export_surface.py`
+- `S17` `M` `dev/registry/tests/test_schema_hygiene.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_foreign_assets.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_renta_income_actividad_contract.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_retenciones_empty_store_advisory_guard.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_withholding_source_resolver.py`
+- `S17` `M` `src/cadrumo/application/calculations/tests/test_row_set_assembly.py`
+- `S17` `M` `src/cadrumo/application/filing/tests/test_runtime.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_actions.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_boolean_binding_decimal_error.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_inventory_source_ownership.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_rate_box_coverage_advisory.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_source_boundary_and_enrollment.py`
+- `S17` `M` `src/cadrumo/application/modelo/tests/test_source_mesh_missing_sources.py`
+- `S17` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_collect_row_sets.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_bindings_previous_filing.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_boolean_binding_encoding.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_modelo_carry_taxonomy.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_foreign_asset_binding_row_field.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_formula_operand_casilla_refs.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_inventory_selector.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_iva_rate_value_selector.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_iva_aggregation_binding.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_manual_input_record_field_selector.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_previous_filing_binding_source_casilla_ids.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_profile_grounding.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_rate_box_partition.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/tests/test_withholding_percepcion_count.py`
+- `S17` `verify:` `uv run --no-sync ruff check <38 files>` -> `pass`
+- `S17` `verify:` `uv run --no-sync ruff format --check <38 files>` -> `pass`
+- `S17` `verify:` `uv run --no-sync pytest dev/registry/tests/test_casilla_field_kind_enrollment.py dev/registry/tests/test_resolved_export_surface.py dev/registry/tests/test_formula_operand_casilla_refs.py -n 0` -> `pass`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2024-desde-06/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/038/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/117/revisions/2019-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/122/revisions/2017-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2019-2023/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/123/revisions/2024-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/126/revisions/2019-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/128/revisions/2019-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/136/revisions/2026/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/156/revisions/2003-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2013-2015/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2016-2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2023-2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/165/revisions/2026-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/181/revisions/2022-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2003-2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/187/revisions/2022-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/188/revisions/2023-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2019/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2023/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/194/revisions/2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/216/revisions/2024-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2013-2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/270/revisions/2023-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/280/revisions/2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2009-2011-junio/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2011-julio-2015/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2004-2015/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2016-2017/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2018-2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/309/revisions/2023-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2026-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/341/revisions/2005-2015/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/345/revisions/2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/2010-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2021/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-1t/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2022-2t-4t/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2023-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2007/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2008-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2021-2023/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2021/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2022/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2023/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/714/revisions/2025/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2023/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/721/revisions/2024/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2012-2t-3t/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2013-2014/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2015-2017/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2018-1t-3t/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2018-4t/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/763/revisions/2019-y-siguientes/revision.toml`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/840/revisions/2003-y-siguientes/revision.toml`
+- `S18` `verify:` `load_modelo_directory over all 58 modelo directories` -> `pass`
+- `S19` `M` `dev/registry/convert_binding_provider_shape.py`
+- `S19` `M` `dev/registry/tests/test_convert_binding_provider_shape.py`
+- `S19` `M` `dev/registry/tests/test_modelo_100_2024_profile_surface.py`
+- `S19` `M` `dev/registry/tests/test_binding_source_kind_taxonomy.py`
+- `S19` `M` `dev/registry/compiler/validate_bindings.py`
+- `S19` `M` `dev/registry/tests/test_validate_bindings.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/binding_selector_utils.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/bindings.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/inventory_bindings.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/gasto193_bindings.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/profile_grounding.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/queries.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/query_reports.py`
+- `S19` `M` `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py`
+- `S19` `M` `src/cadrumo/application/calculations/binding_prefill.py`
+- `S19` `M` `src/cadrumo/application/calculations/multi_year.py`
+- `S19` `M` `src/cadrumo/application/calculations/relation_prefill_m202.py`
+- `S19` `M` `src/cadrumo/application/modelo/work_wizard.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_modelo_discovery_rendering.py`
+- `S19` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_source_accessors.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_provider_registration.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_selector_utils.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_aggregation.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_queries.py`
+- `S19` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S19` `M` `src/cadrumo/domain/user_profile/tests/test_registry_contract.py`
+- `S19` `M` `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`
+- `S19` `M` `src/cadrumo/application/modelo/tests/test_profile_binding.py`
+- `S19` `M` `src/cadrumo/application/calculations/tests/test_row_producer_default_op_detection.py`
+- `S19` `verify:` `uv run --no-sync ruff check <touched files>` -> `pass`
+- `S19` `verify:` `uv run ty check <touched files>` -> `pass`
+- `S19` `verify:` `uv run --no-sync basedpyright <touched domain and application files>` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest <touched registry, profile and converter suites> -n 0` -> `pass`
+- `S20` `A` `src/cadrumo/domain/calculations/registry/binding_terminal_audit.py`
+- `S20` `A` `src/cadrumo/domain/calculations/registry/tests/test_binding_terminal_audit.py`
+- `S20` `A` `src/cadrumo/application/aggregation/terminal_origin_audit.py`
+- `S20` `A` `src/cadrumo/application/aggregation/tests/test_terminal_origin_audit.py`
+- `S20` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S20` `M` `src/cadrumo/application/aggregation/atribucion_member.py`
+- `S20` `M` `src/cadrumo/application/aggregation/foreign_assets.py`
+- `S20` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S20` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S20` `M` `src/cadrumo/application/aggregation/modelo_bindings_retenciones.py`
+- `S20` `M` `src/cadrumo/application/aggregation/oss_ioss.py`
+- `S20` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S20` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S20` `M` `src/cadrumo/application/calculations/bienes_inversion_regularizacion.py`
+- `S20` `M` `src/cadrumo/application/calculations/iva_compensation_annual_partition.py`
+- `S20` `M` `src/cadrumo/application/calculations/iva_wallet_reconciliation.py`
+- `S20` `M` `src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py`
+- `S20` `M` `src/cadrumo/application/calculations/multi_year.py`
+- `S20` `M` `src/cadrumo/application/calculations/prorrata_regularizacion.py`
+- `S20` `M` `src/cadrumo/application/calculations/tests/test_previous_filing_unsatisfied_diagnostic.py`
+- `S20` `M` `src/cadrumo/application/modelo/borrador_binding.py`
+- `S20` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S20` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S20` `M` `src/cadrumo/application/modelo/_calculation_source_staging.py`
+- `S20` `M` `src/cadrumo/application/modelo/tests/test_profile_binding.py`
+- `S20` `M` `dev/registry/analysis/registry_status.py`
+- `S20` `M` `dev/registry/tests/test_schema_hygiene.py`
+- `S20` `verify:` `uv run ruff check <touched files>` -> `pass`
+- `S20` `verify:` `uv run ty check <touched files>` -> `pass`
+- `S20` `verify:` `uv run basedpyright <new files>` -> `pass`
+- `S20` `verify:` `uv run pytest src/cadrumo/domain/calculations/registry/tests/test_binding_terminal_audit.py src/cadrumo/application/aggregation/tests/test_terminal_origin_audit.py -n 0` -> `fail`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0066-renta-2025-maritime-exempt-income-0525.toml`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/0042-renta-2024-rental-reduccion-art-23-2-tier.toml`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0049-renta-2025-profile-madrid-nacimiento-adopcion-eligible-count.toml`
+- `S21` `A` `src/cadrumo/domain/renta/rental_reduction.py`
+- `S21` `M` `src/cadrumo/core/aggregation.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/binding_value_contract.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_value_contract.py`
+- `S21` `M` `dev/registry/convert_binding_provider_shape.py`
+- `S21` `M` `dev/registry/tests/test_convert_binding_provider_shape.py`
+- `S21` `M` `dev/registry/tests/test_m100_rental_reduccion_art23_2.py`
+- `S21` `M` `dev/registry/tests/test_modelo_100_registry_roles_madrid.py`
+- `S21` `verify:` `load_modelo_directory(src/cadrumo/_data/registry/aeat/modelos/100)` -> `pass`
+- `S21` `verify:` `uv run --no-sync python -m dev.registry.pipeline publish-authority` -> `fail`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/casillas/c0224.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/casillas/c0224.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/c0224.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/casillas/c0224.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/casillas/c0224.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/c0224.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/bindings/0007-renta-2020-profile-anualidades-sin-minimo-descendientes.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/bindings/0007-renta-2021-profile-anualidades-sin-minimo-descendientes.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0007-renta-2022-profile-anualidades-sin-minimo-descendientes.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/bindings/0007-renta-2023-profile-anualidades-sin-minimo-descendientes.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/0053-renta-2024-profile-anualidades-sin-minimo-descendientes.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0051-renta-2025-profile-anualidades-sin-minimo-descendientes.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0064-renta-2025-profile-has-economic-activity.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/formulas/0131-renta-2020-cuota-escala-estatal-sobre-base-liquidable-general.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/formulas/0133-renta-2021-cuota-escala-estatal-sobre-base-liquidable-general.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/formulas/0149-renta-2022-cuota-escala-estatal-sobre-base-liquidable-general.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/formulas/0150-renta-2023-cuota-escala-estatal-sobre-base-liquidable-general.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0149-renta-2024-cuota-escala-estatal-sobre-base-liquidable-general.toml`
+- `S22` `M` `src/cadrumo/_data/registry/authority/authority.json`
+- `S22` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S22` `M` `src/cadrumo/application/modelo/tests/test_anualidades_eligibility_derivation.py`
+- `S22` `A` `dev/registry/tests/test_modelo_100_boolean_channel_profile_bindings.py`
+- `S22` `verify:` `uv run --no-sync python -m dev.registry.pipeline publish-authority` -> `pass`
+- `S22` `verify:` `uv run pytest dev/registry/tests/test_modelo_100_boolean_channel_profile_bindings.py -n 0 -m integration` -> `pass`
+- `S22` `verify:` `uv run ruff check` -> `uv run ty check` -> `uv run basedpyright` -> `pass`
+- `S23` `A` `src/cadrumo/adapters/persistence/profile/relation_binding_join.json`
+- `S23` `A` `src/cadrumo/adapters/persistence/profile/relation_binding_join.py`
+- `S23` `A` `src/cadrumo/adapters/persistence/profile/calculation_revision_override_migration.py`
+- `S23` `A` `src/cadrumo/adapters/persistence/profile/tests/test_calculation_revision_override_migration.py`
+- `S23` `A` `src/cadrumo/application/modelo/tests/test_orphaned_override_diagnostic.py`
+- `S23` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S23` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S23` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S23` `verify:` `uv run pytest src/cadrumo/adapters/persistence/profile/tests/test_calculation_revision_override_migration.py -n 0` -> `pass`
+- `S23` `verify:` `uv run ruff check` -> `pass`
+- `S23` `verify:` `uv run ty check` -> `pass`
+- `S23` `verify:` `uv run basedpyright` -> `pass`
+- `S24` `M` `src/cadrumo/application/aggregation/inventory.py`
+- `S24` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
+- `S24` `verify:` `uv run ruff check src/cadrumo/application/aggregation/inventory.py src/cadrumo/application/aggregation/tests/test_inventory_source.py` -> `fail`
+- `S24` `verify:` `uv run ty check src/cadrumo/application/aggregation/inventory.py src/cadrumo/application/aggregation/tests/test_inventory_source.py` -> `pass`
+- `S24` `verify:` `uv run basedpyright src/cadrumo/application/aggregation/inventory.py src/cadrumo/application/aggregation/tests/test_inventory_source.py` -> `pass`
+- `S24` `verify:` `uv run pytest src/cadrumo/application/aggregation/tests/test_inventory_source.py -n 0` -> `fail`
+- `S25` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S25` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S25` `M` `src/cadrumo/application/aggregation/terminal_origin_audit.py`
+- `S25` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S25` `M` `src/cadrumo/application/modelo/binding_resolution.py`
+- `S25` `M` `src/cadrumo/application/modelo/calculation_resolution.py`
+- `S25` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S25` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S25` `M` `src/cadrumo/domain/calculations/registry/formula_runtime.py`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/bindings/0006-renta-2024-profile-taxpayer-birth-date.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/bindings/0013-renta-2025-profile-taxpayer-birth-date.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/bindings/0001-bindings.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/bindings/0001-bindings.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/bindings/0001-bindings.toml`
+- `S25` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/bindings/0001-bindings.toml`
+- `S25` `M` `src/cadrumo/_data/registry/authority/authority.json`
+- `S25` `A` `dev/registry/tests/test_modelo_100_boolean_channel_transport.py`
+- `S25` `verify:` `uv run --no-sync python -m dev.registry.pipeline publish-authority` -> `pass`
+- `S25` `verify:` `uv run --no-sync pytest dev/registry/tests/test_modelo_100_boolean_channel_transport.py dev/registry/tests/test_modelo_100_boolean_channel_profile_bindings.py dev/registry/tests/test_modelo_100_anualidades_separate_escala_multiyear.py dev/registry/tests/test_lookup_bracket_by_ccaa.py -n 0 -m ''` -> `pass`
+- `S25` `verify:` `uv run --no-sync ruff check && ty check && basedpyright <touched files>` -> `pass`
+- `S26` `M` `dev/registry/rename_formula_binding_identifiers.py`
+- `S26` `A` `dev/registry/tests/test_binding_span_strip.py`
+- `S26` `M` `dev/registry/edition_export_scenarios.py`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/*/bindings/*.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/*/bindings/*.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/360/revisions/*/bindings/*.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/*/bindings/*.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/application_links/0002-application-links.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/constructs/0005-constructs.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/application_links/0002-application-links.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/constructs/0005-constructs.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/verification_expectations/0002-verification-expectations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/verification_expectations/0003-reconcile-when-present.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/verification_expectations/0002-verification-expectations.toml`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/verification_expectations/0003-reconcile-when-present.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/verification_expectations/0001-verification-expectations.toml`
+- `S26` `D` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2025-y-siguientes/verification_expectations/0001-verification-expectations.toml`
+- `S26` `verify:` `uv run --no-sync pytest dev/registry/tests/test_binding_span_strip.py dev/registry/tests/test_rename_edition_year_collapse.py dev/registry/tests/test_rename_family_identifier_collapse.py -n 0 -q --noconftest` -> `pass`
+- `S26` `verify:` `load_modelo_directory` -> `pass`
+- `S26` `verify:` `uv run ty check dev/registry/rename_formula_binding_identifiers.py dev/registry/tests/test_binding_span_strip.py` -> `pass`
+- `S26` `verify:` `just report-registry-edition-delta-status --lines --totals-only` -> `pass`
+- `S27` `M` `dev/registry/rename_formula_binding_identifiers.py`
+- `S27` `A` `dev/registry/tests/test_rename_family_identifier_collapse.py`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/036`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/038`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/100`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/117`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/123`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/126`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/128`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/130`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/131`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/136`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/151`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/165`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/180`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/181`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/184`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/185`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/187`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/188`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/190`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/193`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/194`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/200`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/202`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/210`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/216`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/232`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/296`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/303`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/308`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/309`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/322`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/341`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/345`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/349`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/353`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/360`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/369`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/390`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/490`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/604`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/714`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/721`
+- `S27` `M` `src/cadrumo/_data/registry/aeat/modelos/763`
+- `S27` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S27` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S27` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S27` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S27` `verify:` `uv run --no-sync pytest dev/registry/tests/test_rename_family_identifier_collapse.py -n 0` -> `pass`
+- `S27` `verify:` `just report-registry-edition-delta-status --totals-only` -> `pass`
+- `S27` `verify:` `just check-locales` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.registry.pipeline publish-authority` -> `fail`
+- `S28` `M` `dev/registry/rename_formula_binding_identifiers.py`
+- `S28` `M` `dev/registry/tests/test_binding_span_strip.py`
+- `S28` `verify:` `uv run --no-sync pytest dev/registry/tests/test_binding_span_strip.py -n 0` -> `pass`
+- `S28` `verify:` `uv run ty check dev/registry/rename_formula_binding_identifiers.py dev/registry/tests/test_binding_span_strip.py` -> `pass`
+- `S28` `verify:` `uv run --no-sync ruff check dev/registry/rename_formula_binding_identifiers.py dev/registry/tests/test_binding_span_strip.py` -> `pass`
+- `S28` `M` `src/cadrumo/_data/registry/aeat/modelos/714/`
+- `S28` `verify:` `uv run --no-sync python dev/registry/rename_formula_binding_identifiers.py --strip-spans --modelo 714` -> `4844 candidates, 1415 rename pairs, 0 refused, 0 collisions, 153 restored-field rows`
+- `S28` `verify:` `uv run --no-sync python dev/registry/rename_formula_binding_identifiers.py --strip-spans --modelo 714 --apply` -> `9688 references rewritten, 160 files touched`
+- `S28` `verify:` `load_modelo_directory('src/cadrumo/_data/registry/aeat/modelos/714')` -> `pass`
+- `S28` `verify:` `0 binding ids, 0 candidates`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/binding_temporal.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_temporal.py`
+- `S29` `M` `dev/registry/compiler/validate_bindings.py`
+- `S29` `M` `dev/registry/analysis/registry_status.py`
+- `S29` `A` `dev/registry/compiler/tests/test_binding_non_calculation_disposition.py`
+- `S29` `A` `dev/registry/analysis/tests/test_registry_status_informational_bindings.py`
+- `S29` `verify:` `uv run --no-sync pytest dev/registry/compiler/tests/test_binding_non_calculation_disposition.py -n 0` -> `pass`
+- `S29` `verify:` `uv run --no-sync pytest dev/registry/analysis/tests/test_registry_status_informational_bindings.py -n 0` -> `pass`
+- `S29` `verify:` `uv run ruff check` -> `pass`
+- `S29` `verify:` `uv run ty check` -> `pass`
+- `S29` `verify:` `uv run basedpyright` -> `pass`
+- `S30` `A` `dev/registry/lift_family_source_defaults.py`
+- `S30` `A` `dev/registry/tests/test_lift_family_source_defaults.py`
+- `S30` `M` `justfile`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/formulas/0001-formulas.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0001-bindings.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0002-domestic-base.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0003-rate-box-layer.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0004-recargo-rate-box-layer.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0005-volumen-operaciones.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0006-aic-rate-box-layer.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0007-domestic-reverse-charge.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0008-aic-rate-blind-base.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0009-m303-regimen-simplificado-annual-summary.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0010-page-07-prorratas.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0011-page-05-regimen-simplificado.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0012-page-01-declared.toml`
+- `S30` `verify:` `just report-registry-edition-delta-status --lines --totals-only` -> `pass`
+- `S30` `verify:` `uv run --no-sync pytest dev/registry/tests/test_lift_family_source_defaults.py` -> `pass`
+- `S30` `verify:` `uv run --no-sync ruff check dev/registry/lift_family_source_defaults.py dev/registry/tests/test_lift_family_source_defaults.py` -> `pass`
+- `S30` `verify:` `uv run --no-sync ty check dev/registry/lift_family_source_defaults.py dev/registry/tests/test_lift_family_source_defaults.py` -> `pass`
+- `S31` `M` `src/cadrumo/domain/calculations/registry/ids.py`
+- `S31` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S31` `M` `src/cadrumo/domain/calculations/registry/schema_verification.py`
+- `S31` `M` `src/cadrumo/domain/calculations/registry/schema_surfaces.py`
+- `S31` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S31` `A` `dev/registry/author_family_identities.py`
+- `S31` `A` `dev/registry/tests/test_author_family_identities.py`
+- `S31` `M` `dev/registry/tests/test_export_projection_refs.py`
+- `S31` `M` `dev/registry/tests/test_registry_schema_part3.py`
+- `S31` `M` `dev/registry/tests/test_referential_integrity_part1.py`
+- `S31` `M` `dev/registry/pipeline/test_export_tree.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_actions.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_verification_substance.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_verification_substance_advisory.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_modelo_100_settlement_completeness_advisory.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_modelo_131_modulos_computed_diverges_advisory.py`
+- `S31` `M` `src/cadrumo/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
+- `S31` `M` `src/cadrumo/_data/registry/aeat/modelos/{200,296,303}/revisions/*/projection_endpoints/*.toml`
+- `S31` `M` `src/cadrumo/_data/registry/aeat/modelos/{100,111,115,123,130,131,151,180,190,193,200,202,210,216,296,303,309,322,349}/revisions/*/verification_predicates/*.toml`
+- `S31` `verify:` `uv run --no-sync python -m pytest dev/registry/tests/test_author_family_identities.py -q -n0` -> `pass`
+- `S31` `verify:` `uv run --no-sync python -m dev.registry.analysis.edition_delta_status --lines --totals-only` -> `pass`
+
+## Notes
+
+- `S01` Mypy is not installed in the project environment; the configured checkers (ty,
+- `S01` pyrefly, basedpyright) were run in its place. The repository-wide ruff and
+- `S01` import-boundary gates were already failing on unrelated in-flight work; none of
+- `S01` their findings name the files added here.
+- `S02` Four corpus files were rewritten in place by this Step outside its declared scope: `src/cadrumo/_data/registry/aeat/modelos/131/revisions/{2019-2023,2024,2025,2026}/bindings/*.toml` had their previous-filing `selector` mapping edited to carry a `temporal` table while retaining the legacy `source` key. The P04 converter treats a selector already carrying `temporal` as pass-through, so these files converge with the rest of the corpus on that pass.
+- `S03` The registry test suite cannot execute: a repo-global autouse fixture loads the
+- `S03` bundled authority artifact at setup, and the committed artifact still carries the
+- `S03` legacy `source`/`selector`/`typed_enum` binding shape, so all 2015 tests error at
+- `S03` setup. The corpus and its published artifact are converted by the later corpus
+- `S03` step; the new provider tests were executed directly against the module to confirm
+- `S03` they pass (15 assertions).
+- `S03` Consumers of the displaced shape were left failing on purpose, per the Step
+- `S03` contract: 14 application resolver sites reading `binding.selector`, three reading
+- `S03` `binding.typed_enum`, `application/modelo/workspace_manifest.py` importing the
+- `S03` deleted `selector_model_for_source`, and the previous-filing tests that construct
+- `S03` the retired loose temporal fields.
+- `S04` The registry test suite cannot be run through pytest in this checkout: the
+- `S04` autouse conftest fixture decodes the bundled authority artifact, which is stale
+- `S04` relative to the authored tree and fails validation before any test body runs.
+- `S04` The 51 cases in the new test module were executed directly instead and all
+- `S04` pass.
+- `S04` The route-to-registration cross-check could not be exercised by importing
+- `S04` `calculation_route`: an unrelated in-flight edit to `domain/renta/_first_slice_routing.py`
+- `S04` removes a symbol `domain/renta/ledger_expenses.py` still imports, breaking the
+- `S04` application import chain, and past that the same stale artifact blocks. Its two
+- `S04` check functions were executed against the live resolver identities instead, with
+- `S04` four fabricated drift inputs proving refusal.
+- `S04` `application/modelo/workspace_manifest.py` still imports a helper deleted from
+- `S04` `bindings.py` by earlier work in this phase and does not import; it was left
+- `S04` untouched.
+- `S05` The unreferenced-binding refusal is enrolled as an advisory
+- `S05` (`unreferenced_binding_advisories`), not as a compiler failure: measured across
+- `S05` every currently loadable modelo it reports 299 rows, so refusing would break the
+- `S05` corpus. `_validate_record_sections.py` and `_validate_previous_filing_sources.py`
+- `S05` were inspected and needed no edit; the registration section is enrolled in
+- `S05` `_validate_revision_sections.py` instead.
+- `S06` The working-tree copy of `dev/registry/compiler/_validate_dependency_sections.py` was deleted
+- `S06` while retiring the relation validators; it also hosted the surviving dependency-classification
+- `S06` and filing-schedule validators. A concurrent contributor's committed version was restored in
+- `S06` its place, so any uncommitted edit that copy carried at that moment is lost.
+- `S07` The runtime fold-value channel keeps its `relation_values` / `unresolved_relation_ids` /
+- `S07` `relation_overrides` field names and is now keyed by the target binding id. The persisted
+- `S07` `CalculationRevision.relation_overrides` field and its revision-identity payload were left
+- `S07` untouched, so an override stored against a pre-cut relation id no longer matches a key and
+- `S07` stops applying until the persisted-data migration lands.
+- `S07` Test modules that still construct or assert the retired relation family were not migrated in
+- `S07` this Step and fail on import or attribute access.
+- `S07` Periodic transition-period applicability reads the carry binding, not a relation
+- `S07` declaration. `_transition_period_applicability_from_registry` still called
+- `S07` `relation_prefill_bindings_for_period`, which is empty for Modelo 303 after the fold, so
+- `S07` every 303 filing and export raised `NotImplementedError`. The rule now reads the periodic
+- `S07` carry bindings, and Modelo 390's three delta-authored editions gained the export scenarios
+- `S07` their bytes are compared through:
+- `S07` `M` `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py`
+- `S07` `M` `src/cadrumo/application/aggregation/m303_arrivals.py`
+- `S07` `M` `dev/registry/edition_export_scenarios.py`
+- `S07` `A` `src/cadrumo/application/aggregation/tests/test_m303_transition_period_carry.py`
+- `S08` The Step row names `src/cadrumo/application/modelo/binding_prefill.py` and
+- `S08` `src/cadrumo/application/aggregation/_per_grupo_member_keys.py`; the live
+- `S08` modules are `application/calculations/binding_prefill.py` and
+- `S08` `application/calculations/_per_grupo_member_keys.py`.
+- `S08` `bienes_inversion_regularizacion.py` and the iva-compensation resolver carried
+- `S08` no untyped selector read and were left unchanged.
+- `S08` `binding_prefill.py` also moved its `M303_COMPENSATION_*` imports to
+- `S08` `domain/calculations/registry/iva_compensation_annual_partition_bindings.py`,
+- `S08` the constants' new defining module.
+- `S08` Deleting the untyped selector guards orphaned three translation keys
+- `S08` (`selector_filing_year_delta_type`, `selector_source_periods_type`,
+- `S08` `selector_source_periods_member_type`) in the `ca`, `en`, `es` and `hu`
+- `S08` application catalogues. They were left in place: the locale sources are under
+- `S08` concurrent edit by another writer.
+- `S08` Repository test suites for these modules cannot run: the published authority
+- `S08` artifact is mid-regeneration and fails validation in an autouse fixture.
+- `S08` Behaviour was verified by direct execution of the typed narrows instead.
+- `S09` `aggregation/foreign_assets.py` already read its selector through the typed
+- `S09` row-set accessor and needed no change.
+- `S09` `workspace_manifest.py` lost its import of the deleted `selector_model_for_source`;
+- `S09` the selector traversal roots now derive from the provider enrollment table, which
+- `S09` excludes mesh-only source kinds by construction.
+- `S09` `inventory.py` guarded an authored `filing_year` the provider no longer carries.
+- `S09` The guard was re-expressed against the temporal selector, which is where that
+- `S09` invariant now lives.
+- `S09` `_calculation_modelo_adjustments.py` lost a dead `rectification_scope is None`
+- `S09` branch: the typed field is non-optional with a default.
+- `S09` `profile_binding_selectors` was narrowed to the provider union and its
+- `S09` Mapping-reading branch deleted, so the dual path is gone at its source.
+- `S09` Repository test suites for these modules cannot run: the published authority
+- `S09` artifact is mid-regeneration and fails validation in an autouse fixture.
+- `S10` The flattened `BindingSelectorQueryProjection`, `BindingSelectorQueryEntry` and
+- `S10` `BindingSelectorQueryValue` models and their `_public_selector` /
+- `S10` `_public_selector_value` projectors were deleted; the binding query row now
+- `S10` carries the typed `provider` union member itself.
+- `S10` `src/cadrumo/domain/calculations/registry/tests/test_queries.py` still asserts
+- `S10` against the deleted projection and needs migration to the typed member.
+- `S11` Relations fragments are untouched: the Step row names them, but the relation absorption is
+- `S11` sequenced behind this rewrite and no relation row was read or written.
+- `S12` Seven modelos still hold legacy rows whose value contract is not derivable from any declared
+- `S12` source: 130, 202, 210, 303, 347, 349 and 390. Those rows were refused rather than guessed, so
+- `S12` their fragments were left byte-identical and those seven modelo directories do not load. Every
+- `S12` other modelo directory loads. Relations fragments were not deleted; that is a later Step.
+- `S13` Three pre-existing failures remain in `test_loader_directory_mode.py`
+- `S13` (`test_shared_catalogues_reject_noncanonical_parameter_key`,
+- `S13` `test_shared_catalogues_preserves_valid_parameter_key_identity`,
+- `S13` `test_registry_tree_rejects_parameter_unknown_legal_refs`): they assert on the
+- `S13` retired global `[parameters]` catalogue section, which the loader already
+- `S13` refuses, and they are untouched by this step. Further pre-existing failures in
+- `S13` `test_registry_schema_part1.py` and `test_committed_registry.py` come from the
+- `S13` in-flight binding provider/value schema change, not from the layout retirement.
+- `S13` Two test modules under `src/` import `selector_model_for_source` from
+- `S13` `domain.calculations.registry.bindings`, where no such symbol is defined:
+- `S13` `src/cadrumo/domain/calculations/registry/tests/test_filing_grade_binding_resolution.py`
+- `S13` and `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`. Reported
+- `S13` rather than fixed; this step does not edit `src/`.
+- `S14` The corpus rewrite this Step provisioned was already applied by a concurrent
+- `S14` writer: `fix_binding_row_set_contracts --all --dry-run` reports 336 of 336
+- `S14` row-producing rows already on the row-set shape and zero rewrites pending, so
+- `S14` the tool ran as a verified no-op and no registry data file was written. The
+- `S14` before/after hash comparison of all 774 authored binding fragments shows zero
+- `S14` changes.
+- `S14` The registry test suites cannot run under `pytest` in this tree: a session
+- `S14` fixture loads the bundled authority artifact, which is stale against the
+- `S14` current schema (`casilla_continuidad_evolutions` is no longer an enrolled
+- `S14` family) and fails collection for 63 unrelated tests. The domain tests for this
+- `S14` Step were therefore verified by direct execution instead, 93 passing across the
+- `S14` value-contract, registration, and terminal-origin modules.
+- `S14` ### Test-lane migration after the binding-schema cut
+- `S14` A follow-on pass migrated the test corpus onto the post-cut provider API and
+- `S14` re-measured the owning lanes. Only test modules and test-support helpers were
+- `S14` edited; no production module, registry data file, or generated artifact was
+- `S14` touched.
+- `S14` Collection blockers cleared (4 modules): the previous-filing offset test was
+- `S14` rebuilt on a `PreviousFilingProvider` carrying a `TargetPeriodOffset`; the query
+- `S14` test moved from the retired relation grouping to
+- `S14` `relation_prefill_bindings_for_period`; both copies of the ahorro-base chain
+- `S14` moved from the deleted `relation_aggregation` module to `binding_aggregation_op`.
+- `S14` Identifier migration was corpus-verified rather than pattern-applied. Three
+- `S14` mechanical passes ran, each checking every produced identifier against the
+- `S14` declared corpus before writing: 110 edition-collapsed ids across 79 files, the
+- `S14` 72-entry relation-to-binding join map across 96 files, and 5 residual
+- `S14` `m210`/`modelo-200` collapses across 24 files. Interpolated ids built by
+- `S14` f-string were de-interpolated only where the collapsed form existed AND no
+- `S14` edition-keyed variant survived; the one case that failed that second test
+- `S14` (`renta-{year}-dependent-modelos`, still edition-keyed on the 2020-2024
+- `S14` revisions) was kept interpolated. An AST pass then removed 33 duplicate dict and
+- `S14` set entries created where two relation ids merged onto one binding; every
+- `S14` duplicate was value-identical, so no fixture value was silently dropped.
+- `S14` Two assertions were retargeted because their subject no longer exists. The
+- `S14` query row test asserted a `typed_enum` binding consumed on the decimal channel;
+- `S14` no such declaration remains (the estimación-directa binding is boolean now, and
+- `S14` every surviving `typed_enum` is enum-channel), so it now asserts that the row
+- `S14` surfaces the declared `typed_enum` at all. The standalone relation schema-record
+- `S14` family is gone from the workspace surface — a fold's endpoints now hang off the
+- `S14` casilla and binding records — so its dedicated test was deleted and the parity
+- `S14` block dropped; the two surviving endpoint tests already cover each side.
+- `S14` One test module deletion and no other removals. Sources of residual failure are
+- `S14` recorded below.
+- `S14` Lane measurements, taken before the tree became unimportable:
+- `S14` registry domain: 181 failed, 2158 passed, 3 errors
+- `S14` application calculations: 168 failed, 500 passed, 4 errors
+- `S14` application aggregation: 381 failed, 658 passed, 2 errors
+- `S14` application modelo: not measurable; its `conftest` import fails
+- `S14` dev registry: not measurable; see below
+- `S14` Comparison against a detached HEAD worktree shows the tree improving rather than
+- `S14` regressing: registry domain went from 351 failed / 1950 passed at HEAD, and the
+- `S14` calculations and aggregation lanes together from 596 failed / 1124 passed at
+- `S14` HEAD to 549 failed / 1173 passed. Of the residual registry-domain failures only
+- `S14` 18 are absent from the HEAD baseline, and every one of those traces to an
+- `S14` external cause recorded below rather than to this migration.
+- `S14` Two dev-registry modules carried no lane marker and aborted the whole lane
+- `S14` before any test ran; both were given the lane's standard marker pair.
+- `S14` Three external conditions bound the result and are not owned here. The
+- `S14` identifier rename landed in the registry TOML corpus but the bundled authority
+- `S14` artifact was not republished, so it still registers the superseded ids; the
+- `S14` renamed tests are correct against the corpus and fail against the artifact until
+- `S14` a republish runs. A concurrent change replaced the `TaxDomain` enum with a plain
+- `S14` `str` subclass carrying a custom constructor, which pydantic cannot build a
+- `S14` schema for; every model annotating that type now fails at import, so the whole
+- `S14` registry domain, and with it all five lanes, stops at collection. Separately,
+- `S14` `m303_carry_header_key` is absent from its module, which fails the application
+- `S14` modelo `conftest` at HEAD as well as here.
+- `S15` The two per-family sections were later replaced by one `identifier_evolutions` chain-family section whose members carry `family`; `binding_evolutions` and `formula_evolutions` were deleted with zero fragments authored.
+- `S15` `M` `src/cadrumo/domain/calculations/registry/identifier_evolutions.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/tests/test_identifier_evolutions.py`
+- `S16` The whole-revision-id rename was already applied in this checkout: the owning tool's
+- `S16` measurement pass reports zero formula and zero binding identifiers embedding their declaring
+- `S16` edition's key. This Step adds the second, modelo-anchored edition-year collapse rule, whose
+- `S16` year set is each edition's `valid_from` year plus every filing year its period selector
+- `S16` admits, and whose identity proof compares declaration bodies after lifting each edition's
+- `S16` shared source references. The lifting is carried by two new manifest-only revision fields,
+- `S16` `binding_source_refs` and `formula_source_refs`, mirroring `casilla_source_refs` on both the
+- `S16` manifest and the member side. The collapse was then applied one modelo at a time, each
+- `S16` verified through the directory loader before the next: 360 collapses 146, 720 collapses 43,
+- `S16` 232 collapses 370 and lifts one binding source reference per edition, 353 collapses 166,
+- `S16` refuses 3 and lifts one per edition. Modelos 123 and 303 were left untouched: 123's two
+- `S16` year-keyed formulas collide with differently stated bare formulas, and 303 declares no
+- `S16` year-keyed identifier at all. The corpus `edition_keyed_identifier` count falls from 731 to
+- `S16` 8, all of which are either the three refusals, 123's two, or the delta screen's weaker token
+- `S16` test reading an offset range or a period-selector segment as a year. The authority was not
+- `S16` republished and the plan Step is left open.
+- `S16` The collapse stranded the generated export trees of 232 and 353, which quote the renamed
+- `S16` binding ids and are generator-owned. That is a deadlock rather than a stale artifact: the
+- `S16` authority refuses to compile while a published tree names an undeclared binding, and every
+- `S16` generator entry point needs a compiling authority first. The export lane regenerated the four
+- `S16` trees, after which the authority compiles and no export field references an unknown binding.
+- `S16` The tool now refuses to apply when a published export tree quotes an id it would rename,
+- `S16` deriving the condition from the trees themselves rather than from the hand-kept roster that
+- `S16` named only modelo 390, and rewrites both quote styles so a single-quoted reference cannot be
+- `S16` left behind.
+- `S17` The bundled authority artifact is stale, so the session-scoped autouse fixture in
+- `S17` `src/cadrumo/conftest.py` fails every test under `src/cadrumo/`. Those modules were
+- `S17` verified by direct execution of their test functions outside pytest; fixture-backed and
+- `S17` corpus-backed cases in them remain unverified until the artifact is rebuilt.
+- `S17` Two modules were left on the legacy shape because they read
+- `S17` `selector_model_for_source` and the `selector.*` manifest roots, production surfaces
+- `S17` outside this Step's scope:
+- `S17` `src/cadrumo/domain/calculations/registry/tests/test_filing_grade_binding_resolution.py`
+- `S17` and `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`.
+- `S19` Pre-existing failures outside this change remain in modules it touches: four modelo 100
+- `S19` profile-surface assertions and three registry query assertions name pre-rename binding
+- `S19` identifiers, two schema-hygiene tests fail on dangling modelo 232 export references, and
+- `S19` two binding-validation tests carry a retired row-set fixture. One unrelated module under
+- `S19` the application modelo package fails to import a symbol another change is mid-edit on.
+- `S19` Second-review remediation, appended to the same Step.
+- `S19` Restored the prior-domiciliation header-key import and added an executing
+- `S19` import gate. `_prior_domiciliation` imported an accessor the carry-ingress
+- `S19` module never defined, so every consumer of the modelo filing actions raised
+- `S19` `ImportError`; the module-level constant it replaced is back at both use sites.
+- `S19` A new gate under the package test root imports all 1021 non-test modules of
+- `S19` `cadrumo.application` and `cadrumo.entrypoints` and reports every `ImportError`
+- `S19` at once. It passes with no residual: the static import-resolution gates could
+- `S19` not have caught this defect, because they resolve names against packages
+- `S19` without executing the importing module.
+- `S19` Wired the stored relation-override migration into the calculation path. The
+- `S19` forward migration had no caller, so a pre-cut store kept its retired override
+- `S19` keys indefinitely. It now runs where the source-mesh resolution constructs the
+- `S19` calculation-revision repository, mirroring the bienes-inversion authority
+- `S19` migration: only for a repository the function constructs, never for an injected
+- `S19` one, and a no-op on an already-current store.
+- `S19` Widened override-key classification to the active revision's own bindings. An
+- `S19` override keyed by a binding authored after the cut is absent from the frozen
+- `S19` join and was classified as an orphan, which would have refused the revision
+- `S19` forever. A key is now current if the join resolves onto it OR the revision's
+- `S19` registry snapshot declares it; a key matching neither is still refused rather
+- `S19` than dropped.
+- `S19` Refused a filing-year offset bound that admits no step. `max_years` below
+- `S19` `abs(years)` filtered out every anchor silently, leaving a declaration that
+- `S19` looked live and resolved to nothing.
+- `S19` Made the relative-coordinate provider guard recurse. A coordinate nested one
+- `S19` model below a provider field was invisible to the guard; the walk now descends
+- `S19` into nested models with a dotted diagnostic path, skips `temporal` at every
+- `S19` depth, and terminates on self-referential shapes. No enrolled provider trips
+- `S19` the widened guard.
+- `S19` Dropped the frozen advisory count from the binding-validation module docstring
+- `S19` and rewrote the modelo 202 instalment-base header comment: it now describes the
+- `S19` declared 1P/-2 and 2P,3P/-1 anchors and states the Modelo 200 pre-2024 gap as a
+- `S19` resolution-time source absence rather than as an operator-entered period.
+- `S19` Hoisted the calculation-source diagnostic import to module level after
+- `S19` confirming no import cycle results.
+- `S19` New tests: the import gate, the migration entry point and post-cut key
+- `S19` preservation, the offset-bound refusals, the nested-provider detector teeth,
+- `S19` and a live terminal-origin pair proving the registration-derived default is
+- `S19` non-empty and that real profile-resolver output audits clean.
+- `S19` Deferred: the byte-level hash guard requested for the modelo 202 binding file.
+- `S19` The repository has no per-declaration digest ratchet to enrol it in, and a
+- `S19` frozen content hash over a comment would assert the presence of a string rather
+- `S19` than a behaviour. The declaration itself is covered by the compiled-registry
+- `S19` gates.
+- `S19` Pre-existing failures, all reproduced at `HEAD` in a detached baseline worktree
+- `S19` and none introduced here: the twelve prior-domiciliation election assertions
+- `S19` fail on a carry-ingress resultado refusal unrelated to the header key, and they
+- `S19` became visible only because the module can be imported again; the IVA component
+- `S19` catalogue rejects its own category rows across the aggregation suites; two
+- `S19` cross-module and two relative-import gate entries name modules under concurrent
+- `S19` edit; and the binding validation CLI gate aborts inside an untracked in-flight
+- `S19` module.
+- `S19` Late in this Step a concurrent change to the registry schema and the published
+- `S19` authority artifact began refusing `formula_evolutions` as an extra input, which
+- `S19` fails every module that builds a bundled snapshot, including this Step's own
+- `S19` suites. Each suite recorded here passed before that change landed; the refusal
+- `S19` is in files this Step did not touch.
+- `S19` ### Third-review remediation: channel screening, operand refusal, rename guards
+- `S19` Widened the application and entrypoint import scan to catch `Exception` rather
+- `S19` than `ImportError`, so a registry validation error or `TypeError` raised while a
+- `S19` module builds a constant is reported with its type name instead of aborting the
+- `S19` scan at the first module. A fabricated temporary package on `sys.path`, one
+- `S19` module raising `RuntimeError` and one raising `ImportError`, proves both are
+- `S19` reported and that the scan continues past the first.
+- `S19` Screened the boolean channel against the revision's declared binding ids through
+- `S19` the shared `reject_unknown_external_values` gate and dropped the permissive
+- `S19` channel default that treated an unknown id as boolean-contracted. The shared
+- `S19` gate was keyed on ids alone rather than on `Decimal` values so every external
+- `S19` channel screens through one function. A truth value under an undeclared id is
+- `S19` now refused instead of silently discarded.
+- `S19` Added the compiler refusal the evaluator's docstring had been claiming: a
+- `S19` binding whose value contract declares the boolean channel may be an `equal`
+- `S19` operand, an `if_then_else` condition, or the whole expression of a formula
+- `S19` targeting a yes/no casilla, and is refused under every arithmetic operator at
+- `S19` any depth. Run over the published corpus it reports no authored violation across
+- `S19` 1473 formulas; the two shapes it first flagged are the bare-leaf projection onto
+- `S19` Modelo 100 casilla 0245, which the record design itself encodes as 1/0, so the
+- `S19` rule was scoped to operator-consumed positions and the docstring restated to
+- `S19` match.
+- `S19` Replaced the `NotImplementedError` in the Modelo 303 prorrata transition path
+- `S19` with the module's typed `AggregationValidationError` under a new translation key
+- `S19` present in all four catalogues, and moved the record-design grounding onto the
+- `S19` function: the transition period is the last period of the taxpayer's own filing
+- `S19` schedule, per Nota 6 of the official record design that the served revision
+- `S19` cites as its casilla source reference. Removed the campaign marker comment above
+- `S19` it.
+- `S19` Hardened two rewrite guards in the identifier rename tool. The corpus-wide
+- `S19` textual rewrite now refuses a chained rename map, naming the offending pairs,
+- `S19` because one pass cannot decide whether a chained source stops at its target or
+- `S19` travels on. The span strip now runs the same cross-edition post-image projection
+- `S19` the family collapse runs, through one shared screen rather than a second copy;
+- `S19` both plans satisfy a small protocol that owns the withdrawal.
+- `S19` Made the rename tool's data-keyed exemption structural. A member field is a
+- `S19` filing coordinate because of its declared type -- the filing-year alias, the
+- `S19` `Period` model, or a registry period-code alias -- and never because it is
+- `S19` spelled `year` or `period`; a collection of period codes is a row's coverage
+- `S19` rather than its identity. Deadline windows stay withheld on `filing_year` and
+- `S19` `period`, and filing schedules stay in scope, unchanged from the name rule.
+- `S19` Scoped the provider guard's record-layout-integer and `temporal` exemptions to
+- `S19` the provider model itself. Both exemptions describe one specific declared
+- `S19` surface, so a nested model reusing either name no longer inherits them; the
+- `S19` enrolled provider table still passes.
+- `S19` Pointed the reference-section walker's docstrings at `reference_checker`, the
+- `S19` module that exists, and deleted a dead helper from the boolean-channel transport
+- `S19` suite before moving that suite to the application package whose transport it
+- `S19` exercises.
+- `S19` Verification. `ruff check`, `ruff format --check`, `ty check` and `basedpyright`
+- `S19` are clean over every touched file; the only `ty` diagnostics left are the
+- `S19` fourteen pre-existing translatable-message argument reports in the Modelo 303
+- `S19` arrivals module, to which the new refusal adds a fifteenth of the same kind by
+- `S19` following the module's existing call shape. The compiler refusal suite (11
+- `S19` cases), the rename span-strip and chained-map suite (7), the family-collapse
+- `S19` suite including the typed-exemption cases (12), the nested provider guard (11)
+- `S19` and the provider registration suite (35) all pass; the boolean-channel screening
+- `S19` was exercised directly against a compiled revision, refusing an undeclared id
+- `S19` and a decimal-contract id and accepting a declared one. `pytest` could not be
+- `S19` used for the registry-authority-backed suites: the tree cannot compile the
+- `S19` bundled authority because governed facts live in untracked files, which fails
+- `S19` the moved transport suite and every sibling case in it alike. Two cases in the
+- `S19` binding-validation suite fail on fixture strings that no longer match the modelo
+- `S19` 190 corpus, and the application import gate reports a module under concurrent
+- `S19` edit; neither is touched here.
+- `S20` The two new suites (46 cases) pass when their test functions are executed
+- `S20` directly; under pytest they error in the session-scoped `compose_runtime_ports`
+- `S20` fixture, because the bundled authority artifact in this worktree no longer
+- `S20` decodes against the live `RelationPrefillProvider` model while a concurrent
+- `S20` relation-absorption change is mid-republish. The failure is environmental and
+- `S20` affects every suite in the repository, not only these.
+- `S20` Two resolver-level assertions (profile resolver, previous-filing resolver) were
+- `S20` added to existing suites but could not be executed for the same reason.
+- `S20` `src/cadrumo/application/calculations/relation_prefill.py` is owned by the
+- `S20` concurrent change and was left untouched, so its provenance rows still carry no
+- `S20` terminal origin.
+- `S21` 38 of the 40 in-scope binding ids were left unchanged: they carry a value contract that provider-side evidence confirms.
+- `S21` No casilla `data_type` was authored. `CasillaDefinition.data_type` already defaults to `CasillaDataType.MONEY`, so authoring `money` onto the consuming casillas that omit it would restate the schema default without changing compiled behaviour.
+- `S21` `publish-authority` exits 1 on 166 modelo 353 export fields referencing unknown bindings, in another writer's uncommitted area. The captured output contains no modelo 100 diagnostic.
+- `S22` `src/cadrumo/application/modelo/tests/test_anualidades_eligibility_derivation.py` could not be
+- `S22` executed: `src/cadrumo/application/modelo/tests/conftest.py` fails to import at collection because
+- `S22` `cadrumo.application.calculations.m303_carry_ingress` does not export `m303_carry_header_key`, an
+- `S22` in-flight edit owned by another contributor. Pre-existing and unrelated to this change.
+- `S22` Pre-existing unrelated failures observed while validating: 17 in
+- `S22` `dev/registry/tests/test_modelo_100_anualidades_separate_escala_multiyear.py` (a concurrent
+- `S22` uncommitted edit references year-prefixed binding ids that do not exist at HEAD), and 2 in
+- `S22` `dev/registry/tests/test_modelo_100_casilla_wiring_contract.py` /
+- `S22` `dev/registry/tests/test_modelo_100_drift_detection.py` (unauthored retired-provider legal facts and
+- `S22` orphan parameters across modelos 131/303).
+- `S23` The persisted field name `relation_overrides` and the runtime channels
+- `S23` `relation_values` / `unresolved_relation_ids` were NOT renamed: the rename spans
+- `S23` 33 production modules (154 including tests), above the threshold set for this
+- `S23` Step. The naming is retained debt.
+- `S23` `src/cadrumo/application/modelo/tests/test_orphaned_override_diagnostic.py` could
+- `S23` not be executed: the `application/modelo/tests` conftest fails to import at HEAD
+- `S23` (`m303_carry_header_key` absent from `application/calculations/m303_carry_ingress.py`),
+- `S23` a pre-existing breakage unrelated to this Step. Its three assertions were verified
+- `S23` by direct invocation instead.
+- `S23` `src/cadrumo/domain/modelos/tests/test_calculation_revision_evidence.py::test_revision_id_pinned_across_every_optional_branch`
+- `S23` fails at HEAD with a shifted pinned hash; no identity input was touched here.
+- `S24` The three ruff findings are pre-existing missing-docstring errors on untouched
+- `S24` lines; the identical three reproduce against the committed file.
+- `S24` The bundled authority artifact is mid-republish and does not decode, so pytest
+- `S24` errors at the autouse authority fixture for every test in the file and the
+- `S24` inventory projection itself cannot be computed. The new empty-rows test and the
+- `S24` provenance/audit join were verified by direct execution instead; the new
+- `S24` multi-row test remains unexecuted until the artifact republishes.
+- `S24` The shared `_binding` and `_revision` helpers in the test module are stale
+- `S24` against the current `InventoryProvider` (they still pass a removed
+- `S24` `filing_year` key), so the new tests build their own row templates and revision
+- `S24` rather than rewriting another contributor's in-flight helpers.
+- `S25` Part B of the originating Step row (the modelo 100/2020 non-monetary `decimal`
+- `S25` casilla sweep) was reassigned to the registry authoring lane before any file
+- `S25` under that revision was written; no 2020 casilla was modified here.
+- `S25` Routing bindings by their authored `value.channel` surfaced three declarations
+- `S25` that contradicted their own consuming formulas or their own facts, each
+- `S25` corrected at the declaration rather than absorbed by the resolver: the modelo
+- `S25` 100 taxpayer birth date declared `text` while consumed by `age_at_year_end`, the
+- `S25` modelo 210 country of fiscal residence declared `money` while consumed as an
+- `S25` enum dispatch key, and the modelo 200 new-entity flag declared `money` while its
+- `S25` profile fact is a boolean used only as an `if_then_else` predicate.
+- `S25` `src/cadrumo/domain/calculations/registry/formula_runtime.py` was found with a
+- `S25` concurrent contributor's `_merge_relation_values_into_bindings` interleaved into
+- `S25` the middle of `_resolve_calculation_inputs`, leaving that function returning
+- `S25` `None`. The ordering was repaired with both contributions preserved.
+- `S25` `src/cadrumo/application/modelo/profile_binding.py` was re-landed after an
+- `S25` external HEAD restore reverted this file alone; the other boolean-channel files
+- `S25` survived.
+- `S26` Modelos 232, 353 and 390 are refused by the generated-export-tree guard and were
+- `S26` not applied. Probing the strip on an isolated copy of modelo 353 showed the
+- `S26` strip alone leaves every one of its 166 generated-tree binding references
+- `S26` dangling; `load_modelo_directory` returns OK on that state, so it does not gate
+- `S26` the hazard. The regeneration must land in the same change, and the owning
+- `S26` generator cannot run: the pipeline entry point fails at import because a
+- `S26` governed fact is not registered, and the core modelo enum cannot be iterated.
+- `S26` Modelo 714 is withheld from the pass entirely; its 128 within-edition collisions
+- `S26` need the generator's repetition index.
+- `S26` Test modules naming a stripped id are reported, never rewritten -- they belong to
+- `S26` their authors. Modelo 131's stripped ids are still named by three test modules
+- `S26` whose owner must move them.
+- `S26` The modelo 200 verification-expectation duplicate was not the subset it was
+- `S26` described as: the keyed row covered casilla DP200014B:00599, which the surviving
+- `S26` row did not. That casilla was unioned into the surviving row before the keyed row
+- `S26` was deleted, so no verification coverage was dropped.
+- `S26` A src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/identifier_evolutions/0001-replaced-regimen-simplificado-lorca-relabel.toml
+- `S26` A src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/identifier_evolutions/0001-retired-regimen-simplificado-reducciones.toml
+- `S27` `publish-authority` exits 1 on a governed-fact citation failure in the untracked
+- `S27` file `src/cadrumo/_data/registry/aeat/facts/0092-modelo-rendering-declarations.toml`,
+- `S27` which this change did not create or touch; the authority artifact is therefore not
+- `S27` republished here. Two edition-keyed identifiers remain in modelo 200 revision 2024
+- `S27` (`modelo-200-2024-portal`, `modelo-200-2024-cuota-chain-verification`): each
+- `S27` edition already declares the token-free spelling as a separate member, so the
+- `S27` collapse is refused as a collision and the duplicate declarations need a decision.
+- `S27` The deadline window family is withheld from the rename entirely: its members are
+- `S27` identified by the typed filing year and period they state.
+- `S28` The 714 pass is applied: 4,844 span ids stripped under the full-provider.field slot rule (153 restored slots), 9,688 references rewritten across 160 files, 0 collisions in all five editions, load-verified; 714 has no generated export tree. The machine-filled Scope paths naming the export generator are stale: the generator needed no change.
+- `S28` `M` `dev/registry/rename_formula_binding_identifiers.py` - no member id may carry its provider offset in ANY spelling: `drop_provider_offset_tail` removes a trailing separator-bounded token equal to `str(provider.offset)` or the `<offset>-<offset+length-1>` remnant, repeating while both are stacked, and runs after the full-`provider.field` restoration that re-introduced the address. An unexplained span-shaped run elsewhere in the id no longer vetoes the tail drop. Adds `remove_emptied_fragment_directories` (git-status-gated, refuses a dirty directory) and `write_address_map`, which records every candidate's `old_id`/`new_id`/`record`/`offset`/`length`/`field` before any address is dropped.
+- `S28` `A` `dev/registry/generated/714-binding-id-address-map.json` - 2,121 candidates, generated, not hand-edited.
+- `S28` `M` `dev/registry/tests/test_rename_span_strip.py` - 8 added cases: bare-offset tail with no span run, restored-field re-statement, a trailing number that is not the address, offset-only sibling slots refusing the modelo whole, mid-word truncated prefixes colliding on the post-image, an unexplained run not vetoing the tail drop, emptied-directory removal, and a dirty emptied directory left in place.
+- `S28` `verify:` `uv run --no-sync python -m pytest dev/registry/tests/test_rename_span_strip.py -q` -> `15 passed`
+- `S28` `verify:` `uv run --no-sync ruff check` + `ty check` on both files -> `pass`, `pass`
+- `S28` `verify:` `... --strip-spans --modelo 714 --dry-run` -> `exit 1; 2121 candidates, 160 within-edition collisions, modelo refused whole`
+- `S28` `verify:` `... --strip-spans --modelo 714 --apply` -> `exit 1; address map written, 0 references rewritten, corpus unchanged`
+- `S28` `verify:` `load_modelo_directory('src/cadrumo/_data/registry/aeat/modelos/714')` -> `pass`
+- `S28` `verify:` `just report-registry-edition-delta-status --lines --totals-only` -> `family bindings address_identifiers=2126` (unchanged; 714=2121, 390=5)
+- `S29` No modelo 303 binding row was dispositioned. Casillas 62, 63, 74 and 75 are
+- `S29` absent from the authored `casillas/*.toml` fragments of every revision after
+- `S29` 2022, but the compiled revisions inherit them through the predecessor chain, so
+- `S29` all four criterio-de-caja bindings still resolve a `casilla_primary` consumer in
+- `S29` 2023, 2024-hasta-08-y-2t, 2024-desde-09-y-3t, 2025 and 2026-y-siguientes and none
+- `S29` of them appears in the unreferenced advisory. Authoring a non-calculation
+- `S29` disposition on them would both assert a false absence of consumer and make
+- `S29` `binding_applies_to_period` refuse the bound casillas. Retiring those casillas
+- `S29` from the later editions is a registry-authoring question outside this Step.
+- `S29` The bundled authority artifact is at format v3 while the loader requires v4, so
+- `S29` the domain test module for the applicability union cannot run under the project
+- `S29` conftest; the union round trip was verified by direct execution against the real
+- `S29` `BindingApplicability` adapter instead.
+- `S30` The step's 112 candidate editions were reduced to 4 by a concurrent writer before this pass applied; this pass wrote 390/2023 only. 180/2023-y-siguientes remains unlifted because its revision.toml is dirty under another writer's predecessor migration, and 576/2007 is a different condition (edition_default_underivable) for which no disposition key exists in the schema or the screen. The signal now reports family_default_undeclared=2.
+- `S30` The disposition key the prior pass found missing now exists. `ModeloRevision` carries a
+- `S30` MANIFEST_ONLY `source_default_dispositions: Mapping[str, SourceDefaultDisposition]`
+- `S30` (FROZEN_MAPPING), keyed on the families that carry an edition source default -
+- `S30` `casillas`, `bindings`, `formulas` - with the value model in the new public module
+- `S30` `src/cadrumo/domain/calculations/registry/source_default_dispositions.py`
+- `S30` (`kind: Literal["underivable"]`, non-empty `reason`). A model validator refuses a key
+- `S30` naming no source-default family and refuses a disposition for a family whose default the
+- `S30` same edition declares. The allowed-key set is read from `FAMILY_SOURCE_DEFAULT_FIELDS`
+- `S30` plus the casilla family at call time, because `reference_sections` reaches the schema
+- `S30` through the reference checker and a module-level import would close that cycle.
+- `S30` Modelo 576 has no bindings and no formulas in edition 2007, and the screen's only
+- `S30` underivable finding there is the edition-level (casilla) one, detail `no leading
+- `S30` source_refs run is shared by two rows`. The authored disposition is therefore the
+- `S30` `casillas` key, not `bindings` or `formulas`: the edition authors a single
+- `S30` source-stating casilla row, so one statement can open no run a second shares. The key
+- `S30` path for the screen to read is
+- `S30` `revisions."2007".source_default_dispositions.casillas` in
+- `S30` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2007/revision.toml`, carrying
+- `S30` `kind` and `reason`.
+- `S30` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S30` `A` `src/cadrumo/domain/calculations/registry/source_default_dispositions.py`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2007/revision.toml`
+- `S30` `A` `dev/registry/tests/test_revision_source_default_dispositions.py`
+- `S30` `M` `dev/registry/tests/test_revision_manifest_only_placement.py`
+- `S30` `verify:` `uv run pytest dev/registry/tests/test_revision_source_default_dispositions.py -n 0` -> `3 passed` (exit 0)
+- `S30` `verify:` `uv run pytest dev/registry/tests/test_revision_manifest_only_placement.py dev/registry/tests/test_revision_family_source_defaults.py -n 0` -> `31 passed, 1 failed` (exit 1; the failure is the pre-existing `cadrumo-authority-artifact-v3`/`v4` republication gap owned by a concurrent writer)
+- `S30` `verify:` `uv run ruff check` + `uv run ruff format --check` on the five touched Python files -> `pass` (exit 0)
+- `S30` `verify:` `uv run ty check` on the three changed source/test modules -> `All checks passed` (exit 0)
+- `S30` `verify:` `uv run basedpyright` on the four touched Python files -> `0 errors, 0 warnings` (exit 0)
+- `S30` `verify:` `load_modelo_directory` over modelo 576 -> edition 2007 resolves `{'casillas': ('underivable', ...)}`, 2008-y-siguientes empty (exit 0)
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/115/revisions/2019-y-siguientes/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/128/revisions/2019-y-siguientes/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-exterior/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-importacion/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/369/revisions/esquema-union/revision.toml`
+- `S30` `verify:` `load_modelo_directory` over modelos 036, 115, 128, 369 -> all load (exit 0)
+- `S30` `note:` four reported editions deferred as dirty under another writer: 151/2015-2022, 151/2025-y-siguientes (bindings), 202/2019-2022, 202/2023-2024 (bindings)
+- `S30` restated-bindings strip prepared: a dry-run-only tool that removes a successor edition's
+- `S30` binding members restating the member the keyed merge would inherit, proven byte-identical
+- `S30` against the loader's own keyed-merge function called with a locally built `bindings`
+- `S30` family; the live proof through `load_modelo_directory` re-runs after the family is
+- `S30` enrolled in the materialiser. Nothing under `src/cadrumo/_data` was written.
+- `S30` `A` `dev/registry/strip_restated_bindings.py`
+- `S30` `A` `dev/registry/tests/test_strip_restated_bindings.py`
+- `S30` `M` `justfile`
+- `S30` `verify:` `uv run --no-sync pytest dev/registry/tests/test_strip_restated_bindings.py` -> `6 passed` (exit 0)
+- `S30` `verify:` `uv run --no-sync ruff check` + `ruff format` on both files -> `pass` (exit 0)
+- `S30` `verify:` `uv run --no-sync ty check` on both files -> `All checks passed` (exit 0)
+- `S30` `verify:` `uv run --no-sync python -m dev.registry.strip_restated_bindings --all --dry-run --report ...` -> removable=523, kept_differs=1701, restated_after_lifting=1265, restated_ignoring_refs=1911, refusals=45 (exit 0)
+- `S30` deferred bindings editions closed and modelo 180 lifted: the four editions reported
+- `S30` underivable for bindings now carry an explicit `source_default_dispositions.bindings`
+- `S30` disposition, and 180/2023-y-siguientes was lifted through the owning tool for both the
+- `S30` bindings and formulas families.
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/revision.toml`
+- `S30` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/revision.toml`
+- `S30` `verify:` `lift_family_source_defaults --dry-run` over 151 and 202 -> 4 refusals, all
+- `S30` `no leading source_refs run is shared by two rows` for bindings (exit 0)
+- `S30` `verify:` `lift_family_source_defaults --apply --modelo 180` -> manifest carries
+- `S30` `binding_source_refs` and `formula_source_refs`; re-run plans 0 (exit 0)
+- `S30` `verify:` `load_modelo_directory` over modelos 151, 202, 180 -> all load (exit 0)
+- `S30` `verify:` `edition_delta_status` -> `family_default_undeclared` clean (exit 0)
+- `S31` Modelos 353 and 390 were held by an in-flight span replay and left deferred by
+- `S31` this pass; their sixteen predicate ids were authored by a concurrent writer in
+- `S31` the same derivation format before the run closed, so the corpus carries no
+- `S31` member without an identity. The compiler-side duplicate-projection-reference
+- `S31` branch in `dev/registry/compiler/validate_projection_endpoints.py` is now
+- `S31` unreachable through a constructed revision, because the revision boundary
+- `S31` refuses the duplicate first; its assertion was dropped from the owning test and
+- `S31` the branch itself was left to its owner. `dev/registry/compiler/_loader_internals.py`
+- `S31` was not edited: the two `_KEYED_FAMILIES` entries enrolling these families are
+- `S31` reported to that file's owner instead.

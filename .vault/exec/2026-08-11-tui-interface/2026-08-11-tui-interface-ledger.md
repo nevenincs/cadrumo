@@ -1,0 +1,1890 @@
+---
+tags:
+  - '#exec'
+  - '#tui-interface'
+date: '2026-08-11'
+modified: '2026-09-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:64464fcd93e6df333dbf731e3b363bed128993388fe9143f231a710bce2971cf'
+related:
+  - "[[2026-08-11-tui-interface-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `tui-interface` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+- `S01` `M` `.vault/exec/2026-08-11-tui-interface/2026-08-11-tui-interface-W01-P01-S01.md`
+- `S01` `verify:` `pytest dev/tests/test_modelo_workspace_action_denominator.py` -> `9 passed`
+- `S02` `A` `dev/quality/modelo_workspace_receipts.py`
+- `S02` `verify:` `uv run --no-sync ty check dev/quality/modelo_workspace_receipts.py` -> `pass`
+- `S03` `A` `dev/tests/test_modelo_workspace_receipts.py`
+- `S03` `verify:` `uv run --no-sync pytest dev/tests/test_modelo_workspace_receipts.py -q` -> `pass`
+- `S04` `A` `src/cadrumo/application/user_profile/presentation.py`
+- `S04` `verify:` `pytest src/cadrumo/application/user_profile/tests/test_presentation.py -m integration` -> `pass`
+- `S05` `M` `src/cadrumo/application/user_profile/presentation.py`
+- `S06` `A` `src/cadrumo/application/user_profile/tests/test_presentation.py`
+- `S06` `verify:` `pytest src/cadrumo/application/user_profile/tests/test_presentation.py -m integration` -> `pass`
+- `S07` `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `S07` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/components/tests/ -q -m unit` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`
+- `S08` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/components/tests/test_widgets.py -q -m unit` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/tui/components/errors.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/components/logs.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/components/status.py`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/components/tests/ -q -m unit` -> `pass`
+- `S10` `A` `src/cadrumo/entrypoints/tui/components/tests/test_feedback.py`
+- `S10` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/components/tests/test_feedback.py -q -m unit` -> `pass`
+- `S11` `A` `src/cadrumo/entrypoints/tui/profile/app.py`
+- `S11` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py -m integration` -> `pass`
+- `S12` `A` `src/cadrumo/entrypoints/tui/profile/journey_status.py`
+- `S12` `M` `src/cadrumo/application/user_profile/presentation.py`
+- `S12` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py -m integration` -> `pass`
+- `S13` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py`
+- `S13` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py -m integration` -> `pass`
+- `S14` `A` `src/cadrumo/application/user_profile/acquisition_sources.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S14` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/profile/ -q -m "unit or integration"` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/profile/sync_review.py`
+- `S15` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/profile/tests/test_sync_review.py -q -m integration` -> `pass`
+- `S16` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_sync_review.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_census_sync_review.py`
+- `S16` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/profile/ -q -m "unit or integration"` -> `pass`
+- `S17` `A` `src/cadrumo/entrypoints/tui/secret/credentials.py`
+- `S17` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/ --collect-only -q` -> `pass`
+- `S18` `A` `src/cadrumo/entrypoints/tui/secret/login.py`
+- `S18` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/ --collect-only -q` -> `pass`
+- `S19` `R` `src/cadrumo/entrypoints/tui/secret/app.py` -> `src/cadrumo/entrypoints/tui/secret/registration.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/devtools/fixture.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/devtools/surfaces.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/tests/test_login_screen.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/tests/test_login_screen_restored_profile.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_language_switch.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_recovery_words.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_screen.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/tests/test_relocation_parity.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/tests/test_theme.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/tests/test_visual_verification.py`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/ --collect-only -q` -> `pass`
+- `S20` `A` `src/cadrumo/entrypoints/tui/secret/passphrase.py`
+- `S20` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/secret/ -q -m "unit or integration"` -> `pass`
+- `S21` `A` `src/cadrumo/entrypoints/tui/secret/tests/__init__.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`
+- `S21` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py -q -m integration` -> `pass`
+- `S22` `M` `src/cadrumo/entrypoints/tui/flows/app.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `S22` `M` `src/cadrumo/locales/{ca,en,es,hu}/flows.yml`
+- `S22` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/tests/test_flow_tui_app.py src/cadrumo/entrypoints/tui/flows/ -q -m "unit or integration"` -> `pass`
+- `S23` `A` `src/cadrumo/entrypoints/tui/flows/tests/__init__.py`
+- `S23` `A` `src/cadrumo/entrypoints/tui/flows/tests/test_guided_flows.py`
+- `S23` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/flows/tests/test_guided_flows.py -q -m unit` -> `pass`
+- `S24` `A` `src/cadrumo/entrypoints/tui/modelo/view/work_select.py`
+- `S24` `A` `src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/_modelo_work_command_specs.py`
+- `S24` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S24` `M` `dev/quality/modelo_workspace_action_denominator.py`
+- `S24` `M` `.vault/reference/2026-08-24-tui-modelo-workspace-action-denominator-reference.md`
+- `S24` `verify:` `uv run --no-sync ty check` -> `pass`
+- `S25` `A` `src/cadrumo/entrypoints/tui/modelo/tests/__init__.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`
+- `S25` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py -q` -> `pass`
+- `S25` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py -q` -> `pass`
+- `S27` `A` `src/cadrumo/entrypoints/tui/modelo/routes.py`
+- `S27` `A` `src/cadrumo/entrypoints/tui/modelo/app.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py`
+- `S27` `M` `dev/tests/test_import_hygiene_gate.py`
+- `S27` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S36` `A` `dev/quality/modelo_workspace_action_denominator.py`
+- `S36` `A` `dev/tests/test_modelo_workspace_action_denominator.py`
+- `S36` `verify:` `uv run --no-sync pytest dev/tests/test_modelo_workspace_action_denominator.py -q` -> `pass`
+- `S36` `verify:` `uv run --no-sync ty check dev/quality/modelo_workspace_action_denominator.py` -> `pass`
+- `S37` `A` `.vault/reference/2026-08-24-tui-modelo-workspace-action-denominator-reference.md`
+- `S37` `verify:` `validate_modelo_workspace_action_denominator(build_modelo_workspace_action_denominator())` -> `[]`
+- `S38` `M` `.vault/exec/2026-08-11-tui-interface/2026-08-11-tui-interface-W05-P10-S38.md`
+- `S38` `verify:` `pytest test_c1_bounded_review.py -m integration` -> `11 passed`
+- `S49` `M` `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`
+- `S49` `M` `src/cadrumo/application/modelo/tests/test_workspace_producers.py`
+- `S49` `A` `.vault/exec/2026-08-11-tui-interface/2026-08-11-tui-interface-W05-P10a-S49.md`
+- `S49` `verify:` `pytest test_workspace.py test_workspace_models.py test_workspace_producers.py test_workspace_manifest.py` -> `128 passed` -> `45 passed`
+- `S49` `verify:` `pytest test_workspace_projection.py -m integration` -> `121 passed`
+- `S50` `A` `src/cadrumo/entrypoints/tui/modelo/view/models.py`
+- `S50` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_view_models.py`
+- `S50` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/conftest.py`
+- `S50` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S51` `A` `src/cadrumo/entrypoints/tui/modelo/view/controller.py`
+- `S51` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_read_session.py`
+- `S51` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S52` `A` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S52` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
+- `S52` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S53` `A` `src/cadrumo/entrypoints/tui/modelo/view/inputs.py`
+- `S53` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_inputs.py`
+- `S53` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S54` `A` `src/cadrumo/entrypoints/tui/modelo/view/results.py`
+- `S54` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_results.py`
+- `S54` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/modelo/view/provenance.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_provenance_and_filing.py`
+- `S55` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S56` `A` `src/cadrumo/entrypoints/tui/modelo/view/verification.py`
+- `S56` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_verification.py`
+- `S56` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S57` `A` `src/cadrumo/entrypoints/tui/modelo/view/filing.py`
+- `S57` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S58` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c2_workspace_accessibility.py`
+- `S58` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/modelo/ -m "unit or integration" -n0 -q` -> `pass` -> `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S59` `A` `.vault/exec/2026-08-11-tui-interface/2026-08-11-tui-interface-W05-P11-S59.md`
+- `S59` `verify:` `pytest test_workspace_projection.py view/ test_c2_workspace_accessibility.py -m integration` -> `120 passed, 1 failed` -> `121 passed`
+- `S71` `A` `.vault/exec/2026-08-11-tui-interface/2026-08-11-tui-interface-W06-P12a-S71.md`
+- `S71` `verify:` `pytest test_edit_contract.py test_financial_operand*.py test_contract_invariants.py` -> `130 passed`
+- `S72` `A` `src/cadrumo/application/modelo/edit_session.py`
+- `S72` `A` `src/cadrumo/application/modelo/tests/test_edit_session.py`
+- `S72` `verify:` `pytest test_edit_session.py` -> `7 passed`
+- `S72` `verify:` `structural boundary probe over the session's public members` -> `no Edit Contract record reaches a frontend`
+- `S72` `verify:` `ruff check` -> `All checks passed`
+- `S73` `A` `src/cadrumo/entrypoints/tui/modelo/edit/fields.py`
+- `S73` `A` `src/cadrumo/entrypoints/tui/modelo/edit/__init__.py`
+- `S73` `A` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_fields.py`
+- `S73` `A` `src/cadrumo/entrypoints/tui/modelo/edit/tests/__init__.py`
+- `S73` `verify:` `ruff check` -> `All checks passed`
+- `S73` `verify:` `pytest` -> `NOT RUN; see below`
+- `S74` `A` `src/cadrumo/entrypoints/tui/modelo/edit/rows.py`
+- `S74` `A` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_rows_and_review.py`
+- `S74` `verify:` `pytest entrypoints/tui/modelo/edit` -> `17 passed`
+- `S75` `A` `src/cadrumo/entrypoints/tui/modelo/edit/review.py`
+- `S75` `M` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_rows_and_review.py`
+- `S75` `verify:` `pytest entrypoints/tui/modelo/edit` -> `17 passed`
+- `S76` `A` `src/cadrumo/entrypoints/tui/modelo/edit/controller.py`
+- `S76` `A` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_controller.py`
+- `S76` `M` `src/cadrumo/application/modelo/edit_session.py`
+- `S76` `verify:` `ruff check` -> `All checks passed`
+- `S76` `verify:` `pytest entrypoints/tui/modelo/edit` -> `20 passed, 1 failed`
+- `S77` `M` `src/cadrumo/entrypoints/tui/modelo/edit/controller.py`
+- `S77` `M` `src/cadrumo/application/modelo/edit_session.py`
+- `S77` `M` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_controller.py`
+- `S77` `verify:` `pytest edit package + c3 accessibility + edit_session` -> `34 passed`
+- `S78` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c3_editor_accessibility.py`
+- `S78` `A` `src/cadrumo/entrypoints/tui/modelo/edit/screen.py`
+- `S78` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c3_editor_screen.py`
+- `S78` `M` `src/cadrumo/entrypoints/tui/modelo/edit/controller.py`
+- `S78` `M` `src/cadrumo/entrypoints/tui/modelo/edit/review.py`
+- `S78` `M` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_rows_and_review.py`
+- `S78` `M` `src/cadrumo/locales/{en,es,ca,hu}/flows.yml`
+- `S78` `verify:` `pytest test_c3_editor_screen.py edit/` -> `36 passed`
+- `S78` `verify:` `pytest dev/locales/tests/test_parity.py test_locale_translation_honesty.py` -> `42 passed`
+- `S78` `verify:` `python -m dev.locales scaffold --check` -> `ca/en/es/hu ok`
+- `S79` `A` `.vault/exec/2026-08-11-tui-interface/2026-08-11-tui-interface-W06-P12b-S79.md`
+- `S79` `verify:` `pytest edit/ test_c3_editor_screen.py test_c3_editor_accessibility.py test_edit_session.py test_edit_wire_submission_mirror.py` -> `51 passed`
+- `S80` `A` `src/cadrumo/entrypoints/tui/modelo/actions.py`
+- `S80` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_actions.py`
+- `S80` `verify:` `pytest test_actions.py` -> `10 passed`
+- `S81` `M` `dev/quality/modelo_workspace_action_denominator.py`
+- `S81` `M` `dev/tests/test_modelo_workspace_action_denominator.py`
+- `S81` `verify:` `pytest test_modelo_workspace_action_denominator.py test_actions.py` -> `21 passed`
+- `S82` `A` `src/cadrumo/entrypoints/tui/modelo/action/__init__.py`
+- `S82` `A` `src/cadrumo/entrypoints/tui/modelo/action/rename.py`
+- `S82` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_rename_action.py`
+- `S82` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S82` `verify:` `pytest test_c4_rename_action.py test_actions.py test_work_rename_operation.py test_lifecycle_operation_conformance.py` -> `94 passed`
+- `S83` `A` `src/cadrumo/entrypoints/tui/modelo/action/discard.py`
+- `S83` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_discard_action.py`
+- `S83` `verify:` `pytest test_c4_discard_action.py test_c4_rename_action.py` -> `18 passed`
+- `S84` `A` `src/cadrumo/entrypoints/tui/modelo/action/verify.py`
+- `S84` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_verify_action.py`
+- `S84` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S84` `verify:` `pytest test_c4_verify_action.py test_c4_rename_action.py test_c4_discard_action.py test_work_rename_operation.py test_lifecycle_operation_conformance.py` -> `104 passed`
+- `S85` `A` `src/cadrumo/entrypoints/tui/modelo/action/file.py`
+- `S85` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_file_action.py`
+- `S85` `verify:` `pytest test_c4_file_action.py` -> `10 passed`
+- `S86` `A` `src/cadrumo/entrypoints/tui/modelo/action/export.py`
+- `S86` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_export_action.py`
+- `S86` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S86` `verify:` `pytest test_c4_export_action.py test_c4_file_action.py test_c4_verify_action.py test_c4_discard_action.py test_c4_rename_action.py test_actions.py` -> `58 passed`
+- `S87` `A` `src/cadrumo/entrypoints/tui/modelo/action/amend.py`
+- `S87` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_amend_action.py`
+- `S87` `verify:` `pytest test_c4_amend_action.py` -> `10 passed`
+- `S88` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_create_deferred.py`
+- `S88` `verify:` `pytest test_create_deferred.py` -> `6 passed`
+- `S89` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_action_accessibility.py`
+- `S89` `verify:` `pytest test_c4_action_accessibility.py` -> `9 passed`
+- `S90` `A` `.vault/exec/2026-08-11-tui-interface/2026-08-11-tui-interface-W06-P12c-S90.md`
+- `S90` `verify:` `pytest test_modelo_workspace_action_denominator.py test_actions.py test_c4_action_accessibility.py test_create_deferred.py test_c4_{rename,discard,verify,file,export,amend}_action.py` -> `94 passed`
+- `S91` `A` `dev/tests/test_modelo_workspace_fixed_point.py`
+- `S91` `verify:` `pytest test_modelo_workspace_fixed_point.py` -> `6 passed`
+- `S94` `M` `src/cadrumo/application/user_profile/presentation.py`
+- `S94` `M` `src/cadrumo/application/user_profile/tests/test_presentation.py`
+- `S94` `verify:` `pytest src/cadrumo/application/user_profile/tests/test_presentation.py -m integration` -> `pass`
+- `S95` `M` `src/cadrumo/application/user_profile/acquisition_sources.py`
+- `S95` `A` `src/cadrumo/application/user_profile/tests/test_acquisition_sources.py`
+- `S95` `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `S95` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S95` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_acquisition_source_capability.py`
+- `S95` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/profile/ src/cadrumo/application/user_profile/tests/test_acquisition_sources.py -q -m "unit or integration"` -> `pass`
+- `S97` `M` `dev/tests/_marker_metadata_patterns.py`
+- `S97` `M` `dev/tests/test_marker_integrity.py`
+- `S97` `verify:` `pytest dev/tests/test_marker_integrity.py::test_production_source_does_not_cite_dated_vault_documents -n0` -> `1 passed`
+- `S98` `M` `src/cadrumo/application/modelo/workspace.py`
+- `S98` `verify:` `rg 'W[0-9]{2}\.P[0-9]{2}\.S[0-9]{2,3}' workspace.py` -> `0`
+- `S98` `verify:` `bare S## container ids in workspace.py` -> `0`
+- `S98` `verify:` `full W##.P##.S## addresses across production src/` -> `none`
+- `S100` `M` `dev/tests/_marker_metadata_patterns.py`
+- `S100` `M` `dev/tests/test_marker_integrity.py`
+- `S100` `verify:` `bare-S pattern over production, through the gate's own stripper` -> `0 hits`
+- `S100` `verify:` `production-scoped cases` -> `4 -> 5`
+- `S100` `verify:` `pytest dev/tests/test_marker_integrity.py` -> `32 passed; the guard this flip contradicted now passes`
+- `S101` `M` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `S101` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S101` `verify:` `pytest tui/components tui/profile` -> `71 passed`
+- `S101` `verify:` `grep for the retired field names` -> `0 references`
+- `S101` `verify:` `ruff check` -> `All checks passed`
+- `S103` `M` `.vault/audit/2026-08-30-repo-gate-integrity-wrong-subject-gates-audit.md`
+- `S103` `M` `dev/tests/test_workspace_assembly_forbidden_paths.py`
+- `S103` `verify:` `each of the five measured individually before action` -> `2 fixed, 2 refuted, 1 tracked partial`
+- `S104` `M` `src/cadrumo/tests/_deselection_hook.py`
+- `S104` `A` `src/cadrumo/tests/_lost_test_hook.py`
+- `S104` `M` `conftest.py`
+- `S104` `verify:` `pytest -m nonexistent_marker_xyz` -> `"These tests carry: hex_core, unit. Select one of those, or re-run with -m ''"`
+- `S104` `verify:` `exit code of a fully deselected run` -> `5`
+- `S104` `verify:` `pytest test_deselection_hook.py test_serial_marker_enforcement.py` -> `7 passed`
+- `S104` `verify:` `lost-test reporter on a real run` -> `307 of 6773 collected test(s) never reported an outcome`
+- `S107` `A` `src/cadrumo/tests/terminal_sizes.py`
+- `S107` `M` `src/cadrumo/entrypoints/tui/tests/test_visual_verification.py`
+- `S107` `M` `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`
+- `S107` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S107` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`
+- `S107` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_c2_workspace_accessibility.py`
+- `S107` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`
+- `S107` `verify:` `pytest --collect-only -q entrypoints/tui` -> `168/642, 0 errors`
+- `S107` `verify:` `83 passed`
+- `S107` `verify:` `202 passed, 2 pre-existing unrelated failures`
+- `S108` `M` `src/cadrumo/entrypoints/tui/tests/test_visual_verification.py`
+- `S108` `verify:` `pytest -m integration -k geometry -n0` -> `27 passed (9 surfaces x 3 sizes)`
+- `S108` `verify:` `pytest -m integration -n0` -> `151 passed, 2 pre-existing failures`
+- `S108` `verify:` `reds only the patched surface`
+- `S108` `verify:` `reds only the patched surface`
+- `S110` `M` `src/cadrumo/entrypoints/tui/devtools/frame.py`
+- `S110` `verify:` `pytest -m integration -k geometry -n0` -> `27 passed (9 surfaces x 3 sizes), no false positives`
+- `S110` `verify:` `old filter saw 1 owner, widened saw 2, finding raised`
+- `S111` `M` `src/cadrumo/entrypoints/tui/tests/test_visual_verification.py`
+- `S111` `verify:` `pytest -m integration -k declared_binding -n0` -> `9 passed`
+- `S111` `verify:` `reds only the patched surface`
+- `S111` `verify:` `pytest -m integration -k "tab_visits or declared_binding or geometry" -n0` -> `50 passed, 1 honest red`
+- `S112` `A` `src/cadrumo/entrypoints/tui/components/keyboard.py`
+- `S112` `M` `src/cadrumo/entrypoints/tui/modelo/view/work_review.py`
+- `S112` `M` `src/cadrumo/entrypoints/tui/profile/status.py`
+- `S112` `M` `src/cadrumo/entrypoints/tui/flows/app.py`
+- `S112` `M` `src/cadrumo/entrypoints/tui/tests/test_visual_verification.py`
+- `S112` `verify:` `shift+tab probe across all nine enrolled surfaces, before` -> `four LOST`
+- `S112` `verify:` `same probe, after` -> `nine OK`
+- `S112` `verify:` `footer descriptions re-measured on the three localizing surfaces` -> `nine keys visible`
+- `S112` `verify:` `pytest -m "integration or unit" -k "affordances or tab_visits or declared_binding" -n0` -> `24 passed`
+- `S112` `verify:` `bite proof, wholesale replacement reinstated by out-of-repo monkeypatch` -> `reds the four affected surfaces and modelo-review's tab cycle`
+- `S112` `verify:` `pytest src/cadrumo/entrypoints/tui/tests/test_visual_verification.py -n0` -> `206 passed, 2 pre-existing region-eviction reds`
+- `S112` `verify:` `ruff check, ruff format --check, ty check` -> `clean on every touched file`
+- `S113` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S113` `A` `src/cadrumo/entrypoints/tui/tests/test_textual_private_attribute_shadowing.py`
+- `S113` `verify:` `pytest operations/tests/test_operation_modal_lifecycle.py -n0 --timeout=90, before` -> `2 tests hang; run killed`
+- `S113` `verify:` `same file, after` -> `6 passed in 25.11s`
+- `S113` `verify:` `single-test discriminator at --timeout=150, host cpu 14.5% of 24 cores` -> `timed out; HUNG, not slow`
+- `S113` `verify:` `shadowing census over every Textual node class in the package` -> `0 private collisions; 4 public title/sub_title, all legitimate`
+- `S113` `verify:` `pytest tests/test_textual_private_attribute_shadowing.py -n0` -> `1 passed`
+- `S113` `verify:` `bite proof over the REAL pre-fix source read from git, not a synthetic class` -> `pre-fix ['_closing'], post-fix []`
+- `S113` `verify:` `ruff check, ruff format --check` -> `clean`
+- `S114` `M` `src/cadrumo/entrypoints/tui/secret/registration.py`
+- `S114` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_recovery_words.py`
+- `S114` `verify:` `new guard test, state induced on the live screen stack` -> `1 passed in 4.83s`
+- `S114` `verify:` `bite proof, guard disabled in place, window announced and closed` -> `red in 14.75s`
+- `S114` `verify:` `whole module with the guard in place` -> `6 passed in 46.88s`
+- `S114` `verify:` `ruff check, ruff format, ty check` -> `clean`
+- `S115` `A` `src/cadrumo/tests/_lost_test_hook.py`
+- `S115` `M` `conftest.py`
+- `S115` `verify:` `forced worker death, pytest --timeout=1 under xdist` -> `INCOMPLETE RUN: 4 of 5 collected test(s) never reported an outcome`
+- `S115` `verify:` `false-positive control, heavily-deselecting run over components/tests` -> `46 passed, reporter silent`
+- `S115` `verify:` `false-positive control, clean serial run` -> `1 passed, reporter silent`
+- `S115` `verify:` `false-positive control, deselecting run over core/tests/test_modelo.py` -> `5 passed, reporter silent`
+- `S115` `verify:` `ruff check, ruff format --check, ty check` -> `clean`
+- `S116` `A` `dev/tests/test_every_source_file_parses.py`
+- `S116` `verify:` `import with the whole cadrumo package blocked at the meta-path` -> `imports clean`
+- `S116` `verify:` `first real outing, against a live broken tree` -> `four offenders named with path, line and error class`
+- `S116` `verify:` `injected broken files from outside the repo` -> `both named`
+- `S116` `verify:` `empty root` -> `vacuity assertion fires`
+- `S116` `verify:` `four pytest runs across the evening` -> `21.71s, 16.23s, 16.70s, all passed`
+- `S120` `A` `dev/tests/test_exec_records_map_to_live_steps.py`
+- `S120` `verify:` `bite proof, one baselined entry removed at runtime` -> `red`
+- `S120` `verify:` `bite proof, empty baseline` -> `red, vacuity guard fires`
+- `S120` `verify:` `baseline size` -> `2, both belonging to other campaigns`
+
+## Notes
+
+- `S01` THE C1 COHORT-OPEN FACT. The C1 conformance module is
+- `S01` `dev/quality/modelo_workspace_action_denominator.py`, and the retained validator
+- `S01` the 2026-08-28 amendment preserved is
+- `S01` `validate_modelo_workspace_action_denominator` at
+- `S01` `dev/quality/modelo_workspace_action_denominator.py:1161`. Its gate
+- `S01` `dev/tests/test_modelo_workspace_action_denominator.py` was run on 2026-08-31
+- `S01` and reported 9 passed, 0 failed.
+- `S01` COMMIT PROVEN AGAINST, stated precisely because the row's whole point is that a
+- `S01` reader must be able to verify it: HEAD was
+- `S01` `604a9c1bd4669fb0ae6d95aa5e9e3e5beb9b0934`. THE RUN WAS AGAINST THE WORKING
+- `S01` TREE AT THAT HEAD, NOT AGAINST A CLEAN CHECKOUT OF IT. This worktree is shared
+- `S01` and carried uncommitted changes from several concurrent lanes at the time, so
+- `S01` "proven at 604a9c1b" would overstate what was measured. A reader reproducing
+- `S01` this should expect the gate to pass at that commit, and should treat a
+- `S01` divergence as a question about the intervening working-tree state rather than
+- `S01` as a contradiction of this record.
+- `S01` WHY THIS RECORD WAS REWRITTEN RATHER THAN AUTHORED FRESH. A record already
+- `S01` existed at this path, dated 2026-08-26, headed "Record the C1 entrance receipt
+- `S01` with the accepted companion stem, accepting commit and body hash, canonical
+- `S01` Casilla review evidence, and architecture migration-lane commit ancestry". That
+- `S01` is the vocabulary of the CODE-RESIDENT ENTRANCE RECEIPT, which the 2026-08-28
+- `S01` amendment retired -- the same amendment that rewrote this Step row into its
+- `S01` current form. So the artifact existed while describing a design that no longer
+- `S01` applies, and the row stayed open. That is the recorded-but-not-implemented
+- `S01` shape: a file present at the expected path reads as done to anything that
+- `S01` checks for presence, and only reading it reveals that it answers a superseded
+- `S01` question.
+- `S01` STANDING GOAL NOT COVERED, restated from the row so it is not lost on closure:
+- `S01` the retired receipt bound the Casilla review evidence and the architecture
+- `S01` migration-lane commit ancestry as MACHINE-CHECKED fields. This record states
+- `S01` the conformance module and commit as prose. Nothing recomputes them, and
+- `S01` nothing will fail if they drift -- a reader must verify them by hand. That is a
+- `S01` real reduction in guarantee against the retired design, accepted by the
+- `S01` amendment rather than by this row.
+- `S02` C1-C5 exit-receipt schemas and validators only. The dependency receipts an exit
+- `S02` receipt consumes on its way in (`ModeloWorkspaceC2DependencyReceiptV1`,
+- `S02` `ModeloEditContractC3DependencyReceiptV1`,
+- `S02` `TuiOperationFinancialOperandDependencyReceiptV1`,
+- `S02` `TuiOperationObservationDependencyReceiptV1`) are architecture-owned and are
+- `S02` not implemented here; they are consumed through the `dependency_validators`
+- `S02` delegate parameter.
+- `S04` Landed as `presentation.py`, not `_overview.py` as the Step row names: that
+- `S04` path collides with the already-existing PUBLIC `overview.py` (a distinct,
+- `S04` narrower schema-completeness/masking projection with no
+- `S04` requiredness/applicability/provenance/conflict concepts). `_overview.py`
+- `S04` would also violate `aeat-naming`'s instruction that two concepts sharing a
+- `S04` name get the non-canonical one renamed. Reported and confirmed before
+- `S04` implementing.
+- `S04` Scope for this pass, stated in the module docstring: conditional-applicability
+- `S04` resolution covers only the named trigger paths in `_CONDITIONAL_TRIGGERS`
+- `S04` (`auth.clave_movil_route`, the legal-entity fields, the IRNR
+- `S04` fiscal-representative fields) and non-repeatable sections; the IVA-regime
+- `S04` conditional block and repeatable sections present as `OPTIONAL` rather than
+- `S04` being assessed for applicability, since their trigger conditions are
+- `S04` multi-field. The `Review` stage's unresolved-proposal/conflict row is not
+- `S04` built here -- it is produced by whichever registered acquisition/reconciliation
+- `S04` operation proposes the divergence, not by this static per-field projection;
+- `S04` `ADVISORY_NOTICE` and `UNRESOLVED_CONFLICT` are declared absent from
+- `S04` `ProfileFieldClassification` for the same reason, documented on the enum.
+- `S05` No `__init__.py` change: `aeat-architecture-boundaries` makes every package
+- `S05` `__init__.py` inert (no re-exports, aliases, or facades), so "publish
+- `S05` through the application facade" is satisfied by `presentation.py` itself
+- `S05` being the canonical PUBLIC defining module (not `_presentation.py`), with
+- `S05` its complete public contract stated in its own `__all__`
+- `S05` (`ProfileFieldClassification`, `ProfileFieldPresentationV1`,
+- `S05` `ProfileFieldSourceClass`, `ProfilePresentationV1`,
+- `S05` `build_profile_presentation`, `profile_field_source_class`). A consumer
+- `S05` imports directly from `application.user_profile.presentation`. This is the
+- `S05` same judgement already applied and accepted for W05.P11.S65.
+- `S06` Named `test_presentation.py`, not `test_overview.py` as the Step row names:
+- `S06` that filename is already taken by `overview.py`'s own test file. Drives
+- `S06` the real production schema through `register_profile_with_credentials` and
+- `S06` real `UserProfileFact` writes (no synthetic schema, since
+- `S06` `build_profile_presentation` resolves the one committed
+- `S06` `load_user_profile_schema()`), proving: an unanswered trigger field yields
+- `S06` `NEEDS_APPLICABILITY` rather than `NOT_APPLICABLE` or a fabricated
+- `S06` missing-value claim; answering the trigger toward the gated value promotes
+- `S06` the conditional field to `APPLICABLE_REQUIRED_MISSING`/`PRESENT`; answering
+- `S06` it away from the gated value settles `NOT_APPLICABLE`; an unconditionally
+- `S06` required blank field blocks `ready`; the real `aeat_censo_read` provenance
+- `S06` token classifies as `AEAT_CENSUS_ACQUISITION`; and the model's own
+- `S06` cross-field validators (present-requires-source,
+- `S06` needs_applicability-requires-unassessed, blocks_ready-matches-classification)
+- `S06` reject a contradictory construction. Full suite run of
+- `S06` `application/user_profile/` shows 31 pre-existing failures elsewhere in the
+- `S06` package (custody/login-handover/atomic-create-roundtrip and others),
+- `S06` none touching `presentation.py`; the team lead independently traced a
+- `S06` concurrent relocation campaign (`96bb9e08a2`) leaving that package's
+- `S06` `__init__.py` inertness landed without its full consumer sweep as the
+- `S06` likely cause, not this Step.
+- `S12` Landed as `journey_status.py` rather than the Step-named `status.py`, which is the already-existing, unrelated, wired `StatusApp` (a full-config read-only status page, `flows.status.*`). Same judgement as W01.P02.S04's `presentation.py`.
+- `S14` "Capabilities scope and authentication needs" has no backing public contract today (no operation declares requires-auth/scope, and the existing CapabilityDecision resolver covers unrelated service opt-ins, not acquisition sources). Rendered only the explicit source identity and launch action; reported rather than fabricating a local policy.
+- `S16` Found and fixed a real production defect while writing these proofs: CensalFieldReviewScreen's apply-all button called SelectionList.select/deselect with a loop index where the API requires the option's own value, so reverting to the suggested selection was a silent no-op. Fixed in sync_review.py (S15's file) and regression-tested here.
+- `S17` Landed as part of the single atomic `relocation:secret_screens` commit (`38349eee3d`), which also covers S18 and S19 -- the split, the delete of `app.py`, and all 10 consumer updates share one commit per `aeat-architecture-boundaries`.
+- `S18` Landed as part of the single atomic `relocation:secret_screens` commit (`38349eee3d`), which also covers S17 and S19.
+- `S19` Two real defects found and fixed while sweeping consumers, both from earlier W02/W03 work, not this relocation: `SourceActionCard` inherited Textual `Vertical`'s default `height: 1fr` uncorrected, so a second card on the same screen split available space instead of sizing to content (fixed with an explicit `height: auto` override); and `test_visual_verification.py`'s manager fixtures never injected `ProfileManagerApp.launch_source`, leaving its source-action buttons permanently disabled and unfocusable (fixed by injecting a real no-op callable).
+- `S21` Scoped to PassphraseApp (the new build) plus the CredentialApp base it shares with Login/Registration: single-use dispatch, exact refusal binding, cancellation, and canary non-retention. Login and Registration already carry their own real-journey coverage (test_login_screen.py, test_registration_screen.py, test_registration_recovery_words.py, test_registration_language_switch.py); this file does not duplicate that.
+- `S21` Added a parametrized real-geometry proof (narrow/medium/wide) asserting every field and button has a positive, in-viewport region -- direct follow-up to the SourceActionCard height defect found during the S17-S19 relocation, per operator direction that presence and focus assertions alone had already been shown insufficient.
+- `S22` Cancellation and validation summaries were already settled: the existing save-and-exit action (ctrl+s) and the existing #review-blocking aggregate verdict block. Only the section-level stage strip was a real gap; StageNavigationStrip gained set_current_index rather than a forked variant.
+- `S24` `modelo.work.review` and the new `modelo.work.select` are both flipped to
+- `S24` `TuiCapability.AVAILABLE`; `work_review()` and `work_select()` branch on
+- `S24` `tui_was_requested(ctx)` and launch the real `ModeloWorkReviewApp` /
+- `S24` `ModeloWorkSelectApp` Textual hosts, then still emit the normal JSON/text
+- `S24` envelope afterward so the CLI contract stays uniform in both modes. The
+- `S24` select screen is a pure projection over an already-resolved
+- `S24` `tuple[WorkUnit, ...]` (no repository or catalogue access of its own),
+- `S24` mirroring how `ModeloWorkReviewScreen` only renders an already-built
+- `S24` `ModeloWorkReview`. The action denominator (`dev/quality/modelo_workspace_action_denominator.py`)
+- `S24` required a new closed-table row for `modelo.work.select`, added and
+- `S24` regenerated in this Step rather than left to drift.
+- `S25` These 10 tests target the NEW select-screen destination specifically
+- `S25` (keyboard-only row selection returning the exact chosen `work_unit_id`,
+- `S25` quit-without-choosing, empty catalogue, non-colour state distinguishability,
+- `S25` four locales, three geometries, two themes, and a foreign-App-host refusal).
+- `S25` The review screen's own internal accessibility matrix (facets, locale,
+- `S25` geometry, theme, keyboard scroll) was already proven exhaustively by the
+- `S25` pre-existing `view/tests/test_work_review.py` and is not duplicated here.
+- `S25` Writing the first real keyboard-selection test caught a genuine production
+- `S25` bug: `DataTable` owns the `enter` key itself (bound to `select_cursor`) and
+- `S25` never lets it bubble to a screen-level `Binding("enter", ...)`, so the
+- `S25` original `action_confirm_select` binding never fired. Fixed by handling
+- `S25` `DataTable.RowSelected` directly in `work_select.py` (see W05.P10.S24).
+- `S27` The route census test is left DELIBERATELY RED. No non-circular authority exists
+- `S27` to derive its expected destination set from: any source available to the test is
+- `S27` either the census under test or derived from it, so an expected set would assert
+- `S27` the code against itself. Recorded as an open question rather than resolved by a
+- `S27` hardcoded set, which would be the enumerated-subject-list antipattern this
+- `S27` campaign has ruled against.
+- `S27` The seam entry retargeting in the hygiene gate was verified by diffing the
+- `S27` constant against HEAD rather than by grep: the changed key renames
+- `S27` `_run_review_destination_for_selected_unit` to
+- `S27` `_run_workspace_destination_for_selected_unit`, which a pattern keyed on the
+- `S27` constant name or on `modelo` does not match.
+- `S36` Candidates are enumerated only from production imports
+- `S36` (`command_spec_nodes()`, `OPERATOR_ACTION_CATALOGUE`) — never a filesystem
+- `S36` walk — so the artefact cannot ingest a gitignored mirror. The closed
+- `S36` classification table is a hand-reviewed, checked-in constant compared against
+- `S36` a freshly re-observed live signature at validate time; a live candidate
+- `S36` missing from the table, a stale table entry, or a drifted signature field all
+- `S36` red explicitly rather than silently defaulting. Routes, action views, and
+- `S36` dispatch rows are not yet built anywhere in the tree (TUI Workspace read/write
+- `S36` destinations are future C1-C5 work); every current candidate is honestly
+- `S36` classified as pending its future cohort (`C1_OR_C2_READ_PENDING` /
+- `S36` `C4_MUTATION_PENDING`) rather than fabricating a destination that does not
+- `S36` exist. `modelo.work.create` (DEFERRED to work-lifecycle ownership) and the two
+- `S36` wizard commands (FLOW_OWNED) are the only judgement-call rows; every other
+- `S36` disposition follows mechanically from the command's own `write_route`.
+- `S37` Filename carries the `-reference` suffix the scaffolding CLI produces for this
+- `S37` document type (matching the precedent already established by
+- `S37` `2026-08-24-tui-operation-observation-dependency-receipt-reference.md`); the
+- `S37` plan row's cited path omits it. The digest pinned in this artefact
+- `S37` (`rows_digest`) covers ONLY the 78 classification rows themselves, never a
+- `S37` tree-wide scalar, so an unrelated peer commit elsewhere cannot flap it. The
+- `S37` `disposition_tally` field is descriptive provenance, not a pinned pass
+- `S37` condition — no test asserts an exact count against it.
+- `S37` CORRECTION 2026-08-30: the `.vault/reference/` artefact listed above no longer
+- `S37` exists. Commit `280ec80a67` deleted it on 2026-08-28 under a subject announcing
+- `S37` only additive work for the semantic-consolidation feature. The deletion is
+- `S37` defensible -- the document was a SNAPSHOT of generated data, reproducible by
+- `S37` calling `build_modelo_workspace_action_denominator()` -- so no information was
+- `S37` lost, but this record must not keep asserting a file that is gone.
+- `S37` The row's substance is satisfied and was re-measured at HEAD rather than taken
+- `S37` from this record: `dev/quality/modelo_workspace_action_denominator.py` exists,
+- `S37` both public functions resolve, the validator returns ZERO violations, and
+- `S37` `dev/tests/test_modelo_workspace_action_denominator.py` holds it as a standing
+- `S37` gate at 9 passing tests.
+- `S37` `verify:` `validate_modelo_workspace_action_denominator(build_...())` -> `0 violations`
+- `S37` `verify:` `pytest dev/tests/test_modelo_workspace_action_denominator.py` -> `9 passed`
+- `S37` This row is NOT of the same kind as W01.P01.S01 and W05.P10.S38, whose C1
+- `S37` receipt subject commit `51023bdad2` retired outright. That commit explicitly
+- `S37` preserved the action denominator, so the three rows must not be swept together.
+- `S38` THE C1 EXIT FACT. The C1 accessibility matrix, production route and
+- `S38` availability fence are proven by the bounded-review conformance module
+- `S38` `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`, run on
+- `S38` 2026-08-31 with `-m integration` and reporting 11 passed, 0 failed. The marker
+- `S38` matters and the row says so: the module carries the integration marker only, so
+- `S38` a `-m unit` run reports NOTHING RAN across every test in it and exits clean.
+- `S38` COUNT DRIFT, minor and stated rather than smoothed over: the row says 10 tests,
+- `S38` the module now has 11. The suite grew; nothing was removed.
+- `S38` COMMIT PROVEN AGAINST: HEAD `604a9c1bd4669fb0ae6d95aa5e9e3e5beb9b0934`. As with
+- `S38` the C1 cohort-open record, THE RUN WAS AGAINST THE WORKING TREE AT THAT HEAD
+- `S38` RATHER THAN A CLEAN CHECKOUT -- this worktree is shared and carried uncommitted
+- `S38` changes from concurrent lanes, so naming the commit alone would overstate what
+- `S38` was measured.
+- `S38` WHY THIS RECORD WAS REWRITTEN, and it is a sharper case than the cohort-open
+- `S38` record's. The previous body was headed "Emit and validate
+- `S38` `ModeloWorkspaceC1ExitReceiptV1` with the accepted-companion prefix, migration
+- `S38` evidence, denominator digest..." and asserted a verify line of
+- `S38` `validate_modelo_workspace_c1_exit_receipt(receipt, action_denominator_validator=...)`
+- `S38` `-> []`, explicitly annotated "real validator run, not hand-authored".
+- `S38` EVERY ARTIFACT THAT CLAIM DEPENDS ON IS GONE. `dev/quality/modelo_workspace_receipts.py`
+- `S38` does not exist. Neither `validate_modelo_workspace_c1_exit_receipt` nor
+- `S38` `ModeloWorkspaceC1ExitReceiptV1` is defined anywhere in `dev/` or `src/`. The
+- `S38` `.vault/reference/` receipt document the Changes section lists as added is not
+- `S38` in the vault. The 2026-08-28 amendment retired the code-resident receipt design
+- `S38` and marked its building rows (W01.P01.S02, S03) RETIRED BY AMENDMENT; this
+- `S38` record was left behind describing it.
+- `S38` WHAT MAKES THAT WORSE THAN STALE PROSE: this is a PERSISTED EXECUTION RECORD
+- `S38` asserting that a validator ran and returned clean. The annotation "real
+- `S38` validator run, not hand-authored" exists precisely to distinguish a genuine
+- `S38` verification from a claimed one -- and it now guarantees the opposite of what it
+- `S38` was written to guarantee, because the run it attests to cannot be reproduced by
+- `S38` anyone. A reader checking this row would find a record present, detailed, and
+- `S38` self-certifying, with nothing behind it.
+- `S38` STANDING GOAL NOT COVERED, restated so closure does not bury it: the retired
+- `S38` exit receipt bound the denominator digest and the accepted-companion prefix as
+- `S38` MACHINE-CHECKED fields. This record asserts the conformance module and commit in
+- `S38` prose. Nothing recomputes them and nothing fails if they drift.
+- `S49` THE C2 COHORT-OPEN FACT. The Workspace V1 structural invariants and the C2
+- `S49` conformance suite are proven by `test_workspace.py`, `test_workspace_models.py`,
+- `S49` `test_workspace_producers.py`, `test_workspace_manifest.py` and
+- `S49` `test_workspace_projection.py`, all green on 2026-08-31. HEAD was
+- `S49` `82f05205a77916bb83210efffab9acb8e66aebce`; AS WITH THE C1 RECORDS, THE RUN WAS
+- `S49` AGAINST THE WORKING TREE AT THAT HEAD, NOT A CLEAN CHECKOUT -- this worktree is
+- `S49` shared and several lanes were committing throughout.
+- `S49` TWO OF THIS ROW'S NAMED CLAIMS ARE STALE, both recorded rather than quietly
+- `S49` worked around.
+- `S49` FIRST, the row names `test_workspace_structural_invariants.py`, and the Scope
+- `S49` list above carries it because Scope is machine-filled from the row. THAT FILE
+- `S49` DOES NOT EXIST, under that name or any other. pytest errors on the missing path
+- `S49` and runs nothing at all, exiting without a single failure -- the shape where a
+- `S49` run looks fine precisely because it did nothing. The structural invariants are
+- `S49` covered by the five suites that do exist. This is the second row in this plan to
+- `S49` name a nonexistent test module (W06.P12a.S71 names two), so it is a pattern in
+- `S49` the governance spine rather than a typo.
+- `S49` SECOND, the row instructs: "Do NOT assert zero remaining modelo.work.review
+- `S49` routes: no TUI route registry or destination table exists in the tree, so that
+- `S49` assertion would be vacuous by construction". A route table NOW EXISTS --
+- `S49` `entrypoints/tui/modelo/routes.py` ships `MODELO_WORKSPACE_DESTINATIONS`. The
+- `S49` instruction was correct when written and its premise has since been falsified.
+- `S49` The assertion is still NOT added here, because it belongs to whichever row owns
+- `S49` that table, not to a cohort-open record.
+- `S49` TWO GATE DEFECTS FOUND AND REPAIRED, both wrong about their own SUBJECT and
+- `S49` failing in opposite directions.
+- `S49` (A) `test_the_retired_private_manifest_module_is_gone` asserted that importing
+- `S49` `cadrumo.application.modelo.workspace_manifest` raises `ModuleNotFoundError`.
+- `S49` That is the PUBLIC DESTINATION of the hard move, imported by
+- `S49` `workspace_producers.py` in twelve places, while the gate's own docstring says
+- `S49` "No private path... survives". Both the module and the gate demanding its
+- `S49` absence are in HEAD, swept in by a broad `chore: land the in-flight domain,
+- `S49` application and adapter st...` commit -- so it was landed red and UNSATISFIABLE
+- `S49` WITHOUT DELETING LIVE PRODUCTION CODE. Re-pointed at `_workspace_manifest`, plus
+- `S49` a positive assertion that the public module imports, so it proves the move
+- `S49` happened instead of demanding its result not exist. Proven to bite by injecting
+- `S49` the private module into `sys.modules` IN MEMORY -- deliberately not by creating
+- `S49` the file, because a peer's broad landing commit could capture a mutation left on
+- `S49` disk in this tree.
+- `S49` (B) `test_workspace_producer_docs_and_active_tree_reach_the_public_module_fixed_point`
+- `S49` scanned every `src/**/*.py` and `docs/**/*.rst` for the BARE SUBSTRING
+- `S49` `_workspace_producers`. That string also occurs inside `test_workspace_producers`
+- `S49` the legitimately named suite for the public module -- so the gate reported a
+- `S49` sibling test's DOCSTRING as a surviving reference to a deleted module. Now
+- `S49` anchored on a word boundary and verified in both directions: `from
+- `S49` ._workspace_producers import`, `_workspace_producers.py` and the quoted name
+- `S49` still match; `test_workspace_producers.py` and prose naming that suite do not.
+- `S49` STANDING GOAL NOT COVERED, restated from the row: the retired C2 dependency
+- `S49` receipt bound the workspace schema fingerprint, field-manifest digest, producer
+- `S49` inventory and epoch tuple as MACHINE-COMPARED values and re-minted when they
+- `S49` drifted. Nothing recomputes those now, so a fingerprint drift surfaces as a
+- `S49` conformance failure rather than as a receipt mismatch.
+- `S57` The provenance and filing destinations share one test module, recorded under
+- `S57` `W05.P11.S55`; this Step adds no test module of its own.
+- `S58` The matrix proves rendering, localization, geometry and theme behaviour WHEN
+- `S58` MOUNTED. It does not prove availability; the production host does. Reachability
+- `S58` holds only because that host landed under `W05.P11.S27`, and this record must not
+- `S58` be read as the matrix establishing it.
+- `S59` THE C2 EXIT FACT. The C2 read destinations, refusal states and
+- `S59` schema/row/provenance matrix are proven by `test_workspace_projection.py`,
+- `S59` the `entrypoints/tui/modelo/view/` suites and
+- `S59` `test_c2_workspace_accessibility.py`, green on 2026-08-31 at 121 tests. HEAD was
+- `S59` `bb51442a841d3f04a822a092ba92b2109679bbcc`; THE RUN WAS AGAINST THE WORKING TREE
+- `S59` AT THAT HEAD RATHER THAN A CLEAN CHECKOUT, as with every record in this chain --
+- `S59` this worktree is shared and several lanes committed throughout the session.
+- `S59` THE MARKER WARNING IN THE ROW IS CORRECT AND WAS NEEDED. These suites carry the
+- `S59` integration marker only, so `-m unit` reports NOTHING RAN across all of them and
+- `S59` exits clean. The run above used `-m integration` explicitly.
+- `S59` THE ONE FAILURE WAS NOT A C2 DEFECT, and the distinction is the point.
+- `S59` `test_no_domain_or_adapter_module_imports_any_modelo_workspace_symbol` failed on
+- `S59` an `IndentationError` raised while PARSING
+- `S59` `adapters/inbound/financial/providers/tests/test_base.py` -- a peer's file, left
+- `S59` syntactically incomplete mid-edit. The gate walks the tree by AST, so any file
+- `S59` being written at that moment takes it down. Confirmed transient rather than
+- `S59` landed: the file was uncommitted, HEAD's version parsed cleanly, and once the
+- `S59` peer's edit landed the whole tree parsed with zero unparseable files and the
+- `S59` gate passed. Re-run rather than triaged, and the 16-minute cost of learning that
+- `S59` is why the retry was scoped to the single test rather than the suite.
+- `S59` A NOTE ON WHAT THAT COST, because it recurs: this session recorded SIX distinct
+- `S59` peer-churn casualties -- `core/_notificacion_estado_servicio`,
+- `S59` `core/_observed_header_fact`, `core.windows_contention`, `core.refund_election`,
+- `S59` this `test_base.py`, and `get_secret_store` from the storage adapter namespace.
+- `S59` A tree-wide scan run while a relocation campaign is live has a good chance of
+- `S59` catching some file mid-write, and the signature is a DIFFERENT casualty on each
+- `S59` run. One run alone reads as a broken gate.
+- `S59` STANDING GOAL NOT COVERED, restated from the row so closure does not bury it:
+- `S59` the retired C2 exit receipt bound its predecessor digests and cohort evidence as
+- `S59` machine-compared fields. This record states the conformance modules, the test
+- `S59` count and the commit in prose. Nothing recomputes them, and nothing fails if
+- `S59` they drift.
+- `S71` THE C3 PREREQUISITE FACT. The edit-contract and financial-operand invariants are
+- `S71` proven by `application/modelo/tests/test_edit_contract.py` and seven suites in
+- `S71` `application/operations/tests/` -- `test_financial_operand.py`, `_conformance`,
+- `S71` `_custody`, `_dependency_receipt`, `_executor_custody`, `_registration`, and
+- `S71` `test_contract_invariants.py`. Run 2026-08-31: 130 passed, 0 failed.
+- `S71` COMMIT PROVEN AGAINST: HEAD `bb51442a841d3f04a822a092ba92b2109679bbcc`. The row
+- `S71` requires this commit be named precisely because a wiki-link is a human-checked
+- `S71` claim rather than a machine-enforced one. THE RUN WAS AGAINST THE WORKING TREE
+- `S71` AT THAT HEAD, NOT A CLEAN CHECKOUT -- this worktree is shared and several lanes
+- `S71` committed throughout the session, so naming the commit alone would overstate
+- `S71` what was measured.
+- `S71` THIS ROW'S ORIGINAL PREMISE WAS FALSE, and correcting it was most of the work.
+- `S71` The row asserted "Both suites already ship and pass" and named
+- `S71` `test_edit_contract_invariants.py` and `test_financial_operand_invariants.py`.
+- `S71` NEITHER FILE EXISTED, under those names or any others, anywhere in the tree.
+- `S71` Why that is worse than a stale path here specifically: this row's entire product
+- `S71` is a governance record asserting those suites were proven green against a named
+- `S71` commit. Written as specified, it would have cited two paths resolving to nothing
+- `S71` while reading, to any later reader, as evidence that they passed. The artifact
+- `S71` would have been indistinguishable from a real one.
+- `S71` HOW IT PRESENTED, which is the reusable part: running the two named files
+- `S71` reported `no tests ran`, not a green. A bare pytest invocation over a
+- `S71` nonexistent path exits cleanly and looks like success. The NOTHING RAN guard is
+- `S71` the only reason the premise was checked rather than assumed -- and that guard
+- `S71` was itself corrected in the same session, because it attributed the empty run to
+- `S71` the marker expression when the real cause was an empty COLLECTION. It now
+- `S71` separates "the selection matched nothing" from "nothing was collected, so the
+- `S71` selection is not the cause", with both directions proven.
+- `S71` A PATTERN, NOT A TYPO. This is the second row in this plan's governance spine to
+- `S71` name a nonexistent test module; W05.P10a.S49 names a third
+- `S71` (`test_workspace_structural_invariants.py`). Three phantom paths across the
+- `S71` spine whose whole purpose is to record verified facts.
+- `S71` STANDING GOAL NOT COVERED, restated from the row: the retired C3 receipt REFUSED
+- `S71` OUTRIGHT when a predecessor artifact was not green, which made the prerequisite
+- `S71` unbypassable. The two wiki-links this record carries -- the C2 exit record and
+- `S71` the architecture lane's C0 record -- are human-checked claims. Nothing recomputes
+- `S71` them, and nothing fails if a predecessor later goes red.
+- `S72` BUILT TO THE OPERATOR'S RULING: narrow facade in the application layer. The
+- `S72` intent, address and submission family stays private in `_edit_models`;
+- `S72` `edit_contract` keeps its four symbols and was NOT widened.
+- `S72` THE SCOPE PATH ON THIS ROW IS SUPERSEDED BY THAT RULING. The row names
+- `S72` `entrypoints/tui/modelo/edit/session.py`, but a session STORES staged intents,
+- `S72` so under this boundary it cannot live in the frontend at all. It lives in
+- `S72` `application/modelo/edit_session.py`; the TUI will hold a handle and call in
+- `S72` operator terms. Every requirement the row states is met -- memory-only, two
+- `S72` separate baselines, semantic dirty addresses, canonical typed staged values,
+- `S72` ordered row intents, validation, explicit abandon -- only their home moved.
+- `S72` WHAT A FRONTEND HOLDS: one opaque session, plus plain strings. Verified
+- `S72` structurally rather than by reading the source, so a later method returning a
+- `S72` baseline fails the gate instead of silently widening the boundary. The probe
+- `S72` carries its own non-vacuity assertion, because 'nothing forbidden found' and
+- `S72` 'nothing inspected' are the same result otherwise.
+- `S72` FOUR DESIGN POINTS, each load-bearing rather than stylistic:
+- `S72` `open_modelo_edit_session` admits AND opens in one call. Admission produces
+- `S72` the baseline, so a caller that admitted separately would necessarily hold
+- `S72` one. `_opened` is package-internal for the same reason.
+- `S72` `refresh` takes operator coordinates, not a baseline, and re-admits
+- `S72` internally. It moves only the READ baseline and returns whether the two
+- `S72` still agree; advancing the edit baseline would silently re-target every
+- `S72` staged edit, which is what the two-baseline split exists to prevent.
+- `S72` Refusals are RETURNED, not raised. Being unable to edit a target is an
+- `S72` ordinary answer on a read surface, and a frontend should not need an
+- `S72` exception handler to render a disabled control. `message_key` is a
+- `S72` localisation key, never prose and never the operator's raw lexeme -- the
+- `S72` contract refuses to echo one, and a test asserts the outcome does not.
+- `S72` Parsing delegates to `parse_modelo_edit_value`. A second parser beside the
+- `S72` contract's would disagree the first time a locale changed.
+- `S72` `writable_scalars()` was added during the build because the tests exposed a
+- `S72` real gap: a frontend must know WHICH casillas are editable to render controls,
+- `S72` and reading `baseline.permitted_surface` would have handed it surface records.
+- `S72` It projects the same admitted fact into two plain strings per entry.
+- `S72` Rows are keyed by `(detail_row_kind, natural_key)` and NOT order-preserved,
+- `S72` following the intent kind's own documentation: no MOVE exists because every
+- `S72` row-producer sorts by a content key before assigning occurrence numbers, so
+- `S72` supply order cannot change the rendered fichero. Preserving it here would imply
+- `S72` a significance the fichero does not have.
+- `S72` CORRECTION 2026-08-31: THE "TWO SEPARATE BASELINES" CLAIM ABOVE IS STALE AND THE SESSION NOW HOLDS ONE.
+- `S72` What that record said was delivered as written. What it did not say is that the second baseline could not do the job it was kept for. Staleness was answered by comparing the two baseline RECORDS, and an admission carries its own identity and lifetime -- `baseline_id`, `issued_at`, `expires_at` -- so two admissions of an UNCHANGED tree are never equal. The comparison reported "stale" permanently, which is the exact failure a compare-and-swap exists to prevent: an operator warned of a conflict on every refresh learns to ignore the warning.
+- `S72` Found by a failing test in W06.P12b.S76, not by review, and the failure was in code this row had already been closed on.
+- `S72` Corrected design: staleness is asked of the contract's own `reconfirm_modelo_edit_baseline`, which compares the coordinate axes the guarded commit point judges -- catalogue revisions and the calculation revision id -- rather than the record. That is the same one-authority correction made earlier the same day to the work-target revision comparison, reintroduced here within hours.
+- `S72` The read baseline then had nothing left to do: written at open, never read. It was REMOVED rather than kept alive to preserve this record's wording. The requirement the split existed to serve is unchanged and still met -- a refresh must not silently re-target staged edits at whatever the tree looks like now -- and it is met directly, by never moving the one baseline a submission is judged against.
+- `S72` Recorded here rather than by rewriting the original notes, because a closed row asserting a shape the code no longer has is exactly the stale artefact this campaign keeps finding in other people's rows.
+- `S73` PARTIAL: the module and its tests are written and lint clean; the tests are
+- `S73` UNVERIFIED and the row stays open until they run.
+- `S73` THE FOUR DISTINCTIONS THE ROW NAMES ARE KEPT APART, each for a stated reason:
+- `S73` UNCHANGED: `touched` is set by interaction and never inferred from a value.
+- `S73` A control whose text happens to equal the declared value has still not been
+- `S73` answered, and inferring otherwise stages an intent nobody made.
+- `S73` ZERO and FALSE: answers that stage a typed value. Treating an empty-looking
+- `S73` value as nothing would silently drop a declaration.
+- `S73` CLEARED: stages a removal, which is not the same as never having answered.
+- `S73` UNRESOLVED: stages nothing AND blocks review. Reviewing around unparsed text
+- `S73` would submit the value the field held BEFORE the operator typed over it while
+- `S73` the screen shows what they typed, so the submission and the surface would
+- `S73` disagree and only the surface is visible.
+- `S73` Every lexeme goes to the session, which parses it through the contract's own
+- `S73` parse request. This module holds exactly one thing the application layer
+- `S73` cannot: text the operator has typed and the contract has not accepted.
+- `S73` TWO CORRECTIONS MADE DURING THE BUILD, both the same error caught early:
+- `S73` The module first resolved the locale itself through an `active_locale()` that
+- `S73` DOES NOT EXIST. The locale is now supplied by the surface that rendered,
+- `S73` which is also the correct design: the language a lexeme is parsed in must be
+- `S73` the language the operator was shown, or a language switch makes the parse
+- `S73` disagree with the screen.
+- `S73` `writable_scalars()` had to be added to the session facade, because otherwise
+- `S73` this module would have read `baseline.permitted_surface` and held contract
+- `S73` records after all -- reintroducing through the back door exactly what the
+- `S73` operator's boundary ruling removed.
+- `S73` WHY THE TESTS ARE UNRUN, and it is a measurement judgement rather than a
+- `S73` blocker: four consecutive collection attempts produced four DIFFERENT missing
+- `S73` symbols -- `core.storage_taxonomy`, `core.authority_grade`,
+- `S73` `core.filing_projection_ref`, then `source_diagnostics_for` from
+- `S73` `aggregation._source_mesh`. A peer sweep is rewriting the tree wholesale: 1685
+- `S73` source files changed within two minutes and 4708 uncommitted modifications
+- `S73` under `src/cadrumo`. Any result now would describe that sweep's instant rather
+- `S73` than this module. Run the package's tests once the tree is quiet.
+- `S73` VERIFIED 2026-08-31, once the tree settled. The peer sweep landed: churn fell from 1685 files in two minutes to 3, and `application/aggregation/__init__.py` -- which was importing four symbols from `_source_mesh` that a relocation had moved to `source_resolution_operations.py` -- was repaired by its owner.
+- `S73` `verify:` `pytest entrypoints/tui/modelo/edit` -> `7 passed`
+- `S73` `verify:` `pytest test_edit_session.py + entrypoints/tui/modelo/edit` -> `14 passed`
+- `S73` The second run matters as much as the first: it re-exercises W06.P12b.S72's facade AFTER a tree-wide sweep rewrote roughly 4,700 files underneath it, so the session and the fields are proven against the settled tree rather than the one they were written against.
+- `S73` Waiting rather than retrying was the right call and is worth recording as method. Six consecutive collection attempts produced six DIFFERENT missing symbols -- `core.storage_taxonomy`, `core.authority_grade`, `core.filing_projection_ref`, `source_diagnostics_for`, `core.storage_taxonomy_locations`, `core.auth_provider` -- each resolving as the next appeared. That is the still-being-produced signature, where the per-attempt tell looks identical to an unenumerated population but the remedy is the opposite: enumerate harder and you measure the sweep; wait and the question answers itself.
+- `S74` Rows are addressed by the natural key the declaration already carries, never
+- `S74` by widget position. A position is not an identity: it changes when a row above
+- `S74` is removed, when a filter is applied and on every re-render, so a row edited by
+- `S74` position after any of those edits the WRONG row. Proven by staging two rows and
+- `S74` asserting both survive under their own keys.
+- `S74` WHOLE-ROW OPERATIONS ONLY, because a partially applied row has no meaning in a
+- `S74` declaration -- half a counterparty is not a smaller counterparty, it is a
+- `S74` malformed one. Add and replace are ONE method: whether a key is already
+- `S74` declared is a fact about the work unit rather than the operator's gesture, and
+- `S74` making the surface choose would make it guess.
+- `S74` NO MOVE IS OFFERED, AND THAT IS THE ROW'S 'EXPLICITLY PERMITTED' ANSWER. The
+- `S74` contract's intent kind documents why none exists: every row-producer sorts by a
+- `S74` content key before assigning fichero occurrence numbers, so two calls supplying
+- `S74` the same rows in different orders render byte-identical output. A move would
+- `S74` change nothing in the filing while implying to the operator that it had, so
+- `S74` this module offers none rather than one that quietly does nothing.
+- `S74` AN INCOMPLETE DRAFT NEVER REACHES THE SESSION. A row under construction lives
+- `S74` in the surface with a client correlation and no intent staged; it is committed
+- `S74` only when it carries BOTH its natural key and its payload. A refused commit
+- `S74` leaves the draft OPEN rather than dropping it, because the operator can still
+- `S74` see it. Committing removes it from the draft set, so a completed row cannot be
+- `S74` staged twice.
+- `S75` NO FABRICATED SUPERVISOR APPROVAL, which is the row's sharpest requirement. The
+- `S75` gate returns the contract's own preflight verdict UNMODIFIED and never says
+- `S75` 'approved'. A green preflight is review material, not authorization: the
+- `S75` execution path independently repeats every concurrency and capability check at
+- `S75` the guarded commit point, and a surface reporting approval would be inventing a
+- `S75` decision it has no standing to make. The summary carries the preflight through
+- `S75` rather than re-shaping it, because a surface-local summary of a contract
+- `S75` verdict is a second reading of the same facts, free to disagree with the first.
+- `S75` TWO KINDS OF BLOCKER, kept apart because they are resolved differently.
+- `S75` SURFACE blockers are unresolved lexemes: nothing is staged for them, so
+- `S75` submitting would file the value the field held BEFORE the operator typed over
+- `S75` it while the screen shows the new text. CONTRACT findings come from preflight
+- `S75` and describe the staged submission itself. The gate refuses on surface blockers
+- `S75` BEFORE calling preflight, so a real recheck is not spent on a request the
+- `S75` operator did not mean.
+- `S75` A refusal NAMES the controls to return to. That is what makes it actionable:
+- `S75` a gate reporting errors without saying where sends the operator searching.
+- `S75` AN EMPTY EDIT IS NOT REVIEWABLE. Offering review over nothing invites
+- `S75` confirming a submission with no intents, which either does nothing or looks
+- `S75` like it did something, and neither is honest.
+- `S75` LEAVING OFFERS EXACTLY TWO ANSWERS -- stay or abandon. A silent save on
+- `S75` navigation is deliberately absent: an edit the operator did not review is an
+- `S75` edit they did not approve, and filing one would be a declaration nobody
+- `S75` confirmed.
+- `S76` PARTIAL: the module and its tests are written and lint clean, and the one
+- `S76` failure they found is fixed. The full re-run is outstanding and the row stays
+- `S76` open until it is green.
+- `S76` THE ORDERING GUARANTEE IS STRUCTURAL, NOT PROCEDURAL. Until admission succeeds
+- `S76` the controller has no field set, no row set and no gate to hand out, so there
+- `S76` is no object on which a lexeme could be offered. A controller that exposed
+- `S76` controls and checked compatibility when the first key was pressed would have
+- `S76` the same intention and none of the guarantee, and its test would assert a flag
+- `S76` rather than an impossibility.
+- `S76` The tuple is judged by the CONTRACT and not re-checked here. `admit_modelo_edit`
+- `S76` compares every axis and refuses before resolving any secure state; re-comparing
+- `S76` them in the controller would be a second judge of one question, free to
+- `S76` disagree with the first.
+- `S76` A TEST FOUND A REAL DEFECT IN CODE WRITTEN AN HOUR EARLIER, which is the whole
+- `S76` reason to write it. `open_modelo_edit_session` read `refusal.code`, which
+- `S76` exists on ONE of the refusal union's five arms. A stale compatibility tuple
+- `S76` yields `ModeloEditCompatibilityRefusalV1`, which has no `code`, so the facade
+- `S76` raised `AttributeError` instead of returning a refusal outcome -- on exactly
+- `S76` the path a platform upgrade takes, where the operator should be told the editor
+- `S76` is unavailable rather than shown a traceback. The key is now derived from the
+- `S76` `kind` DISCRIMINATOR, which every arm carries by construction.
+- `S76` The test caught it only because it drives a GENUINELY stale tuple through the
+- `S76` contract's own comparison. A test that had simulated the refusal would have
+- `S76` passed against the broken code, never producing the arm the facade could not
+- `S76` handle.
+- `S76` WHY THE RE-RUN IS OUTSTANDING: a `relocation:core` campaign is landing in
+- `S76` batches -- `promote eight more private modules and repoint every consumer` at
+- `S76` 06:56 -- and each batch briefly breaks the import graph. Successive attempts
+- `S76` failed on `core.optional_extras`, `core.provenance_stamp`,
+- `S76` `core.model_catalogue` and `core.field_grounding`, each resolving as the next
+- `S76` appeared. A collection-gated wait was tried and still raced: collection passed,
+- `S76` then the tree moved again before the run. Re-run the package once the campaign
+- `S76` lands.
+- `S76` VERIFIED 2026-08-31, once the relocation campaign settled -- churn fell from 39 files per minute to 4.
+- `S76` `verify:` `pytest entrypoints/tui/modelo/edit + application/modelo/tests/test_edit_session.py` -> `28 passed`
+- `S76` That run covers all five C3 modules together: the application-owned session facade, scalar fields, repeated rows, the review gate and this controller. It is the first green over the whole editor surface, and it is taken against the settled tree rather than the one the modules were written against -- roughly 4,700 files were rewritten underneath them while the campaign ran.
+- `S76` The refusal fix is included in that green. The stale-tuple test now exercises the path that previously raised `AttributeError`, so the defect is proven fixed rather than merely edited.
+- `S77` PARTIAL: the stale-conflict clause is delivered; the submission clauses are not.
+- `S77` Submitting through the operation-owned financial handoff and folding public
+- `S77` observation to settlement require the operations platform -- an async supervisor
+- `S77` submission of the kind W07.P16.S340 also needs -- which is different engineering
+- `S77` from the editor surface and is not started here.
+- `S77` STALE CONFLICT RESCUES NOTHING, WHICH IS THE POINT. The row forbids merge,
+- `S77` rebase, result-ref interpretation and old-view patching. Each would produce a
+- `S77` screen that is neither what the operator wrote nor what the tree holds, and then
+- `S77` submit that. `refresh` reports which coordinates drifted and moves nothing: the
+- `S77` staged edits stay staged and the baseline they are judged against stays put, so
+- `S77` a submit still refuses against the coordinate it was admitted on.
+- `S77` A DEFECT OF MY OWN, FOUND BY A FAILING TEST AND NOT BY REVIEW. The first version
+- `S77` answered staleness by comparing two admission RECORDS. An admission carries its
+- `S77` own identity and lifetime -- `baseline_id`, `issued_at`, `expires_at` -- so two
+- `S77` admissions of an UNCHANGED tree are never equal, and the signal was stuck
+- `S77` permanently on 'stale'. A gate that always fires is as useless as one that never
+- `S77` does, and worse: it teaches the operator to ignore it.
+- `S77` Corrected to ask `reconfirm_modelo_edit_baseline`, the contract's own
+- `S77` compare-and-swap, which judges the coordinate axes the guarded commit point
+- `S77` judges. That is the SAME one-authority correction made earlier the same day to
+- `S77` the work-target revision comparison. Writing that lesson down did not prevent
+- `S77` repeating it hours later; the test did.
+- `S77` CONSEQUENCE, and it invalidated a claim already recorded: with staleness moved
+- `S77` to the CAS, the session's second 'read' baseline had nothing left to do -- set
+- `S77` at open, never read. It was removed, and W06.P12b.S72's record was amended,
+- `S77` because a closed row asserting a shape the code no longer has is precisely the
+- `S77` stale artefact this campaign keeps finding in other rows.
+- `S77` The new tests carry the control the first one lacked: an unchanged tree must
+- `S77` report NO drift and an emptied catalogue must report drift. The original
+- `S77` asserted only the first and would have passed against a `refresh` that did
+- `S77` nothing at all.
+- `S78` ALL ELEVEN AXES NOW COVERED, at 36 passed / 0 failed. This record previously said
+- `S78` PARTIAL and blocked on W06.P12b.S77; that submission path has since landed, and
+- `S78` the three remaining axes needed a mounted surface that did not exist.
+- `S78` EIGHT AXES WERE PROVABLE HEADLESSLY and are proven in the modules' own suites --
+- `S78` scalar distinctions, row editing, review and abandon, exact tuple refusal, stale
+- `S78` conflict, locale switch, unique-sentinel non-retention, and operation handoff.
+- `S78` Deliberately not duplicated here: a second copy would be two tests of one
+- `S78` property, free to disagree.
+- `S78` THREE NEEDED A SCREEN, because every C3 module built so far was headless logic.
+- `S78` `edit/screen.py` builds its controls from the admitted permitted surface, so a
+- `S78` casilla the contract will not accept has no widget to type into -- the
+- `S78` controller's structural guarantee carried onto the screen rather than restated.
+- `S78` It takes a catalogue SUPPLIER rather than catalogues, because review must be
+- `S78` judged against what the tree holds when the operator asks; caching would hide a
+- `S78` concurrent change from exactly the check that exists to catch it. It never
+- `S78` admits on mount, so the no-control-before-admission guarantee cannot be broken
+- `S78` by rendering early.
+- `S78` FOCUS IS THE ERROR CHANNEL. A refused lexeme returns focus to the input that
+- `S78` carried it and leaves the operator's text in place. The alternative -- accept
+- `S78` the keystroke, clear the box, report the problem elsewhere -- makes the operator
+- `S78` hunt for which field was rejected, and is how a mistyped amount becomes a
+- `S78` silently abandoned one. The proof moves focus AWAY before the refusal, so
+- `S78` passing requires the screen to actively return it; a counterpart test asserts an
+- `S78` ACCEPTED value does NOT steal focus, without which the first would pass equally
+- `S78` well against a screen that grabs focus on every keystroke and fights the
+- `S78` operator moving through the form.
+- `S78` DEFECT FOUND BY BUILDING THE SCREEN, and it is the substance of the locale axis
+- `S78` rather than an aside. The screen renders through ambient `tr()` while the
+- `S78` controller parses lexemes in the locale it was ADMITTED for, and nothing kept
+- `S78` the two in step: an operator could be shown Hungarian while their number was
+- `S78` parsed as Spanish. The failure is invisible by construction, because `1.234,56`
+- `S78` is a valid spelling in more than one language -- the form accepts the typing and
+- `S78` records a DIFFERENT AMOUNT than the operator believes they entered, with no
+- `S78` error for anyone to notice. The headless tests could not see it because they had
+- `S78` no display language to disagree with. The controller now exposes its parse
+- `S78` locale and the screen REFUSES to mount on a divergence, raised rather than shown
+- `S78` as a notice: a mismatch means the route was built with the wrong locale, which
+- `S78` is a programming error the operator cannot act on.
+- `S78` LOCALES. 32 entries written through `python -m dev.locales set` across es/en/ca/hu,
+- `S78` none hand-edited. `casilla` is kept verbatim in all four languages because it
+- `S78` names an official AEAT surface; a Catalan cognate or a generic Hungarian word
+- `S78` would stop matching what the operator sees on the AEAT site. The language proof
+- `S78` does not stop at 'mounted without raising': a catalogue silently serving the
+- `S78` Spanish string for every language would mount cleanly four times and still be
+- `S78` wrong, so it also requires the rendered titles to differ.
+- `S78` TEST HOME. The mounted proofs live in the sibling `test_c3_editor_screen.py`
+- `S78` rather than the module this row names, because they carry integration and
+- `S78` hex_entrypoint markers while the accessibility module is headless unit tests. A
+- `S78` file-level `pytestmark` cannot say both, and a test tagged with two
+- `S78` contradictory lane markers ends up selected by neither lane in the way its
+- `S78` author expected.
+- `S78` CARRIED FORWARD FROM THE EARLIER DRAFT, because it is the same hollow-proof
+- `S78` shape this campaign keeps finding: the accepted-path retention test originally
+- `S78` read `f"12.34{'' if True else _SENTINEL}"` and then asserted the sentinel was
+- `S78` absent -- a test that never introduced what it searched for, and would have
+- `S78` passed forever while proving nothing.
+- `S79` THE C3 EXIT FACT. The C3 editor state machine, parse and validation focus,
+- `S79` review-only submit, stale refusal, atomic-result refresh, locale switch,
+- `S79` operation handoff and sensitive non-retention are proven by the editor package
+- `S79` `entrypoints/tui/modelo/edit/`, the mounted-surface suite
+- `S79` `test_c3_editor_screen.py`, the adversarial suite
+- `S79` `test_c3_editor_accessibility.py`, and the application-side
+- `S79` `test_edit_session.py` and `test_edit_wire_submission_mirror.py`. Run
+- `S79` 2026-08-31: 51 passed, 0 failed. HEAD was
+- `S79` `35c1721dd88e13402506b7e56863821cced75c8f`; THE RUN WAS AGAINST THE WORKING TREE
+- `S79` AT THAT HEAD, NOT A CLEAN CHECKOUT, as with every record in this chain.
+- `S79` WHAT THE C3 BUILD ACTUALLY PRODUCED, beyond the passing count.
+- `S79` OPERATION HANDOFF EXISTED ONLY ON PAPER. The registered `modelo.edit.apply`
+- `S79` operation had NO production caller: `ModeloEditApplySubmissionV1` owned
+- `S79` `to_submission` (wire to domain, which the executor needs) but not its inverse,
+- `S79` and the single site constructing the wire type was a test. The editor could
+- `S79` stage edits with nowhere to send them. The inverse now lives beside
+- `S79` `to_submission` so the two directions cannot drift, with a shared
+- `S79` `_WireDetailRowMirror.from_row` serving all six per-modelo mirrors -- the
+- `S79` direction back does not differ between them, only `Decimal` becoming its exact
+- `S79` characters -- reached through a `row_type`-discriminated dispatch rather than a
+- `S79` hand-written map that could fall behind the union.
+- `S79` THE DETAIL-ROW ASYMMETRY IS PERMANENT AND DELIBERATE. A domain detail-row
+- `S79` address carries only the JOINED natural key; the wire form carries the identity
+- `S79` components. Splitting the key back apart cannot be made correct, because a
+- `S79` component containing the separator is indistinguishable from a boundary once
+- `S79` joined -- it would guess right for most rows and wrong for exactly the rows whose
+- `S79` identifier contains the separator, producing a misaddressed edit rather than an
+- `S79` error. So `from_submission` refuses detail rows, and only the session, which
+- `S79` captured the components at staging time, may build that address.
+- `S79` THE LOCALE DEFECT IS THE MOST IMPORTANT THING HERE, and it was invisible until
+- `S79` a screen existed. The editor renders through ambient `tr()` while the controller
+- `S79` parses lexemes in the locale it was ADMITTED for, and nothing kept them in step:
+- `S79` an operator could be shown Hungarian while their number was parsed as Spanish.
+- `S79` `1.234,56` is a valid spelling in more than one language, so the form accepts
+- `S79` the typing and RECORDS A DIFFERENT AMOUNT THAN THE OPERATOR BELIEVES THEY
+- `S79` ENTERED, with no error for anyone to notice. Every headless proof passed
+- `S79` throughout, because none of them had a display language to disagree with. The
+- `S79` screen now refuses to mount on a divergence -- raised rather than surfaced as a
+- `S79` notice, since a mismatch means the route was built with the wrong locale, a
+- `S79` programming error the operator cannot act on.
+- `S79` TWO DEFECTS IN THIS COHORT'S OWN EARLIER CODE, both found by changing it rather
+- `S79` than by reading it: `stage_row` accepted the natural key BESIDE the row, so an
+- `S79` address and the row it described could disagree while the contract addresses by
+- `S79` key; and correcting that immediately exposed a test asserting the key
+- `S79` `DE123456789` when the row's real compound key is `DE123456789|E` -- an address
+- `S79` no row ever had.
+- `S79` STANDING GOAL NOT COVERED: this record's predecessor relationship to the C3
+- `S79` prerequisite record is a wiki-link, which is a human-checked claim. Nothing
+- `S79` recomputes it, and nothing fails if that predecessor later goes red.
+- `S80` CALLBACK-FREE BY TYPE, NOT BY CONVENTION. `ModeloActionView` is a frozen,
+- `S80` slotted dataclass, and a proof walks every field of every row asserting none
+- `S80` holds a callable, module, method or function. Checked at RUNTIME rather than
+- `S80` against the annotations, because a field declared `str` can still hold a bound
+- `S80` method and the annotation would not object. A view row carrying a callback is a
+- `S80` hidden edge from a rendering surface into whatever the callback closed over --
+- `S80` invisible to the import graph and to any reader of the row -- which is the
+- `S80` shape the previous cohort removed.
+- `S80` THE DISPATCH MAP IS KEYED BY THE REGISTERED DEFINITION ID, never by a parallel
+- `S80` enum, so a row cannot name an operation the platform does not register. A proof
+- `S80` resolves every key against the ids the application layer publicly declares, and
+- `S80` fails if one is absent -- a row pointing at an unregistered id would submit into
+- `S80` nothing, and the failure would otherwise surface at the operator.
+- `S80` THE UNDISPATCHABLE ACTIONS ARE DECLARED. The denominator classifies 31 modelo
+- `S80` candidates as pending C4 mutations; only SIX have registered definitions, so 25
+- `S80` are listed in `MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS` rather than
+- `S80` omitted. Two proofs keep that list honest in both directions: it must not
+- `S80` overlap the dispatch table, and none of its members may have acquired a
+- `S80` registered operation -- if one does, it belongs in the table and the test fails.
+- `S80` A pending list that goes stale silently would understate the surface
+- `S80` indefinitely. Note `modelo.work.calculate` is among the 25: it looks like a
+- `S80` sibling of the six and is not dispatchable.
+- `S80` ARITHMETIC STATED BECAUSE IT LOOKS WRONG: seven dispatchable plus twenty-five
+- `S80` pending does not sum to thirty-one. The sets overlap in six members and each
+- `S80` holds one the other does not -- `modelo.edit.apply` is registered but is not
+- `S80` among the denominator's 31, having arrived with the C3 editor. Caught before it
+- `S80` became a cited figure; the module now says so rather than leaving an apparent
+- `S80` slip.
+- `S80` THIS ROW WAS WRONGLY DECLARED BLOCKED EARLIER IN THE SAME SESSION, and the
+- `S80` correction is the more useful record. The reasoning was: the row must not
+- `S80` hand-list actions, the canonical catalogue lives in `application/operator_actions/`,
+- `S80` and that package has no legal public route -- every defining module is private
+- `S80` and its `__init__.py` re-exports 15 symbols, which the architecture rule
+- `S80` forbids. All of that is TRUE of that package and IRRELEVANT here: the C4
+- `S80` actions ARE registered operations, and all seven definition ids are public and
+- `S80` in `operation_definitions.__all__`. A dependency was inferred that the row never
+- `S80` had, and a buildable row was parked awaiting an operator ruling it did not need.
+- `S80` The `operator_actions` namespace violation is real and stands on its own,
+- `S80` unrelated to this row.
+- `S80` A TEST THAT WAS WRONG ABOUT ITS ENVIRONMENT RATHER THAN ITS SUBJECT. The
+- `S80` immutability proof originally asserted `FrozenInstanceError`. It failed with
+- `S80` `TypeError: super(type, obj): obj is not an instance or subtype of type` --
+- `S80` which reads like the frozen guarantee is broken. It is not: run directly, the
+- `S80` module raises `FrozenInstanceError` correctly; under pytest the module is
+- `S80` reachable under two identities, so the generated `__setattr__` resolves
+- `S80` `super()` against a different class object. The assertion now pins the PROPERTY
+- `S80` the write is refused AND the value is unchanged -- rather than the exception
+- `S80` class, which would have made the test assert a fact about the import context.
+- `S81` A SECOND CANDIDATE STREAM, which is what this row's "dispatch" candidates
+- `S81` required. Discovery previously observed ONE source: the CLI command graph. It
+- `S81` now also observes `discover_dispatchable_modelo_action_identities`, imported
+- `S81` from the shipped package rather than re-listed, so a dispatch row added to the
+- `S81` surface enters this gate automatically instead of when somebody remembers a
+- `S81` parallel list.
+- `S81` THE TWO STREAMS HAVE DIFFERENT DENOMINATORS, and that is the finding rather
+- `S81` than a defect. Measured: 7 dispatchable, 79 command-graph live, 6 overlapping.
+- `S81` The command graph answers "what commands exist"; the dispatch table answers
+- `S81` "what can a workspace surface invoke". They disagree in both directions -- a
+- `S81` command can exist with no surface reaching it, and `modelo.edit.apply` is
+- `S81` dispatchable while not being a command-graph candidate at all. A test pins the
+- `S81` non-convergence, so a future change that made the two coincide would have to
+- `S81` widen the rule deliberately rather than by accident.
+- `S81` THE ENFORCEABLE RULE IS THE INTERSECTION ONLY, and arriving there meant
+- `S81` retracting a stronger rule I had already written. The first version flagged
+- `S81` every action classified `C4_MUTATION_PENDING` that appears in the dispatch
+- `S81` table -- six of them -- as "a classification describing a state the tree has
+- `S81` left". THAT IS FALSE. W06.P12c.S80 declares WHERE an action would dispatch; it
+- `S81` does not enrol it. Enrolment is S82 through S87, all still open, so those six
+- `S81` are correctly still pending and the rule asserted something S80 never
+- `S81` established. A gate encoding that would have forced six classifications to be
+- `S81` rewritten to describe a state that does not exist.
+- `S81` The second wrong shape was subtler and worth recording: requiring every
+- `S81` dispatchable action to be classified would demand a table row for
+- `S81` `modelo.edit.apply`, which the EXISTING stale-classification rule would then
+- `S81` reject, because that rule fires on any classification absent from the live
+- `S81` command graph. The two rules would contradict each other on one identity, each
+- `S81` correct in isolation. Widening the classification table's denominator to cover
+- `S81` non-CLI registered operations is a scope decision belonging to that table's
+- `S81` owner, not to this check.
+- `S81` PROVEN TO BITE, not merely green: removing one intersection member
+- `S81` (`modelo.export`) from an injected classification table raises the violation
+- `S81` naming it. Driven through the validator's own `denominator` argument -- which
+- `S81` exists so a candidate table can be checked without mutating the module
+- `S81` constant -- so nothing on disk is broken to test the gate. That matters here
+- `S81` specifically: this worktree is shared, and a peer's broad landing commit could
+- `S81` otherwise capture a deliberately corrupted table.
+- `S82` ENROLLED THROUGH THE REGISTERED OPERATION, NEVER THE WRITER. The action builds
+- `S82` a typed `ModeloWorkRenameRequest` addressed to `modelo.work.rename` and submits
+- `S82` it through the composed supervisor, returning the shared `OperationController`
+- `S82` bound to that submission. It never calls `rename_work_unit`.
+- `S82` That distinction carries the whole value, because the wrong path SUCCEEDS.
+- `S82` Calling the lifecycle writer directly would rename the unit and produce an
+- `S82` identical visible outcome, while the run held no lease, entered no journal,
+- `S82` could not be cancelled or resumed, and published no observation. A live
+- `S82` operator path executing outside the platform that governs it is exactly the
+- `S82` defect W07.P16.S340 records against the spreadsheet export. So it is asserted
+- `S82` STRUCTURALLY, against the module's own AST rather than its import block: a
+- `S82` writer reached through a deferred function-local import would not appear in the
+- `S82` header, and a reviewer scanning the file would miss it.
+- `S82` NOTHING WAS REDECLARED. `OperationController` and `present_operation_modal`
+- `S82` already ship; this module contributes only the two rename-specific pieces --
+- `S82` building the request and naming the destination -- and reads that destination
+- `S82` from the S80 dispatch table rather than restating it, so where a settled rename
+- `S82` leaves the operator is declared once.
+- `S82` SUBMITS WITHOUT STARTING, proven on the coroutine's own source: starting
+- `S82` belongs to the modal that presents the run. An action that started the run
+- `S82` itself would execute a rename to completion with no window observing it, which
+- `S82` defeats the point of routing it through the platform.
+- `S82` A REAL DEFECT FOUND BY THE REFUSAL PROOF, and fixed rather than accommodated.
+- `S82` The empty name was refused; the whitespace-only name `" "` WAS NOT. Cause:
+- `S82` the operation request's `_WORK_UNIT_NAME` carried `Field(min_length=1)` while
+- `S82` the domain's `_DisplayName` carries `StringConstraints(strip_whitespace=True,
+- `S82` min_length=1)`. The REQUEST TYPE WAS LOOSER THAN THE TYPE IT FEEDS, so a
+- `S82` whitespace rename passed the boundary, was journalled, took a lease, and was
+- `S82` scheduled -- then failed at the writer. The platform did real work for a rename
+- `S82` that could never settle, and an operator would see a lease and a journal entry
+- `S82` for it. Aligned to the domain's constraint: `""` and `" "` now refuse at the
+- `S82` boundary, and `" Q1 2026 "` is accepted as `"Q1 2026"`, which is what the
+- `S82` domain would have stored anyway.
+- `S82` The test was NOT weakened to match the observed behaviour. Encoding
+- `S82` whitespace-acceptance as the contract would have made this suite assert a
+- `S82` defect, which is worse than not testing it -- the constraint moved instead.
+- `S83` THE EXACT-APPROVAL INTERACTION IS THE BASELINE, and the enrolment's design
+- `S83` turns on refusing to fill it locally. The registered operation declares
+- `S83` `OperationBaselinePolicy.EXACT_APPROVAL`, and the request carries a
+- `S83` `ModeloWorkDiscardBaseline` holding the unit's name and `observed_updated_at`
+- `S83` AS THE OPERATOR SAW THEM. Those arrive as REQUIRED parameters with no defaults,
+- `S83` asserted on the signature, because a function that resolved them for itself
+- `S83` would produce a baseline matching the tree by construction: the platform's
+- `S83` compare-and-swap would always pass, and the operator would be recorded as
+- `S83` approving a state they never saw. A second proof shows two approvals of
+- `S83` different observed states are distinguishable -- without that, staleness has
+- `S83` nothing to compare.
+- `S83` CANCELLATION IS PROVEN BY ITS ABSENCE. The operation declares
+- `S83` `OperationCancellation.UNSUPPORTED`, so the surface must not offer to cancel a
+- `S83` discard. On a destructive action specifically, an affordance that cannot work
+- `S83` is worse than no affordance: an operator who believes they cancelled, and did
+- `S83` not, learns otherwise only from the absence of the thing they meant to keep.
+- `S83` Both the cancellation and baseline policies are READ from the definition rather
+- `S83` than restated, so a change to either surfaces here, where the baseline is
+- `S83` built.
+- `S83` A GATE OF MINE THAT WAS WRONG ABOUT ITS SUBJECT, caught by itself. The
+- `S83` cancellation proof first searched the module source for the word "cancel" and
+- `S83` fired -- on this module's own docstring EXPLAINING that cancellation is
+- `S83` unsupported. It forbade documenting the constraint rather than offering the
+- `S83` affordance. This is the same defect class as the `_workspace_producers`
+- `S83` substring scan repaired under W05.P10a.S49 earlier in this session, and the
+- `S83` same one W07.P16.S340 warns against in its note refusing a name-matching gate:
+- `S83` match the STRUCTURE, not the spelling. It now walks the AST for a call whose
+- `S83` func mentions cancellation, so prose is free and a request is refused.
+- `S83` A blank discard reason is refused while an absent one is accepted, because
+- `S83` recording no reason and recording an empty reason are different claims -- an
+- `S83` empty string reads later as a reason that was given and lost.
+- `S83` As with rename, the action reaches the registered operation and never
+- `S83` `work_lifecycle`, asserted against the module's AST, and submits without
+- `S83` starting so a destructive run cannot execute with no window observing it.
+- `S84` THE REPLAY-SAFETY PROPERTY IS WHAT DISTINGUISHES VERIFY, and it is now pinned.
+- `S84` The request carries the calculation revision and NOTHING TAXPAYER-SCOPED: the
+- `S84` profile the gates evaluate against is resolved at execution from live state. A
+- `S84` profile carried in the request would be frozen into the journal, and a replay
+- `S84` would produce a verdict that was true when submitted and is not true now -- on
+- `S84` the one surface whose job is telling an operator whether their filing is sound.
+- `S84` Asserted over the payload's WHOLE field set rather than by naming a suspect, so
+- `S84` a taxpayer-scoped field arriving later under any spelling fails here.
+- `S84` CANCELLATION IS COOPERATIVE, the opposite of discard, and read from the
+- `S84` operation rather than restated. Verification reads and reports, so abandoning
+- `S84` one part-way leaves nothing half-written -- which is exactly why discard, whose
+- `S84` operation declares cancellation UNSUPPORTED, must not offer the same
+- `S84` affordance. The two enrolments now pin their own halves of that contrast.
+- `S84` SUBJECT IS THE WORK UNIT WHILE THE PAYLOAD NAMES THE REVISION, and the two are
+- `S84` not interchangeable. Two verifications of different revisions of the same unit
+- `S84` must serialise, because they read the same evolving state; keying the subject
+- `S84` on the revision would let them run concurrently against a unit moving
+- `S84` underneath both.
+- `S84` A SYSTEMIC DEFECT, THE SAME CLASS AS W06.P12c.S82's AND FIXED DIFFERENTLY ON
+- `S84` PURPOSE. The blank-identifier proof failed on `" "`: twelve identifier fields
+- `S84` in `operation_definitions.py` carry `Field(min_length=1)` with no whitespace
+- `S84` guard, so an all-whitespace id is journalled, takes a lease and is scheduled
+- `S84` before failing to resolve at execution -- real platform work for something that
+- `S84` can never settle.
+- `S84` The fix is NOT the one S82 used. A display name is STRIPPED, because that is
+- `S84` what the domain's own `_DisplayName` does. An identifier must NOT be stripped:
+- `S84` altering it changes what it addresses, so `" rev-1 "` and `"rev-1"` must stay
+- `S84` distinct. The guard is therefore `pattern=r"\S"`, which refuses `""` and
+- `S84` `" "` while leaving an accepted value exactly as given. Applied to
+- `S84` `_WORK_UNIT_ID` and to verify's `calculation_revision_id` and `actor` -- the
+- `S84` identifiers these three enrolments actually submit.
+- `S84` THE REMAINING SIBLING FIELDS ARE A FINDING, NOT A SWEEP. Roughly nine further
+- `S84` identifier fields in that module share the looseness (`bucket_id`,
+- `S84` `verification_report_id`, `completeness_status`, further `actor` declarations).
+- `S84` They are recorded here rather than rewritten, because tightening a peer's
+- `S84` shared module wholesale on the strength of one enrolment's proof would change
+- `S84` validation for callers this row never examined.
+- `S84` CORRECTED IN MY OWN TEST: the field-set assertion originally named a
+- `S84` `request_version` field that does not exist. The measured set is
+- `S84` `{calculation_revision_id, actor}`.
+- `S85` THE PROHIBITION IS THE PROOF, not a comment. This application never submits to
+- `S85` the AEAT sede -- a person files outside it -- so the module is checked against
+- `S85` its own AST for any reach into a `sede` or `outbound.aeat` path. Structural
+- `S85` rather than by review, because a submission path reached through a deferred
+- `S85` function-local import would not appear in the header a reviewer scans.
+- `S85` THE CORRECTNESS CONSEQUENCE IS SHARPER THAN THE PROHIBITION ITSELF: a local
+- `S85` filing must never be classifiable as OFFICIAL AEAT EVIDENCE.
+- `S85` `ObservationSourceKind.APP_FILING.is_official_aeat` is False, and the official
+- `S85` set is pinned as exactly {AEAT_SEDE_JUSTIFICANTE, AEAT_SEDE_LIVE_CAPTURE,
+- `S85` AEAT_CSV_REGISTER} -- all three AEAT-sourced. A locally produced kind joining
+- `S85` that set fails here. Without it, a cross-period clean-state gate could believe
+- `S85` the AEAT accepted something it has never seen.
+- `S85` APPROVAL NAMES BOTH THE REVISION AND THE VERIFICATION, both required
+- `S85` parameters. A revision re-verified since the operator approved it is a
+- `S85` different fact, and filing on the strength of the older look would record an
+- `S85` intent nobody formed -- the same discipline the discard baseline follows, and
+- `S85` for the same reason: a function resolving either id for itself would produce an
+- `S85` approval that always matches and never refuses.
+- `S85` The refund and payment elections pass through ONLY when the operator chose one,
+- `S85` so the request type's own declared defaults apply. A second copy of a default
+- `S85` is a second place for it to be wrong, and these two decide whether a refund is
+- `S85` compensated or paid out.
+- `S85` TWO IMPORT FAULTS, ONE MINE AND ONE A PEER'S, worth separating because they
+- `S85` looked alike. The peer's: `application/calculations/_bienes_inversion_regularizacion.py`
+- `S85` and `application/modelo/_bienes_inversion_advisory.py` briefly carried
+- `S85` `from ....bienes_inversion...`, reaching past the `cadrumo` root, while the
+- `S85` `adapters/persistence/profile/` tree that path expects existed nowhere in
+- `S85` `src/`. That blocked this suite entirely -- it needs `ObservationSourceKind`,
+- `S85` and importing any submodule of `application/calculations` executes the package
+- `S85` `__init__` that walked into the break. It was left alone rather than repointed,
+- `S85` because guessing at a migration in progress is how two lanes corrupt one
+- `S85` relocation; it cleared on its own.
+- `S85` Mine: `RefundElection` and `PaymentElection` were imported from
+- `S85` `core.external_constants`, where they do not live. Their canonical defining
+- `S85` modules are `core/refund_election.py` and `core/payment_election.py`. The
+- `S85` run-time import in `file.py` sat under TYPE_CHECKING and so failed silently at
+- `S85` runtime -- only the test's real import surfaced it.
+- `S85` RETRY-LOOP LESSON: the churn-detection grep matched `ImportError: cannot
+- `S85` import` and `No module named 'cadrumo.`, and therefore sailed past `attempted
+- `S85` relative import beyond top-level package`, reporting a peer casualty as this
+- `S85` suite's own result. Import failures do not share one spelling.
+- `S86` THIS IS NOT THE EXPORT THAT BYPASSES THE SUPERVISOR, and a test pins the
+- `S86` difference because the names invite conflation. `modelo.export` and
+- `S86` `export.google-sheets` are distinct registered operations; only the latter is
+- `S86` reached by calling a service's `execute` directly, which is the unjournalled,
+- `S86` unleased defect recorded against the architecture lane in W07.P16.S340. This
+- `S86` enrolment submits through the composed supervisor like its siblings, and
+- `S86` asserting the two definition ids differ stops it inheriting that finding by
+- `S86` association.
+- `S86` THE CONFIDENTIALITY PROPERTY IS THE LOAD-BEARING ONE. The exported bytes never
+- `S86` enter the request OR the result, asserted over both whole field sets rather
+- `S86` than by naming a suspect field. An operation request is journalled, and a
+- `S86` filing artefact is a taxpayer's complete declared position -- the most
+- `S86` sensitive thing this application produces. Carrying the bytes would copy them
+- `S86` out of the encrypted store into the operations journal, a different store with
+- `S86` a different lifetime. The path is carried because a LOCATION IS NOT CONTENT.
+- `S86` Cancellation is UNSUPPORTED, so no surface may offer it -- a half-written
+- `S86` fichero is worse than one the operator waited for. Checked structurally on the
+- `S86` AST rather than by searching for the word, so this module's own prose
+- `S86` explaining the constraint stays permitted.
+- `S86` THE WHITESPACE DEFECT, THIRD OCCURRENCE, AND A THIRD DISTINCT REMEDY. A
+- `S86` whitespace-only `output_path` was accepted. Across the three C4 rows this class
+- `S86` has now appeared on a display name (W06.P12c.S82), an identifier
+- `S86` (W06.P12c.S84), and a destination path here -- and each needed a DIFFERENT fix,
+- `S86` which is why a blanket sweep of `min_length=1` fields would have been wrong. A
+- `S86` name is STRIPPED, matching the domain's own `_DisplayName`. An identifier and a
+- `S86` path are NOT: altering an identifier changes what it addresses, and trimming a
+- `S86` path masks a typo rather than surfacing it. Both get `pattern=r"\S"`, which
+- `S86` refuses an all-whitespace value while leaving an accepted one byte-exact.
+- `S86` CAUGHT BY MY OWN GUARD: the edit asserted a single `output_path` declaration
+- `S86` and there were TWO -- the request and the public result. Both are now guarded,
+- `S86` since a result echoing a whitespace path is equally meaningless. Had the
+- `S86` assertion not been there, the first match would have been patched and the
+- `S86` second left silently loose.
+- `S86` ENVIRONMENTAL FAILURE SEPARATED FROM CODE FAILURE. A run of the whole modelo
+- `S86` TUI package reported 112 passed with 24 ERRORS, all in the C2 accessibility
+- `S86` suite, all `EOFError: profile KDF worker closed its pipe` /
+- `S86` `KDF_SUPERVISION_UNAVAILABLE`. That is a host-level resource failure wearing a
+- `S86` domain-shaped error -- the same class as the credential-store saturation this
+- `S86` campaign has hit before -- not a regression from the constraint change. Checked
+- `S86` rather than assumed: the errors never mention `output_path`, and the six C4
+- `S86` suites run 58 passed on their own.
+- `S87` AMENDMENT IS THE ONLY ACTION IN THIS COHORT ADDRESSED TO SOMETHING ALREADY
+- `S87` FILED, and everything distinctive follows from that. It is keyed on the FILING
+- `S87` RECORD rather than a work unit, so two amendments of the same filed return
+- `S87` contend: they describe competing corrections to one declaration. Keying the
+- `S87` subject on a work unit would let them proceed concurrently and the authority
+- `S87` would receive two corrections with no established order.
+- `S87` THREE CONTRACT REQUIREMENTS NO SIBLING HAS, each carried through rather than
+- `S87` softened. A REASON IS MANDATORY -- discard's is optional because abandoning
+- `S87` local work owes nobody an explanation, while telling the tax authority a filed
+- `S87` figure was wrong does; the asymmetry is deliberate, not an inconsistency. AT
+- `S87` LEAST ONE OVERRIDE -- re-filing identical numbers would tell the authority a
+- `S87` figure changed when none did. VALUES CROSS AS EXACT CHARACTERS -- the override
+- `S87` value is a pattern-checked string rather than a `Decimal`, because a `Decimal`
+- `S87` accepts number-or-string and emits string, so a journalled request would not
+- `S87` round-trip to what the operator typed. On a correction to a filed return the
+- `S87` digits are the whole content.
+- `S87` OVERRIDES ARRIVE AS A MAPPING so the same casilla cannot be corrected twice
+- `S87` with different values. A sequence would admit that contradiction and leave the
+- `S87` contract to decide which one counted; a mapping makes it unrepresentable.
+- `S87` THE ROW'S SECOND HALF NEEDED NO ACTION, and the reasoning is recorded rather
+- `S87` than the conclusion alone. `modelo.work.amend_wizard` is a DIFFERENT action
+- `S87` from `modelo.work.amend`, already classified FLOW_OWNED with an owning
+- `S87` authority (tui-architecture guided flows), a stated reason, an evidence
+- `S87` reference, and a reopening condition reading "reopens only if C4 assigns this
+- `S87` wizard a distinct disposition". Enrolling `modelo.work.amend` assigns the
+- `S87` WIZARD nothing, so that gate stays shut. Reclassifying it DEFERRED would also
+- `S87` LOSE information: FLOW_OWNED is the more specific disposition and matches the
+- `S87` accepted ADR framing the denominator cites, whereas DEFERRED means owned
+- `S87` entirely outside this plan. A test pins that the wizard is absent from the
+- `S87` dispatch table, so this row cannot be read as having replaced a surface it
+- `S87` never touched.
+- `S87` A THIRD IMPORT GUESS OF MINE, CORRECTED: `CalculationRevisionAmendmentKind` and
+- `S87` `M303RectificativaMotive` live in
+- `S87` `domain/modelos/calculation_revision_amendment.py`, not the `core` paths
+- `S87` assumed. Like the election enums in W06.P12c.S85, these sat under TYPE_CHECKING
+- `S87` and so would have failed silently at runtime -- only a real import surfaces
+- `S87` them.
+- `S87` WITH THIS ROW ALL SIX PER-ACTION ENROLMENTS ARE COMPLETE: rename, discard,
+- `S87` verify, file, export and amend. Each submits through the composed supervisor,
+- `S87` none reaches a writer directly, and each pins a different half of the
+- `S87` platform's contract -- whitespace stripping versus identifier exactness,
+- `S87` cancellation supported versus unsupported, replay safety, the prohibition on
+- `S87` live submission, journal confidentiality, and now filed-record addressing.
+- `S88` THE CLASSIFICATION HALF ALREADY HELD, so nothing was rewritten to claim credit
+- `S88` for it. `modelo.work.create` is classified DEFERRED in the action denominator
+- `S88` with an owning authority (work-lifecycle ownership), a stated reason, an
+- `S88` evidence reference, and a reopening condition reading "reopens only if a future
+- `S88` accepted decision moves this into scope". This row's contribution is the OTHER
+- `S88` half: proving C1 through C5 cannot invoke it.
+- `S88` A DEFERRAL IS EASY TO STATE AND EASY TO LEAK. An action can acquire a caller
+- `S88` through a dispatch row, a route, or a direct import long after the
+- `S88` classification was written, and nothing about the classification itself would
+- `S88` notice. So the proofs go wider than the dispatch table: the whole shipped TUI
+- `S88` package is swept for the action id, and separately walked by AST for an import
+- `S88` of a work-unit creation writer. Naming the id is the obvious leak; importing
+- `S88` the writer is the quiet one, and a deferred function-local import would not
+- `S88` appear in any header a reviewer reads.
+- `S88` DEFERRED AND PENDING ARE DIFFERENT CLAIMS, and a proof keeps them apart.
+- `S88` Creation must not appear in `MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS`
+- `S88` either: that list means "in scope for this plan, not yet built", while creation
+- `S88` is owned outside the plan entirely. Listing it there would misstate ownership
+- `S88` and invite a later reader to enrol it as though it were merely unfinished.
+- `S88` TWO ANTI-VACUITY CONTROLS, because an absence proof over an empty or blind
+- `S88` scan proves nothing. The first asserts the sweep actually finds the TUI surface
+- `S88` more than twenty modules, including `actions.py` itself. The second runs the
+- `S88` SAME scan against `modelo.work.rename`, an action known to be enrolled and
+- `S88` named by a TUI module, and requires a hit. Without it, both absence sweeps
+- `S88` would pass equally well against a scanner that reads nothing.
+- `S89` THIS ROW PROVES WHAT NO PER-ACTION SUITE CAN. Each of the six enrolments
+- `S89` asserts its own action deeply; none of them can catch an action that was simply
+- `S89` never given a disposition, a definition, or a proof. So these checks run over
+- `S89` the dispatch table AS A CLOSED SET.
+- `S89` CAPABILITY DISPOSITIONS ARE VISIBLE, AND WHICH ONES ARE `None` IS ITSELF
+- `S89` PINNED. Every row either names the workspace capability gating it or explicitly
+- `S89` states that its availability is not a workspace-capability question. Asserting
+- `S89` only "a capability field exists" would be weak, so the capability-FREE set is
+- `S89` named exactly: {modelo.work.rename, modelo.work.discard}, both work-unit
+- `S89` lifecycle actions not gated by what a projection measured. Any OTHER action
+- `S89` answering `None` would be an ungated mutation wearing the same shape, and fails
+- `S89` here.
+- `S89` ONLY THE EDITOR APPLY DECLARES A MID-FLIGHT INTERACTION, measured rather than
+- `S89` assumed: all seven definitions were built and their `interaction_kinds` read.
+- `S89` `modelo.edit.apply` carries INPUT; the other six carry none. That is correct
+- `S89` and worth stating, because DISCARD looks like a counterexample -- it has an
+- `S89` exact-approval baseline. But that approval is carried IN THE REQUEST, formed
+- `S89` before submission, not asked for mid-run. Same for the file approval and the
+- `S89` amendment reason. Declaring an interaction an action does not have would leave
+- `S89` the modal waiting for input nobody will give.
+- `S89` NO ACTION IS AVAILABLE BEFORE ITS OWN PROOF EXISTS, checked structurally: every
+- `S89` enrolment module under `action/` must have a matching `test_c4_<name>_action.py`.
+- `S89` An action reachable from a surface with nothing asserting how it behaves is
+- `S89` available on the strength of nobody having checked it.
+- `S89` SCOPE CORRECTION ON THE ACCESSIBILITY MATRIX, recorded rather than quietly
+- `S89` narrowed. This row's text asks for an "action-specific locale and accessibility
+- `S89` matrix". The six C4 actions have NO per-action screens: they build typed
+- `S89` requests and present through the ONE shared `OperationModal`. A per-action
+- `S89` matrix would therefore be six copies of one surface's proof -- the duplication
+- `S89` this campaign removes everywhere else.
+- `S89` MEASURED GAP, which belongs to the shared modal rather than here: the modal's
+- `S89` own suites (`operations/tests/test_operation_modal.py` and
+- `S89` `test_operation_modal_lifecycle.py`) reference NONE of the shared accessibility
+- `S89` denominators -- no `SUPPORTED_TERMINAL_SIZES`, no `SUPPORTED_OUTPUT_LANGUAGES`,
+- `S89` no theme names. So the geometry/locale/theme matrix every C4 action depends on
+- `S89` does not exist anywhere yet. It is one matrix on one surface, and W06.P13.S93
+- `S89` (the C5 aggregate locale, geometry, theme and keyboard row) is where it
+- `S89` belongs. Building it here would put a shared surface's proof inside a
+- `S89` per-action row and leave S93 asserting it a second time.
+- `S89` WHY IT WAS NOT BUILT OPPORTUNISTICALLY ANYWAY: the modal's existing tests use a
+- `S89` REAL runtime -- real composed services, a real profile, a real submission, no
+- `S89` mocks, which is right. That path is currently KDF-dependent and was observed
+- `S89` failing with `KDF_SUPERVISION_UNAVAILABLE` during this session. A 4x4x2 matrix
+- `S89` stood up on it now would be heavy and environment-fragile, and a fragile matrix
+- `S89` teaches readers to ignore its failures.
+- `S90` THE C4 EXIT FACT. Zero unclassified action candidates through the retained
+- `S90` denominator gate, plus an independent proof suite for each of rename, discard,
+- `S90` verify, file, export and amend. Run 2026-08-31: 94 passed, 0 failed, HEAD
+- `S90` `2e19d04b73a4d450579f3e6bc90b99a47e5d3356`. AS WITH EVERY RECORD IN THIS CHAIN,
+- `S90` THE RUN WAS AGAINST THE WORKING TREE AT THAT HEAD RATHER THAN A CLEAN CHECKOUT
+- `S90` this worktree is shared and several lanes committed throughout the session.
+- `S90` THE DENOMINATOR GATE WAS REUSED, NOT REBUILT, as the row requires. The 2026-08-28
+- `S90` amendment retained `validate_modelo_workspace_action_denominator` verbatim;
+- `S90` W06.P12c.S81 added a second CANDIDATE STREAM to it rather than a second gate --
+- `S90` `discover_dispatchable_modelo_action_identities`, imported from the shipped
+- `S90` package so a new dispatch row enters the gate automatically.
+- `S90` EACH ACTION'S PROOF ASSERTS AGAINST THE ENROLLED DEFINITION rather than
+- `S90` restating the action's semantics, which is the distinction this row draws.
+- `S90` Capabilities, cancellation policies and baseline policies are READ from
+- `S90` `build_modelo_work_*_definition()`; none is copied into a test as a literal. So
+- `S90` a change to an operation's declared policy surfaces where the action is
+- `S90` enrolled, instead of passing because two copies of a constant still agree with
+- `S90` each other.
+- `S90` WHAT THE SIX PROOFS COVER, each pinning a different half of the platform's
+- `S90` contract rather than repeating one shape six times: whitespace STRIPPING for a
+- `S90` display name versus byte-exactness for an identifier and a path; cancellation
+- `S90` COOPERATIVE for verify versus UNSUPPORTED for discard and export; replay safety
+- `S90` (no taxpayer profile in a journalled verify request); the standing prohibition
+- `S90` on live AEAT submission, with a local filing proven never to count as official
+- `S90` evidence; journal confidentiality (exported bytes in neither request nor
+- `S90` result); and filed-record addressing for amendment, whose reason is mandatory
+- `S90` where discard's is optional.
+- `S90` THREE DEFECTS FOUND AND FIXED BY THESE PROOFS, all the same class and all
+- `S90` requiring different remedies -- a whitespace-only value accepted by
+- `S90` `Field(min_length=1)` on a display name, an identifier, and a destination path.
+- `S90` A blanket sweep would have been wrong: names are stripped to match the domain,
+- `S90` while identifiers and paths take a non-whitespace pattern and stay byte-exact,
+- `S90` because altering an identifier changes what it addresses and trimming a path
+- `S90` masks a typo. Each was journalled, leased and scheduled before failing at
+- `S90` execution -- real platform work for something that could never settle.
+- `S90` CARRIED FORWARD, NOT SILENTLY DROPPED: the action-specific accessibility matrix
+- `S90` named in W06.P12c.S89 is recorded on W06.P13.S93 instead, because all six
+- `S90` actions present through ONE shared OperationModal and six matrices would be six
+- `S90` copies of one surface's proof. That modal currently has no accessibility
+- `S90` coverage at all -- a measured gap, with its KDF-dependent runtime fragility
+- `S90` noted so the next attempt does not stand a 4x4x2 matrix on an unreliable base.
+- `S90` STANDING GOAL NOT COVERED: this record's predecessor relationship to the C3
+- `S90` exit record is a wiki-link, a human-checked claim. Nothing recomputes it, and
+- `S90` nothing fails if that predecessor later goes red.
+- `S91` BUILT ON THE EXISTING SCANNER, NOT A SECOND CENSUS. The fixed point is a
+- `S91` declarative `CanonicalAuthoritySpec` handed to `scan_canonical_authority` --
+- `S91` the same scanner the work-selection fixed point uses. Writing a parallel census
+- `S91` here would have created a duplicate authority inside a gate whose entire
+- `S91` subject is duplicate authorities.
+- `S91` TWO SHIPPED AUTHORITIES ARE DECLARED: the destination table in `routes.py` and
+- `S91` the action dispatch table in `actions.py`. The DENOMINATOR IS DELIBERATELY NOT A
+- `S91` TARGET -- it lives in `dev/quality`, outside the shipped package, and `src` may
+- `S91` not import it, so an import census over it would have nothing to census. Its
+- `S91` singularity is asserted instead by running its own retained validator, reused
+- `S91` rather than restated for the same reason.
+- `S91` A REAL CONSTRAINT INTERACTION, WORTH KEEPING BECAUSE IT WILL RECUR. The scanner
+- `S91` resolves its corpus through `git ls-files`. This worktree forbids git
+- `S91` operations, so newly authored modules are UNTRACKED and therefore invisible to
+- `S91` it -- every symbol the spec declared canonical was reported `missing canonical
+- `S91` definition`, which reads exactly like a module that failed to define them. It
+- `S91` is a property of the corpus, not a defect in the module or the scanner.
+- `S91` The fix is scoped rather than blanket: the scan paths are tracked files UNIONED
+- `S91` WITH THIS COHORT'S OWN TREE. Admitting untracked files generally would pull a
+- `S91` peer's in-flight work into this gate's denominator, which is precisely the
+- `S91` contaminated-artefact hazard the architecture lane records against regenerating
+- `S91` inventories during churn.
+- `S91` A SECOND SELF-INFLICTED FAULT: the namespace-inertness check counted `from
+- `S91` __future__ import annotations` as a bound import, so every correctly inert
+- `S91` namespace failed its own inertness test. A `__future__` directive binds no
+- `S91` project symbol -- it is a compiler instruction -- and is now excluded.
+- `S91` TRANSITIONAL MARKERS ARE SWEPT FROM THE SHIPPED SURFACE, with an anti-tautology
+- `S91` control proving the matcher can see a marker it is given. Without that control
+- `S91` the sweep passes identically against a scanner that opens nothing, which is the
+- `S91` hollow-proof shape this campaign keeps finding.
+- `S94` Modelo-IVA block: resolved through the domain's own
+- `S94` `profile_claims_modelo_iva_block` (trigger: any of the block's real claiming
+- `S94` paths declared) and `modelo_iva_profile_required_paths` (which fields it then
+- `S94` obliges) -- no reimplemented claiming-path set. Repeatable sections: every
+- `S94` declared row of every repeatable section now reports its fields by static
+- `S94` schema requiredness (previously skipped entirely, so even an unconditionally
+- `S94` required repeatable-row field went unclassified); the one section with a
+- `S94` documented conditional rule, `attribution_entity_socios`, resolves its
+- `S94` `country_of_residence` field per row against that same row's own
+- `S94` `participe_clave` (`completeness.PARTICIPE_CLAVE_BEARING_COUNTRY`), proven
+- `S94` on real facts reaching `needs_applicability` (clave unanswered),
+- `S94` `applicable_required_missing`/`present` (clave 2), and `not_applicable`
+- `S94` (clave 1). Every other repeatable section still reports `OPTIONAL` for its
+- `S94` non-required fields -- correctly, since no conditional rule for them exists
+- `S94` anywhere in this package; that is not the narrowing this Step closes.
+- `S97` Both halves delivered. The step-notation cases are production-scoped in the
+- `S97` pattern table, and the single scan mechanism inspects
+- `S97` `token.type == tokenize.COMMENT` as well as strings inside docstring ranges,
+- `S97` so a comment carrying a plan address is now caught in production source. No
+- `S97` second detector was built: the production-scoped subset is DERIVED from the
+- `S97` one table at `_marker_metadata_patterns.py:229`.
+- `S97` A STALE DOCSTRING WAS FOUND AND FIXED IN THE SAME CHANGE. The production
+- `S97` gate's docstring still read "every other pattern in the table stays
+- `S97` test-scoped; this check is the dated-document-stem family only", which the
+- `S97` flip had made false. It was worse than the two patterns this Step flipped:
+- `S97` FOUR entries carry production scope (`:80`, `:88`, `:162`, `:189`), all
+- `S97` flowing through the same derivation.
+- `S97` The replacement states that the gate enforces every family the table marks
+- `S97` production-scoped, names the step-notation families as having joined once
+- `S97` their sweep completed, and records that the set is DERIVED from the table so
+- `S97` a family added there is enforced without touching the test. That last clause
+- `S97` is what stops it going stale again: the previous docstring restated a set the
+- `S97` code derives, so it could only ever drift out of agreement with it.
+- `S97` A gate whose prose understates its own reach is not a cosmetic defect -- a
+- `S97` reader deciding whether a pattern is enforced would have consulted the
+- `S97` docstring and got the wrong answer while the gate was green.
+- `S98` THE ROW'S OWN `BLOCKED ON PEER HANDOVER` TEXT IS STALE RELATIVE TO THE TREE.
+- `S98` The sweep landed regardless of the peer's paginator generalisation. The file
+- `S98` still shows as modified in the working tree, but that is the peer's edit and
+- `S98` not an unfinished half of this Step. Do not re-open this row on the strength
+- `S98` of the row's own prose; measure the file.
+- `S98` The last full `W##.P##.S##` address in shipped production source is gone --
+- `S98` verified across the whole production tree, not only this module. Its sibling
+- `S98` modules were swept earlier in `54778350d0`.
+- `S100` THE SWEEP HALF WAS ALREADY DONE, BY THE OTHER PLAN. This row and
+- `S100` `W05.P23.S322` in the tui-architecture plan are the same sweep addressed from
+- `S100` two plans that do not cross-reference, which this row states outright. The nine
+- `S100` modules and sixteen sites it lists as the live set are exactly the ones swept
+- `S100` when S322 closed. Production now measures ZERO bare campaign identifiers.
+- `S100` WHAT REMAINED WAS THE FLIP, AND ITS TWO BLOCKERS HAD CLEARED. `W01.P01.S97`
+- `S100` production-scoped the dotted step-notation cases and deliberately deferred the
+- `S100` bare single-code one: it hit 68 files, of which 55 were the file-level
+- `S100` suppression form the stripper could not see because its pattern required the
+- `S100` directive to follow the hash directly. The stripper now accepts an optional
+- `S100` tool prefix, so ruff's own rule codes no longer read as campaign ids.
+- `S100` THE GATE'S OWN META-TEST HAD TO MOVE WITH THE FLIP, AND THAT IS THE POINT.
+- `S100` `test_production_scope_excludes_the_families_that_false_fire_on_domain_prose`
+- `S100` listed `closed by S08` among the families that must NOT reach production, with
+- `S100` the stated reason that the pattern reaches 22 unswept production modules. That
+- `S100` exclusion was empirical, not principled, and both facts it rested on had
+- `S100` changed. The probe moved to the production-scoped set and the comment now
+- `S100` records the measurement rather than the stale count. Leaving the probe where it
+- `S100` was would have meant a gate asserting the opposite of the table it guards.
+- `S100` FOUR FAILURES IN THAT SUITE ARE NOT THIS ROW'S. Three are pytestmark placement
+- `S100` and validity violations in peer modules; one is a campaign-metadata hit in a
+- `S100` test module's docstring. All four are TEST modules, which every pattern already
+- `S100` scanned before this flip, so widening a pattern to PRODUCTION scope cannot
+- `S100` reach them. The arithmetic confirms it: the suite failed 5 before this change
+- `S100` and 4 after, and the one that disappeared is exactly the guard above.
+- `S101` `SourceActionDescriptor` carried `credential_requirement_label` and
+- `S101` `credential_requirement_status` as two independent optionals whose dependency
+- `S101` lived only in the docstring -- frozen dataclass, no post-init, no validator.
+- `S101` `SourceActionCard.compose` rendered the badge only when BOTH were non-None, so
+- `S101` a half-populated descriptor dropped a resolved requirement from an
+- `S101` operator-facing surface and raised nothing. They are now one optional
+- `S101` `CredentialRequirement` record carrying both together, so the half-populated
+- `S101` state cannot be expressed and compose needs one None check.
+- `S101` The caller sweep landed in the same change, as the row requires for a shared
+- `S101` widget. `_credential_requirement_badge` returned a both-or-neither tuple by
+- `S101` construction -- the invariant was already true, just unexpressed -- and now
+- `S101` returns `CredentialRequirement | None`, which is the same fact in a shape a
+- `S101` caller cannot get half right.
+- `S101` PROCESS NOTE: a `ruff --select ALL --fix` pass was run on the widget module and
+- `S101` applied a rule outside the project's configured set, silently removing the
+- `S101` blank line after a docstring summary that every sibling docstring in the file
+- `S101` carries. Caught by reading the diff rather than the exit code, and restored.
+- `S101` Lint with the project's own configuration; a broader rule set is not a
+- `S101` stricter version of it.
+- `S103` Every instance now carries its OWN measurement, which the row required before
+- `S103` any of them earned action. Two dissolved on that measurement, which is the
+- `S103` result worth recording loudest: a relayed finding that survives to a plan row
+- `S103` reads exactly like a measured one.
+- `S103` REFUTED (2):
+- `S103` The TUI route census is not built on a hardcoded literal set.
+- `S103` `declared_destination_ids()` derives from `get_args` on the destination type
+- `S103` alias, its docstring states why a literal was rejected, and the table is
+- `S103` compared against it in BOTH directions. It is this family's counter-example,
+- `S103` not an instance of it.
+- `S103` The workspace remnant scanner's reported defect -- a pass condition
+- `S103` contradicting a legitimate docstring -- was already resolved by three
+- `S103` documented exclusions plus whole-filename matching.
+- `S103` FIXED (2):
+- `S103` The staleness remediation that completed the defect it should prevent, closed
+- `S103` under W01.P01.S104. The root cause was NOT the lane named in the message:
+- `S103` naming any lane without knowing what the collected tests carry reproduces the
+- `S103` empty selection for some other input. The banner now names the markers
+- `S103` actually collected.
+- `S103` The remnant scanner carried a STALE EXCLUSION, found while measuring the
+- `S103` refuted claim above: `workspace.py` was excluded from the scan and no longer
+- `S103` names the forbidden module at all, so the exclusion suppressed nothing and
+- `S103` would have gone on suppressing that file the day it named the module again.
+- `S103` Removed, and each surviving exclusion now asserts it still contains the
+- `S103` token. Proven both directions against the real population.
+- `S103` TRACKED, NOT CLOSED (1): the strict-frozen config gate, the family's exemplar.
+- `S103` 170 of ~222 production sites are repointed to the canonical constant under
+- `S103` W05.P23.S352, which stays open with a partial record for the remaining 26 and
+- `S103` the census gate. The row's own sequencing is why the gate is not landed here:
+- `S103` landing it first reds up to 221 sites and makes weakening the detector the
+- `S103` cheapest route to green.
+- `S103` The executor conformance matrix is the sixth item the row's own text
+- `S103` discounts; its census half landed under W07.P16.S333, whose partial record
+- `S103` names the three-deep payload blocker that keeps it open.
+- `S103` The counter-example the row points at held up under use: the marker scan's
+- `S103` scope gate asserts both directions, and when W01.P01.S100 widened a family it
+- `S103` FAILED loudly and correctly until its own probe moved with the change. A gate
+- `S103` that cannot go vacuous is one that breaks when the table it guards moves.
+- `S103` Re-attested through the owning edit verb after hand-authoring, so the body
+- `S103` fingerprint matches its stamp.
+- `S103` Re-attested through the owning edit verb; body fingerprint matches its stamp.
+- `S104` THE BANNER DEFECT IS FIXED AT ITS ROOT, WHICH IS NOT THE LANE NAME. An earlier
+- `S104` pass in this campaign handled only the case the row names literally -- an
+- `S104` operator who had already selected `integration`. The defect still reproduced
+- `S104` for every OTHER expression: `-m nonexistent_marker_xyz` still advised re-running
+- `S104` with `-m integration`, which yields the identical NOTHING RAN whenever the
+- `S104` module is unit-marked. Naming ANY lane without knowing what the collected tests
+- `S104` carry is the defect. The banner now records markers during collection, before
+- `S104` selection removes anything, and names them; where that record is unavailable
+- `S104` (xdist deselects inside workers while the banner prints on the controller) it
+- `S104` offers only the selector that cannot be empty.
+- `S104` THE EXIT-STATUS HALF NEEDED NO CHANGE AND NONE WAS INVENTED. The row asks
+- `S104` whether a zero-execution run can exit non-zero. Measured: a fully deselected run
+- `S104` already exits 5. Building a mechanism for it would have been fabricated work.
+- `S104` THE COMPOUNDING FACTOR IS COVERED BY A SECOND REPORTER. The row records that a
+- `S104` timeout inside a combined run destroys attribution for every test in it.
+- `S104` `_lost_test_hook` states the discrepancy between what collection found and what
+- `S104` the reporter heard back, so a run with a hole announces it. It fired on a real
+- `S104` run during this campaign -- a footer reading `13 failed, 6452 passed`, entirely
+- `S104` self-consistent, over a session where 307 collected tests never reported an
+- `S104` outcome after a worker died.
+- `S104` NEAR-MISS WORTH RECORDING: the first wiring attempt added a SECOND
+- `S104` `pytest_collection_modifyitems` to `conftest.py`, which already defines one.
+- `S104` Python would have silently taken the later definition and disabled the
+- `S104` repository's marker contract and banned-live-import policy for every run --
+- `S104` strictly worse than the bug being fixed, and invisible to `ast.parse`. Lint
+- `S104` caught it as F811; it is now merged into the existing hook.
+- `S107` SCOPE CORRECTION FOUND WHILE EXECUTING: the finding named THREE private size
+- `S107` declarations. There are SIX. The three unmeasured ones are
+- `S107` `modelo/tests/test_c1_bounded_review`, `secret/tests/test_secret_journeys`
+- `S107` and `modelo/tests/test_c2_workspace_accessibility`, the last hiding behind a
+- `S107` `_GEOMETRIES` alias rather than an inline literal, which is why a search for
+- `S107` the literal shape missed it. Only the 80x24 floor was common to all six.
+- `S107` FOUR SIZES ADOPTED, each carrying its reason: 80x24 the floor a real terminal
+- `S107` can be; 100x30 immediately above the wrap transition; 120x40 ordinary; 200x50
+- `S107` wide. The fourth size costs parametrisation across every TUI suite -- the
+- `S107` visual and review suites went from 164 to 202 cases -- and that cost was
+- `S107` accepted deliberately, because the transition band is where the wrapping
+- `S107` defect class is born and nothing sampled it on purpose. NOT the union, which
+- `S107` is five and includes 160 with no argument behind it.
+- `S107` 100 WAS ADOPTED, NOT INVENTED. It already existed in `test_widgets` -- the one
+- `S107` triple carrying no rationale -- and after this campaign's own layout work it
+- `S107` became the most informative width declared anywhere: the review summary is
+- `S107` unwrapped at 98 and wraps at 97, so 100 sits one column into the safe side,
+- `S107` where a wrapping regression appears first. Nobody chose it for that reason. It
+- `S107` became right, and this row records why.
+- `S107` ITS INVALIDATION CONDITION IS STRUCTURAL RATHER THAN A VERSION, the same form
+- `S107` `S360`'s closing condition took: 100 is correct while it samples immediately
+- `S107` above the wrap transition. Shortening summary content moves the transition
+- `S107` DOWN and 100 stays valid; only content GROWING past it invalidates the size.
+- `S107` That is why this row did not have to wait on the id-presentation row, which
+- `S107` can only shorten.
+- `S107` Single-size uses such as `run_test(size=(80, 24))` are not sets and were left
+- `S107` alone deliberately; a test that needs only the floor is not a competing
+- `S107` declaration.
+- `S108` PARTIAL: the enrolment half only, and the row stays OPEN. The gate provably
+- `S108` misses a live instance on the very screen it was built to protect, so
+- `S108` closing it here would be delivered-narrower wearing a complete checkbox.
+- `S108` The widening of the scroll-owner predicate is folded into the same row
+- `S108` rather than opened as a successor -- one row, one property -- and it is
+- `S108` sequenced BEHIND the layout fix, because widening first reds the modelo
+- `S108` screen on a live defect and the pressure then becomes to weaken the
+- `S108` detector.
+- `S108` Two changes. `ModeloWorkReviewApp` is enrolled as a ninth surface in
+- `S108` `_SURFACES`, so it now falls under the side-edge, scrollability and
+- `S108` both-appearances gates that covered eight surfaces and not it. And
+- `S108` `test_every_surface_reports_no_geometry_findings` drives the canonical
+- `S108` `devtools/frame.py:geometry_band` over every surface at every declared
+- `S108` size -- its FIRST test caller.
+- `S108` BITE-PROVEN TWICE, INDEPENDENTLY, both from outside the repo with no
+- `S108` tracked file touched. One widened the summary panel to 400 columns via a
+- `S108` CSS override; the other widened the header to 200. Each reported
+- `S108` `painted past the side edges` naming the offending widget and its region,
+- `S108` and each RED ONLY THE PATCHED SURFACE while the other eight stayed green.
+- `S108` Discriminating rather than globally sensitive is the property that
+- `S108` matters: a gate that reds everything on any injection proves only that it
+- `S108` runs.
+- `S108` WHAT THE GATE DOES NOT COVER, recorded because the omission is specific
+- `S108` and was found while landing it. `geometry_band`'s scroll-owner check
+- `S108` filters on `isinstance(host, ScrollableContainer)`. On this very screen
+- `S108` `#modelo-review-summary` is a `Static` carrying `overflow-y: auto`:
+- `S108` measured `allow_vertical_scroll=True`, `max_scroll_y=3`,
+- `S108` `show_vertical_scrollbar=True`, and enumerating every widget with a
+- `S108` visible vertical scrollbar returns TWO -- the body and the summary. So
+- `S108` the screen carries the defect that check is named for, and the check
+- `S108` cannot see it because one owner is a styled Static rather than a
+- `S108` container subclass. Opened as `S109`; do not read this record as
+- `S108` claiming that property is now gated for this surface. It is not.
+- `S108` CORRECTION TO AN EARLIER READING, kept because the reasoning was wrong in
+- `S108` both directions before it was right. The summary bound was first reported
+- `S108` as having passed the nested-scroll-owner check by luck of construction,
+- `S108` then corrected to having passed structurally because the check cannot
+- `S108` apply to a Static. Neither is accurate: the check does not apply, AND the
+- `S108` underlying defect is genuinely present. A failed bite proof has two
+- `S108` explanations -- the gate is inert, or the injection is outside its reach
+- `S108` and they are indistinguishable from the result alone. Read the
+- `S108` predicate before concluding either.
+- `S108` Also corrected: the single-scroll-owner property was NOT ungated before
+- `S108` this change. A sibling test proves it for the flow surface only, with a
+- `S108` bespoke many-page fixture, because that is where the defect was first
+- `S108` found. A gate written at the site of a defect inherits that defect's
+- `S108` scope, and its name usually does not say so.
+- `S108` The two failures in the full-suite run are the pre-existing
+- `S108` `status-populated` and `manager-populated` region-eviction pair, already
+- `S108` reported and handed back; they are untouched by this change and unrelated
+- `S108` to the modelo surface.
+- `S110` Both scroll checks in `geometry_band` filtered on
+- `S110` `isinstance(host, ScrollableContainer)` -- asking which widgets SUBCLASS a
+- `S110` container while the findings are about which widgets SCROLL. Widened to the
+- `S110` behaviour each is actually about: `allow_vertical_scroll` for "configured to
+- `S110` scroll but cannot", `show_vertical_scrollbar` for "is a visible owner". The
+- `S110` reason is recorded in a comment at the site so the filter is not narrowed
+- `S110` back to a type.
+- `S110` BITE PROOF, and it isolates the change rather than a surface. A minimal app
+- `S110` with a `VerticalScroll` host and a `Static` carrying a mounted child plus a
+- `S110` height bound, both predicates evaluated over the same widget tree:
+- `S110` widgets painting a vertical bar : ['host', 'styled']
+- `S110` what the OLD isinstance filter saw: ['host']
+- `S110` geometry_band findings : multiple visible vertical scroll
+- `S110` owners: VerticalScroll#host,
+- `S110` Static#styled
+- `S110` Two bars painted, the old predicate saw one, the widened one names both.
+- `S110` THREE INJECTIONS FAILED FIRST, all for the same reason, which is worth
+- `S110` keeping because it is the ambiguity this campaign has hit repeatedly: a
+- `S110` failed bite proof means the gate is inert OR the injection is outside its
+- `S110` reach, and the result alone cannot distinguish them. Capping the summary
+- `S110` had no effect because it is now a collapsed disclosure with nothing to
+- `S110` overflow; capping the casillas panel REMOVED scrolling entirely (visible
+- `S110` bars went to zero); and a bare `Static` with inline content never paints a
+- `S110` bar at all. The shape only reproduces with a Static carrying a MOUNTED
+- `S110` CHILD WIDGET plus a height bound -- which is precisely what the summary
+- `S110` panel was, and part of why the defect survived unseen.
+- `S110` No false positives: all nine enrolled surfaces stay clean at all three
+- `S110` declared sizes under the widened predicate.
+- `S111` Four band readers adjudicated individually rather than treated as one gap,
+- `S111` which would have produced three redundant gates.
+- `S111` `key_band` GATED. `test_every_declared_binding_is_actually_offered` asserts
+- `S111` every key a surface declares is a key the operator can press. It lands GREEN,
+- `S111` and that is legitimate rather than vacuous: every declared binding resolves
+- `S111` today BECAUSE of the duplication workaround recorded against the flow
+- `S111` surface's sibling-page bindings. The gate is a regression pin on a known
+- `S111` fragile state -- when that redesign stops duplicating, this notices, and
+- `S111` nothing else would, because an unreachable affordance paints no pixels and
+- `S111` geometry, focus and text all stay clean while the operator loses a key.
+- `S111` Not parametrised over sizes, deliberately: bindings do not vary with terminal
+- `S111` geometry, and nine surfaces by four sizes would buy thirty-six cases proving
+- `S111` one size-invariant property. The geometry gate needs sizes; copying its shape
+- `S111` here would be cargo-culting it. The assertion is "every declared binding is
+- `S111` offered", NOT "some bindings exist" -- Textual contributes 17 to 43 of its
+- `S111` own per surface, so any non-empty check is tautological.
+- `S111` `focus_band` -- PREDICATE CORRECTED, TWO SURFACES ENROLLED. `_INTERACTIVE_
+- `S111` SURFACES` was a deliberate predicate whose population grew underneath it. Its
+- `S111` docstring named two exclusions with reasons that both still hold, but the set
+- `S111` had come to exclude five. Measured focus chains: `status` 1 and its populated
+- `S111` variant 1 (read-only chrome, correctly out), `question` 4 all flow-navigation
+- `S111` buttons (engine-paged, correctly out), `manager-populated` 28 identical to
+- `S111` `manager` which IS in the set, and `modelo-review` 3. So the genuine gap was
+- `S111` TWO, not five. Both enrolled, and the docstring rewritten to state the
+- `S111` PREDICATE rather than list the instances that satisfied it when written --
+- `S111` an enumerated rationale goes stale with no edit, no failure and no signal,
+- `S111` and a well-argued one is the worst kind because a reader who checks it finds
+- `S111` sound reasons and stops.
+- `S111` `screen_text` -- CONCLUSION, NOT DEFERRAL: its only plausible predicate is
+- `S111` that the surface rendered something real, already asserted per surface and
+- `S111` per theme by the both-appearances gate. A second gate would re-assert an
+- `S111` existing property through a different renderer.
+- `S111` `engine_band` -- CONCLUSION: flow-only, returns an empty list for any surface
+- `S111` without a flow definition and state, and reads engine state rather than a
+- `S111` defect predicate. A gate would have to invent its assertion.
+- `S112` The row predicted a routing defect and the cause was an unbound key. What
+- `S112` separated them was `shift+tab`: it has exactly one source in the tree, so its
+- `S112` absence proves the inherited table was discarded rather than shadowed, and no
+- `S112` amount of focus-chain measurement could have reached that. The one-key probe
+- `S112` also turned a single-surface row into a four-surface sweep for the cost of one
+- `S112` command.
+- `S112` The gate first asserted the inherited ACTIONS and red on three surfaces for
+- `S112` `screen.copy_text`, which is legitimate rather than a defect: a focused
+- `S112` `Input` owns the copy key while a text cursor is present. Restated over KEYS,
+- `S112` which is the property that actually holds -- the operator keeps the
+- `S112` affordance, whoever answers it.
+- `S112` A naive re-description would have regressed the footer. Textual bakes `show`
+- `S112` down to `description and show` at class-merge time, so all nine localized keys
+- `S112` arrived hidden and carrying that flag forward would have left them bound and
+- `S112` invisible. Caught by re-measuring the footer rather than assuming it, and the
+- `S112` described-key path now sets `show` from the description.
+- `S112` `test_operation_modal_lifecycle.py` hangs on two tests under this branch and
+- `S112` is UNATTRIBUTED. It is not reachable from this change -- a different package,
+- `S112` and no binding path participates -- but it is not cleared either: it was not
+- `S112` measured against a pristine tree, and the host was carrying fifty concurrent
+- `S112` python processes when both runs were taken. Reported rather than absorbed.
+- `S113` Reported as unattributed before this row existed and attributed here: the
+- `S113` defect is PRE-EXISTING AT HEAD. `git show HEAD` carries all three
+- `S113` `self._closing` sites, so neither the async-lock work nor the settled-branch
+- `S113` reap introduced it. The settled-branch reap does extend its reach, because it
+- `S113` routes a second close path through the same flag.
+- `S113` The gate excludes PUBLIC names on purpose. A census found `title` and
+- `S113` `sub_title` on four screens, and those are reactives Textual intends a screen
+- `S113` to set, so including them would have produced four false reds and taught the
+- `S113` next author to widen the exclusion rather than read it.
+- `S113` Two findings in the same suite are OUT OF SCOPE of this row and not
+- `S113` investigated: `tests/test_registration_recovery_words.py::test_the_full_screen
+- `S113` _door_shows_the_words_then_wipes_them` hangs, and two further tests fail whose
+- `S113` identities were lost because a thread-method timeout kills the process before
+- `S113` pytest writes its summary. Neither is cleared and neither is attributed.
+- `S114` PARTIAL: this closes the reachable-state gap only. The intermittent suite
+- `S114` timeouts this row was opened for are NOT addressed and the row stays open.
+- `S114` The disclaimer is in the code's docstring as well as here, because the row
+- `S114` does not travel with the file.
+- `S114` The guard keys on an invariant rather than a symptom, which is what makes it
+- `S114` safe: `push_screen` appends synchronously and `call_from_thread` returns only
+- `S114` after it has, so a pending handoff always has its screen on the stack.
+- `S114` "Unanswered AND unstacked" is therefore a state a waiting operator cannot be
+- `S114` in. That mattered more than the fix did -- a guard keyed on elapsed time or on
+- `S114` liveness would eventually abort a real operator mid-mnemonic and destroy a
+- `S114` live registration.
+- `S114` Confirmed across two consecutive polls, because the list is read from a
+- `S114` worker thread and a single torn read must not abandon a live registration.
+- `S114` The three existing guards are untouched and named in the new code comment.
+- `S114` They are deliberate and correct; the next reader must not mistake a fourth
+- `S114` escape for evidence the first three were inadequate.
+- `S114` Two of my own errors, recorded because each produced a confident wrong result
+- `S114` before being caught. The test first removed the words screen from
+- `S114` `app.screen_stack`, which returns a COPY -- so it induced nothing and the
+- `S114` guard looked broken when the test was. And the bite proof turns the hang into
+- `S114` a bounded FAILURE rather than a hang, because the test carries its own
+- `S114` deadline and asserts; that is the better shape, since a hanging bite proof
+- `S114` costs a timeout budget to read.
+- `S115` Authored by the team lead; verified independently before this record was
+- `S115` written, because a report of a landed gate is not evidence that it bites. The
+- `S115` hook was read in full, its wiring confirmed at `conftest.py:172` beside the
+- `S115` deselection reporter, and all four runs above were re-executed here rather
+- `S115` than quoted.
+- `S115` The false-positive side is the half that decides whether this survives. The
+- `S115` default marker selection deselects thousands of tests on every invocation, so
+- `S115` a reporter that did not subtract deselected would fire on every run in the
+- `S115` repository and be muted within a day. Three separate silent controls, not
+- `S115` one.
+- `S115` Provenance, because the order matters and neither half is sufficient alone:
+- `S115` the truncation risk was raised from this lane after a thread-method timeout
+- `S115` destroyed a FAILED list, and the lead's own run supplied the count that showed
+- `S115` the same mechanism also loses tests that were never attempted. The second is
+- `S115` strictly worse than the first and was not predicted by it.
+- `S115` This does not resolve the intermittent timeouts recorded in `W04.P07.S114`
+- `S115` and makes no claim to. It makes a run that hits one legible instead of
+- `S115` misleading, which is a precondition for investigating it at all.
+- `S116` Authored by the team lead; verified here rather than accepted on report, and
+- `S116` the version recorded is NOT the version first reviewed.
+- `S116` The first version reused the project's canonical file scanner to avoid
+- `S116` re-implementing it -- normally the right instinct, and wrong exactly here. Its
+- `S116` import chain reached `cadrumo.core.redaction`, so the gate could not load
+- `S116` while the tree was unparseable, which is the only state it exists for.
+- `S116` Rewritten to `os.walk` and the standard library. The narrow property, stated
+- `S116` in the module docstring so nobody helpfully restores the shared helper: a gate
+- `S116` whose subject is the tree's ability to be USED AT ALL must owe that tree
+- `S116` nothing.
+- `S116` Its first real outing beat every injected case: four live offenders neither
+- `S116` author knew about, all working-tree residue from a peer's in-flight import
+- `S116` sweep, all the same shape. HEAD parsed every one, so "a commit landed four
+- `S116` invalid files" would have been false.
+- `S116` The injected cases still earned their place by exposing a second failure
+- `S116` inside the reporting path of the first: `relative_to` raises on a path outside
+- `S116` the repository, so a correctly-detected breakage would have surfaced as a
+- `S116` confusing `ValueError`. A gate's failure path never runs in normal operation
+- `S116` and is therefore the half nothing tests.
+- `S116` WHAT THIS RECORD DOES NOT CLAIM: that the tree is currently clean. The passing
+- `S116` runs are snapshots. The three-part settle condition agreed for this feature --
+- `S116` no new untracked modules across checks minutes apart, no source mtimes inside
+- `S116` the last several minutes, parse clean across both -- was NOT met at the time of
+- `S116` recording: four source files were modified between 21:33:58 and 21:35:27, in
+- `S116` `application/evidence/` and `entrypoints/cli/`, by a lane unrelated to the
+- `S116` sweep this gate was tracking. What is recorded here is that the GATE is built
+- `S116` and proven, which are properties of the gate; the tree's state is a separate
+- `S116` claim and is not made.
+- `S116` That distinction is worth keeping for the next reader: in a shared worktree
+- `S116` with several active lanes, a globally quiet tree may never occur, so a rule
+- `S116` that waits for one blocks indefinitely. Separating "the gate is proven" from
+- `S116` "the tree is clean" is what lets both be stated honestly.
+- `S120` Authored by the team lead; the logic verified here by direct invocation.
+- `S120` The fix is ELEVATION, NOT DETECTION, and the row's constraint is what forced
+- `S120` that shape: the vault's `exec-mapping` check already names this defect
+- `S120` precisely. The gate reads that check's `--json` verdict and raises the
+- `S120` severity of one diagnostic class, filtering to the step-not-in-plan phrase and
+- `S120` leaving its siblings alone. Re-deriving plan structure would have created a
+- `S120` second authority free to disagree with a tool that is already right.
+- `S120` The two pre-existing entries are NAMED, NOT BLESSED. Both belong to other
+- `S120` campaigns, and only their owners can say whether a row was lost, renamed or
+- `S120` retired. Removing an entry when its owner resolves it is the intended
+- `S120` lifecycle; adding one to silence a fresh failure is not.
+- `S120` The vacuity guard carries more weight here than in the parse gate: a renamed
+- `S120` diagnostic string or a changed JSON shape would yield an empty result set and
+- `S120` pass silently, which is the exact failure this gate exists to prevent, one
+- `S120` level up. It asserts the baseline is non-empty so a gate that has stopped
+- `S120` reading real diagnostics fails loudly instead of going quiet.
+- `S120` IT WOULD HAVE CAUGHT TONIGHT. When a cross-lane plan overwrite removed five
+- `S120` rows, `exec-mapping` reported the orphaned record immediately -- as one warning
+- `S120` among twenty-eight, in a run that exits zero. It was found by accident, because
+- `S120` an unrelated `vault add exec` call refused loudly. This gate turns that into a
+- `S120` failure.
+- `S120` NOT CLAIMED: that the tree is currently clean. Under pytest, collection fails
+- `S120` at `ModuleNotFoundError: No module named 'cadrumo.core.errors._registry'` --
+- `S120` the module is deleted in the working tree while importers remain, from a live
+- `S120` peer sweep. The gate's logic was therefore proven by direct invocation. As
+- `S120` with the parse gate, what is recorded is a property of the gate, which holds
+- `S120` regardless of any lane's activity; the tree's state is a separate claim and is
+- `S120` not made.
+- `S120` WORTH KNOWING FOR THE PARSE GATE'S SCOPE: it reports zero unparseable files
+- `S120` during this same breakage. A deleted module whose importers remain is not a
+- `S120` syntax error, so that gate cannot see it. "Every file parses" and "every import
+- `S120` resolves" are different properties, and only the first is gated.

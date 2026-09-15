@@ -29,7 +29,7 @@
       "command": "uvx",
       "args": [
         "--from",
-        "vaultspec-rag[mcp]",
+        "vaultspec-rag[gpu,mcp]",
         "python",
         "-m",
         "vaultspec_rag.server"

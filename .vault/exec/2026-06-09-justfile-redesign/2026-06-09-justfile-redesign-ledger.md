@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#justfile-redesign'
 date: '2026-06-09'
-modified: '2026-08-26'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:2dd224273aa6bbbb50e9d4868edf85cbcaec9d80afafc56d363bab04995836df'
+body_hash: 'sha256:4434cc6a418ac2f565fd271abc248b3d1e6f9d990a9052139a96e4bff65fccb3'
 related:
   - "[[2026-06-09-justfile-redesign-plan]]"
 ---
@@ -39,3 +39,27 @@ related:
 - `S19` `T` `scripts/audit_semantic.py`
 - `S19` `T` `pyproject.toml`
 - `S20` `T` `justfile.bak`
+- `S45` `T`
+- `S48` `M` `justfile`
+- `S49` `M` `dev/init/README.md`
+- `S49` `M` `dev/init/__main__.py`
+- `S49` `M` `dev/init/contract.py`
+- `S49` `M` `dev/init/plan.py`
+- `S49` `M` `dev/init/stamp.py`
+- `S49` `M` `dev/EXIT-CODES.md`
+- `S50` `M` `.github/workflows/code-health-report.yml`
+- `S51` `M` `dev/audit/advisory.py`
+- `S51` `M` `dev/audit/security.py`
+- `S51` `M` `dev/quality/suite.py`
+- `S51` `M` `dev/quality/tests/test_suite_gate_table.py`
+- `S52` `M` `CONTRIBUTING.md`
+- `S52` `M` `.devcontainer/devcontainer.json`
+- `S53` `M` `dev/docs/tests/test_docs_build_localized.py`
+- `S53` `M` `dev/quality/tests/test_suite_gate_table.py`
+- `S54` `T`
+- `S54` `verify:` `uv run --no-sync pytest -q -n0 <focused command-surface tests>` -> `pass`
+- `S54` `verify:` `uv run --no-sync ruff check <edited Python files>` -> `pass`
+- `S54` `verify:` `just check-workflow` -> `pass`
+- `S55` `T`
+- `S55` `verify:` `independent Sol reviewer diff audit` -> `pass`
+
