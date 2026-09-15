@@ -836,8 +836,10 @@ def _valid_retirement(raw: object, repository: Path, capability: str) -> bool:
 
 def module_is_test_scoped(module: str) -> bool:
     parts = module.split(".")
-    return "tests" in parts or "conftest" in parts or any(
-        part.startswith("test_") or part.endswith("_test") for part in parts
+    return (
+        "tests" in parts
+        or "conftest" in parts
+        or any(part.startswith("test_") or part.endswith("_test") for part in parts)
     )
 
 
