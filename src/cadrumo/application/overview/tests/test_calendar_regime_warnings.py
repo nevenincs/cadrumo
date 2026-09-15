@@ -35,7 +35,7 @@ def _autonomo(*, iva_regime: IVARegime) -> TaxpayerProfile:
 
 
 def test_calendar_warns_when_m303_simplificado_forfait_engine_is_unavailable(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A SIMPLIFICADO profile must not receive a silent general-regime M303 row."""
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
@@ -43,7 +43,7 @@ def test_calendar_warns_when_m303_simplificado_forfait_engine_is_unavailable(
     cal = build_overview_calendar(
         _autonomo(iva_regime=IVARegime("SIMPLIFICADO")),
         rng,
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2026, 4, 1),
     )
 
@@ -59,7 +59,7 @@ def test_calendar_warns_when_m303_simplificado_forfait_engine_is_unavailable(
 
 
 def test_calendar_does_not_emit_simplificado_forfait_warning_for_general_regime(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """GENERAL-regime M303 rows do not carry the SIMPLIFICADO forfait warning."""
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
@@ -67,7 +67,7 @@ def test_calendar_does_not_emit_simplificado_forfait_warning_for_general_regime(
     cal = build_overview_calendar(
         _autonomo(iva_regime=IVARegime("GENERAL")),
         rng,
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2026, 4, 1),
     )
 

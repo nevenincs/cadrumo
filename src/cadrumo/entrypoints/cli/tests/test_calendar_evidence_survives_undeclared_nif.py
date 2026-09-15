@@ -29,7 +29,7 @@ from ....application.user_profile.projections import projection_for_taxpayer
 from ....core.period import Period
 from ....tests.aeat_literal_fixtures import FILED_ARTEFACT_PATH_FIXTURE, aeat_url
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _REAL_NIF = "12345678Z"
 _PERIOD = Period.from_year_and_code(2024, "1T")

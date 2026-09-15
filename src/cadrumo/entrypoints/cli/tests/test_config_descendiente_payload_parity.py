@@ -22,7 +22,7 @@ from ....core.descendant_relacion import DescendantRelacion
 from ....domain.contribuyente.descendant import DescendantInfo
 from .._config_descendiente_payloads import ProfileDescendientePayload
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 def _payload_from(canonical: DescendantInfo, *, index: int = 0) -> ProfileDescendientePayload:

@@ -53,7 +53,7 @@ from ..descendant_group import (
 )
 from ..persistence import descendant_facts_from_answers as _descendant_facts_from_answers
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _NIF_INVALID_KEY = "wizard.errors.invalid_tax_id"
 _VALID_NIF = "00000000T"  # 00000000 mod 23 == 0 -> control letter T

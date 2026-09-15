@@ -59,7 +59,7 @@ from .calendar_test_support import (
     modelo_record as _modelo_record,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _justificante_capture_snapshot(

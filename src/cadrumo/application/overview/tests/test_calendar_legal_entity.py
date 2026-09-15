@@ -32,10 +32,10 @@ def _legal_entity() -> TaxpayerProfile:
 
 
 def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, operation=calendar_operation, today=date(2025, 4, 1))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(2025, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "202" in surfaced, (
@@ -46,10 +46,10 @@ def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados(
 
 
 def test_calendar_legal_entity_shows_modelo_200_impuesto_sociedades(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, operation=calendar_operation, today=date(2025, 4, 1))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(2025, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "200" in surfaced, (

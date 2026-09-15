@@ -1,4 +1,4 @@
-"""Registry authority lease shared by the overview tests in this directory."""
+"""Registry authority lease shared by the CLI tests in this directory."""
 
 from __future__ import annotations
 

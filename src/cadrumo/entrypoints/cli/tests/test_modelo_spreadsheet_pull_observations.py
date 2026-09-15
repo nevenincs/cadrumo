@@ -16,7 +16,7 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ..errors import CliRefusedBoundaryError
 from ..modelo_spreadsheet_cli import _assemble_pull_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 def _snapshot():

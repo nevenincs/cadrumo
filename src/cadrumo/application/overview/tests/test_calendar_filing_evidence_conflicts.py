@@ -51,7 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disagree(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A verified filed-history row must not hide a different local AEAT evidence reference."""
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
@@ -105,7 +105,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2025, 4, 10),
         events=event,
         filing_evidence=evidence,
@@ -131,7 +131,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
 
 
 def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history_csv(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A local live-capture CSV and filed-history expediente can point to the same receipt."""
     csv = "CSVFILED3031T2025"
@@ -161,7 +161,7 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2025, 4, 10),
         filing_evidence=evidence,
     )
@@ -178,7 +178,7 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
 
 
 def test_calendar_does_not_conflict_matching_verified_csv_across_reference_namespaces(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """CSV-backed local evidence and expediente-backed filed-history evidence can describe the same receipt."""
     csv = "JUST3032025X1T7"
@@ -212,7 +212,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2025, 4, 10),
         filing_evidence=evidence,
     )

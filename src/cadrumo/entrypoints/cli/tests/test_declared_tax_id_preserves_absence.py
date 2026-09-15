@@ -26,7 +26,7 @@ from ....application.user_profile.projections import projection_for_taxpayer
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..common import declared_tax_id
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 #: A fixed, valid profile UUID4. The record model enforces the UUID grammar, so
 #: the value is pinned here rather than generated: these assertions are about the
