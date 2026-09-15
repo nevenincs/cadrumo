@@ -20,9 +20,11 @@ class RecargoBandsRepository:
         return self._load(key)
 
     def _load(self, key: None) -> object:
+        from ...calculations.registry.authority import bundled_indexed_authority
         from ...deadlines.recargo import load_recargo_bands
 
-        return load_recargo_bands()
+        with bundled_indexed_authority().operation() as operation:
+            return load_recargo_bands(operation=operation)
 
     def all(self) -> Iterable[object]:
         """Preserve the repository contract's non-enumerable behavior."""

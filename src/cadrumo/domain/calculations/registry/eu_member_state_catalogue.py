@@ -149,14 +149,14 @@ def resolve_eu_member_state_catalogue(
         alias, raw_token = (part.strip() for part in parts)
         if not alias or not raw_token:
             raise RegistryValidationError("EU member-state aliases must not be blank")
-        token = EUMemberState._from_registry(raw_token.lower())
+        token = EUMemberState.from_registry(raw_token.lower())
         alias_key = alias.upper()
         if alias_key in aliases and aliases[alias_key] != token:
             raise RegistryValidationError(f"EU member-state alias {alias!r} has conflicting targets")
         aliases[alias_key] = token
         aliases_by_token.setdefault(token, []).append(alias_key)
     for raw_token in raw_order:
-        token = EUMemberState._from_registry(raw_token.lower())
+        token = EUMemberState.from_registry(raw_token.lower())
         if token in {definition.token for definition in definitions}:
             raise RegistryValidationError(f"EU member-state catalogue repeats {raw_token!r}")
         if token not in aliases_by_token:

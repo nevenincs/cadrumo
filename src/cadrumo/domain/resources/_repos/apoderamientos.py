@@ -22,8 +22,10 @@ class ApoderamientosRepository:
 
     def _load(self, key: None) -> object:
         from ...auth.apoderamientos.catalogue import load_default_catalogue
+        from ...calculations.registry.authority import bundled_indexed_authority
 
-        return load_default_catalogue()
+        with bundled_indexed_authority().operation() as operation:
+            return load_default_catalogue(operation=operation)
 
     def all(self) -> Iterable[object]:
         """Preserve the repository contract's non-enumerable behavior."""

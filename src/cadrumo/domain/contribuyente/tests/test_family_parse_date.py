@@ -74,7 +74,7 @@ def test_descendant_info_acogimiento_date_from_iso_string() -> None:
     info = DescendantInfo.model_validate(
         {
             "birth_date": date(2020, 1, 1),
-            "relacion": DescendantRelacion._from_registry("acogimiento_preadoptivo_o_permanente"),
+            "relacion": DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
             "acogimiento_resolucion_date": "2021-05-10",
         },
     )

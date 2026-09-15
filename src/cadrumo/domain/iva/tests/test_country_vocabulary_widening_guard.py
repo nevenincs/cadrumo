@@ -77,7 +77,7 @@ def test_a_widening_must_not_admit_this_code_as_a_third_country(code: str) -> No
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             code, operation=_authority_operation_for_test
-        ) != IvaTerritorialScope._from_registry("third_country")
+        ) != IvaTerritorialScope.from_registry("third_country")
 
 
 @pytest.mark.parametrize("code", NEVER_THIRD_COUNTRY)
@@ -93,9 +93,9 @@ def test_a_widening_must_not_admit_this_code_as_a_spanish_scope(code: str) -> No
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(code, operation=_authority_operation_for_test) not in {
-            IvaTerritorialScope._from_registry("es_mainland"),
-            IvaTerritorialScope._from_registry("es_canarias"),
-            IvaTerritorialScope._from_registry("es_ceuta_melilla"),
+            IvaTerritorialScope.from_registry("es_mainland"),
+            IvaTerritorialScope.from_registry("es_canarias"),
+            IvaTerritorialScope.from_registry("es_ceuta_melilla"),
         }
 
 
@@ -110,4 +110,4 @@ def test_the_guard_would_notice_a_real_third_country() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             "US", operation=_authority_operation_for_test
-        ) == IvaTerritorialScope._from_registry("third_country")
+        ) == IvaTerritorialScope.from_registry("third_country")

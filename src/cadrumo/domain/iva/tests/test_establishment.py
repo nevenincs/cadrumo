@@ -33,9 +33,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 SPANISH_SCOPES = frozenset(
     {
-        IvaTerritorialScope._from_registry("es_mainland"),
-        IvaTerritorialScope._from_registry("es_canarias"),
-        IvaTerritorialScope._from_registry("es_ceuta_melilla"),
+        IvaTerritorialScope.from_registry("es_mainland"),
+        IvaTerritorialScope.from_registry("es_canarias"),
+        IvaTerritorialScope.from_registry("es_ceuta_melilla"),
     },
 )
 
@@ -101,7 +101,7 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
                 printed, operation=_authority_operation_for_test
-            ) is IvaTerritorialScope._from_registry("eu_member")
+            ) is IvaTerritorialScope.from_registry("eu_member")
 
     @pytest.mark.parametrize("printed", ["US", "CH", "JP", "GB"])
     def test_a_well_formed_non_member_resolves_to_the_third_country_scope(self, printed: str) -> None:
@@ -109,7 +109,7 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
                 printed, operation=_authority_operation_for_test
-            ) is IvaTerritorialScope._from_registry("third_country")
+            ) is IvaTerritorialScope.from_registry("third_country")
 
     def test_every_member_state_except_spain_resolves_to_the_eu_scope(self) -> None:
         """Derived from the catalogue, so a State joining or leaving is covered."""
@@ -117,7 +117,7 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
             member_states = resolve_eu_member_state_catalogue(authority=_authority_operation_for_test).all_states
             for member in member_states:
                 code = member.value.upper()
-                expected = None if code == SPAIN_COUNTRY_CODE else IvaTerritorialScope._from_registry("eu_member")
+                expected = None if code == SPAIN_COUNTRY_CODE else IvaTerritorialScope.from_registry("eu_member")
 
                 assert territorial_scope_for_country(code, operation=_authority_operation_for_test) is expected, code
 
@@ -138,7 +138,7 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
                 "NO", operation=_authority_operation_for_test
-            ) is IvaTerritorialScope._from_registry("third_country")
+            ) is IvaTerritorialScope.from_registry("third_country")
             assert territorial_scope_for_country(
                 "BR", operation=_authority_operation_for_test
-            ) is IvaTerritorialScope._from_registry("third_country")
+            ) is IvaTerritorialScope.from_registry("third_country")

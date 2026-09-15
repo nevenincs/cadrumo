@@ -40,7 +40,7 @@ class CCAA(str, metaclass=_CCAAType):
 
     Instantiation is deliberately fail-closed: arbitrary strings cannot become
     CCAA values without passing through the selected dated facts catalogue.
-    ``_from_registry`` is private to the typed projection module.
+    ``from_registry`` is private to the typed projection module.
     """
 
     __slots__ = ()
@@ -55,12 +55,13 @@ class CCAA(str, metaclass=_CCAAType):
         from ..calculations.registry.errors import RegistryValidationError
 
         try:
-            return cls._from_registry(str(resolve_ccaa_catalogue().require(value)))
+            return cls.from_registry(str(resolve_ccaa_catalogue().require(value)))
         except RegistryValidationError as exc:
             raise ValueError(str(exc)) from exc
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -88,7 +89,7 @@ class CCAA(str, metaclass=_CCAAType):
         """Resolve one of the registry-declared three-letter aliases."""
         from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 
-        return cls._from_registry(str(resolve_ccaa_catalogue().from_iso_code(code)))
+        return cls.from_registry(str(resolve_ccaa_catalogue().from_iso_code(code)))
 
     @classmethod
     def from_label(cls, label: str) -> Self:
@@ -97,7 +98,7 @@ class CCAA(str, metaclass=_CCAAType):
         from ..calculations.registry.errors import RegistryValidationError
 
         try:
-            return cls._from_registry(str(resolve_ccaa_catalogue().from_label(label)))
+            return cls.from_registry(str(resolve_ccaa_catalogue().from_label(label)))
         except (KeyError, RegistryValidationError) as exc:
             raise ProfileAnswerTypeError(str(exc)) from exc
 

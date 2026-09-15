@@ -118,13 +118,6 @@ def pending_orden_vocabulary(*, authority: GovernedFactSource | None = None) -> 
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
-def _duplicate_year_message(year: int) -> str:
-    template = pending_orden_vocabulary().get("duplicate_error.template")
-    if not template:
-        raise RegistryValidationError("registry vocabulary is missing a duplicate declaration message")
-    return template.format(year=year)
-
-
 def _publication_year_message(filing_year: int, expected_publication_year: int) -> str:
     template = pending_orden_vocabulary().get("publication_year_error.template")
     if not template:
@@ -133,15 +126,6 @@ def _publication_year_message(filing_year: int, expected_publication_year: int) 
         filing_year=filing_year,
         expected_publication_year=expected_publication_year,
     )
-
-
-def _validate_unique_years(value: tuple[PendingEjercicioOrden, ...]) -> tuple[PendingEjercicioOrden, ...]:
-    seen: set[int] = set()
-    for entry in value:
-        if entry.filing_year in seen:
-            raise RegistryValidationError(_duplicate_year_message(entry.filing_year))
-        seen.add(entry.filing_year)
-    return value
 
 
 PendingEjercicioOrdenes = Annotated[

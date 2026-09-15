@@ -134,7 +134,7 @@ def _coerce_token(
         if not raw:
             raise RegistryValidationError(f"{label} must be a non-empty string token")
         try:
-            token = token_type._from_registry(raw)
+            token = token_type.from_registry(raw)
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError(f"{label} must be a non-empty registry token") from exc
     else:
@@ -232,7 +232,7 @@ def resolve_prorrata_kind_catalogue(
             raise RegistryValidationError(f"prorrata kind {raw_token!r} declares a mismatched value")
         definitions.append(
             ProrrataKindDefinition(
-                token=ProrrataKind._from_registry(declared_value),
+                token=ProrrataKind.from_registry(declared_value),
                 description=_required(entries, f"{prefix}.description"),
                 legal_ref=_required(entries, f"{prefix}.legal_ref"),
                 period_required=_boolean(entries, f"{prefix}.period_required"),
@@ -320,14 +320,14 @@ def resolve_input_classification_catalogue(
                 )
         definitions.append(
             InputClassificationDefinition(
-                token=InputClassification._from_registry(declared_value),
+                token=InputClassification.from_registry(declared_value),
                 description=_required(entries, f"{prefix}.description"),
                 legal_ref=_required(entries, f"{prefix}.legal_ref"),
                 deductible_percentage=fixed_percentage,
                 uses_general_percentage=uses_general_percentage,
             ),
         )
-    default = InputClassification._from_registry(_required(entries, _INPUT_DEFAULT_KEY))
+    default = InputClassification.from_registry(_required(entries, _INPUT_DEFAULT_KEY))
     catalogue = InputClassificationCatalogue(
         definitions=tuple(definitions),
         default_classification=default,

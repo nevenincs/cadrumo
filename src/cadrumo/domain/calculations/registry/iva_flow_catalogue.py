@@ -90,7 +90,7 @@ class IvaFlowDirectionCatalogue:
             if not raw:
                 raise RegistryValidationError("IVA flow direction must be a non-empty string token")
             try:
-                token = IvaFlowDirection._from_registry(raw)
+                token = IvaFlowDirection.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("IVA flow direction must be a non-empty string token") from exc
         else:
@@ -110,7 +110,7 @@ class IvaFlowDirectionCatalogue:
             if not raw:
                 raise RegistryValidationError("IVA settlement side must be a non-empty string token")
             try:
-                token = IvaSettlementSide._from_registry(raw)
+                token = IvaSettlementSide.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("IVA settlement side must be a non-empty string token") from exc
         else:
@@ -211,7 +211,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
     settlement_definitions: list[IvaSettlementSideDefinition] = []
     settlement_tokens = _csv(entries, _SETTLEMENT_ORDER_KEY)
     for raw_token in settlement_tokens:
-        token = IvaSettlementSide._from_registry(raw_token)
+        token = IvaSettlementSide.from_registry(raw_token)
         prefix = f"{_SETTLEMENT_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"IVA settlement side {raw_token!r} declares a mismatched value")
@@ -226,10 +226,10 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
         raise RegistryValidationError("IVA flow catalogue contains duplicate settlement sides")
 
     settlement_choice_set = frozenset(item.token for item in settlement_definitions)
-    devengada_token = IvaSettlementSide._from_registry(
+    devengada_token = IvaSettlementSide.from_registry(
         _required(entries, f"{_SETTLEMENT_PREFIX}devengada.value"),
     )
-    deducible_token = IvaSettlementSide._from_registry(
+    deducible_token = IvaSettlementSide.from_registry(
         _required(entries, f"{_SETTLEMENT_PREFIX}deducible.value"),
     )
     if devengada_token not in settlement_choice_set or deducible_token not in settlement_choice_set:
@@ -241,7 +241,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
 
     flow_definitions: list[IvaFlowDirectionDefinition] = []
     for raw_token in _csv(entries, _FLOW_ORDER_KEY):
-        token = IvaFlowDirection._from_registry(raw_token)
+        token = IvaFlowDirection.from_registry(raw_token)
         prefix = f"{_FLOW_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"IVA flow direction {raw_token!r} declares a mismatched value")
@@ -256,7 +256,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
                 )
             typed_sides: list[IvaSettlementSide] = []
             for side in side_tokens:
-                projected_side = IvaSettlementSide._from_registry(side)
+                projected_side = IvaSettlementSide.from_registry(side)
                 if not isinstance(projected_side, IvaSettlementSide):
                     raise RegistryValidationError("IVA flow catalogue projected an invalid settlement side")
                 typed_sides.append(projected_side)
@@ -279,7 +279,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
     declared_flows = frozenset(item.token for item in flow_definitions)
 
     def _flow_pointer(key: str) -> IvaFlowDirection:
-        token = IvaFlowDirection._from_registry(_required(entries, key))
+        token = IvaFlowDirection.from_registry(_required(entries, key))
         if token not in declared_flows:
             raise RegistryValidationError(f"IVA flow catalogue pointer {key!r} names an undeclared flow")
         return token

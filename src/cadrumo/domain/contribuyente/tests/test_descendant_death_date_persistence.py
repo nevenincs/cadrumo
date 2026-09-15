@@ -41,7 +41,7 @@ def _fully_populated() -> DescendantInfo:
     """
     return DescendantInfo(
         birth_date=date(2012, 3, 4),
-        relacion=DescendantRelacion._from_registry("adoptado"),
+        relacion=DescendantRelacion.from_registry("adoptado"),
         inscripcion_registro_civil_date=date(2013, 5, 6),
         acogimiento_resolucion_date=date(2012, 9, 9),
         death_date=date(2024, 7, 8),

@@ -80,7 +80,7 @@ class TipoRentaIrnrCatalogue:
             token = value
         elif isinstance(value, str):
             try:
-                token = TipoRentaIrnr._from_registry(value.strip())
+                token = TipoRentaIrnr.from_registry(value.strip())
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("tipo_renta must be a non-empty string token") from exc
         else:
@@ -186,7 +186,7 @@ def resolve_tipo_renta_irnr_catalogue(
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[TipoRentaIrnrDefinition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
-        token = TipoRentaIrnr._from_registry(raw_token)
+        token = TipoRentaIrnr.from_registry(raw_token)
         prefix = f"{_PREFIX}{raw_token}"
         if _required(entries, f"{prefix}.value") != raw_token:
             raise RegistryValidationError(f"tipo-renta token {raw_token!r} declares a mismatched value")

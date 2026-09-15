@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
 from ._worker_count_hook import DEFAULT_WORKER_COUNT
 
@@ -77,14 +77,16 @@ def _resolved_worker_count(
             command.extend(("--confcutdir", str(tmp_path)))
         command.append(str(probe_path))
 
-        result = run_audited_process(
-            command,
-            cwd=_REPOSITORY_ROOT,
-            env=env,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+        result = ensure_text_completed_process(
+            run_audited_process(
+                command,
+                cwd=_REPOSITORY_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+            )
         )
         sentinel = tmp_path / "worker_count.txt"
         assert sentinel.is_file(), (

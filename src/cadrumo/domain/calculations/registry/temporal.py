@@ -383,24 +383,6 @@ def _effective_candidates[RevisionT: _SelectableRevision](
     ]
 
 
-def _year_revision_candidates[RevisionT: _SelectableRevision](
-    revisions: Sequence[RevisionT],
-    *,
-    filing_year: int,
-    on: date | None,
-) -> list[RevisionT]:
-    """Return year-matching revisions applicable on ``on``, in the declared order.
-
-    ``period`` is ``None`` here because the question is not period-scoped: the
-    caller asked which revision governs a filing YEAR. Every window the modelo
-    declares for that year is therefore admissible evidence, and the tier order
-    above -- not a period filter this caller cannot supply -- is what keeps a
-    design boundary unambiguous.
-    """
-    matching = [revision for revision in revisions if revision.period_selector.includes_year(filing_year)]
-    return _effective_candidates(matching, on=on, filing_year=filing_year, period=None)
-
-
 def _absence_refusal(
     modelo_id: str,
     revisions: Sequence[_SelectableRevision],
@@ -660,35 +642,6 @@ def select_revision_metadata(
         period=period,
         revision_id=revision_id,
     )
-
-
-def _revision_matches_request(
-    revision: _SelectableRevision,
-    *,
-    filing_year: int,
-    period: str,
-    revision_id: RevisionId | None,
-) -> bool:
-    """Return whether a revision matches the request's identity and selector.
-
-    Deliberately date-free: ``on`` narrows the matched set in tiers via
-    :func:`_effective_candidates`, which cannot be expressed as a per-revision
-    predicate because the tier a revision lands in depends on whether any OTHER
-    candidate governs the date.
-    """
-    if revision_id is not None and revision.id != revision_id:
-        return False
-    if not revision.period_selector.includes_year(filing_year):
-        return False
-    # Case-insensitive comparison is intentional: _resolve_period() in the
-    # declaracion parser calls .upper() on every period string before it reaches
-    # the registry, producing "ALTA"/"MODIFICACION"/"BAJA" for M036 whose
-    # canonical registry periods are lowercase. The shared matcher also lets
-    # symbolic EVENT-N selectors cover concrete EVENT-1/EVENT-2 scopes.
-    #
-    # The caller's token remains unchanged; canonical normalisation happens at
-    # the snapshot boundary, where relation consumers compare exact tokens.
-    return selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period) is not None
 
 
 def _select_single_revision[RevisionT: _SelectableRevision](

@@ -64,7 +64,7 @@ def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
     assert isinstance(result[_PREVIOUS_YEAR_NET_INCOME_BINDING], Decimal)
 
 
-def test_previous_filing_requirements_are_declared_from_registry_binding_selector(
+def test_previous_filing_requirements_are_declaredfrom_registry_binding_selector(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
     binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)

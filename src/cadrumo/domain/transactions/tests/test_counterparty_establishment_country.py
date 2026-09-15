@@ -106,8 +106,8 @@ def test_the_member_state_is_derived_and_never_stored_twice() -> None:
 @pytest.mark.parametrize(
     ("country", "scope", "status"),
     (
-        ("DE", IvaTerritorialScope._from_registry("eu_member"), StatedCountryCodeStatus.CATALOGUED),
-        ("US", IvaTerritorialScope._from_registry("third_country"), StatedCountryCodeStatus.CATALOGUED),
+        ("DE", IvaTerritorialScope.from_registry("eu_member"), StatedCountryCodeStatus.CATALOGUED),
+        ("US", IvaTerritorialScope.from_registry("third_country"), StatedCountryCodeStatus.CATALOGUED),
         ("XX", None, StatedCountryCodeStatus.UNASSIGNED),
         (an_uncatalogued_alpha2(), None, StatedCountryCodeStatus.UNCATALOGUED),
         (None, None, None),

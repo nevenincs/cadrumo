@@ -96,7 +96,7 @@ def test_a_genuine_third_country_still_resolves(code: str) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             code, operation=_authority_operation_for_test
-        ) is IvaTerritorialScope._from_registry("third_country")
+        ) is IvaTerritorialScope.from_registry("third_country")
         assert country_code_for_stated_country_code(code, operation=_authority_operation_for_test) == code
 
 
@@ -105,7 +105,7 @@ def test_a_member_state_still_resolves() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             "DE", operation=_authority_operation_for_test
-        ) is IvaTerritorialScope._from_registry("eu_member")
+        ) is IvaTerritorialScope.from_registry("eu_member")
 
 
 def test_northern_ireland_survives_the_narrowing() -> None:
@@ -120,7 +120,7 @@ def test_northern_ireland_survives_the_narrowing() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             "XI", operation=_authority_operation_for_test
-        ) is IvaTerritorialScope._from_registry("eu_member")
+        ) is IvaTerritorialScope.from_registry("eu_member")
 
 
 def test_spain_still_refuses_for_its_own_reason() -> None:
@@ -202,4 +202,4 @@ def test_no_unmatched_code_degrades_to_spain(code: str) -> None:
         assert country_code_for_stated_country_code(code, operation=_authority_operation_for_test) != "ES"
         assert territorial_scope_for_country(
             code, operation=_authority_operation_for_test
-        ) is not IvaTerritorialScope._from_registry("es_mainland")
+        ) is not IvaTerritorialScope.from_registry("es_mainland")

@@ -90,7 +90,7 @@ def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
     """
     fostered = DescendantInfo(
         birth_date=date(2018, 5, 1),
-        relacion=DescendantRelacion._from_registry("acogimiento_preadoptivo_o_permanente"),
+        relacion=DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
         acogimiento_resolucion_date=date(2024, 3, 10),
     )
     assert fostered.entry_year() == 2018

@@ -43,7 +43,7 @@ class ConceptoIngresoCatalogue:
             if not raw:
                 raise RegistryValidationError("income-concept token must be non-empty")
             try:
-                token = ConceptoIngreso._from_registry(raw)
+                token = ConceptoIngreso.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("income-concept token must be a non-empty string") from exc
         else:
@@ -74,7 +74,7 @@ def _resolve_catalogue(
     if not entities or len(entities) != len(set(entities)) or any(not entity for entity in entities):
         raise RegistryValidationError("income-concept vocabulary must contain unique non-empty tokens")
     return ConceptoIngresoCatalogue(
-        tokens=tuple(ConceptoIngreso._from_registry(entity) for entity in entities),
+        tokens=tuple(ConceptoIngreso.from_registry(entity) for entity in entities),
     )
 
 

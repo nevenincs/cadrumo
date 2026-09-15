@@ -51,7 +51,7 @@ def test_the_five_percent_food_rate_classifies_across_its_whole_grounded_span(on
     """Every date the two bundled provisions jointly cover must classify 5 %."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert rate_kinds_for_declared_rate(
-            EUMemberState._from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
+            EUMemberState.from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
         ) == (IvaRateKind("reduced"),), (
             f"5 % is a lawful Spanish rate on {on_date.isoformat()} under the provisions this "
             "registry already grounds, so a line declaring it must classify"
@@ -77,7 +77,7 @@ def test_the_five_percent_rate_stays_refused_outside_its_statutory_span(on_date:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert (
             rate_kinds_for_declared_rate(
-                EUMemberState._from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
+                EUMemberState.from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
             )
             == ()
         ), (
@@ -92,7 +92,7 @@ def test_the_successor_rate_still_holds_its_own_window() -> None:
         seven_five = Decimal("0.075")
         assert (
             rate_kinds_for_declared_rate(
-                EUMemberState._from_registry("es"),
+                EUMemberState.from_registry("es"),
                 seven_five,
                 date(2024, 8, 1),
                 operation=_authority_operation_for_test,
@@ -100,7 +100,7 @@ def test_the_successor_rate_still_holds_its_own_window() -> None:
             == ()
         )
         assert rate_kinds_for_declared_rate(
-            EUMemberState._from_registry("es"), seven_five, date(2024, 11, 1), operation=_authority_operation_for_test
+            EUMemberState.from_registry("es"), seven_five, date(2024, 11, 1), operation=_authority_operation_for_test
         ) == (IvaRateKind("reduced"),)
 
 
@@ -115,5 +115,5 @@ def test_the_two_food_windows_abut_without_a_gap_or_an_overlap() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         for on_date in (date(2024, 6, 29), date(2024, 6, 30), date(2024, 7, 1), date(2024, 7, 2)):
             assert rate_kinds_for_declared_rate(
-                EUMemberState._from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
+                EUMemberState.from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
             ) == (IvaRateKind("reduced"),), f"the join between the two food-rate provisions drops {on_date.isoformat()}"

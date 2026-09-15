@@ -41,7 +41,7 @@ class SpendingCategoryCatalogue:
             if not raw:
                 raise RegistryValidationError("spending category token must be non-empty")
             try:
-                token = SpendingCategory._from_registry(raw)
+                token = SpendingCategory.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("spending category token must be non-empty") from exc
         else:
@@ -124,7 +124,7 @@ def resolve_spending_category_catalogue(
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
     raw_categories = _csv(entries, _ORDER_KEY)
     try:
-        categories = tuple(SpendingCategory._from_registry(raw) for raw in raw_categories)
+        categories = tuple(SpendingCategory.from_registry(raw) for raw in raw_categories)
     except (TypeError, ValueError) as exc:
         raise RegistryValidationError("spending category catalogue contains an invalid token") from exc
     category_by_value = {category.value: category for category in categories}

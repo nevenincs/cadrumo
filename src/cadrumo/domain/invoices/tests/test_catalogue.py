@@ -52,7 +52,7 @@ def _valid_invoice(
             "quantity": Decimal("1"),
             "unit_price": Decimal("100.00"),
             "subtotal": Decimal("100.00"),
-            "iva_rate": IvaRate._from_registry("RATE_21"),
+            "iva_rate": IvaRate.from_registry("RATE_21"),
             "iva_amount": Decimal("21.00"),
         },
     )
@@ -91,7 +91,7 @@ def _maximally_populated_invoice() -> Invoice:
             "quantity": Decimal("10"),
             "unit_price": Decimal("100.00"),
             "subtotal": Decimal("1000.00"),
-            "iva_rate": IvaRate._from_registry("RATE_21"),
+            "iva_rate": IvaRate.from_registry("RATE_21"),
             "iva_amount": Decimal("210.00"),
             "spending_category_id": "consultoria",
             "oss_rate_kind": IvaRateKind("general"),
@@ -100,22 +100,22 @@ def _maximally_populated_invoice() -> Invoice:
     return Invoice.model_validate(
         {
             "kind": InvoiceKind.ISSUED,
-            "invoice_class": InvoiceClass._from_registry("RECTIFICATIVA"),
+            "invoice_class": InvoiceClass.from_registry("RECTIFICATIVA"),
             "series": "R",
             "rectifies_invoice_number": "F-2026-099",
             "invoice_number": "F-2026-100",
             "issued_at": date(2026, 4, 10),
             "operation_date": date(2026, 4, 8),
-            "operation_date_role": InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED"),
+            "operation_date_role": InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
             "counterparty_name": "Consultora Ibérica SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
-            "counterparty_identification_state": EUMemberState._from_registry("es"),
+            "counterparty_identification_state": EUMemberState.from_registry("es"),
             "bucket_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
             "issuer_address": "Calle Mayor 1, 28013 Madrid",
             "recipient_address": "Gran Vía 2, 28013 Madrid",
             "exemption_reference": "LIVA art. 20.Uno.26",
-            "legal_mentions": (InvoiceLegalMention._from_registry("CASH_ACCOUNTING_REGIME"),),
+            "legal_mentions": (InvoiceLegalMention.from_registry("CASH_ACCOUNTING_REGIME"),),
             "base_total": Decimal("1000.00"),
             "iva_total": Decimal("210.00"),
             "grand_total": Decimal("1287.00"),
@@ -147,7 +147,7 @@ def _foreign_currency_invoice() -> Invoice:
             "quantity": Decimal("1"),
             "unit_price": Decimal("200.00"),
             "subtotal": Decimal("200.00"),
-            "iva_rate": IvaRate._from_registry("RATE_21"),
+            "iva_rate": IvaRate.from_registry("RATE_21"),
             "iva_amount": Decimal("42.00"),
         },
     )
@@ -192,11 +192,11 @@ def test_persistence_round_trip_preserves_catalogue() -> None:
     populated = next(invoice for invoice in restored if invoice.invoice_number == "F-2026-100")
     assert populated.series == "R"
     assert populated.rectifies_invoice_number == "F-2026-099"
-    assert populated.counterparty_identification_state is EUMemberState._from_registry("es")
+    assert populated.counterparty_identification_state is EUMemberState.from_registry("es")
     assert populated.issuer_address == "Calle Mayor 1, 28013 Madrid"
     assert populated.recipient_address == "Gran Vía 2, 28013 Madrid"
     assert populated.exemption_reference == "LIVA art. 20.Uno.26"
-    assert populated.legal_mentions == (InvoiceLegalMention._from_registry("CASH_ACCOUNTING_REGIME"),)
+    assert populated.legal_mentions == (InvoiceLegalMention.from_registry("CASH_ACCOUNTING_REGIME"),)
     assert populated.operation_type is IntracomOperationType.S
     assert populated.oss_transaction_kind is TransactionKind("oss_union_services")
     assert populated.retention_amount == Decimal("150.00")

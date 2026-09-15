@@ -44,7 +44,7 @@ from ..ledger_expenses import RentaDeductibilityContext, resolve_region_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CATEGORY = SpendingCategory._from_registry("material_oficina")
+_CATEGORY = SpendingCategory.from_registry("material_oficina")
 
 
 def _citation() -> CategoryCitation:
@@ -73,8 +73,8 @@ def _profile(kind: ProportionalityKind, *, fixed_pct: str | None = None) -> Cate
     )
 
 
-_STATE_PROFILE = _profile(ProportionalityKind._from_registry("full_deductible"))
-_OVERRIDE_PROFILE = _profile(ProportionalityKind._from_registry("fixed_percentage"), fixed_pct="0.50")
+_STATE_PROFILE = _profile(ProportionalityKind.from_registry("full_deductible"))
+_OVERRIDE_PROFILE = _profile(ProportionalityKind.from_registry("fixed_percentage"), fixed_pct="0.50")
 
 
 def _context(residence_ccaa: CCAA | None) -> RentaDeductibilityContext:

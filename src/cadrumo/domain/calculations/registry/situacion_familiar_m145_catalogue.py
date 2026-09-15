@@ -57,7 +57,7 @@ class SituacionFamiliarM145Catalogue:
             if not raw:
                 raise RegistryValidationError("Modelo 145 family-situation token must be non-empty")
             try:
-                token = SituacionFamiliarM145._from_registry(raw)
+                token = SituacionFamiliarM145.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError(
                     "Modelo 145 family-situation token must be a non-empty string",
@@ -170,7 +170,7 @@ def resolve_situacion_familiar_m145_catalogue(
     definitions: list[SituacionFamiliarM145Definition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
         try:
-            token = SituacionFamiliarM145._from_registry(raw_token)
+            token = SituacionFamiliarM145.from_registry(raw_token)
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError(
                 "Modelo 145 family-situation vocabulary contains an invalid token",

@@ -80,16 +80,16 @@ def test_breakdown_groups_by_clave_and_sums_magnitudes() -> None:
 
     breakdown = aggregate_withholding_by_clave(observations)
 
-    assert [row.clave for row in breakdown] == [RetencionClave._from_registry("A"), RetencionClave._from_registry("G")]
+    assert [row.clave for row in breakdown] == [RetencionClave.from_registry("A"), RetencionClave.from_registry("G")]
     rows = {row.clave: row for row in breakdown}
     # Clave A: two distinct perceptores, percibido = 1000 + 500, retención = 190 + 95.
-    assert rows[RetencionClave._from_registry("A")].percepcion_count == 2
-    assert rows[RetencionClave._from_registry("A")].percibido_total == Decimal("1500.00")
-    assert rows[RetencionClave._from_registry("A")].retencion_total == Decimal("285.00")
+    assert rows[RetencionClave.from_registry("A")].percepcion_count == 2
+    assert rows[RetencionClave.from_registry("A")].percibido_total == Decimal("1500.00")
+    assert rows[RetencionClave.from_registry("A")].retencion_total == Decimal("285.00")
     # Clave G: one percepción, percibido = dinerario + especie, retención = practicada + ingreso a cuenta.
-    assert rows[RetencionClave._from_registry("G")].percepcion_count == 1
-    assert rows[RetencionClave._from_registry("G")].percibido_total == Decimal("2100.00")
-    assert rows[RetencionClave._from_registry("G")].retencion_total == Decimal("420.00")
+    assert rows[RetencionClave.from_registry("G")].percepcion_count == 1
+    assert rows[RetencionClave.from_registry("G")].percibido_total == Decimal("2100.00")
+    assert rows[RetencionClave.from_registry("G")].retencion_total == Decimal("420.00")
     assert all(isinstance(row, WithholdingClaveBreakdown) for row in breakdown)
 
 
@@ -105,7 +105,7 @@ def test_distinct_percepcion_count_is_per_perceptor_subclave_within_clave() -> N
 
     assert len(breakdown) == 1
     row = breakdown[0]
-    assert row.clave == RetencionClave._from_registry("A")
+    assert row.clave == RetencionClave.from_registry("A")
     # (H, 01) collapses to one percepción; (H, 02) is a second.
     assert row.percepcion_count == 2
     assert row.retencion_total == Decimal("150.00")
@@ -122,9 +122,9 @@ def test_breakdown_is_order_independent_and_sorted_by_clave() -> None:
 
     assert forward == shuffled
     assert [row.clave for row in forward] == [
-        RetencionClave._from_registry("A"),
-        RetencionClave._from_registry("E"),
-        RetencionClave._from_registry("G"),
+        RetencionClave.from_registry("A"),
+        RetencionClave.from_registry("E"),
+        RetencionClave.from_registry("G"),
     ]
 
 

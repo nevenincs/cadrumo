@@ -66,12 +66,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # super-reducido tier (0,5 / 0,26). That many-to-one relation is exactly why a
 # per-tier casilla cannot serve a per-rate box, and it is what this module pins.
 _RUNGS = (
-    ("5-2", IvaRate._from_registry("RATE_21"), date(2024, 3, 10), "4000.00", "817.00", "203.00"),
-    ("1-4", IvaRate._from_registry("RATE_10"), date(2024, 3, 11), "2500.00", "241.00", "31.00"),
-    ("1", IvaRate._from_registry("RATE_7.5"), date(2024, 11, 12), "1600.00", "127.00", "17.00"),
-    ("0-62", IvaRate._from_registry("RATE_5"), date(2024, 8, 13), "1400.00", "73.00", "11.00"),
-    ("0-5", IvaRate._from_registry("RATE_4"), date(2024, 3, 14), "1200.00", "51.00", "7.00"),
-    ("0-26", IvaRate._from_registry("RATE_2"), date(2024, 11, 15), "900.00", "19.00", "3.00"),
+    ("5-2", IvaRate.from_registry("RATE_21"), date(2024, 3, 10), "4000.00", "817.00", "203.00"),
+    ("1-4", IvaRate.from_registry("RATE_10"), date(2024, 3, 11), "2500.00", "241.00", "31.00"),
+    ("1", IvaRate.from_registry("RATE_7.5"), date(2024, 11, 12), "1600.00", "127.00", "17.00"),
+    ("0-62", IvaRate.from_registry("RATE_5"), date(2024, 8, 13), "1400.00", "73.00", "11.00"),
+    ("0-5", IvaRate.from_registry("RATE_4"), date(2024, 3, 14), "1200.00", "51.00", "7.00"),
+    ("0-26", IvaRate.from_registry("RATE_2"), date(2024, 11, 15), "900.00", "19.00", "3.00"),
 )
 
 # The official AEAT box each recargo rung occupies, read off the bundled 2024

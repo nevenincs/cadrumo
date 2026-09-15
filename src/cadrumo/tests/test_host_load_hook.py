@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
 from ._host_load_hook import STAMP_PREFIX
 
@@ -89,24 +89,26 @@ def _run_probe(*, probe_source: str) -> subprocess.CompletedProcess[str]:
         (tmp_path / "conftest.py").write_text(_PROBE_CONFTEST, encoding="utf-8")
         (tmp_path / "test_probe.py").write_text(probe_source, encoding="utf-8")
 
-        return run_audited_process(
-            [
-                sys.executable,
-                "-m",
-                "pytest",
-                "-q",
-                "--no-header",
-                "-p",
-                "no:cacheprovider",
-                f"--timeout={_PROBE_TIMEOUT_SECONDS}",
-                "test_probe.py",
-            ],
-            cwd=tmp_path,
-            env=dict(os.environ),
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+        return ensure_text_completed_process(
+            run_audited_process(
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    "-q",
+                    "--no-header",
+                    "-p",
+                    "no:cacheprovider",
+                    f"--timeout={_PROBE_TIMEOUT_SECONDS}",
+                    "test_probe.py",
+                ],
+                cwd=tmp_path,
+                env=dict(os.environ),
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+            )
         )
 
 

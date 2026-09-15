@@ -107,14 +107,14 @@ def test_an_invoice_can_state_its_fixed_legal_mentions() -> None:
     """art. 6.1.m/.p: an invoice under inversión del sujeto pasivo and criterio de caja."""
     invoice = _invoice(
         legal_mentions=[
-            InvoiceLegalMention._from_registry("reverse_charge"),
-            InvoiceLegalMention._from_registry("cash_accounting_regime"),
+            InvoiceLegalMention.from_registry("reverse_charge"),
+            InvoiceLegalMention.from_registry("cash_accounting_regime"),
         ],
     )
 
     assert invoice.legal_mentions == (
-        InvoiceLegalMention._from_registry("reverse_charge"),
-        InvoiceLegalMention._from_registry("cash_accounting_regime"),
+        InvoiceLegalMention.from_registry("reverse_charge"),
+        InvoiceLegalMention.from_registry("cash_accounting_regime"),
     )
 
 
@@ -122,7 +122,7 @@ def test_legal_mentions_coerces_plain_string_values() -> None:
     """A JSON-decoded payload carries plain strings, not enum instances."""
     invoice = _invoice(legal_mentions=["REVERSE_CHARGE"])
 
-    assert invoice.legal_mentions == (InvoiceLegalMention._from_registry("reverse_charge"),)
+    assert invoice.legal_mentions == (InvoiceLegalMention.from_registry("reverse_charge"),)
 
 
 def test_an_unknown_legal_mention_is_refused() -> None:

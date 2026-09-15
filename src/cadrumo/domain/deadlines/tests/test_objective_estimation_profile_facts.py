@@ -30,7 +30,7 @@ def test_taxpayer_profile_projects_objective_estimation_exclusion_volumes() -> N
         tax_id_default="X1234567L",
     )
 
-    assert profile.irpf_estimation_regime is IrpfEstimationRegime._from_registry("objetiva")
+    assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("objetiva")
     assert profile.objective_estimation_prior_year_gross_income_eur == Decimal("250000.01")
     assert profile.objective_estimation_prior_year_invoice_gross_income_eur == Decimal("125000.01")
     assert profile.objective_estimation_prior_year_agri_livestock_forest_gross_eur == Decimal(
@@ -59,7 +59,7 @@ def test_taxpayer_profile_projects_objective_estimation_modulos_annual_facts() -
         tax_id_default="X1234567L",
     )
 
-    assert profile.irpf_estimation_regime is IrpfEstimationRegime._from_registry("objetiva")
+    assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("objetiva")
     assert profile.objective_estimation_modulos_iae_epigraph == "972.1"
     assert profile.objective_estimation_modulos_module_1_units == Decimal("2.50")
     assert profile.objective_estimation_modulos_module_2_units == Decimal("85")
@@ -71,7 +71,7 @@ def test_taxpayer_profile_round_trips_objective_estimation_modulos_annual_facts(
     original = TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime("GENERAL"),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("objetiva"),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         objective_estimation_modulos_iae_epigraph="972.1",
         objective_estimation_modulos_module_1_units=Decimal("2.50"),
         objective_estimation_modulos_module_2_units=Decimal("85"),
@@ -91,7 +91,7 @@ def test_taxpayer_profile_round_trips_objective_estimation_exclusion_volumes() -
     original = TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime("GENERAL"),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("objetiva"),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
         objective_estimation_prior_year_agri_livestock_forest_gross_eur=Decimal("250000.01"),

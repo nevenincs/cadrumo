@@ -31,8 +31,8 @@ def _profile(scope: str):
 @pytest.mark.parametrize(
     ("scope", "expected"),
     (
-        ("common_regime", M303TaxTerritory._from_registry("common_regime")),
-        ("foral_unsupported", M303TaxTerritory._from_registry("foral")),
+        ("common_regime", M303TaxTerritory.from_registry("common_regime")),
+        ("foral_unsupported", M303TaxTerritory.from_registry("foral")),
     ),
 )
 def test_profile_hydration_preserves_explicit_tax_territory(

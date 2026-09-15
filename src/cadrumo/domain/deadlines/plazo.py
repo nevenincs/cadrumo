@@ -189,9 +189,9 @@ def _resolve_filing_window_with_operation(
         raise DeadlineValidationError(
             f"filing window tipo_renta_code {tipo_renta_code!r} is not a canonical official Modelo 210 code",
         )
-    from .engine import _indexed_deadline_windows
+    from .engine import indexed_deadline_windows
 
-    windows = tuple(item for item in _indexed_deadline_windows(operation, filing_year) if item[0] == modelo)
+    windows = tuple(item for item in indexed_deadline_windows(operation, filing_year) if item[0] == modelo)
     return _resolve_projected_filing_window(
         windows,
         modelo=modelo,

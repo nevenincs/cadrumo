@@ -67,7 +67,7 @@ class EntityVocabulary:
             if not raw:
                 raise RegistryValidationError("entity-type token must be non-empty")
             try:
-                token = EntityType._from_registry(raw)
+                token = EntityType.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("entity-type token must be a non-empty string") from exc
         else:
@@ -87,7 +87,7 @@ class EntityVocabulary:
             if not raw:
                 raise RegistryValidationError("legal-entity-form token must be non-empty")
             try:
-                token = LegalEntityForm._from_registry(raw)
+                token = LegalEntityForm.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("legal-entity-form token must be a non-empty string") from exc
         else:
@@ -192,7 +192,7 @@ def resolve_entity_vocabulary(
     entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
     entity_types: list[EntityTypeDefinition] = []
     for raw_token in _csv(entries, _ENTITY_TYPE_ORDER_KEY):
-        token = EntityType._from_registry(raw_token)
+        token = EntityType.from_registry(raw_token)
         prefix = f"{_ENTITY_TYPE_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"entity-type token {raw_token!r} declares a mismatched value")
@@ -207,7 +207,7 @@ def resolve_entity_vocabulary(
     vocabulary = EntityVocabulary(entity_types=tuple(entity_types), legal_entity_forms=())
     legal_entity_forms: list[LegalEntityFormDefinition] = []
     for raw_token in _csv(entries, _LEGAL_FORM_ORDER_KEY):
-        token = LegalEntityForm._from_registry(raw_token)
+        token = LegalEntityForm.from_registry(raw_token)
         prefix = f"{_LEGAL_FORM_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"legal-entity-form token {raw_token!r} declares a mismatched value")

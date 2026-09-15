@@ -39,10 +39,10 @@ def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("DE"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             kind=TransactionKind("oss_union_goods_distance_sale"),
             direction=InvoiceKind.ISSUED,
         )
@@ -55,10 +55,10 @@ def test_classifier_routes_oss_union_goods_interface_facilitated_to_r18() -> Non
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("FR"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             kind=TransactionKind("oss_union_goods_interface_facilitated"),
             direction=InvoiceKind.ISSUED,
         )
@@ -71,10 +71,10 @@ def test_classifier_routes_oss_union_services_to_r19() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("IT"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             kind=TransactionKind("oss_union_services"),
             direction=InvoiceKind.ISSUED,
         )
@@ -87,10 +87,10 @@ def test_classifier_routes_external_scheme_services_to_r16() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("third_country"),
-            customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+            issuer_residency=IvaTerritorialScope.from_registry("third_country"),
+            customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("ES"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             kind=TransactionKind("external_scheme_services"),
             direction=InvoiceKind.ISSUED,
         )
@@ -103,10 +103,10 @@ def test_classifier_routes_ioss_low_value_distance_sale_to_r23() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("DE"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             kind=TransactionKind("ioss_distance_sale_low_value"),
             direction=InvoiceKind.ISSUED,
         )
@@ -120,10 +120,10 @@ def test_classifier_rejects_retired_digital_b2c_oss_alias() -> None:
         IvaInvoiceClassificationCriteria.model_validate(
             {
                 "transaction_date": date(2025, 6, 15),
-                "issuer_residency": IvaTerritorialScope._from_registry("es_mainland"),
-                "customer_residency": IvaTerritorialScope._from_registry("eu_member"),
+                "issuer_residency": IvaTerritorialScope.from_registry("es_mainland"),
+                "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
                 "customer_identification_state": require_eu_member_state("DE"),
-                "customer_tax_status": CustomerTaxStatus._from_registry("b2c_consumer"),
+                "customer_tax_status": CustomerTaxStatus.from_registry("b2c_consumer"),
                 "kind": "services_digital_b2c_oss",
                 "direction": InvoiceKind.ISSUED,
             },

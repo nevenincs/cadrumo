@@ -92,7 +92,7 @@ def test_unregistered_member_state_refusal_carries_no_authored_sentence() -> Non
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with pytest.raises(IvaRateNotFoundError) as caught:
             lookup_rate(
-                EUMemberState._from_registry("xi"), IvaRateKind("general"), _ON, operation=_authority_operation_for_test
+                EUMemberState.from_registry("xi"), IvaRateKind("general"), _ON, operation=_authority_operation_for_test
             )
 
         assert str(caught.value) == "errors.iva.rate_member_state_unregistered"
@@ -103,7 +103,7 @@ def test_unmatched_tier_refusal_carries_no_authored_sentence() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with pytest.raises(IvaRateNotFoundError) as caught:
             lookup_rate(
-                EUMemberState._from_registry("dk"), IvaRateKind("reduced"), _ON, operation=_authority_operation_for_test
+                EUMemberState.from_registry("dk"), IvaRateKind("reduced"), _ON, operation=_authority_operation_for_test
             )
 
         assert str(caught.value) == "errors.error.error_financial_iva_rate_not_found"

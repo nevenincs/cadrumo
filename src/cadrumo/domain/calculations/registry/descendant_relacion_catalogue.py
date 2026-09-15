@@ -42,7 +42,7 @@ class DescendantRelacionCatalogue:
             token = value
         elif isinstance(value, str):
             try:
-                token = DescendantRelacion._from_registry(value.strip())
+                token = DescendantRelacion.from_registry(value.strip())
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("descendant relationship must be a non-empty token") from exc
         else:
@@ -106,11 +106,11 @@ def resolve_descendant_relacion_catalogue(
         )
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
     try:
-        relations = tuple(DescendantRelacion._from_registry(raw) for raw in _csv(entries, _ORDER_KEY))
-        default_token = DescendantRelacion._from_registry(_required(entries, _DEFAULT_KEY))
-        adoption_token = DescendantRelacion._from_registry(_required(entries, _ADOPTION_KEY))
-        maternity_tokens = tuple(DescendantRelacion._from_registry(raw) for raw in _csv(entries, _MATERNITY_KEY))
-        entitling_tokens = tuple(DescendantRelacion._from_registry(raw) for raw in _csv(entries, _ENTITLING_KEY))
+        relations = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _ORDER_KEY))
+        default_token = DescendantRelacion.from_registry(_required(entries, _DEFAULT_KEY))
+        adoption_token = DescendantRelacion.from_registry(_required(entries, _ADOPTION_KEY))
+        maternity_tokens = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _MATERNITY_KEY))
+        entitling_tokens = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _ENTITLING_KEY))
     except (TypeError, ValueError) as exc:
         raise RegistryValidationError("descendant relationship catalogue contains an invalid token") from exc
     catalogue = DescendantRelacionCatalogue(

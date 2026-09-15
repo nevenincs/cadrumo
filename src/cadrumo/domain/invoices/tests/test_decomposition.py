@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FX_RATE_SOURCE_ID = "test_reference"
 _INVOICE_DATE = date(2026, 4, 1)
-_DEFAULT_RATE_21 = IvaRate._from_registry("RATE_21")
+_DEFAULT_RATE_21 = IvaRate.from_registry("RATE_21")
 
 
 def _line(*, unit_price: str = "1000.00", iva_rate: IvaRate = _DEFAULT_RATE_21, **extra: object) -> InvoiceLine:
@@ -129,7 +129,7 @@ def test_retencion_leaves_the_total_untouched_and_reduces_only_the_cash() -> Non
 def test_exempt_invoice_is_grounded_with_a_real_base_and_zero_cuota() -> None:
     """Cuota-less is not substrate-less: an exempt supply still decomposes."""
     invoice = _invoice(
-        lines=(_line(iva_rate=IvaRate._from_registry("EXEMPT")),),
+        lines=(_line(iva_rate=IvaRate.from_registry("EXEMPT")),),
         iva_category=IvaCategory("domestic_exempt"),
     )
 
@@ -171,7 +171,7 @@ def test_invoice_with_no_taxable_base_is_excluded_where_the_category_requires_on
     """A category that carries a base grounds nothing without one recorded."""
     verdict = decompose_invoice(
         _invoice(
-            lines=(_line(unit_price="0.00", iva_rate=IvaRate._from_registry("EXEMPT")),),
+            lines=(_line(unit_price="0.00", iva_rate=IvaRate.from_registry("EXEMPT")),),
             iva_category=IvaCategory("domestic_exempt"),
         ),
     )
@@ -186,7 +186,7 @@ def test_defects_accumulate_so_one_pass_shows_everything_wrong() -> None:
             counterparty_country="US",
             counterparty_tax_id="US-TAX-1",
             currency="USD",
-            lines=(_line(iva_rate=IvaRate._from_registry("RATE_0")),),
+            lines=(_line(iva_rate=IvaRate.from_registry("RATE_0")),),
         ),
     )
 
@@ -221,7 +221,7 @@ def test_unconverted_foreign_invoice_is_excluded_rather_than_approximated() -> N
         counterparty_tax_id="US-TAX-1",
         currency="USD",
         iva_category=IvaCategory("export_third_country_zero_rated"),
-        lines=(_line(iva_rate=IvaRate._from_registry("RATE_0")),),
+        lines=(_line(iva_rate=IvaRate.from_registry("RATE_0")),),
     )
 
     verdict = decompose_invoice(invoice)
@@ -236,7 +236,7 @@ def test_converted_foreign_invoice_decomposes_in_euro() -> None:
         counterparty_tax_id="US-TAX-1",
         currency="USD",
         iva_category=IvaCategory("export_third_country_zero_rated"),
-        lines=(_line(unit_price="200.00", iva_rate=IvaRate._from_registry("RATE_0")),),
+        lines=(_line(unit_price="200.00", iva_rate=IvaRate.from_registry("RATE_0")),),
         fx_rate=Decimal("0.90"),
         fx_rate_date=date(2026, 4, 1),
         fx_rate_source=_FX_RATE_SOURCE_ID,
@@ -327,10 +327,10 @@ def test_eu_member_state_substrate_still_resolves_for_a_partitioned_invoice() ->
         counterparty_country="DE",
         counterparty_tax_id="DE123456789",
         iva_category=IvaCategory("intra_community_supply"),
-        lines=(_line(iva_rate=IvaRate._from_registry("EXEMPT")),),
+        lines=(_line(iva_rate=IvaRate.from_registry("EXEMPT")),),
     )
 
-    assert invoice.counterparty_eu_member_state is EUMemberState._from_registry("de")
+    assert invoice.counterparty_eu_member_state is EUMemberState.from_registry("de")
     assert decompose_invoice(invoice).is_grounded
 
 

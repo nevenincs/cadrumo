@@ -46,7 +46,7 @@ _ART_30_2_5_A_DISCAPACIDAD = Decimal("1500")
 
 def _shipped_rule(operation: PinnedAuthorityOperation) -> ProportionalityRule:
     return load_category_profiles(operation=operation)[
-        SpendingCategory._from_registry("seguros_salud_autonomo")
+        SpendingCategory.from_registry("seguros_salud_autonomo")
     ].proportionality
 
 
@@ -90,7 +90,7 @@ def test_the_variants_are_annual_per_person_not_daily(operation: PinnedAuthority
     """The article caps per person per year; a daily reading would be a different rule."""
     rule = _shipped_rule(operation)
 
-    assert rule.statutory_cap_period is StatutoryCapPeriod._from_registry("year_per_person", is_per_person=True)
+    assert rule.statutory_cap_period is StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True)
     assert all(not variant.is_per_day for variant in rule.statutory_cap_variants)
     assert all(variant.statutory_cap_eur_per_day is None for variant in rule.statutory_cap_variants)
 
@@ -106,7 +106,7 @@ def _rule_with(
 ) -> ProportionalityRule:
     return ProportionalityRule.model_validate(
         {
-            "kind": ProportionalityKind._from_registry(
+            "kind": ProportionalityKind.from_registry(
                 "statutory_cap",
                 is_statutory_cap=True,
                 is_full_deductible=False,
@@ -140,7 +140,7 @@ def test_variants_inside_one_rule_must_agree_on_the_unit(operation: PinnedAuthor
         _rule_with(
             _variant("annual", statutory_cap_eur=Decimal("500")),
             _variant("daily", statutory_cap_eur_per_day=Decimal("26.67")),
-            period=StatutoryCapPeriod._from_registry("year_per_person", is_per_person=True),
+            period=StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True),
             operation=operation,
         )
 
@@ -154,7 +154,7 @@ def test_an_annual_variant_set_requires_the_period_it_applies_over(operation: Pi
 def test_the_daily_dietas_shape_still_loads_unchanged(operation: PinnedAuthorityOperation) -> None:
     """The variant concept was widened, not repurposed; RIRPF art. 9's shape is intact."""
     dietas = load_category_profiles(operation=operation)[
-        SpendingCategory._from_registry("manutencion_dietas_nacional")
+        SpendingCategory.from_registry("manutencion_dietas_nacional")
     ].proportionality
 
     assert dietas.statutory_cap_variants

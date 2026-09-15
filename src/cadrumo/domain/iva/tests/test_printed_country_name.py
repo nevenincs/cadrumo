@@ -114,9 +114,9 @@ class TestAnUnrecognisedNameEstablishesNothing:
                 country_code_for_printed_country_name(printed, operation=_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             ) not in {
-                IvaTerritorialScope._from_registry("es_mainland"),
-                IvaTerritorialScope._from_registry("es_canarias"),
-                IvaTerritorialScope._from_registry("es_ceuta_melilla"),
+                IvaTerritorialScope.from_registry("es_mainland"),
+                IvaTerritorialScope.from_registry("es_canarias"),
+                IvaTerritorialScope.from_registry("es_ceuta_melilla"),
             }
 
 
@@ -230,14 +230,14 @@ class TestTheRungComposesRatherThanDecides:
             assert territorial_scope_for_country(
                 country_code_for_printed_country_name("Deutschland", operation=_authority_operation_for_test),
                 operation=_authority_operation_for_test,
-            ) == IvaTerritorialScope._from_registry("eu_member")
+            ) == IvaTerritorialScope.from_registry("eu_member")
 
     def test_a_third_country_name_establishes_the_third_country_scope(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
                 country_code_for_printed_country_name("Suiza", operation=_authority_operation_for_test),
                 operation=_authority_operation_for_test,
-            ) == IvaTerritorialScope._from_registry("third_country")
+            ) == IvaTerritorialScope.from_registry("third_country")
 
     def test_a_spanish_name_names_the_state_but_establishes_no_scope(self) -> None:
         """The composition proving nothing about Spain is decided twice.

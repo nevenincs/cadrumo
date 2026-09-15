@@ -102,7 +102,7 @@ def test_suministros_luz_concrete_value_at_20_percent_afectacion(operation: Pinn
 
     profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025, operation=operation)
 
-    assert profile.ratios[SpendingCategory._from_registry("suministros_home_office_luz")] == Decimal("0.060")
+    assert profile.ratios[SpendingCategory.from_registry("suministros_home_office_luz")] == Decimal("0.060")
 
 
 def test_arrendamiento_vivienda_afecto_concrete_value_at_20_percent_afectacion(
@@ -120,10 +120,10 @@ def test_arrendamiento_vivienda_afecto_concrete_value_at_20_percent_afectacion(
 
     profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025, operation=operation)
 
-    assert profile.ratios[SpendingCategory._from_registry("arrendamiento_vivienda_afecto")] == Decimal("0.20")
+    assert profile.ratios[SpendingCategory.from_registry("arrendamiento_vivienda_afecto")] == Decimal("0.20")
     assert (
-        profile.ratios[SpendingCategory._from_registry("arrendamiento_vivienda_afecto")]
-        == profile.ratios[SpendingCategory._from_registry("ibi_vivienda_afecto")]
+        profile.ratios[SpendingCategory.from_registry("arrendamiento_vivienda_afecto")]
+        == profile.ratios[SpendingCategory.from_registry("ibi_vivienda_afecto")]
     )
 
 
@@ -139,10 +139,10 @@ def test_telefonia_fija_concrete_value_at_20_percent_afectacion(operation: Pinne
 
     profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025, operation=operation)
 
-    assert profile.ratios[SpendingCategory._from_registry("telefonia_fija")] == Decimal("0.060")
+    assert profile.ratios[SpendingCategory.from_registry("telefonia_fija")] == Decimal("0.060")
     assert (
-        profile.ratios[SpendingCategory._from_registry("telefonia_fija")]
-        == profile.ratios[SpendingCategory._from_registry("suministros_home_office_internet")]
+        profile.ratios[SpendingCategory.from_registry("telefonia_fija")]
+        == profile.ratios[SpendingCategory.from_registry("suministros_home_office_internet")]
     )
 
 

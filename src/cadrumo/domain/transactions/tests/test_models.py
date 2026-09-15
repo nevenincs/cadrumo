@@ -301,14 +301,14 @@ def test_concepto_ingreso_roundtrips_for_an_excluded_concept() -> None:
             "group_label": None,
             "source_jurisdiction": "ES",
             "tipo_actividad": TipoActividad.B01_AGRICOLA,
-            "concepto_ingreso": ConceptoIngreso._from_registry("subvencion_capital"),
+            "concepto_ingreso": ConceptoIngreso.from_registry("subvencion_capital"),
         },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.concepto_ingreso is ConceptoIngreso._from_registry("subvencion_capital")
+    assert restored.concepto_ingreso is ConceptoIngreso.from_registry("subvencion_capital")
 
 
 def test_concepto_ingreso_dropped_from_the_payload_surfaces_as_inequality() -> None:
@@ -326,7 +326,7 @@ def test_concepto_ingreso_dropped_from_the_payload_surfaces_as_inequality() -> N
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "concepto_ingreso": ConceptoIngreso._from_registry("subvencion_capital"),
+            "concepto_ingreso": ConceptoIngreso.from_registry("subvencion_capital"),
         },
     )
     storage_payload = json.loads(original.model_dump_json())
@@ -348,7 +348,7 @@ def test_concepto_ingreso_rejects_a_token_outside_the_closed_set() -> None:
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "concepto_ingreso": ConceptoIngreso._from_registry("subvencion_capital"),
+            "concepto_ingreso": ConceptoIngreso.from_registry("subvencion_capital"),
         },
     )
     storage_payload = json.loads(original.model_dump_json())
@@ -474,14 +474,14 @@ def test_input_classification_roundtrips_for_especial_common_use() -> None:
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "input_classification": InputClassification._from_registry("common"),
+            "input_classification": InputClassification.from_registry("common"),
         },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.input_classification is InputClassification._from_registry("common")
+    assert restored.input_classification is InputClassification.from_registry("common")
 
 
 def test_input_classification_rejects_unknown_member_on_load() -> None:
@@ -492,7 +492,7 @@ def test_input_classification_rejects_unknown_member_on_load() -> None:
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "input_classification": InputClassification._from_registry("exclusively_deductible"),
+            "input_classification": InputClassification.from_registry("exclusively_deductible"),
         },
     )
     storage_payload = json.loads(original.model_dump_json())

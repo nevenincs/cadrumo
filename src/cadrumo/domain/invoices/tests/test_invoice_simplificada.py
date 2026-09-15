@@ -39,7 +39,7 @@ def _line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=_CUOTA,
     )
 
@@ -47,7 +47,7 @@ def _line() -> InvoiceLine:
 def _invoice(**overrides: Any) -> Invoice:
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
-        "invoice_class": InvoiceClass._from_registry("SIMPLIFICADA"),
+        "invoice_class": InvoiceClass.from_registry("SIMPLIFICADA"),
         "invoice_number": "T-2026-001",
         "issued_at": date(2026, 5, 3),
         "counterparty_name": "Cliente de mostrador",
@@ -68,14 +68,14 @@ def test_an_ordinary_ticket_needs_no_counterparty_tax_id() -> None:
     """The truthful ticket -- no customer identified -- is representable."""
     invoice = _invoice()
 
-    assert invoice.invoice_class is InvoiceClass._from_registry("SIMPLIFICADA")
+    assert invoice.invoice_class is InvoiceClass.from_registry("SIMPLIFICADA")
     assert invoice.counterparty_tax_id is None
 
 
 def test_a_missing_tax_id_on_a_non_simplificada_invoice_is_refused() -> None:
     """Ordinaria and rectificativa keep the tax id mandatory, unchanged from before."""
     with pytest.raises(ValidationError, match="counterparty_tax_id is required unless invoice_class is SIMPLIFICADA"):
-        _invoice(invoice_class=InvoiceClass._from_registry("ORDINARIA"))
+        _invoice(invoice_class=InvoiceClass.from_registry("ORDINARIA"))
 
 
 def test_a_simplificada_is_refused_outright_for_an_exempt_intracommunity_supply() -> None:
@@ -106,7 +106,7 @@ def test_a_simplificada_still_requires_the_tax_id_when_the_destinatario_self_ass
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate._from_registry("NOT_SUBJECT"),
+        iva_rate=IvaRate.from_registry("NOT_SUBJECT"),
         iva_amount=Decimal("0"),
     )
     with pytest.raises(ValidationError, match=r"RD 1619/2012 art. 6.1.d"):

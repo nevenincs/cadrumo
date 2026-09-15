@@ -47,7 +47,7 @@ def test_lookup_rate_raises_for_northern_ireland_prefix() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with pytest.raises(IvaRateNotFoundError) as caught:
             lookup_rate(
-                EUMemberState._from_registry("xi"),
+                EUMemberState.from_registry("xi"),
                 IvaRateKind("general"),
                 date(2025, 6, 1),
                 operation=_authority_operation_for_test,
@@ -74,7 +74,7 @@ def test_es_rate_table_fully_expanded() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         es_kinds = {
             rate.kind
-            for rate in load_iva_rate_table(operation=_authority_operation_for_test)[EUMemberState._from_registry("es")]
+            for rate in load_iva_rate_table(operation=_authority_operation_for_test)[EUMemberState.from_registry("es")]
         }
         assert {
             IvaRateKind("general"),
@@ -88,7 +88,7 @@ def test_lookup_rate_returns_spain_general_21() -> None:
     """`lookup_rate` resolves the Spanish general rate for mid-2025."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         rate = lookup_rate(
-            EUMemberState._from_registry("es"),
+            EUMemberState.from_registry("es"),
             IvaRateKind("general"),
             date(2025, 6, 1),
             operation=_authority_operation_for_test,
@@ -107,7 +107,7 @@ def test_lookup_rate_raises_for_unknown_kind() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with pytest.raises(IvaRateNotFoundError) as caught:
             lookup_rate(
-                EUMemberState._from_registry("dk"),
+                EUMemberState.from_registry("dk"),
                 IvaRateKind("reduced"),
                 date(2025, 6, 1),
                 operation=_authority_operation_for_test,
@@ -137,7 +137,7 @@ def test_lookup_rate_respects_effective_from() -> None:
         pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2012|rate"),
     ):
         lookup_rate(
-            EUMemberState._from_registry("es"),
+            EUMemberState.from_registry("es"),
             IvaRateKind("general"),
             date(2012, 8, 31),
             operation=_authority_operation_for_test,

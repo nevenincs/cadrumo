@@ -27,7 +27,7 @@ from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ES = EUMemberState._from_registry("es")
+_ES = EUMemberState.from_registry("es")
 _GENERAL = IvaRateKind("general")
 _REDUCED = IvaRateKind("reduced")
 _SUPER_REDUCED = IvaRateKind("super_reduced")
