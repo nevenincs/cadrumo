@@ -33,18 +33,11 @@ permissions:
 jobs:
   pr-correctness:
     name: "Check: PR core (Linux)"
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 60
     steps:
-      - name: Reject untrusted fork execution
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
-        shell: bash
-        run: |
-          echo "::error::fork pull requests cannot execute repository code on the private runner fleet"
-          exit 1
-
       - name: Checkout repository
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
