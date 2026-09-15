@@ -264,12 +264,6 @@ check-docs-synonyms:
 check-registry:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-registry --signal registry-health -- uv run --no-sync python -m dev.registry.analysis.registry_status --check --json
 
-[doc('Detect Python-owned regulatory facts and verify their registry relocation, consumers, publication, and accounting.')]
-[group('check')]
-[no-exit-message]
-check-facts:
-    @uv run --no-sync python -m dev.registry.facts
-
 [doc('Measure binding declarations, consumers, provider enrollment, temporal coherence, and advisory resolution routes.')]
 [group('check')]
 [no-exit-message]

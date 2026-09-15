@@ -219,6 +219,8 @@ def test_revision_selection_delegates_year_admission_to_the_shared_catalogue() -
             ):
                 literal_gates.append(f"{path.name}:{node.lineno}:{text}")
 
+    authority_source = _YEAR_SELECTION_MODULES[0].read_text(encoding="utf-8")
     temporal_source = _YEAR_SELECTION_MODULES[-1].read_text(encoding="utf-8")
-    assert "support.projection_coordinate(filing_year)" in temporal_source
+    assert "support.projection_coordinate(filing_year)" in authority_source
+    assert "support.admits_filing_year(filing_year)" in temporal_source
     assert literal_gates == [], f"year selection duplicates literal admission limits: {literal_gates}"
