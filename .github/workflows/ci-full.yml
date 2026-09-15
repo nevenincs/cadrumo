@@ -98,6 +98,8 @@ jobs:
       - name: Tooling and workflow conformance gates
         # Dev-tree ceiling raised over the 300 s ini default: real install/
         # harness tests legitimately run 300-900 s (see ci.yml).
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
         run: just test-ci-contracts
 
       - name: Test (integration)

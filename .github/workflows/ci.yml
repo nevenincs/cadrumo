@@ -219,6 +219,8 @@ jobs:
         # `dev/tests/test_lane_reachability.py` exists to catch.
         # Routing through the recipe also makes the lane reproducible locally,
         # which it was not while it lived here.
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
         run: just test-ci-contracts
 
       - name: Product integration parallel population

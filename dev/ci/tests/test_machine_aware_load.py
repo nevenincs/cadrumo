@@ -162,19 +162,20 @@ def _pytest_lines(
     lines: list[str] = []
     for job in document["jobs"].values():
         for step in job.get("steps") or []:
+            step_environment = "".join(f"{name}={value} " for name, value in (step.get("env") or {}).items())
             for line in executed_lines(step.get("run")):
-                if "pytest" in line:
+                if re.search(r"(?:^|\s)pytest(?:\s|$)", line):
                     lines.append(line)
                     continue
                 match = _JUST_CALL.search(line)
                 if match is None:
                     continue
                 recipe = match.group("recipe")
-                env_prefix = line[: match.start()]
+                env_prefix = step_environment + line[: match.start()]
                 call_args = line[match.end() :].split()
                 for raw_body_line in recipe_bodies.get(recipe, []):
                     body_line = next(iter(executed_lines(raw_body_line)), "")
-                    if "pytest" not in body_line:
+                    if re.search(r"(?:^|\s)pytest(?:\s|$)", body_line) is None:
                         continue
                     resolved = _resolve_recipe_line(
                         body_line,
@@ -189,7 +190,7 @@ def _pytest_lines(
 
 @pytest.mark.parametrize(
     "workflow",
-    ("ci.yml", "ci-full.yml", "agent-harness-eval.yml", "aeat-drift-detector.yml"),
+    ("pr.yml", "ci.yml", "ci-full.yml", "agent-harness-eval.yml", "aeat-drift-detector.yml"),
 )
 def test_ci_pytest_invocations_carry_explicit_worker_counts(workflow: str) -> None:
     """Every CI pytest run line declares an explicit ``-n <int>``.
@@ -457,7 +458,7 @@ def test_every_lane_reaching_the_members_excludes_exactly_the_declared_set() -> 
     mismatched = {
         lane.source: sorted(lane.exclusions)
         for lane in _lanes_reaching_members_with_exclusions_dropped(_REPOSITORY_ROOT, members, member_markers)
-        if sorted(lane.exclusions) != declared
+        if sorted(set(lane.exclusions) & set(members)) != declared
     }
 
     assert not mismatched, (

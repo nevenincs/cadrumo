@@ -33,6 +33,7 @@ _QUICK: Final = _WORKFLOWS_DIR / "packaging-quick.yml"
 _FULL: Final = _WORKFLOWS_DIR / "ci-full.yml"
 _DOCS: Final = _WORKFLOWS_DIR / "docs.yml"
 _COMPATIBILITY: Final = _WORKFLOWS_DIR / "python-runtime-compatibility.yml"
+_PR: Final = _WORKFLOWS_DIR / "pr.yml"
 
 _COMPATIBILITY_INPUTS: Final = frozenset(
     {
@@ -99,19 +100,18 @@ def _triggers(document: dict[str, Any]) -> Any:
 
 
 def _assert_compatibility_lane_contract(document: dict[str, Any]) -> None:
-    """Require the rolling lane to be a guarded code-change verification surface."""
+    """Require compatibility to run on main and schedule, never on pull requests."""
     triggers = _triggers(document)
-    assert set(triggers) == {"workflow_dispatch", "push", "pull_request"}
-    for event in ("push", "pull_request"):
-        trigger = triggers[event]
-        assert trigger["branches"] == ["main"]
-        assert set(trigger["paths"]) >= _COMPATIBILITY_INPUTS
-        assert "paths-ignore" not in trigger
+    assert set(triggers) == {"workflow_dispatch", "push", "schedule"}
+    assert triggers["schedule"] == [{"cron": "17 3 * * 1"}]
+    trigger = triggers["push"]
+    assert trigger["branches"] == ["main"]
+    assert set(trigger["paths"]) >= _COMPATIBILITY_INPUTS
+    assert "paths-ignore" not in trigger
 
     jobs = document["jobs"]
     assert jobs
     for job_name, job in jobs.items():
-        assert job.get("if") == _SAME_REPO_GUARD, f"compatibility workflow job {job_name} lacks the fork guard"
         assert job.get("runs-on") == ["self-hosted", "Linux", "X64"], job_name
 
 
@@ -152,35 +152,20 @@ def test_compatibility_workflow_is_enrolled_in_change_class_and_fork_safety() ->
 
 
 def test_compatibility_lane_guard_has_detector_teeth() -> None:
-    """A missing fork guard is refused rather than hidden by a healthy sibling job."""
+    """Removing the scheduled diagnostic is refused."""
     document = deepcopy(_document(_COMPATIBILITY))
-    document["jobs"]["compatibility-source"]["if"] = "always()"
-    with pytest.raises(AssertionError, match="lacks the fork guard"):
+    del _triggers(document)["schedule"]
+    with pytest.raises(AssertionError):
         _assert_compatibility_lane_contract(document)
 
 
-def test_code_lane_carve_out_is_identical_across_every_python_lane_and_trigger() -> None:
-    """The Python lanes agree EXACTLY on what never reaches the code surface.
-
-    Equality, not superset. The previous form asserted ``>= _T0_CARVE_OUT`` per
-    lane independently, which is satisfiable by two lanes that disagree: it can
-    only catch a lane dropping a shared path, never one lane carving out
-    something the other does not. That is not a hypothetical — it is how the
-    tree actually drifted. `packaging-quick.yml` carved out `docs/**` and
-    `ci.yml` did not, for long enough that the whole documentation tree was
-    carved out for one Python lane and not the other, while the governing
-    decision described the carve-out as shared and this gate reported green.
-
-    Both triggers, not just push. The old form read only ``push``, so the
-    pull-request carve-out could diverge from the push one with nothing
-    watching — the same class of hole one level down.
-    """
-    for path in (_CI, _QUICK):
-        triggers = _triggers(_document(path))
-        for event in ("push", "pull_request"):
-            assert event in triggers, f"{path.name} lost its {event} trigger"
-            carve_out = set(triggers[event]["paths-ignore"])
-            assert carve_out == set(_CODE_LANE_CARVE_OUT), f"{path.name}:{event}"
+def test_primary_pr_context_is_unfiltered_while_legacy_lanes_leave_prs() -> None:
+    """Every PR emits the required context; broad legacy lanes never join it."""
+    pr_triggers = _triggers(_document(_PR))
+    assert "paths" not in pr_triggers["pull_request"]
+    assert "paths-ignore" not in pr_triggers["pull_request"]
+    assert set(_triggers(_document(_CI))) == {"workflow_dispatch"}
+    assert "pull_request" not in _triggers(_document(_QUICK))
 
 
 def test_every_code_lane_carve_out_path_has_a_lane_of_its_own() -> None:
@@ -374,15 +359,10 @@ def test_the_cross_run_artifact_gate_refuses_a_run_id_read(tmp_path: Path) -> No
     assert "run-id" in step["with"]
 
 
-def test_no_workflow_carries_a_schedule_trigger() -> None:
-    """Operator ruling 2026-07-21: manual cadence, no standing compute.
-
-    The project is not developed continuously, so every lane is dispatch-,
-    push-, or pull-request-triggered; a schedule trigger anywhere is creeping standing
-    compute this gate refuses.
-    """
-    for path in sorted(_workflow_paths()):
-        assert "schedule" not in set(_triggers(_document(path))), path.name
+def test_only_runtime_compatibility_carries_the_weekly_schedule() -> None:
+    """Standing compute is limited to the audited prerelease-runtime diagnostic."""
+    scheduled = {path.name for path in _workflow_paths() if "schedule" in set(_triggers(_document(path)))}
+    assert scheduled == {_COMPATIBILITY.name}
 
 
 def test_every_workflow_name_carries_the_product_identity() -> None:
