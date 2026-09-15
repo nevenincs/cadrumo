@@ -592,7 +592,11 @@ def _defaulted_fields(model: type[BaseModel]) -> frozenset[str]:
     as current. That is the one shape change a version integer cannot see,
     and the only one this walk has to answer for.
     """
-    return frozenset(name for name, field in model.model_fields.items() if not field.is_required())
+    names: set[str] = set()
+    for name, field in model.model_fields.items():
+        if not field.is_required() and isinstance(name, str):
+            names.add(name)
+    return frozenset(names)
 
 
 def _shape_refusal(payload: dict[str, object]) -> str | None:

@@ -112,7 +112,7 @@ def test_the_issuers_own_rate_corroborates_the_registration(*, operation: Pinned
     """
     scope, rung, conflict = _walk(charged_iva_rates=(Decimal("19"),), operation=operation)
 
-    assert scope is IvaTerritorialScope._from_registry("eu_member")
+    assert scope is IvaTerritorialScope.from_registry("eu_member")
     assert rung is EstablishmentRung.CONCORDANT_REGISTRATION
     assert conflict is None
 
@@ -121,7 +121,7 @@ def test_the_reverse_charge_mention_still_corroborates(*, operation: PinnedAutho
     """The pre-existing signal is not collateral damage of the widening."""
     scope, rung, _ = _walk(regime_legend=_REVERSE_CHARGE, operation=operation)
 
-    assert scope is IvaTerritorialScope._from_registry("eu_member")
+    assert scope is IvaTerritorialScope.from_registry("eu_member")
     assert rung is EstablishmentRung.CONCORDANT_REGISTRATION
 
 
@@ -200,5 +200,5 @@ def test_the_corroborated_scope_is_the_registration_states_own(*, operation: Pin
     german, _, _ = _walk(charged_iva_rates=(Decimal("19"),), operation=operation)
     dutch, _, _ = _walk(tax_identifier=_DUTCH_IVA, regime_legend=_REVERSE_CHARGE, operation=operation)
 
-    assert german is IvaTerritorialScope._from_registry("eu_member")
-    assert dutch is IvaTerritorialScope._from_registry("eu_member")
+    assert german is IvaTerritorialScope.from_registry("eu_member")
+    assert dutch is IvaTerritorialScope.from_registry("eu_member")

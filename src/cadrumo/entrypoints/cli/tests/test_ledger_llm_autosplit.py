@@ -114,7 +114,7 @@ def test_list_hide_llm_rejected_retains_unrelated_rows(tmp_path: Path) -> None:
         transaction_id=rejected_id,
         provenance="llm:recorded-review-input",
         classification=BusinessClassification.BUSINESS,
-        category=SpendingCategory._from_registry("material_oficina"),
+        category=SpendingCategory.from_registry("material_oficina"),
         confidence=Decimal("0.9"),
         reason="recorded review input",
     )

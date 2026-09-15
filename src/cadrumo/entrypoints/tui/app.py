@@ -10,7 +10,7 @@ authority.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, ClassVar, cast, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -190,7 +190,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
                     )
                 )
             case "root-appearance":
-                factories.appearance(cast("App[None]", self))
+                factories.appearance(self)
             case "root-language":
                 screen = factories.profile(TuiScreenContextV1(destination="workbench.profile"))
                 self._replace_destination(screen, return_to_home=True)

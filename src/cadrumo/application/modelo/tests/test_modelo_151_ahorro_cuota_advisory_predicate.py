@@ -56,7 +56,7 @@ _YEARS = (2015, 2019, 2022)
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType._from_registry("natural_person"),
+        entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("exento"),
     )
 

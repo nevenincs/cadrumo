@@ -215,6 +215,12 @@ check-style:
 check-format:
     @uv run --no-sync python -m dev.quality.quiet ruff format --check .
 
+# Verify repository TOML/YAML syntax, lint, and safe textual formatting.
+[doc('Check TOML and YAML syntax, YAML lint, UTF-8 encoding, and final newlines.')]
+[group('check')]
+check-data-format:
+    @uv run --no-sync python -m dev.quality.data_files check
+
 # Verify type correctness with ty (full src) and pyrefly / basedpyright (strict production subset).
 # Wrapper emits a signal-only summary grouped by rule and file; silent on success.
 # Pass --count to emit only the aggregate number of findings.

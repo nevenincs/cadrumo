@@ -253,4 +253,4 @@ def test_the_companion_modules_are_imported_rather_than_merely_listed() -> None:
 
     assert result.returncode != 0
     assert "absent_companion_pkg" in result.stderr
-    assert COMPANION_MODULES, "the shipped lane must name the extra-supplied companions"
+    assert any(COMPANION_MODULES), "the shipped lane must name the extra-supplied companions"

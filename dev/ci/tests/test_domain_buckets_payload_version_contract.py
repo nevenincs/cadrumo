@@ -26,8 +26,8 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

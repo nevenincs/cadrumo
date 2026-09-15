@@ -71,6 +71,11 @@ _DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL
 _MODELO_130_DIR = bundled_path("registry", "aeat", "modelos", "130")
 
 
+def _object_boundary(value: object) -> object:
+    """Preserve runtime validation for intentionally malformed fixture values."""
+    return value
+
+
 def _committed_modelo_text() -> str:
     """Flatten the committed M130 source tree into one editable TOML text.
 
@@ -742,7 +747,9 @@ def _first_profile_tax_id_draft_field(
     for layout in revision.export_layouts:
         for record in layout.records:
             for field in record.fields:
-                if field.kind == CasillaFieldKind.DRAFT and field.draft_attribute == "profile_tax_id":
+                kind = _object_boundary(field.kind)
+                draft_attribute = _object_boundary(field.draft_attribute)
+                if kind == CasillaFieldKind.DRAFT and draft_attribute == "profile_tax_id":
                     return field, record.id, layout.id
     raise AssertionError("the committed revision declares no profile_tax_id draft export field to anchor on")
 

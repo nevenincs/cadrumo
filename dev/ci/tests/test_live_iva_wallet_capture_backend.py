@@ -24,6 +24,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.application.calculations.observations_repository import iva_wallet_decision_key
 from cadrumo.application.live.iva_remote_state import list_iva_compensation_history
+from cadrumo.application.live.iva_remote_state_ports import IvaRemoteStatePort
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
@@ -34,7 +35,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
-from cadrumo.entrypoints.live_state_composition import persist_and_reconcile_iva_compensation_wallet
+from cadrumo.entrypoints.live_state_composition import compose_live_state, persist_and_reconcile_iva_compensation_wallet
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 _EXTERNAL = load_external_constants()
@@ -49,6 +50,14 @@ _TAXPAYER_REF = "12345678Z"
 _CAPTURED_AT = datetime(2026, 5, 20, 10, 30, 0, tzinfo=UTC)
 _SESSION_BUCKET_ID = "38383838-3838-4383-8383-383838383838"
 _OTHER_SESSION_BUCKET_ID = "39393939-3939-4393-8393-393939393939"
+
+
+def _remote_state_port(output_root: Path) -> IvaRemoteStatePort:
+    """Compose the history reader against the active test bucket."""
+    return compose_live_state(
+        output_root=output_root,
+        bucket_id=_SESSION_BUCKET_ID,
+    ).iva_remote_state_port
 
 
 def _snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
@@ -244,7 +253,10 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
             ),
         )
 
-        report = list_iva_compensation_history(as_of_year=2026)
+        report = list_iva_compensation_history(
+            ports=_remote_state_port(tmp_path / "wallet-evidence"),
+            as_of_year=2026,
+        )
 
     assert report.row_count == 2
     assert report.carry_forward_lot_count == 2
@@ -363,7 +375,10 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             _TAXPAYER_REF,
             Period.from_year_and_code(2026, "1T"),
         )
-        report = list_iva_compensation_history(as_of_year=2026)
+        report = list_iva_compensation_history(
+            ports=_remote_state_port(tmp_path / "remote-iva-evidence"),
+            as_of_year=2026,
+        )
 
         assert reloaded_wallet == wallet
         assert reloaded_history is not None

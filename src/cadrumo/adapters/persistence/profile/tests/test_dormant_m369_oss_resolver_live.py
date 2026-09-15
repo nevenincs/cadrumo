@@ -115,7 +115,7 @@ _M369_DE_SERVICES = OssIossLedgerCandidate(
     ledger_id="oss-de-services",
     transaction_date=date(2026, 2, 15),
     regime=OssIossRegime("union_scheme"),
-    destination_member_state=EUMemberState._from_registry("de"),
+    destination_member_state=EUMemberState.from_registry("de"),
     rate_kind=IvaRateKind("general"),
     invoice_direction=InvoiceKind.ISSUED,
     transaction_kind=TransactionKind("oss_union_services"),
@@ -126,7 +126,7 @@ _M369_FR_SERVICES = OssIossLedgerCandidate(
     ledger_id="oss-fr-services",
     transaction_date=date(2026, 2, 16),
     regime=OssIossRegime("union_scheme"),
-    destination_member_state=EUMemberState._from_registry("fr"),
+    destination_member_state=EUMemberState.from_registry("fr"),
     rate_kind=IvaRateKind("general"),
     invoice_direction=InvoiceKind.ISSUED,
     transaction_kind=TransactionKind("oss_union_services"),
@@ -137,7 +137,7 @@ _M369_DE_GOODS = OssIossLedgerCandidate(
     ledger_id="oss-de-goods",
     transaction_date=date(2026, 2, 17),
     regime=OssIossRegime("union_scheme"),
-    destination_member_state=EUMemberState._from_registry("de"),
+    destination_member_state=EUMemberState.from_registry("de"),
     rate_kind=IvaRateKind("general"),
     invoice_direction=InvoiceKind.ISSUED,
     transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
@@ -220,7 +220,7 @@ def _m369_invoice(
         quantity=Decimal("1"),
         unit_price=base_amount,
         subtotal=base_amount,
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         oss_rate_kind=IvaRateKind("general"),
         iva_amount=iva_amount,
     )
@@ -250,7 +250,7 @@ def _m369_invoice(
         oss_transaction_kind=transaction_kind,
         operation_date=operation_date,
         operation_date_role=(
-            None if operation_date is None else InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED")
+            None if operation_date is None else InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
         ),
     )
 
@@ -401,7 +401,7 @@ def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_voca
         ledger_id=f"unsupported-{unsupported_rate_kind.value}",
         transaction_date=date(2026, 2, 15),
         regime=OssIossRegime("external_scheme"),
-        destination_member_state=EUMemberState._from_registry("de"),
+        destination_member_state=EUMemberState.from_registry("de"),
         rate_kind=unsupported_rate_kind,
         invoice_direction=InvoiceKind.ISSUED,
         transaction_kind=TransactionKind("external_scheme_services"),

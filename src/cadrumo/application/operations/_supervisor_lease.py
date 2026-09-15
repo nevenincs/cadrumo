@@ -6,7 +6,6 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime, timedelta
-from typing import Any
 
 from ...core.hex import Hex64Str
 from .models import OperationId, OperationIdentity
@@ -131,15 +130,14 @@ class OperationSupervisorLeaseMixin:
             raise ValueError("operation lease no longer matches this supervisor's exact held lease")
         return held
 
-    # KWARGS-ANY-RATIONALE-COROUTINE-PROTOCOL: a coroutine's yield/send type
-    # positions are structurally Any for any plain `async def` body -- only
-    # its return type (here `object`) is a meaningful signature position.
-    async def _renew_while_executing(
+    # A plain async executor neither yields nor accepts sent values; preserving
+    # its generic return type lets callers retain their precise result contract.
+    async def _renew_while_executing[ResultT](
         self,
         *,
         identity: OperationIdentity,
-        executor: Coroutine[Any, Any, object],
-    ) -> object:
+        executor: Coroutine[None, None, ResultT],
+    ) -> ResultT:
         """Join one executor while renewing its exact durable lease on schedule."""
         executor_task = asyncio.create_task(executor, name=f"operation-executor-{identity.operation_id}")
         try:

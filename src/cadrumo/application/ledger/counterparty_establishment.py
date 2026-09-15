@@ -97,9 +97,11 @@ def _canonical_identity_token(value: str, *, country_code: str | None) -> str | 
     break and changes only WHEN the owning module executes: the symbol keeps its
     one home and one import path.
     """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from .identity_roles import canonical_identity_token
 
-    return canonical_identity_token(value, country_code=country_code)
+    with bundled_indexed_authority().operation() as operation:
+        return canonical_identity_token(value, country_code=country_code, operation=operation)
 
 
 class ConfirmedCounterpartyFactsInputError(LedgerPreconditionErrorMixin, CadrumoError):

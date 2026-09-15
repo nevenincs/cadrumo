@@ -113,8 +113,7 @@ def test_no_legal_reference_grounds_a_normatives_citation_in_a_derived_artefact(
     offending = sorted(
         f"{ref_id} -> {reference.corpus_ref!r}"
         for ref_id, reference in catalogues.legal.items()
-        if reference.corpus_ref is not None
-        and reference.corpus_ref.partition("#")[0].startswith("corpus/normatives/")
+        if reference.corpus_ref.partition("#")[0].startswith("corpus/normatives/")
         and reference.corpus_ref.partition("#")[0].endswith(".html.extracted.md")
     )
 
@@ -137,8 +136,7 @@ def test_the_derived_artefact_gate_still_admits_the_pdf_manual_exception() -> No
     manual_extracted_md_refs = [
         ref_id
         for ref_id, reference in catalogues.legal.items()
-        if reference.corpus_ref is not None
-        and reference.corpus_ref.partition("#")[0].startswith("corpus/manuals/")
+        if reference.corpus_ref.partition("#")[0].startswith("corpus/manuals/")
         and reference.corpus_ref.partition("#")[0].endswith(".pdf.extracted.md")
     ]
 

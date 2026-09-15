@@ -466,7 +466,15 @@ def test_the_diff_refuses_a_run_whose_manifest_outlives_its_frames(
 def _payload_of(tmp_path: Path, manifest: Manifest) -> tuple[Path, dict[str, object]]:
     """Write ``manifest`` and hand back its path and its decoded payload."""
     path = write_manifest(tmp_path, manifest)
-    return path, json.loads(path.read_text(encoding=UTF_8))
+    decoded: object = json.loads(path.read_text(encoding=UTF_8))
+    if not isinstance(decoded, dict):
+        raise AssertionError("written manifest must be a JSON object")
+    payload: dict[str, object] = {}
+    for key, value in decoded.items():
+        if not isinstance(key, str):
+            raise AssertionError("written manifest keys must be strings")
+        payload[key] = value
+    return path, payload
 
 
 def test_a_manifest_this_tool_wrote_is_read_back(tmp_path: Path) -> None:

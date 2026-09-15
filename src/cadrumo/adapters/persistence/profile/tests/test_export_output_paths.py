@@ -146,8 +146,8 @@ def _typed_profile_with_charge_account(*, taxpayer_nif: str, charge_iban: str | 
         tax_id=taxpayer_nif,
         iva_regime=IVARegime("GENERAL"),
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory._from_registry("common_regime"),
-            regime_composition=M303RegimeComposition._from_registry("general"),
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
@@ -248,8 +248,8 @@ def _nota_three_profile(*, taxpayer_nif: str, refund_account: RefundAccount | No
         tax_id=taxpayer_nif,
         iva_regime=IVARegime("GENERAL"),
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory._from_registry("common_regime"),
-            regime_composition=M303RegimeComposition._from_registry("general"),
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,

@@ -42,7 +42,7 @@ import sys
 import tomllib
 import unicodedata
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Final
 
@@ -121,7 +121,7 @@ def main(argv: list[str] | None = None) -> int:
     counts = {kind: sum(1 for f in findings if f.kind == kind) for kind in CITATION_CLASSES}
 
     if args.json:
-        print(json.dumps({"counts": counts, "findings": [f.__dict__ for f in findings]}, indent=2))
+        print(json.dumps({"counts": counts, "findings": [asdict(f) for f in findings]}, indent=2))
         return 0
 
     print("# legal_citation_grounding schema=1")

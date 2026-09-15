@@ -89,7 +89,10 @@ def extract_pointer_version(text: str, pointer_format: PointerFormat) -> str:
     match = _HOMEBREW_URL_VERSION.search(text)
     if match is None:
         raise ValueError("homebrew formula carries no '/releases/download/v<version>/cadrumo-*' url")
-    return match.group("version")
+    version = match.groupdict().get("version")
+    if not isinstance(version, str):
+        raise ValueError("homebrew formula carries an invalid release URL version")
+    return version
 
 
 def assert_forward_bump(*, existing: str | None, incoming: str) -> None:

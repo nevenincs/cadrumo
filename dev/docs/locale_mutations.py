@@ -691,9 +691,7 @@ def _validate_format_contract(
 
 def _percent_placeholders(value: str) -> frozenset[str]:
     """Return Python percent-format tokens, excluding the literal ``%%``."""
-    return frozenset(
-        match.group(0) for match in _PYTHON_PERCENT.finditer(value) if match.group(0) != "%%"
-    )
+    return frozenset(match.group(0) for match in _PYTHON_PERCENT.finditer(value) if match.group(0) != "%%")
 
 
 def _inline_tokens(

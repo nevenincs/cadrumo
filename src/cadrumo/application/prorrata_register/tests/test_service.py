@@ -120,14 +120,14 @@ def test_record_aeat_autorizada_preserves_sector_and_regime(
         provisional_percentage=Decimal("58"),
         authorisation_reference="AEAT-AUTH-2026-SECTOR-02",
         sector_id="arrendamiento",
-        regime=ProrrataRegisterRegime._from_registry("especial"),
+        regime=ProrrataRegisterRegime.from_registry("especial"),
     )
 
     entry = updated.entry_for(2026, sector_id="arrendamiento")
     assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime._from_registry("especial")
+    assert entry.regime is ProrrataRegisterRegime.from_registry("especial")
     assert entry.provisional_percentage == Decimal("58")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance._from_registry("aeat_autorizada")
+    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
     assert entry.authorisation_reference == "AEAT-AUTH-2026-SECTOR-02"
 
 
@@ -141,14 +141,14 @@ def test_record_inicio_actividad_preserves_sector_and_regime(
         provisional_percentage=Decimal("52"),
         proposal_reference="INICIO-036-2026-SECTOR-04",
         sector_id="formacion",
-        regime=ProrrataRegisterRegime._from_registry("especial"),
+        regime=ProrrataRegisterRegime.from_registry("especial"),
     )
 
     entry = updated.entry_for(2026, sector_id="formacion")
     assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime._from_registry("especial")
+    assert entry.regime is ProrrataRegisterRegime.from_registry("especial")
     assert entry.provisional_percentage == Decimal("52")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance._from_registry("inicio_actividad")
+    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("inicio_actividad")
     assert entry.authorisation_reference == "INICIO-036-2026-SECTOR-04"
 
 
@@ -159,20 +159,20 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(
     service.declare(
         ProrrataRegisterEntry(
             ejercicio=2026,
-            regime=ProrrataRegisterRegime._from_registry("general"),
+            regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("80"),
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_observation_ref="303:2025:4T",
             source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
         ),
     )
     authorised = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("63"),
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
         authorisation_reference="AEAT-AUTH-2026-0009",
         source_registry_snapshot_refs=(),
     )
@@ -181,7 +181,7 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(
 
     assert resolution.resolved
     assert resolution.percentage == Decimal("63")
-    assert resolution.provenance is ProrrataProvisionalProvenance._from_registry("aeat_autorizada")
+    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
 
 
 def test_resolve_provisional_uses_ladder_for_inicio_candidate(
@@ -191,20 +191,20 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(
     service.declare(
         ProrrataRegisterEntry(
             ejercicio=2026,
-            regime=ProrrataRegisterRegime._from_registry("general"),
+            regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("80"),
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_observation_ref="303:2025:4T",
             source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
         ),
     )
     inicio = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("55"),
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("inicio_actividad"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("inicio_actividad"),
         authorisation_reference="INICIO-036-2026-0005",
         source_registry_snapshot_refs=(),
     )
@@ -213,7 +213,7 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(
 
     assert resolution.resolved
     assert resolution.percentage == Decimal("55")
-    assert resolution.provenance is ProrrataProvisionalProvenance._from_registry("inicio_actividad")
+    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("inicio_actividad")
 
 
 def test_resolve_provisional_filters_candidates_to_requested_sector(
@@ -223,22 +223,22 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(
     service.declare(
         ProrrataRegisterEntry(
             ejercicio=2026,
-            regime=ProrrataRegisterRegime._from_registry("general"),
+            regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             sector_id="comercio",
             provisional_percentage=Decimal("80"),
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_observation_ref="303:2025:4T",
             source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
         ),
     )
     other_sector = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         sector_id="arrendamiento",
         provisional_percentage=Decimal("63"),
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
         authorisation_reference="AEAT-AUTH-2026-0010",
         source_registry_snapshot_refs=(),
     )
@@ -251,4 +251,4 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(
 
     assert resolution.resolved
     assert resolution.percentage == Decimal("80")
-    assert resolution.provenance is ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
+    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")

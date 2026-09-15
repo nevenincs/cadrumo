@@ -169,7 +169,7 @@ class TestConcordantPapersResolveSilently:
             repository, tax_identifier=_GERMAN_IVA, country_name="Alemania", postal_code=_BERLIN, operation=operation
         )
 
-        assert resolved.scope == IvaTerritorialScope._from_registry("eu_member")
+        assert resolved.scope == IvaTerritorialScope.from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
         assert resolved.source is ClassifierInputSource.DOCUMENT_EVIDENCE
         assert resolved.registration_conflict is None
@@ -180,7 +180,7 @@ class TestConcordantPapersResolveSilently:
         """The concordance rung proper: registration plus an independent treatment."""
         resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, regime_legend=_REVERSE_CHARGE, operation=operation)
 
-        assert resolved.scope == IvaTerritorialScope._from_registry("eu_member")
+        assert resolved.scope == IvaTerritorialScope.from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.CONCORDANT_REGISTRATION
         assert resolved.identification_state == require_eu_member_state("DE")
         assert resolved.registration_conflict is None
@@ -212,7 +212,7 @@ class TestConcordantPapersResolveSilently:
             operation=operation,
         )
 
-        assert resolved.scope != IvaTerritorialScope._from_registry("eu_member")
+        assert resolved.scope != IvaTerritorialScope.from_registry("eu_member")
         assert resolved.rung is not EstablishmentRung.CONCORDANT_REGISTRATION
 
 
@@ -261,7 +261,7 @@ class TestConflictedPapersSurface:
             repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID, operation=operation
         )
 
-        assert resolved.scope != IvaTerritorialScope._from_registry("es_mainland")
+        assert resolved.scope != IvaTerritorialScope.from_registry("es_mainland")
         assert resolved.rung is not EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_spanish_registration_with_a_spanish_address_does_not_conflict(
@@ -278,7 +278,7 @@ class TestConflictedPapersSurface:
         )
 
         assert not resolved.conflicted
-        assert resolved.scope == IvaTerritorialScope._from_registry("es_mainland")
+        assert resolved.scope == IvaTerritorialScope.from_registry("es_mainland")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_foreign_rate_charged_beside_a_foreign_registration_does_not_conflict(

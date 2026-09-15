@@ -349,9 +349,9 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap(
 
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("SIMPLIFICADO"),
     )
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))

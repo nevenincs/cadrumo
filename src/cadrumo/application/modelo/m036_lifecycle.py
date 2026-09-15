@@ -178,19 +178,6 @@ def m036_declaration_object_key(bucket_id: str, declaration_id: str) -> str:
     return f"m036-declaration:{bucket_id}:{declaration_id}"
 
 
-def _m036_declaration_not_found(declaration_id: str) -> M036DeclarationNotFoundError:
-    return M036DeclarationNotFoundError(f"M036 declaration {declaration_id!r} not found")
-
-
-def _m036_declaration_ambiguous_prefix(
-    declaration_id: str,
-    full_ids: tuple[str, ...],
-) -> M036DeclarationAmbiguousError:
-    return M036DeclarationAmbiguousError(
-        f"M036 declaration prefix {declaration_id!r} is ambiguous; matches {list(full_ids)!r}",
-    )
-
-
 def _m036_declaration_repository(*, ports: M036LifecyclePorts) -> M036DeclarationRepositoryPort:
     """Return the required declaration capability for this lifecycle call."""
     return ports.declaration_repository

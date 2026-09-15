@@ -74,9 +74,9 @@ def _prior_m303_snapshot_ref():
 
 def _deduction_authority(provider_id: str) -> dict[str, object]:
     return {
-        "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
+        "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
         "deduction_provenance": IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
             source_locator=f"invoice:{provider_id}",
             evidence_digest="7" * 64,
         ),
@@ -251,7 +251,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
                 entries=(
                     ProrrataRegisterEntry(
                         ejercicio=2026,
-                        regime=ProrrataRegisterRegime._from_registry("ninguna"),
+                        regime=ProrrataRegisterRegime.from_registry("ninguna"),
                         especial_transition=None,
                         source_registry_snapshot_refs=(),
                     ),
@@ -313,10 +313,10 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
                 entries=(
                     ProrrataRegisterEntry(
                         ejercicio=2026,
-                        regime=ProrrataRegisterRegime._from_registry("general"),
+                        regime=ProrrataRegisterRegime.from_registry("general"),
                         especial_transition=None,
                         provisional_percentage=Decimal("80"),
-                        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                         source_observation_ref="303:2025:4T",
                         source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                     ),
@@ -339,8 +339,8 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
     assert baseline.prorrata_apportionment is None
     assert apportioned.prorrata_apportionment is not None
     assert apportioned.prorrata_apportionment.percentage == Decimal("80")
-    assert apportioned.prorrata_apportionment.regime is ProrrataRegisterRegime._from_registry("general")
-    assert apportioned.prorrata_apportionment.provenance is ProrrataProvisionalProvenance._from_registry(
+    assert apportioned.prorrata_apportionment.regime is ProrrataRegisterRegime.from_registry("general")
+    assert apportioned.prorrata_apportionment.provenance is ProrrataProvisionalProvenance.from_registry(
         "carried_prior_definitiva"
     )
     assert apportioned_values[_DEDUCIBLE_CUOTA_BINDING] < baseline_values[_DEDUCIBLE_CUOTA_BINDING]
@@ -362,7 +362,7 @@ def _seed_register(
                     regime=regime,
                     especial_transition=None,
                     provisional_percentage=percentage,
-                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                    provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                     source_observation_ref="303:2025:4T",
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
@@ -393,7 +393,7 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(
                 ),
             ),
         )
-        _seed_register(objects, regime=ProrrataRegisterRegime._from_registry("general"), percentage=Decimal("80"))
+        _seed_register(objects, regime=ProrrataRegisterRegime.from_registry("general"), percentage=Decimal("80"))
         aggregation = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
@@ -408,7 +408,7 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(
         )
 
     assert aggregation.prorrata_apportionment is not None
-    assert aggregation.prorrata_apportionment.regime is ProrrataRegisterRegime._from_registry("general")
+    assert aggregation.prorrata_apportionment.regime is ProrrataRegisterRegime.from_registry("general")
     # 10.50 * 80/100 == 8.400, exactly as the pre-especial flat multiplier produced.
     assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("10.50") * (Decimal("80") / Decimal("100"))
     assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("8.400")
@@ -437,15 +437,15 @@ def test_especial_regime_routes_each_input_by_art_106_classification(
             TransactionCatalogue.from_transactions(
                 (
                     _fully_taxable_sale("sale-especial"),
-                    _classified_purchase("buy-excl-ded", InputClassification._from_registry("exclusively_deductible")),
+                    _classified_purchase("buy-excl-ded", InputClassification.from_registry("exclusively_deductible")),
                     _classified_purchase(
-                        "buy-excl-non", InputClassification._from_registry("exclusively_non_deductible")
+                        "buy-excl-non", InputClassification.from_registry("exclusively_non_deductible")
                     ),
-                    _classified_purchase("buy-common", InputClassification._from_registry("common")),
+                    _classified_purchase("buy-common", InputClassification.from_registry("common")),
                 ),
             ),
         )
-        _seed_register(objects, regime=ProrrataRegisterRegime._from_registry("especial"), percentage=Decimal("80"))
+        _seed_register(objects, regime=ProrrataRegisterRegime.from_registry("especial"), percentage=Decimal("80"))
         aggregation = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
@@ -460,7 +460,7 @@ def test_especial_regime_routes_each_input_by_art_106_classification(
         )
 
     assert aggregation.prorrata_apportionment is not None
-    assert aggregation.prorrata_apportionment.regime is ProrrataRegisterRegime._from_registry("especial")
+    assert aggregation.prorrata_apportionment.regime is ProrrataRegisterRegime.from_registry("especial")
     # regla 1.ª (100%) + regla 2.ª (0%) + regla 3.ª (general 80%): 10.50 + 0 + 8.40.
     assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("10.50") + Decimal("10.50") * (Decimal("80") / Decimal("100"))
     assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("18.900")
@@ -490,12 +490,12 @@ def test_especial_all_common_reduces_to_general_byte_identical(
             TransactionCatalogue.from_transactions(
                 (
                     _fully_taxable_sale("sale-cmp"),
-                    _classified_purchase("buy-common-a", InputClassification._from_registry("common")),
-                    _classified_purchase("buy-common-b", InputClassification._from_registry("common")),
+                    _classified_purchase("buy-common-a", InputClassification.from_registry("common")),
+                    _classified_purchase("buy-common-b", InputClassification.from_registry("common")),
                 ),
             ),
         )
-        _seed_register(objects, regime=ProrrataRegisterRegime._from_registry("especial"), percentage=Decimal("80"))
+        _seed_register(objects, regime=ProrrataRegisterRegime.from_registry("especial"), percentage=Decimal("80"))
         especial = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
@@ -511,7 +511,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(
             ),
         )
 
-        _seed_register(objects, regime=ProrrataRegisterRegime._from_registry("general"), percentage=Decimal("80"))
+        _seed_register(objects, regime=ProrrataRegisterRegime.from_registry("general"), percentage=Decimal("80"))
         general = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
@@ -528,7 +528,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(
         )
 
     assert especial.prorrata_apportionment is not None
-    assert especial.prorrata_apportionment.regime is ProrrataRegisterRegime._from_registry("especial")
+    assert especial.prorrata_apportionment.regime is ProrrataRegisterRegime.from_registry("especial")
     assert especial_bytes == general_bytes
 
 
@@ -557,7 +557,7 @@ def _sectored_purchase(provider_id: str, sector_id: str | None) -> Transaction:
         "classified_by": "manual",
     }
     if sector_id is None:
-        payload["input_classification"] = InputClassification._from_registry("common")
+        payload["input_classification"] = InputClassification.from_registry("common")
     else:
         payload["prorrata_sector_id"] = sector_id
     return Transaction.model_validate(payload)
@@ -566,11 +566,11 @@ def _sectored_purchase(provider_id: str, sector_id: str | None) -> Transaction:
 def _sector_entry(sector_id: str | None, percentage: Decimal) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=percentage,
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref=f"303:2025:4T:{sector_id or 'comun'}",
         source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
     )
@@ -609,7 +609,7 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(
                 sector_definitions=(
                     SectorDefinition(
                         sector_id="comercio",
-                        letra=SectorDiferenciadoLetra._from_registry("a"),
+                        letra=SectorDiferenciadoLetra.from_registry("a"),
                         member_activity_codes=("4711",),
                     ),
                 ),
@@ -703,12 +703,12 @@ def test_each_input_routes_to_its_own_sector_percentage(
                 sector_definitions=(
                     SectorDefinition(
                         sector_id="comercio",
-                        letra=SectorDiferenciadoLetra._from_registry("a"),
+                        letra=SectorDiferenciadoLetra.from_registry("a"),
                         member_activity_codes=("4711",),
                     ),
                     SectorDefinition(
                         sector_id="arrendamiento",
-                        letra=SectorDiferenciadoLetra._from_registry("a"),
+                        letra=SectorDiferenciadoLetra.from_registry("a"),
                         member_activity_codes=("6820",),
                     ),
                 ),
@@ -780,7 +780,7 @@ def test_each_input_routes_to_its_own_sector_percentage(
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="comercio",
-                regime=ProrrataRegisterRegime._from_registry("ninguna"),
+                regime=ProrrataRegisterRegime.from_registry("ninguna"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -790,7 +790,7 @@ def test_each_input_routes_to_its_own_sector_percentage(
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="comercio",
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -815,7 +815,7 @@ def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry
                 sector_definitions=(
                     SectorDefinition(
                         sector_id="comercio",
-                        letra=SectorDiferenciadoLetra._from_registry("a"),
+                        letra=SectorDiferenciadoLetra.from_registry("a"),
                         member_activity_codes=("4711",),
                     ),
                 ),

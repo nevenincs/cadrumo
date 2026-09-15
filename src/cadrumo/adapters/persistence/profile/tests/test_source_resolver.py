@@ -184,7 +184,7 @@ def _invoice(
                 # Spain has no standing zero tier, so RATE_0 here asserted a
                 # rate that was not in force and refused every fixture dated
                 # outside the 2024 temporary food window.
-                iva_rate=IvaRate._from_registry("EXEMPT"),
+                iva_rate=IvaRate.from_registry("EXEMPT"),
                 iva_amount=Decimal("0"),
             ),
         ),
@@ -244,7 +244,7 @@ def _domestic_invoice(
                 quantity=Decimal("1"),
                 unit_price=base_total,
                 subtotal=base_total,
-                iva_rate=IvaRate._from_registry("RATE_21"),
+                iva_rate=IvaRate.from_registry("RATE_21"),
                 iva_amount=iva_total,
             ),
         ),
@@ -694,7 +694,7 @@ def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
         quantity=Decimal("1"),
         unit_price=base,
         subtotal=base,
-        iva_rate=IvaRate._from_registry("EXEMPT"),
+        iva_rate=IvaRate.from_registry("EXEMPT"),
         iva_amount=Decimal("0.00"),
     )
     # invoice_id is omitted deliberately: a before-validator on the model derives
@@ -913,7 +913,7 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
         iva_category=IvaCategory("domestic_general"),
     )
     mediated_sale = mediated_sale.model_copy(
-        update={"travel_agency_mediation": TravelAgencyMediationType._from_registry("mediated_service")},
+        update={"travel_agency_mediation": TravelAgencyMediationType.from_registry("mediated_service")},
     )
     ordinary_sale = _invoice(
         bucket_id=None,
@@ -965,7 +965,7 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         iva_category=IvaCategory("domestic_general"),
     )
     air_transport_purchase = air_transport_purchase.model_copy(
-        update={"travel_agency_mediation": TravelAgencyMediationType._from_registry("air_passenger_transport")},
+        update={"travel_agency_mediation": TravelAgencyMediationType.from_registry("air_passenger_transport")},
     )
     non_air_mediated_purchase = _invoice(
         bucket_id=None,
@@ -979,7 +979,7 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         iva_category=IvaCategory("domestic_general"),
     )
     non_air_mediated_purchase = non_air_mediated_purchase.model_copy(
-        update={"travel_agency_mediation": TravelAgencyMediationType._from_registry("mediated_service")},
+        update={"travel_agency_mediation": TravelAgencyMediationType.from_registry("mediated_service")},
     )
 
     resolution = _public_resolution((air_transport_purchase, non_air_mediated_purchase), context=context)
@@ -1050,7 +1050,7 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(
             path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole._from_registry("third_party_fee_collector").value,
+            value=ThirdPartyDeclarationRole.from_registry("third_party_fee_collector").value,
         ),
     )
     seed_test_profile_record(
@@ -1115,7 +1115,7 @@ def _third_party_fee_collector_profile_facts() -> tuple[UserProfileFact, ...]:
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(
             path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole._from_registry("third_party_fee_collector").value,
+            value=ThirdPartyDeclarationRole.from_registry("third_party_fee_collector").value,
         ),
     )
 
@@ -1259,7 +1259,7 @@ def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(
             path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole._from_registry("public_administration_entity").value,
+            value=ThirdPartyDeclarationRole.from_registry("public_administration_entity").value,
         ),
     )
 
@@ -1371,7 +1371,7 @@ def _statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(
             path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole._from_registry("statutory_information_duty_entity").value,
+            value=ThirdPartyDeclarationRole.from_registry("statutory_information_duty_entity").value,
         ),
     )
 
@@ -1624,7 +1624,7 @@ def _same_facts_invoice(*, with_category: bool):
                 quantity=Decimal("1"),
                 unit_price=Decimal("4000.00"),
                 subtotal=Decimal("4000.00"),
-                iva_rate=IvaRate._from_registry("RATE_21"),
+                iva_rate=IvaRate.from_registry("RATE_21"),
                 iva_amount=Decimal("840.00"),
             ),
         ),
@@ -2171,7 +2171,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
                 quantity=Decimal("1"),
                 unit_price=Decimal("1500.00"),
                 subtotal=Decimal("1500.00"),
-                iva_rate=IvaRate._from_registry("RATE_21"),
+                iva_rate=IvaRate.from_registry("RATE_21"),
                 iva_amount=Decimal("315.00"),
             ),
         ),

@@ -40,6 +40,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 _CSV_FORMAT = "csv_spreadsheet"
 
 
+def _missing_corpus_key() -> object:
+    """Return the deliberately invalid key used to prove early refusal."""
+    value: object = None
+    return value
+
+
 def _corpus_key():
     return load_corpus_key()
 
@@ -266,7 +272,7 @@ def test_the_truth_document_lookup_refuses_an_unauthored_document() -> None:
     with pytest.raises(TabularTruthError, match="no column-role truth is authored"):
         # The None is the point: the refusal has to precede the key access,
         # so the call is made with a key that could not be used if reached.
-        column_role_truth_document("OP-NOT-a-real-document", key=cast("CorpusKey", None))
+        column_role_truth_document("OP-NOT-a-real-document", key=cast("CorpusKey", _missing_corpus_key()))
 
 
 def test_defensible_alternates_refuse_an_unauthored_document() -> None:

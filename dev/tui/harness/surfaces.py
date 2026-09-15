@@ -69,13 +69,22 @@ def _login() -> App[Any]:
         preselected_profile_login_id,
         profile_login_choices,
     )
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.secret.login import LoginScreen
+
+    def authenticate(profile_id: str, passphrase: str):
+        with bundled_indexed_authority().operation() as operation:
+            return attempt_profile_login(
+                profile_id,
+                passphrase,
+                profile_decode_context=operation.profile_decode_context(),
+            )
 
     return ScreenHostApp(
         LoginScreen(
             choices=profile_login_choices(),
-            authenticate=attempt_profile_login,
+            authenticate=authenticate,
             preselected=preselected_profile_login_id(None),
         )
     )
@@ -87,11 +96,17 @@ def _manager() -> App[Any]:
     from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
     from cadrumo.application.user_profile.profile_summary import summary_inventory
     from cadrumo.core.bucket_pointer import require_active_bucket_id
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
 
     profile_id = require_active_bucket_id()
-    profiles = ProfileRecordRepository.for_current_session(profile_id)
+    with bundled_indexed_authority().operation() as operation:
+        profile_decode_context = operation.profile_decode_context()
+        profiles = ProfileRecordRepository.for_current_session(
+            profile_id,
+            profile_decode_context=profile_decode_context,
+        )
     # The label comes from the summary projection, not the authenticated
     # aggregate: `load` takes a per-profile custody lock and reads password
     # material, the transaction journal and the label head to hand back a
@@ -105,7 +120,13 @@ def _manager() -> App[Any]:
         return build_profile_overview(profiles.load(profile_id), label=label)
 
     def _persist(path: str, value: str):
-        record = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
+        with bundled_indexed_authority().operation() as operation:
+            record = apply_manager_profile_field_mutation(
+                profile_id=profile_id,
+                path=path,
+                value=value,
+                profile_decode_context=operation.profile_decode_context(),
+            )
         return build_profile_overview(record, label=label)
 
     return ScreenHostApp(

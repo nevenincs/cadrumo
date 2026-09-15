@@ -64,7 +64,10 @@ def _justfile_recipe_bodies() -> dict[str, list[str]]:
     for raw_line in _JUSTFILE.read_text(encoding="utf-8").splitlines():
         header = _RECIPE_HEADER.match(raw_line)
         if header is not None:
-            current = header.group("name")
+            name = header.group("name")
+            if not isinstance(name, str):
+                raise AssertionError("recipe header did not provide a textual name")
+            current = name
             bodies.setdefault(current, [])
             continue
         if current is not None and raw_line[:1].isspace():
@@ -129,7 +132,9 @@ def _resolve_recipe_line(
         if env_var is not None:
             found = re.search(rf"\b{re.escape(env_var)}=(\S+)", env_prefix)
             if found is not None:
-                return found.group(1)
+                value = found.group(1)
+                if isinstance(value, str):
+                    return value
         return match.group(0)
 
     return _TEMPLATE_REF.sub(_substitute, body_line)

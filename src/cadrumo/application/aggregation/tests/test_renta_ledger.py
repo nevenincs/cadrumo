@@ -45,7 +45,7 @@ from ..renta_ledger import (
 from .renta_income_aggregation_support import _period
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
-_DEFAULT_SPENDING_CATEGORY = SpendingCategory._from_registry("asesoria_fiscal")
+_DEFAULT_SPENDING_CATEGORY = SpendingCategory.from_registry("asesoria_fiscal")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -209,7 +209,7 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
     mixed = _transaction(
         "row-mixed",
         amount=Decimal("200.00"),
-        category=SpendingCategory._from_registry("gastos_bancarios"),
+        category=SpendingCategory.from_registry("gastos_bancarios"),
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.25"),
         purchase_invoice_evidence_id=None,
@@ -233,18 +233,18 @@ def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation
     active = _transaction(
         "row-active",
         amount=Decimal("100.00"),
-        category=SpendingCategory._from_registry("gastos_bancarios"),
+        category=SpendingCategory.from_registry("gastos_bancarios"),
     )
     archived = _transaction(
         "row-archived",
         amount=Decimal("500.00"),
-        category=SpendingCategory._from_registry("gastos_bancarios"),
+        category=SpendingCategory.from_registry("gastos_bancarios"),
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
     stashed = _transaction(
         "row-stashed",
         amount=Decimal("700.00"),
-        category=SpendingCategory._from_registry("gastos_bancarios"),
+        category=SpendingCategory.from_registry("gastos_bancarios"),
         lifecycle_state=TransactionLifecycleState.STASHED,
     )
 
@@ -265,7 +265,7 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     manual = _transaction(
         "manual-tax-fields",
         amount=Decimal("121.00"),
-        category=SpendingCategory._from_registry("asesoria_fiscal"),
+        category=SpendingCategory.from_registry("asesoria_fiscal"),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("21.00"),
@@ -289,7 +289,7 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
 def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> None:
     phone = _transaction(
         "phone",
-        category=SpendingCategory._from_registry("telefonia_movil"),
+        category=SpendingCategory.from_registry("telefonia_movil"),
     )
 
     missing_ratio = aggregate_renta_ledger_expenses(
@@ -310,7 +310,7 @@ def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> 
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
-        usage_ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("0.25")},
+        usage_ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.25")},
     )
 
     assert with_ratio.issues == ()
@@ -423,7 +423,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
     caja_in_year = _transaction(
         "row-caja-in-year",
         amount=Decimal("100.00"),
-        category=SpendingCategory._from_registry("gastos_bancarios"),
+        category=SpendingCategory.from_registry("gastos_bancarios"),
         booked_date=date(2024, 12, 31),
         value_date=date(2025, 1, 2),
         purchase_invoice_evidence_id=None,
@@ -432,7 +432,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
     caja_out_of_year = _transaction(
         "row-caja-out-of-year",
         amount=Decimal("100.00"),
-        category=SpendingCategory._from_registry("gastos_bancarios"),
+        category=SpendingCategory.from_registry("gastos_bancarios"),
         booked_date=date(2025, 1, 2),
         value_date=date(2024, 12, 31),
         purchase_invoice_evidence_id=None,
@@ -461,7 +461,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
 def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None:
     usd_expense = _transaction(
         "row-usd",
-        category=SpendingCategory._from_registry("gastos_bancarios"),
+        category=SpendingCategory.from_registry("gastos_bancarios"),
         purchase_invoice_evidence_id=None,
         currency="USD",
     )
@@ -482,7 +482,7 @@ def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
     zero_business = _transaction(
         "row-zero-business",
         amount=Decimal("200.00"),
-        category=SpendingCategory._from_registry("gastos_bancarios"),
+        category=SpendingCategory.from_registry("gastos_bancarios"),
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0"),
         purchase_invoice_evidence_id=None,
@@ -516,7 +516,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
         category=category,
         display_label=tr("Override territorial de prueba"),
         proportionality=ProportionalityRule(
-            kind=ProportionalityKind._from_registry("fixed_percentage"),
+            kind=ProportionalityKind.from_registry("fixed_percentage"),
             fixed_pct=Decimal("0.50"),
             citations=(
                 CategoryCitation(
@@ -541,7 +541,7 @@ def test_non_regional_category_profile_preserves_result_across_region() -> None:
     observations whether the residence comunidad is declared or not.
     """
     row = _transaction(
-        "row-region-inert", amount=Decimal("100.00"), category=SpendingCategory._from_registry("gastos_bancarios")
+        "row-region-inert", amount=Decimal("100.00"), category=SpendingCategory.from_registry("gastos_bancarios")
     )
     catalogue = TransactionCatalogue.from_transactions((row,))
 
@@ -569,12 +569,12 @@ def test_region_override_selected_when_residence_matches() -> None:
     versus the full-deductible state profile, proving selection by CCAA.
     """
     row = _transaction(
-        "row-region-hit", amount=Decimal("100.00"), category=SpendingCategory._from_registry("gastos_bancarios")
+        "row-region-hit", amount=Decimal("100.00"), category=SpendingCategory.from_registry("gastos_bancarios")
     )
     overrides = {
         CCAA.CANARIAS: {
-            SpendingCategory._from_registry("gastos_bancarios"): _region_override_profile(
-                SpendingCategory._from_registry("gastos_bancarios")
+            SpendingCategory.from_registry("gastos_bancarios"): _region_override_profile(
+                SpendingCategory.from_registry("gastos_bancarios")
             )
         }
     }
@@ -590,19 +590,19 @@ def test_region_override_selected_when_residence_matches() -> None:
     )
 
     assert result.issues == ()
-    assert result.observations[0].proportionality_kind == ProportionalityKind._from_registry("fixed_percentage")
+    assert result.observations[0].proportionality_kind == ProportionalityKind.from_registry("fixed_percentage")
     assert result.observations[0].deductible_amount == Decimal("50.0000")
 
 
 def test_region_override_undeclared_residence_fails_closed() -> None:
     """A category carrying an override with no declared residence fails closed."""
     row = _transaction(
-        "row-region-undeclared", amount=Decimal("100.00"), category=SpendingCategory._from_registry("gastos_bancarios")
+        "row-region-undeclared", amount=Decimal("100.00"), category=SpendingCategory.from_registry("gastos_bancarios")
     )
     overrides = {
         CCAA.CANARIAS: {
-            SpendingCategory._from_registry("gastos_bancarios"): _region_override_profile(
-                SpendingCategory._from_registry("gastos_bancarios")
+            SpendingCategory.from_registry("gastos_bancarios"): _region_override_profile(
+                SpendingCategory.from_registry("gastos_bancarios")
             )
         }
     }

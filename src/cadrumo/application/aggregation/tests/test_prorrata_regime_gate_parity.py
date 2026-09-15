@@ -55,7 +55,7 @@ def _register(regime: ProrrataRegisterRegime) -> ProrrataRegister:
                 regime=regime,
                 especial_transition=None,
                 provisional_percentage=_PERCENTAGE,
-                provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                 source_observation_ref="303:2025:4T",
                 source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
             ),
@@ -101,10 +101,10 @@ def test_a_percentage_and_its_provenance_are_resolved_together_or_not_at_all() -
     """
     entry = ProrrataRegisterEntry(
         ejercicio=_EJERCICIO,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=_PERCENTAGE,
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref="303:2025:4T",
         source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
     )
@@ -129,7 +129,7 @@ def test_an_entry_recording_a_regime_but_no_percentage_yields_no_apportionment()
             entries=(
                 ProrrataRegisterEntry(
                     ejercicio=_EJERCICIO,
-                    regime=ProrrataRegisterRegime._from_registry("general"),
+                    regime=ProrrataRegisterRegime.from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=None,
                     provisional_provenance=None,
@@ -138,7 +138,7 @@ def test_an_entry_recording_a_regime_but_no_percentage_yields_no_apportionment()
             ),
         )
 
-        assert regime_apportions_deduction(ProrrataRegisterRegime._from_registry("general"))
+        assert regime_apportions_deduction(ProrrataRegisterRegime.from_registry("general"))
         assert (
             _sector_scoped_apportionment(register, _EJERCICIO, sector_id=None, operation=_authority_operation_for_test)
             is None

@@ -94,27 +94,27 @@ def _row(category: IvaCategory) -> IvaLedgerObservation:
         iva_amount=Decimal("210.00"),
         recargo_amount=Decimal("0"),
         deduction_fact_kind=(
-            IvaDeductionFactKind._from_registry("import_current")
+            IvaDeductionFactKind.from_registry("import_current")
             if category == IvaCategory("import_third_country")
-            else IvaDeductionFactKind._from_registry("intra_eu_current")
+            else IvaDeductionFactKind.from_registry("intra_eu_current")
             if category
             in {
                 IvaCategory("intra_community_acquisition_reverse_charge"),
                 IvaCategory("intra_community_service_acquisition_reverse_charge"),
             }
-            else IvaDeductionFactKind._from_registry("domestic_current")
+            else IvaDeductionFactKind.from_registry("domestic_current")
         ),
         deduction_provenance=IvaDeductionClassificationProvenance(
             authority=(
-                IvaDeductionEvidenceAuthority._from_registry("customs_declaration")
+                IvaDeductionEvidenceAuthority.from_registry("customs_declaration")
                 if category == IvaCategory("import_third_country")
-                else IvaDeductionEvidenceAuthority._from_registry("intra_eu_self_assessment")
+                else IvaDeductionEvidenceAuthority.from_registry("intra_eu_self_assessment")
                 if category
                 in {
                     IvaCategory("intra_community_acquisition_reverse_charge"),
                     IvaCategory("intra_community_service_acquisition_reverse_charge"),
                 }
-                else IvaDeductionEvidenceAuthority._from_registry("invoice_evidence")
+                else IvaDeductionEvidenceAuthority.from_registry("invoice_evidence")
             ),
             source_locator=f"fixture:{category.value}",
             evidence_digest="d" * 64,
@@ -383,9 +383,9 @@ def _third_country_import() -> Transaction:
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
             "iva_category": IvaCategory("import_third_country"),
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("import_current"),
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("import_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("customs_declaration"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("customs_declaration"),
                 source_locator="customs:import-1",
                 evidence_digest="e" * 64,
             ),

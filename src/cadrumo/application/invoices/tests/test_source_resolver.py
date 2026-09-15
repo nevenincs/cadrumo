@@ -86,7 +86,7 @@ def _invoice(
                 quantity=Decimal("1"),
                 unit_price=total,
                 subtotal=total,
-                iva_rate=IvaRate._from_registry("EXEMPT"),
+                iva_rate=IvaRate.from_registry("EXEMPT"),
                 iva_amount=Decimal("0"),
             ),
         ),

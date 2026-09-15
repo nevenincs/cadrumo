@@ -856,7 +856,7 @@ class TestPlantedAttestationOnAnAlreadyWrittenRow:
         self._stamp(shard)
 
         harvested = harvest_attestations(spec.out_dir, REVISION)
-        assert harvested[f"{SEGMENTO}:00562"]
+        assert harvested[f"{SEGMENTO}:00562"][1]
 
         # What a re-run actually produces: the generator's own eight fields, with
         # no attestation on them at all.

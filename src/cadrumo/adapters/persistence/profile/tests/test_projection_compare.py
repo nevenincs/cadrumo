@@ -124,7 +124,7 @@ def _seed_revision(
     return revision
 
 
-def test_compare_uses_revision_observation_rows_from_registry_snapshot(
+def test_compare_uses_revision_observation_rowsfrom_registry_snapshot(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Comparison rows must not lose registry-grounded provenance."""

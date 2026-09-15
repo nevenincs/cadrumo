@@ -20,12 +20,16 @@ import contextlib
 import json
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
 from dev.docs.pagefind_index import build_search_index
+
+if TYPE_CHECKING:
+    from pagefind.index import PagefindIndex
 
 from ..docs_static_site import (
     _assert_served_index_matches_build,
@@ -56,9 +60,9 @@ def _built_root(tmp_path: Path, name: str, *, with_records: bool) -> Path:
         (site / source.name).write_bytes(source.read_bytes())
     shutil.copy(_PAGEFIND_YML, site / "pagefind.yml")
 
-    async def _inject(index: object) -> None:
+    async def _inject(index: PagefindIndex) -> None:
         for kind in ("concept", "casilla", "cli"):
-            await index.add_custom_record(  # type: ignore[attr-defined]
+            await index.add_custom_record(
                 url=f"/records/{kind}.html",
                 content=f"a real injected {kind} record",
                 language="en",

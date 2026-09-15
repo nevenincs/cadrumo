@@ -84,7 +84,7 @@ def _parsed_catalogue(locale_code: str) -> tuple[tuple[str, str | None], ...]:
     source = locale_catalogue_source(LOCALES_DIR, locale_code)
     assert source is not None, f"no committed catalogue for {locale_code!r}; every honesty gate over it is vacuous"
     raw = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR).load_locale(source)
-    leaves = _flatten(raw if isinstance(raw, dict) else {})
+    leaves = _flatten(raw)
     assert leaves, f"catalogue {locale_code!r} flattened to no leaves; every honesty gate over it is vacuous"
     return tuple(leaves.items())
 

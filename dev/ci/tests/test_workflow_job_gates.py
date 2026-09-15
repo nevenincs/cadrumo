@@ -32,7 +32,7 @@ _FORK_GUARD = (
 _DEV_IMAGE_GUARD = "${{ github.event_name == 'workflow_dispatch' && inputs.include_dev_image }}"
 
 
-def _workflow() -> dict[str, Any]:
+def _workflow() -> dict[str | bool, Any]:
     """A workflow shaped like the live fleet-health lane: push plus an opt-in job."""
     return {
         # YAML 1.1 parses `on:` as the boolean True, which is how a safe-loaded
@@ -65,7 +65,8 @@ def test_a_falsy_input_default_is_reported_as_a_second_weakening() -> None:
     assert gate.is_opt_in
     assert gate.opt_in == ("include_dev_image",)
     # Flipping only the default removes the second weakening and leaves the first.
-    document[True]["workflow_dispatch"]["inputs"]["include_dev_image"]["default"] = True
+    dispatch = next(value for key, value in document.items() if key is True)
+    dispatch["workflow_dispatch"]["inputs"]["include_dev_image"]["default"] = True
     relaxed = job_gate(document, "dev-image", ("push", "workflow_dispatch"))
     assert relaxed.events == ("workflow_dispatch",)
     assert not relaxed.is_opt_in

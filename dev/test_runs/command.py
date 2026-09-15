@@ -879,24 +879,8 @@ class _ImportBoundariesProcessor:
             )
             run_outputs["report"] = str(run_dir / "artifacts" / "import-health.json")
             return payload
-        if self._health_payload is None:
-            classification = "tool_failure"
-            headline = "Import boundaries did not produce a schema-v2 health payload; inspect the run log."
-        elif exit_status == 0:
-            classification = "clean"
-            headline = "Import boundaries passed with no blocking findings."
-        elif self.operational_failure:
-            classification = "tool_failure"
-            headline = "Import boundaries could not produce a complete verdict; inspect the run log."
-        elif broken or diagnostic_total:
-            classification = "blocking_findings"
-            headline = (
-                f"Import boundaries failed: {broken} architectural contracts broken "
-                f"and {diagnostic_total} import-form diagnostics found."
-            )
-        else:
-            classification = "failed_without_findings"
-            headline = "Import boundaries failed without normalized findings; inspect the run log."
+        classification = "tool_failure"
+        headline = "Import boundaries did not produce a schema-v2 health payload; inspect the run log."
         return {
             "broken_contracts": self.broken_contracts,
             "classification": classification,

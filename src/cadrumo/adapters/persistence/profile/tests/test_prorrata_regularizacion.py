@@ -109,14 +109,14 @@ def _ledger_observation(
 ) -> IvaLedgerObservation:
     deduction = (
         {
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{ledger_id}",
                 evidence_digest="d" * 64,
             ),
         }
-        if flow == IvaFlowDirection._from_registry("soportado")
+        if flow == IvaFlowDirection.from_registry("soportado")
         else {}
     )
     with validating_governed_facts(operation):
@@ -327,7 +327,7 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority(
             transaction_date=date(2026, 1, 20),
             category=IvaCategory("domestic_general"),
             base="1000.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
         _ledger_observation(
@@ -336,14 +336,14 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority(
             category=IvaCategory("domestic_exempt"),
             exemption_article=IvaExemptionArticle("art_20_uno_8"),
             base="500.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
         _ledger_observation(
             "input-purchase-ignored",
             transaction_date=date(2026, 2, 15),
             category=IvaCategory("domestic_general"),
-            flow=IvaFlowDirection._from_registry("soportado"),
+            flow=IvaFlowDirection.from_registry("soportado"),
             base="700.00",
             operation=operation,
         ),
@@ -352,7 +352,7 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority(
             transaction_date=date(2025, 12, 31),
             category=IvaCategory("domestic_general"),
             base="999.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
     )
@@ -392,7 +392,7 @@ def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms
             transaction_date=date(2026, 1, 20),
             category=IvaCategory("domestic_general"),
             base="1000.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
         _ledger_observation(
@@ -400,7 +400,7 @@ def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms
             transaction_date=date(2026, 6, 10),
             category=IvaCategory("domestic_general"),
             base="4000.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
     )
@@ -437,7 +437,7 @@ def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion(
             transaction_date=date(2026, 1, 20),
             category=IvaCategory("domestic_general"),
             base="1000.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
         _ledger_observation(
@@ -445,7 +445,7 @@ def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion(
             transaction_date=date(2026, 6, 10),
             category=IvaCategory("domestic_general"),
             base="4000.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
     )
@@ -477,7 +477,7 @@ def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values(
             transaction_date=date(2026, 1, 20),
             category=IvaCategory("domestic_general"),
             base="1000.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
         _ledger_observation(
@@ -486,7 +486,7 @@ def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values(
             category=IvaCategory("domestic_exempt"),
             exemption_article=IvaExemptionArticle("art_20_uno_8"),
             base="500.00",
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             operation=operation,
         ),
     )
@@ -512,7 +512,7 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator(
         transaction_date=date(2026, 1, 20),
         category=IvaCategory("domestic_general"),
         base="1000.00",
-        flow=IvaFlowDirection._from_registry("repercutido"),
+        flow=IvaFlowDirection.from_registry("repercutido"),
         operation=operation,
     )
     domestic_exempt_sale = _ledger_observation(
@@ -520,7 +520,7 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator(
         transaction_date=date(2026, 5, 3),
         category=IvaCategory("domestic_exempt"),
         base="300.00",
-        flow=IvaFlowDirection._from_registry("repercutido"),
+        flow=IvaFlowDirection.from_registry("repercutido"),
         operation=operation,
     )
 
@@ -710,7 +710,7 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
         assert seed.stamped_revision_id == _m303_revision_id(filing_year=_SETTLEMENT_YEAR, period=_SETTLEMENT_PERIOD)
         assert seed.entry.ejercicio == _CARRY_YEAR
         assert seed.entry.provisional_percentage == Decimal("75")
-        assert seed.entry.provisional_provenance == ProrrataProvisionalProvenance._from_registry(
+        assert seed.entry.provisional_provenance == ProrrataProvisionalProvenance.from_registry(
             "carried_prior_definitiva"
         )
         assert seed.entry.source_observation_ref == "303:2026:4T"

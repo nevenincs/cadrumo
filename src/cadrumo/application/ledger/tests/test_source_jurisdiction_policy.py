@@ -35,7 +35,7 @@ def test_a_declared_resident_defaults_to_spain() -> None:
     resolution = resolve_source_jurisdiction(
         None,
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
-        irpf_special_regime=IrpfSpecialRegime._from_registry("general"),
+        irpf_special_regime=IrpfSpecialRegime.from_registry("general"),
     )
 
     assert resolution.outcome is SourceJurisdictionOutcome.DEFAULTED
@@ -81,7 +81,7 @@ def test_an_unresolved_row_is_not_an_obligation_to_state_one() -> None:
         ),
         (
             FiscalResidency.from_registry("resident_irpf"),
-            IrpfSpecialRegime._from_registry("impatriado"),
+            IrpfSpecialRegime.from_registry("impatriado"),
             SourceJurisdictionOutcome.REQUIRED_IMPATRIADO,
         ),
     ],
@@ -119,7 +119,7 @@ def test_the_impatriado_obligation_outranks_the_undeclared_path() -> None:
     resolution = resolve_source_jurisdiction(
         None,
         fiscal_residency=None,
-        irpf_special_regime=IrpfSpecialRegime._from_registry("impatriado"),
+        irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
     )
 
     assert resolution.outcome is SourceJurisdictionOutcome.REQUIRED_IMPATRIADO
@@ -129,9 +129,9 @@ def test_the_impatriado_obligation_outranks_the_undeclared_path() -> None:
     ("fiscal_residency", "irpf_special_regime"),
     [
         (None, None),
-        (FiscalResidency.from_registry("resident_irpf"), IrpfSpecialRegime._from_registry("general")),
+        (FiscalResidency.from_registry("resident_irpf"), IrpfSpecialRegime.from_registry("general")),
         (FiscalResidency.from_registry("non_resident_irnr"), None),
-        (FiscalResidency.from_registry("resident_irpf"), IrpfSpecialRegime._from_registry("impatriado")),
+        (FiscalResidency.from_registry("resident_irpf"), IrpfSpecialRegime.from_registry("impatriado")),
     ],
     ids=["undeclared", "ordinary_resident", "non_resident", "impatriado"],
 )
@@ -164,10 +164,10 @@ def test_every_outcome_the_enum_declares_is_reachable() -> None:
     """
     conditions = [
         ("PT", None, None),
-        (None, FiscalResidency.from_registry("resident_irpf"), IrpfSpecialRegime._from_registry("general")),
+        (None, FiscalResidency.from_registry("resident_irpf"), IrpfSpecialRegime.from_registry("general")),
         (None, None, None),
         (None, FiscalResidency.from_registry("non_resident_irnr"), None),
-        (None, FiscalResidency.from_registry("resident_irpf"), IrpfSpecialRegime._from_registry("impatriado")),
+        (None, FiscalResidency.from_registry("resident_irpf"), IrpfSpecialRegime.from_registry("impatriado")),
     ]
 
     produced = {

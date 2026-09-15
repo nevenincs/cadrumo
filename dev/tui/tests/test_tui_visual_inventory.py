@@ -23,6 +23,7 @@ from .._artifacts import (
     Manifest,
     RenderedFrame,
     SkippedFrame,
+    ThemeName,
     now,
     read_manifest,
     unaccounted_frames,
@@ -545,14 +546,14 @@ def test_the_frame_reading_redacts_the_harness_build_timing_only() -> None:
     slower = Capture(
         surface="status",
         viewport=resolve_viewport("small"),
-        theme="dark",
+        theme=ThemeName.DARK,
         svg_path=Path("unused.svg"),
         frame_text=f"{header}\n{body}",
     )
     faster = Capture(
         surface="status",
         viewport=resolve_viewport("small"),
-        theme="dark",
+        theme=ThemeName.DARK,
         svg_path=Path("unused.svg"),
         frame_text=f"{header.replace('591ms', '2176ms')}\n{body}",
     )

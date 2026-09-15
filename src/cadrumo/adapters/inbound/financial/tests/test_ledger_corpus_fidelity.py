@@ -279,13 +279,13 @@ def test_iva_observations_match_oracle_category_and_flow() -> None:
                     f"{rule['match']}: {obs.category} != {rule['iva_category']}"
                 )
                 expected_flow = (
-                    IvaFlowDirection._from_registry("repercutido")
+                    IvaFlowDirection.from_registry("repercutido")
                     if rule["direction"] == "INCOMING"
-                    else IvaFlowDirection._from_registry("soportado")
+                    else IvaFlowDirection.from_registry("soportado")
                 )
                 # Reverse-charge / intra-community acquisition / import self-assess
                 # as inversion sujeto pasivo; allow either the directional flow or ISP.
-                assert obs.flow_direction in {expected_flow, IvaFlowDirection._from_registry("inversion_sujeto_pasivo")}
+                assert obs.flow_direction in {expected_flow, IvaFlowDirection.from_registry("inversion_sujeto_pasivo")}
                 seen += 1
         assert seen > 0
 
@@ -364,6 +364,6 @@ def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
             soportado = {
                 o.ledger_id
                 for o in result.observations
-                if o.flow_direction is IvaFlowDirection._from_registry("soportado")
+                if o.flow_direction is IvaFlowDirection.from_registry("soportado")
             }
             assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"

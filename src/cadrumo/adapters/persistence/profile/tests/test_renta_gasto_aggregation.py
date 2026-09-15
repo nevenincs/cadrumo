@@ -345,10 +345,10 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
-            regime=ProrrataRegisterRegime._from_registry("general"),
+            regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("70"),
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         ),
     )
@@ -388,7 +388,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
-            regime=ProrrataRegisterRegime._from_registry("ninguna"),
+            regime=ProrrataRegisterRegime.from_registry("ninguna"),
             especial_transition=None,
             source_registry_snapshot_refs=(),
         ),
@@ -429,10 +429,10 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
-            regime=ProrrataRegisterRegime._from_registry("general"),
+            regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("70"),
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         ),
     )

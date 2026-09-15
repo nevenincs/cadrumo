@@ -273,7 +273,7 @@ def test_no_declared_family_is_silently_gutted() -> None:
         "makes a family look populated while its own membership is borrowed."
     )
 
-    assert _REINSTATED_CONSENT_SYMBOLS, (
+    assert any(_REINSTATED_CONSENT_SYMBOLS), (
         "the reinstated consent set is empty, so both totality checks above pass over nothing and no "
         "consent symbol is asserted present or wired at the choke point"
     )

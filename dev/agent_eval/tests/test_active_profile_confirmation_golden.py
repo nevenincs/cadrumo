@@ -114,7 +114,10 @@ def _dispatch_confirmation() -> str | None:
     result = invoke_cached_cli(["--format", "json", "config", "profile", "status"])
     assert result.exit_code == 0, result.output
     payload = require_schema_envelope(result.output)
-    return payload["active_profile"]
+    active_profile = payload["active_profile"]
+    if active_profile is None or isinstance(active_profile, str):
+        return active_profile
+    raise TypeError(f"CLI active_profile must be a string or null, got {type(active_profile).__name__}")
 
 
 def _dispatch_create() -> None:

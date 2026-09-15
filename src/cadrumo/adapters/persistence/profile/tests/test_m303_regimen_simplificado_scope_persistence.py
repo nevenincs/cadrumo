@@ -87,15 +87,15 @@ def _store_profile(*, composition: M303RegimeComposition) -> None:
     ("composition", "expected_scope"),
     (
         (
-            M303RegimeComposition._from_registry("general"),
+            M303RegimeComposition.from_registry("general"),
             m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
         ),
         (
-            M303RegimeComposition._from_registry("simplified"),
+            M303RegimeComposition.from_registry("simplified"),
             m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
         ),
         (
-            M303RegimeComposition._from_registry("mixed"),
+            M303RegimeComposition.from_registry("mixed"),
             m303_regime_composition_simplified_scope("mixed", authority=compiled_bundled_authority()),
         ),
     ),

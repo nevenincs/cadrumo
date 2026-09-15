@@ -217,8 +217,8 @@ def test_calendar_entry_marks_censo_enrolment_not_checked_when_no_live_censo_sco
 def _corporate_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType._from_registry("legal_entity"),
-        legal_entity_form=LegalEntityForm._from_registry("SL"),
+        entity_type=EntityType.from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm.from_registry("SL"),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("7500000.00"),
         new_entity_first_two_profit_periods=False,

@@ -1044,7 +1044,7 @@ def _declared_type_hint_names() -> frozenset[str]:
     for path in scan_directory(source_root, pattern="*.py", recursive=True):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
-            if isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            if isinstance(node, ast.TypeAlias):
                 names.add(node.name.id)
             elif isinstance(node, ast.TypeVar):
                 names.add(node.name)

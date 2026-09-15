@@ -128,8 +128,7 @@ def approved_modelo_numbers(required_text: tuple[str, ...]) -> frozenset[str]:
             continue
         for number_match in _THREE_DIGITS.finditer(listed):
             number = number_match.group(0)
-            if isinstance(number, str):
-                numbers.add(number)
+            numbers.add(number)
     return frozenset(numbers)
 
 

@@ -65,7 +65,7 @@ _RUNTIME_MATRIX_REFERENCE: Final = "${{ fromJSON(needs.inventory.outputs.matrix)
 #: BOTH readers of this set -- `_collect_violations` and `_census_shortfalls`
 #: -- take the excused set as an argument, and the keying and census cases
 #: below drive them with a planted one.
-HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset()
+HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset[str]()
 
 
 #: Floors for the workflow census this fleet gate reads. Two sibling modules

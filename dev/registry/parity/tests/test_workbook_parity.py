@@ -17,7 +17,7 @@ import re
 import shutil
 import subprocess
 import zipfile
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -30,6 +30,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.packaging.command_execution import CommandResult
 
 from ...conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .._parity_tapes import ParityScenario
@@ -744,6 +745,15 @@ def test_subprocess_failure_detail_omits_raw_stdout_stderr_content() -> None:
 
 
 def test_subprocess_failure_detail_handles_completed_process_without_exception() -> None:
-    completed = subprocess.CompletedProcess(args=["soffice"], returncode=0, stdout="", stderr="")
+    completed = CommandResult(
+        argv=("soffice",),
+        cwd=".",
+        started_at=datetime.now(UTC),
+        completed_at=datetime.now(UTC),
+        duration_seconds=0.0,
+        returncode=0,
+        stdout="",
+        stderr="",
+    )
 
     assert _subprocess_failure_detail(completed) == "exit code 0 (0 stdout chars, 0 stderr chars captured)"

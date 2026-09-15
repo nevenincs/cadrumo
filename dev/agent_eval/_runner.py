@@ -466,6 +466,7 @@ def _canonical_action_arguments(
     """
     from cadrumo.core.operator_action_enums import ActionArgumentStatus
     from cadrumo.core.product_identity import PRODUCT_IDENTITY
+    from cadrumo.entrypoints.cli.command_spec import OptionSpec
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     values: dict[str, object] = {}
@@ -486,7 +487,7 @@ def _canonical_action_arguments(
             continue
         value = values[name]
         consumed.add(name)
-        if parameter.kind == "argument":
+        if not isinstance(parameter, OptionSpec):
             arguments.append(str(value))
             continue
 
@@ -510,21 +511,32 @@ def _canonical_action_arguments(
 
 def _invoke_canonical_cli(argv: Sequence[str]):
     """Run the live CLI command tree once, requesting its canonical JSON envelope."""
+    from click.core import Command
     from click.testing import CliRunner
     from typer.main import get_command
 
     from cadrumo.entrypoints.cli.main import app
 
-    return CliRunner().invoke(get_command(app), ["--format", "json", *argv])
+    command = get_command(app)
+    if not isinstance(command, Command):
+        raise TypeError("Typer application did not produce a Click command")
+    return CliRunner().invoke(command, ["--format", "json", *argv])
 
 
 def _decoded_envelope(output: str) -> Mapping[str, object] | None:
     """Return one actual JSON envelope, without accepting a fabricated substitute."""
     try:
-        decoded = json.loads(output)
+        decoded: object = json.loads(output)
     except json.JSONDecodeError:
         return None
-    return decoded if isinstance(decoded, Mapping) else None
+    if not isinstance(decoded, dict):
+        return None
+    envelope: dict[str, object] = {}
+    for key, value in decoded.items():
+        if not isinstance(key, str):
+            return None
+        envelope[key] = value
+    return envelope
 
 
 def _safe_to_execute(cli_path: tuple[str, ...]) -> bool:

@@ -66,7 +66,7 @@ _ON = date(2024, 11, 6)
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
 COMPONENT_CATALOGUE = registry_component_catalogue()
-_DEFAULT_EU_MEMBER_STATE = EUMemberState._from_registry("de")
+_DEFAULT_EU_MEMBER_STATE = EUMemberState.from_registry("de")
 
 
 def _transaction(
@@ -131,11 +131,11 @@ def _transaction(
             IvaCategory("intra_community_acquisition_reverse_charge"),
             IvaCategory("intra_community_service_acquisition_reverse_charge"),
         }:
-            payload["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("intra_eu_current")
-            authority = IvaDeductionEvidenceAuthority._from_registry("intra_eu_self_assessment")
+            payload["deduction_fact_kind"] = IvaDeductionFactKind.from_registry("intra_eu_current")
+            authority = IvaDeductionEvidenceAuthority.from_registry("intra_eu_self_assessment")
         else:
-            payload["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("domestic_current")
-            authority = IvaDeductionEvidenceAuthority._from_registry("invoice_evidence")
+            payload["deduction_fact_kind"] = IvaDeductionFactKind.from_registry("domestic_current")
+            authority = IvaDeductionEvidenceAuthority.from_registry("invoice_evidence")
         payload["deduction_provenance"] = IvaDeductionClassificationProvenance(
             authority=authority,
             source_locator=f"fixture:{row_id}",
@@ -168,7 +168,7 @@ def _non_arising_pairs() -> list[tuple[IvaCategory, InvoiceKind]]:
     return [
         (category, kind)
         for (category, kind), row in COMPONENT_CATALOGUE.items()
-        if row.applicability is IvaKindApplicability._from_registry("does_not_arise")
+        if row.applicability is IvaKindApplicability.from_registry("does_not_arise")
     ]
 
 

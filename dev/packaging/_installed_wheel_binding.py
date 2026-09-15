@@ -152,6 +152,7 @@ print(hashlib.sha256(payload).hexdigest())
 """
     completed = run_command(
         [str(python), "-I", "-c", script, distribution],
+        cwd=Path.cwd(),
         errors="strict",
     )
     if completed.returncode != 0:
@@ -221,6 +222,7 @@ if not callable(target):
 """
     completed = run_command(
         [str(python), "-I", "-c", script, distribution, entry_point, expected_value],
+        cwd=Path.cwd(),
         errors="strict",
         timeout_seconds=15,
     )

@@ -51,8 +51,8 @@ _RETENCION_TRABAJO = validated_casilla_id("0596", surface="trabajo-retencion-adv
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
         iva_regime=IVARegime("EXENTO"),
     )
 

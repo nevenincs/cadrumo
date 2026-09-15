@@ -9,6 +9,7 @@ the live operator surface.  No test owns an expected action or a recovery comman
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -47,7 +48,7 @@ _PROFILE_ID = "0ac1e000-0000-4000-8000-000000000344"
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path) -> TestRuntimeProfile:
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,

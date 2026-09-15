@@ -408,7 +408,7 @@ def _calculation_observation_period(
     # permits that, so the fallback stays live rather than being deleted as
     # unreachable.
     try:
-        return _period_from_registry_token(filing_year, registry_token)
+        return _periodfrom_registry_token(filing_year, registry_token)
     except ValueError:
         return None
 
@@ -528,7 +528,7 @@ def _metadata_justificante_csv_candidates(source_metadata: Mapping[str, object])
     return tuple(dict.fromkeys(csvs))
 
 
-def _period_from_registry_token(filing_year: int, registry_token: str) -> _Period:
+def _periodfrom_registry_token(filing_year: int, registry_token: str) -> _Period:
     return _Period.from_year_and_code(filing_year, registry_token)
 
 

@@ -905,8 +905,7 @@ def run_workbook_with_excel_com(
             result[output_id] = _coerce_excel_result(workbook.cell_value(cell))
         return result
     finally:
-        if workbook is not None:
-            workbook.close_without_saving()
+        workbook.close_without_saving()
         excel.quit()
         pythoncom.CoUninitialize()
 

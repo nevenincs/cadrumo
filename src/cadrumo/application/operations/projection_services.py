@@ -6,15 +6,15 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from secrets import compare_digest
-from typing import Protocol, runtime_checkable
+from typing import Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel
 
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ._projection_authority import (
-    BoundOperationSecureResponseAuthorityMixin,
     OperationResponseAuthorityBrokerMixin,
+    response_authority_binding_matches,
 )
 from ._projection_control import (
     authorize_cancellation as _authorize_cancellation,
@@ -213,7 +213,7 @@ class OperationResponseAuthorityIssuer(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
-class BoundOperationSecureResponseAuthority(BoundOperationSecureResponseAuthorityMixin):
+class BoundOperationSecureResponseAuthority:
     """One runtime-only bearer bound to an exact pending REVIEW decision."""
 
     operation_id: OperationId
@@ -226,6 +226,79 @@ class BoundOperationSecureResponseAuthority(BoundOperationSecureResponseAuthorit
     clock: Callable[[], datetime]
     _token: bytearray = field(repr=False)
     _closed: bool = field(default=False, init=False, repr=False)
+
+    @classmethod
+    def bind(
+        cls,
+        *,
+        operation_id: OperationId,
+        interaction_id: OperationInteractionId,
+        revision: int,
+        reviewed_proposal_digest: ContentDigest,
+        actor_ref: OperationActorReference,
+        expires_at: datetime | None,
+        intents: frozenset[OperationResponseIntent],
+        response_token: OperationResponseToken,
+        clock: Callable[[], datetime],
+    ) -> Self:
+        """Bind one mutable bearer to an exact pending REVIEW decision."""
+        if not intents or not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
+            raise ValueError("secure response authority requires supported REVIEW intents")
+        return cls(
+            operation_id=operation_id,
+            interaction_id=interaction_id,
+            revision=revision,
+            reviewed_proposal_digest=reviewed_proposal_digest,
+            actor_ref=actor_ref,
+            expires_at=expires_at,
+            intents=intents,
+            clock=clock,
+            _token=bytearray(response_token, "ascii"),
+        )
+
+    async def permitted_intents(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        /,
+    ) -> frozenset[OperationResponseIntent]:
+        """Validate the binding and return its still-permitted response intents."""
+        self._validate_binding(request, pending)
+        return self.intents
+
+    def _validate_binding(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+    ) -> None:
+        """Enforce every runtime bearer check before exposing its intent set."""
+        if self._closed:
+            raise ValueError("secure response authority is closed")
+        if not response_authority_binding_matches(self, request, pending):
+            raise ValueError("secure response authority binding is stale")
+        if self.expires_at is not None and self.clock() > self.expires_at:
+            raise ValueError("secure response authority is expired")
+        token_digest = content_hash_hex(self._token.decode("ascii"))
+        if not compare_digest(token_digest, pending.response_token_digest):
+            raise ValueError("secure response authority bearer does not match the pending interaction")
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        """Return the private token only after exact authority validation."""
+        intents = await self.permitted_intents(request, pending)
+        if intent not in intents:
+            raise ValueError("secure response authority does not permit the requested intent")
+        return self._token.decode("ascii")
+
+    def close(self) -> None:
+        """Zeroize the in-memory response bearer and prevent reuse."""
+        zeroize_secret_buffer(self._token)
+        object.__setattr__(self, "_closed", True)
 
 
 class UnavailableOperationSecureResponseAuthority:

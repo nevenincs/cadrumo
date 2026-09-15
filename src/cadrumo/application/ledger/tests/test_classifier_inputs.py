@@ -91,7 +91,7 @@ def test_an_unknown_status_carries_no_anchor() -> None:
 def test_a_printed_identifier_is_not_promoted_to_iva_registered() -> None:
     """The expensive one. An unverified number must not reach the art. 25 exemption.
 
-    `CustomerTaxStatus._from_registry("b2b_iva_registered")` is the trigger for the
+    `CustomerTaxStatus.from_registry("b2b_iva_registered")` is the trigger for the
     intra-community supply rule, which classifies the operation exempt. This
     envelope must not be able to express that claim at all — not merely decline
     to make it today — because VIES is deferred and nothing here has verified
@@ -100,8 +100,8 @@ def test_a_printed_identifier_is_not_promoted_to_iva_registered() -> None:
     inputs = collect_classifier_inputs(InvoiceDraft(customer_tax_id=_CUSTOMER_NIF))
 
     values = {fact.value for fact in inputs.facts}
-    assert CustomerTaxStatus._from_registry("b2b_iva_registered").value not in values
-    assert CustomerTaxStatus._from_registry("b2b_iva_registered").value not in {
+    assert CustomerTaxStatus.from_registry("b2b_iva_registered").value not in values
+    assert CustomerTaxStatus.from_registry("b2b_iva_registered").value not in {
         member.value for member in CounterpartyTaxablePersonStatus
     }
 

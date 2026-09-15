@@ -64,7 +64,7 @@ _RETENCION_CAPITAL_MOBILIARIO = validated_casilla_id("0597", surface="capital-mo
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType._from_registry("natural_person"),
+        entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("EXENTO"),
     )
 

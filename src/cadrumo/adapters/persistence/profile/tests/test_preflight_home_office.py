@@ -62,7 +62,7 @@ def _transaction(
     amount: Decimal = Decimal("121.00"),
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
-    category_id: str | None = SpendingCategory._from_registry("material_oficina").value,
+    category_id: str | None = SpendingCategory.from_registry("material_oficina").value,
     usage_ratio_id: str | None = None,
 ) -> Transaction:
     booked_date = date(2026, 4, 5)
@@ -158,7 +158,7 @@ def test_declaring_vivienda_office_facts_clears_the_missing_censo_refusal(
     write path must then CLEAR the refusal — proving the operator instruction
     is not a dead instruction.
     """
-    category = SpendingCategory._from_registry("suministros_home_office_internet")
+    category = SpendingCategory.from_registry("suministros_home_office_internet")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
         save_usage_ratios(
             UsageRatioProfile(ratios={category: Decimal("0.060")}),
@@ -208,7 +208,7 @@ def test_preflight_flags_home_office_ratio_without_applied_censo(
     operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        category = SpendingCategory._from_registry("suministros_home_office_internet")
+        category = SpendingCategory.from_registry("suministros_home_office_internet")
         save_usage_ratios(
             UsageRatioProfile(ratios={category: Decimal("0.30")}),
             bucket_id=profile.bucket_id,
@@ -249,7 +249,7 @@ def test_preflight_accepts_home_office_ratio_after_matching_censo_apply(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
         _apply_home_office_censo(profile.bucket_id, operation=operation)
-        category = SpendingCategory._from_registry("suministros_home_office_internet")
+        category = SpendingCategory.from_registry("suministros_home_office_internet")
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         repository.save(
             TransactionCatalogue.from_transactions(
@@ -284,7 +284,7 @@ def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
         _apply_home_office_censo(profile.bucket_id, operation=operation)
-        category = SpendingCategory._from_registry("suministros_home_office_internet")
+        category = SpendingCategory.from_registry("suministros_home_office_internet")
         save_usage_ratios(
             UsageRatioProfile(ratios={category: Decimal("0.30")}),
             bucket_id=profile.bucket_id,
@@ -328,8 +328,8 @@ def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio
         save_usage_ratios(
             UsageRatioProfile(
                 ratios={
-                    SpendingCategory._from_registry("suministros_home_office_internet"): Decimal("0.30"),
-                    SpendingCategory._from_registry("telefonia_movil"): Decimal("0.60"),
+                    SpendingCategory.from_registry("suministros_home_office_internet"): Decimal("0.30"),
+                    SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60"),
                 },
             ),
             bucket_id=profile.bucket_id,
@@ -342,8 +342,8 @@ def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio
                         "row-phone",
                         business_classification=BusinessClassification.MIXED,
                         business_pct=Decimal("0.60"),
-                        category_id=SpendingCategory._from_registry("telefonia_movil").value,
-                        usage_ratio_id=SpendingCategory._from_registry("telefonia_movil").value,
+                        category_id=SpendingCategory.from_registry("telefonia_movil").value,
+                        usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
                     ),
                 ),
             ),
@@ -385,7 +385,7 @@ def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(
     category-keyed one.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        category = SpendingCategory._from_registry("suministros_home_office_internet")
+        category = SpendingCategory.from_registry("suministros_home_office_internet")
         save_usage_ratios(
             UsageRatioProfile(ratios={category: Decimal("1.00")}),
             bucket_id=profile.bucket_id,
@@ -437,7 +437,7 @@ def test_preflight_stays_silent_for_a_non_home_office_category(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         save_usage_ratios(
             UsageRatioProfile(
-                ratios={SpendingCategory._from_registry("suministros_home_office_internet"): Decimal("1.00")}
+                ratios={SpendingCategory.from_registry("suministros_home_office_internet"): Decimal("1.00")}
             ),
             bucket_id=profile.bucket_id,
         )
@@ -449,7 +449,7 @@ def test_preflight_stays_silent_for_a_non_home_office_category(
                         "row-unrelated",
                         business_classification=BusinessClassification.BUSINESS,
                         business_pct=None,
-                        category_id=SpendingCategory._from_registry("cuotas_autonomos_ss").value,
+                        category_id=SpendingCategory.from_registry("cuotas_autonomos_ss").value,
                         usage_ratio_id=None,
                     ),
                 ),

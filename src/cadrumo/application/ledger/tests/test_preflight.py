@@ -82,7 +82,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts(operation: PinnedA
         "row-mixed",
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.40"),
-        category_id=SpendingCategory._from_registry("telefonia_movil").value,
+        category_id=SpendingCategory.from_registry("telefonia_movil").value,
         usage_ratio_id=None,
     )
 

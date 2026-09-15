@@ -64,7 +64,7 @@ def test_operator_derive_persists_substrate_with_derived_provenance(
     assert reloaded is not None
     assert reloaded.classified_by == "derived:iva-category"
     assert reloaded.business_classification is BusinessClassification.BUSINESS
-    assert reloaded.category_id == SpendingCategory._from_registry("arrendamiento_local").value
+    assert reloaded.category_id == SpendingCategory.from_registry("arrendamiento_local").value
     assert reloaded.iva_category is IvaCategory("domestic_general")
     assert reloaded.taxable_base is not None and reloaded.iva_amount is not None
     assert reloaded.taxable_base + reloaded.iva_amount == gross

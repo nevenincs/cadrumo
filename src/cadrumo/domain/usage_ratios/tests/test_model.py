@@ -63,9 +63,7 @@ def test_empty_profile_round_trips_json() -> None:
 
 def test_single_ratio_round_trips() -> None:
     """A profile with one ratio survives JSON round-trip byte-for-byte."""
-    profile = UsageRatioProfile(
-        ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")}
-    )
+    profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")})
     reloaded = UsageRatioProfile.model_validate_json(profile.model_dump_json())
     assert reloaded == profile
     assert reloaded.ratios[SpendingCategory.from_registry("suministros_home_office_luz")] == Decimal("0.21")
@@ -107,9 +105,7 @@ def test_frozen_attribute_reassignment_rejected() -> None:
 
 
 def test_ratios_mapping_item_assignment_rejected() -> None:
-    profile = UsageRatioProfile(
-        ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")}
-    )
+    profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")})
     ratios = cast(Any, profile.ratios)
     with pytest.raises(TypeError):
         ratios[SpendingCategory.from_registry("suministros_home_office_luz")] = Decimal("0.50")
@@ -126,21 +122,15 @@ def test_with_ratio_returns_new_profile() -> None:
 
 def test_without_ratio_is_noop_on_unset() -> None:
     """Removing an unset category is a no-op."""
-    profile = UsageRatioProfile(
-        ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")}
-    )
+    profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")})
     result = profile.without_ratio(SpendingCategory.from_registry("telefonia_movil"))
     assert result == profile
 
 
 def test_resolve_user_ratio_returns_set_or_none() -> None:
     """``resolve_user_ratio`` returns a ``Decimal`` for set keys, ``None`` otherwise."""
-    profile = UsageRatioProfile(
-        ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")}
-    )
-    assert resolve_user_ratio(profile, SpendingCategory.from_registry("suministros_home_office_luz")) == Decimal(
-        "0.21"
-    )
+    profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")})
+    assert resolve_user_ratio(profile, SpendingCategory.from_registry("suministros_home_office_luz")) == Decimal("0.21")
     assert resolve_user_ratio(profile, SpendingCategory.from_registry("suministros_home_office_agua")) is None
 
 
@@ -204,9 +194,7 @@ def test_an_undeclared_usage_ratio_has_no_registry_fallback(operation: PinnedAut
     that an undeclared proportion resolves to nothing and the deduction is
     ineligible until the operator declares one.
     """
-    profile = UsageRatioProfile(
-        ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")}
-    )
+    profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")})
 
     def resolve_for_compute(category: SpendingCategory) -> Decimal | None:
         user_value = resolve_user_ratio(profile, category)

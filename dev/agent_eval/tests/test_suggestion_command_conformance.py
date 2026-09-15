@@ -681,8 +681,6 @@ def test_locale_catalogues_cite_live_commands() -> None:
         data = manager.load_locale(path)
         counted = 0
         for key, value in _iter_locale_leaves(data):
-            if not isinstance(value, str):
-                continue
             counted += _count_citations(value)
             failures.extend(_dead_citations_in(value, origin=f"{path.name}:{key}"))
         citations_by_locale[path.name] = counted

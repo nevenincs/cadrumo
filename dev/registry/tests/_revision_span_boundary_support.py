@@ -77,7 +77,7 @@ def _mid_year_span(revision: ModeloRevision) -> int | None:
     open-ended -- those claim their years outright and every design in them.
     """
     valid_from, valid_to = revision.valid_from, revision.valid_to
-    if valid_from is None or valid_to is None or valid_from.year != valid_to.year:
+    if valid_to is None or valid_from.year != valid_to.year:
         return None
     covers_whole_year = (valid_from.month, valid_from.day) == (1, 1) and (valid_to.month, valid_to.day) == (12, 31)
     return None if covers_whole_year else valid_from.year

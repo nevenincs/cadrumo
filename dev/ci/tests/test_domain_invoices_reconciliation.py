@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.invoices.transaction_linking import link_invoice_transaction_repositories
 from cadrumo.core.invoice_link import LinkInconsistencyDirection
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.invoices.service import (
@@ -44,33 +45,34 @@ def _invoice(
 ) -> Invoice:
     subtotal = (grand_total / Decimal("1.21")).quantize(Decimal("0.01"))
     iva_amount = grand_total - subtotal
-    line = InvoiceLine.model_validate(
-        {
-            "description": "Service",
-            "quantity": Decimal("1"),
-            "unit_price": subtotal,
-            "subtotal": subtotal,
-            "iva_rate": IvaRate.RATE_21,
-            "iva_amount": iva_amount,
-        },
-    )
-    return Invoice.model_validate(
-        {
-            "kind": kind,
-            "invoice_number": invoice_number,
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": counterparty_name,
-            "counterparty_tax_id": counterparty_tax_id,
-            "counterparty_country": counterparty_country,
-            "base_total": subtotal,
-            "iva_total": iva_amount,
-            "grand_total": grand_total,
-            "currency": "EUR",
-            "lines": (line,),
-            "payment_status": PaymentStatus.PAID,
-            "linked_transaction_ids": linked_transaction_ids,
-        },
-    )
+    with bundled_indexed_authority().operation():
+        line = InvoiceLine.model_validate(
+            {
+                "description": "Service",
+                "quantity": Decimal("1"),
+                "unit_price": subtotal,
+                "subtotal": subtotal,
+                "iva_rate": IvaRate.from_registry("rate_21"),
+                "iva_amount": iva_amount,
+            },
+        )
+        return Invoice.model_validate(
+            {
+                "kind": kind,
+                "invoice_number": invoice_number,
+                "issued_at": date(2026, 4, 1),
+                "counterparty_name": counterparty_name,
+                "counterparty_tax_id": counterparty_tax_id,
+                "counterparty_country": counterparty_country,
+                "base_total": subtotal,
+                "iva_total": iva_amount,
+                "grand_total": grand_total,
+                "currency": "EUR",
+                "lines": (line,),
+                "payment_status": PaymentStatus.PAID,
+                "linked_transaction_ids": linked_transaction_ids,
+            },
+        )
 
 
 def _transaction(

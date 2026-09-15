@@ -108,14 +108,14 @@ def _invoice(
     number: str = "F-2024-001",
     iva_category: IvaCategory | None = _DEFAULT_IVA_CATEGORY,
 ) -> Invoice:
-    rate = iva_rate_percentage(IvaRate._from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
         quantity=Decimal("1"),
         unit_price=Decimal("1000.00"),
         subtotal=Decimal("1000.00"),
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=Decimal("1000.00") * rate,
     )
     return Invoice.model_validate(

@@ -194,8 +194,8 @@ def workflow_profile(*, redeme_enrolled: bool, period_token: str) -> TaxpayerPro
         bienes_extranjero_above_threshold=False,
         activity_start_date=_activity_start_date_for_period(period_token),
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory._from_registry("common_regime"),
-            regime_composition=M303RegimeComposition._from_registry("general"),
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
             redeme_enrolled=redeme_enrolled,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,

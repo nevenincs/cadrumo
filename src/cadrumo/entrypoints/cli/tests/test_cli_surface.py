@@ -233,7 +233,7 @@ def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
     from ....domain.usage_ratios.model import UsageRatioProfile
 
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("0.60")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60")}),
         bucket_id=bucket_id,
     )
 

@@ -127,10 +127,7 @@ def _load_recorded(name: str) -> tuple[str, tuple[ChunkHit, ...]]:
     raw_hits = data.get("hits")
     if not isinstance(query, str) or not isinstance(raw_hits, list):
         raise AssertionError("recorded sweep fixture has an invalid query or hit list")
-    hits = tuple(
-        ChunkHit.model_validate(row)
-        for row in raw_hits
-    )
+    hits = tuple(ChunkHit.model_validate(row) for row in raw_hits)
     return query, hits
 
 

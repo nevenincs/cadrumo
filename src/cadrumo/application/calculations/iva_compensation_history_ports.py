@@ -30,7 +30,12 @@ class IvaCompensationHistoryRepositoryProtocol(Protocol):
         """Return all period states in chronological order."""
         ...
 
-    def to_secure_object_write(self, state: IvaCompensationPeriodState) -> SecureObjectWrite:
+    def to_secure_object_write(
+        self,
+        state: IvaCompensationPeriodState,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Prepare one history write for an atomic outer co-commit."""
         ...
 

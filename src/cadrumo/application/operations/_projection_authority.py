@@ -6,7 +6,7 @@ import secrets
 from collections.abc import Callable
 from datetime import datetime
 from threading import RLock
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
@@ -44,8 +44,28 @@ class _AuthorityHost:
         def __getattr__(self, name: str) -> Any: ...
 
 
+class _BoundAuthorityHost(Protocol):
+    @property
+    def operation_id(self) -> OperationId: ...
+
+    @property
+    def interaction_id(self) -> OperationInteractionId: ...
+
+    @property
+    def revision(self) -> int: ...
+
+    @property
+    def reviewed_proposal_digest(self) -> ContentDigest: ...
+
+    @property
+    def actor_ref(self) -> OperationActorReference: ...
+
+    @property
+    def expires_at(self) -> datetime | None: ...
+
+
 def response_authority_binding_matches(
-    authority: _AuthorityHost,
+    authority: _BoundAuthorityHost,
     request: OperationResponseControlRequestV1,
     pending: OperationPendingInteraction,
 ) -> bool:

@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Protocol
 
 from textual.theme import Theme
 
@@ -24,6 +24,12 @@ if TYPE_CHECKING:
 
 CADRUMO_LIGHT_THEME_NAME: Final[str] = "cadrumo-light"
 CADRUMO_DARK_THEME_NAME: Final[str] = "cadrumo-dark"
+
+
+class AppearanceHost(Protocol):
+    """Minimal mutable theme surface needed by the appearance toggle."""
+
+    theme: str
 
 CADRUMO_LIGHT: Final[Theme] = Theme(
     name=CADRUMO_LIGHT_THEME_NAME,
@@ -441,7 +447,7 @@ def install_cadrumo_themes[ReturnT](
     app.theme = resolve_theme_name(selected)
 
 
-def toggle_appearance[ReturnT](app: App[ReturnT]) -> str:
+def toggle_appearance(app: AppearanceHost) -> str:
     """Flip the active surface between the light and dark appearance."""
     app.theme = CADRUMO_LIGHT_THEME_NAME if app.theme == CADRUMO_DARK_THEME_NAME else CADRUMO_DARK_THEME_NAME
     return str(app.theme)
@@ -456,6 +462,7 @@ __all__ = [
     "CADRUMO_LIGHT_THEME_NAME",
     "CADRUMO_THEMES",
     "NOTICE_BAND_CSS",
+    "AppearanceHost",
     "install_cadrumo_themes",
     "resolve_theme_name",
     "toggle_appearance",

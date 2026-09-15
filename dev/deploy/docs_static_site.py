@@ -592,7 +592,10 @@ def _issued_certificate_arn(aws: str, repo_root: Path) -> str:
             "Expected exactly one issued "
             f"{STACK_REGION} ACM certificate for {CANONICAL_SITE_DOMAIN}; found {len(matches)}.",
         )
-    return matches[0]
+    certificate_arn = matches[0]
+    if not isinstance(certificate_arn, str):
+        raise SystemExit("AWS returned an invalid ACM certificate ARN.")
+    return certificate_arn
 
 
 def _provision_stack(aws: str, repo_root: Path, account_id: str, certificate_arn: str) -> None:

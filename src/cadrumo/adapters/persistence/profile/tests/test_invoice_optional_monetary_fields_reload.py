@@ -71,7 +71,7 @@ def _invoice_with_every_optional_monetary_field_populated() -> Invoice:
                     quantity=Decimal("1"),
                     unit_price=Decimal("500.00"),
                     subtotal=Decimal("500.00"),
-                    iva_rate=IvaRate._from_registry("RATE_21"),
+                    iva_rate=IvaRate.from_registry("RATE_21"),
                     iva_amount=Decimal("105.00"),
                 ),
             ),
@@ -128,7 +128,7 @@ def test_an_unset_optional_monetary_field_survives_the_encrypted_roundtrip_as_no
             quantity=Decimal("1"),
             unit_price=Decimal("500.00"),
             subtotal=Decimal("500.00"),
-            iva_rate=IvaRate._from_registry("RATE_21"),
+            iva_rate=IvaRate.from_registry("RATE_21"),
             iva_amount=Decimal("105.00"),
         )
         invoice = Invoice.model_validate(

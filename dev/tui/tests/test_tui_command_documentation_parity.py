@@ -15,7 +15,9 @@ the fact and its source spelling is not.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Protocol, runtime_checkable
 
 import pytest
 from typer.main import get_command
@@ -48,15 +50,45 @@ _FOREIGN_OPTIONS = frozenset({"--no-sync"})
 _FAILURE_BULLET = re.compile(r"^- \*\*([a-z]+)\*\*", re.MULTILINE)
 
 
+class _CommandParameter(Protocol):
+    """The option declarations exposed by the live command graph."""
+
+    opts: Sequence[str]
+    secondary_opts: Sequence[str]
+
+
+class _Command(Protocol):
+    """The parameter collection exposed by one live command."""
+
+    params: Sequence[_CommandParameter]
+
+
+@runtime_checkable
+class _CommandGroup(Protocol):
+    """The command mapping exposed by the Typer-built root group."""
+
+    commands: Mapping[str, _Command]
+
+
 def _registered_command_names() -> frozenset[str]:
     """Every verb the live Typer application answers to.
 
     Reads the registration Typer itself holds, so a verb added, renamed or
     withdrawn moves this side without anybody remembering to.
     """
-    return frozenset(
-        command.name or command.callback.__name__ for command in app.registered_commands if command.callback is not None
-    )
+    names: set[str] = set()
+    for command in app.registered_commands:
+        callback = command.callback
+        if callback is None:
+            continue
+        if command.name:
+            names.add(command.name)
+            continue
+        callback_name = getattr(callback, "__name__", None)
+        if not isinstance(callback_name, str):
+            raise AssertionError("registered command callback has no function name")
+        names.add(callback_name)
+    return frozenset(names)
 
 
 def _documented_command_names() -> frozenset[str]:
@@ -70,7 +102,11 @@ def _documented_command_names() -> frozenset[str]:
     heading = text.index("\n## Commands\n")
     end = text.find("\n## ", heading + 1)
     block = text[heading : end if end != -1 else len(text)]
-    return frozenset(_INVOCATION.findall(block))
+    names: set[str] = set()
+    for name in _INVOCATION.findall(block):
+        if isinstance(name, str):
+            names.add(name)
+    return frozenset(names)
 
 
 def test_the_readme_documents_every_verb_the_command_tree_answers_to() -> None:
@@ -128,8 +164,10 @@ def _live_options() -> dict[str, frozenset[str]]:
     pair, which the decorator's source spelling hides inside one string.
     """
     built = get_command(app)
+    if not isinstance(built, _CommandGroup):
+        raise AssertionError("the TUI command application did not expose a command group")
     resolved: dict[str, frozenset[str]] = {}
-    for name, command in built.commands.items():  # type: ignore[attr-defined]
+    for name, command in built.commands.items():
         tokens: set[str] = set()
         for parameter in command.params:
             tokens.update(parameter.opts)

@@ -119,8 +119,8 @@ def test_art25_turns_on_identification_in_both_directions() -> None:
     spanish_established_german_identified = _aggregate(
         _intracom_supply(
             "es-established-de-identified",
-            established_in=EUMemberState._from_registry("es"),
-            identified_in=EUMemberState._from_registry("de"),
+            established_in=EUMemberState.from_registry("es"),
+            identified_in=EUMemberState.from_registry("de"),
         ),
     )
     assert spanish_established_german_identified.issues == (), (
@@ -134,8 +134,8 @@ def test_art25_turns_on_identification_in_both_directions() -> None:
     german_established_spanish_identified = _aggregate(
         _intracom_supply(
             "de-established-es-identified",
-            established_in=EUMemberState._from_registry("de"),
-            identified_in=EUMemberState._from_registry("es"),
+            established_in=EUMemberState.from_registry("de"),
+            identified_in=EUMemberState.from_registry("es"),
         ),
     )
     assert german_established_spanish_identified.observations == (), (
@@ -157,8 +157,8 @@ def test_absent_identification_refuses_and_never_falls_back_to_the_country() -> 
     the wrong reason. Both are refused identically, for the one honest reason.
     """
     for label, established_in in (
-        ("non-ES establishment", EUMemberState._from_registry("de")),
-        ("ES establishment", EUMemberState._from_registry("es")),
+        ("non-ES establishment", EUMemberState.from_registry("de")),
+        ("ES establishment", EUMemberState.from_registry("es")),
         ("no establishment", None),
     ):
         aggregation = _aggregate(

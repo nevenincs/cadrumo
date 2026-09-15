@@ -8,6 +8,7 @@ import platform
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal
 
 import pytest
 from pydantic import ValidationError
@@ -167,8 +168,8 @@ def _synthetic_cohort(tmp_path: Path) -> LoadedReleaseCohort:
 def _installation_outcome(
     evidence: DistributionEvidence,
     *,
-    mode: str = "source",
-    status: str = "resolved",
+    mode: Literal["source", "binary"] = "source",
+    status: Literal["resolved", "missing-wheel", "failed"] = "resolved",
     cohort_manifest_sha256: str | None = None,
 ) -> InstallationOutcome:
     """Build a digest-bound installation result for evidence contract tests."""

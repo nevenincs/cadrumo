@@ -395,7 +395,7 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "bucket_id": "default",
             "rows": [
                 {
-                    "category": SpendingCategory._from_registry("vehiculo_combustible"),
+                    "category": SpendingCategory.from_registry("vehiculo_combustible"),
                     "proportionality_kind": require_proportionality_kind("usage_ratio_personal"),
                     "default_ratio": None,
                     "override_present": False,
@@ -412,10 +412,10 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "profile_present": True,
             "eligible_count": 1,
             "overrides_count": 1,
-            "missing_overrides": [SpendingCategory._from_registry("vehiculo_combustible")],
+            "missing_overrides": [SpendingCategory.from_registry("vehiculo_combustible")],
             "findings": [
                 {
-                    "category": SpendingCategory._from_registry("vehiculo_combustible"),
+                    "category": SpendingCategory.from_registry("vehiculo_combustible"),
                     "kind": "missing_override",
                     "detail": "required",
                 },

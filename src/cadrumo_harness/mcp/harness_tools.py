@@ -285,7 +285,10 @@ def build_whoami_identity() -> WhoamiIdentity:
     which compiles the wizard source on demand and therefore has no bootstrap
     import-order precondition.
     """
-    health = assess_active_profile_health()
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        health = assess_active_profile_health(operation=operation)
     tax_id_present = health.profile_record_present and _TAX_ID_FACT_PATH not in health.missing_required
     from .command_surface import resolve_precondition_action
 

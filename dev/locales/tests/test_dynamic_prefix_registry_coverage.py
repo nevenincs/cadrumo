@@ -441,9 +441,7 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
             function_name = node.func.attr
         else:
             function_name = None
-        return function_name == "override_settings" and any(
-            kw.arg == "cadrumo_output_language" for kw in node.keywords
-        )
+        return function_name == "override_settings" and any(kw.arg == "cadrumo_output_language" for kw in node.keywords)
 
     found: set[tuple[str, str]] = set()
     ctx_wrapped: set[tuple[str, str]] = set()

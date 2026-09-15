@@ -95,7 +95,6 @@ def _partition_box_numbers(revision: ModeloRevision) -> frozenset[str]:
         str(casillas[casilla_id].number)
         for partition in derive_rate_box_partitions(revision)
         for casilla_id in partition.box_casilla_ids
-        if casillas[casilla_id].number is not None
     )
 
 

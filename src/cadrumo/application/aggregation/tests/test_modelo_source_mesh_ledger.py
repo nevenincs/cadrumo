@@ -287,9 +287,9 @@ def _iva_transaction(
     if counterparty_country is not None:
         fields["counterparty_country"] = counterparty_country
     if direction is TransactionDirection.OUTGOING:
-        fields["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("domestic_current")
+        fields["deduction_fact_kind"] = IvaDeductionFactKind.from_registry("domestic_current")
         fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
             source_locator=f"invoice:{provider_id}",
             evidence_digest="a" * 64,
         )
@@ -313,7 +313,7 @@ def _renta_transaction(
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
-            "category_id": SpendingCategory._from_registry("asesoria_fiscal").value,
+            "category_id": SpendingCategory.from_registry("asesoria_fiscal").value,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -326,7 +326,7 @@ def _invoice(tx_id: str, *, bucket_id: str = _BUCKET_ID) -> Invoice:
         quantity=Decimal("1"),
         unit_price=Decimal("100.00"),
         subtotal=Decimal("100.00"),
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=Decimal("21.00"),
     )
     return Invoice.model_validate(
@@ -367,7 +367,7 @@ def _domestic_iva_invoice(
         quantity=Decimal("1"),
         unit_price=taxable_base,
         subtotal=taxable_base,
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=iva_amount,
     )
     return Invoice.model_validate(
@@ -391,7 +391,7 @@ def _domestic_iva_invoice(
                 if operation_date is None
                 else {
                     "operation_date": operation_date,
-                    "operation_date_role": InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED"),
+                    "operation_date_role": InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
                 }
             ),
         },
@@ -411,7 +411,7 @@ def _exempt_intracommunity_invoice(
         quantity=Decimal("1"),
         unit_price=taxable_base,
         subtotal=taxable_base,
-        iva_rate=IvaRate._from_registry("RATE_0"),
+        iva_rate=IvaRate.from_registry("RATE_0"),
         iva_amount=Decimal("0"),
     )
     return Invoice.model_validate(
@@ -497,10 +497,10 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
             entries=(
                 ProrrataRegisterEntry(
                     ejercicio=2026,
-                    regime=ProrrataRegisterRegime._from_registry("general"),
+                    regime=ProrrataRegisterRegime.from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=Decimal("80"),
-                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                    provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                     source_observation_ref="303:2025:4T",
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
@@ -1065,7 +1065,7 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
             ledger_id="oss-ledger-1",
             transaction_date=date(2025, 7, 15),
             regime=OssIossRegime("union_scheme"),
-            destination_member_state=EUMemberState._from_registry("de"),
+            destination_member_state=EUMemberState.from_registry("de"),
             rate_kind=IvaRateKind("general"),
             invoice_direction=IvaInvoiceKind.ISSUED,
             transaction_kind=TransactionKind("oss_union_services"),
@@ -1109,7 +1109,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
             ledger_id="oss-it-unrouted",
             transaction_date=date(2025, 7, 15),
             regime=OssIossRegime("union_scheme"),
-            destination_member_state=EUMemberState._from_registry("it"),
+            destination_member_state=EUMemberState.from_registry("it"),
             rate_kind=IvaRateKind("general"),
             invoice_direction=IvaInvoiceKind.ISSUED,
             transaction_kind=TransactionKind("oss_union_services"),

@@ -19,15 +19,9 @@ reaches them because it does not call ``main``.
 from __future__ import annotations
 
 import re
-from typing import IO, Any, Protocol, cast
+from typing import IO, Any
 
 from ...core.i18n.render import tr
-
-
-class _TyperExceptionsState(Protocol):
-    """Local marker for Cadrumo's idempotent Typer localisation state."""
-
-    cadrumo_parse_errors_localised: bool
 
 
 def localise_help_section_headers() -> None:
@@ -257,7 +251,4 @@ def localise_typer_parse_error_messages() -> None:
     _typer_formatting.HelpFormatter.write_usage = localised_write_usage
     _typer_exceptions.ClickException.show = localised_click_exception_show
     _typer_exceptions.UsageError.show = localised_usage_error_show
-    typer_exceptions_state = cast(  # CAST-RATIONALE-TYPER-EXCEPTIONS-STATE: module attribute is Cadrumo-owned.
-        "_TyperExceptionsState", _typer_exceptions
-    )
-    typer_exceptions_state.cadrumo_parse_errors_localised = True
+    setattr(_typer_exceptions, "cadrumo_parse_errors_localised", True)

@@ -64,14 +64,14 @@ def _invoice(
     category: IvaCategory = _DEFAULT_IVA_CATEGORY,
 ) -> Invoice:
     subtotal = Decimal(base)
-    rate = iva_rate_percentage(IvaRate._from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
         quantity=Decimal("1"),
         unit_price=subtotal,
         subtotal=subtotal,
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=subtotal * rate,
     )
     return Invoice.model_validate(
@@ -343,7 +343,7 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
 
     projection = project_received_invoice_retencion(received_no_liability, scheme=_PROFESIONAL)
 
-    assert role is not IvaRetencionRole._from_registry("taxpayer_liability")
+    assert role is not IvaRetencionRole.from_registry("taxpayer_liability")
     assert received_no_liability.kind is InvoiceKind.RECEIVED
     assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
 

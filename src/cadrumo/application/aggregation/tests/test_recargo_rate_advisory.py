@@ -32,6 +32,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....domain.invoices.enums import IvaRate
@@ -54,8 +55,8 @@ _ORDINARY_DAY = date(2025, 6, 15)
 #: An exempt slot names no percentage at all, so there is no pairing to look up.
 #: This is the reachable silence; the test below records why the table's OWN
 #: silence cannot be reached through a validly-constructed invoice.
-_EXEMPT_SLOT = IvaRate._from_registry("EXEMPT")
-_DEFAULT_RATE = IvaRate._from_registry("RATE_21")
+_EXEMPT_SLOT = IvaRate.from_registry("EXEMPT")
+_DEFAULT_RATE = IvaRate.from_registry("RATE_21")
 
 
 def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate = _DEFAULT_RATE) -> Invoice:
@@ -65,7 +66,7 @@ def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate =
     carry zero, which the invoice model enforces, so a hardcoded figure would
     make the exempt variant unconstructible.
     """
-    cuota = Decimal("210.00") if slot is IvaRate._from_registry("RATE_21") else Decimal("0.00")
+    cuota = Decimal("210.00") if slot is IvaRate.from_registry("RATE_21") else Decimal("0.00")
     total = _BASE + cuota + Decimal(recargo)
     return Invoice.model_validate(
         {
@@ -97,7 +98,7 @@ def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate =
     )
 
 
-def test_a_recargo_matching_the_published_rate_raises_nothing() -> None:
+def test_a_recargo_matching_the_published_rate_raises_nothing(operation: PinnedAuthorityOperation) -> None:
     """The ordinary invoice is silent, and that is what keeps the advisory usable.
 
     1000,00 at the 21 % general rate pairs with 5,2 % under art. 161, so 52,00 is
@@ -105,17 +106,28 @@ def test_a_recargo_matching_the_published_rate_raises_nothing() -> None:
     recargo invoice, and an operator who sees it on correct documents stops
     reading it -- which costs more than never having built it.
     """
-    assert _recargo_rate_divergence(_recargo_invoice(recargo="52.00"), devengo_date=_ORDINARY_DAY) is None
+    assert (
+        _recargo_rate_divergence(
+            _recargo_invoice(recargo="52.00"),
+            devengo_date=_ORDINARY_DAY,
+            operation=operation,
+        )
+        is None
+    )
 
 
-def test_a_mistyped_recargo_is_reported_with_both_figures() -> None:
+def test_a_mistyped_recargo_is_reported_with_both_figures(operation: PinnedAuthorityOperation) -> None:
     """The wrong-entry case, which is silent today.
 
     Asserted on both figures rather than on the fact of a mismatch: an advisory
     that says only "these disagree" cannot be acted on, because the operator
     cannot tell which of the two to go and check.
     """
-    divergence = _recargo_rate_divergence(_recargo_invoice(recargo="25.00"), devengo_date=_ORDINARY_DAY)
+    divergence = _recargo_rate_divergence(
+        _recargo_invoice(recargo="25.00"),
+        devengo_date=_ORDINARY_DAY,
+        operation=operation,
+    )
 
     assert divergence is not None
     assert divergence.recorded == Decimal("25.00")
@@ -169,12 +181,21 @@ def test_the_table_silence_branch_is_defensive_and_currently_unreachable() -> No
         )
 
 
-def test_an_invoice_bearing_no_recargo_is_not_this_screens_business() -> None:
+def test_an_invoice_bearing_no_recargo_is_not_this_screens_business(operation: PinnedAuthorityOperation) -> None:
     """An ordinary invoice carries no recargo, and absence is not a divergence of zero."""
-    assert _recargo_rate_divergence(_recargo_invoice(recargo="0.00"), devengo_date=_ORDINARY_DAY) is None
+    assert (
+        _recargo_rate_divergence(
+            _recargo_invoice(recargo="0.00"),
+            devengo_date=_ORDINARY_DAY,
+            operation=operation,
+        )
+        is None
+    )
 
 
-def test_the_advisory_names_the_provision_and_disclaims_the_correction() -> None:
+def test_the_advisory_names_the_provision_and_disclaims_the_correction(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Two properties the message must carry, for different reasons.
 
     It names art. 161, because an advisory that cites no authority reads as the
@@ -185,7 +206,11 @@ def test_the_advisory_names_the_provision_and_disclaims_the_correction() -> None
     reasonably assume the application has already substituted the computed
     figure, and file believing something the record does not do.
     """
-    divergence = _recargo_rate_divergence(_recargo_invoice(recargo="25.00"), devengo_date=_ORDINARY_DAY)
+    divergence = _recargo_rate_divergence(
+        _recargo_invoice(recargo="25.00"),
+        devengo_date=_ORDINARY_DAY,
+        operation=operation,
+    )
     assert divergence is not None
 
     diagnostics = recargo_rate_mismatch_diagnostics((divergence,), resolver_id="test-resolver")
@@ -202,7 +227,7 @@ def test_the_advisory_names_the_provision_and_disclaims_the_correction() -> None
     assert diagnostics[0].asserted_legal_refs == ("ley-37-1992:art-161",)
 
 
-def test_the_advisory_is_not_a_refusal() -> None:
+def test_the_advisory_is_not_a_refusal(operation: PinnedAuthorityOperation) -> None:
     """A divergence yields a diagnostic and nothing that stops a filing.
 
     Refusing on mismatch was considered and rejected: a legitimate invoice can
@@ -210,7 +235,11 @@ def test_the_advisory_is_not_a_refusal() -> None:
     a correct invoice is the worse error. Pinned so a later author does not
     "harden" the advisory into a refusal and read that as an improvement.
     """
-    divergence = _recargo_rate_divergence(_recargo_invoice(recargo="25.00"), devengo_date=_ORDINARY_DAY)
+    divergence = _recargo_rate_divergence(
+        _recargo_invoice(recargo="25.00"),
+        devengo_date=_ORDINARY_DAY,
+        operation=operation,
+    )
     assert divergence is not None
 
     diagnostics = recargo_rate_mismatch_diagnostics((divergence,), resolver_id="test-resolver")

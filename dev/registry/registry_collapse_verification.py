@@ -501,11 +501,7 @@ def assessment_coverage_gaps(
     """Prove every revision has one row for every family and its scalar bucket."""
     expected_families = (*sorted(_EXPECTED_ASSESSMENT_FAMILIES), "$scalars")
     expected = {(str(revision_id), family) for revision_id in modelo.revisions for family in expected_families}
-    actual = {
-        (str(row.get("revision")), str(row.get("family")))
-        for row in assessment.by_revision_family
-        if isinstance(row, Mapping)
-    }
+    actual = {(str(row.get("revision")), str(row.get("family"))) for row in assessment.by_revision_family}
     return tuple(
         {
             "stage": stage,

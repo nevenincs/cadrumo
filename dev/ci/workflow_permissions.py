@@ -66,6 +66,20 @@ def _declared_jobs(document: dict[str, Any]) -> dict[str, Any]:
     return jobs
 
 
+def _permission_declaration(value: object) -> dict[str, str] | str | None:
+    """Validate one workflow permission declaration without trusting YAML ``Any``."""
+    if value is None or isinstance(value, str):
+        return value
+    if not isinstance(value, dict):
+        raise TypeError(f"workflow permissions must be a mapping, scalar, or null; got {type(value).__name__}")
+    resolved: dict[str, str] = {}
+    for scope, level in value.items():
+        if not isinstance(scope, str) or not isinstance(level, str):
+            raise TypeError("workflow permission scopes and levels must be strings")
+        resolved[scope] = level
+    return resolved
+
+
 def effective_job_permissions(document: dict[str, Any], job_name: str) -> dict[str, str] | str | None:
     """Return the permission declaration the runtime applies to ``job_name``.
 
@@ -77,10 +91,13 @@ def effective_job_permissions(document: dict[str, Any], job_name: str) -> dict[s
     jobs = _declared_jobs(document)
     if job_name not in jobs:
         raise KeyError(f"no job named {job_name!r} in this workflow")
-    declared = (jobs[job_name] or {}).get("permissions", _ABSENT)
+    job = jobs[job_name]
+    if not isinstance(job, dict):
+        raise TypeError(f"workflow job {job_name!r} must be a mapping")
+    declared = job.get("permissions", _ABSENT)
     if declared is not _ABSENT:
-        return declared  # type: ignore[no-any-return]
-    return document.get("permissions")
+        return _permission_declaration(declared)
+    return _permission_declaration(document.get("permissions"))
 
 
 def granted_level(document: dict[str, Any], job_name: str, scope: str) -> str | None:

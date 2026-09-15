@@ -658,7 +658,7 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
     # spanning revision.
     widened_reported: list[str] = []
     for modelo, revision_id, revision in _filing_revisions():
-        if revision.valid_from is None or revision.valid_to is None:
+        if revision.valid_to is None:
             continue
         if revision.valid_from.year != revision.valid_to.year:
             continue

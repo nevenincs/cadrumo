@@ -117,8 +117,8 @@ def _observed_counterparty_gate_reasons(
     """
     states: tuple[EUMemberState | None, ...] = (
         None,
-        EUMemberState._from_registry("es"),
-        EUMemberState._from_registry("de"),
+        EUMemberState.from_registry("es"),
+        EUMemberState.from_registry("de"),
     )
     observed: set[IvaLedgerAggregationIssueReason] = set()
     categories = resolve_iva_category_catalogue(

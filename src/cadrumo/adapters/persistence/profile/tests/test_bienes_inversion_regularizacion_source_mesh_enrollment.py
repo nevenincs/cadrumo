@@ -152,7 +152,7 @@ def _record() -> BienInversionIvaRecord:
         acquisition_year=2022,
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("80"),
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         acquisition_ledger_id="ledger-bi-2022-maquina",
     )
 

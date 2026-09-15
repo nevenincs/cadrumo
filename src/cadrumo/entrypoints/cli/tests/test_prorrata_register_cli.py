@@ -79,13 +79,13 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     )
     assert result.exit_code == 0, result.output
     payload = _json(result)
-    assert payload["entry"]["regime"] == ProrrataRegisterRegime._from_registry("especial").value
+    assert payload["entry"]["regime"] == ProrrataRegisterRegime.from_registry("especial").value
     assert payload["entry"]["provisional_percentage"] == "60"
     assert payload["entry"]["provisional_provenance"] == (
-        ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva").value
+        ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva").value
     )
     assert payload["entry"]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind._from_registry("opcion").value,
+        "kind": ProrrataEspecialTransitionKind.from_registry("opcion").value,
         "evidence_reference": "modelo-303-2025-prorrata-opcion",
     }
 
@@ -95,10 +95,10 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     entries = _prorrata_entries()
     assert len(entries) == 1
     assert entries[0]["ejercicio"] == 2025
-    assert entries[0]["regime"] == ProrrataRegisterRegime._from_registry("especial").value
+    assert entries[0]["regime"] == ProrrataRegisterRegime.from_registry("especial").value
     assert entries[0]["provisional_percentage"] == "60"
     assert entries[0]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind._from_registry("opcion").value,
+        "kind": ProrrataEspecialTransitionKind.from_registry("opcion").value,
         "evidence_reference": "modelo-303-2025-prorrata-opcion",
     }
 
@@ -123,7 +123,7 @@ def test_evidence_reference_persists_the_explicit_option_and_revocation() -> Non
     )
     assert option.exit_code == 0, option.output
     assert _json(option)["entry"]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind._from_registry("opcion").value,
+        "kind": ProrrataEspecialTransitionKind.from_registry("opcion").value,
         "evidence_reference": "operator-option-2025",
     }
 
@@ -146,7 +146,7 @@ def test_evidence_reference_persists_the_explicit_option_and_revocation() -> Non
     assert revocation.exit_code == 0, revocation.output
     entries = _prorrata_entries()
     assert entries[-1]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind._from_registry("revocacion").value,
+        "kind": ProrrataEspecialTransitionKind.from_registry("revocacion").value,
         "evidence_reference": "operator-revocation-2026",
     }
 
@@ -207,7 +207,7 @@ def test_elect_general_persists_general_register_entry() -> None:
     assert result.exit_code == 0, result.output
     entries = _prorrata_entries()
     assert len(entries) == 1
-    assert entries[0]["regime"] == ProrrataRegisterRegime._from_registry("general").value
+    assert entries[0]["regime"] == ProrrataRegisterRegime.from_registry("general").value
     assert entries[0]["provisional_percentage"] == "75"
     assert entries[0]["especial_transition"] is None
 
@@ -237,7 +237,7 @@ def test_elect_especial_for_sector_scopes_the_entry() -> None:
     entries = _prorrata_entries()
     assert len(entries) == 1
     assert entries[0]["sector_id"] == "alquiler"
-    assert entries[0]["regime"] == ProrrataRegisterRegime._from_registry("especial").value
+    assert entries[0]["regime"] == ProrrataRegisterRegime.from_registry("especial").value
 
 
 def test_elect_especial_requires_nonblank_evidence_reference() -> None:
@@ -326,15 +326,15 @@ def test_revoke_especial_requires_prior_state_and_persists_evidence() -> None:
     )
     assert revoked.exit_code == 0, revoked.output
     payload = _json(revoked)
-    assert payload["entry"]["regime"] == ProrrataRegisterRegime._from_registry("general").value
+    assert payload["entry"]["regime"] == ProrrataRegisterRegime.from_registry("general").value
     assert payload["entry"]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind._from_registry("revocacion").value,
+        "kind": ProrrataEspecialTransitionKind.from_registry("revocacion").value,
         "evidence_reference": "modelo-303-2026-prorrata-revocacion",
     }
     entries = _prorrata_entries()
     assert len(entries) == 2
     assert entries[1]["especial_transition"] == {
-        "kind": ProrrataEspecialTransitionKind._from_registry("revocacion").value,
+        "kind": ProrrataEspecialTransitionKind.from_registry("revocacion").value,
         "evidence_reference": "modelo-303-2026-prorrata-revocacion",
     }
 
@@ -390,7 +390,7 @@ def test_referenced_provenance_without_reference_refuses() -> None:
             "--percentage",
             "50",
             "--provenance",
-            ProrrataProvisionalProvenance._from_registry("aeat_autorizada").value,
+            ProrrataProvisionalProvenance.from_registry("aeat_autorizada").value,
         ],
     )
     assert result.exit_code != 0
@@ -409,7 +409,7 @@ def test_interrupted_provenance_is_not_operator_electable() -> None:
             "--percentage",
             "50",
             "--provenance",
-            ProrrataProvisionalProvenance._from_registry("interrumpida_tres_ultimos").value,
+            ProrrataProvisionalProvenance.from_registry("interrumpida_tres_ultimos").value,
         ],
     )
     assert result.exit_code != 0
@@ -420,7 +420,7 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
         repository = ProrrataRegisterRepository()
         definition = SectorDefinition(
             sector_id="comercio",
-            letra=SectorDiferenciadoLetra._from_registry("a"),
+            letra=SectorDiferenciadoLetra.from_registry("a"),
             member_activity_codes=("4711",),
         )
         repository.save(
@@ -428,7 +428,7 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
                 entries=(
                     ProrrataRegisterEntry(
                         ejercicio=2024,
-                        regime=ProrrataRegisterRegime._from_registry("general"),
+                        regime=ProrrataRegisterRegime.from_registry("general"),
                         especial_transition=None,
                         source_registry_snapshot_refs=(),
                     ),
@@ -440,10 +440,10 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
         repository.upsert_entry(
             ProrrataRegisterEntry(
                 ejercicio=2025,
-                regime=ProrrataRegisterRegime._from_registry("especial"),
+                regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 provisional_percentage=Decimal("60"),
-                provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                 source_registry_snapshot_refs=(),
             )
         )
@@ -465,7 +465,7 @@ def test_declare_sector_persists_partition_and_sectorizes_register() -> None:
             "--sector-id",
             "arrendamiento",
             "--letra",
-            SectorDiferenciadoLetra._from_registry("a").value,
+            SectorDiferenciadoLetra.from_registry("a").value,
             "--activity-code",
             "6820",
             "--activity-code",
@@ -475,7 +475,7 @@ def test_declare_sector_persists_partition_and_sectorizes_register() -> None:
     assert result.exit_code == 0, result.output
     payload = _json(result)
     assert payload["sector"]["sector_id"] == "arrendamiento"
-    assert payload["sector"]["letra"] == SectorDiferenciadoLetra._from_registry("a").value
+    assert payload["sector"]["letra"] == SectorDiferenciadoLetra.from_registry("a").value
     assert payload["sector"]["member_activity_codes"] == ["6820", "6810"]
 
     listing = _invoke(["--format", "json", "app", "ledger", "prorrata", "list"])
@@ -495,7 +495,7 @@ def test_declare_sector_requires_at_least_one_activity_code() -> None:
             "--sector-id",
             "arrendamiento",
             "--letra",
-            SectorDiferenciadoLetra._from_registry("a").value,
+            SectorDiferenciadoLetra.from_registry("a").value,
         ],
     )
     assert result.exit_code != 0
@@ -506,10 +506,10 @@ def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
         repository = ProrrataRegisterRepository()
         entry = ProrrataRegisterEntry(
             ejercicio=2025,
-            regime=ProrrataRegisterRegime._from_registry("especial"),
+            regime=ProrrataRegisterRegime.from_registry("especial"),
             especial_transition=None,
             provisional_percentage=Decimal("60"),
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_registry_snapshot_refs=(),
         )
         repository.save(ProrrataRegister(entries=(entry,)))
@@ -517,7 +517,7 @@ def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
         repository.upsert_sector_definition(
             SectorDefinition(
                 sector_id="comercio",
-                letra=SectorDiferenciadoLetra._from_registry("a"),
+                letra=SectorDiferenciadoLetra.from_registry("a"),
                 member_activity_codes=("4711",),
             )
         )
@@ -619,7 +619,7 @@ def test_sector_tag_naming_declared_sector_is_silent() -> None:
             "--sector-id",
             "arrendamiento",
             "--letra",
-            SectorDiferenciadoLetra._from_registry("a").value,
+            SectorDiferenciadoLetra.from_registry("a").value,
             "--activity-code",
             "6820",
         ],
@@ -635,13 +635,13 @@ def test_sector_tag_naming_declared_sector_is_silent() -> None:
     ("regime", "kind", "expected_token"),
     [
         (
-            ProrrataRegisterRegime._from_registry("especial"),
-            ProrrataEspecialTransitionKind._from_registry("opcion"),
+            ProrrataRegisterRegime.from_registry("especial"),
+            ProrrataEspecialTransitionKind.from_registry("opcion"),
             "opcion",
         ),
         (
-            ProrrataRegisterRegime._from_registry("general"),
-            ProrrataEspecialTransitionKind._from_registry("revocacion"),
+            ProrrataRegisterRegime.from_registry("general"),
+            ProrrataEspecialTransitionKind.from_registry("revocacion"),
             "revocacion",
         ),
     ],

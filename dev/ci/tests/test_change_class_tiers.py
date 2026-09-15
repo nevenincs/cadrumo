@@ -95,7 +95,10 @@ def _document(path: Path) -> dict[str, Any]:
 
 
 def _triggers(document: dict[str, Any]) -> Any:
-    return document[True] if True in document else document["on"]
+    for key, value in document.items():
+        if key is True:
+            return value
+    return document["on"]
 
 
 def _assert_compatibility_lane_contract(document: dict[str, Any]) -> None:

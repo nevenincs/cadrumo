@@ -16,13 +16,16 @@ from cadrumo.adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilAp
 from cadrumo.adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from cadrumo.adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRowIdentityError, StorageValidationError
+from cadrumo.adapters.persistence.storage.runtime_repository import (
+    secure_object_repository_for_active_bucket_or_default_route,
+)
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     isolated_sessionless_storage_root,
     read_db_at_rest_bytes,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.auth.session_types import (
     AeatLoginAssertion,
     AeatSession,
@@ -57,9 +60,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
-from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports
-from cadrumo.entrypoints.live_state_composition import compose_live_state
-from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket_or_default_route
+from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports, compose_live_state
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -76,9 +77,7 @@ def _remote_state_port(
     objects: SecureObjectRepository | None = None,
 ) -> IvaRemoteStatePort:
     """Compose the live application port against the active test route."""
-    resolved_objects = (
-        secure_object_repository_for_active_bucket_or_default_route() if objects is None else objects
-    )
+    resolved_objects = secure_object_repository_for_active_bucket_or_default_route() if objects is None else objects
     return compose_live_state(
         output_root=output_root,
         bucket_id=_BUCKET_ID,
@@ -775,43 +774,43 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
 
 
 def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    ports = _remote_state_port(tmp_path / "remote-state")
-
-    async def run() -> None:
-        await capture_iva_remote_state(
-            ports=ports,
-            year_from=2026,
-            year_to=2026,
-            target_year=2026,
-            target_period=_TARGET_2T,
-        )
-
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        ports = _remote_state_port(tmp_path / "remote-state")
+
+        async def run() -> None:
+            await capture_iva_remote_state(
+                ports=ports,
+                year_from=2026,
+                year_to=2026,
+                target_year=2026,
+                target_period=_TARGET_2T,
+            )
+
         asyncio.run(run())
 
 
 def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    ports = _remote_state_port(tmp_path / "remote-state")
-
-    async def run() -> None:
-        await capture_iva_compensation_wallet(ports=ports, target_year=2026, target_period=_TARGET_2T)
-
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        ports = _remote_state_port(tmp_path / "remote-state")
+
+        async def run() -> None:
+            await capture_iva_compensation_wallet(ports=ports, target_year=2026, target_period=_TARGET_2T)
+
         asyncio.run(run())
 
 
 def test_standalone_iva_history_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    ports = _remote_state_port(tmp_path / "history")
-
-    async def run() -> None:
-        await capture_iva_compensation_history(
-            ports=ports,
-            year_from=2026,
-            year_to=2026,
-            output_root=tmp_path / "history",
-        )
-
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        ports = _remote_state_port(tmp_path / "history")
+
+        async def run() -> None:
+            await capture_iva_compensation_history(
+                ports=ports,
+                year_from=2026,
+                year_to=2026,
+                output_root=tmp_path / "history",
+            )
+
         asyncio.run(run())
 
 

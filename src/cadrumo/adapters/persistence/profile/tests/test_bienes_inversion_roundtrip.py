@@ -43,12 +43,10 @@ def _populated_register() -> BienesInversionIvaRegister:
         acquisition_year=2022,
         cuota_soportada=Decimal("4200.00"),
         prorrata_inicial_pct=Decimal("80"),
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         art108_elegible=True,
         acquisition_ledger_id="ledger-2022-furgoneta",
-        disposal=BienInversionDisposal(
-            year=2024, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     real_estate = BienInversionIvaRecord(
         identifier="bi-2021-local",
@@ -56,7 +54,7 @@ def _populated_register() -> BienesInversionIvaRegister:
         acquisition_year=2021,
         cuota_soportada=Decimal("31500.00"),
         prorrata_inicial_pct=Decimal("65"),
-        kind=BienInversionKind._from_registry("inmueble"),
+        kind=BienInversionKind.from_registry("inmueble"),
         art108_elegible=False,
         acquisition_ledger_id="ledger-2021-local",
     )
@@ -75,13 +73,13 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         movable = loaded.records[0]
         assert movable.cuota_soportada == Decimal("4200.00")
         assert movable.prorrata_inicial_pct == Decimal("80")
-        assert movable.kind is BienInversionKind._from_registry("mueble")
+        assert movable.kind is BienInversionKind.from_registry("mueble")
         assert movable.art108_elegible is True
         assert movable.disposal is not None
         assert movable.disposal.year == 2024
-        assert movable.disposal.regime is BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        assert movable.disposal.regime is BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
         real_estate = loaded.records[1]
-        assert real_estate.kind is BienInversionKind._from_registry("inmueble")
+        assert real_estate.kind is BienInversionKind.from_registry("inmueble")
         assert real_estate.art108_elegible is False
 
 

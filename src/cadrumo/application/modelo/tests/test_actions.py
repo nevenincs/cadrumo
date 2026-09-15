@@ -424,7 +424,7 @@ def test_iva_ledger_exempt_regime_membership_matches_contract(regime_token: str,
         pytest.param("303", id="m303-yyyy-nt-deadline-shape"),
     ),
 )
-def test_workflow_period_resolves_quarter_from_registry_deadline_shape(modelo: str) -> None:
+def test_workflow_period_resolves_quarterfrom_registry_deadline_shape(modelo: str) -> None:
     work_unit = _minimal_work_unit(modelo=modelo, period="1T", filing_year=2026)
 
     assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")

@@ -1071,7 +1071,7 @@ def _sheet_coverage_inputs(
 ) -> _CoverageInputs:
     """Resolve the authoritative byte source and scope for one design sheet."""
     is_envelope_sheet = envelope is not None and sheet.name == envelope.record_identity
-    if is_envelope_sheet and envelope is not None:
+    if is_envelope_sheet:
         written = _envelope_written_bytes(envelope)
         return _CoverageInputs((), written, written, f"filing envelope {sheet.name!r}")
 

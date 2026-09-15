@@ -66,16 +66,16 @@ def _profile(postcode: str | None) -> UserProfileRecord:
 @pytest.mark.parametrize(
     ("postcode", "expected"),
     [
-        ("35001", IvaTerritorialScope._from_registry("es_canarias")),
-        ("38001", IvaTerritorialScope._from_registry("es_canarias")),
-        ("51001", IvaTerritorialScope._from_registry("es_ceuta_melilla")),
-        ("52001", IvaTerritorialScope._from_registry("es_ceuta_melilla")),
-        ("28013", IvaTerritorialScope._from_registry("es_mainland")),
+        ("35001", IvaTerritorialScope.from_registry("es_canarias")),
+        ("38001", IvaTerritorialScope.from_registry("es_canarias")),
+        ("51001", IvaTerritorialScope.from_registry("es_ceuta_melilla")),
+        ("52001", IvaTerritorialScope.from_registry("es_ceuta_melilla")),
+        ("28013", IvaTerritorialScope.from_registry("es_mainland")),
         # A Barcelona postcode, deliberately leading-zero. The profile fact
         # store has its own guard against a zero-significant identifier being
         # round-tripped through Decimal and losing the zero; a gate that read
         # "8001" would resolve a four-character string to no territory at all.
-        ("08001", IvaTerritorialScope._from_registry("es_mainland")),
+        ("08001", IvaTerritorialScope.from_registry("es_mainland")),
     ],
 )
 def test_a_declared_postcode_resolves_the_filers_own_territory(

@@ -95,7 +95,7 @@ def test_seed_happy_path_uses_prior_settlement_observation(
     assert seed.stamped_revision_id == _prior_revision_id()
     assert seed.entry.ejercicio == _CURRENT_YEAR
     assert seed.entry.provisional_percentage == Decimal("87")
-    assert seed.entry.provisional_provenance is ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
+    assert seed.entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
     assert seed.entry.source_observation_ref == "303:2025:4T"
 
 

@@ -47,7 +47,7 @@ def _bound_names(tree: ast.Module) -> set[str]:
         elif isinstance(node, (ast.Assign, ast.AnnAssign)):
             targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
             names.update(target.id for target in targets if isinstance(target, ast.Name))
-        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+        elif isinstance(node, ast.TypeAlias):
             names.add(node.name.id)
         elif isinstance(node, (ast.Import, ast.ImportFrom)):
             names.update(alias.asname or alias.name.rsplit(".", 1)[-1] for alias in node.names)

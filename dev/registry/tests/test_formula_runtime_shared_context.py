@@ -279,4 +279,6 @@ def test_eval_context_is_frozen_and_slotted() -> None:
     )
     assert not hasattr(ctx, "__dict__")
     with pytest.raises(dataclasses.FrozenInstanceError):
-        ctx.operand_refs = []
+        replacement: list[str] = []
+        attribute_name: str = "operand_refs"
+        setattr(ctx, attribute_name, replacement)

@@ -84,7 +84,7 @@ def test_a_declared_impatriado_still_refuses() -> None:
         resolve_source_jurisdiction(
             None,
             fiscal_residency=None,
-            irpf_special_regime=IrpfSpecialRegime._from_registry("impatriado"),
+            irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
         )
 
 
@@ -100,7 +100,7 @@ def test_the_impatriado_refusal_outranks_the_undeclared_residency_path() -> None
         resolve_source_jurisdiction(
             None,
             fiscal_residency=None,
-            irpf_special_regime=IrpfSpecialRegime._from_registry("impatriado"),
+            irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
         )
 
 

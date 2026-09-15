@@ -129,7 +129,7 @@ def test_the_existing_oo_corpus_record_confirms_as_ordinary(
         authority=invoice_authority,
     )
 
-    assert result.invoice.invoice_class is InvoiceClass._from_registry("ORDINARIA")
+    assert result.invoice.invoice_class is InvoiceClass.from_registry("ORDINARIA")
 
 
 def test_the_existing_or_corpus_record_confirms_as_corrective(
@@ -146,7 +146,7 @@ def test_the_existing_or_corpus_record_confirms_as_corrective(
         authority=invoice_authority,
     )
 
-    assert result.invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
+    assert result.invoice.invoice_class is InvoiceClass.from_registry("RECTIFICATIVA")
     assert result.invoice.rectifies_invoice_number == "0028"
 
 
@@ -167,7 +167,7 @@ def test_a_record_declaring_no_class_keeps_the_corrective_reference_fallback(
         authority=invoice_authority,
     )
 
-    assert result.invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
+    assert result.invoice.invoice_class is InvoiceClass.from_registry("RECTIFICATIVA")
 
 
 def test_a_declared_ordinary_class_does_not_silently_take_the_corrective_inference(
@@ -223,7 +223,7 @@ def test_the_copy_of_an_ordinary_invoice_keeps_the_ordinary_domain_class(
         authority=invoice_authority,
     )
 
-    assert result.invoice.invoice_class is InvoiceClass._from_registry("ORDINARIA")
+    assert result.invoice.invoice_class is InvoiceClass.from_registry("ORDINARIA")
 
 
 def test_the_copy_of_a_corrective_invoice_keeps_the_corrective_domain_class(
@@ -242,7 +242,7 @@ def test_the_copy_of_a_corrective_invoice_keeps_the_corrective_domain_class(
         authority=invoice_authority,
     )
 
-    assert result.invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
+    assert result.invoice.invoice_class is InvoiceClass.from_registry("RECTIFICATIVA")
     assert result.invoice.rectifies_invoice_number == "0028"
 
 
@@ -281,10 +281,10 @@ def test_a_summary_declaration_is_reported_without_overwriting_the_operator_clas
             isolated_settings=isolated_settings,
             authority=invoice_authority,
         ),
-        invoice_class=InvoiceClass._from_registry("SIMPLIFICADA"),
+        invoice_class=InvoiceClass.from_registry("SIMPLIFICADA"),
     )
 
-    assert result.invoice.invoice_class is InvoiceClass._from_registry("SIMPLIFICADA")
+    assert result.invoice.invoice_class is InvoiceClass.from_registry("SIMPLIFICADA")
 
 
 @pytest.mark.parametrize("declared", [b"OR", b"CR"])

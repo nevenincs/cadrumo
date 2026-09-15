@@ -67,7 +67,7 @@ _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _SUPPLIER_CIF = "B12345674"
 _OTHER_CIF = "B87654321"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
-_DEFAULT_SCOPE = IvaTerritorialScope._from_registry("es_canarias")
+_DEFAULT_SCOPE = IvaTerritorialScope.from_registry("es_canarias")
 
 
 def _confirm(
@@ -206,9 +206,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
     assert key is not None
     assert key == confirmed_counterparty_facts_key("SE 556677889901"), "separators are not identity"
 
-    stored = _confirm(
-        repository, tax_identifier="SE556677889901", scope=IvaTerritorialScope._from_registry("eu_member")
-    )
+    stored = _confirm(repository, tax_identifier="SE556677889901", scope=IvaTerritorialScope.from_registry("eu_member"))
     assert stored.counterparty_key == key
     resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
@@ -216,7 +214,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
         repository=repository,
     )
     assert resolution.fact is not None
-    assert resolution.fact.value == IvaTerritorialScope._from_registry("eu_member")
+    assert resolution.fact.value == IvaTerritorialScope.from_registry("eu_member")
 
     # A country the caller SUPPLIES still decides, so a stated country that
     # disagrees with the printed prefix stays a refusal rather than being
@@ -249,7 +247,7 @@ def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
     )
 
     assert resolution.fact is not None
-    assert resolution.fact.value == IvaTerritorialScope._from_registry("es_canarias")
+    assert resolution.fact.value == IvaTerritorialScope.from_registry("es_canarias")
 
 
 def test_a_different_counterparty_is_not_answered_by_this_one(
@@ -299,7 +297,7 @@ def test_a_document_sourced_fact_is_refused_by_the_model() -> None:
         ConfirmedCounterpartyFacts(
             counterparty_key="a" * 64,
             canonical_tax_identifier=_SUPPLIER_CIF,
-            territorial_scope=IvaTerritorialScope._from_registry("es_canarias"),
+            territorial_scope=IvaTerritorialScope.from_registry("es_canarias"),
             source=ClassifierInputSource.DOCUMENT_EVIDENCE,
             asserted_by="operator@example.test",
             asserted_at=_ASSERTED_AT,
@@ -320,13 +318,13 @@ def test_agreeing_printed_evidence_corroborates_rather_than_contradicts(
     resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
-        evidenced_scope=IvaTerritorialScope._from_registry("es_canarias"),
+        evidenced_scope=IvaTerritorialScope.from_registry("es_canarias"),
         repository=repository,
     )
 
     assert resolution.contradiction is None
     assert resolution.fact is not None
-    assert resolution.fact.value == IvaTerritorialScope._from_registry("es_canarias")
+    assert resolution.fact.value == IvaTerritorialScope.from_registry("es_canarias")
 
 
 def test_disagreeing_printed_evidence_yields_a_contradiction_and_no_fact(
@@ -344,7 +342,7 @@ def test_disagreeing_printed_evidence_yields_a_contradiction_and_no_fact(
     resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
-        evidenced_scope=IvaTerritorialScope._from_registry("eu_member"),
+        evidenced_scope=IvaTerritorialScope.from_registry("eu_member"),
         repository=repository,
     )
 
@@ -352,11 +350,11 @@ def test_disagreeing_printed_evidence_yields_a_contradiction_and_no_fact(
     assert resolution.fact is None
     contradiction = resolution.contradiction
     assert contradiction is not None
-    assert contradiction.confirmed_scope == IvaTerritorialScope._from_registry("es_canarias")
-    assert contradiction.evidenced_scope == IvaTerritorialScope._from_registry("eu_member")
+    assert contradiction.confirmed_scope == IvaTerritorialScope.from_registry("es_canarias")
+    assert contradiction.evidenced_scope == IvaTerritorialScope.from_registry("eu_member")
     assert contradiction.canonical_tax_identifier == _SUPPLIER_CIF
-    assert IvaTerritorialScope._from_registry("es_canarias").value in contradiction.detail
-    assert IvaTerritorialScope._from_registry("eu_member").value in contradiction.detail
+    assert IvaTerritorialScope.from_registry("es_canarias").value in contradiction.detail
+    assert IvaTerritorialScope.from_registry("eu_member").value in contradiction.detail
 
 
 def test_reconfirming_the_same_territory_is_a_no_op(
@@ -372,7 +370,7 @@ def test_reconfirming_the_same_territory_is_a_no_op(
     again = record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier="ESB-1234567-4",
-        territorial_scope=IvaTerritorialScope._from_registry("es_canarias"),
+        territorial_scope=IvaTerritorialScope.from_registry("es_canarias"),
         asserted_by="someone-else@example.test",
         note="confirmed by telephone",
         asserted_at=datetime(2026, 9, 1, tzinfo=UTC),
@@ -391,11 +389,11 @@ def test_asserting_a_different_territory_refuses_rather_than_overwriting(
     _confirm(repository)
 
     with pytest.raises(CounterpartyEstablishmentConflictError) as raised:
-        _confirm(repository, scope=IvaTerritorialScope._from_registry("es_mainland"))
+        _confirm(repository, scope=IvaTerritorialScope.from_registry("es_mainland"))
 
     message = str(raised.value)
-    assert IvaTerritorialScope._from_registry("es_canarias").value in message
-    assert IvaTerritorialScope._from_registry("es_mainland").value in message
+    assert IvaTerritorialScope.from_registry("es_canarias").value in message
+    assert IvaTerritorialScope.from_registry("es_mainland").value in message
 
     resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
@@ -403,7 +401,7 @@ def test_asserting_a_different_territory_refuses_rather_than_overwriting(
         repository=repository,
     )
     assert resolution.fact is not None
-    assert resolution.fact.value == IvaTerritorialScope._from_registry("es_canarias")
+    assert resolution.fact.value == IvaTerritorialScope.from_registry("es_canarias")
 
 
 def test_withdrawing_a_fact_is_the_route_to_correcting_one(
@@ -426,8 +424,8 @@ def test_withdrawing_a_fact_is_the_route_to_correcting_one(
         is None
     )
 
-    corrected = _confirm(repository, scope=IvaTerritorialScope._from_registry("es_mainland"))
-    assert corrected.territorial_scope == IvaTerritorialScope._from_registry("es_mainland")
+    corrected = _confirm(repository, scope=IvaTerritorialScope.from_registry("es_mainland"))
+    assert corrected.territorial_scope == IvaTerritorialScope.from_registry("es_mainland")
 
     assert not forget_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
@@ -460,7 +458,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
         from ....domain.iva.schema import IvaCategory
 
         filer_side = DeclaredFact[IvaTerritorialScope](
-            value=IvaTerritorialScope._from_registry("es_mainland"),
+            value=IvaTerritorialScope.from_registry("es_mainland"),
             source=ClassifierInputSource.PROFILE_AUTHORITY,
         )
 
@@ -499,7 +497,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
         )
         assert derived.assembled, [gap.field for gap in derived.missing]
         assert derived.criteria is not None
-        assert derived.criteria.issuer_residency == IvaTerritorialScope._from_registry("es_canarias")
+        assert derived.criteria.issuer_residency == IvaTerritorialScope.from_registry("es_canarias")
         assert classify_iva(derived.criteria, operation=_authority_operation_for_test).category == IvaCategory(
             "domestic_not_subject"
         )

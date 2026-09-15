@@ -102,7 +102,7 @@ def is_hosted_image(target: object) -> bool:
 def is_fleet_label_set(target: object) -> bool:
     """Return whether ``target`` is a self-hosted label set."""
     labels = _sequence(target)
-    return bool(labels) and labels[0] == "self-hosted"
+    return bool(labels) and bool(labels[0] == "self-hosted")
 
 
 def _mapping(value: Any) -> Mapping[str, Any]:

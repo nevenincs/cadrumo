@@ -105,9 +105,9 @@ def _autonomo(
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         activity_start_date=activity_start_date,
         activity_end_date=activity_end_date,
@@ -216,7 +216,7 @@ def test_the_modelo_axis_differs_between_two_different_profiles() -> None:
     company = expected_filed_declaration_grid(
         TaxpayerProfile(
             tax_id="B12345674",
-            entity_type=EntityType._from_registry("legal_entity"),
+            entity_type=EntityType.from_registry("legal_entity"),
             irpf_income_categories=frozenset(),
             iva_regime=IVARegime("GENERAL"),
             activity_start_date=date(2024, 3, 1),

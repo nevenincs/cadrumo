@@ -228,8 +228,8 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
 def test_explain_721_depends_on_crypto_abroad_threshold_fact() -> None:
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
         iva_regime=IVARegime("GENERAL"),
         bienes_extranjero_above_threshold=False,
         monedas_virtuales_extranjero_above_threshold=True,

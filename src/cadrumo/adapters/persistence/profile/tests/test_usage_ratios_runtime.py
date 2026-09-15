@@ -32,7 +32,7 @@ class TestRuntimeFacade:
         ):
             prior = set_usage_ratio(
                 bucket_id=profile.bucket_id,
-                category=SpendingCategory._from_registry("telefonia_movil"),
+                category=SpendingCategory.from_registry("telefonia_movil"),
                 ratio=Decimal("0.42"),
                 operation=operation,
             )
@@ -44,12 +44,12 @@ class TestRuntimeFacade:
             assert report.overrides_count == 1
 
             rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id, year=2025, operation=operation)
-            targeted = next(row for row in rows if row.category is SpendingCategory._from_registry("telefonia_movil"))
+            targeted = next(row for row in rows if row.category is SpendingCategory.from_registry("telefonia_movil"))
             assert targeted.override_present is True
 
             cleared = unset_usage_ratio(
                 bucket_id=profile.bucket_id,
-                category=SpendingCategory._from_registry("telefonia_movil"),
+                category=SpendingCategory.from_registry("telefonia_movil"),
                 operation=operation,
             )
             assert cleared == Decimal("0.42")
@@ -63,7 +63,7 @@ class TestRuntimeFacade:
             with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
                 set_usage_ratio(
                     bucket_id=_OTHER_BUCKET_ID,
-                    category=SpendingCategory._from_registry("telefonia_movil"),
+                    category=SpendingCategory.from_registry("telefonia_movil"),
                     ratio=Decimal("0.42"),
                     operation=operation,
                 )

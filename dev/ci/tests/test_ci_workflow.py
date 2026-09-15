@@ -102,6 +102,7 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # `just check-registry`, not a copied development integrity command.
     # The recipe owns the development gate so the workflow cannot drift from it.
     assert "just check-registry" in static_commands
+    assert "just check-data-format" in static_commands
     assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" not in static_commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
     # The CI/repository contract gates run per-push here, via the
@@ -171,7 +172,9 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
     # same thirty lines.
     from dev import actionlint
 
-    assert actionlint.VERSION, "actionlint must be pinned to a version"
+    assert actionlint.VERSION.replace(".", "").isdigit() and actionlint.VERSION.count(".") >= 2, (
+        "actionlint must be pinned to a dotted numeric version"
+    )
     assert actionlint.ARCHIVES, "actionlint must pin at least one platform"
     for (system, machine), (suffix, digest) in actionlint.ARCHIVES.items():
         assert len(digest) == 64, (
@@ -548,6 +551,7 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
     unit_step = next(step for step in full_steps if "just test-unit 100" in str(step.get("run", "")))
     assert unit_step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8"
     assert "just check-registry" in commands
+    assert "just check-data-format" in commands
     assert _prohibited_aeat_product_forms(_FULL_WORKFLOW.read_text(encoding="utf-8")) == ()
 
 

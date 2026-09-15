@@ -121,7 +121,7 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
 
     def visit(directory: Path, base: str, rules: tuple[_ScopedRules, ...]) -> None:
         own = _ignore_rules(directory, base)
-        scoped = (*rules, own) if own is not None else rules
+        scoped = (*rules, own) if isinstance(own, _ScopedRules) else rules
         with os.scandir(directory) as entries:
             children = sorted(entries, key=lambda entry: entry.name)
         for entry in children:
@@ -142,7 +142,7 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
         # Only the named subtree is walked, but every ancestor's rules still
         # apply to it, and an ignored ancestor excludes it outright.
         parts = prefix.split("/")
-        rules: tuple[_ScopedRules, ...] = ()
+        rules: list[_ScopedRules] = []
         excluded = False
         for depth, name in enumerate(parts):
             base = "/".join(parts[:depth])
@@ -150,7 +150,8 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
                 excluded = True
                 break
             own = _ignore_rules(root / base if base else root, base)
-            rules = (*rules, own) if own is not None else rules
+            if isinstance(own, _ScopedRules):
+                rules.append(own)
             candidate = root / "/".join(parts[: depth + 1])
             is_last = depth == len(parts) - 1
             is_directory = candidate.is_dir() and not candidate.is_symlink()
@@ -161,7 +162,7 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
             continue
         target = root / prefix
         if target.is_dir() and not target.is_symlink():
-            visit(target, prefix, rules)
+            visit(target, prefix, tuple(rules))
         elif target.exists() or target.is_symlink():
             found.append(prefix)
     return tuple(sorted(dict.fromkeys(found)))

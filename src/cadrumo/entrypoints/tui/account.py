@@ -15,10 +15,8 @@ from enum import StrEnum, auto
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from textual.app import App
-
 from ...core.errors.hierarchy import CadrumoError
-from .components.theme import toggle_appearance
+from .components.theme import AppearanceHost, toggle_appearance
 from .navigation import TuiScreenContextV1
 from .profile.overview import ProfileManagerScreen
 from .secret.login import LoginScreen
@@ -39,7 +37,7 @@ if TYPE_CHECKING:
 type AccountProfileFactoryV1 = Callable[[TuiScreenContextV1], ProfileManagerScreen]
 type AccountChangeUserFactoryV1 = Callable[[], LoginScreen]
 type AccountPasswordFactoryV1 = Callable[[], PassphraseScreen]
-type AccountAppearanceFactoryV1 = Callable[[App[None]], str]
+type AccountAppearanceFactoryV1 = Callable[[AppearanceHost], str]
 type AccountLanguageFactoryV1 = Callable[[ProfileManagerScreen], None]
 type AccountSignOutFactoryV1 = Callable[[], Awaitable[OperationController]]
 

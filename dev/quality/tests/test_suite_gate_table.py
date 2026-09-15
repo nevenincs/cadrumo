@@ -20,6 +20,7 @@ from __future__ import annotations
 import re
 import shlex
 import sys
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Final
 
@@ -66,6 +67,7 @@ _CODE_GATES: Final[frozenset[str]] = frozenset(
     {
         "check-style",
         "check-format",
+        "check-data-format",
         "check-types",
         "check-import-boundaries",
         "check-dependency-declarations",
@@ -136,9 +138,15 @@ def _justfile_static_checks() -> set[str]:
     return names
 
 
+def _malformed_rows(rows: Iterable[Sequence[object]]) -> list[Sequence[object]]:
+    """Return rows whose runtime shape is not the suite's two-column contract."""
+    return [row for row in rows if len(row) != 2]
+
+
 def test_every_row_unpacks_as_a_name_and_a_command() -> None:
     """A malformed row takes down the whole suite before any gate runs."""
-    malformed = [row for row in GATES if len(row) != 2]
+    rows: tuple[Sequence[object], ...] = GATES
+    malformed = _malformed_rows(rows)
     assert not malformed, f"each GATES row must be (name, command): {malformed}"
 
 
@@ -171,8 +179,8 @@ def test_the_recipe_scan_finds_the_group() -> None:
 
 def test_the_gate_catches_a_malformed_row() -> None:
     """Detector teeth: the exact five-element shape that broke the suite."""
-    planted = (("check-a", ("x",), ("y",), ("z",)),)
-    assert [row for row in planted if len(row) != 2] == list(planted)
+    planted: tuple[Sequence[object], ...] = (("check-a", ("x",), ("y",), ("z",)),)
+    assert _malformed_rows(planted) == list(planted)
 
 
 def test_each_gate_runs_the_same_command_its_recipe_does() -> None:

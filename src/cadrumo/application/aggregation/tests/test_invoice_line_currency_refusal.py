@@ -60,7 +60,7 @@ def _unconverted_gbp_invoice(*, line_count: int = 1) -> Invoice:
             quantity=Decimal("1"),
             unit_price=base_per_line,
             subtotal=base_per_line,
-            iva_rate=IvaRate._from_registry("RATE_21"),
+            iva_rate=IvaRate.from_registry("RATE_21"),
             iva_amount=iva_per_line,
         )
         for index in range(line_count)
@@ -105,7 +105,7 @@ def test_modelo_bindings_does_not_refuse_a_converted_invoice() -> None:
         quantity=Decimal("1"),
         unit_price=Decimal("500.00"),
         subtotal=Decimal("500.00"),
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=Decimal("105.00"),
     )
     invoice = Invoice.model_validate(
@@ -137,7 +137,7 @@ def _unconverted_pln_oss_line() -> tuple[Invoice, InvoiceLine]:
         quantity=Decimal("1"),
         unit_price=base_total,
         subtotal=base_total,
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=iva_total,
         oss_rate_kind=IvaRateKind("general"),
     )
@@ -233,7 +233,7 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
         quantity=Decimal("1"),
         unit_price=Decimal("500.00"),
         subtotal=Decimal("500.00"),
-        iva_rate=IvaRate._from_registry("NOT_SUBJECT"),
+        iva_rate=IvaRate.from_registry("NOT_SUBJECT"),
         iva_amount=Decimal("0.00"),
     )
     invoice = Invoice.model_validate(
@@ -279,7 +279,7 @@ def test_oss_ioss_does_not_refuse_an_invoice_never_tagged_as_oss() -> None:
         quantity=Decimal("1"),
         unit_price=Decimal("500.00"),
         subtotal=Decimal("500.00"),
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=Decimal("105.00"),
     )
     invoice = Invoice.model_validate(

@@ -78,7 +78,7 @@ def test_missing_provisional_advisory_names_inicio_action_for_first_ejercicio() 
         register_entries=(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -101,7 +101,7 @@ def test_missing_provisional_advisory_is_silent_when_prorrata_does_not_apply() -
         register_entries=(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime._from_registry("ninguna"),
+                regime=ProrrataRegisterRegime.from_registry("ninguna"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),

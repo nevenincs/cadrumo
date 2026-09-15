@@ -337,9 +337,9 @@ def _m303_iva_transaction(
 ) -> Transaction:
     deduction_authority = (
         {
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="8" * 64,
             ),
@@ -593,10 +593,10 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
             entries=(
                 ProrrataRegisterEntry(
                     ejercicio=_PRORRATA_YEAR,
-                    regime=ProrrataRegisterRegime._from_registry("general"),
+                    regime=ProrrataRegisterRegime.from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=Decimal("80"),
-                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                    provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                     source_observation_ref="303:2025:4T",
                     source_registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "4T"),),
                 ),

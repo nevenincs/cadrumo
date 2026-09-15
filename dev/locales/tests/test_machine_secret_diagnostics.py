@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 import pytest
 
 from .._paths import LOCALES_DIR, SRC_DIR
@@ -28,7 +26,10 @@ def _catalogue(locale: str) -> dict[str, object]:
     payload = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR).load_locale(source)
     inner = payload.get(locale, payload)
     assert isinstance(inner, dict)
-    return cast("dict[str, object]", inner)
+    catalogue: dict[str, object] = {}
+    for key, value in inner.items():
+        catalogue[key] = value
+    return catalogue
 
 
 def _leaf(catalogue: dict[str, object], key: str) -> str:

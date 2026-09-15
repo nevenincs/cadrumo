@@ -217,8 +217,7 @@ def test_ipv6_relay_bridges_to_the_ipv4_listener(sphinx_http_server: int) -> Non
             assert response.status == 200
             assert _looks_like_sphinx(response.read().decode("utf-8", "replace"))
     finally:
-        if relay is not None:
-            relay.close()
+        relay.close()
 
 
 # ── State file round-trip ─────────────────────────────────────────────────────

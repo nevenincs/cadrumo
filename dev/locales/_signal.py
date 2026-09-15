@@ -1031,9 +1031,7 @@ def _source_inventory(
                         if isinstance(value, ast.Constant) and isinstance(value.value, str):
                             counts["naked_presentation_sites"] += 1
                             findings.append(_source_finding("naked_presentation_text", path, node.lineno, value.value))
-    resolved_dynamic_keys = tuple(
-        key for key in dynamic_resolved_keys if isinstance(key, str) and _DOTTED_KEY_RE.fullmatch(key)
-    )
+    resolved_dynamic_keys = tuple(key for key in dynamic_resolved_keys if _DOTTED_KEY_RE.fullmatch(key))
     key_occurrences.extend(resolved_dynamic_keys)
     for key in resolved_dynamic_keys:
         if _DOTTED_KEY_RE.fullmatch(key):
@@ -1434,7 +1432,11 @@ def _documentation_source_inventory(
                         if source_normalized == translation_normalized:
                             if echo_dictionaries is None and not echo_dictionaries_unavailable:
                                 try:
-                                    echo_dictionaries = cast(dict[str, object], load_dictionaries(repository))
+                                    loaded_dictionaries = load_dictionaries(repository)
+                                    object_dictionaries: dict[str, object] = {}
+                                    for dictionary_locale, dictionary in loaded_dictionaries.items():
+                                        object_dictionaries[dictionary_locale] = dictionary
+                                    echo_dictionaries = object_dictionaries
                                 except SpellingToolError:
                                     echo_dictionaries_unavailable = True
                             reason = _translation_invariant_echo_reason(
@@ -1555,9 +1557,7 @@ def _po_message_identity(message: object) -> str:
     message_id_value = getattr(message, "id", None)
     if not isinstance(message_id_value, (str, tuple, list)):
         raise TypeError("gettext message id must be text or plural forms")
-    if isinstance(message_id_value, (tuple, list)) and not all(
-        isinstance(item, str) for item in message_id_value
-    ):
+    if isinstance(message_id_value, (tuple, list)) and not all(isinstance(item, str) for item in message_id_value):
         raise TypeError("gettext plural message ids must contain text")
     message_id = _po_message_id(message_id_value)
     context = getattr(message, "context", None)
@@ -1652,7 +1652,7 @@ def _platform_identity_terms(repository: Path) -> frozenset[str]:
             payload = tomllib.load(handle)
     except (OSError, tomllib.TOMLDecodeError):
         return frozenset[str]()
-    channels = payload.get("channel") if isinstance(payload, dict) else None
+    channels = payload.get("channel")
     if not isinstance(channels, list):
         return frozenset[str]()
     terms: set[str] = set()

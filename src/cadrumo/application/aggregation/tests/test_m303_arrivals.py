@@ -57,7 +57,7 @@ def _observation(
         transaction_date=transaction_date,
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
-        flow_direction=IvaFlowDirection._from_registry("repercutido"),
+        flow_direction=IvaFlowDirection.from_registry("repercutido"),
         base_amount=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
         cash_accounting_treatment=cash_accounting_treatment,
@@ -112,12 +112,12 @@ def test_supplier_regime_arrival_refuses_mismatched_or_out_of_period_canonical_e
 
 def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
     option = ProrrataEspecialTransitionEvidence(
-        kind=ProrrataEspecialTransitionKind._from_registry("opcion"),
+        kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
         evidence_reference="modelo-303-2026-1t-prorrata-opcion",
     )
     entry = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("especial"),
+        regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=option,
         source_registry_snapshot_refs=(),
     )
@@ -129,16 +129,16 @@ def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
 
     assert arrival.period == _Q4_2026
     assert arrival.is_applicable is True
-    assert arrival.transition is ProrrataEspecialTransitionKind._from_registry("opcion")
+    assert arrival.transition is ProrrataEspecialTransitionKind.from_registry("opcion")
     assert arrival.register_evidence == (entry,)
 
 
 def test_prorrata_transition_arrival_is_blank_before_the_modelo_303_final_period() -> None:
     entry = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("especial"),
+        regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind._from_registry("opcion"),
+            kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
             evidence_reference="modelo-303-2026-prorrata-opcion",
         ),
         source_registry_snapshot_refs=(),
@@ -179,9 +179,9 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
     option_entry = ProrrataRegisterEntry(
         ejercicio=2026,
         sector_id="retail",
-        regime=ProrrataRegisterRegime._from_registry("especial"),
+        regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind._from_registry("opcion"),
+            kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
             evidence_reference="modelo-303-2026-retail-opcion",
         ),
         source_registry_snapshot_refs=(),
@@ -189,9 +189,9 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
     revocation_entry = ProrrataRegisterEntry(
         ejercicio=2026,
         sector_id="wholesale",
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind._from_registry("revocacion"),
+            kind=ProrrataEspecialTransitionKind.from_registry("revocacion"),
             evidence_reference="modelo-303-2026-wholesale-revocacion",
         ),
         source_registry_snapshot_refs=(),
@@ -203,7 +203,7 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
                 ProrrataRegisterEntry(
                     ejercicio=2025,
                     sector_id="wholesale",
-                    regime=ProrrataRegisterRegime._from_registry("especial"),
+                    regime=ProrrataRegisterRegime.from_registry("especial"),
                     especial_transition=None,
                     source_registry_snapshot_refs=(),
                 ),
@@ -218,7 +218,7 @@ def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_e
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime._from_registry("especial"),
+                regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -235,9 +235,9 @@ def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_e
 def test_prorrata_register_refuses_a_revocation_without_a_prior_especial_state() -> None:
     entry = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind._from_registry("revocacion"),
+            kind=ProrrataEspecialTransitionKind.from_registry("revocacion"),
             evidence_reference="modelo-303-2026-revocacion",
         ),
         source_registry_snapshot_refs=(),
@@ -250,9 +250,9 @@ def test_prorrata_register_refuses_a_revocation_without_a_prior_especial_state()
 def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especial_state() -> None:
     revocation_entry = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind._from_registry("revocacion"),
+            kind=ProrrataEspecialTransitionKind.from_registry("revocacion"),
             evidence_reference="modelo-303-2026-revocacion",
         ),
         source_registry_snapshot_refs=(),
@@ -261,7 +261,7 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=2025,
-                regime=ProrrataRegisterRegime._from_registry("especial"),
+                regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -272,7 +272,7 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
     arrival = resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=register)
 
     assert arrival.is_applicable is True
-    assert arrival.transition is ProrrataEspecialTransitionKind._from_registry("revocacion")
+    assert arrival.transition is ProrrataEspecialTransitionKind.from_registry("revocacion")
     assert arrival.register_evidence == (revocation_entry,)
 
 
@@ -281,7 +281,7 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
     current = ProrrataRegisterEntry(
         ejercicio=2026,
         sector_id="retail",
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         source_registry_snapshot_refs=(),
     )
@@ -290,12 +290,12 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
         sector_definitions=(
             SectorDefinition(
                 sector_id="retail",
-                letra=SectorDiferenciadoLetra._from_registry("a"),
+                letra=SectorDiferenciadoLetra.from_registry("a"),
                 member_activity_codes=("471",),
             ),
             SectorDefinition(
                 sector_id="leasing",
-                letra=SectorDiferenciadoLetra._from_registry("a"),
+                letra=SectorDiferenciadoLetra.from_registry("a"),
                 member_activity_codes=("649",),
             ),
         ),
@@ -313,7 +313,7 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -321,7 +321,7 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="leasing",
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),

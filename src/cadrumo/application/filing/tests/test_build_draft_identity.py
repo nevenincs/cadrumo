@@ -87,7 +87,7 @@ def _schema_provider(
 
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope._from_registry("not_claimed"),
+        scope=M303RegimenSimplificadoScope.from_registry("not_claimed"),
     )
 
 

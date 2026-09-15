@@ -39,6 +39,26 @@ _PYTHON_MINOR_RE = re.compile(r"^3\.\d+$")
 _INVENTORY_PATH = _REPO_ROOT / "dev" / "ci" / "python-runtime-matrix.json"
 
 
+def _classifiers(pyproject_path: Path) -> list[str]:
+    """Read and structurally validate one project's classifier list."""
+    with pyproject_path.open("rb") as fh:
+        data = tomllib.load(fh)
+    if not isinstance(data, dict):
+        raise AssertionError(f"{pyproject_path}: project metadata is not a table")
+    project = data.get("project")
+    if not isinstance(project, dict):
+        raise AssertionError(f"{pyproject_path}: project metadata is not a table")
+    raw_classifiers = project.get("classifiers", [])
+    if not isinstance(raw_classifiers, list):
+        raise AssertionError(f"{pyproject_path}: classifiers is not a list")
+    classifiers: list[str] = []
+    for classifier in raw_classifiers:
+        if not isinstance(classifier, str):
+            raise AssertionError(f"{pyproject_path}: classifier is not a string: {classifier!r}")
+        classifiers.append(classifier)
+    return classifiers
+
+
 def test_cohort_roster_is_not_degenerate() -> None:
     """The roster must find the cohort, or every parity test below proves nothing.
 
@@ -55,9 +75,7 @@ def test_cohort_roster_is_not_degenerate() -> None:
 
 def _extract_dev_status(pyproject_path: Path) -> str:
     """Return the single Development Status classifier value from a pyproject.toml."""
-    with pyproject_path.open("rb") as fh:
-        data = tomllib.load(fh)
-    classifiers: list[str] = data.get("project", {}).get("classifiers", [])
+    classifiers = _classifiers(pyproject_path)
     matches = [c for c in classifiers if c.startswith(_DEV_STATUS_PREFIX)]
     assert len(matches) == 1, (
         f"{pyproject_path}: expected exactly one '{_DEV_STATUS_PREFIX}' classifier, found {len(matches)}: {matches}"
@@ -67,9 +85,7 @@ def _extract_dev_status(pyproject_path: Path) -> str:
 
 def _extract_python_minors(pyproject_path: Path) -> frozenset[str]:
     """Return exact CPython minor classifiers from one project declaration."""
-    with pyproject_path.open("rb") as fh:
-        data = tomllib.load(fh)
-    classifiers: list[str] = data.get("project", {}).get("classifiers", [])
+    classifiers = _classifiers(pyproject_path)
     minors: set[str] = set()
     for classifier in classifiers:
         if not classifier.startswith(_PYTHON_CLASSIFIER_PREFIX):

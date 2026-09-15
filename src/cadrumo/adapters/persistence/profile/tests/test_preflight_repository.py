@@ -40,7 +40,7 @@ def _transaction(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     amount: Decimal = Decimal("121.00"),
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
-    category_id: str | None = SpendingCategory._from_registry("material_oficina").value,
+    category_id: str | None = SpendingCategory.from_registry("material_oficina").value,
 ) -> Transaction:
     booked_date = date(2026, 4, 5)
     raw = RawTransaction(

@@ -93,11 +93,10 @@ class TemporalRevisionCoverage(BaseModel):
             if self.declared_authority_grade is None:
                 raise ValueError("declared-grade snapshot refusal requires a declared authority grade")
             return self
-        if self.failure_code == "snapshot_revision_mismatch":
-            if self.selected_revision is None or self.selected_revision == self.revision:
-                raise ValueError("snapshot-revision mismatch requires a conflicting snapshot revision")
-            if self.declared_authority_grade is None:
-                raise ValueError("snapshot-revision mismatch requires a declared authority grade")
+        if self.selected_revision is None or self.selected_revision == self.revision:
+            raise ValueError("snapshot-revision mismatch requires a conflicting snapshot revision")
+        if self.declared_authority_grade is None:
+            raise ValueError("snapshot-revision mismatch requires a declared authority grade")
         return self
 
 

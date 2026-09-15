@@ -129,8 +129,8 @@ def _issued_goods_to(customer_country_code: str, *, operation: PinnedAuthorityOp
     return assemble_classification_criteria(
         declared=DeclaredFacts(
             supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-            customer_tax_status=DeclaredFact(value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED),
-            issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
+            customer_tax_status=DeclaredFact(value=CustomerTaxStatus.from_registry("b2c_consumer"), source=_ASSERTED),
+            issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED),
             customer_scope=None,
             customer_identification_state=None,
         ),

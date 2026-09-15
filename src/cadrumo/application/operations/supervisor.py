@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel
 
@@ -29,7 +29,6 @@ from .financial_operand_submission import (
 )
 from .interactions import (
     OperationConsumedInteraction,
-    OperationPendingInteraction,
     OperationRejectResponse,
 )
 from .models import (
@@ -67,7 +66,6 @@ from .secret_submission import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ._supervisor_settlement import SupervisorHost as SettlementSupervisorHost
 
 
 def _financial_operand_broker(
@@ -149,7 +147,7 @@ class OperationSupervisor(
         self._lease_locks: dict[OperationId, asyncio.Lock] = {}
         self._resources: dict[OperationId, list[AsyncCloseable]] = {}
         self._contexts: dict[OperationId, DefinitionBoundContext] = {}
-        self._executor_tasks: dict[OperationId, asyncio.Task[object]] = {}
+        self._executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]] = {}
         self._cleanup_tasks: dict[OperationId, asyncio.Task[None]] = {}
         self._continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
@@ -165,43 +163,15 @@ class OperationSupervisor(
         )
 
     @override
-    async def _renew_while_executing(
-        self,
-        *,
-        identity: OperationIdentity,
-        executor: Coroutine[Any, Any, OperationReference | None],
-    ) -> OperationReference | None:
-        result = await OperationSupervisorLeaseMixin._renew_while_executing(
-            self,
-            identity=identity,
-            executor=executor,
-        )
-        return cast("OperationReference | None", result)
-
-    @override
-    async def _resume_from_checkpoint(
-        self,
-        snapshot: OperationPersistedSnapshot,
-        definition: OperationDefinition,
-        continuation: OperationPendingInteraction | OperationConsumedInteraction,
-    ) -> OperationPersistedSnapshot:
-        return await SupervisorReconciliationMixin._resume_from_checkpoint(
-            self,
-            snapshot,
-            definition,
-            continuation,
-        )
-
-    @override
     async def _acknowledge_cancellation(
-        self: SettlementSupervisorHost,
+        self,
         context_snapshot: OperationPersistedSnapshot,
     ) -> OperationPersistedSnapshot:
         return await SupervisorSettlementMixin._acknowledge_cancellation(self, context_snapshot)
 
     @override
     async def _set_cancellation_deferred(
-        self: SettlementSupervisorHost,
+        self,
         context_snapshot: OperationPersistedSnapshot,
         deferred: bool,
     ) -> OperationPersistedSnapshot:
@@ -304,6 +274,7 @@ class OperationSupervisor(
         """Consume a rejected REVIEW response through the shared response transition."""
         return await self.respond(response)
 
+    @override
     async def _cancel_pre_entry_secret(
         self,
         snapshot: OperationPersistedSnapshot,

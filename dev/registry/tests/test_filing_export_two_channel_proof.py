@@ -52,6 +52,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
+def _blocked_vector_payload() -> object:
+    """Return a foreign-shaped object for the enrollment refusal test."""
+    coordinate = SimpleNamespace(modelo="100", revision="static-refusal")
+    return SimpleNamespace(evidence=SimpleNamespace(coordinate=coordinate))
+
+
 def _static_data_graph(value: object) -> Iterator[object]:
     """Walk only values stored in the static diagnostic projection."""
     yield value
@@ -285,10 +291,7 @@ def test_static_projection_has_one_residue_classifier_and_strict_failure_cannot_
 
     assert diagnostic_report.residues == strict_report.residues
     assert not diagnostic_report.materializable_vectors
-    blocked_vector = cast(
-        FilingExportConformanceVector,
-        SimpleNamespace(evidence=SimpleNamespace(coordinate=SimpleNamespace(modelo="100", revision="static-refusal"))),
-    )
+    blocked_vector = cast(FilingExportConformanceVector, _blocked_vector_payload())
     with pytest.raises(ValueError, match="cannot materialize"):
         FilingExportConformanceEnrollmentReport(
             full_registry_validation_error="whole-registry validation failed",

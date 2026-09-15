@@ -89,7 +89,7 @@ def test_the_operator_can_record_the_identification_and_it_persists() -> None:
     assert result.exit_code == 0, result.output
     transaction = _active_repo().load().get(transaction_id)
     assert transaction is not None
-    assert transaction.counterparty_identification_state is EUMemberState._from_registry("de")
+    assert transaction.counterparty_identification_state is EUMemberState.from_registry("de")
 
 
 def test_recording_the_identification_leaves_the_establishment_axis_alone() -> None:
@@ -114,7 +114,7 @@ def test_recording_the_identification_leaves_the_establishment_axis_alone() -> N
     assert result.exit_code == 0, result.output
     transaction = _active_repo().load().get(transaction_id)
     assert transaction is not None
-    assert transaction.counterparty_identification_state is EUMemberState._from_registry("de")
+    assert transaction.counterparty_identification_state is EUMemberState.from_registry("de")
     assert transaction.counterparty_eu_member_state == establishment_before, (
         "recording where a counterparty is IVA-identified must not silently restate where it is established"
     )

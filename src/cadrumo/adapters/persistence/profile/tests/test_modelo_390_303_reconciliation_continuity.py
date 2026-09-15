@@ -143,8 +143,8 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
     invented authority would reconcile just as cleanly as a real one.
     """
     is_input_flow = flow in {
-        IvaFlowDirection._from_registry("soportado"),
-        IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+        IvaFlowDirection.from_registry("soportado"),
+        IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
     }
     return IvaLedgerObservation(
         ledger_id=ledger_id,
@@ -155,10 +155,10 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         base_amount=Decimal("100.00"),
         iva_amount=iva,
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current") if is_input_flow else None,
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current") if is_input_flow else None,
         deduction_provenance=(
             IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{ledger_id}",
                 evidence_digest="d" * 64,
             )
@@ -175,13 +175,13 @@ def _quarter_ledger(filing_year: int, period: str) -> tuple[IvaLedgerObservation
         _ledger_line(
             ledger_id=f"{filing_year}-{period}-out",
             txn_date=date(filing_year, month, 10),
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             iva=repercutido,
         ),
         _ledger_line(
             ledger_id=f"{filing_year}-{period}-in",
             txn_date=date(filing_year, month, 20),
-            flow=IvaFlowDirection._from_registry("soportado"),
+            flow=IvaFlowDirection.from_registry("soportado"),
             iva=soportado,
         ),
     )

@@ -27,7 +27,7 @@ from hashlib import sha256
 from itertools import pairwise
 from pathlib import Path
 from statistics import median
-from typing import Final
+from typing import Final, Protocol, runtime_checkable
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -69,6 +69,29 @@ _TEXT_RUN = re.compile(
 
 class RasterError(RuntimeError):
     """The SVG did not describe a terminal grid this renderer understands."""
+
+
+@runtime_checkable
+class _GlyphMask(Protocol):
+    """The small Pillow mask surface needed for deterministic byte comparison."""
+
+    size: tuple[int, int]
+
+    def __getitem__(self, index: int) -> object: ...
+
+
+def _mask_bytes(mask: object) -> bytes:
+    """Read a grayscale Pillow glyph mask without depending on private buffers."""
+    if not isinstance(mask, _GlyphMask):
+        raise RasterError("Pillow returned an unsupported glyph mask")
+    width, height = mask.size
+    pixels: list[int] = []
+    for index in range(width * height):
+        value = mask[index]
+        if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 255:
+            raise RasterError("Pillow returned a non-byte glyph mask")
+        pixels.append(value)
+    return bytes(pixels)
 
 
 @dataclass(frozen=True)
@@ -114,7 +137,7 @@ candidate character is compared against."""
 @cache
 def _notdef_mask(pixels: int) -> bytes:
     """The pinned font's ``.notdef`` bitmap at this size."""
-    return bytes(_font(pixels).getmask(_NOTDEF_PROBE))
+    return _mask_bytes(_font(pixels).getmask(_NOTDEF_PROBE))
 
 
 def _is_missing(font: ImageFont.FreeTypeFont, pixels: int, character: str) -> bool:
@@ -128,7 +151,7 @@ def _is_missing(font: ImageFont.FreeTypeFont, pixels: int, character: str) -> bo
     bitmap against the font's own ``.notdef`` identifies the box for what it
     is.
     """
-    return bytes(font.getmask(character)) == _notdef_mask(pixels)
+    return _mask_bytes(font.getmask(character)) == _notdef_mask(pixels)
 
 
 @cache

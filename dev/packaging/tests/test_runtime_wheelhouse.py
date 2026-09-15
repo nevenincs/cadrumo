@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -207,7 +208,8 @@ class _CountingIndex:
                 self.end_headers()
                 self.wfile.write(index.payload)
 
-            def log_message(self, *_args: object) -> None:
+            @override
+            def log_message(self, format: str, *args: object) -> None:
                 return
 
         self._server = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)

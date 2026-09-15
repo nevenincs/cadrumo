@@ -95,7 +95,7 @@ def _objective_profile(**overrides: Any) -> TaxpayerProfile:
     base_data: dict[str, Any] = {
         "tax_id": "X1234567L",
         "iva_regime": IVARegime("GENERAL"),
-        "irpf_estimation_regime": IrpfEstimationRegime._from_registry("objetiva"),
+        "irpf_estimation_regime": IrpfEstimationRegime.from_registry("objetiva"),
     }
     base_data.update(overrides)
     return TaxpayerProfile(**base_data)
@@ -251,7 +251,7 @@ def test_objective_estimation_exclusion_advisory_does_not_apply_direct_estimatio
     profile = TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime("GENERAL"),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         objective_estimation_prior_year_gross_income_eur=Decimal("999999.00"),
     )
 

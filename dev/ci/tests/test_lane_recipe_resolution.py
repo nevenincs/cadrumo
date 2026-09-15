@@ -49,7 +49,7 @@ def _declared_recipes(root: Path) -> frozenset[str]:
     tool being installed.
     """
     justfile = root / "justfile"
-    return frozenset(_recipe_bodies(justfile.read_text(encoding=_UTF_8))) if justfile.exists() else frozenset()
+    return frozenset(_recipe_bodies(justfile.read_text(encoding=_UTF_8))) if justfile.exists() else frozenset[str]()
 
 
 def _workflow_callees(root: Path) -> dict[str, set[str]]:

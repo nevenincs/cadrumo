@@ -35,6 +35,7 @@ what keeps the single true case legible.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -85,7 +86,10 @@ def _condition_text(condition: object) -> str:
         return ""
     text = str(condition).strip()
     match = _INTERPOLATION.fullmatch(text)
-    return (match.group("body") if match is not None else text).strip()
+    if match is None:
+        return text
+    body = match.group("body")
+    return body.strip() if isinstance(body, str) else ""
 
 
 def narrowed_events(condition: object, events: tuple[str, ...]) -> tuple[str, ...]:
@@ -123,11 +127,13 @@ def opt_in_conjuncts(condition: object) -> tuple[str, ...]:
     for conjunct in text.split("&&"):
         match = _BARE_INPUT.match(conjunct.strip().strip("()").strip())
         if match is not None:
-            names.append(match.group("name"))
+            name = match.group("name")
+            if isinstance(name, str):
+                names.append(name)
     return tuple(names)
 
 
-def dispatch_input_defaults(document: dict[str, Any]) -> dict[str, Any]:
+def dispatch_input_defaults(document: Mapping[str | bool, Any]) -> dict[str, Any]:
     """Return the ``workflow_dispatch`` input defaults declared by a workflow.
 
     ``on`` is a YAML 1.1 boolean, so a safe-loaded workflow carries its trigger
@@ -148,7 +154,7 @@ def dispatch_input_defaults(document: dict[str, Any]) -> dict[str, Any]:
     return {str(name): spec.get("default") if isinstance(spec, dict) else None for name, spec in inputs.items()}
 
 
-def job_gate(document: dict[str, Any], job_name: str, events: tuple[str, ...]) -> JobGate:
+def job_gate(document: Mapping[str | bool, Any], job_name: str, events: tuple[str, ...]) -> JobGate:
     """Return the events reaching ``job_name`` and the opt-in inputs it requires.
 
     A job the document does not declare reaches nothing, which is distinct from
