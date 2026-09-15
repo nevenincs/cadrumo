@@ -66,7 +66,7 @@ def test_committed_modelo_036_binds_censo_status_from_profile() -> None:
     assert binding.id == "modelo-036-profile-censo-status"
     assert binding.source == "profile"
     assert selector_as_dict(binding) == {"profile_key": "censo.status"}
-    assert binding.typed_enum == "censo_event_kind"
+    assert binding.value.typed_enum == "censo_event_kind"
     assert casilla.input_kind == InputKind.BOUND
     assert casilla.binding == binding.id
 

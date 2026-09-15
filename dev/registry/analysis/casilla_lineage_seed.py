@@ -1770,7 +1770,10 @@ def plan_corpus(
         try:
             plans.append(plan_modelo(modelo_id, loaded[modelo_id], oracle, rulings))
         except RegistryError as error:
-            records = error.context.get("partial_stamping_records", ())
+            context = error.context
+            if context is None:
+                raise
+            records = context.get("partial_stamping_records", ())
             if not isinstance(records, tuple) or not all(isinstance(record, PartialStamping) for record in records):
                 raise
             partial.extend(records)

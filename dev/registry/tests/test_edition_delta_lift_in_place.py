@@ -1,13 +1,11 @@
-"""Lifting a delta-authored modelo in place, and the identity proof that guards it.
+"""Completing a partially delta-authored modelo and proving its identity.
 
-A modelo whose editions already name predecessors has no full copy left to
-prove a rewrite against, so the migration admits exactly one operation on it:
-lifting restatement where it stands. Every stated member stays stated, in the
-order it was authored, no predecessor or review stamp is written, and the only
-changes are a row dropping a reference the manifest default already supplies
-and a manifest declaring a default it derives. The proof is identity: the
-staged edition must hold the same members in the same order and materialise to
-the same bytes as the edition it was planned from.
+A modelo whose editions already name predecessors may still state redundant
+or changed complete members. The migration keeps genuine additions, converts
+changed predecessor members to precise storage overrides, and lifts shared
+defaults. The proof is identity: the staged edition must hold the same members
+in the same order and materialise to the same bytes as the edition it was
+planned from.
 
 Every test drives the real planner, writer and chain proof over a synthetic
 on-disk modelo built in ``tmp_path``, with nothing mocked and no production
@@ -58,6 +56,7 @@ _SOURCE_REF: Final = "aeat-manual"
 _PREDECESSOR: Final = "2024"
 _SUCCESSOR: Final = "2025"
 _SUCCESSOR_FRAGMENT: Final = "c0005__c0002.toml"
+_MINIMISED_SUCCESSOR_FRAGMENT: Final = "c0005.toml"
 _FORMULA_FRAGMENT: Final = "0001-formulas.toml"
 _CLEAN_REPORT: Final = RoundTripReport(findings=(), byte_compared_revisions=())
 #: The successor states the new row before the row it supersedes, which is the
@@ -213,8 +212,8 @@ def _copy_of(reference_dir: Path, destination: Path) -> Path:
     return shutil.copytree(reference_dir, destination / _MODELO_ID)
 
 
-def test_a_lift_in_place_keeps_every_stated_member_in_its_authored_order(tmp_path: Path) -> None:
-    """Nothing is inherited, reordered or newly declared beyond the defaults the lift derives."""
+def test_an_existing_delta_finishes_changed_members_as_storage_overrides(tmp_path: Path) -> None:
+    """A predecessor declaration does not make remaining full member statements final."""
     modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
     assert _materialised_ids(modelo_dir, _SUCCESSOR) == _MATERIALISED_ORDER
 
@@ -223,11 +222,17 @@ def test_a_lift_in_place_keeps_every_stated_member_in_its_authored_order(tmp_pat
     assert plan.already_delta_authored
     assert [edition.basis for edition in plan.editions] == [PredecessorBasis.FIRST, PredecessorBasis.LIFT_ONLY]
     predecessor, successor = plan.editions
-    # The successor keeps the members it authored, in the order it authored
-    # them, which is not the order its materialisation gives them.
-    assert successor.stated_ids == _AUTHORED_ORDER
-    assert successor.stated_ids != tuple(row_id for row_id in _MATERIALISED_ORDER if row_id in set(_AUTHORED_ORDER))
-    assert successor.inherited_ids == ("0001", "0003")
+    # The genuinely new row remains authored. The changed predecessor member
+    # becomes one precise storage override instead of remaining a full row.
+    assert successor.stated_ids == ("0005",)
+    assert successor.inherited_ids == ("0001", "0002", "0003")
+    assert successor.casilla_overrides == (
+        {
+            "selector": {"revision": _PREDECESSOR, "id": "0002"},
+            "fields": {"number": "22"},
+            "removed_fields": [],
+        },
+    )
     assert predecessor.stated_ids == ("0001", "0002", "0003")
     assert predecessor.inherited_ids == ()
     # Inheritance, review stamps and root declarations are left as authored.
@@ -253,13 +258,18 @@ def test_a_written_lift_proves_identical_and_a_rerun_changes_nothing(tmp_path: P
     staged_dir = _stage_lift(reference_dir, tmp_path / "staged")
 
     manifest = (staged_dir / "revisions" / _SUCCESSOR / "revision.toml").read_text(encoding="utf-8")
-    fragment = (staged_dir / "revisions" / _SUCCESSOR / "casillas" / _SUCCESSOR_FRAGMENT).read_text(encoding="utf-8")
+    fragment = (
+        staged_dir / "revisions" / _SUCCESSOR / "casillas" / _MINIMISED_SUCCESSOR_FRAGMENT
+    ).read_text(encoding="utf-8")
     assert f'casilla_source_refs = ["{_SOURCE_REF}"]\n' in manifest
     assert f'formula_source_refs = ["{_SOURCE_REF}"]\n' in manifest
     assert 'predecessor = "2024"\n' in manifest
     assert "reviewed_against" not in manifest
     assert "source_refs" not in fragment
-    assert fragment.index('id = "0005"') < fragment.index('id = "0002"')
+    assert 'id = "0005"' in fragment
+    assert 'id = "0002"' not in fragment
+    assert 'selector = { revision = "2024", id = "0002" }' in manifest
+    assert 'fields = { number = "22" }' in manifest
 
     assert _prove(reference_dir, staged_dir) == _CLEAN_REPORT
     assert _materialised_ids(staged_dir, _SUCCESSOR) == _MATERIALISED_ORDER
@@ -267,7 +277,7 @@ def test_a_written_lift_proves_identical_and_a_rerun_changes_nothing(tmp_path: P
     plan, works = _plan(staged_dir, _definition(staged_dir))
 
     assert plan.already_delta_authored
-    assert [edition.stated_ids for edition in plan.editions] == [("0001", "0002", "0003"), _AUTHORED_ORDER]
+    assert [edition.stated_ids for edition in plan.editions] == [("0001", "0002", "0003"), ("0005",)]
     assert [edition.lifted.total() for edition in plan.editions] == [0, 0]
     assert [_edition_changes(work) for work in works] == [False, False]
 
@@ -360,8 +370,14 @@ def test_a_modelo_naming_no_predecessor_still_plans_through_the_full_copy_path(t
     # The full-copy path drops the rows the successor may inherit and states the
     # rest in materialised order, where the lift path states what was authored.
     assert successor.inherited_ids == ("0001", "0003")
-    assert successor.stated_ids == ("0002", "0005")
-    assert successor.stated_ids != _AUTHORED_ORDER
+    assert successor.stated_ids == ("0005",)
+    assert successor.casilla_overrides == (
+        {
+            "selector": {"revision": _PREDECESSOR, "id": "0002"},
+            "fields": {"number": "22"},
+            "removed_fields": [],
+        },
+    )
 
 
 def test_a_value_the_chain_proof_cannot_render_is_refused_by_key_path_and_type(tmp_path: Path) -> None:

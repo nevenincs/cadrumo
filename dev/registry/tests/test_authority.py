@@ -112,7 +112,7 @@ def test_authority_snapshot_is_authority_owned_revision_projection(
     assert snapshot.modelo == modelo
     assert snapshot.revision == modelo.revisions[snapshot.revision.id]
     assert authority.snapshot("130", filing_year=2026, period="1T") == snapshot
-    assert "130" in authority._validated_modelos
+    assert modelo in authority.modelos
 
 
 def test_authority_rejects_unknown_modelo(registry_authority: ValidatedRegistryAuthority) -> None:

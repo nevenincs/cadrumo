@@ -8,7 +8,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector, MappingFactEntry, ScalarFactPayload
+from cadrumo.domain.calculations.registry.facts.schema import (
+    FactSelector,
+    MappingFactEntry,
+    MappingFactPayload,
+    ScalarFactPayload,
+)
 
 from ..compiler.fact_loader import load_governed_fact_file
 
@@ -44,7 +49,9 @@ entries = [{ key = 2025, value_type = "decimal", value = "15876.00" }]
 
     fact = load_governed_fact_file(path)
 
-    assert fact.variants[0].payload.entries[0].value == Decimal("15876.00")
+    payload = fact.variants[0].payload
+    assert isinstance(payload, MappingFactPayload)
+    assert payload.entries[0].value == Decimal("15876.00")
 
 
 def test_mapping_decimal_annotation_refuses_non_string_values() -> None:

@@ -1863,9 +1863,7 @@ def _plan(
                     attestation for attestation in attestations if attestation.identity in stated_lineages
                 ),
             )
-            materialised[revision_id] = [
-                _Placed(lift.lifts[row_id].row, revision_id) for row_id in reconstructed_order
-            ]
+            materialised[revision_id] = [_Placed(lift.lifts[row_id].row, revision_id) for row_id in reconstructed_order]
             if normalised:
                 order_normalised.add(revision_id)
             work.append(_EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None))
@@ -2302,10 +2300,14 @@ def _choose_drops(
     # explicit positions whose effective order must remain unchanged while we
     # finish its remaining authored rows.
     canonical_merge_order = not _delta_authored(source.manifest)
-    representation_only_reversal = normalise_order or canonical_merge_order or (
-        len(expected_shared) > 1
-        and expected_shared != current_shared
-        and expected_shared == list(reversed(current_shared))
+    representation_only_reversal = (
+        normalise_order
+        or canonical_merge_order
+        or (
+            len(expected_shared) > 1
+            and expected_shared != current_shared
+            and expected_shared == list(reversed(current_shared))
+        )
     )
     positions_list: list[_Row] = []
     if not representation_only_reversal:
