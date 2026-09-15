@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
     from .command_spec import (
         CommandSpec,
         CommandSpecNode,
