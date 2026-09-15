@@ -7,8 +7,21 @@ on:
         description: "Release tag to publish (e.g. v0.3.0)"
         required: true
         type: string
+      packaging_run_id:
+        description: "Successful Cadrumo Packaging Smoke run"
+        required: true
+        type: string
+      homebrew_run_id:
+        description: "Successful Cadrumo Homebrew Acquisition run"
+        required: true
+        type: string
+      scoop_run_id:
+        description: "Successful Cadrumo Scoop Acquisition run"
+        required: true
+        type: string
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -20,6 +33,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release-evidence:
+    name: "Check: Release channel evidence (Linux)"
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    steps:
+      - name: Require successful validation and acquisition runs for this tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
+          HOMEBREW_RUN_ID: ${{ inputs.homebrew_run_id }}
+          SCOOP_RUN_ID: ${{ inputs.scoop_run_id }}
+        run: |
+          set -euo pipefail
+          tag_type="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" --jq .object.type)"
+          tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" --jq .object.sha)"
+          if [ "$tag_type" = tag ]; then
+            tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_sha}" --jq .object.sha)"
+          fi
+          verify_run() {
+            local run_id="$1" expected_name="$2"
+            [[ "$run_id" =~ ^[1-9][0-9]*$ ]] || { echo "::error::invalid run id for ${expected_name}"; exit 1; }
+            local payload conclusion name head_sha
+            payload="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}")"
+            conclusion="$(jq -r .conclusion <<<"$payload")"
+            name="$(jq -r .name <<<"$payload")"
+            head_sha="$(jq -r .head_sha <<<"$payload")"
+            test "$conclusion" = success || { echo "::error::${expected_name} run ${run_id} did not succeed"; exit 1; }
+            test "$name" = "$expected_name" || { echo "::error::run ${run_id} is ${name}, expected ${expected_name}"; exit 1; }
+            test "$head_sha" = "$tag_sha" || { echo "::error::${expected_name} run ${run_id} did not validate ${TAG}"; exit 1; }
+          }
+          verify_run "$PACKAGING_RUN_ID" "Cadrumo Packaging Smoke"
+          verify_run "$HOMEBREW_RUN_ID" "Cadrumo Homebrew Acquisition"
+          verify_run "$SCOOP_RUN_ID" "Cadrumo Scoop Acquisition"
+
   runner-queue-watchdog:
     # Mandatory now that the release path runs on the fleet: `smoke-test`
     # targets macOS ARM64 and Windows X64, and a lane whose label set no online
@@ -34,7 +83,7 @@ jobs:
     # create a dependent job's record until its dependencies resolve, so an
     # ungated watchdog would open and close its bounded window before
     # `smoke-test` exists -- present, and watching nothing.
-    needs: [build, runtime-inventory]
+    needs: [build, runtime-inventory, release-evidence]
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
     permissions:
@@ -57,6 +106,7 @@ jobs:
   runtime-inventory:
     timeout-minutes: 20
     name: "Check: Runtime inventory (Linux)"
+    needs: release-evidence
     runs-on: [self-hosted, Linux, X64]
     outputs:
       matrix: ${{ steps.emit-matrix.outputs.matrix }}
