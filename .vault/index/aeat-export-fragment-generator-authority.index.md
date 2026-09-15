@@ -4,21 +4,10 @@ tags:
   - '#index'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-16'
-modified: '2026-09-07'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec8bbbcd347098eb0f38a8c90a89166b89ea55d098d8a40d35f54a27326e8e0b'
+body_hash: 'sha256:b45acbcf019c81040e8a9092ee3301cdaa87e66f2ac487ddbe6be86362131a1b'
 related:
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S128]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S129]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S130]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S131]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S132]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S133]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S21]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S80]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S81]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S82]]'
-  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S84]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-ledger]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
@@ -120,6 +109,7 @@ related:
   - '[[2026-09-07-aeat-export-fragment-generator-authority-s81-semantic-map-review-audit]]'
   - '[[2026-09-07-aeat-export-fragment-generator-authority-s82-semantic-map-review-audit]]'
   - '[[2026-09-07-aeat-export-fragment-generator-authority-s84-implementation-reconciliation-audit]]'
+  - '[[2026-09-14-aeat-export-fragment-generator-authority-signed-composite-audit]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -223,21 +213,11 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-09-07-aeat-export-fragment-generator-authority-s81-semantic-map-review-audit` - `aeat-export-fragment-generator-authority` audit: `S81 Modelo 390 2024 semantic map review`
 - `2026-09-07-aeat-export-fragment-generator-authority-s82-semantic-map-review-audit` - `aeat-export-fragment-generator-authority` audit: `S82 Modelo 390 2025 semantic map review`
 - `2026-09-07-aeat-export-fragment-generator-authority-s84-implementation-reconciliation-audit` - `aeat-export-fragment-generator-authority` audit: `S84 implementation reconciliation`
+- `2026-09-14-aeat-export-fragment-generator-authority-signed-composite-audit` - `aeat-export-fragment-generator-authority` audit: `Reviewed signed-composite generator extension`
 
 ### exec
 
 - `2026-08-10-aeat-export-fragment-generator-authority-ledger` - `aeat-export-fragment-generator-authority` ledger
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S128` - Centralize hash-pinned source-defect declarations in one public pipeline-owned module, wire the operator CLI and generated-tree gate to that catalogue, prove the Modelo 390 render seam, extend temporal-coverage S32 to detect in-file revision enrolment lists, and reconcile S79's landed map and enrolment state without claiming publication.
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S129` - Define one shared candidate-staging boundary that excludes both generated export and superseded manual export_layouts authority, stages the required supplementary Orden closure, applies only an explicit count-pinned bootstrap retargeting of superseded construct members, and expands the authored M390 2022 construct to the generated layout's exact legal-reference closure; use the boundary in the operator CLI and enrolled drift gate, and prove the real bootstrap candidate validates without consulting either tree
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S130` - Declare the three remaining Modelo 390 generated-export bootstrap targets for revisions 2023, 2024, and 2025 through exact modelo, revision, record-design source, source digest, generated layout, CRLF transport, superseded manual layout identity, and one-reference construct pins, and prove wrong-source and supersession-count drift refuse before S21 publication
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S131` - Make generated-export continuity witnesses close transitively over every source-declared predecessor instead of copying only the target revision immediate predecessors, centralize that staging boundary for the operator CLI and enrolled gate, and expand the Modelo 390 2023 through 2025 constructs to the exact legal-reference unions required by their generated layouts before S21 publication
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S132` - Replace the hand-maintained generated-tree enrolment table with a deterministic projection of every provenance-attested export tree in the validated registry, derive each check coordinate through canonical law-selection coordinates, prove every published generated tree is included automatically and every filing revision without generated provenance remains explicitly accounted for by the canonical filing-export residue authority, and remove stale claims that explicit manual enrolment is authoritative without loosening any generator matcher or adding casts.
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S133` - Add an explicit digest-bound provenance-only republish command to the canonical generated-tree CLI, require the current target manifest identity and exact semantic record reproduction before transactional replacement, refuse record or member drift, refresh every currently publication-eligible stale generated attestation, retain lower-grade and record-drifting trees only through live source-bound per-subject pins, and prove the full dynamically enrolled gate reaches only those declared pending states.
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S21` - Publish the four exact-source Modelo 390 revision trees and provenance manifests through the canonical validated CLI, replace each construct manual layout member with its generated identity, delete every superseded export_layouts tree with no fallback, enroll all four published revisions in the generated-tree drift gate, and prune the consumed bootstrap declarations so no authorization outlives its cause
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S80` - Author and hand-review the Modelo 390 2023 exact-source semantic map and exhaustive source-bound render profile, bijecting all 541 numbered-page fixed anchors plus the separately governed 13-anchor auxiliary header for 554 parsed anchors total, reusing only unchanged source-anchor and owner adjudications and hand-reviewing every delta, and explicitly adjudicate the recurring hash-pinned 2023 Page 7 close-literal source defect through the accepted pipeline catalogue so the complete render remains exact
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S81` - Author and hand-review the Modelo 390 2024 exact-source semantic map and exhaustive source-bound render profile, bijecting all 621 numbered-page fixed anchors plus the separately governed 13-anchor auxiliary header for 634 parsed anchors total by carrying the 2024 revision's 477 exact layout owners and 130 exact binding owners, explicitly classifying 14 reserved fillers, preserving the payloads of all 341 parser-stable anchors, reviewing all 200 changed and 80 added anchors including the two Lorca replacements and nine DANA additions, and proving the nine numbered-record composition renders without a source-defect pin
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S82` - Author and hand-review the Modelo 390 2025 exact-source semantic map and exhaustive source-bound render profile, bijecting all 612 numbered-page fixed anchors plus the separately governed 13-anchor auxiliary header for 625 parsed anchors total by carrying the 2025 revision's 477 exact layout owners and 119 exact binding owners, explicitly classifying 16 reserved fillers, preserving the payloads of all 523 parser-stable anchors, reviewing all 89 changed common anchors, removing the nine retired Page 5 rows, and proving the three retired Page 5 slots at A27, A51 and A101 are explicit fillers before the nine numbered-record composition renders
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S84` - Introduce the typed M303 fourth-quarter to Modelo 390 annual-summary handoff over the one canonical simplified-regime annual result, carrying strict source and target calculation identity, year, period, revision, evidence and digest checks, and atomically retire the scalar-only box-79 relation when boxes 74-83 arrive through the typed handoff
 
 ### plan
 

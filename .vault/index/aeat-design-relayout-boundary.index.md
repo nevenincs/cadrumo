@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-18'
-modified: '2026-09-04'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:3d9c2eb44103ce4e9efb5ced605f37ddfdaa35d3a3683a4fca0e5f897d561c50'
+body_hash: 'sha256:85d9138e19e1b3981763899b20c6048ad54862b8f9990557141f436b197bdbf8'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -21,22 +21,8 @@ related:
   - '[[2026-08-14-aeat-design-relayout-boundary-modelo-200-verification-reconciliation-audit]]'
   - '[[2026-08-14-aeat-design-relayout-boundary-row-disposition-carry-forward-audit]]'
   - '[[2026-08-18-aeat-design-relayout-boundary-audit]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W01-P01-S01]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W01-P01-S02]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W01-P01-summary]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W01-P02-S03]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W01-P02-S04]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W02-P03-S05]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W02-P03-S06]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W02-P03-summary]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W02-P04-S07]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W02-P04-S08]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W02-P04-summary]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W03-P05-S09]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W03-P05-S10]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W03-P05-S11]]'
-  - '[[2026-09-02-aeat-design-relayout-boundary-W03-P06-S15]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-W03-P06-summary]]'
+  - '[[2026-09-02-aeat-design-relayout-boundary-ledger]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-plan]]'
   - '[[2026-09-02-aeat-design-relayout-boundary-research]]'
   - '[[2026-09-03-aeat-design-relayout-boundary-m200-qualified-identity-admission-reference]]'
@@ -74,21 +60,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 ### exec
 
 - `2026-08-08-aeat-design-relayout-boundary-ledger` - `aeat-design-relayout-boundary` ledger
-- `2026-09-02-aeat-design-relayout-boundary-W01-P01-S01` - Extend the deterministic census across 3,173 current declarations, 156 reconstructed candidates, 3,171 exact map-owned rebinds, 2 unmapped declarations, 15 printed-identity diagnostics, 185 map-owner mismatches, and declaration and map legal gaps
-- `2026-09-02-aeat-design-relayout-boundary-W01-P01-S02` - Prove census completeness, determinism, source-SHA binding, contamination visibility, and partition-drift refusal
-- `2026-09-02-aeat-design-relayout-boundary-W01-P01-summary` - `aeat-design-relayout-boundary` `W01.P01` summary
-- `2026-09-02-aeat-design-relayout-boundary-W01-P02-S03` - Retire historic-payload restoration as authority-producing behavior while retaining proposal-only diagnostics
-- `2026-09-02-aeat-design-relayout-boundary-W01-P02-S04` - Detect target-description, semantic-role, legal-reference, and source-SHA mutations at the historic-restoration boundary
-- `2026-09-02-aeat-design-relayout-boundary-W02-P03-S05` - Implement the source-SHA-bound planner and canonical TOML mutation surface for 3,171 exact map-owned declaration rebinds while refusing two true orphans
-- `2026-09-02-aeat-design-relayout-boundary-W02-P03-S06` - Reject missing anchors, source drift, duplicate output, altered non-source payloads, and partial rebind application
-- `2026-09-02-aeat-design-relayout-boundary-W02-P03-summary` - `aeat-design-relayout-boundary` `W02.P03` summary
-- `2026-09-02-aeat-design-relayout-boundary-W02-P04-S07` - Implement target-anchor identity classification and explicit dispositions for every unmapped declaration
-- `2026-09-02-aeat-design-relayout-boundary-W02-P04-S08` - Prove identity ambiguity, segment qualification, non-casilla ownership, and orphan omission fail closed
-- `2026-09-02-aeat-design-relayout-boundary-W02-P04-summary` - `aeat-design-relayout-boundary` `W02.P04` summary
-- `2026-09-02-aeat-design-relayout-boundary-W03-P05-S09` - Derive the source-bound legal worklist with applicability-window and unresolved-reference evidence
-- `2026-09-02-aeat-design-relayout-boundary-W03-P05-S10` - Author reviewed 2024-applicable legal catalogue entries and anchors for the closed worklist
-- `2026-09-02-aeat-design-relayout-boundary-W03-P05-S11` - Enforce legal resolution, target-window coverage, anchor reachability, and rejection of later-year substitution
-- `2026-09-02-aeat-design-relayout-boundary-W03-P06-S15` - Author target-year authority for target fields with no applicable cross-revision candidate
+- `2026-09-02-aeat-design-relayout-boundary-ledger` - `aeat-design-relayout-boundary` ledger
 - `2026-09-02-aeat-design-relayout-boundary-W03-P06-summary` - `aeat-design-relayout-boundary` `W03.P06` summary
 
 ### plan

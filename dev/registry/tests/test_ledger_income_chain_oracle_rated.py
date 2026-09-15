@@ -80,7 +80,7 @@ from cadrumo.domain.transactions.retencion_facts import load_retencion_actividad
 from ..compiler.authority import compiled_bundled_authority
 from ._ledger_income_chain_oracle_support import modelo_130_revision
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # The invoice, stated once from the document and the two cited rates.
 _BASE = Decimal("1000.00")
