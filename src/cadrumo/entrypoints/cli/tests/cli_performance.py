@@ -706,7 +706,7 @@ def _child_main(payload: Mapping[str, Any]) -> int:
     sys.addaudithook(audit)
     sys.setprofile(profiler)
     exit_code = 0
-    child_exception = False
+    failure_kind = "none"
     started = time.perf_counter()
     try:
         if phase == "resolution":
@@ -721,7 +721,7 @@ def _child_main(payload: Mapping[str, Any]) -> int:
         exit_code = int(exc.code or 0) if isinstance(exc.code, int | None) else 1
     except BaseException:
         exit_code = 1
-        child_exception = True
+        failure_kind = "child-exception"
         raise
     finally:
         observing_filesystem = False
@@ -750,7 +750,7 @@ def _child_main(payload: Mapping[str, Any]) -> int:
             "initial_filesystem_digest": initial_filesystem_digest,
             "observed_root_identity": observed_root_identity,
             "exit_code": exit_code,
-            "failure_kind": "child-exception" if child_exception else "none",
+            "failure_kind": failure_kind,
         }
         result_path.write_text(json.dumps(observation, sort_keys=True), encoding="utf-8", newline="\n")
     return exit_code

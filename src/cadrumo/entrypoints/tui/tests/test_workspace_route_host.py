@@ -19,7 +19,7 @@ exists to remove.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import NoReturn, cast
 
 import pytest
 from textual.widgets import DataTable, Static
@@ -105,7 +105,7 @@ def _catalogue() -> TuiDestinationCatalogueV1:
     review_action = ActionReference(action_id=lookup_action("operator.ledger.review").action_id)
     ledger_factory = ledger_screen_factory(_projection(), review_action=review_action)
 
-    def absent(context: TuiScreenContextV1) -> None:
+    def absent(context: TuiScreenContextV1) -> NoReturn:
         raise AssertionError(f"no other destination should be built by this test: {context.destination}")
 
     admissions: dict[str, TuiDestinationAdmissionV1] = {
@@ -116,7 +116,7 @@ def _catalogue() -> TuiDestinationCatalogueV1:
         for descriptor in TUI_DESTINATION_CATALOGUE
     }
     factories: dict[str, TuiScreenFactoryV1] = {
-        descriptor.destination: cast("TuiScreenFactoryV1", absent) for descriptor in TUI_DESTINATION_CATALOGUE
+        descriptor.destination: absent for descriptor in TUI_DESTINATION_CATALOGUE
     }
     factories["workbench.ledger"] = ledger_factory
     return build_destination_catalogue(admissions=admissions, factories=factories)

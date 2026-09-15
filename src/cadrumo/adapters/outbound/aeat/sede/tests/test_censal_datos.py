@@ -134,8 +134,6 @@ class TestParseCensalDatos:
         Guards against AEAT adding a censal field that the parser quietly
         ignores, which would under-report the taxpayer's censal state.
         """
-        from bs4 import Tag
-
         from ..._html import parse_html
         from ..censal_datos import (
             _DOMICILIO_LABELS,
@@ -147,8 +145,6 @@ class TestParseCensalDatos:
         soup = parse_html(_fixture_html())
         unmapped: list[str] = []
         for table in soup.find_all("table"):
-            if not isinstance(table, Tag):
-                continue
             section = _section_of(table)
             if section is None:
                 continue

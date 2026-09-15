@@ -159,7 +159,8 @@ async def _terminate_tree(process: asyncio.subprocess.Process) -> None:
             stderr=asyncio.subprocess.DEVNULL,
         )
         await killer.communicate()
-        if process.returncode is None:
+        returncode: object = process.returncode
+        if returncode is None:
             _kill_process(process)
         return
     try:

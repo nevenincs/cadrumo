@@ -242,14 +242,19 @@ def _try_create_lock(target: Path, pid: int) -> bool:
         _cleanup_created_lockfile(target, reason="pid_write_failure")
         raise
     finally:
-        try:
-            os.close(fd)
-        except OSError as exc:
-            _log.debug("bucket lockfile close failed after create error=%s", type(exc).__name__)
-            if not write_failed:
-                _cleanup_created_lockfile(target, reason="pid_close_failure")
-                raise
+        _close_created_lockfile(fd, target, write_failed=write_failed)
     return True
+
+
+def _close_created_lockfile(fd: int, target: Path, *, write_failed: bool) -> None:
+    """Close a newly-created lockfile while preserving write-error precedence."""
+    try:
+        os.close(fd)
+    except OSError as exc:
+        _log.debug("bucket lockfile close failed after create error=%s", type(exc).__name__)
+        if not write_failed:
+            _cleanup_created_lockfile(target, reason="pid_close_failure")
+            raise
 
 
 def _reclaim_if_stale(target: Path) -> None:

@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Sequence
+from operator import methodcaller
 from types import SimpleNamespace
 from typing import NoReturn, cast
 
 import pytest
-from textual.app import App
 
-from ....application.operations.composition import OperationComposedServices
+from ....application.operations.models import OperationRequest
 from ....application.user_profile.acquisition_sources import (
     AcquisitionSourceCredentialPostureV1,
     ProfileAcquisitionSourceV1,
 )
 from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
+from ....application.user_profile.operations import ProfileLogoutOperationRequest
 from ....application.user_profile.overview import ProfileOverview
 from ....core.credentials import ProfilePasswordAssessment
 from ..account import (
@@ -23,7 +24,9 @@ from ..account import (
     compose_account_factories,
     compose_profile_sign_out_factory,
 )
+from ..components.theme import AppearanceHost
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
+from ..operations.controller import OperationController
 from ..profile.overview import ProfileManagerScreen
 from ..secret.login import LoginScreen
 from ..secret.passphrase import PassphraseChangeAttempt, PassphraseScreen
@@ -38,6 +41,10 @@ class _LanguageScreen:
 
     def action_choose_language(self) -> None:
         self.opened = True
+
+
+class _Appearance:
+    theme = "cadrumo-light"
 
 
 def _factories(
@@ -58,7 +65,7 @@ def _factories(
         observed_calls.add(name)
         raise AssertionError(f"{name} ran while composing an account screen")
 
-    def default_appearance(_app: App[None]) -> str:
+    def default_appearance(_app: AppearanceHost) -> str:
         return "appearance.changed"
 
     selected_appearance = appearance or default_appearance
@@ -98,7 +105,7 @@ def test_account_factories_construct_existing_screens_without_host_effects() -> 
     """Composition does not read or mutate; each screen remains its prior owner."""
     calls: set[str] = set()
 
-    def refuse_appearance(_app: App[None]) -> str:
+    def refuse_appearance(_app: AppearanceHost) -> str:
         calls.add("appearance")
         raise AssertionError("appearance ran while composing an account screen")
 
@@ -165,16 +172,16 @@ def test_profile_factory_refuses_another_destination_before_constructing_a_scree
 
 def test_language_and_appearance_delegates_are_explicit_host_effects() -> None:
     """Language reuses Profile's action and appearance is supplied by the host."""
-    observed_apps: list[App[None]] = []
+    observed_apps: list[AppearanceHost] = []
 
-    def change_appearance(app: App[None]) -> str:
+    def change_appearance(app: AppearanceHost) -> str:
         observed_apps.append(app)
         return "appearance.changed"
 
     factories = _factories(appearance=change_appearance)
     language_screen = _LanguageScreen()
     factories.language(cast(ProfileManagerScreen, language_screen))
-    app = cast(App[None], object())
+    app = _Appearance()
 
     assert language_screen.opened is True
     assert factories.appearance(app) == "appearance.changed"
@@ -213,22 +220,29 @@ async def test_sign_out_is_deferred_to_the_injected_operation_factory() -> None:
 @pytest.mark.asyncio
 async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_opened() -> None:
     """The production door shares S402 services and leaves start ownership to the modal."""
-    calls: list[tuple[object, str]] = []
+    calls: list[tuple[OperationRequest[ProfileLogoutOperationRequest], str]] = []
     submission = SimpleNamespace(receipt=SimpleNamespace(operation_id="operation-1"))
 
     class _Submission:
-        async def submit(self, request: object, *, actor_ref: str) -> object:
+        async def submit(
+            self,
+            request: OperationRequest[ProfileLogoutOperationRequest],
+            *,
+            actor_ref: str,
+        ) -> object:
             calls.append((request, actor_ref))
             return submission
 
     services = SimpleNamespace(submission=_Submission())
-    factory = compose_profile_sign_out_factory(
-        cast(OperationComposedServices, services),
+    factory = methodcaller(
+        "__call__",
+        services,
         profile_id="11111111-1111-4111-8111-111111111111",
-    )
+    )(compose_profile_sign_out_factory)
 
     assert calls == []
     controller = await factory()
+    assert isinstance(controller, OperationController)
 
     assert controller.services is services
     assert controller.submission is submission
@@ -236,5 +250,5 @@ async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_
     assert len(calls) == 1
     request, actor_ref = calls[0]
     assert actor_ref == "operator:tui-account"
-    assert request.definition_id == "user-profile.logout"  # type: ignore[attr-defined]
-    assert str(request.payload.profile_id) == "11111111-1111-4111-8111-111111111111"  # type: ignore[attr-defined]
+    assert request.definition_id == "user-profile.logout"
+    assert str(request.payload.profile_id) == "11111111-1111-4111-8111-111111111111"

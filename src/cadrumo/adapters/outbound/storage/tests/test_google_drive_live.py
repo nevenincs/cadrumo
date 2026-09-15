@@ -165,7 +165,7 @@ def test_remote_mirror_manifest_round_trips_against_real_drive_contents() -> Non
         latest_revision_written_at=revision_written_at,
         objects=(entry,),
     )
-    manifest_hmac: str | None = None
+    manifest_keys_to_delete: list[str] = []
     provider.put(
         _PROBE_NAMESPACE,
         object_hmac,
@@ -176,6 +176,7 @@ def test_remote_mirror_manifest_round_trips_against_real_drive_contents() -> Non
     try:
         manifest_metadata = put_remote_mirror_namespace_manifest(provider, manifest)
         manifest_hmac = manifest_metadata.object_key_hmac
+        manifest_keys_to_delete.append(manifest_hmac)
 
         namespaces = set(provider.iter_namespaces())
         object_hmacs = {metadata.object_key_hmac for metadata in provider.iter_objects(_PROBE_NAMESPACE)}
@@ -194,5 +195,5 @@ def test_remote_mirror_manifest_round_trips_against_real_drive_contents() -> Non
         assert inspect_remote_mirror_download(provider, manifest).ok is True
     finally:
         provider.delete(_PROBE_NAMESPACE, object_hmac)
-        if manifest_hmac is not None:
+        for manifest_hmac in manifest_keys_to_delete:
             provider.delete(REMOTE_MIRROR_MANIFEST_NAMESPACE, manifest_hmac)

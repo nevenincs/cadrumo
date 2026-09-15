@@ -251,4 +251,4 @@ def localise_typer_parse_error_messages() -> None:
     _typer_formatting.HelpFormatter.write_usage = localised_write_usage
     _typer_exceptions.ClickException.show = localised_click_exception_show
     _typer_exceptions.UsageError.show = localised_usage_error_show
-    setattr(_typer_exceptions, "cadrumo_parse_errors_localised", True)
+    vars(_typer_exceptions)["cadrumo_parse_errors_localised"] = True

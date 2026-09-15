@@ -465,7 +465,7 @@ def _full_invocation_verb_path() -> str | None:
             skip_next = False
             continue
         if token.startswith("-"):
-            if token in ("--language", "--lang", "--format", "--profile", "--output-language") and "=" not in token:
+            if token in ("--language", "--lang", "--format", "--profile", "--output-language"):
                 skip_next = True
             continue
         verb_tokens.append(token)

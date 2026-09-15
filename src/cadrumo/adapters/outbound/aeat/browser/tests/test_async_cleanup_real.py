@@ -55,7 +55,7 @@ async def _cancel_blocked_cleanup_attempts(
         # its production lock, leaving the Playwright process retryable.
         for _ in range(attempts):
             waiter: object | None = None
-            while waiter is None and time.monotonic() < deadline:
+            while time.monotonic() < deadline:
                 waiters = getattr(close_lock, "_waiters", None)
                 if waiters:
                     waiter = waiters[0]

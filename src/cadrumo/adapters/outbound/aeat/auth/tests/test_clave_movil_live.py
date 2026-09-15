@@ -12,6 +12,7 @@ import os
 from urllib.parse import quote
 
 import pytest
+from playwright.async_api import BrowserContext
 
 from ......application.auth.session_types import AeatLoginAssertion, AeatSession, ClaveMovilSessionDetail
 from ......core.config import Settings
@@ -38,9 +39,10 @@ async def test_clave_movil_playwright_entrypoint_reaches_live_selector() -> None
 
     settings = _settings_or_skip()
     browser_session = await default_browser_session_factory(settings)
-    context = None
+    contexts: list[BrowserContext] = []
     try:
         context = await browser_session.create_context(storage_state={})
+        contexts.append(context)
         page = await context.new_page()
         target_path = settings.aeat_sede_expedientes_path
         selector_url = settings.aeat_clave_sede_access_url_template.format(target=quote(target_path, safe=""))
@@ -53,7 +55,7 @@ async def test_clave_movil_playwright_entrypoint_reaches_live_selector() -> None
         text = " ".join((await button.inner_text(timeout=settings.cadrumo_clave_movil_timeout_ms)).split())
         assert "Cl@ve" in text or "Móvil" in text
     finally:
-        if context is not None:
+        for context in contexts:
             await context.close()
         await browser_session.close()
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import cast
 
 import pytest
+from playwright.async_api import BrowserContext, Playwright
 from playwright.async_api import Error as PlaywrightError
-from playwright.async_api import Playwright
 
 from ......core.config import Settings
 from ......domain.calculations.registry.errors import RegistryValidationError
@@ -86,7 +86,7 @@ async def test_verify_csv_keeps_borrowed_real_browser_available() -> None:
             settings=Settings(),
             profile_name="verify-borrowed",
         )
-        second_context = None
+        second_contexts: list[BrowserContext] = []
         try:
             concrete_session = session
             assert verify_module._is_verify_browser_session_like(session)
@@ -96,11 +96,12 @@ async def test_verify_csv_keeps_borrowed_real_browser_available() -> None:
             assert browser is not None
             assert browser.is_connected()
             second_context = await browser.new_context()
+            second_contexts.append(second_context)
             page = await second_context.new_page()
             await page.goto("data:text/html,<title>borrowed-still-open</title>")
             assert await page.title() == "borrowed-still-open"
         finally:
-            if second_context is not None:
+            for second_context in second_contexts:
                 await second_context.close()
             await session.close()
             await playwright.stop()

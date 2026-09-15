@@ -14,6 +14,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from enum import StrEnum
+from operator import methodcaller
 from typing import Any, Final, cast
 
 from textual.app import App
@@ -84,7 +85,6 @@ from ....application.operations.frontend_requests import (
     OperationPublicEventPageV1,
     OperationSubmissionReceiptV1,
 )
-from ....application.operations.interactions import OperationActorReference
 from ....application.operations.models import OperationId
 from ....application.operations.persistence.replay import OperationReplayStatus
 from ....application.operations.registry import OperationPublicContractSetV1
@@ -663,11 +663,13 @@ def _operation_modal_app() -> App[Any]:
         receipt=OperationSubmissionReceiptV1(operation_id=operation_id, secret_requirement=None),
         response_capability=cast(Any, object()),
     )
-    controller = OperationController(
-        services=cast(OperationComposedServices, _FixtureOperationServices(_FixtureObservationService(observation))),
+    fixture_services = _FixtureOperationServices(_FixtureObservationService(observation))
+    controller = methodcaller(
+        "__call__",
+        services=fixture_services,
         submission=submission,
-        actor_ref=cast(OperationActorReference, "fixture:operator"),
-    )
+        actor_ref="fixture:operator",
+    )(OperationController)
     return _host(OperationModal(controller))
 
 

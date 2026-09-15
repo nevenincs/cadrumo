@@ -6,7 +6,6 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
 import pytest
 from dev.registry.tests.profile_schema_support import (
@@ -337,7 +336,7 @@ def test_pure_selector_stays_on_captured_encrypted_catalogue_after_storage_mutat
             revision_id="later-revision",
         ),
         bucket_id=bucket_id,
-        modelo=cast(ModeloCode, "130"),
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period=_P_2026_1T,
         revision_id="later-revision",
@@ -518,7 +517,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(
     second = WorkUnit(
         work_unit_id=second_id,
         bucket_id=bucket_id,
-        modelo=cast(ModeloCode, "130"),
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period=_P_2026_1T,
         revision_id="manual-revision",

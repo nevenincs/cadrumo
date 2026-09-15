@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
-from types import SimpleNamespace
-from typing import cast
 
 import pytest
 
@@ -262,10 +260,7 @@ def _account_inputs(
 
     return InstalledWorkbenchAccountInputsV1(
         profile_id=profile_id,
-        profile_overview=cast(
-            "ProfileOverview",
-            SimpleNamespace(profile_id=overview_profile_id, label=label),
-        ),
+        profile_overview=ProfileOverview.model_construct(profile_id=overview_profile_id, label=label),
         persist_profile_field=persist,
         login_choices=(ProfileLoginChoice(profile_id=profile_id, label=choice_label),),
         authenticate=authenticate,
@@ -301,7 +296,8 @@ def _operation_runtime(*, operation: PinnedAuthorityOperation) -> TuiOperationCo
             ).contract,
         )
     )
-    services = cast("OperationComposedServices", SimpleNamespace(public_contracts=contracts))
+    services = object.__new__(OperationComposedServices)
+    object.__setattr__(services, "public_contracts", contracts)
     return TuiOperationCompositionV1(
         services=services,
         public_contracts=contracts,

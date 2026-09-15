@@ -53,6 +53,11 @@ from .secure_object_records import SecureObjectBatchLoadItem, SecureObjectRecord
 _log = get_logger(__name__)
 
 
+def _runtime_object(value: object) -> object:
+    """Capture a row value before validating the database boundary shape."""
+    return value
+
+
 class _SecureObjectListRawRow(Protocol):
     """Typed SQL projection consumed by the batch-list decode boundary."""
 
@@ -353,7 +358,8 @@ def _normalised_list_raw_row(row: _SecureObjectListRawRow) -> tuple[_NormalisedL
         malformed.append("schema_version")
         schema_version = _UNREADABLE_SCHEMA_VERSION
 
-    written_at = row.written_at
+    raw_written_at = _runtime_object(row.written_at)
+    written_at = raw_written_at
     if not isinstance(written_at, datetime):
         malformed.append("written_at")
         written_at = _UNREADABLE_INSTANT

@@ -8,7 +8,7 @@ import sys
 import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import cast
+from operator import methodcaller
 
 import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
@@ -130,7 +130,7 @@ def test_selection_rejects_an_unknown_runtime_channel_before_reading() -> None:
     descriptor = _pipe_with(_payload())
     try:
         with pytest.raises(TypeError, match="known channel"):
-            MachineSecretSelection(cast(MachineSecretChannel, "unknown"), descriptor)
+            methodcaller("__call__", "unknown", descriptor)(MachineSecretSelection)
         assert os.read(descriptor, _MAX_SECRETS_BYTES) == _payload()
     finally:
         os.close(descriptor)

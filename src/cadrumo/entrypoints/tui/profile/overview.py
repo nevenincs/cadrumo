@@ -835,9 +835,10 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         """
         if event.state not in {WorkerState.SUCCESS, WorkerState.ERROR, WorkerState.CANCELLED}:
             return
-        event_worker = cast("Worker[object]", event.worker)
-        if self._pending_write is not None and event_worker is self._pending_write:
-            await self._settle_write(self._pending_write)
+        event_worker: object = event.worker
+        pending_write = self._pending_write
+        if pending_write is not None and event_worker is pending_write:
+            await self._settle_write(pending_write)
             return
 
     async def _settle_write(self, worker: Worker[ProfileOverview]) -> None:

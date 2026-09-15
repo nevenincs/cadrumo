@@ -22,6 +22,7 @@ from __future__ import annotations
 import asyncio
 
 import pytest
+from playwright.async_api import BrowserContext
 
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
@@ -68,9 +69,10 @@ def test_groi_verdict_parser_recognises_live_telefonica_certification() -> None:
 async def _assert_form_shape() -> None:
     settings = Settings()
     session = await default_browser_session_factory(settings)
-    context = None
+    contexts: list[BrowserContext] = []
     try:
         context = await session.create_context()
+        contexts.append(context)
         from playwright.async_api import Page as _Page
 
         _raw = await context.new_page()
@@ -96,7 +98,7 @@ async def _assert_form_shape() -> None:
         action = await form.get_attribute("action")
         assert action == Settings.external_constants().aeat.oracles.groi_check.rsplit("/", maxsplit=1)[-1], action
     finally:
-        if context is not None:
+        for context in contexts:
             await context.close()
         await session.close()
 
@@ -104,9 +106,10 @@ async def _assert_form_shape() -> None:
 async def _query_live_body_text(nif: str) -> str:
     settings = Settings()
     session = await default_browser_session_factory(settings)
-    context = None
+    contexts: list[BrowserContext] = []
     try:
         context = await session.create_context()
+        contexts.append(context)
         from playwright.async_api import Page as _Page
 
         _raw = await context.new_page()
@@ -120,6 +123,6 @@ async def _query_live_body_text(nif: str) -> str:
         await page.wait_for_load_state("networkidle", timeout=20_000)
         return await page.locator("body").inner_text(timeout=10_000)
     finally:
-        if context is not None:
+        for context in contexts:
             await context.close()
         await session.close()

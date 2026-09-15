@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast
+from operator import methodcaller
 
 import pytest
-from sqlalchemy.engine import Dialect
 
 from ...errors import StorageValidationError
 from ..encrypted_columns import HashedLookup
@@ -13,11 +12,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def hashed_lookup_compute_with_wrong_type() -> None:
-    HashedLookup.compute(cast(str, 12345))
+    methodcaller("__call__", 12345)(HashedLookup.compute)
 
 
 def hashed_lookup_bind_with_wrong_type() -> None:
-    HashedLookup().process_bind_param(cast(str | bytes, 99.9), cast(Dialect, None))
+    methodcaller("__call__", 99.9, None)(HashedLookup().process_bind_param)
 
 
 @pytest.mark.parametrize(

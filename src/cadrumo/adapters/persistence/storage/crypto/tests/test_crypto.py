@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import secrets
-from typing import cast
+from operator import methodcaller
 
 import pytest
 
@@ -122,13 +122,13 @@ class TestKeySizeValidation:
 
     def test_encrypt_wraps_invalid_plaintext_type_as_encryption_error(self) -> None:
         with pytest.raises(EncryptionError):
-            encrypt_record(cast(bytes, "payload"), key=_fresh_key())
+            methodcaller("__call__", "payload", key=_fresh_key())(encrypt_record)
 
     def test_decrypt_wraps_invalid_associated_data_type_as_decryption_error(self) -> None:
         key = _fresh_key()
         blob = encrypt_record(b"payload", key=key, associated_data=b"context")
         with pytest.raises(DecryptionError):
-            decrypt_record(blob, key=key, associated_data=cast(bytes, "context"))
+            methodcaller("__call__", blob, key=key, associated_data="context")(decrypt_record)
 
 
 class TestEncryptedBlobShape:
@@ -212,11 +212,12 @@ class TestHkdfDerivation:
 
     def test_invalid_context_type_is_wrapped_as_key_derivation_error(self) -> None:
         with pytest.raises(KeyDerivationError):
-            derive_key(
+            methodcaller(
+                "__call__",
                 key_material=b"ikm",
                 salt=b"salt",
-                context=cast(bytes, "cadrumo.context.v1"),
-            )
+                context="cadrumo.context.v1",
+            )(derive_key)
 
     def test_derived_key_can_drive_encrypt_round_trip(self) -> None:
         """End-to-end: HKDF-derived key works as an AES-256-GCM key."""

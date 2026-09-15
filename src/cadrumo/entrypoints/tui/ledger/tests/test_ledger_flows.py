@@ -6,7 +6,6 @@ import ast
 import asyncio
 import pickle
 from pathlib import Path
-from types import SimpleNamespace
 from typing import cast, override
 
 import pytest
@@ -25,6 +24,7 @@ from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.identity.transaction_ids import TransactionId
 from .....domain.transactions.enums import BusinessClassification
+from .....domain.transactions.models import BucketTransactionRef
 from ....tui.components.host import ScreenHostApp
 from ...tests.frame import geometry_band
 from ..classification import LedgerClassificationScreen
@@ -51,9 +51,8 @@ class _ClassificationDoor:
 
     async def __call__(self, submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
         self.calls.append(submission)
-        return cast(
-            "ManualLedgerTransactionResult",
-            SimpleNamespace(ref=SimpleNamespace(transaction_id=submission.transaction_id)),
+        return ManualLedgerTransactionResult.model_construct(
+            ref=BucketTransactionRef.model_construct(transaction_id=submission.transaction_id),
         )
 
 
@@ -85,9 +84,8 @@ class _SlowClassificationDoor(_ClassificationDoor):
         self.calls.append(submission)
         self.started.set()
         await self.release.wait()
-        return cast(
-            "ManualLedgerTransactionResult",
-            SimpleNamespace(ref=SimpleNamespace(transaction_id=submission.transaction_id)),
+        return ManualLedgerTransactionResult.model_construct(
+            ref=BucketTransactionRef.model_construct(transaction_id=submission.transaction_id),
         )
 
 

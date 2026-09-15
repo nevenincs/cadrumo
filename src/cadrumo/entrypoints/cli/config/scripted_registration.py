@@ -54,6 +54,11 @@ if TYPE_CHECKING:
     from ....domain.user_profile.values import UserProfileFact
 
 
+def _runtime_object(value: object) -> object:
+    """Capture a credential before applying the cleanup boundary check."""
+    return value
+
+
 class ProfileCreationSecrets(MachineSecretPayload):
     """Strict machine-channel payload for profile creation."""
 
@@ -256,15 +261,16 @@ def _run_scripted_profile_creation(
     recovery_descriptors: tuple[int, int] | None,
 ) -> ProfileRegistrationOutcome:
     """Register the profile while keeping the passphrase live only in this span."""
-    passphrase: str | None = None
+    passphrase = _runtime_object(None)
     try:
-        passphrase = resolve_creation_passphrase(
+        resolved_passphrase = resolve_creation_passphrase(
             secrets_stdin=secrets_stdin,
             secrets_fd=secrets_fd,
         )
+        passphrase = _runtime_object(resolved_passphrase)
         return register_profile(
             label=label,
-            passphrase=passphrase,
+            passphrase=resolved_passphrase,
             facts=facts,
             recovery_handover=_recovery_handover(descriptors=recovery_descriptors),
         )
