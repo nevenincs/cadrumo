@@ -43,7 +43,7 @@ class _M200ProjectionCatalogue:
     family_by_kind: Mapping[str, str]
 
 
-# fact-relocation: selected M200 row-family declarations are consumed through the dated mapping fact.
+# Registry authority: selected M200 row-family declarations are consumed through the dated mapping fact.
 def _registry_m200_projection_catalogue(
     effective_date: date,
     *,

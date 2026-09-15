@@ -27,7 +27,7 @@ _DT12_TRABAJO_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _DT12_LARGE_TRABAJO_THRESHOLD = Decimal("20000")
 
 
-# fact-relocation: selected DT12 declarations are consumed through the pinned operation and dated mapping fact
+# Registry authority: selected DT12 declarations are consumed through the pinned operation and dated mapping fact
 def _registry_dt12_declaration(
     revision: object,
     *,

@@ -40,7 +40,7 @@ def raise_if_m349_intracom_ledger_rows_need_operator_rows(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> None:
-    # fact-relocation: selected registry detail and verification declarations are consumed
+    # Registry authority: selected registry detail and verification declarations are consumed
     _selected_registry_ledger_declarations(work_unit)
     del transaction_repository, detail_rows
     return None

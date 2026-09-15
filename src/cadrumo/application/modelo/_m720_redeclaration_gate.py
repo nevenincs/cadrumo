@@ -36,7 +36,7 @@ def modelo_720_redeclaration_findings(
     observation_repository: CalculationObservationRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloVerificationFinding, ...]:
-    # fact-relocation: selected M720 detail, applicability, and verification declarations
+    # Registry authority: selected M720 detail, applicability, and verification declarations
     # are consumed through the caller's generation-pinned operation.
     declarations = _registry_m720_declarations(
         operation,

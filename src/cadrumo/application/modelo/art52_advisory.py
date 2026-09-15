@@ -34,7 +34,7 @@ _ART52_APORTACIONES_AUTONOMOS_EMPRESARIOS_ROLE = "irpf_red_prevision_social_apor
 _ART52_INDIVIDUAL_SUBLIMIT_FACT_ID = "lirpf-art-52-individual-contribution-sublimit"
 
 
-# fact-relocation: selected Art.52 declarations are consumed through the pinned operation and dated mapping fact
+# Registry authority: selected Art.52 declarations are consumed through the pinned operation and dated mapping fact
 def _registry_art52_declaration(
     revision: object,
     *,

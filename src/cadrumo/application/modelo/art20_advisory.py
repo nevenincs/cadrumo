@@ -25,7 +25,7 @@ _ART20_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
 _ART20_RNT_CEILING_FACT_ID = "lirpf-art-20-trabajo-reduccion-rnt-ceiling"
 
 
-# fact-relocation: selected Art.20 verification declarations are consumed through the dated mapping fact
+# Registry authority: selected Art.20 verification declarations are consumed through the dated mapping fact
 def _registry_art20_declaration(
     revision: object,
     *,

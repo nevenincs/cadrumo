@@ -59,7 +59,7 @@ class _CounterpartRegistryCatalogue:
         return frozenset(operation_kinds)
 
 
-# fact-relocation: selected M347/M349 counterpart declarations are consumed through
+# Registry authority: selected M347/M349 counterpart declarations are consumed through
 # one generation-pinned operation and the dated mapping fact.
 def _registry_counterpart_catalogue(
     effective_date: date,
