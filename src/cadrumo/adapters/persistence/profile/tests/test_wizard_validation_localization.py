@@ -30,7 +30,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.wizard.commands import build_wizard_command
 from cadrumo.application.wizard.models import WizardFlow
-from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation

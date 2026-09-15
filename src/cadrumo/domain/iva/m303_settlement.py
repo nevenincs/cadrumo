@@ -10,7 +10,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 
-# fact-relocation: M303 annual settlement ordering is resolved through the
+# Registry authority: M303 annual settlement ordering is resolved through the
 # generation-pinned revision directory; the authored revision remains external.
 
 

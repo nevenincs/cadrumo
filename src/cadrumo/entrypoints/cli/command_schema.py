@@ -9,6 +9,11 @@ from functools import cache
 from types import MappingProxyType
 from typing import TYPE_CHECKING, cast
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    JsonType,
+)
+
 from ...application.operator_surface.command_ports import (
     CommandCapabilityClass,
     CommandParameterDefault,
@@ -25,9 +30,7 @@ from ...core.i18n.render import output_language, tr
 from ...core.type_guards import is_object_list_or_tuple
 from ._command_target import resolve_deferred_target
 from .command_spec import (
-    CommandNodeKind,
     DefaultKind,
-    JsonType,
     OptionSpec,
     SchemaState,
 )

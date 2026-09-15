@@ -6,9 +6,14 @@ from dataclasses import dataclass
 
 from pydantic import SecretStr
 
+from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
+
 from ...core.errors.hierarchy import InternalInvariantError
 from ._bootstrap_exempt import is_bootstrap_exempt
-from .command_spec import CommandSpecNode, ProfileAuthenticationPosture, ProfileSecretSpec
+from .command_spec import (
+    CommandSpecNode,
+    ProfileSecretSpec,
+)
 from .config.secure_input import MachineSecretPayload
 
 

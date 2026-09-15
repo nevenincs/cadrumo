@@ -23,7 +23,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.application.live.iva_remote_state import capture_iva_compensation_wallet
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked

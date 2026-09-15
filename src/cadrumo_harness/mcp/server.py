@@ -57,7 +57,6 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 
-from ._call_runtime import serving_capacity_limiter
 from ._completions import complete_prompt_argument
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
@@ -125,6 +124,7 @@ from ._transport import (
     _run_subprocess_tool,
     _run_tool,
 )
+from .call_runtime import serving_capacity_limiter
 from .dispatch import command_key_for_tool
 from .faithfulness import SessionGroundingWindow, advisory_line, arguments_faithfulness
 from .harness_tools import (

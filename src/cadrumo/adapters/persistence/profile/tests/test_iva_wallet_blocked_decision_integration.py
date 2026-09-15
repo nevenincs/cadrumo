@@ -43,7 +43,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.bindings import BindingId
+from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.iva_compensation.reconciliation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,

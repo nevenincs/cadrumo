@@ -46,8 +46,8 @@ no lineage; a lineage carried twice; or a stated row colliding with an
 inherited row of another lineage. Because a modelo whose editions name predecessors admits one
 key-less root only, a blocked edition other than the first needs an explicit
 no-predecessor declaration. That declaration is a claim about the form, so the
-tool refuses to write one unless ``--declare-blocked-roots`` is passed, and then
-cites the edition's own first legal and source reference and names the cause.
+tool reports the unresolved source condition and refuses application rather
+than manufacturing legal continuity.
 
 Proof and publication. The migration is written into a staging copy of the
 registry and compared with the unmigrated modelo through the round-trip gate:
@@ -3462,7 +3462,7 @@ def stage_declaration_drop(modelo_dir: Path, edition: EditionDrop) -> None:
 
 def _assert_proof_inputs_unchanged(*, live_root: Path, captured_root: Path, modelo_id: str) -> None:
     """Refuse apply when any dependency captured by the proof has changed."""
-    from .compact import fingerprint
+    from .source_tree_installation import fingerprint
 
     captured_modelos = captured_root / _MODELOS
     for captured_modelo in captured_modelos.iterdir():
@@ -3477,9 +3477,9 @@ def _assert_proof_inputs_unchanged(*, live_root: Path, captured_root: Path, mode
 
 def _apply_proven_modelo(*, target: Path, staged: Path, original: Path) -> None:
     """Install one proven source tree with the shared recoverable publisher."""
-    from .compact import fingerprint, publish_staged_tree
+    from .source_tree_installation import fingerprint, install_proven_tree
 
-    publish_staged_tree(target, staged, original, fingerprint(original))
+    install_proven_tree(target, staged, original, fingerprint(original))
 
 
 def _validate_staged_modelo(*, staged_root: Path, modelo_id: str) -> None:

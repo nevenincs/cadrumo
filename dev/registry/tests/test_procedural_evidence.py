@@ -9,9 +9,9 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..compiler._validate_surfaces import validate_deadline_window_section
 from ..compiler.authority import compile_structural_authority
 from ..compiler.validate_evidence import EvidenceValidator
+from ..compiler.validate_registry_surfaces import validate_deadline_window_section
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

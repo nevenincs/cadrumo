@@ -22,7 +22,7 @@ import pytest
 import typer
 
 from cadrumo.application.wizard.models import WizardFlow
-from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES

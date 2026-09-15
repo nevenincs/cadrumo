@@ -89,12 +89,12 @@ _Q1_2024 = _period(2024, "1T")
 _Q2_2024 = _period(2024, "2T")
 
 
-_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
 _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = validated_casilla_id("0171")
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
-_M130_MODELO: str = Modelo("130").value
+M130_MODELO: str = Modelo("130").value
 _M130_ACCEPT_ACTIVITY_MARKER: bool = True
 
 
@@ -104,7 +104,7 @@ def _renta_income_category_authority() -> GovernedFactSource:
     return compiled_bundled_authority()
 
 
-def _m130_activity_category_matcher(transaction: Transaction) -> bool:
+def m130_activity_category_matcher(transaction: Transaction) -> bool:
     """Resolve M130 activity eligibility from the registry-owned taxonomy."""
     return has_activity_irpf_category(
         transaction.irpf_category,
@@ -113,7 +113,7 @@ def _m130_activity_category_matcher(transaction: Transaction) -> bool:
     )
 
 
-def _m130_employment_category_matcher(transaction: Transaction) -> bool:
+def m130_employment_category_matcher(transaction: Transaction) -> bool:
     """Resolve M130 employment exclusion from the registry-owned taxonomy."""
     return has_employment_irpf_category(
         transaction.irpf_category,

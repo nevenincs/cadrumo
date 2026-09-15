@@ -83,7 +83,7 @@ _TOOL_INPUTS: Final = (
     "dev/registry/edition_delta_migration.py",
     "dev/registry/edition_family_delta.py",
     "dev/registry/compiler/loader.py",
-    "dev/registry/compiler/_loader_internals.py",
+    "dev/registry/compiler/loader_materialisation.py",
     "dev/registry/compiler/edition_materialisation.py",
     "dev/registry/compiler/authority.py",
     "dev/registry/compiler/authority_database.py",

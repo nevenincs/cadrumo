@@ -894,7 +894,7 @@ def _ps_parent_map() -> dict[int, int] | None:
         logger.debug("watchdog: ps executable is unavailable")
         return None
     try:
-        from ._call_runtime import run_captured
+        from .call_runtime import run_captured
 
         completed = run_captured(
             [executable, "-Ao", "pid=,ppid="],

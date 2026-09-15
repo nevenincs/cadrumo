@@ -30,7 +30,7 @@ from .....core.image_media_type import ImageMediaType
 from .....domain.transactions.llm import prompt_spec_with_saturation_fields
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
 from .....domain.user_profile.values import ProfileSetupState, create_user_profile_record
-from .....entrypoints.cli._ledger_llm_composition import compose_ledger_llm
+from .....entrypoints.cli.ledger_llm_composition import compose_ledger_llm
 from .....tests.llm_vision_evidence_support import png_image
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile
 from .persistence_vision_evidence_support import (

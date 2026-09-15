@@ -41,7 +41,7 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.application.auth.operator import inspect_operator_auth
 from cadrumo.application.auth.operator import test_operator_auth as probe_operator_auth

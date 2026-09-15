@@ -52,15 +52,15 @@ from mcp.server import Server
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.application.user_profile.login_session import close_profile_session_artefacts
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
 from cadrumo.core.config_support import SecretStoreBackend
 
-from .._call_runtime import tier_for
 from .._profile_secret_channel import clear_profile_secret, load_profile_secret_file
+from ..call_runtime import tier_for
 from ..dispatch import tool_name_for_command
 from ..harness_tools import WHOAMI_TOOL
 from ..inprocess import tier_runs_in_process

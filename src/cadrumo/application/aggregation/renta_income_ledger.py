@@ -56,7 +56,7 @@ from .currency_predicates import effective_eur_amount, effective_eur_taxable_bas
 from .errors import AggregationPeriodError
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 
-# fact-relocation: selected Renta income model, target, selector, and binding
+# Registry authority: selected Renta income model, target, selector, and binding
 # declarations are consumed through RegistryQueryService
 
 

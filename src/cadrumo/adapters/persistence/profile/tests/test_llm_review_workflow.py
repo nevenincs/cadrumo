@@ -50,7 +50,7 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.llm import LLMSplitResponse
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.entrypoints.cli._ledger_llm_composition import compose_ledger_llm
+from cadrumo.entrypoints.cli.ledger_llm_composition import compose_ledger_llm
 
 from ._llm_evidence_split_support import (
     _single_line_proposal,

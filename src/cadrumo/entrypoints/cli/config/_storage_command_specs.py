@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ..command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

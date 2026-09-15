@@ -25,19 +25,21 @@ def compile_runtime_catalogues(registry_root: Path) -> RuntimeRegistryCatalogues
     """Compile every former raw runtime table from one candidate registry root."""
     root = registry_root.resolve()
     iva_root = root / "iva"
-    countries = _records(_read(iva_root / "country_names.toml"), "country", CountryVocabularyRecord, "code")
-    territories = _territories(_read(iva_root / "territories.toml"))
-    carve_outs = _carve_outs(_read(iva_root / "territory_carve_outs.toml"))
-    apoderamientos = _read(root / "apoderamientos" / "scopes.toml")
-    scopes = _records(apoderamientos, "scopes", ApoderamientoScopeRecord, "code")
-    regulations = _regulations(_read(iva_root / "catalogues.toml"))
-    place_of_supply = _records(
-        _read(iva_root / "place_of_supply.toml"),
+    countries = validated_catalogue_records(
+        read_catalogue_document(iva_root / "country_names.toml"), "country", CountryVocabularyRecord, "code"
+    )
+    territories = _territories(read_catalogue_document(iva_root / "territories.toml"))
+    carve_outs = _carve_outs(read_catalogue_document(iva_root / "territory_carve_outs.toml"))
+    apoderamientos = read_catalogue_document(root / "apoderamientos" / "scopes.toml")
+    scopes = validated_catalogue_records(apoderamientos, "scopes", ApoderamientoScopeRecord, "code")
+    regulations = published_iva_regulations(read_catalogue_document(iva_root / "catalogues.toml"))
+    place_of_supply = validated_catalogue_records(
+        read_catalogue_document(iva_root / "place_of_supply.toml"),
         "place_of_supply_rules",
         PublishedIvaPlaceOfSupplyRule,
         "rule_id",
     )
-    recargo = _recargo_bands(_read(root / "legal" / "ley-58-2003-recargo-bands.toml"))
+    recargo = _recargo_bands(read_catalogue_document(root / "legal" / "ley-58-2003-recargo-bands.toml"))
     version = apoderamientos.get("catalogue_version")
     if not isinstance(version, str) or not version:
         raise RegistryValidationError("apoderamientos catalogue has no version")
@@ -53,14 +55,18 @@ def compile_runtime_catalogues(registry_root: Path) -> RuntimeRegistryCatalogues
     )
 
 
-def _read(path: Path) -> Mapping[str, object]:
+def read_catalogue_document(path: Path) -> Mapping[str, object]:
+    """Read one runtime catalogue TOML document from ``path``."""
     try:
         return tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, tomllib.TOMLDecodeError) as exc:
         raise RegistryValidationError(f"cannot compile runtime catalogue {path}: {exc}") from exc
 
 
-def _records(document: Mapping[str, object], member: str, model: type[Any], identity: str) -> dict[str, Any]:
+def validated_catalogue_records(
+    document: Mapping[str, object], member: str, model: type[Any], identity: str
+) -> dict[str, Any]:
+    """Validate and index one named catalogue record family."""
     rows = document.get(member)
     if not isinstance(rows, list) or not rows:
         raise RegistryValidationError(f"runtime catalogue member {member!r} must be a non-empty array")
@@ -79,7 +85,7 @@ def _records(document: Mapping[str, object], member: str, model: type[Any], iden
 def _carve_outs(document: Mapping[str, object]) -> dict[str, TerritoryCarveOut]:
     """Compile carve-outs and refuse assimilation chains that cannot terminate."""
     rows: dict[str, TerritoryCarveOut] = {}
-    for code, raw_row in _records(document, "carve_out", TerritoryCarveOut, "code").items():
+    for code, raw_row in validated_catalogue_records(document, "carve_out", TerritoryCarveOut, "code").items():
         if not isinstance(raw_row, TerritoryCarveOut):
             raise RegistryValidationError("runtime carve-out catalogue contains an invalid model row")
         rows[code] = raw_row
@@ -116,7 +122,8 @@ def _territories(document: Mapping[str, object]) -> dict[str, SpanishPostalTerri
     return compiled
 
 
-def _regulations(document: Mapping[str, object]) -> dict[str, PublishedIvaRegulation]:
+def published_iva_regulations(document: Mapping[str, object]) -> dict[str, PublishedIvaRegulation]:
+    """Validate and index the published IVA regulation records."""
     rows = document.get("regulations")
     if not isinstance(rows, list) or not rows:
         raise RegistryValidationError("runtime IVA catalogue must contain regulations")

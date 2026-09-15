@@ -28,7 +28,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from ....application.wizard.models import WizardFlow
-from ....application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from ....application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from .._root_support import _prefer_complete_verb_path
 from .cli_runner import invoke_cached_cli
 

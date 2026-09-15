@@ -9,8 +9,13 @@ parse as an option. These gates tie the refusal's vocabulary to the real
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...wizard.commands import SETUP_OPTION_INFOS
 from ..filing_baseline import _profile_path_flag, missing_filing_baseline_flags
 
@@ -27,18 +32,39 @@ _IVA_BLOCK_OWED = {
     "iva.regime": "GENERAL",
 }
 
+_PROFILE_PATH_FLAGS = {
+    "taxpayer_type.country_of_fiscal_residence": "country-of-fiscal-residence",
+    "taxpayer_type.representante_fiscal_nif": "representante-fiscal-nif",
+    "iva.redeme_enrolled": "iva-redeme-enrolled",
+    "iva.regime": "iva-regime",
+    "tax_residence.jurisdiction_scope": "tax-residence-jurisdiction-scope",
+}
 
-def test_the_refusal_names_only_flags_the_cli_accepts() -> None:
+
+def test_public_module_import_needs_no_registry_authority() -> None:
+    """Importing the baseline check must not resolve governed setup facts."""
+    completed = subprocess.run(
+        [sys.executable, "-c", "import cadrumo.application.user_profile.filing_baseline"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, completed.stderr
+
+
+def test_the_refusal_names_only_flags_the_cli_accepts(operation: PinnedAuthorityOperation) -> None:
     """Every flag this refusal emits parses as a real wizard option."""
-    emitted = missing_filing_baseline_flags(_IVA_BLOCK_OWED)
+    with validating_governed_facts(operation):
+        emitted = missing_filing_baseline_flags(_IVA_BLOCK_OWED, profile_path_flags=_PROFILE_PATH_FLAGS)
     assert emitted, "fixture no longer reproduces an incomplete IVA block"
     unknown = sorted(flag for flag in emitted if flag not in SETUP_OPTION_INFOS)
     assert not unknown, f"refusal would name flags the CLI does not accept: {unknown}"
 
 
-def test_no_emitted_flag_carries_path_punctuation() -> None:
+def test_no_emitted_flag_carries_path_punctuation(operation: PinnedAuthorityOperation) -> None:
     """A dot or underscore means a raw profile path leaked into operator text."""
-    emitted = missing_filing_baseline_flags(_IVA_BLOCK_OWED)
+    with validating_governed_facts(operation):
+        emitted = missing_filing_baseline_flags(_IVA_BLOCK_OWED, profile_path_flags=_PROFILE_PATH_FLAGS)
     malformed = sorted(flag for flag in emitted if "." in flag or "_" in flag)
     assert not malformed, f"profile paths leaked into flag spellings: {malformed}"
 
@@ -56,14 +82,14 @@ def test_no_emitted_flag_carries_path_punctuation() -> None:
 def test_namespace_handling_is_not_a_textual_rule(path: str, flag: str) -> None:
     """``taxpayer_type`` drops its namespace where ``iva`` keeps it.
 
-    No textual transform reproduces both, which is why the registry is the sole
-    authority and a derived-by-string fallback cannot replace it.
+    No textual transform reproduces both, which is why the operation-scoped
+    wizard descriptor is the authority and a string fallback cannot replace it.
     """
-    assert _profile_path_flag(path) == flag
+    assert _profile_path_flag(path, profile_path_flags=_PROFILE_PATH_FLAGS) == flag
 
 
 def test_an_unregistered_path_still_yields_a_well_formed_flag() -> None:
     """The fallback may name the wrong flag, but never an unparseable one."""
-    derived = _profile_path_flag("nonexistent_namespace.some_field")
+    derived = _profile_path_flag("nonexistent_namespace.some_field", profile_path_flags=_PROFILE_PATH_FLAGS)
     assert "." not in derived
     assert "_" not in derived

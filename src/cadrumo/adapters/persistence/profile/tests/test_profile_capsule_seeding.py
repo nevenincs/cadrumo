@@ -28,7 +28,7 @@ from dev.registry.tests.profile_schema_support import (
 )
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS

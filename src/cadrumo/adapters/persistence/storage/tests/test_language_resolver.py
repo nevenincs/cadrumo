@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import login_profile

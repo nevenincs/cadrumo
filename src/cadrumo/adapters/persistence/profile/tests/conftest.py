@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     _file_flow_runtime,
     _FileFlowRuntime,
     _Repos,

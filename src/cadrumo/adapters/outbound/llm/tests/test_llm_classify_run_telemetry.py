@@ -26,7 +26,7 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import LLMClassifierError
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.entrypoints.cli._ledger_llm_composition import compose_ledger_llm
+from cadrumo.entrypoints.cli.ledger_llm_composition import compose_ledger_llm
 
 from .subprocess_classifier_support import SubprocessLLMClassifier
 

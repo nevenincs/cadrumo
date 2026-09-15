@@ -128,7 +128,7 @@ def reconcile_pull_verb(
         capture_justificante_snapshot,
         reconcile_capture,
     )
-    from ._app_live_justificante_composition import (
+    from .app_live_justificante_composition import (
         build_justificante_authenticity_verifier,
         build_justificante_capture_service,
         build_justificante_live_read_port,

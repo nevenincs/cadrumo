@@ -95,7 +95,7 @@ if TYPE_CHECKING:
 _LEDGER_CATALOGUE_ID = "ledger"
 
 
-# fact-relocation: selected renta-ledger insurance variants, category-profile
+# Registry authority: selected renta-ledger insurance variants, category-profile
 # routing, issue/applicability, and binding declarations are consumed through the dated mapping
 def _registry_renta_ledger_declarations(
     *,

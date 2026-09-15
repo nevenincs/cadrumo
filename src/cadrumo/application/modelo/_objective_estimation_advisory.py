@@ -95,7 +95,7 @@ def _objective_estimation_exclusion_advisory_findings(
                 profile=profile,
                 authority=indexed_operation,
             )
-    # fact-relocation: objective-estimation scope and applicability are resolved
+    # Registry authority: objective-estimation scope and applicability are resolved
     # through registry authority; authored fact publication remains external.
     modelo = str(getattr(work_unit.modelo, "value", work_unit.modelo))
     if not _uses_objective_estimation(profile):

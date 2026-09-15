@@ -116,7 +116,7 @@ def _require_catalogue(catalogue: CitationCatalogue | None) -> CitationCatalogue
     return catalogue
 
 
-# fact-relocation: selected IVA statutory citation catalogue is consumed through the governed mapping fact
+# Registry authority: selected IVA statutory citation catalogue is consumed through the governed mapping fact
 def registry_citation_catalogue(
     *,
     effective_date: date,

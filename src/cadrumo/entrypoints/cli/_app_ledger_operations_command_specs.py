@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
@@ -25,7 +27,6 @@ from ._app_ledger_command_spec_support import (
     _required_text_argument,
 )
 from .command_spec import (
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     LazyBinding,

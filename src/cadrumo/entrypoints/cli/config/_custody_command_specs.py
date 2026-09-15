@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    ProfileAuthenticationPosture,
+)
+
 from ..command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -15,7 +19,6 @@ from ..command_spec import (
     MachineSecretVariantSpec,
     OptionSpec,
     ParameterDefault,
-    ProfileAuthenticationPosture,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,

@@ -6,15 +6,14 @@ formulas/, bindings/, completeness_manifest/, verification_expectations/,
 extraction_profiles/, application_links/}``) in edition-delta shape, and
 surfaces the contributor checklist for taking the scaffold calc-grade.
 
-Run via ``python -m dev.registry.newmodelo scaffold <modelo_id> <revision_id>``
-(add ``--check`` to preview drift without writing, ``--force`` to overwrite
-existing placeholder files) or ``python -m dev.registry.newmodelo checklist``
-to print the checklist alone.
+Run via ``python -m dev.registry.newmodelo scaffold`` for a new modelo,
+``new-edition`` for a preserving existing-modelo delta, or ``checklist`` for
+hydrated coverage guidance.
 
 Major declarations:
 
-* :class:`~dev.registry.newmodelo.manager.NewModeloScaffoldManager` — plans,
-  writes, and checks the skeleton directory tree.
+* :class:`~dev.registry.newmodelo.manager.NewModeloScaffoldManager` — plans and
+  writes the selected authoring route.
 * :data:`~dev.registry.newmodelo.checklist.CHECKLIST` — the
   contributor checklist.
 """

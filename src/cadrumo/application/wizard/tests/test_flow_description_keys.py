@@ -15,7 +15,7 @@ import pytest
 
 from ....core.i18n.render import tr
 from ..models import WizardFlow
-from ._support import registry_setup_flow as registry_setup_flow
+from .registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -16,7 +16,7 @@ from pydantic import TypeAdapter
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository

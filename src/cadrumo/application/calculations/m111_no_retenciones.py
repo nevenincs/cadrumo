@@ -9,7 +9,7 @@ from ...domain.calculations.registry.errors import RegistrySnapshotError, Regist
 from ...domain.calculations.registry.schema import ModeloRevision
 
 
-# fact-relocation: M111 schedule and applicability are consumed through the pinned operation
+# Registry authority: M111 schedule and applicability are consumed through the pinned operation
 def _registry_no_retenciones_periods(
     revision: ModeloRevision | None = None,
     *,

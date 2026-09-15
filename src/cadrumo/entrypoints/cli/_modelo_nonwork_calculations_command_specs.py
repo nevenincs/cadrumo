@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._modelo_nonwork_command_spec_policies import (
     _CALCULATION_WRITE,
@@ -19,7 +21,6 @@ from ._modelo_nonwork_common_command_parameters import (
     _required_whole_number_option,
 )
 from .command_spec import (
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

@@ -16,7 +16,7 @@ from ...domain.calculations.registry.relation_prefill_bindings import RelationPr
 from ...domain.calculations.registry.schema import ModeloRevision
 
 
-# fact-relocation: selected M202 relation and absent-by-design defaults are
+# Registry authority: selected M202 relation and absent-by-design defaults are
 # consumed through the registry query boundary.
 def _registry_relation_prefill_binding_ids(
     revision: ModeloRevision,

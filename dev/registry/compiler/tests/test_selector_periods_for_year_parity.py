@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
 
-from .._loader_internals import _selector_periods_for_year
+from ..loader_materialisation import _selector_periods_for_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -175,7 +175,7 @@ def test_calculation_source_mesh_migrates_the_stored_catalogue(tmp_path: Path) -
     repository injected, so the assertion is that the wiring exists rather than
     that the migration works in isolation.
     """
-    from .....adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
+    from .....adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
     from .....application.modelo.calculation_actions import resolve_bucket_source_mesh
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

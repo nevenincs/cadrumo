@@ -19,7 +19,7 @@ from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
 from ....domain.filing.validator import ModeloValidator
 from ....domain.submission.models import ModeloDraftStatus
-from ...review.tests._fakes import draft_review_ports
+from ...review.tests.draft_review_test_support import draft_review_ports
 from ..draft_construction import binding_provenance, build_draft
 from ..draft_review import (
     approve_draft,

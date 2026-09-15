@@ -39,13 +39,13 @@ from cadrumo.application.auth.operator_results import (
 )
 from cadrumo.application.auth.probes import ProviderProbeResult
 from cadrumo.application.auth.sessions import storage_state_paths
-from cadrumo.application.auth.tests._operator_projection_support import (
+from cadrumo.application.auth.tests.operator_projection_test_support import (
     build_live_auth_preflight_report,
     build_operator_state_projection,
     configure_operator_auth,
     inspect_operator_auth,
 )
-from cadrumo.application.auth.tests._operator_projection_support import (
+from cadrumo.application.auth.tests.operator_projection_test_support import (
     test_operator_auth as run_operator_auth_test,
 )
 from cadrumo.application.state_projection_auth import ProjectionAuthReadiness

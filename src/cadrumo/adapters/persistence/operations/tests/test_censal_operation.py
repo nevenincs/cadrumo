@@ -13,7 +13,7 @@ from cadrumo.adapters.outbound.aeat.sede.censal_datos import parse_censal_datos
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.interactions import (

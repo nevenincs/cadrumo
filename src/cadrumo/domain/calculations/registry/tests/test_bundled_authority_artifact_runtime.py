@@ -17,7 +17,7 @@ from ..authority_artifact import (
     PublishedLegalEvidence,
 )
 from ..provenance import NormativeCorpusProvenance
-from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
+from .artifact_runtime_support import minimal_catalogues, minimal_modelo, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,8 +36,8 @@ def _stage_runtime_publication(
 ) -> Path:
     """Install one package-independent indexed generation."""
     artifact = AuthorityArtifact(
-        modelos=(_minimal_modelo(_minimal_revision()),),
-        catalogues=_minimal_catalogues(),
+        modelos=(minimal_modelo(minimal_revision()),),
+        catalogues=minimal_catalogues(),
         build_identity=_BUILD_IDENTITY,
         identity_digest=_BUILD_IDENTITY.identity_digest,
         evidence=AuthorityEvidenceProjection(

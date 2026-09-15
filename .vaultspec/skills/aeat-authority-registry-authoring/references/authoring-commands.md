@@ -1,17 +1,18 @@
 # Authoring commands
 
-Run from the repository root in PowerShell. Bind `$modelo`, `$revision`, `$filingYear`, `$period` and, when needed, `$sourceRef` to the subject established with the user and official evidence. These are task coordinates, not new registry support-range settings. Use a fresh work directory for each converter/assessor invocation. Commands below mutate only where explicitly stated.
+Run from the repository root in PowerShell. Bind `$modelo`, `$revision`, `$validFrom`, `$filingYear`, `$period` and, when needed, `$sourceRef` to the subject established with the user and official evidence. These are task coordinates, not new registry support-range settings. Use a fresh work directory for each converter/assessor invocation. Commands below mutate only where explicitly stated.
 
 ## Orient and capture evidence
 
 ```powershell
 uv run --no-sync python -m dev.registry.newmodelo checklist
 uv run --no-sync python -m dev.registry.newmodelo scaffold --help
+uv run --no-sync python -m dev.registry.newmodelo new-edition --help
 uv run --no-sync python -m dev.registry.edition_delta_migration --help
 uv run --no-sync python -m dev.registry.pipeline --help
 ```
 
-The checklist is a coverage aid, not a full-copy template. Its predecessor and "author every casilla" wording predates storage-only ancestry; interpret coverage on hydrated data under the skill's delta contract. Scaffold dates are placeholders, not the supported tax range. `scaffold --check` checks skeleton file presence, not registry validity or minimality; do not recreate deliberately absent empty fragments just to make it pass.
+The checklist is a hydrated-coverage aid, not a full-copy template. Scaffolds require explicit applicability coordinates. Storage baselines select reusable payload independently of legal predecessor continuity, and only independent validation establishes registry validity or minimality.
 
 For enrolled record-design corpus integrity:
 
@@ -44,10 +45,16 @@ These generators can touch multiple enrolled sources. Review their scope and pre
 For a genuinely new modelo only, after confirming its directory does not already contain real declarations:
 
 ```powershell
-just registry-modelo-scaffold $modelo $revision
+just registry-modelo-scaffold $modelo $revision $validFrom $filingYear $period
 ```
 
-Replace the manifest/revision placeholders with grounded declarations at `src/cadrumo/_data/registry/aeat/modelos/<modelo>/`. For an existing modelo, use targeted file edits to add `revisions/<revision>/revision.toml` and only required delta fragments. The scaffold refuses a foreign/live manifest; `--force` overwrites planned files and is not a new-edition workaround. An isolated scaffold can be used as a structural aid with `--registry-modelos-root <isolated-modelos-directory>`, but its output is not an enrolled revision.
+Replace the remaining manifest/revision placeholders with grounded declarations at `src/cadrumo/_data/registry/aeat/modelos/<modelo>/`. For an existing modelo, use the preserving route:
+
+```powershell
+just registry-modelo-new-edition $modelo $revision $validFrom $filingYear $period
+```
+
+It writes only `revisions/<revision>/revision.toml`, preserves the existing manifest and declarations, and proposes storage baselines without inventing legal continuity. Author only required delta fragments. An isolated scaffold remains structural authoring assistance, not enrollment or publication proof.
 
 Resolve legal/source IDs through the canonical compiler catalogues. Find the owning declaration for a known source ID with targeted `rg`, then enroll the new evidence alongside its actual owner rather than guessing a top-level catalogue filename.
 
@@ -95,7 +102,7 @@ $workDir = Join-Path ([System.IO.Path]::GetTempPath()) ('registry-authoring-' + 
 uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root $registryRoot --modelo $modelo --work-dir $workDir
 ```
 
-Read the emitted report and candidate diff. The canonical owner handles casillas plus family/scalar continuation; do not invoke removed modelo-specific converters. Do not pass old unsupported flags such as `--declare-blocked-roots` merely because a recipe or historical report mentions them.
+Read the emitted report and candidate diff. The canonical owner handles casillas plus family/scalar continuation; do not invoke removed modelo-specific converters or standalone compact/lift tools.
 
 If the converter reports no changes and the live declarations already pass minimality, skip `--apply`. Otherwise, after the source change's evidence/tests and normalization proof are accepted, apply through the converter using a fresh directory. This recomputes against current live inputs rather than installing a stale candidate blindly:
 

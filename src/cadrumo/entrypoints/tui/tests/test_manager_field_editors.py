@@ -21,10 +21,10 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Label, OptionList, Static
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
-)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation

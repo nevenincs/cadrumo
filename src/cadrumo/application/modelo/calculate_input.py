@@ -119,7 +119,7 @@ _MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_
 _MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND = "maternidad_ambiguous_relacion"
 
 
-# fact-relocation: selected calculate-input declarations are consumed through
+# Registry authority: selected calculate-input declarations are consumed through
 # the pinned operation and the dated mapping fact.
 def _registry_calculate_input_declarations(
     work_unit: WorkUnit | None = None,

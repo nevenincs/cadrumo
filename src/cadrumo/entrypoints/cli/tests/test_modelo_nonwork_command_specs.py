@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from .._command_runtime import _behavior_wrapper
 from .._modelo_nonwork_bindings_command_specs import (
     _AS_OF_OPTION,
@@ -52,7 +54,10 @@ from .._modelo_nonwork_review_package_command_specs import (
     MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
 )
 from .._modelo_nonwork_work_amend_command_specs import MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS
-from ..command_spec import CommandNodeKind, SchemaState, TranslationKey
+from ..command_spec import (
+    SchemaState,
+    TranslationKey,
+)
 from ..command_specs import COMMAND_GRAPH
 from ..modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 

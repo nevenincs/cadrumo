@@ -19,21 +19,21 @@ from ..renta_income_ledger import (
 )
 from .renta_income_aggregation_support import (
     _ANNUAL_2024,
-    _M130_INGRESOS_CASILLA,
     _Q1_2024,
     _Q2_2024,
+    M130_INGRESOS_CASILLA,
     _catalogue_read_ports,
     _income_transaction,
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
     raw_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
-_is_activity_income = _m130_activity_category_matcher
-_is_employment_income = _m130_employment_category_matcher
+_is_activity_income = m130_activity_category_matcher
+_is_employment_income = m130_employment_category_matcher
 
 
 # Pure-aggregator tests (no repository)
@@ -53,7 +53,7 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -64,7 +64,7 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
     # April is outside Q1 window — ends up in issues
     issue_ids = {i.transaction_id for i in result.issues}
     assert apr.transaction_id in issue_ids
-    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
+    assert result.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (jan, feb, mar)),
         Decimal("0"),
     )
@@ -82,14 +82,14 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q2_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
-    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
+    assert result.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (jan, may)),
         Decimal("0"),
     )
@@ -111,14 +111,14 @@ def test_mixed_classification_applies_business_pct() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
 
     assert len(result.observations) == 1
     assert result.observations[0].gross_amount == Decimal("600.00")
-    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("600.00")
+    assert result.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == Decimal("600.00")
 
 
 def test_personal_transaction_excluded_with_reason() -> None:
@@ -134,7 +134,7 @@ def test_personal_transaction_excluded_with_reason() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -153,7 +153,7 @@ def test_non_eur_transaction_excluded_with_reason() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -202,7 +202,7 @@ def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> N
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -240,7 +240,7 @@ def test_outgoing_personal_transaction_is_skipped_silently_by_income_pipeline() 
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -263,7 +263,7 @@ def test_inactive_transaction_skipped_silently() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -282,7 +282,7 @@ def test_non_quarterly_period_raises() -> None:
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2024,
             modelo="130",
-            target_casilla_id=_M130_INGRESOS_CASILLA,
+            target_casilla_id=M130_INGRESOS_CASILLA,
             activity_category_matcher=_is_activity_income,
             employment_category_matcher=_is_employment_income,
         )
@@ -306,7 +306,7 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
         ports=_catalogue_read_ports(
@@ -321,7 +321,7 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
     assert result_q1.out_of_window_summary.count == 1
     assert result_q1.out_of_window_summary.min_filing_date == date(2024, 5, 10)
     assert result_q1.out_of_window_summary.max_filing_date == date(2024, 5, 10)
-    assert result_q1.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
+    assert result_q1.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (q1_tx1, q1_tx2)),
         Decimal("0"),
     )
@@ -332,7 +332,7 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q2_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
         ports=_catalogue_read_ports(
@@ -344,7 +344,7 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
     assert result_q2.issues == ()
     assert result_q2.out_of_window_summary is None
-    assert result_q2.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
+    assert result_q2.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (q1_tx1, q1_tx2, q2_only)),
         Decimal("0"),
     )
@@ -373,7 +373,7 @@ def test_partitioned_aggregation_summarizes_previously_silent_out_of_window_rows
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
         ports=_catalogue_read_ports(
@@ -411,7 +411,7 @@ def test_partitioned_aggregation_matches_full_scan() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
         ports=_catalogue_read_ports(
@@ -424,7 +424,7 @@ def test_partitioned_aggregation_matches_full_scan() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -462,12 +462,12 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
 
-    assert all(o.target_casilla_id == _M130_INGRESOS_CASILLA for o in result.observations)
+    assert all(o.target_casilla_id == M130_INGRESOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
 
 
@@ -480,7 +480,7 @@ def test_income_observation_rejects_legacy_target_casilla_key() -> None:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )

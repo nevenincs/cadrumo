@@ -41,7 +41,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority

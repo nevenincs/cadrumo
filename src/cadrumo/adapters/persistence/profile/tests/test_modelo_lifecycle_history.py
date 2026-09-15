@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import _FILE_FLOW_PROFILE_ID, _Repos
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import _FILE_FLOW_PROFILE_ID, _Repos
 from cadrumo.application.modelo.history import admitted_modelo_history_event_types, assemble_modelo_lifecycle_history
 from cadrumo.application.modelo.history_ports import ModeloHistoryPorts
 from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit

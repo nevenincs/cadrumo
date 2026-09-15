@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from typing import Final
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+    CommandWriteRouteValue,
+)
+
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     FLAG_VALUE,
@@ -12,10 +18,7 @@ from .command_spec import (
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
     Capability,
-    CommandNodeKind,
     CommandSpec,
-    CommandWriteRoute,
-    CommandWriteRouteValue,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

@@ -8,20 +8,14 @@ from ...domain.contribuyente.entity_type import (
     entity_type_attribution_entity_token,
     entity_type_legal_entity_token,
 )
-from ...domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS
 from .completeness import conditional_profile_missing_required
 
-#: Profile path to the long-option spelling an operator actually types, derived
-#: from the one field registry rather than restated. The namespace is not
-#: uniformly dropped -- ``taxpayer_type.country_of_fiscal_residence`` is
-#: ``--country-of-fiscal-residence`` while ``iva.regime`` is ``--iva-regime`` --
-#: so no textual rule reproduces it and the registry is the only authority.
-_PROFILE_PATH_FLAGS: dict[str, str] = {
-    spec.path: field.replace("_", "-") for field, spec in SETUP_ANSWER_FIELDS.items()
-}
 
-
-def missing_filing_baseline_flags(values: Mapping[str, object]) -> tuple[str, ...]:
+def missing_filing_baseline_flags(
+    values: Mapping[str, object],
+    *,
+    profile_path_flags: Mapping[str, str],
+) -> tuple[str, ...]:
     """Return profile-create/edit/import flags needed for filing identity."""
     missing: list[str] = []
     entity_type = _profile_token(values, "taxpayer_type.entity_type")
@@ -32,25 +26,38 @@ def missing_filing_baseline_flags(values: Mapping[str, object]) -> tuple[str, ..
             missing.append("legal-entity-form")
         if not _profile_token(values, "identity.legal_name"):
             missing.append("legal-name")
-        return _dedupe_with_conditional_profile_flags(values, missing)
+        return _dedupe_with_conditional_profile_flags(
+            values,
+            missing,
+            profile_path_flags=profile_path_flags,
+        )
     if entity_type == entity_type_attribution_entity_token().value:
         if not _profile_token(values, "identity.name"):
             missing.append("name")
-        return _dedupe_with_conditional_profile_flags(values, missing)
+        return _dedupe_with_conditional_profile_flags(
+            values,
+            missing,
+            profile_path_flags=profile_path_flags,
+        )
     if not _profile_token(values, "identity.name"):
         missing.append("name")
     if not _profile_token(values, "identity.surnames"):
         missing.append("surnames")
-    return _dedupe_with_conditional_profile_flags(values, missing)
+    return _dedupe_with_conditional_profile_flags(values, missing, profile_path_flags=profile_path_flags)
 
 
-def _dedupe_with_conditional_profile_flags(values: Mapping[str, object], missing: list[str]) -> tuple[str, ...]:
+def _dedupe_with_conditional_profile_flags(
+    values: Mapping[str, object],
+    missing: list[str],
+    *,
+    profile_path_flags: Mapping[str, str],
+) -> tuple[str, ...]:
     for path in conditional_profile_missing_required(values):
-        missing.append(_profile_path_flag(path))
+        missing.append(_profile_path_flag(path, profile_path_flags=profile_path_flags))
     return tuple(dict.fromkeys(missing))
 
 
-def _profile_path_flag(path: str) -> str:
+def _profile_path_flag(path: str, *, profile_path_flags: Mapping[str, str]) -> str:
     """Return the long-option spelling for a profile path.
 
     The refusal that carries this names flags the operator retypes verbatim, so
@@ -59,7 +66,7 @@ def _profile_path_flag(path: str) -> str:
     that does not parse. An unregistered path falls back to a dash form, which
     may be the wrong flag but is at least a well-formed one.
     """
-    registered = _PROFILE_PATH_FLAGS.get(path)
+    registered = profile_path_flags.get(path)
     if registered is not None:
         return registered
     return path.replace(".", "-").replace("_", "-")

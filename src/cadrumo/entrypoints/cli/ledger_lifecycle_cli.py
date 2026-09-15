@@ -38,7 +38,6 @@ from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ..ledger_action_composition import compose_ledger_action_ports
 from ._decimal_parsing import parse_decimal_amount
-from ._ledger_llm_composition import compose_ledger_llm
 from ._ledger_support import (
     emit_update_result,
     ledger_transaction_validation_no_recovery,
@@ -46,6 +45,7 @@ from ._ledger_support import (
     resolve_id,
 )
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from .ledger_llm_composition import compose_ledger_llm
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:

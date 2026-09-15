@@ -157,7 +157,7 @@ def _treaty_rate(
     return None, []
 
 
-# fact-relocation: M210 rate selection and convenio applicability are resolved
+# Registry authority: M210 rate selection and convenio applicability are resolved
 # through generic registry/fact queries; authored authority publication remains
 # external.
 def resolve_m210_rate(

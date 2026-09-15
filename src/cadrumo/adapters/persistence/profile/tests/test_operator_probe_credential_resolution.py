@@ -30,7 +30,7 @@ from cadrumo.application.auth.operator_probes import (
     live_auth_identity_state,
     probe_clave_credentials,
 )
-from cadrumo.application.auth.tests._operator_projection_support import (
+from cadrumo.application.auth.tests.operator_projection_test_support import (
     build_live_auth_preflight_report,
     configure_operator_auth,
 )

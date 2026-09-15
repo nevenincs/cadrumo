@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ._modelo_nonwork_command_spec_policies import (
     _MODEL_READ,
     _MODEL_WRITE,
 )
 from .command_spec import (
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

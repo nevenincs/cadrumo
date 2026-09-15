@@ -70,7 +70,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record

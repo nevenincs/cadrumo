@@ -7,6 +7,8 @@ from dataclasses import replace
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
+
 from .._profile_authentication_contract import (
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
@@ -19,7 +21,6 @@ from ..command_spec import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     OptionSpec,
-    ProfileAuthenticationPosture,
     ProfileSecretChannelKind,
 )
 from ..command_specs import COMMAND_GRAPH

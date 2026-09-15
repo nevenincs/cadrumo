@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Final
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ._app_live_command_spec_support import (
     _ENCRYPTED_LOCAL_READ_POLICY,
     _LEAF_INVOCATION,
@@ -12,7 +14,6 @@ from ._app_live_command_spec_support import (
 )
 from .command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     LazyBinding,

@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 
 if TYPE_CHECKING:

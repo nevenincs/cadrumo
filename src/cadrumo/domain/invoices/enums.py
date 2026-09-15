@@ -487,7 +487,7 @@ def resolve_iva_rate_token(
     return IvaRate.from_registry(value)
 
 
-def _iva_rate_slot_tokens(on_date: date) -> tuple[IvaRate, ...]:
+def iva_rate_slots_on(on_date: date) -> tuple[IvaRate, ...]:
     values = _iva_rate_slot_registry_values(on_date)
     return tuple(IvaRate.from_registry(token) for token in _iva_rate_slot_registry_order(values))
 
@@ -648,7 +648,7 @@ def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
 def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
     """Resolve a printed percentage to its persisted slot at an explicit date."""
     if percentage is None:
-        for rate in _iva_rate_slot_tokens(on_date):
+        for rate in iva_rate_slots_on(on_date):
             declarations = _iva_rate_slot_registry_declarations(rate, on_date)
             if (
                 declarations["numeric"] != "true"
@@ -658,7 +658,7 @@ def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
                 return rate
         raise RegistryValidationError("IVA rate slot catalogue has no exempt slot")
     resolved_rates: list[tuple[Decimal, IvaRate]] = []
-    for rate in _iva_rate_slot_tokens(on_date):
+    for rate in iva_rate_slots_on(on_date):
         try:
             resolved = iva_rate_percentage(rate, on_date)
         except IvaRateNotFoundError:

@@ -35,7 +35,7 @@ from cadrumo.application.live.justificante import (
 from cadrumo.core.config import Settings
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.entrypoints.cli._app_live_justificante_composition import (
+from cadrumo.entrypoints.cli.app_live_justificante_composition import (
     build_justificante_authenticity_verifier,
     build_justificante_capture_service,
 )

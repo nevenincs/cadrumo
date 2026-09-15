@@ -50,15 +50,6 @@ from ._validate_record_sections import (
     validate_extraction_profile_section,
     validate_parameter_section,
 )
-from ._validate_revision_closure import validate_revision_closure_sections as _validate_revision_closure_sections
-from ._validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
-from ._validate_surfaces import (
-    validate_application_link_section,
-    validate_cross_reference_section,
-    validate_deadline_window_section,
-    validate_verification_expectation_section,
-    validate_workbook_parity_section,
-)
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
 from .validate_applicability_section import validate_applicability_section
 from .validate_authority_grade import validate_authority_grade_section
@@ -68,6 +59,15 @@ from .validate_evidence import EvidenceValidator
 from .validate_export_layout_coverage import validate_export_layout_record_coverage
 from .validate_exports import validate_export_layout_section
 from .validate_formulas import validate_formula_section
+from .validate_registry_surfaces import (
+    validate_application_link_section,
+    validate_cross_reference_section,
+    validate_deadline_window_section,
+    validate_verification_expectation_section,
+    validate_workbook_parity_section,
+)
+from .validate_revision_closure import validate_revision_closure_sections as _validate_revision_closure_sections
+from .validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
 from .validate_revision_id_window_agreement import validate_revision_id_window_agreement
 
 

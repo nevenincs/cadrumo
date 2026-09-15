@@ -23,7 +23,7 @@ from dev.registry.tests.profile_schema_support import (
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision

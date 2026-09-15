@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from cadrumo.application.calculations.observations_repository import CalculationObservationRepositoryProtocol
+
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import ModeloVerificationFinding
 from ...domain.modelos.work_unit import WorkUnit
-from .verification_repository_ports import CalculationObservationRepositoryProtocol
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -36,7 +37,7 @@ def modelo_720_redeclaration_findings(
     observation_repository: CalculationObservationRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloVerificationFinding, ...]:
-    # fact-relocation: selected M720 detail, applicability, and verification declarations
+    # Registry authority: selected M720 detail, applicability, and verification declarations
     # are consumed through the caller's generation-pinned operation.
     declarations = _registry_m720_declarations(
         operation,

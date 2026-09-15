@@ -21,7 +21,7 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from .._workspace import _PluginPythonCohort, materialise_marketplace, materialise_plugin
-from ..mcp._call_runtime import run_captured
+from ..mcp.call_runtime import run_captured
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

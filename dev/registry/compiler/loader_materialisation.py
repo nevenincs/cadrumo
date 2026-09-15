@@ -191,7 +191,7 @@ def _keyed_retirements(successor: Mapping[str, object], revision_id: str, family
     return frozenset(retired)
 
 
-def _inherit_keyed_family(
+def inherit_keyed_family(
     context: str,
     *,
     revision_id: str,
@@ -364,7 +364,7 @@ def _patch_family_table(context: str, value: object, fields: Mapping[str, object
     return result
 
 
-def _patch_family_sequences(
+def patch_family_sequences(
     context: str,
     value: object,
     additions: Mapping[str, tuple[object, ...]],
@@ -453,7 +453,7 @@ def _apply_family_storage_delta(
         seen.add(identity)
         index = by_identity[identity]
         result[index] = _patch_family_table(context, result[index], declaration.fields, declaration.removed_fields)
-        result[index] = _patch_family_sequences(
+        result[index] = patch_family_sequences(
             context,
             result[index],
             declaration.sequence_additions,
@@ -1109,7 +1109,7 @@ def _materialise_revision(
                     continue
                 if family.scoped and family.section not in (as_toml_array(table.get("scoped_families", ())) or ()):
                     continue
-                family_members = _inherit_keyed_family(
+                family_members = inherit_keyed_family(
                     f"{source_path}: revision {revision_id!r} inheriting from {semantic_predecessor_id!r}",
                     revision_id=revision_id,
                     predecessor_id=semantic_predecessor_id,

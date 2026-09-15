@@ -58,10 +58,10 @@ from ..iva_ledger import (
 from ..renta_income_ledger import aggregate_renta_income_ledger
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .renta_income_aggregation_support import (
-    _M130_INGRESOS_CASILLA,
-    _M130_MODELO,
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
+    M130_INGRESOS_CASILLA,
+    M130_MODELO,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
     raw_transaction,
 )
 
@@ -217,10 +217,10 @@ def test_a_grounded_invoice_reconciles_across_income_retenciones_and_iva() -> No
         catalogue,
         bucket_id=_BUCKET,
         period=_PERIOD,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
@@ -290,10 +290,10 @@ def test_an_ungrounded_invoice_is_never_silently_dropped_nor_silently_folded() -
         catalogue,
         bucket_id=_BUCKET,
         period=_PERIOD,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
@@ -325,10 +325,10 @@ def test_the_ungrounded_invoice_costs_the_taxpayer_in_both_directions_at_once() 
         _catalogue(_invoice_transaction(with_substrate=False)),
         bucket_id=_BUCKET,
         period=_PERIOD,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     observation = income.observations[0]
 
@@ -504,10 +504,10 @@ def test_the_filed_figures_close_the_invoice_identity() -> None:
         catalogue,
         bucket_id=_BUCKET,
         period=_PERIOD,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
@@ -604,10 +604,10 @@ def test_the_two_modelos_draw_the_same_base_from_one_invoice(
         catalogue,
         bucket_id=_BUCKET,
         period=_PERIOD,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 

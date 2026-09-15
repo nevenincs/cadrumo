@@ -97,7 +97,7 @@ jobs:
             --title "chore(deps): reconcile uv.lock with ${TAG}" \
             --body "Main carries the previous version's \`uv.lock\`. Every job installing with \`--frozen\` fails until this merges."
 
-      - name: Dispatch the publish workflow
+      - name: Dispatch release validation
         if: steps.release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,10 +108,9 @@ jobs:
             exit 1
           fi
           gh api --method POST \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/publish.yml/dispatches" \
-            -f "ref=${TAG}" \
-            -f "inputs[tag]=${TAG}"
-          echo "Dispatched publish.yml for ${TAG}" >> "$GITHUB_STEP_SUMMARY"
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/packaging-smoke.yml/dispatches" \
+            -f "ref=${TAG}"
+          echo "Dispatched packaging-smoke.yml for ${TAG}. Publication remains blocked until packaging, Homebrew, and Scoop run IDs are supplied to publish.yml." >> "$GITHUB_STEP_SUMMARY"
 
       # GitHub raises no workflow events for refs created with the default
       # GITHUB_TOKEN, so a `release: published` trigger never fires for a

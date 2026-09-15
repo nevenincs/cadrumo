@@ -17,7 +17,7 @@ import sys
 
 import pytest
 
-from .._call_runtime import CallTier
+from ..call_runtime import CallTier
 from ..inprocess import (
     CompletedCliRun,
     dispatch_verb_in_process,

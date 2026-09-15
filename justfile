@@ -670,16 +670,15 @@ registry-publish-target MODELO REVISION SOURCE_REF FILING_YEAR PERIOD:
 registry-republish-target MODELO REVISION SOURCE_REF FILING_YEAR PERIOD EXPECTED_MANIFEST_SHA256:
     @uv run --no-sync python -m dev.registry.pipeline republish-target {{MODELO}} {{REVISION}} {{SOURCE_REF}} {{FILING_YEAR}} {{PERIOD}} {{EXPECTED_MANIFEST_SHA256}}
 
-[doc('Scaffold one modelo revision through the registry-owned CLI.')]
+[doc('Scaffold a new modelo with explicit applicability coordinates.')]
 [group('maintenance')]
-registry-modelo-scaffold MODELO REVISION:
-    @uv run --no-sync python -m dev.registry.newmodelo scaffold {{MODELO}} {{REVISION}}
-    @echo "next_currentness=check-registry next_publication=registry-publish-authority-then-registry-publish-target"
+registry-modelo-scaffold MODELO REVISION VALID_FROM YEAR_FROM PERIOD:
+    @uv run --no-sync python -m dev.registry.newmodelo scaffold {{MODELO}} {{REVISION}} --valid-from {{VALID_FROM}} --year-from {{YEAR_FROM}} --period {{PERIOD}}
 
-[doc('Check one modelo revision scaffold without writing any skeleton files.')]
-[group('check')]
-check-registry-modelo-scaffold MODELO REVISION:
-    @uv run --no-sync python -m dev.registry.newmodelo scaffold {{MODELO}} {{REVISION}} --check
+[doc('Create only a delta revision manifest for an existing modelo; preserves its manifest and declarations.')]
+[group('maintenance')]
+registry-modelo-new-edition MODELO REVISION VALID_FROM YEAR_FROM PERIOD:
+    @uv run --no-sync python -m dev.registry.newmodelo new-edition {{MODELO}} {{REVISION}} --valid-from {{VALID_FROM}} --year-from {{YEAR_FROM}} --period {{PERIOD}}
 
 [doc('Render the registry modelo contributor checklist.')]
 [group('maintenance')]
@@ -690,34 +689,16 @@ registry-modelo-checklist:
 [group('maintenance')]
 registry-governance-stamp REGISTRY_ROOT MODELO REVISION ENGINEERED_BY="" CLEAR_ENGINEERED_BY="false" REVIEW_STATUS="" REVIEWED_BY="" REVIEWED_AT="":
     @uv run --no-sync python -m dev.registry.conformance stamp {{MODELO}} {{REVISION}} --registry-root {{quote(REGISTRY_ROOT)}}{{ if ENGINEERED_BY == "" { "" } else { " --engineered-by " + quote(ENGINEERED_BY) } }}{{ if CLEAR_ENGINEERED_BY == "true" { " --clear-engineered-by" } else { "" } }}{{ if REVIEW_STATUS == "" { "" } else { " --review-status " + quote(REVIEW_STATUS) } }}{{ if REVIEWED_BY == "" { "" } else { " --reviewed-by " + quote(REVIEWED_BY) } }}{{ if REVIEWED_AT == "" { "" } else { " --reviewed-at " + quote(REVIEWED_AT) } }}
-    @echo "next_currentness=check-registry next_publication=registry-publish-authority-then-registry-publish-target"
 
 [doc('Apply one named modelo edition migration after its round-trip proof; scratch stays under WORK_DIR and evidence under .logs.')]
 [group('maintenance')]
-registry-edition-migrate REGISTRY_ROOT MODELO WORK_DIR DECLARE_BLOCKED_ROOTS="false":
-    @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} --apply {{ if DECLARE_BLOCKED_ROOTS == "true" { "--declare-blocked-roots" } else { "" } }}
-    @echo "next_currentness=check-registry next_publication=registry-publish-authority-then-registry-publish-target"
+registry-edition-migrate REGISTRY_ROOT MODELO WORK_DIR:
+    @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} --apply
 
 [doc('Stage one modelo edition migration under WORK_DIR and persist its report under .logs; never apply it to the registry.')]
 [group('report')]
-report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR DECLARE_BLOCKED_ROOTS="false":
-    @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} {{ if DECLARE_BLOCKED_ROOTS == "true" { "--declare-blocked-roots" } else { "" } }}
-
-[doc("Lift each edition family's shared source_refs onto its revision manifest through the owning CLI; pass a modelo id to scope it, or --all for the whole corpus.")]
-[group('maintenance')]
-registry-family-source-defaults-lift SCOPE="--all" REPORT="":
-    @uv run --no-sync python -m dev.registry.lift_family_source_defaults --apply {{ if SCOPE == "--all" { "--all" } else { "--modelo " + SCOPE } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-    @echo "next_currentness=check-registry next_publication=registry-publish-authority-then-registry-publish-target"
-
-[doc("Report the edition family source_refs lift and its refusals without writing any file; pass a modelo id to scope it, or --all for the whole corpus.")]
-[group('report')]
-report-registry-family-source-defaults-lift SCOPE="--all" REPORT="":
-    @uv run --no-sync python -m dev.registry.lift_family_source_defaults --dry-run {{ if SCOPE == "--all" { "--all" } else { "--modelo " + SCOPE } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-
-[doc("Report which successor binding members restate the member they would inherit, and prove the strip byte-identical, without writing any file; pass a modelo id to scope it, or --all for the whole corpus.")]
-[group('report')]
-report-registry-restated-bindings SCOPE="--all" REPORT="":
-    @uv run --no-sync python -m dev.registry.strip_restated_bindings --dry-run {{ if SCOPE == "--all" { "--all" } else { "--modelo " + SCOPE } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR:
+    @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}}
 
 # The dev.tui command family is limited to visual-review artefacts: inventory,
 # render, snapshot, rasterise, and diff. It has no service-control or test

@@ -28,13 +28,13 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
-    _corpus_destination,
     assert_boe_holds_no_consolidated_text,
     assert_served_by_the_requested_endpoint,
     assert_serves_the_article_in_force,
     assert_serves_the_published_document,
     assert_serves_the_text_in_force,
     canonical_lf_bytes,
+    corpus_destination,
     version_selections,
 )
 
@@ -62,7 +62,7 @@ _REDACCIONES: Final[str] = "boe-a-1972-1469-a1-2-redacciones.xml"
 )
 def test_corpus_destination_refuses_wrong_format_or_nested_names(name: str, suffix: str) -> None:
     with pytest.raises(NormativeAcquisitionError, match="one filename ending"):
-        _corpus_destination(_CORPUS, name, suffix=suffix)
+        corpus_destination(_CORPUS, name, suffix=suffix)
 
 
 def _payload(name: str) -> str:

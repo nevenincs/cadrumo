@@ -19,10 +19,11 @@ elapses. On timeout the helper raises :class:`LockAcquisitionError`
 
 The lock file is created adjacent to the protected path by appending
 the suffix ``.lock``. The lock fd is held for the duration of the
-context. The lock file itself is left on disk after release; cleanup
-of stale lock files is the consumer's responsibility because deleting
-the file while another process is racing to acquire it would create
-a TOCTOU window.
+context. The sidecar is deliberately retained after release. Lock
+ownership is managed by the OS against the open descriptor; the mere
+existence of the sidecar does not mean that any process owns the lock.
+Consumers must not delete it because doing so while another process is
+racing to acquire it would create a TOCTOU window.
 
 This primitive is deliberately metadata-free. It does not write a PID,
 hostname, profile id, timeout stamp, or secure-storage custody state into

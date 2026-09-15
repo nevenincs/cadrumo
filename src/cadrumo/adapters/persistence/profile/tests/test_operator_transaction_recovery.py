@@ -23,10 +23,10 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
-)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
@@ -48,7 +48,7 @@ from cadrumo.application.auth.operator_results import (
 )
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.sessions import ensure_authenticated_aeat_session, storage_state_paths
-from cadrumo.application.auth.tests._operator_projection_support import configure_operator_auth
+from cadrumo.application.auth.tests.operator_projection_test_support import configure_operator_auth
 from cadrumo.application.user_profile.profile_keys import profile_keys
 from cadrumo.application.workflow.persistence import WorkflowStateRepository, workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState

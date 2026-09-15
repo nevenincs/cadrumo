@@ -73,9 +73,9 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.transactions.retencion_facts import load_retencion_actividades_rates
 from ..renta_income_ledger import aggregate_renta_income_ledger
 from .renta_income_aggregation_support import (
-    _M130_MODELO,
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
+    M130_MODELO,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -103,7 +103,7 @@ _PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
 _VALUE_DATE = date(_FILING_YEAR, 2, 16)
 _BUCKET = "46f1b1e3-e3c7-4522-8f3b-0689c804cd52"  # was 'bucket-oracle-rated'
 
-_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="M130_INGRESOS_CASILLA")
 
 
 def _invoice_row(*, declares_substrate: bool, cash: Decimal | None = None) -> Transaction:
@@ -162,10 +162,10 @@ def _aggregated(*, declares_substrate: bool, cash: Decimal | None = None):
         TransactionCatalogue.from_transactions((_invoice_row(declares_substrate=declares_substrate, cash=cash),)),
         bucket_id=_BUCKET,
         period=_PERIOD,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
 
@@ -308,7 +308,7 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
     screened = ungrounded_ledger_renta_income_observations(revision, aggregation.observations)
 
     assert len(screened.observations) == 1
-    assert screened.observations[0].target_casilla_id == _M130_INGRESOS_CASILLA
+    assert screened.observations[0].target_casilla_id == M130_INGRESOS_CASILLA
     assert screened.facts == frozenset({"ingresos_integros_sum", "taxable_base_sum"})
 
 

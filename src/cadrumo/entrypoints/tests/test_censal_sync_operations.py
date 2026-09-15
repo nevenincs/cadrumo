@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CENSO_SOURCE_TAG

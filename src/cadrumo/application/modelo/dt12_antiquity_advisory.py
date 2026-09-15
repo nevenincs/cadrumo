@@ -27,7 +27,8 @@ __all__ = ["dt12_antiquity_advisory_finding"]
 _DT12_TRABAJO_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion"
 
 
-# fact-relocation: selected DT12 antiquity declarations are consumed through the pinned operation and dated mapping fact
+# Registry authority: selected DT12 antiquity declarations are consumed through
+# the pinned operation and dated mapping fact.
 def _registry_dt12_antiquity_declaration(
     revision: object,
     *,
