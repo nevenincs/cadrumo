@@ -41,7 +41,7 @@ from ..commands import (
     build_wizard_command,
 )
 from ..models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
-from ._support import EmptyAnswersBase
+from .registry_setup_flow_support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

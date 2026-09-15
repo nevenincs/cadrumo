@@ -44,10 +44,10 @@ from ...domain.transactions.errors import LLMClassifierError, TransactionValidat
 from ...domain.transactions.llm import LLMClassificationResponse, LLMClassifier, PromptSpec
 from ...domain.transactions.models import Transaction
 from ..adapter_composition import build_ledger_evidence_ports
-from ._ledger_evidence_extraction_wiring import evidence_text_layer_ports
+from .ledger_evidence_extraction_wiring import evidence_text_layer_ports
 
 
-class _VisionReader:
+class VisionReader:
     """Convert application evidence values into the adapter's transport values."""
 
     def __init__(self, reader: LocalVisionLLMClassifier) -> None:
@@ -100,6 +100,8 @@ class _TextReader:
 
 @dataclass(frozen=True)
 class LedgerLlmComposition:
+    """Composed LLM classification ports and their event repository."""
+
     ports: LLMClassificationPorts
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
 
@@ -191,7 +193,7 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         text_layer_ports=text_layer_ports,
         rasterise_pdf=rasterise_pdf_pages_to_base64_png,
         make_text_classifier=make_text_classifier,
-        make_vision_classifier=lambda spec, model: _VisionReader(
+        make_vision_classifier=lambda spec, model: VisionReader(
             LocalVisionLLMClassifier(spec=spec, settings=settings, model=model)
         ),
         run_reader=run_reader,

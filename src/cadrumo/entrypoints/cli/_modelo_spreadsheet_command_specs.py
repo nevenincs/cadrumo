@@ -14,15 +14,18 @@ on the way is declared on its parameters rather than in its name.
 
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
+
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandNodeKind,
     CommandSpec,
-    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

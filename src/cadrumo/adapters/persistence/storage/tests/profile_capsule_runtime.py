@@ -61,7 +61,7 @@ def derive_test_bucket_key(identity: str, *, purpose: str) -> bytes:
     return sha256(f"cadrumo-test-bucket:{purpose}:{identity}".encode("ascii")).digest()
 
 
-def _profile_authority_contexts() -> tuple[ProfileCreateContext, ProfileDecodeContext]:
+def profile_authority_contexts() -> tuple[ProfileCreateContext, ProfileDecodeContext]:
     """Return canonical schema contexts through one injected authority pin."""
     reader = FakeAuthorityComponentReader({ProfileSchemaComponentQuery(): load_user_profile_schema()})
     operation = PinnedAuthorityOperation(reader, reader.pin())
@@ -119,7 +119,7 @@ def publish_test_profile_capsule(
     storage_root = effective_storage_root(root)
     dek = derive_test_bucket_key(str(identity), purpose="dek")
     envelope = new_test_profile_custody_envelope(identity)
-    create_context, decode_context = _profile_authority_contexts()
+    create_context, decode_context = profile_authority_contexts()
     initial = create_user_profile_record(
         context=create_context,
         profile_id=str(identity),
@@ -220,7 +220,7 @@ def mint_test_profile_recovery_envelope(
 
 def _record_session(profile_id: UUID, *, root: Path) -> ProfileRecordSession:
     material = load_committed_profile_password_material(profile_id, root=root)
-    _, decode_context = _profile_authority_contexts()
+    _, decode_context = profile_authority_contexts()
     return ProfileRecordSession.from_envelope(
         envelope=material.envelope,
         dek=_active_bucket_dek(profile_id),
@@ -372,7 +372,7 @@ def seed_modelo_ready_profile_record(
     profile_id: str, *, clock: datetime, tax_id: str | None = None
 ) -> UserProfileRecord:
     """Seed one profile carrying the modelo readiness baseline."""
-    create_context, _ = _profile_authority_contexts()
+    create_context, _ = profile_authority_contexts()
     return seed_test_profile_record(
         create_user_profile_record(
             context=create_context,
@@ -397,7 +397,7 @@ def seed_test_profile_record(
     dek = _active_bucket_dek(identity)
     if identity not in list_current_profile_custody_capsule_ids(root=storage_root):
         envelope = new_test_profile_custody_envelope(identity)
-        create_context, decode_context = _profile_authority_contexts()
+        create_context, decode_context = profile_authority_contexts()
         session = ProfileRecordSession.from_envelope(
             envelope=envelope,
             dek=dek,

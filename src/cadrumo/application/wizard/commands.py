@@ -551,7 +551,16 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     from ..user_profile.filing_baseline import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
     from .persistence import serialise_answers
 
-    return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
+    profile_path_flags = {
+        question.profile_key: question.id
+        for section in flow.sections
+        for question in section.questions
+        if question.profile_key is not None
+    }
+    return _missing_profile_filing_baseline_flags(
+        serialise_answers(flow, answers),
+        profile_path_flags=profile_path_flags,
+    )
 
 
 def _require_filing_baseline(flow: WizardFlow, answers: BaseModel) -> None:

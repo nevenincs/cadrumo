@@ -16,7 +16,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.hashing import canonical_json_bytes
 from .....core.tax_domain import TaxDomain
 from ..schema import ModeloDefinition, ModeloRevision
-from ._artifact_runtime_support import _LEGAL_ID, _SOURCE_ID, _minimal_revision
+from .artifact_runtime_support import _LEGAL_ID, _SOURCE_ID, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +41,7 @@ def _modelo_with(*capabilities: str, revision: ModeloRevision) -> ModeloDefiniti
 
 def test_declared_order_does_not_reach_the_stored_capabilities() -> None:
     """Both authored orders hydrate into the same sorted tuple."""
-    revision = _minimal_revision()
+    revision = minimal_revision()
     forward = _modelo_with("borrador", "renta_ledger_default", revision=revision)
     reversed_declaration = _modelo_with("renta_ledger_default", "borrador", revision=revision)
 
@@ -54,7 +54,7 @@ def test_declared_order_does_not_reach_the_stored_capabilities() -> None:
 
 def test_both_declaration_orders_serialise_and_digest_identically() -> None:
     """Serialisation, JSON dump, and canonical digest bytes all agree."""
-    revision = _minimal_revision()
+    revision = minimal_revision()
     forward = _modelo_with("borrador", "renta_ledger_default", revision=revision)
     reversed_declaration = _modelo_with("renta_ledger_default", "borrador", revision=revision)
 
@@ -67,7 +67,7 @@ def test_both_declaration_orders_serialise_and_digest_identically() -> None:
 
 def test_an_undeclared_capability_set_stays_empty_and_omittable() -> None:
     """The default is a declared-nothing tuple, not a hash-ordered empty set."""
-    modelo = _modelo_with(revision=_minimal_revision())
+    modelo = _modelo_with(revision=minimal_revision())
 
     assert modelo.capabilities == ()
     assert "capabilities" not in modelo.model_dump(exclude_defaults=True)
@@ -76,9 +76,9 @@ def test_an_undeclared_capability_set_stays_empty_and_omittable() -> None:
 def test_a_repeated_capability_is_refused_rather_than_silently_collapsed() -> None:
     """A duplicate declaration is an authoring defect, not a deduplication job."""
     with pytest.raises(ValidationError, match="at most once"):
-        _modelo_with("borrador", "borrador", revision=_minimal_revision())
+        _modelo_with("borrador", "borrador", revision=minimal_revision())
 
 
 def test_an_unknown_capability_token_is_still_refused() -> None:
     with pytest.raises(ValidationError):
-        _modelo_with("borrador", "not_a_capability", revision=_minimal_revision())
+        _modelo_with("borrador", "not_a_capability", revision=minimal_revision())

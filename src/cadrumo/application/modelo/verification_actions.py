@@ -51,6 +51,11 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from cadrumo.application.calculations.observations_repository import (
+    CalculationObservationRepositoryProtocol,
+    IvaWalletDecisionRepositoryProtocol,
+)
+
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.config import Settings
@@ -177,11 +182,7 @@ from .verification_preconditions import (
     build_verification_precondition_failure,
     project_verification_findings,
 )
-from .verification_repository_ports import (
-    CalculationObservationRepositoryProtocol,
-    IvaWalletDecisionRepositoryProtocol,
-    VerificationRepositoryBundle,
-)
+from .verification_repository_ports import VerificationRepositoryBundle
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate

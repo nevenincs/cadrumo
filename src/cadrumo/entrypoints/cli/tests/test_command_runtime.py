@@ -6,6 +6,11 @@ import pytest
 from click import IntRange
 from typer.testing import CliRunner
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
+
 from ....core.i18n.render import tr
 from .._command_runtime import (
     _parameter,
@@ -15,10 +20,8 @@ from .._command_runtime import (
 from .._command_target import resolve_deferred_target
 from ..command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     CommandSpecGraph,
-    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

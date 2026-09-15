@@ -22,16 +22,16 @@ from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
 from .renta_income_aggregation_support import (
-    _M130_INGRESOS_CASILLA,
-    _M130_MODELO,
     _M130_RETENCIONES_BINDING,
     _M130_RETENCIONES_CASILLA,
     _Q1_2024,
+    M130_INGRESOS_CASILLA,
+    M130_MODELO,
     _actividad_transaction,
     _catalogue_read_ports,
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
     _period,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -103,7 +103,7 @@ def _m130_2026_q1_revision() -> ModeloRevision:
         period_selector=PeriodSelector(year_from=2019, periods=("1T", "2T", "3T", "4T")),
         legal_refs=_M130_INGRESOS_LEGAL_REFS,
         source_refs=_M130_INCOME_SOURCE_REFS,
-        casillas=(_m130_casilla(_M130_INGRESOS_CASILLA), _m130_casilla(_M130_RETENCIONES_CASILLA)),
+        casillas=(_m130_casilla(M130_INGRESOS_CASILLA), _m130_casilla(_M130_RETENCIONES_CASILLA)),
         bindings=(
             _m130_renta_income_binding(
                 _M130_INGRESOS_BINDING,
@@ -161,15 +161,15 @@ def test_irpf_actividad_economica_flows_despite_unclassified_business() -> None:
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     assert len(result.observations) == 1, result
     assert result.observations[0].gross_amount == amount
-    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == amount
+    assert result.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == amount
     assert result.issues == ()
 
 
@@ -199,10 +199,10 @@ def test_trabajo_income_excluded_from_m130() -> None:
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     assert len(result.observations) == 1
@@ -211,7 +211,7 @@ def test_trabajo_income_excluded_from_m130() -> None:
     assert result.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME
     assert result.issues[0].transaction_id == nomina.transaction_id
     # casilla 01 only reflects the actividad transaction
-    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("1800.00")
+    assert result.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == Decimal("1800.00")
 
 
 def test_taxable_base_amount_populated_when_set() -> None:
@@ -237,10 +237,10 @@ def test_taxable_base_amount_populated_when_set() -> None:
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     assert len(result.observations) == 1
@@ -272,10 +272,10 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     assert len(aggregation.observations) == 1
     observation = aggregation.observations[0]
@@ -284,7 +284,7 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
 
     revision = _m130_2026_q1_revision()
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
-    assert aggregation.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("2000.00")
+    assert aggregation.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == Decimal("2000.00")
     assert resolved[_M130_RETENCIONES_BINDING] == Decimal("300.00")
 
 
@@ -332,17 +332,17 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
             TransactionCatalogue.from_transactions((tx,)),
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_Q1_2024,
-            modelo=_M130_MODELO,
-            target_casilla_id=_M130_INGRESOS_CASILLA,
-            activity_category_matcher=_m130_activity_category_matcher,
-            employment_category_matcher=_m130_employment_category_matcher,
+            modelo=M130_MODELO,
+            target_casilla_id=M130_INGRESOS_CASILLA,
+            activity_category_matcher=m130_activity_category_matcher,
+            employment_category_matcher=m130_employment_category_matcher,
         )
         resolved = resolve_ledger_renta_income_aggregation_binding_values(
             _m130_2026_q1_revision(),
             aggregation.observations,
         )
         return (
-            aggregation.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA],
+            aggregation.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA],
             resolved[_M130_RETENCIONES_BINDING],
         )
 
@@ -487,17 +487,17 @@ def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> Non
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     # Field-selection wiring contract: tagged row contributes its declared
     # IVA-exclusive base, untagged row its gross transfer amount. The
     # inequality guard proves the selection is live (a gross-summing
     # regression would produce the IVA-inflated total instead).
-    projected = result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA]
+    projected = result.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA]
     assert tagged.taxable_base is not None
     assert projected == tagged.taxable_base + untagged.raw.amount
     assert projected != tagged.raw.amount + untagged.raw.amount
@@ -531,10 +531,10 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
         catalogue_a,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     # Scenario B: both transactions as actividad — both should flow
@@ -555,14 +555,14 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
         catalogue_b,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
-    casilla_a = result_a.casilla_aggregation.casilla_values.get(_M130_INGRESOS_CASILLA, Decimal("0"))
-    casilla_b = result_b.casilla_aggregation.casilla_values.get(_M130_INGRESOS_CASILLA, Decimal("0"))
+    casilla_a = result_a.casilla_aggregation.casilla_values.get(M130_INGRESOS_CASILLA, Decimal("0"))
+    casilla_b = result_b.casilla_aggregation.casilla_values.get(M130_INGRESOS_CASILLA, Decimal("0"))
 
     assert casilla_a != casilla_b, (
         f"Anti-tautology failure: both scenarios produced casilla_01={casilla_a}; irpf_category filter has no effect"

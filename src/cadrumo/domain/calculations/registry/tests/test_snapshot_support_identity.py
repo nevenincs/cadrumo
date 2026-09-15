@@ -11,7 +11,7 @@ from ..errors import RegistryValidationError
 from ..facts.resolution import MappingFactQuery
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_base import DateAxis
-from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
+from .artifact_runtime_support import minimal_catalogues, minimal_modelo, minimal_revision
 from .snapshot_support import (
     _fixture_authority,
     _fixture_authority_identity_digest,
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _subject() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _minimal_modelo(_minimal_revision()), _minimal_catalogues()
+    return minimal_modelo(minimal_revision()), minimal_catalogues()
 
 
 def test_semantically_equal_typed_inputs_have_a_stable_identity() -> None:
@@ -61,9 +61,9 @@ def test_fixture_identity_is_accepted_by_governed_fact_resolution() -> None:
 
 
 def test_fixture_authority_does_not_upgrade_an_unsupported_filing_grade() -> None:
-    revision = _minimal_revision().model_copy(update={"authority_grade": RegistryAuthorityGrade.CALCULATION})
-    modelo = _minimal_modelo(revision)
-    catalogues = _minimal_catalogues()
+    revision = minimal_revision().model_copy(update={"authority_grade": RegistryAuthorityGrade.CALCULATION})
+    modelo = minimal_modelo(revision)
+    catalogues = minimal_catalogues()
 
     with pytest.raises(RegistryValidationError, match=r"declares 'calculation' authority grade.*requested 'filing'"):
         build_validated_snapshot(modelo, catalogues, filing_year=2024, period="0A")

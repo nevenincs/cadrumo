@@ -27,8 +27,8 @@ from ..models import (
     WizardVisibility,
     WizardWidget,
 )
-from ._support import EmptyAnswersBase
-from ._support import registry_setup_flow as registry_setup_flow
+from .registry_setup_flow_support import EmptyAnswersBase
+from .registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

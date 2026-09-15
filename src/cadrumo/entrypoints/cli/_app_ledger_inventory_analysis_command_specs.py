@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_6,
@@ -9,7 +11,6 @@ from .app_ledger_inventory_common_command_parameters import (
     INVENTORY_YEAR_OPTION,
 )
 from .command_spec import (
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

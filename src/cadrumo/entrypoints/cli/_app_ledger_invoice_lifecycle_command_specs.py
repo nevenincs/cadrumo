@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Final
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ...application.ledger.operator_input_contracts import NOTES_INPUT
 from ._app_ledger_command_spec_policies import (
     _POLICY_2,
@@ -18,7 +20,6 @@ from .app_ledger_invoice_common_command_parameters import (
 )
 from .command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

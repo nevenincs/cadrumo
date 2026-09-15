@@ -25,13 +25,13 @@ from ..operator_results import AuthOperationRequiresCustodySessionError
 from ..operator_scope import active_profile_storage_span
 from ..operator_scope_ports import OperatorScopeSession
 from ._operator_probe_fakes import fake_operator_probe_ports
-from ._operator_projection_support import (
+from ._operator_scope_fakes import build_inward_operator_scope_ports
+from .operator_projection_test_support import (
     build_live_auth_preflight_report,
 )
-from ._operator_projection_support import (
+from .operator_projection_test_support import (
     test_operator_auth as run_operator_auth_test,
 )
-from ._operator_scope_fakes import build_inward_operator_scope_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

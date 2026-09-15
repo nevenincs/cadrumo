@@ -55,7 +55,6 @@ from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ._ledger_llm_composition import compose_ledger_llm
 from ._ledger_support import (
     ledger_transaction_validation_no_recovery,
     ledger_validation_bad,
@@ -63,6 +62,7 @@ from ._ledger_support import (
     resolve_id,
 )
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from .ledger_llm_composition import compose_ledger_llm
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:

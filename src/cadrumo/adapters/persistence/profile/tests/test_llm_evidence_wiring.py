@@ -27,7 +27,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
-from cadrumo.entrypoints.cli._ledger_llm_composition import compose_ledger_llm
+from cadrumo.entrypoints.cli.ledger_llm_composition import compose_ledger_llm
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]

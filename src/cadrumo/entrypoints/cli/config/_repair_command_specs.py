@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from typing import Final
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ..command_spec import (
     FLAG_VALUE,
     TEXT_VALUE,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

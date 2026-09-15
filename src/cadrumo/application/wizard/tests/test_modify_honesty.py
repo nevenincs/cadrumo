@@ -42,7 +42,7 @@ from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
 
 from cadrumo.application.wizard.models import WizardFlow
-from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind

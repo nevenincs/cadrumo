@@ -8,6 +8,8 @@ import sys
 
 import pytest
 
+from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
+
 from ....core.config import override_settings
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage
@@ -19,7 +21,6 @@ from .._profile_authentication_notice import (
 )
 from .._profile_session_gate import session_refusal_translation_key
 from .._windows_profile_secret_bootstrap import descriptor_from_inherited_handle
-from ..command_spec import ProfileAuthenticationPosture
 from ..command_specs import COMMAND_GRAPH
 from ..config.secure_input import (
     MachineSecretChannel,

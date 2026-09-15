@@ -9,11 +9,19 @@ from typing import cast
 
 import pytest
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandWriteRoute,
+    CommandWriteRouteValue,
+)
+
 from ....application.operator_surface.command_ports import CommandCapabilityClass
 from .._command_policy import (
     CommandExecutionPolicy,
 )
-from ..command_spec import Capability, CommandWriteRoute, CommandWriteRouteValue, SideEffect
+from ..command_spec import (
+    Capability,
+    SideEffect,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

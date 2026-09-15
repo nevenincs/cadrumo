@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from .._call_runtime import run_captured
 from .._command_policy import CommandPolicyProjection, policy_projection_is_coherent, project_command_policy
+from ..call_runtime import run_captured
 from ..command_surface import command_surface
 from ..hitl import ConfirmationPolicy, confirmation_for_policy
 from ..tools import build_tool_descriptors

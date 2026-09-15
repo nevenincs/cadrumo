@@ -33,7 +33,7 @@ from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.protocols import ModeloInputs
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
-from ...review.tests._fakes import draft_review_ports
+from ...review.tests.draft_review_test_support import draft_review_ports
 from ..draft_construction import build_draft
 from ..draft_review import approve_draft
 from ..runtime import build_runtime_schema_provider

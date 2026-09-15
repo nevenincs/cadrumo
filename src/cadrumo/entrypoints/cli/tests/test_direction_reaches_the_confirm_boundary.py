@@ -51,7 +51,7 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from ....domain.user_profile.values import UserProfileFact
 from ....entrypoints.adapter_composition import build_ledger_evidence_ports
-from ....entrypoints.cli._ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
+from ....entrypoints.cli.ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,

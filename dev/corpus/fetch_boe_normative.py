@@ -225,7 +225,7 @@ def _write_verified(destination: Path, data: bytes) -> Path:
     return destination
 
 
-def _corpus_destination(root: Path, destination_name: str, *, suffix: str) -> Path:
+def corpus_destination(root: Path, destination_name: str, *, suffix: str) -> Path:
     """Return one format-correct direct child of a corpus namespace."""
     name = Path(destination_name)
     if name.name != destination_name or name.suffix.casefold() != suffix:
@@ -385,7 +385,7 @@ def fetch_normative(
         NormativeAcquisitionError: If the payload is not the text in force, or a
             ``required_text`` phrase is absent, or the read-back does not match.
     """
-    destination = _corpus_destination(_HTML_CORPUS, destination_name, suffix=".html")
+    destination = corpus_destination(_HTML_CORPUS, destination_name, suffix=".html")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,
@@ -643,7 +643,7 @@ def fetch_article(
         NormativeAcquisitionError: If the payload is not this article in force,
             or a ``required_text`` phrase is absent, or the read-back differs.
     """
-    destination = _corpus_destination(_XML_CORPUS, destination_name, suffix=".xml")
+    destination = corpus_destination(_XML_CORPUS, destination_name, suffix=".xml")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,
@@ -691,7 +691,7 @@ def fetch_article_redaction(
     response.  It is suitable for a fact's effective window only after the
     caller has established the next redaction or an in-force endpoint boundary.
     """
-    destination = _corpus_destination(_XML_CORPUS, destination_name, suffix=".xml")
+    destination = corpus_destination(_XML_CORPUS, destination_name, suffix=".xml")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,
@@ -840,7 +840,7 @@ def fetch_published_document(
             consolidates the id, a ``required_text`` phrase is absent, or the
             read-back does not match.
     """
-    destination = _corpus_destination(_HTML_CORPUS, destination_name, suffix=".html")
+    destination = corpus_destination(_HTML_CORPUS, destination_name, suffix=".html")
     owned = client is None
     http = client or httpx.Client(
         follow_redirects=True,

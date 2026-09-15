@@ -38,10 +38,12 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files
 
-from ..core.directory_scan import scan_directory
-from .inventory import REPO_ROOT, SRC_CADRUMO
+SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

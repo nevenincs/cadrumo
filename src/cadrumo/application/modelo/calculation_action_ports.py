@@ -13,6 +13,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from cadrumo.application.calculations.observations_repository import (
+    CalculationObservationRepositoryProtocol,
+    IvaWalletDecisionRepositoryProtocol,
+)
+
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
@@ -33,10 +38,6 @@ from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..live.borrador_100 import Borrador100SnapshotRepository
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ..user_profile.profile_read_ports import ProfileReadPorts
-from .verification_repository_ports import (
-    CalculationObservationRepositoryProtocol,
-    IvaWalletDecisionRepositoryProtocol,
-)
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 if TYPE_CHECKING:

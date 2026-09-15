@@ -4,12 +4,15 @@ import dataclasses
 
 import pytest
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
+
 from ..command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     CommandSpecGraph,
-    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

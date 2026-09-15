@@ -39,7 +39,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.core.config import Settings
-from cadrumo.domain.invoices.enums import IvaRate, _iva_rate_slot_tokens, iva_rate_percentage
+from cadrumo.domain.invoices.enums import IvaRate, iva_rate_percentage, iva_rate_slots_on
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.errors import IvaRateNotFoundError
@@ -65,7 +65,7 @@ _SUPPLIER_CIF = "B12345674"
 
 def _authority_percentages(on_date: date) -> set[Decimal]:
     percentages: set[Decimal] = set()
-    for rate in _iva_rate_slot_tokens(on_date):
+    for rate in iva_rate_slots_on(on_date):
         try:
             resolved = iva_rate_percentage(rate, on_date)
         except IvaRateNotFoundError:

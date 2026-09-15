@@ -54,7 +54,7 @@ def _minimal_source_ref() -> SourceReference:
     )
 
 
-def _minimal_catalogues() -> RegistryCatalogues:
+def minimal_catalogues() -> RegistryCatalogues:
     legal = LegalReference(
         id=_LEGAL_ID,
         evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
@@ -174,7 +174,7 @@ def _minimal_catalogues() -> RegistryCatalogues:
     )
 
 
-def _minimal_revision(
+def minimal_revision(
     *, bindings: tuple[BindingDefinition, ...] = (), export_layouts: tuple[ExportLayoutDefinition, ...] = ()
 ) -> ModeloRevision:
     return ModeloRevision(
@@ -227,7 +227,7 @@ def _minimal_revision(
     )
 
 
-def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
+def minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
     return ModeloDefinition(
         id="130",
         title_localization_key="test.schema.modelo.130.title",

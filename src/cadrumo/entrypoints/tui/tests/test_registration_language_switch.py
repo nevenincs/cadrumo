@@ -23,10 +23,10 @@ from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    load_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    load_test_profile_record,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root

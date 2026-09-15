@@ -36,7 +36,7 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute

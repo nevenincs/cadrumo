@@ -20,9 +20,9 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..analysis.casilla_lineage_ledger import load_ledger_refusals
 from ..analysis.casilla_lineage_partition import load_partitioned_corpus, partitioned_lineage_totality
-from ..compiler._validate_cross_revision_lineage_origin import lineage_origin_continuity_failures
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_cache import discover_modelo_sources
+from ..compiler.validate_cross_revision_lineage_origin import lineage_origin_continuity_failures
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

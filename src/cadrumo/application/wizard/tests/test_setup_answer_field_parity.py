@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
-from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 
 from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS, project_setup_answers
 from ....domain.user_profile.setup_answers import (

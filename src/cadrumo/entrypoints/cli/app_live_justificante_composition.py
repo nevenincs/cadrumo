@@ -249,8 +249,10 @@ def build_justificante_live_read_port(
     operator_scope_ports: OperatorScopePorts,
     operation: PinnedAuthorityOperation,
 ) -> JustificanteLiveReadPort:
+    """Bind the authenticated live justificante reader."""
     return _LiveRead(certificate_secret_backend_factory, operator_scope_ports, operation)
 
 
 def build_justificante_authenticity_verifier() -> JustificanteAuthenticityVerifierPort:
+    """Build the verifier for captured justificante authenticity evidence."""
     return _Verifier()

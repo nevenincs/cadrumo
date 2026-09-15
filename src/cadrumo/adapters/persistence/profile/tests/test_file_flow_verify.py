@@ -8,7 +8,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -42,7 +43,6 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     workflow_gate,
     workflow_profile,
 )
-from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,

@@ -68,8 +68,8 @@ from ..renta_income_ledger import (
 )
 from .renta_income_aggregation_support import (
     _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -280,8 +280,8 @@ def test_trabajo_income_admitted_into_m151_base_but_excluded_from_m130() -> None
         period=_ANNUAL_2024,
         modelo=Modelo("100").value,
         target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     assert not m130.observations
     assert any(issue.reason is RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME for issue in m130.issues)

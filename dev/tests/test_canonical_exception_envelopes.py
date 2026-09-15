@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ..application.modelo.m036_lifecycle import M036DeclarationNotFoundError
-from ..core.errors.error_codes import build_error_envelope
-from ..core.errors.hierarchy import InternalInvariantError
+from cadrumo.application.modelo.m036_lifecycle import M036DeclarationNotFoundError
+from cadrumo.core.errors.error_codes import build_error_envelope
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

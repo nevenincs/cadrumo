@@ -1,7 +1,15 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ._modelo_nonwork_command_spec_policies import _METADATA
-from .command_spec import CommandNodeKind, CommandSpec, InvocationSpec, ResultSchemaSpec, SchemaState, TranslationKey
+from .command_spec import (
+    CommandSpec,
+    InvocationSpec,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+)
 
 MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

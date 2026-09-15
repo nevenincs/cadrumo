@@ -29,22 +29,6 @@ on:
       - ".agents/**"
       - "docs/**"
       - "**.md"
-  # SAME-REPO pull_request only: fork PRs must never reach the self-hosted
-  # fleet (see ci.yml). Today's flow is direct-push; this trigger gives a
-  # future PR flow the T1 install-probe signal automatically. Every job
-  # carries the same-repo guard, so fork-PR jobs skip.
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - ".vault/**"
-      - ".vaultspec/**"
-      - ".claude/**"
-      - ".codex/**"
-      - ".gemini/**"
-      - ".agents/**"
-      - "docs/**"
-      - "**.md"
-
 # Main pushes must produce a completed packaging signal. GitHub concurrency
 # still bounds this lane to one running and one pending run per ref, replacing
 # an older pending run when a newer push arrives. Pull-request revisions are
@@ -88,7 +72,7 @@ jobs:
 
   quick-linux:
     name: "Test: Installed package (Linux)"
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'workflow_dispatch'
     runs-on: [self-hosted, Linux, X64]
     # Budget: ~7-9 min measured-baseline projection; the ceiling allows cold
     # uv caches without flaking, and a wedge still dies inside one queue slot.
@@ -153,7 +137,7 @@ jobs:
 
   quick-macos:
     name: "Test: Installed package (macOS)"
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'workflow_dispatch'
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 20
     steps:

@@ -44,10 +44,10 @@ from ..renta_income_ledger import (
 )
 from ..source_mesh import CalculationSourceDiagnostic
 from .renta_income_aggregation_support import (
-    _M130_INGRESOS_CASILLA,
-    _M130_MODELO,
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
+    M130_INGRESOS_CASILLA,
+    M130_MODELO,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
     raw_transaction,
 )
 
@@ -122,8 +122,8 @@ def _advisories(
                 effective_date=_Q1.end_date,
             )
         ),
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     return aggregation, undeclared_activity_income_advisory_observations(aggregation, _m131_revision())
 
@@ -262,10 +262,10 @@ def test_the_m130_path_carries_no_census_and_never_fires() -> None:
         _catalogue(_income_row("row-1")),
         bucket_id=_BUCKET,
         period=_Q1,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     assert aggregation.unadmitted_activity_income is None

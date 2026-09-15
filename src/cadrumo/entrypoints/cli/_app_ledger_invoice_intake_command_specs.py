@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ...application.ledger.operator_input_contracts import INVOICE_KIND_INPUT
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
@@ -13,7 +15,6 @@ from .app_ledger_invoice_common_command_parameters import (
     OPTIONAL_IVA_CATEGORY_OPTION,
 )
 from .command_spec import (
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

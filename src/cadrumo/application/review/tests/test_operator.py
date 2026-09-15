@@ -21,7 +21,7 @@ from ..operator import (
     _to_row,
     project_review_item,
 )
-from ._fakes import draft_review_ports
+from .draft_review_test_support import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

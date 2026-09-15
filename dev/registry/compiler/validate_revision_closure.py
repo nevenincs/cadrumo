@@ -42,7 +42,7 @@ from .validate_revision_rules import validate_reconciliation_total_closure
 _REVISION_REFERENCE_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
 
-def _validate_revision_closure_sections(
+def validate_revision_closure_sections(
     failures: list[str],
     *,
     prefix: str,
@@ -79,7 +79,7 @@ def _validate_revision_closure_sections(
     failures.extend(validate_formula_dag(prefix, revision))
 
 
-def _validate_revision_reference_surfaces(
+def validate_revision_reference_surfaces(
     failures: list[str],
     *,
     prefix: str,
@@ -143,7 +143,3 @@ def _validate_revision_reference_surfaces(
         failures.extend(
             evidence.require_any_source_tier(prefix, owner, evolution.source_refs, _REVISION_REFERENCE_SOURCE_TIERS),
         )
-
-
-validate_revision_closure_sections = _validate_revision_closure_sections
-validate_revision_reference_surfaces = _validate_revision_reference_surfaces

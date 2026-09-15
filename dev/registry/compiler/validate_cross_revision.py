@@ -24,8 +24,8 @@ from cadrumo.domain.calculations.registry.revision_order import revisions_coexis
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._validate_cross_revision_evolution import strict_continuity_evolution_failures
-from ._validate_cross_revision_lineage_origin import role_exempt_occurrences
+from .validate_cross_revision_evolution import strict_continuity_evolution_failures
+from .validate_cross_revision_lineage_origin import role_exempt_occurrences
 
 # D3 defines revision-level continuidad_validation = "strict" as
 # surface-scoped strictness: declared continuity surfaces hard-fail drift,

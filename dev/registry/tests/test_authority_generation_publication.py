@@ -14,10 +14,10 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
 )
-from cadrumo.domain.calculations.registry.tests._artifact_runtime_support import (
-    _minimal_catalogues,
-    _minimal_modelo,
-    _minimal_revision,
+from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
+    minimal_catalogues,
+    minimal_modelo,
+    minimal_revision,
 )
 
 from ..compiler.profile_schema import capture_profile_schema
@@ -35,8 +35,8 @@ def _artifact(label: str) -> AuthorityArtifact:
         update={"title": f"Profile schema {label}"}
     )
     return AuthorityArtifact(
-        modelos=(_minimal_modelo(_minimal_revision()),),
-        catalogues=_minimal_catalogues(),
+        modelos=(minimal_modelo(minimal_revision()),),
+        catalogues=minimal_catalogues(),
         identity_digest=build.identity_digest,
         build_identity=build,
         evidence=AuthorityEvidenceProjection(),

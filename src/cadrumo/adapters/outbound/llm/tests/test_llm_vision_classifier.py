@@ -28,7 +28,7 @@ from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.llm import LLMClassificationResponse, prompt_spec_with_saturation_fields
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
-from .....entrypoints.cli._ledger_llm_composition import _VisionReader, compose_ledger_llm
+from .....entrypoints.cli.ledger_llm_composition import VisionReader, compose_ledger_llm
 from .....tests.llm_vision_evidence_support import (
     json_array,
     json_object,
@@ -243,7 +243,7 @@ def test_vision_model_override_selects_the_named_model() -> None:
                 evidence,
                 text_classifier=None,
                 spec=spec,
-                vision_classifier=_VisionReader(classifier),
+                vision_classifier=VisionReader(classifier),
                 vision_model="qwen2.5vl:7b",
                 settings=settings,
                 ports=_llm_ports(settings),

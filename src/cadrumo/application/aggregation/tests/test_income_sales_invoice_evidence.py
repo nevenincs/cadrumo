@@ -47,8 +47,8 @@ from .._retencion_rate_advisory import (
 )
 from ..renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
 from .renta_income_aggregation_support import (
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -57,10 +57,10 @@ _BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 _OTHER_BUCKET = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 _QUARTER = Period.from_year_and_code(2024, "1T")
 _ANNUAL = Period.from_year_and_code(2024, "0A")
-_M130_INGRESOS_CASILLA = validated_casilla_id("01")
+M130_INGRESOS_CASILLA = validated_casilla_id("01")
 _M100_ACTIVIDAD_INGRESOS_CASILLA = validated_casilla_id("0171")
-_is_activity_income = _m130_activity_category_matcher
-_is_employment_income = _m130_employment_category_matcher
+_is_activity_income = m130_activity_category_matcher
+_is_employment_income = m130_employment_category_matcher
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 
@@ -171,7 +171,7 @@ def test_a_linked_sales_invoice_puts_casilla_01_on_the_base_not_the_cash() -> No
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -193,7 +193,7 @@ def test_the_declared_retencion_is_preferred_over_the_inference() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     ).observations[0]
@@ -237,7 +237,7 @@ def test_a_declared_retencion_is_never_screened_by_the_rate_advisory() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     ).observations
@@ -277,7 +277,7 @@ def test_the_annual_m100_path_grounds_identically_to_the_quarterly_one() -> None
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -309,7 +309,7 @@ def test_an_unlinked_row_is_untouched_by_the_evidence_path() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -334,7 +334,7 @@ def test_a_credit_matching_the_gross_rather_than_the_net_is_refused() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -353,7 +353,7 @@ def test_an_invoice_without_retencion_is_matched_on_its_gross() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -373,7 +373,7 @@ def test_a_received_invoice_is_refused_as_income_evidence() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -392,7 +392,7 @@ def test_an_invoice_from_another_bucket_is_refused() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -417,7 +417,7 @@ def test_a_one_directional_link_is_refused() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -442,7 +442,7 @@ def test_an_invoice_spanning_several_transactions_is_refused() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -461,7 +461,7 @@ def test_each_guard_reports_its_own_reason() -> None:
             bucket_id=_BUCKET,
             period=_QUARTER,
             modelo="130",
-            target_casilla_id=_M130_INGRESOS_CASILLA,
+            target_casilla_id=M130_INGRESOS_CASILLA,
             activity_category_matcher=_is_activity_income,
             employment_category_matcher=_is_employment_income,
         )
@@ -472,7 +472,7 @@ def test_each_guard_reports_its_own_reason() -> None:
             bucket_id=_BUCKET,
             period=_QUARTER,
             modelo="130",
-            target_casilla_id=_M130_INGRESOS_CASILLA,
+            target_casilla_id=M130_INGRESOS_CASILLA,
             activity_category_matcher=_is_activity_income,
             employment_category_matcher=_is_employment_income,
         )
@@ -483,7 +483,7 @@ def test_each_guard_reports_its_own_reason() -> None:
             bucket_id=_BUCKET,
             period=_QUARTER,
             modelo="130",
-            target_casilla_id=_M130_INGRESOS_CASILLA,
+            target_casilla_id=M130_INGRESOS_CASILLA,
             activity_category_matcher=_is_activity_income,
             employment_category_matcher=_is_employment_income,
         )
@@ -519,7 +519,7 @@ def test_an_instalment_paid_invoice_still_declares_its_cash() -> None:
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -553,7 +553,7 @@ def test_no_evidence_guard_ever_removes_income_from_the_aggregation() -> None:
             bucket_id=_BUCKET,
             period=_QUARTER,
             modelo="130",
-            target_casilla_id=_M130_INGRESOS_CASILLA,
+            target_casilla_id=M130_INGRESOS_CASILLA,
             activity_category_matcher=_is_activity_income,
             employment_category_matcher=_is_employment_income,
         )
@@ -583,7 +583,7 @@ def test_an_uncategorised_invoice_is_refused_even_though_it_reconciles_perfectly
         bucket_id=_BUCKET,
         invoices=invoices,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )
@@ -610,7 +610,7 @@ def test_a_categorised_invoice_still_grounds_on_its_base() -> None:
         bucket_id=_BUCKET,
         invoices=invoices,
         modelo="130",
-        target_casilla_id=_M130_INGRESOS_CASILLA,
+        target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
     )

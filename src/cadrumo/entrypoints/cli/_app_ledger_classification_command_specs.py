@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ...application.ledger.operator_input_contracts import (
     COUNTERPARTY_IDENTIFICATION_STATE_INPUT,
     DEDUCTION_FACT_KIND_INPUT,
@@ -16,7 +18,6 @@ from ._app_ledger_command_spec_support import (
 )
 from .command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

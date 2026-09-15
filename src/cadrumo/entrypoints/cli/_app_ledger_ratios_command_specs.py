@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_5,
@@ -12,7 +14,6 @@ from ._app_ledger_rule_ratio_command_spec_support import (
 )
 from .command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     LazyBinding,

@@ -20,7 +20,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 

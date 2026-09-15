@@ -9,7 +9,7 @@ import typer
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id

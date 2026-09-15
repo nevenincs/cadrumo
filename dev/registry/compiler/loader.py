@@ -39,19 +39,6 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
-from ._loader_internals import (
-    _inherit_keyed_family,
-    _load_catalogue_file_cached,
-    _load_modelo_directory_cached,
-    _load_modelo_manifest,
-    _load_modelo_revisions,
-    _materialise_revisions,
-    _refresh_modelo_directory_fingerprints_after_load_error,
-    _refresh_registry_tree_fingerprints_after_load_error,
-    _RegistryPathFingerprints,
-    _toml_fingerprint,
-    _validate_legal_directory,
-)
 from .compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
@@ -75,6 +62,21 @@ from .loader_fingerprints import (
 )
 from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
+)
+from .loader_materialisation import (
+    _load_catalogue_file_cached,
+    _load_modelo_directory_cached,
+    _load_modelo_manifest,
+    _load_modelo_revisions,
+    _materialise_revisions,
+    _refresh_modelo_directory_fingerprints_after_load_error,
+    _refresh_registry_tree_fingerprints_after_load_error,
+    _RegistryPathFingerprints,
+    _toml_fingerprint,
+    _validate_legal_directory,
+)
+from .loader_materialisation import (
+    inherit_keyed_family as _inherit_keyed_family,
 )
 
 

@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
+
 from ...core.modelo import Modelo
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_live_command_spec_support import (
@@ -12,9 +17,7 @@ from ._app_live_command_spec_support import (
 )
 from .command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
-    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     LazyBinding,

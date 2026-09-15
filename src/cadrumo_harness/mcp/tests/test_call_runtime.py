@@ -17,7 +17,7 @@ import time
 import pytest
 from pydantic import TypeAdapter
 
-from .._call_runtime import (
+from ..call_runtime import (
     CallTier,
     SupervisedResult,
     run_supervised,
@@ -237,8 +237,8 @@ def test_transport_notices_carry_exact_terminal_projections() -> None:
 
 
 def test_serving_limiter_is_a_settings_sized_singleton() -> None:
-    from .._call_runtime import serving_capacity_limiter
     from .._settings import load_mcp_settings
+    from ..call_runtime import serving_capacity_limiter
 
     limiter = serving_capacity_limiter()
     # The explicit cap is the settings value, not the anyio default of 40.
@@ -255,7 +255,7 @@ def test_serving_limiter_caps_concurrent_off_loop_dispatch() -> None:
     import anyio
     from anyio.to_thread import run_sync
 
-    from .._call_runtime import serving_capacity_limiter
+    from ..call_runtime import serving_capacity_limiter
 
     limiter = serving_capacity_limiter()
     cap = int(limiter.total_tokens)

@@ -42,10 +42,10 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-from dev.source_tree import repository_files, snapshot
 
-from ..core.directory_scan import scan_directory
-from .inventory import REPO_ROOT
+from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files, snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
