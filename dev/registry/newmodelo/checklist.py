@@ -79,7 +79,8 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         title="Author changed bindings and verify hydrated binding coverage",
         detail=(
             "revisions/<revision-id>/bindings/*.toml: only new or changed bindings. Verify the "
-            "hydrated edition binds every required ledger, profile, counterpart, or cross-modelo casilla. Use the single "
+            "hydrated edition binds every required ledger, profile, counterpart, or cross-modelo "
+            "casilla. Use the single "
             "canonical BindingSourceKind taxonomy (aeat-registry-bindings) and "
             "enroll a new source resolver in the live calculate mesh "
             "(aeat-calculation-aggregation) rather than leaving it dormant."

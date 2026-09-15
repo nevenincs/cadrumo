@@ -133,8 +133,8 @@ def _validate_revision_id(revision_id: str) -> None:
 
 # First line of every scaffolded manifest.toml. Used as the sole signal that an
 # existing manifest.toml on disk was authored by this scaffold (and is
-# therefore safe to leave alone / overwrite with --force) rather than being
-# real, already-modelled registry content this scaffold must never graft onto.
+# therefore recognizable as an unfinished new-modelo scaffold) rather than
+# real, already-modelled registry content.
 _SCAFFOLDED_MANIFEST_SENTINEL = "# Scaffolded modelo manifest —"
 
 

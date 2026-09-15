@@ -3434,7 +3434,7 @@ def stage_declaration_drop(modelo_dir: Path, edition: EditionDrop) -> None:
     This does not publish source or attest authority. The caller must compare
     complete materialised definitions before accepting the staged representation.
     """
-    from .compact import toml_comments
+    from .source_tree_installation import toml_comments
 
     families = {family.section: family for family in _DROPPABLE_FAMILIES}
     comments: list[str] = []
