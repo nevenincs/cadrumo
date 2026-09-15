@@ -11,8 +11,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import cast
-
 from ...core.errors.hierarchy import CadrumoError
 
 
@@ -64,12 +62,7 @@ class PdfExtractionCoverageMixin:
             coverage: Fraction of required targets successfully extracted,
                 or ``None`` when the error is not a coverage failure.
         """
-        # CAST-RATIONALE-PDF-COVERAGE-MRO: cooperative super resolves the CadrumoError initializer in this mixin MRO.
-        error_base = cast(  # nosemgrep: no-cast-in-domain-application reason: MRO targets CadrumoError.
-            CadrumoError,
-            super(),
-        )
-        error_base.__init__(
+        super().__init__(
             message,
             context=context,
             translated_message=translated_message,
