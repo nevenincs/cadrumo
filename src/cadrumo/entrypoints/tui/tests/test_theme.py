@@ -30,7 +30,7 @@ from textual.theme import Theme
 
 from ....core.config_support import TuiAppearance
 from ....core.directory_scan import scan_directory
-from ....entrypoints.tui.secret.registration import RegistrationScreen
+from ....entrypoints.tui.secret.registration import RegistrationAttempt, RegistrationScreen
 from ..components.host import ScreenHostApp
 from ..components.theme import (
     BASE_CSS,
@@ -55,6 +55,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from textual.app import App
+
+    from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
 
 
 # ── WCAG 2.1 contrast, recomputed from the published formula ────────────────
@@ -201,7 +203,15 @@ def _registration_screen() -> RegistrationScreen:
 
     from ....core.credentials import assess_profile_password
 
-    return RegistrationScreen(assess=assess_profile_password, register=lambda _request: None)
+    def unused_registration_attempt(
+        _label: str,
+        _candidate_passphrase: str,
+        _output_language: str,
+        _recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+    ) -> RegistrationAttempt:
+        return RegistrationAttempt()
+
+    return RegistrationScreen(assess=assess_profile_password, register=unused_registration_attempt)
 
 
 def _gutters(active: Screen[Any]) -> tuple[int, int]:

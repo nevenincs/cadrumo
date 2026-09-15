@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
-from typing import ClassVar, TypeVar, override
+from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
@@ -28,10 +28,8 @@ from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import WITHHOLDING_OBSERVATIONS_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
 
-_ResultT = TypeVar("_ResultT")
 
-
-def _translate_storage_failure(operation: str, action: Callable[[], _ResultT]) -> _ResultT:
+def _translate_storage_failure[ResultT](operation: str, action: Callable[[], ResultT]) -> ResultT:
     """Translate persistence failures into the application-owned error."""
     try:
         return action()

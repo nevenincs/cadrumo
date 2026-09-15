@@ -33,6 +33,7 @@ from ....application.operations.models import OperationRequest
 from ....application.operations.persistence.leases import operation_conflict_scope_reference
 from ....application.operations.registry import OperationRegistry
 from ....application.operations.tests.authority_test_support import unread_authority_operation
+from ....application.storage.calc_sheets.records import SheetExportPlan
 from ....core.operations import (
     OperationEffect,
     OperationEventKind,
@@ -228,7 +229,7 @@ def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_pa
     release = Event()
 
     class Prepared:
-        def execute(self, _plan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
+        def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
             entered.set()
             assert release.wait(timeout=10)
             return GoogleSheetsExportRemoteResult(

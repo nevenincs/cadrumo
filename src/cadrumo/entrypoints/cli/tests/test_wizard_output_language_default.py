@@ -16,11 +16,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.mark.usefixtures("clean_install")
 def test_wizard_prose_defaults_to_spanish(*, registry_setup_flow: WizardFlow) -> None:
     """A clean install renders the wizard prose in Spanish with no override."""
-    _TITLE_KEY = str(registry_setup_flow.title)
-    _PROMPT_KEY = str(registry_setup_flow.sections[0].questions[0].prompt)
+    title_key = str(registry_setup_flow.title)
+    prompt_key = str(registry_setup_flow.sections[0].questions[0].prompt)
     with override_settings(cadrumo_output_language="es"):
-        expected_title, expected_prompt = tr(_TITLE_KEY), tr(_PROMPT_KEY)
+        expected_title, expected_prompt = tr(title_key), tr(prompt_key)
     clear_output_language_cache()
 
-    assert tr(_TITLE_KEY) == expected_title
-    assert tr(_PROMPT_KEY) == expected_prompt
+    assert tr(title_key) == expected_title
+    assert tr(prompt_key) == expected_prompt

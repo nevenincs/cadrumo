@@ -31,7 +31,7 @@ from ..storage.runtime_repository import secure_object_repository_for_bucket
 T = TypeVar("T")
 
 
-def _translate_attachment_failure(operation: str, action: Callable[[], T]) -> T:
+def _translate_attachment_failure[T](operation: str, action: Callable[[], T]) -> T:
     """Expose only domain misses/validation and the app persistence contract."""
     try:
         return action()
@@ -45,6 +45,7 @@ class InvoiceConfirmationAttachmentStoreAdapter(AttachmentStoreProtocol):
     """Translate the encrypted attachment store to the confirmation port."""
 
     def __init__(self, *, store: AttachmentStore) -> None:
+        """Bind the encrypted attachment store."""
         self._store = store
 
     @override

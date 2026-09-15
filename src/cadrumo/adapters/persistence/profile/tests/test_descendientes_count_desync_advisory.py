@@ -20,7 +20,7 @@ sibling undeclared-advisory treats it as, not a fault.
 from __future__ import annotations
 
 from datetime import date
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -72,10 +72,10 @@ def _diagnostics(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourc
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
-        observation_repository=Mock(),
-        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=Mock(),
-        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+        observation_repository=SimpleNamespace(),
+        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=SimpleNamespace(),
+        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
     )
 
 

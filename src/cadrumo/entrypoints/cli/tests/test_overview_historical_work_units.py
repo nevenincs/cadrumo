@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -11,7 +9,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.period import Period
@@ -21,6 +19,8 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import _create_profile, _invoke
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -118,7 +118,7 @@ def _get_nested_dict_value(obj: object, key: str) -> dict[str, object] | None:
     return None
 
 
-def test_calendar_surfaces_created_historical_m130_m303_work_units(_isolated_cli_backend: Path) -> None:
+def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
     created = _seed_historical_m130_m303_work()
 
     result = _invoke(
@@ -147,7 +147,6 @@ def test_calendar_surfaces_created_historical_m130_m303_work_units(_isolated_cli
 
 
 def test_backlog_default_surface_includes_created_historical_m130_m303_work_units(
-    _isolated_cli_backend: Path,
 ) -> None:
     created = _seed_historical_m130_m303_work()
 
@@ -174,7 +173,6 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
 
 
 def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late(
-    _isolated_cli_backend: Path,
 ) -> None:
     _create_profile()
     bucket_id = resolve_active_bucket_id()

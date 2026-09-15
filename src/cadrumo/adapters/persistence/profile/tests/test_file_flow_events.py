@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> None:
     """The filing decision boundary cannot consume values under a drifted schema."""
-    wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, _filing_repo, _vr_repo, _bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -89,7 +89,7 @@ def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
     event with the new revision id as object_id and the work unit's
     (modelo, year, period) carried in the payload."""
 
-    wu_repo, cr_repo, _, _, bv_repo = repos
+    wu_repo, _cr_repo, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
 
     with bundled_indexed_authority().operation() as operation:
@@ -172,7 +172,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
     when a required casilla is missing; the calculation revision
     stays DRAFT and the refusal lands in the bucket event log."""
 
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     required = registry_required_manual_casillas()
     omitted = required[0]
     supplied = {cid: Decimal("1") for cid in required[1:]}

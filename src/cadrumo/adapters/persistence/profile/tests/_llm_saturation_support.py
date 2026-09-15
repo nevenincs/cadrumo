@@ -25,12 +25,14 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "17171717-1717-4717-8717-171717171717"
+_DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
+_DEFAULT_SPENDING_CATEGORY = SpendingCategory._from_registry("arrendamiento_local")
 
 
 def _saturating_subprocess_classifier(
     *,
     classification: BusinessClassification = BusinessClassification.BUSINESS,
-    iva_category: IvaCategory | None = IvaCategory("domestic_general"),
+    iva_category: IvaCategory | None = _DEFAULT_IVA_CATEGORY,
     business_pct: Decimal | None = None,
     model: str = "test-model",
     operation: PinnedAuthorityOperation,
@@ -100,7 +102,7 @@ def _seed_business(
     repository: TransactionCatalogueRepository,
     *,
     amount: Decimal = Decimal("121.00"),
-    category: SpendingCategory = SpendingCategory._from_registry("arrendamiento_local"),
+    category: SpendingCategory = _DEFAULT_SPENDING_CATEGORY,
 ) -> str:
     """Persist one ACTIVE BUSINESS transaction with no IVA substrate and return its id."""
     raw = RawTransaction(

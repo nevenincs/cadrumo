@@ -12,6 +12,7 @@ from playwright.async_api import Route, async_playwright
 
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......core.config import override_settings
+from ......domain.calculations.registry.authority import bundled_indexed_authority
 from ......tests.inventory import FIXTURES_DIR
 from ..declarations import DeclaracionesRegisterSession
 
@@ -88,8 +89,11 @@ async def open_routed_declarations_register(
             }
             if ver_click_timeout_ms is not None:
                 settings["cadrumo_browser_ver_click_timeout_ms"] = ver_click_timeout_ms
-            with override_settings(**settings):
-                yield DeclaracionesRegisterSession(offline_aeat_session(), page, context), routed
+            with bundled_indexed_authority().operation() as authority_operation, override_settings(**settings):
+                yield (
+                    DeclaracionesRegisterSession(offline_aeat_session(), page, context, operation=authority_operation),
+                    routed,
+                )
         finally:
             await browser.close()
 

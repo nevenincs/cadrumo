@@ -380,6 +380,7 @@ class LLMRunTelemetryDiagnosticsAdapter(DiagnosticRunTelemetryPort):
     """Adapt encrypted LLM run records to the application diagnostics port."""
 
     def __init__(self, recorder: LLMRunTelemetryRecorder) -> None:
+        """Bind the recorder used to load encrypted run telemetry."""
         self._recorder = recorder
 
     @override

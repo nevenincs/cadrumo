@@ -60,7 +60,10 @@ def _handler_signature(spec: CommandSpec) -> inspect.Signature | None:
     target = handler.target
     if target is None:
         return None
-    return inspect.signature(resolve_deferred_target(target))
+    resolved = resolve_deferred_target(target)
+    if not callable(resolved):
+        raise TypeError(f"command handler target is not callable: {target.identity!r}")
+    return inspect.signature(resolved)
 
 
 def _annotation_text(parameter: inspect.Parameter) -> str:
@@ -81,7 +84,8 @@ def test_every_spec_parameter_is_accepted_by_its_handler() -> None:
         for parameter in spec.parameters:
             if parameter.name not in accepted:
                 unknown.append(f"{spec.key}: {parameter.name}")
-    assert not unknown, "spec parameters the handler cannot accept: " + ", ".join(sorted(unknown))
+    if unknown:
+        raise AssertionError("spec parameters the handler cannot accept: " + ", ".join(sorted(unknown)))
 
 
 def test_repeatable_options_match_the_arity_their_handler_expects() -> None:
@@ -111,7 +115,8 @@ def test_repeatable_options_match_the_arity_their_handler_expects() -> None:
             declared_many = bool(getattr(parameter, "multiple", False))
             if declared_many is not expects_sequence and not getattr(parameter, "is_flag", False):
                 mismatched.append(f"{spec.key}: {parameter.name} multiple={declared_many} but handler types {text}")
-    assert not mismatched, "option arity disagrees with the handler: " + "; ".join(sorted(mismatched))
+    if mismatched:
+        raise AssertionError("option arity disagrees with the handler: " + "; ".join(sorted(mismatched)))
 
 
 def test_the_parity_gates_walk_the_corpus_they_claim_to() -> None:
@@ -124,11 +129,13 @@ def test_the_parity_gates_walk_the_corpus_they_claim_to() -> None:
     """
     bound = [spec for spec in COMMAND_SPECS if _handler_signature(spec) is not None]
     declared = sum(len(spec.parameters) for spec in COMMAND_SPECS)
-    assert len(bound) >= _MINIMUM_HANDLER_BINDINGS, (
-        f"only {len(bound)} of {len(COMMAND_SPECS)} specs resolved a handler signature; "
-        f"the parity gates compare nothing below {_MINIMUM_HANDLER_BINDINGS}"
-    )
-    assert declared >= _MINIMUM_DECLARED_PARAMETERS, (
-        f"the corpus declares only {declared} parameters; "
-        f"the parity gates compare nothing below {_MINIMUM_DECLARED_PARAMETERS}"
-    )
+    if len(bound) < _MINIMUM_HANDLER_BINDINGS:
+        raise AssertionError(
+            f"only {len(bound)} of {len(COMMAND_SPECS)} specs resolved a handler signature; "
+            f"the parity gates compare nothing below {_MINIMUM_HANDLER_BINDINGS}"
+        )
+    if declared < _MINIMUM_DECLARED_PARAMETERS:
+        raise AssertionError(
+            f"the corpus declares only {declared} parameters; "
+            f"the parity gates compare nothing below {_MINIMUM_DECLARED_PARAMETERS}"
+        )

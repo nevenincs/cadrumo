@@ -48,7 +48,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
@@ -94,19 +94,23 @@ def _events(profile: TestRuntimeProfile) -> BucketEventHistoryRepository:
     return BucketEventHistoryRepository(objects=profile.repository)
 
 
-def _batch_ports(profile: TestRuntimeProfile) -> tuple[LedgerEvidencePorts, InvoiceDraftExtractionPorts]:
+def _batch_ports(
+    profile: TestRuntimeProfile,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[LedgerEvidencePorts, InvoiceDraftExtractionPorts]:
     """Compose the required application ports from this test's outer adapters."""
     evidence_ports = LedgerEvidencePorts(
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
     )
-    return evidence_ports, _invoice_draft_extraction_ports(evidence_ports=evidence_ports)
+    return evidence_ports, _invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation)
 
 
-def _service(profile: TestRuntimeProfile) -> PurchaseInvoiceEvidenceService:
+def _service(profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation) -> PurchaseInvoiceEvidenceService:
     """Build the evidence service from the same outer repository binding."""
-    return PurchaseInvoiceEvidenceService(ports=_batch_ports(profile)[0])
+    return PurchaseInvoiceEvidenceService(ports=_batch_ports(profile, operation=operation)[0])
 
 
 def _run_batch(
@@ -119,9 +123,9 @@ def _run_batch(
     on_item: Callable[[BatchItemResult], None] | None = None,
 ) -> BatchRunResult:
     """Run the application batch through ports composed by this outer test."""
-    evidence_ports, extraction_ports = _batch_ports(runtime)
     period = default_invoice_extraction_period()
     with bundled_indexed_authority().operation() as operation:
+        evidence_ports, extraction_ports = _batch_ports(runtime, operation=operation)
         legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
         return run_evidence_batch(
             bucket_id=_BUCKET_ID,
@@ -266,6 +270,8 @@ def test_a_batch_draft_records_the_transport_that_carried_it(
 def test_a_second_run_re_ingests_nothing_and_emits_no_second_event(
     runtime_profile: TestRuntimeProfile,
     batch_dir: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Resume IS re-run, so the second pass must be a no-op rather than a duplicate.
 
@@ -274,7 +280,7 @@ def test_a_second_run_re_ingests_nothing_and_emits_no_second_event(
     second record would pass a rows-only check.
     """
     first = _run(runtime_profile, batch_dir)
-    service = _service(runtime_profile)
+    service = _service(runtime_profile, operation=operation)
     records_after_first = len(service.list_all(bucket_id=_BUCKET_ID))
     events_after_first = len(_events(runtime_profile).load().events)
     drafted_at_first = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts[0].drafted_at
@@ -434,12 +440,14 @@ def test_an_unreadable_source_is_reported_rather_than_dropped(
 def test_the_same_document_under_two_directions_is_two_records(
     runtime_profile: TestRuntimeProfile,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Positive control for idempotency: the guard must not collapse a sale into a purchase."""
     folder = tmp_path / "directional"
     folder.mkdir()
     (folder / _STRUCTURED).write_bytes((_CORPUS / _STRUCTURED).read_bytes())
-    service = _service(runtime_profile)
+    service = _service(runtime_profile, operation=operation)
 
     for direction in (InvoiceKind.RECEIVED, InvoiceKind.ISSUED):
         _run_batch(runtime_profile, sources=[folder], direction=direction)

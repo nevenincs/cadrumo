@@ -53,7 +53,7 @@ def test_applied_censal_review_lands_adopted_values_with_censo_provenance(tmp_pa
     """Adopted values reach the durable record carrying the censo source tag."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     cleanup = _CloseWitness()
-    with _runtime(tmp_path / "censal-apply", cleanup=cleanup) as (driver, _registry, profile_id):
+    with _runtime(tmp_path / "censal-apply", cleanup=cleanup) as (_driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -111,7 +111,7 @@ def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(t
     """A rejected review neither writes values nor stamps censo provenance."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     cleanup = _CloseWitness()
-    with _runtime(tmp_path / "censal-reject", cleanup=cleanup) as (driver, _registry, profile_id):
+    with _runtime(tmp_path / "censal-reject", cleanup=cleanup) as (_driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -142,7 +142,7 @@ def test_each_censal_acquisition_publishes_exactly_one_answerable_review(tmp_pat
     first_cleanup = _CloseWitness()
     second_cleanup = _CloseWitness()
 
-    with _runtime(tmp_path / "censal-first", cleanup=first_cleanup) as (driver, _registry, profile_id):
+    with _runtime(tmp_path / "censal-first", cleanup=first_cleanup) as (_driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -155,7 +155,7 @@ def test_each_censal_acquisition_publishes_exactly_one_answerable_review(tmp_pat
         )
         after_first = repository.load(profile_id)
 
-    with _runtime(tmp_path / "censal-second", cleanup=second_cleanup) as (driver, _registry, profile_id):
+    with _runtime(tmp_path / "censal-second", cleanup=second_cleanup) as (_driver, _registry, profile_id):
         decide_second, second_seen = _decide(apply=False)
         second = asyncio.run(
             run_censal_review_through_services(

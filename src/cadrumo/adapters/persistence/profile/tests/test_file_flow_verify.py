@@ -95,7 +95,7 @@ def _verification_repositories_for_test(repos: Repos):
 
 def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> None:
     """Verification cannot interpret a stored calculation under a different schema."""
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, _, _vr_repo, _bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -269,7 +269,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
     a readiness-ready modelo stays reachable by verify.
     """
 
-    wu_repo, cr_repo, _, _, bv_repo = repos
+    wu_repo, _cr_repo, _, _, _bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -303,7 +303,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
 
 
 def test_get_calculation_revision_raises_on_missing_id(repos: Repos) -> None:
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with pytest.raises(CalculationRevisionNotFoundError), bundled_indexed_authority().operation() as operation:
         get_calculation_revision(
             "0" * 64,
@@ -386,7 +386,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     revision stays DRAFT; the refused report is still persisted so
     the audit trail records the refusal."""
 
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     required = registry_required_manual_casillas()
     assert len(required) >= 2
 
@@ -481,7 +481,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
     must never refuse. Mirrors the re-file no-op.
     """
 
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -585,7 +585,7 @@ def test_verify_refuses_non_draft_revision_with_no_granting_report(repos: Repos)
     actually exists, and otherwise keeps the hard state refusal.
     """
 
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, _, _vr_repo, _bv_repo = repos
     # Modelo 111 has no cross-period dependencies, so mark can transition it to
     # VERIFICADO_COMPLETO without seeding cross-period evidence.
     work_unit = seed_work_unit(

@@ -40,7 +40,7 @@ class _M036AdapterInputError(CadrumoError):
 T = TypeVar("T")
 
 
-def _translate_adapter_failure(operation: str, action: Callable[[], T]) -> T:
+def _translate_adapter_failure[T](operation: str, action: Callable[[], T]) -> T:
     """Run one adapter operation and expose only the application contract."""
     try:
         return action()
@@ -74,6 +74,7 @@ class M036DeclarationRepositoryAdapter(M036DeclarationRepositoryPort):
     """Translate the generic secure snapshot repository to the M036 port."""
 
     def __init__(self, *, repository: SecureSnapshotRepository[M036DeclarationResult]) -> None:
+        """Bind the encrypted Modelo 036 declaration repository."""
         self._repository = repository
 
     @override
@@ -130,6 +131,7 @@ class M036BucketEventRepositoryAdapter(BucketEventHistoryRepositoryProtocol):
     """Translate bucket-event persistence to the M036 application contract."""
 
     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
+        """Bind the encrypted bucket-event history repository."""
         self._repository = repository
 
     @override

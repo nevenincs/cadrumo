@@ -35,6 +35,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _PARITY_BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
+_DEFAULT_CASH_ACCOUNTING_TREATMENT = IvaCashAccountingTreatment("none")
 
 
 def _raw(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
@@ -65,7 +66,7 @@ def _transaction(
     booked_date: date,
     taxable_base: Decimal,
     iva_amount: Decimal,
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment("none"),
+    cash_accounting_treatment: IvaCashAccountingTreatment = _DEFAULT_CASH_ACCOUNTING_TREATMENT,
     operation_date: date | None = None,
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = (),
 ) -> Transaction:

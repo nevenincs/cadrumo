@@ -26,9 +26,6 @@ from .ledger_action_persistence_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-__all__ = ["secure_objects"]
-
-
 @contextmanager
 def _ledger_ports(transaction_repository, event_repository, profile):
     with bundled_indexed_authority().operation() as operation:

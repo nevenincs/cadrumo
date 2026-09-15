@@ -18,17 +18,18 @@ resultado-parcial trace is the issue's worked example.
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_profile, _invoke
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -79,7 +80,6 @@ def _calculate_m130_draft() -> str:
 
 
 def test_work_revision_renders_inline_formula_trace_for_computed_casilla(
-    _isolated_cli_backend: Path,
 ) -> None:
     """`work revision` shows the formula trace inline for a computed casilla.
 
@@ -101,7 +101,6 @@ def test_work_revision_renders_inline_formula_trace_for_computed_casilla(
 
 
 def test_work_revision_input_casilla_renders_value_without_trace(
-    _isolated_cli_backend: Path,
 ) -> None:
     """An input / bound casilla with no formula renders its value only.
 
@@ -122,7 +121,6 @@ def test_work_revision_input_casilla_renders_value_without_trace(
 
 
 def test_work_revision_verbose_exposes_full_ledger_entry(
-    _isolated_cli_backend: Path,
 ) -> None:
     """`work revision --verbose` exposes the full per-casilla trace entry.
 
@@ -152,7 +150,6 @@ def test_work_revision_verbose_exposes_full_ledger_entry(
 
 
 def test_work_revision_json_observation_carries_formula_op(
-    _isolated_cli_backend: Path,
 ) -> None:
     """The JSON observation for a computed casilla carries the typed ``op``.
 

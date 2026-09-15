@@ -128,8 +128,8 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
     catalogue through to the bound casillas.
     """
     wu_repo = WorkUnitCatalogueRepository(objects=m349_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=m349_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_M349_BUCKET, objects=m349_objects)
+    CalculationRevisionCatalogueRepository(objects=m349_objects)
+    TransactionCatalogueRepository(bucket_id=_M349_BUCKET, objects=m349_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=m349_objects)
 
     invoices = tuple(

@@ -8,7 +8,7 @@ from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -117,7 +117,7 @@ _VERIFIED_AT = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
 
 def _inward_export_ports(*, calculation: CalculationRevisionCatalogueRepository) -> ModeloExportPorts:
     """Provide application-owned fakes for authorities unused by this gate."""
-    authority = Mock()
+    authority = SimpleNamespace()
     return ModeloExportPorts(
         calculation=calculation,
         work_unit=authority,

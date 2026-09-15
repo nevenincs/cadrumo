@@ -313,7 +313,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    wu_repo, _cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     incoming = _transaction(
         "sale-general",
@@ -458,7 +458,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    wu_repo, _cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     ledger_rows = (
         _transaction(
             "q1-sale",
@@ -662,7 +662,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    wu_repo, cr_repo, event_repo, _tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
     with pytest.raises(ModeloAggregationBindingError) as excinfo, _calculation_ports() as ports:
@@ -686,7 +686,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    wu_repo, cr_repo, event_repo, _tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info, _calculation_ports() as ports:
@@ -720,7 +720,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
     and NO manual override — the path a new filer needs.
     """
     _store_first_period_profile(secure_objects)
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
+    wu_repo, cr_repo, event_repo, _tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
     # Empty ledger: no transactions saved at all, no overrides, no seed.

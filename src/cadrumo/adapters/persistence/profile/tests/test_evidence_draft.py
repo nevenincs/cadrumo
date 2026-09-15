@@ -504,7 +504,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
@@ -573,7 +573,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         first = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
@@ -611,7 +611,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
@@ -650,7 +650,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
@@ -679,7 +679,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         pdf_path.write_bytes(text_pdf_bytes(_PARTIAL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
             confirm_invoice_draft_from_evidence(
@@ -706,7 +706,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         # The counterparty tax-id checksum is enforced by a pydantic
         # ``model_validator(mode="before")`` on ``Invoice`` itself, so an
@@ -748,7 +748,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         empty_dir = tmp_path_factory.mktemp("no-write-expected-confirm")
         confirm_invoice_draft_from_evidence(
@@ -780,7 +780,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
@@ -808,7 +808,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
@@ -839,7 +839,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
-        repo = self._repo(secure_objects)
+        self._repo(secure_objects)
 
         first = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",

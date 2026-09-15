@@ -45,7 +45,11 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from cadrumo.application.aggregation.source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceResolution,
+)
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.core.aggregation import IntracomOperationType
@@ -126,7 +130,7 @@ def _screen(secure_objects: SecureObjectRepository) -> CalculationSourceResoluti
     ).resolve(context)
 
 
-def _mismatch_diagnostics(resolution: CalculationSourceResolution) -> tuple:
+def _mismatch_diagnostics(resolution: CalculationSourceResolution) -> tuple[CalculationSourceDiagnostic, ...]:
     """Select the public resolver diagnostics for a contradictory invoice."""
     return tuple(
         diagnostic

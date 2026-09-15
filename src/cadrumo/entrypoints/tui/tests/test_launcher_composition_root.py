@@ -10,6 +10,7 @@ import pytest
 
 from ....application.operations.composition import OperationComposedServices
 from ....application.operations.registry import OperationPublicContractSetV1
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..launcher import TuiOperationCompositionV1, operation_services_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -104,5 +105,10 @@ def test_operation_composition_refuses_a_detached_public_contract_set() -> None:
 
     services = cast(OperationComposedServices, _Services())
 
-    with pytest.raises(ValueError, match="exact composed service contracts"):
-        TuiOperationCompositionV1(services=services, public_contracts=detached)
+    with bundled_indexed_authority().operation() as authority_operation:
+        with pytest.raises(ValueError, match="exact composed service contracts"):
+            TuiOperationCompositionV1(
+                services=services,
+                public_contracts=detached,
+                authority_operation=authority_operation,
+            )

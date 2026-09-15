@@ -7,14 +7,6 @@ from typing import NamedTuple
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
-
-isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
-
-__all__ = ["isolated_backend"]
-
 from cadrumo.adapters.persistence.profile.tests._justificante_reconcile_support import (
     MODELO_130_FIXTURE,
     _active_bucket_id,
@@ -23,6 +15,9 @@ from cadrumo.adapters.persistence.profile.tests._justificante_reconcile_support 
 )
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+)
+from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
 )
 from cadrumo.application.live.justificante import reconcile_capture
 from cadrumo.application.modelo.reconciliation import ReconciliationEvidenceInvalidError
@@ -33,6 +28,10 @@ from cadrumo.application.modelo.reconciliation_records import (
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
+isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
+
+__all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

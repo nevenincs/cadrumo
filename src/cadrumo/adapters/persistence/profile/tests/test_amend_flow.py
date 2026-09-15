@@ -398,7 +398,7 @@ def test_amend_refuses_evidence_less_m303_external_baseline(
 def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """A locally-filed return (no ``external_evidence``) cannot be amended."""
 
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo, operation=operation)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -472,7 +472,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
 def test_amend_refuses_when_baseline_already_superseded(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """A SUPERSEDED filing record cannot be amended."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _wu_repo, _cr_repo, fr_repo, _, _bv_repo = repos
     _, _, baseline = _seed_external_baseline(
         repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
     )
@@ -519,7 +519,7 @@ class _AmendOutcome:
 
 def _drive_amend_creates_complementaria(repos: _Repos, *, operation: PinnedAuthorityOperation) -> _AmendOutcome:
     """Run the seed-baseline + amend scenario and bundle the observable state."""
-    wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
+    _wu_repo, _cr_repo, _fr_repo, _evidence_repo, _bv_repo = repos
     work_unit, baseline_revision, baseline = _seed_external_baseline(
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000"), _AMEND_EXPENSE_CASILLA: Decimal("250")},
@@ -560,7 +560,7 @@ def test_amend_new_filing_records_filing_metadata(repos: _Repos, *, operation: P
 
 def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
-    _, _, fr_repo, _, _ = repos
+    _, _, _fr_repo, _, _ = repos
     refreshed_baseline = get_filing_record(
         outcome.baseline.filing_record_id,
         ports=build_filing_action_ports(bucket_id=_PROFILE_ID),
@@ -571,7 +571,7 @@ def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos, *, operation:
 
 def test_amend_new_revision_is_filed_complementaria(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
             outcome.new_filing.calculation_revision_id,
@@ -591,7 +591,7 @@ def test_amend_member_scoped_filing_id_carries_member_nif(
     ``member_nif`` -- both on the persisted record and in its derived id --
     rather than silently defaulting to the single-filer ``None`` slot."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _wu_repo, _cr_repo, _fr_repo, _, _bv_repo = repos
     _, _, baseline = _seed_external_baseline(
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
@@ -634,7 +634,7 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
     filing record" catalogue error with no path back to the missing-member
     cause."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _wu_repo, _cr_repo, fr_repo, _, _bv_repo = repos
     work_unit, _, baseline_a = _seed_external_baseline(
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
@@ -683,7 +683,7 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
 
 def test_amend_overridden_casilla_takes_new_value(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
             outcome.new_filing.calculation_revision_id,
@@ -696,7 +696,7 @@ def test_amend_unoverridden_casilla_inherits_baseline_value(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
             outcome.new_filing.calculation_revision_id,
@@ -710,7 +710,7 @@ def test_amend_unoverridden_casilla_inherits_baseline_value(
 
 def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
-    wu_repo, _, _, _, _ = repos
+    _wu_repo, _, _, _, _ = repos
     refreshed_wu = get_work_unit(
         outcome.work_unit.work_unit_id,
         ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
@@ -765,7 +765,7 @@ def test_amend_refuses_no_op_overrides(repos: _Repos, *, operation: PinnedAuthor
     addressed revision id; the action refuses rather than persisting
     a no-op amendment."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _wu_repo, _cr_repo, _fr_repo, _, _bv_repo = repos
     _, _, baseline = _seed_external_baseline(
         repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
     )
@@ -792,7 +792,7 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(
     corrected revision is the legal basis of the complementaria filing;
     fabricated casillas cannot be silently accepted."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _wu_repo, _cr_repo, _fr_repo, _, _bv_repo = repos
     _, _, baseline = _seed_external_baseline(
         repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
     )
@@ -818,7 +818,7 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(
 def test_amend_refuses_printed_number_metadata_token(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """Amendment overrides must not treat a printed number as a casilla reference."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _wu_repo, _cr_repo, _fr_repo, _, _bv_repo = repos
     _, _, baseline = _seed_external_baseline(
         repos,
         modelo="303",
@@ -857,7 +857,7 @@ def test_amend_refuses_non_string_override_casilla_keys_without_coercion(
 ) -> None:
     """Malformed override casilla keys fail before registry membership checks."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _wu_repo, _cr_repo, _fr_repo, _, _bv_repo = repos
     _, _, baseline = _seed_external_baseline(
         repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
     )
@@ -890,7 +890,7 @@ def test_amend_revision_carries_casilla_observations(repos: _Repos, *, operation
     no observations (the externally-imported baseline seeded here)."""
 
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
             outcome.new_filing.calculation_revision_id,
@@ -931,7 +931,7 @@ def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos, *, operati
     belongs on the amend path, not on the guard.
     """
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
             outcome.new_filing.calculation_revision_id,
@@ -1002,7 +1002,7 @@ def test_amendment_commits_its_catalogues_and_event_in_one_transaction(
     incomplete-amendment marker named the gap.
     """
     repos_tuple = amend_runtime.repos
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos_tuple
+    _wu_repo, _cr_repo, _fr_repo, _, _bv_repo = repos_tuple
     _, _, baseline = _seed_external_baseline(
         repos_tuple,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
@@ -1069,7 +1069,7 @@ def test_amendment_event_and_state_are_both_present_after_success(
 ) -> None:
     """Parity: co-committing the event does not change what an amendment records."""
     repos_tuple = amend_runtime.repos
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos_tuple
+    _wu_repo, _cr_repo, _fr_repo, _, bv_repo = repos_tuple
     _, _, baseline = _seed_external_baseline(
         repos_tuple,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},

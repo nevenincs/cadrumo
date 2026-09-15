@@ -928,7 +928,7 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
     """The public frontend driver answers the encrypted exact proposal once."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     cleanup = _CloseWitness()
-    with _runtime(tmp_path / f"frontend-{apply}", cleanup=cleanup) as (driver, _registry, profile_id):
+    with _runtime(tmp_path / f"frontend-{apply}", cleanup=cleanup) as (_driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -987,7 +987,7 @@ def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(tmp_p
                     )
                 return observed
 
-        failed_services = replace(driver.services, observation=_FailedTerminalObservation())
+        replace(driver.services, observation=_FailedTerminalObservation())
         with pytest.raises(InternalInvariantError, match="did not succeed"):
             asyncio.run(
                 run_censal_review_through_services(

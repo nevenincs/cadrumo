@@ -24,6 +24,7 @@ class IvaRemoteStateAcquisitionManifestRepository(SecureBoundRepository[IvaRemot
     payload_type: ClassVar[type[BaseModel]] = IvaRemoteStateAcquisitionManifest
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Bind the active-bucket secure-object repository."""
         super().__init__(objects=objects or secure_object_repository_for_active_bucket())
 
     @override

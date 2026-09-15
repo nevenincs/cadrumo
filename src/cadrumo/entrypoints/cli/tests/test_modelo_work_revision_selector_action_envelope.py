@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
 from .cli_runner import semantic_cli_output
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -123,7 +124,6 @@ def _assert_address_absent_refusal(
 
 
 def test_verify_and_file_mistaken_work_unit_selectors_project_canonical_localized_actions(
-    _isolated_cli_backend: Path,
 ) -> None:
     """Both verbs preserve the application verdict across all supported locales and lifecycle states."""
     _create_profile()
@@ -153,7 +153,6 @@ def test_verify_and_file_mistaken_work_unit_selectors_project_canonical_localize
 
 
 def test_verify_and_file_absent_targets_report_declared_no_action_envelopes_in_all_locales(
-    _isolated_cli_backend: Path,
 ) -> None:
     """Natural and exact absent addresses are application verdicts, not CLI hints."""
     _create_profile()

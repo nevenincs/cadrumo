@@ -39,7 +39,7 @@ class CommandSpecTyperGroup(CadrumoTyperGroup):
     """Runtime group whose lazy table is namespaced to CommandSpec authority."""
 
 
-class _PydanticStringParamType(ParamType):
+class _PydanticStringParamType(ParamType[str]):
     """Convert an opaque string annotation through its declared Pydantic schema."""
 
     name = "registry value"
@@ -49,7 +49,7 @@ class _PydanticStringParamType(ParamType):
         self.name = annotation.__name__
 
     @override
-    def convert(self, value: Any, param: Parameter | None, ctx: Context | None) -> object:
+    def convert(self, value: Any, param: Parameter | None, ctx: Context | None) -> str:
         try:
             return self._adapter.validate_python(value)
         except (TypeError, ValueError, ValidationError) as exc:

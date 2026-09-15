@@ -29,9 +29,6 @@ from .ledger_action_persistence_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-__all__ = ["secure_objects"]
-
-
 def _seed_evidence_free_transaction(secure_objects: SecureObjectRepository, *, idempotency_key: str) -> str:
     transaction_repository, event_repository = _repositories(secure_objects)
     with ledger_ports_for_test(

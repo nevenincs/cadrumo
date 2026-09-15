@@ -49,11 +49,6 @@ def is_exposable_command(command_key: str) -> bool:
     )
 
 
-def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, ...]) -> None:
-    if resolution_errors:
-        raise SchemaResolutionError(resolution_errors)
-
-
 def project_recovery_handoff_contract(spec: CommandSpec) -> RecoveryHandoffContract | None:
     """Project one command's validated recovery protocol into discovery metadata."""
     from .command_spec import OptionSpec

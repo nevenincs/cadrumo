@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -41,6 +41,7 @@ from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture 
     advisory_profile_bucket,  # noqa: F401
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.modelo import Modelo
@@ -94,7 +95,9 @@ def _write(
     set_active_test_profile_facts(tuple(facts))
 
 
-def _source_diagnostics(casilla_values: dict[CasillaId, Decimal]) -> tuple:
+def _source_diagnostics(
+    casilla_values: dict[CasillaId, Decimal],
+) -> tuple[CalculationSourceDiagnostic, ...]:
     """Every diagnostic the COORDINATOR raises for this bucket."""
     return collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
@@ -103,10 +106,10 @@ def _source_diagnostics(casilla_values: dict[CasillaId, Decimal]) -> tuple:
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
-        observation_repository=Mock(),
-        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=Mock(),
-        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+        observation_repository=SimpleNamespace(),
+        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=SimpleNamespace(),
+        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
     )
 
 
@@ -180,10 +183,10 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
         period_token=_ANNUAL_PERIOD,
         filing_year=2020,
         bucket_id=_BUCKET_ID,
-        observation_repository=Mock(),
-        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=Mock(),
-        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+        observation_repository=SimpleNamespace(),
+        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=SimpleNamespace(),
+        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
     )
     assert _SETTLEMENT in {diagnostic.source_kind for diagnostic in diagnostics}
 
@@ -203,10 +206,10 @@ def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> N
         period_token=_ANNUAL_PERIOD,
         filing_year=2024,
         bucket_id=_BUCKET_ID,
-        observation_repository=Mock(),
-        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=Mock(),
-        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+        observation_repository=SimpleNamespace(),
+        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=SimpleNamespace(),
+        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
     )
     assert _SETTLEMENT not in {diagnostic.source_kind for diagnostic in diagnostics}
 

@@ -476,10 +476,10 @@ def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
     consistent.
     """
     result = _seeded_calculation(secure_objects, operation=operation)
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
-    bv_repo = BucketEventHistoryRepository(objects=secure_objects)
+    WorkUnitCatalogueRepository(objects=secure_objects)
+    CalculationRevisionCatalogueRepository(objects=secure_objects)
+    VerificationReportCatalogueRepository(objects=secure_objects)
+    BucketEventHistoryRepository(objects=secure_objects)
 
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(

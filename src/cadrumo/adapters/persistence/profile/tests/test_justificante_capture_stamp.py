@@ -6,15 +6,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
-
-isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
-
-__all__ = ["isolated_backend"]
-
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -25,6 +16,10 @@ from cadrumo.adapters.persistence.profile.tests._justificante_reconcile_support 
     _seed_unverified_filing,
     _seed_work_unit,
 )
+from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.live.errors import LiveApplicationInputError
 from cadrumo.application.live.justificante import register_capture_as_filing_evidence
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
@@ -34,6 +29,10 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli._app_live_justificante_composition import build_justificante_registration_ports
+
+isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
+
+__all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

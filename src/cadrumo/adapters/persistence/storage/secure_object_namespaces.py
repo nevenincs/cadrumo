@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import TypeVar
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -36,16 +35,13 @@ SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
-_ValidationResultT = TypeVar("_ValidationResultT")
-
-
-def _pydantic_namespace_validator(
-    function: Callable[..., _ValidationResultT],
-) -> Callable[..., _ValidationResultT]:
+def _pydantic_namespace_validator[ValidationResultT](
+    function: Callable[..., ValidationResultT],
+) -> Callable[..., ValidationResultT]:
     """Translate the registered namespace refusal at Pydantic's callback edge."""
 
     @wraps(function)
-    def wrapped(*args: object, **kwargs: object) -> _ValidationResultT:
+    def wrapped(*args: object, **kwargs: object) -> ValidationResultT:
         try:
             return function(*args, **kwargs)
         except NamespaceRegistryError as exc:

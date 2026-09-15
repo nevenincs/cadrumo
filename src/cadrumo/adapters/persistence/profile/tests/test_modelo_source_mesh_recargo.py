@@ -50,7 +50,7 @@ class LedgerIvaAggregationSourceResolver(modelo_bindings.LedgerIvaAggregationSou
     def __init__(
         self,
         *,
-        transaction_repository: TransactionCatalogueRepository | None = None,
+        transaction_repository: TransactionCatalogueRepository,
         invoice_repository: InvoiceCatalogueRepository | None = None,
     ) -> None:
         super().__init__(
@@ -64,12 +64,10 @@ class LedgerIvaAggregationSourceResolver(modelo_bindings.LedgerIvaAggregationSou
                 transaction_reader=_EmptyTransactionCatalogueReader(),
             ),
             prorrata_register_repository=ProrrataRegisterRepository(
-                bucket_id=(transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID),
+                bucket_id=transaction_repository.bucket_id,
             ),
             investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id=(
-                transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID
-            ),
+            investment_asset_profile_id=transaction_repository.bucket_id,
         )
 
 

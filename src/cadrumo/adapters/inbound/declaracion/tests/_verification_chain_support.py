@@ -279,7 +279,7 @@ def _assert_annual_bound_perceptor_output(
     perceptor_binding_id: BindingId,
     perceptor_binding_value: Decimal,
 ) -> dict[CasillaId, object]:
-    engine_values = dict(result.values)
+    engine_values: dict[CasillaId, object] = dict(result.values)
     entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
 
     assert _DECL_TOTAL_PERCEPTORES_CASILLA not in entries_by_target, (

@@ -8,6 +8,7 @@ having been made.
 
 from __future__ import annotations
 
+from operator import ior
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -346,7 +347,7 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
             expected_context["maximum_utf8_bytes"] = 1024
         assert dict(payload.context) == expected_context
         with pytest.raises(TypeError):
-            payload.context["candidate"] = candidate  # type: ignore[index]  # reason: writing to the immutable context IS the refusal under test
+            ior(payload.context, {"candidate": candidate})
 
 
 @pytest.mark.parametrize(

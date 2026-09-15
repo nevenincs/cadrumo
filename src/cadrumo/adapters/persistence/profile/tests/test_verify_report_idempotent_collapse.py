@@ -118,7 +118,7 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
 ) -> None:
     """Two identical-outcome non-granting verifies at different clocks → one report."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+        _wu_repo, _cr_repo, _, _vr_repo, _bv_repo = repos
         revision = _seed_nongranting_revision(repos, operation=operation)
 
         first = verify_modelo_revision(
@@ -170,7 +170,7 @@ def test_distinct_outcome_verify_produces_a_distinct_report(
 ) -> None:
     """A verify whose outcome differs (different actor) → a distinct report, not a collapse."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+        _wu_repo, _cr_repo, _, _vr_repo, _bv_repo = repos
         revision = _seed_nongranting_revision(repos, operation=operation)
 
         by_a = verify_modelo_revision(

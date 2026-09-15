@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -28,7 +27,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....application.overview.pipeline_health import ModeloReadinessState
 from ....core.bucket_pointer import resolve_active_bucket_id
@@ -43,6 +42,8 @@ from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._overview_payloads import OverviewPipelineModeloPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -72,7 +73,7 @@ def _create_complete_pipeline_profile() -> None:
     )
 
 
-def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos(_isolated_cli_backend: Path) -> None:
+def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos() -> None:
     """A brand-new profile with no ledger data and no work units for the
     period: zero ledger rows, an empty modelo list, and an honest
     ``ready=False`` — there is nothing to be ready about yet."""
@@ -94,7 +95,7 @@ def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos(_isolated_c
     assert payload["ready"] is False
 
 
-def test_pipeline_surfaces_unclassified_ledger_pending_count(_isolated_cli_backend: Path) -> None:
+def test_pipeline_surfaces_unclassified_ledger_pending_count() -> None:
     """A manually-added transaction with no classification shows up as a
     pending-review row in the ledger section and keeps the period unready."""
 
@@ -119,7 +120,7 @@ def test_pipeline_surfaces_unclassified_ledger_pending_count(_isolated_cli_backe
     assert payload["ready"] is False
 
 
-def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready(_isolated_cli_backend: Path) -> None:
+def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
     """A Modelo 130 work unit driven through calculate/verify/file for the
     period reports a ``filed`` readiness row with zero outstanding
     findings; with a clean ledger for the same period the overall pipeline
@@ -187,7 +188,7 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready(_isolated_c
     assert payload["ready"] is True
 
 
-def test_pipeline_calculated_but_unverified_unit_is_not_ready(_isolated_cli_backend: Path) -> None:
+def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     """A modelo whose current revision is calculated but not yet verified
     reports the ``calculated`` state and keeps the pipeline unready."""
 
@@ -233,7 +234,6 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready(_isolated_cli_back
 
 
 def test_pipeline_distinguishes_persisted_incomplete_from_never_verified(
-    _isolated_cli_backend: Path,
 ) -> None:
     """The latest persisted completeness outcome, not findings or revision state,
     decides readiness.
@@ -319,7 +319,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified(
     assert any(notice["code"] == "overview.pipeline.modelo.incomplete" for notice in _notices(after.output))
 
 
-def test_pipeline_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend: Path) -> None:
+def test_pipeline_is_read_only_and_safe_to_run_repeatedly() -> None:
     """Running the report twice in a row must be a pure read: the second
     invocation reports identical state, proving no mutation occurred."""
 

@@ -22,12 +22,12 @@ filing) per the fixture-provenance discipline.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.inbound.declaracion.schema import InboundDeclaracionObservation, TemplateRevision
 from cadrumo.adapters.inbound.pdf.extracted_casilla import ExtractedCasilla
@@ -50,6 +50,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -71,6 +72,13 @@ _FILING_YEAR = 2026
 _PERIOD = "1T"
 
 
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Keep one indexed authority generation live across each test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 # Seeded through a detached WorkflowState, never a repository read: the
 # capsule publishes by an atomic no-replace rename onto ``buckets/<profile-id>``,
 # which a workflow-state repository construction would otherwise materialise
@@ -87,6 +95,7 @@ def _seed_work_unit(
     filing_year: int = _FILING_YEAR,
     period: str = _PERIOD,
     snapshot_grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
@@ -95,16 +104,12 @@ def _seed_work_unit(
     # Seed the real law-determined revision id (mirrors
     # test_reconcile_value_comparison.py) so the snapshot resolver's D1 identity
     # assertion holds and the casilla compare actually runs.
-    revision_id = (
-        compiled_bundled_authority()
-        .snapshot(
-            modelo,
-            filing_year=filing_year,
-            period=typed_period.registry_token,
-            grade=snapshot_grade,
-        )
-        .revision.id
-    )
+    revision_id = operation.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=typed_period.registry_token,
+        grade=snapshot_grade,
+    ).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -176,6 +181,7 @@ def _synthetic_declaracion(
     work_unit: WorkUnit,
     *,
     values: dict[str, Decimal],
+    operation: PinnedAuthorityOperation,
     tax_id: str = _PROFILE_TAX_ID,
     modelo: str | None = None,
     ejercicio: str | None = None,
@@ -191,7 +197,7 @@ def _synthetic_declaracion(
     the parser would return, with an explicit registry snapshot ref matching
     the seeded work unit's law-determined revision.
     """
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = operation.snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -233,23 +239,36 @@ def _synthetic_declaracion(
     )
 
 
-def _reconcile(work_unit: WorkUnit, declaracion: InboundDeclaracionObservation):
+def _reconcile(
+    work_unit: WorkUnit,
+    declaracion: InboundDeclaracionObservation,
+    *,
+    operation: PinnedAuthorityOperation,
+):
     return reconcile_parsed_declaracion(
         work_unit=work_unit,
         source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
         source_ref="test://declaracion-130",
         actor="operator",
         declaracion=declaracion,
+        operation=operation,
     )
 
 
-def test_filed_declaracion_matching_computed_revision_reconciles_clean() -> None:
-    work_unit = _seed_work_unit()
+def test_filed_declaracion_matching_computed_revision_reconciles_clean(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    work_unit = _seed_work_unit(operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00"), "19": Decimal("900.00")})
 
     report = _reconcile(
         work_unit,
-        _synthetic_declaracion(work_unit, values={"03": Decimal("5000.00"), "19": Decimal("900.00")}),
+        _synthetic_declaracion(
+            work_unit,
+            values={"03": Decimal("5000.00"), "19": Decimal("900.00")},
+            operation=authority_operation,
+        ),
+        operation=authority_operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
@@ -257,13 +276,15 @@ def test_filed_declaracion_matching_computed_revision_reconciles_clean() -> None
     assert "extraction_profile_provisional" not in {a.code for a in report.advisories}
 
 
-def test_provisional_extraction_profile_surfaces_non_blocking_advisory() -> None:
+def test_provisional_extraction_profile_surfaces_non_blocking_advisory(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A declaración parsed through a ``provisional_pending_specimen`` profile
     discloses that its layout is unconfirmed rather than silently presenting
     bbox-anchored values as verified (no-silent-under-declaration)."""
-    work_unit = _seed_work_unit()
+    work_unit = _seed_work_unit(operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00"), "19": Decimal("900.00")})
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = authority_operation.snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -276,8 +297,10 @@ def test_provisional_extraction_profile_surfaces_non_blocking_advisory() -> None
         _synthetic_declaracion(
             work_unit,
             values={"03": Decimal("5000.00"), "19": Decimal("900.00")},
+            operation=authority_operation,
             extraction_profile_provisional=profile.provisional_pending_specimen,
         ),
+        operation=authority_operation,
     )
 
     # The advisory is non-blocking: identity and casillas still match.
@@ -291,16 +314,23 @@ def test_provisional_extraction_profile_surfaces_non_blocking_advisory() -> None
     assert "manually verify the extracted casilla values" in advisory.message
 
 
-def test_filed_declaracion_value_mismatch_is_caught_as_typed_casilla_diff() -> None:
+def test_filed_declaracion_value_mismatch_is_caught_as_typed_casilla_diff(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A filed casilla value that differs from the computed revision is CAUGHT
     and represented as a typed ``casilla`` diff with legal grounding — not a
     silent identity ``matches``."""
-    work_unit = _seed_work_unit()
+    work_unit = _seed_work_unit(operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00"), "19": Decimal("900.00")})
 
     report = _reconcile(
         work_unit,
-        _synthetic_declaracion(work_unit, values={"03": Decimal("5000.00"), "19": Decimal("950.00")}),
+        _synthetic_declaracion(
+            work_unit,
+            values={"03": Decimal("5000.00"), "19": Decimal("950.00")},
+            operation=authority_operation,
+        ),
+        operation=authority_operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
@@ -317,15 +347,18 @@ def test_filed_declaracion_value_mismatch_is_caught_as_typed_casilla_diff() -> N
     assert diff.source_refs
 
 
-def test_filed_declaracion_missing_casilla_is_caught_as_typed_casilla_diff() -> None:
+def test_filed_declaracion_missing_casilla_is_caught_as_typed_casilla_diff(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A casilla the computed revision resolved but the declaración omitted
     is MISSING_IN_FILED, not a silent skip."""
-    work_unit = _seed_work_unit()
+    work_unit = _seed_work_unit(operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00"), "19": Decimal("900.00")})
 
     report = _reconcile(
         work_unit,
-        _synthetic_declaracion(work_unit, values={"03": Decimal("5000.00")}),
+        _synthetic_declaracion(work_unit, values={"03": Decimal("5000.00")}, operation=authority_operation),
+        operation=authority_operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
@@ -338,15 +371,22 @@ def test_filed_declaracion_missing_casilla_is_caught_as_typed_casilla_diff() -> 
     assert diff.evidence_value == ""
 
 
-def test_filed_declaracion_extra_casilla_is_caught_as_typed_casilla_diff() -> None:
+def test_filed_declaracion_extra_casilla_is_caught_as_typed_casilla_diff(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A casilla the declaración prints but the computed revision never
     resolved is EXTRA_IN_FILED."""
-    work_unit = _seed_work_unit()
+    work_unit = _seed_work_unit(operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00")})
 
     report = _reconcile(
         work_unit,
-        _synthetic_declaracion(work_unit, values={"03": Decimal("5000.00"), "19": Decimal("900.00")}),
+        _synthetic_declaracion(
+            work_unit,
+            values={"03": Decimal("5000.00"), "19": Decimal("900.00")},
+            operation=authority_operation,
+        ),
+        operation=authority_operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
@@ -359,27 +399,33 @@ def test_filed_declaracion_extra_casilla_is_caught_as_typed_casilla_diff() -> No
     assert diff.evidence_value == "900.00"
 
 
-def test_filed_declaracion_divergence_within_tolerance_does_not_flag() -> None:
+def test_filed_declaracion_divergence_within_tolerance_does_not_flag(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The registry tolerance (0.01) is honoured: a one-cent gap is clean."""
-    work_unit = _seed_work_unit()
+    work_unit = _seed_work_unit(operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"19": Decimal("900.00")})
 
     report = _reconcile(
         work_unit,
-        _synthetic_declaracion(work_unit, values={"19": Decimal("900.01")}),
+        _synthetic_declaracion(work_unit, values={"19": Decimal("900.01")}, operation=authority_operation),
+        operation=authority_operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert not report.diffs
 
 
-def test_no_persisted_revision_surfaces_advisory_not_false_green() -> None:
-    work_unit = _seed_work_unit()
+def test_no_persisted_revision_surfaces_advisory_not_false_green(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    work_unit = _seed_work_unit(operation=authority_operation)
     # No revision persisted.
 
     report = _reconcile(
         work_unit,
-        _synthetic_declaracion(work_unit, values={"19": Decimal("900.00")}),
+        _synthetic_declaracion(work_unit, values={"19": Decimal("900.00")}, operation=authority_operation),
+        operation=authority_operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
@@ -389,15 +435,23 @@ def test_no_persisted_revision_surfaces_advisory_not_false_green() -> None:
     assert "no_persisted_revision" in reasons
 
 
-def test_header_mismatch_and_casilla_mismatch_both_surface_together() -> None:
+def test_header_mismatch_and_casilla_mismatch_both_surface_together(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A declaración that diverges on BOTH the header and a casilla value
     surfaces both diff kinds in one report — neither shadows the other."""
-    work_unit = _seed_work_unit()
+    work_unit = _seed_work_unit(operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"19": Decimal("900.00")})
 
     report = _reconcile(
         work_unit,
-        _synthetic_declaracion(work_unit, values={"19": Decimal("950.00")}, tax_id="12345678Z"),
+        _synthetic_declaracion(
+            work_unit,
+            values={"19": Decimal("950.00")},
+            operation=authority_operation,
+            tax_id="12345678Z",
+        ),
+        operation=authority_operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
@@ -407,7 +461,9 @@ def test_header_mismatch_and_casilla_mismatch_both_surface_together() -> None:
     assert any(d.field_name == "19" for d in casilla_diffs)
 
 
-def test_unenrolled_modelo_refuses_casilla_level_declaration_reconcile() -> None:
+def test_unenrolled_modelo_refuses_casilla_level_declaration_reconcile(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Modelo 200 declares no ``declaracion_pdf`` extraction profile at all and
     is not enrolled in casilla-level declaración reconcile; the private seam
     itself refuses cleanly (defence in depth alongside the public
@@ -417,6 +473,7 @@ def test_unenrolled_modelo_refuses_casilla_level_declaration_reconcile() -> None
         filing_year=_FILING_YEAR,
         period="0A",
         snapshot_grade=RegistryAuthorityGrade.CALCULATION,
+        operation=authority_operation,
     )
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError):
@@ -425,7 +482,9 @@ def test_unenrolled_modelo_refuses_casilla_level_declaration_reconcile() -> None
             _synthetic_declaracion(
                 work_unit,
                 values={"00552": Decimal("100.00")},
+                operation=authority_operation,
                 modelo="200",
                 snapshot_grade=RegistryAuthorityGrade.CALCULATION,
             ),
+            operation=authority_operation,
         )

@@ -200,8 +200,8 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
             assert ambient_transaction_repository.exists() is False
             _seed_m210_profile()
             work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
-            calculation_repository = CalculationRevisionCatalogueRepository(objects=runtime.repository)
-            ambient_event_repository = BucketEventHistoryRepository(objects=runtime.repository)
+            CalculationRevisionCatalogueRepository(objects=runtime.repository)
+            BucketEventHistoryRepository(objects=runtime.repository)
             snapshot = compiled_bundled_authority().snapshot("210", filing_year=2025, period="0A")
             work_unit = create_work_unit(
                 bucket_id=_BUCKET_ID,
@@ -372,7 +372,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
         )
         snapshot = compiled_bundled_authority().snapshot("210", filing_year=2025, period="0A")
         work_repository = WorkUnitCatalogueRepository()
-        calculation_repository = CalculationRevisionCatalogueRepository()
+        CalculationRevisionCatalogueRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="210",

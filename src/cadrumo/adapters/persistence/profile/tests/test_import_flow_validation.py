@@ -56,7 +56,7 @@ def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos, *, operation:
 def test_import_refuses_printed_number_metadata_token(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """External imports must not treat a printed number as a casilla reference."""
 
-    wu_repo, _, _, _, _ = repos
+    _wu_repo, _, _, _, _ = repos
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="303",

@@ -177,7 +177,7 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
     rejections that shared this branch before it, and every draft assertion
     above would still pass.
     """
-    from cadrumo.adapters.outbound.llm.suggestions import LLMClassificationSuggestion
+    from cadrumo.application.ledger.llm_classification_ports import LLMClassificationSuggestion
     from cadrumo.domain.transactions.enums import BusinessClassification
 
     suggestion = LLMClassificationSuggestion(

@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -82,10 +82,10 @@ def _coordinator_diagnostics(
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
-        observation_repository=Mock(),
-        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=Mock(),
-        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+        observation_repository=SimpleNamespace(),
+        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=SimpleNamespace(),
+        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
     )
 
 

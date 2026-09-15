@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -54,6 +54,7 @@ _FILING_YEAR = 2024
 _ANNUAL_PERIOD = "0A"
 _ESTATAL_CASILLA: CasillaId = "0513"
 _CLAIMED = {_ESTATAL_CASILLA: Decimal("2400")}
+_DEFAULT_DESCENDANT_RELATION = DescendantRelacion._from_registry("descendiente")
 
 
 def _coordinator_diagnostics() -> tuple[CalculationSourceDiagnostic, ...]:
@@ -64,10 +65,10 @@ def _coordinator_diagnostics() -> tuple[CalculationSourceDiagnostic, ...]:
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
-        observation_repository=Mock(),
-        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=Mock(),
-        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+        observation_repository=SimpleNamespace(),
+        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=SimpleNamespace(),
+        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
     )
 
 
@@ -93,7 +94,7 @@ def _write(*descendants: DescendantInfo) -> None:
 
 def _assimilated_child(
     *,
-    relacion: DescendantRelacion = DescendantRelacion._from_registry("descendiente"),
+    relacion: DescendantRelacion = _DEFAULT_DESCENDANT_RELATION,
     inscripcion_registro_civil_date: date | None = None,
 ) -> DescendantInfo:
     """A NON-cohabiting descendant the filer economically supports.

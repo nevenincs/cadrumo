@@ -8,7 +8,8 @@ repositories, and the public ledger composition that joins them.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from collections.abc import Iterable
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -20,7 +21,7 @@ from cadrumo.application.ledger.actions_common import save_transaction_catalogue
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import build_bucket_event, emit_bucket_events
-from cadrumo.domain.transactions.models import TransactionCatalogue
+from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -63,6 +64,28 @@ class _InterleavingTransactionWriter:
         self._delegate = delegate
         self._event_repository = event_repository
         self._interloper_written = False
+
+    @property
+    def bucket_id(self) -> str:
+        return self._delegate.bucket_id
+
+    def exists(self) -> bool:
+        return self._delegate.exists()
+
+    def load(self) -> TransactionCatalogue:
+        return self._delegate.load()
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        return self._delegate.load_for_date_range(start, end)
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        return self._delegate.load_by_ids(transaction_ids)
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        return self._delegate.partition_by_date_range(start, end)
+
+    def save(self, catalogue: TransactionCatalogue) -> None:
+        self._delegate.save(catalogue)
 
     def save_with_secure_object_writes(
         self,

@@ -28,8 +28,10 @@ def _profile_status_inputs() -> tuple[
     """Read the backend health snapshot and its committed display projection."""
     from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
     from ....application.workflow.profile_health import assess_active_profile_health
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
-    profile_health = assess_active_profile_health()
+    with bundled_indexed_authority().operation() as operation:
+        profile_health = assess_active_profile_health(operation=operation)
     active_uuid = profile_health.active_profile
     pointer = read_profile_bucket_by_id(active_uuid) if active_uuid else None
     active_profile = pointer.label if pointer is not None else None

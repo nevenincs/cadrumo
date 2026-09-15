@@ -21,6 +21,7 @@ It is the regression for exactly that defect.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from operator import ior
 from pathlib import Path
 from types import MappingProxyType
 from uuid import UUID
@@ -278,7 +279,7 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
         assert payload.translated_message == translated_message
         assert refused.value.translated_message == translated_message
         with pytest.raises(TypeError):
-            payload.context["candidate"] = candidate  # type: ignore[index]  # reason: writing to the immutable context IS the refusal under test
+            ior(payload.context, {"candidate": candidate})
 
 
 @pytest.mark.parametrize(

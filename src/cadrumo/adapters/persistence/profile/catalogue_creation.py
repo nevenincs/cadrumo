@@ -40,6 +40,7 @@ class CatalogueCreationInvoiceRepositoryAdapter(CatalogueInvoiceRepositoryPort):
     """Translate the encrypted invoice repository to the creation port."""
 
     def __init__(self, *, repository: InvoiceCatalogueRepository) -> None:
+        """Bind the encrypted invoice catalogue repository."""
         self._repository = repository
 
     @override
@@ -65,6 +66,7 @@ class CatalogueCreationEventRepositoryAdapter(CatalogueInvoiceEventRepositoryPor
     """Translate the encrypted bucket-event repository to the creation port."""
 
     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
+        """Bind the encrypted bucket-event history repository."""
         self._repository = repository
 
     @override
@@ -129,6 +131,7 @@ class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
     """Translate the ECB provider to the application rate capability."""
 
     def __init__(self, *, provider: EcbReferenceRateProvider) -> None:
+        """Bind the ECB reference-rate provider."""
         self._provider = provider
 
     @property
