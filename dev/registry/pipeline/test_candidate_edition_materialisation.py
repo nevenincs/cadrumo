@@ -48,10 +48,13 @@ def _stage(candidate_root: Path, *, modelo: str, revision: str) -> Path:
 def test_inheriting_edition_is_staged_with_the_members_it_does_not_restate(tmp_path: Path) -> None:
     """An id the target inherits rather than restates survives into the candidate."""
     source_revision = bundled_path("registry", "aeat", "modelos", _INHERITED_MODELO, "revisions", _INHERITING_REVISION)
-    restated = tomllib.loads(
-        next((source_revision / "application_links").glob("*.toml")).read_text("utf-8"),
-    )["revisions"][_INHERITING_REVISION]["application_links"]
-    restated_ids = {row["id"] for row in restated}
+    restated_ids = {
+        row["id"]
+        for fragment in (source_revision / "application_links").glob("*.toml")
+        for row in tomllib.loads(fragment.read_text("utf-8"))["revisions"][_INHERITING_REVISION][
+            "application_links"
+        ]
+    }
     assert _INHERITED_LINK not in restated_ids, (
         "the fixture rests on this id being inherited rather than restated; pick another id"
     )
