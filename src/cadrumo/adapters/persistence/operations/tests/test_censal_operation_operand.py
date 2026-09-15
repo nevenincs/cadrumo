@@ -41,12 +41,12 @@ from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
 from .....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 

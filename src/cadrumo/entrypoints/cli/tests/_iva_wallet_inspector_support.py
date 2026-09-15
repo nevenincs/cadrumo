@@ -11,7 +11,7 @@ from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact

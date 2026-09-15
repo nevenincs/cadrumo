@@ -33,7 +33,6 @@ from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.modelo.registry_authority_capture import PinnedRegistryAuthorityCapture
 from ....application.modelo.work_addressing import ModeloVisibleFilingTarget
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.workspace import resolve_static_inspection_result
@@ -43,10 +42,6 @@ from ....application.modelo.workspace_models import (
 )
 from ....core.external_constants import OutputLanguage
 from ....core.period import Period
-from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context,
-    published_selected_revision_id,
-)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 _BUCKET_ID = "13000000-0000-4000-8000-000000000451"
@@ -116,7 +111,10 @@ def real_workspace_inspection_result(
     fixture with invented rows -- which would prove the layout against data the
     product never produces.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+    ):
         seed_test_profile_record(
             _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
@@ -124,7 +122,7 @@ def real_workspace_inspection_result(
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
-                context=published_profile_create_context(),
+                context=operation.profile_create_context(),
             ),
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
@@ -133,39 +131,36 @@ def real_workspace_inspection_result(
         # caller choosing an address does not also have to know which revision
         # governs it -- a hand-written revision id is the shape that goes stale
         # silently when the legal window moves.
-        selected_revision = revision_id or published_selected_revision_id(
-            modelo,
-            filing_year=filing_year,
-            period=period.registry_token,
+        selected_revision = revision_id or str(
+            operation.revision_for_context(modelo, filing_year=filing_year, period=period.registry_token).id
         )
-        with bundled_indexed_authority().operation() as operation:
-            create_work_unit(
+        create_work_unit(
+            bucket_id=profile.bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=selected_revision,
+            ports=build_work_lifecycle_ports(bucket_id=profile.bucket_id),
+            clock=_T0,
+            operation=operation,
+        )
+
+        def resolve(at_language: OutputLanguage) -> ModeloWorkspaceStaticInspectionResultV1:
+            """Resolve the seeded address again at one language."""
+            result = resolve_static_inspection_result(
+                ModeloWorkspaceVisibleFilingTargetV1(
+                    target=ModeloVisibleFilingTarget(
+                        modelo=modelo,
+                        filing_year=filing_year,
+                        period=period,
+                    )
+                ),
                 bucket_id=profile.bucket_id,
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                revision_id=selected_revision,
-                ports=build_work_lifecycle_ports(bucket_id=profile.bucket_id),
-                clock=_T0,
-                operation=operation,
+                catalogue_repository=repository,
+                authority=operation,
+                output_language=at_language,
             )
+            assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)
+            return result
 
-            def resolve(at_language: OutputLanguage) -> ModeloWorkspaceStaticInspectionResultV1:
-                """Resolve the seeded address again at one language."""
-                result = resolve_static_inspection_result(
-                    ModeloWorkspaceVisibleFilingTargetV1(
-                        target=ModeloVisibleFilingTarget(
-                            modelo=modelo,
-                            filing_year=filing_year,
-                            period=period,
-                        )
-                    ),
-                    bucket_id=profile.bucket_id,
-                    catalogue_repository=repository,
-                    authority=PinnedRegistryAuthorityCapture(operation),
-                    output_language=at_language,
-                )
-                assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)
-                return result
-
-            yield _SeededWorkspace(resolve=resolve, result=resolve(language))
+        yield _SeededWorkspace(resolve=resolve, result=resolve(language))

@@ -39,7 +39,7 @@ from ....application.modelo.calculation_actions import (
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -49,7 +49,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....entrypoints.adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000452"
 _T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)

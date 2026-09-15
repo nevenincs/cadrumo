@@ -90,10 +90,12 @@ __all__ = [
     "_store_artefact",
     "_submitted_file_coverage_for_casillas",
     "_submitted_file_extraction_coverage",
+    "_submitted_file_layout_refusal",
     "_verify_submitted_file_context",
     "_with_derived_303_compensation_available_observation",
     "non_numeric_observed_casillas",
     "observed_casillas_from_submitted_file",
+    "published_layout_source_payloads",
     "registry_observation_from_filed_declaration",
 ]
 
@@ -167,7 +169,7 @@ def _registry_snapshot_for_declaration(
         raise SedeParseError(f"registry has no snapshot for AEAT declaration {declaration.modelo!r}") from exc
 
 
-def _published_source_payloads(
+def published_layout_source_payloads(
     *,
     snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
@@ -177,6 +179,11 @@ def _published_source_payloads(
     Citation-only sources such as the record design stay in the layout's
     ``source_refs`` and in every casilla's provenance; their bytes are never
     requested because a published generation does not hold them.
+
+    Raises:
+        RegistryValidationError: The layout cites a source the snapshot does not
+            catalogue, or an XML dictionary layout has no embedded dictionary.
+        LookupError: The generation lacks bytes for a source the contract embeds.
     """
     layout = resolve_export_layout(snapshot).layout
     source_ids = layout_embedded_source_ids((layout,), sources=snapshot.sources)
@@ -294,15 +301,18 @@ def observed_header_facts_from_submitted_file(
     Returns an empty tuple rather than raising when the payload cannot be parsed
     against the layout. The casilla projection is the caller's primary result and
     reports its own failure loudly; a header read that fails must not take the
-    casillas down with it.
+    casillas down with it. A registry that cannot resolve the layout or its
+    source bytes is a different failure and raises, so it never reads as a
+    fichero without headers.
     """
+    resolved = resolve_export_layout(snapshot)
+    source_payloads = published_layout_source_payloads(snapshot=snapshot, operation=operation)
     try:
-        resolved = resolve_export_layout(snapshot)
         parsed = parse_export_payload(
             resolved.layout,
             body,
             sources=snapshot.sources,
-            source_payloads=_published_source_payloads(snapshot=snapshot, operation=operation),
+            source_payloads=source_payloads,
         )
     except RegistryValidationError:
         return ()
@@ -347,7 +357,7 @@ def observed_casillas_from_submitted_file(
             resolved.layout,
             body,
             sources=snapshot.sources,
-            source_payloads=_published_source_payloads(snapshot=snapshot, operation=operation),
+            source_payloads=published_layout_source_payloads(snapshot=snapshot, operation=operation),
         )
     except RegistryValidationError as exc:
         raise _submitted_file_layout_refusal(
@@ -454,7 +464,7 @@ def _submitted_file_coverage_for_casillas(
         resolved_layout.layout,
         body,
         sources=snapshot.sources,
-        source_payloads=_published_source_payloads(snapshot=snapshot, operation=operation),
+        source_payloads=published_layout_source_payloads(snapshot=snapshot, operation=operation),
     )
     return _submitted_file_extraction_coverage(
         parsed_field_ids=frozenset(field.field_id for field in parsed.fields),

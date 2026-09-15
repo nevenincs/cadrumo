@@ -647,7 +647,6 @@ def resolve_modelo_workspace_static_inspection(
     another profile.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.modelo.registry_authority_capture import PinnedRegistryAuthorityCapture
     from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ...application.modelo.workspace import resolve_static_inspection_result
     from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
@@ -661,7 +660,7 @@ def resolve_modelo_workspace_static_inspection(
         ),
         bucket_id=unit.bucket_id,
         catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
-        authority=PinnedRegistryAuthorityCapture(operation),
+        authority=operation,
         output_language=output_language,
     )
 

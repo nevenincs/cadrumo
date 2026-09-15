@@ -21,7 +21,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ....application.user_profile.projections import projection_for_taxpayer
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..common import declared_tax_id

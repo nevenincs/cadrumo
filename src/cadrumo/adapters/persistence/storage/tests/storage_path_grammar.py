@@ -38,9 +38,6 @@ _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # Content-hash fan-out (blob store, both root- and bucket-scoped).
     "sha256[:2]": r"[0-9a-f]{2}",
     "sha256": r"[0-9a-f]{64}",
-    # Registry-verdict cache filename: a 16-lowercase-hex truncation of a
-    # sha256 digest over the resolved registry root.
-    "sha256[:16]": r"[0-9a-f]{16}",
     # Observability per-run trace directory: 16 lowercase hex characters,
     # the shape core.observability.context._mint_run_id mints.
     "run_id": r"[0-9a-f]{16}",
