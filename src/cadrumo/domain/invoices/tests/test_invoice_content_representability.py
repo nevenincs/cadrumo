@@ -55,7 +55,7 @@ def _line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+        iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
         iva_amount=_CUOTA,
     )
 
@@ -179,7 +179,7 @@ def test_legal_mentions_are_never_derived_from_iva_category() -> None:
                 quantity=Decimal("1"),
                 unit_price=_BASE,
                 subtotal=_BASE,
-                iva_rate=resolve_iva_rate_token("exempt", date.today()),
+                iva_rate=resolve_iva_rate_token("EXEMPT", date.today()),
                 iva_amount=Decimal("0"),
             ),
         ),

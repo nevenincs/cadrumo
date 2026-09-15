@@ -51,7 +51,7 @@ def _rated_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+        iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
         iva_amount=_CUOTA,
     )
 
@@ -62,7 +62,7 @@ def _exempt_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=resolve_iva_rate_token("exempt", date.today()),
+        iva_rate=resolve_iva_rate_token("EXEMPT", date.today()),
         iva_amount=Decimal("0"),
     )
 

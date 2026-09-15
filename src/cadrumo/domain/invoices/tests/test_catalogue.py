@@ -201,7 +201,7 @@ def test_persistence_round_trip_preserves_catalogue() -> None:
     populated = next(invoice for invoice in restored if invoice.invoice_number == "F-2026-100")
     assert populated.series == "R"
     assert populated.rectifies_invoice_number == "F-2026-099"
-    assert populated.counterparty_identification_state is EUMemberState.from_registry("es")
+    assert populated.counterparty_identification_state == EUMemberState.from_registry("es")
     assert populated.issuer_address == "Calle Mayor 1, 28013 Madrid"
     assert populated.recipient_address == "Gran Vía 2, 28013 Madrid"
     assert populated.exemption_reference == "LIVA art. 20.Uno.26"

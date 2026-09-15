@@ -50,7 +50,7 @@ def _valid_payload() -> dict[str, object]:
             "quantity": Decimal("1"),
             "unit_price": Decimal("100.00"),
             "subtotal": Decimal("100.00"),
-            "iva_rate": resolve_iva_rate_token("rate_21", date.today()),
+            "iva_rate": resolve_iva_rate_token("RATE_21", date.today()),
             "iva_amount": Decimal("21.00"),
         },
     )

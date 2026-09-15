@@ -114,7 +114,7 @@ def test_invoice_accepts_a_transitional_food_rate_inside_its_window() -> None:
         lines=(_valid_line(iva_rate=IvaRate.from_registry("RATE_2"), on_date=date(2024, 11, 15)),),
     )
 
-    assert invoice.lines[0].iva_rate is IvaRate.from_registry("RATE_2")
+    assert invoice.lines[0].iva_rate == IvaRate.from_registry("RATE_2")
     assert invoice.iva_total == Decimal("2.00")
 
 

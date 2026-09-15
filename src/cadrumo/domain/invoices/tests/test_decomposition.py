@@ -339,7 +339,7 @@ def test_eu_member_state_substrate_still_resolves_for_a_partitioned_invoice() ->
         lines=(_line(iva_rate=IvaRate.from_registry("EXEMPT")),),
     )
 
-    assert invoice.counterparty_eu_member_state is EUMemberState.from_registry("de")
+    assert invoice.counterparty_eu_member_state == EUMemberState.from_registry("de")
     assert decompose_invoice(invoice).is_grounded
 
 
