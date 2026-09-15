@@ -182,7 +182,7 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
         )
     declared = frozenset(definition.token for definition in definitions)
     projections: dict[str, frozenset[IvaCategory]] = {}
-    for key, raw_value in entries.items():
+    for key, _raw_value in entries.items():
         if not key.startswith(_PROJECTION_PREFIX):
             continue
         name = key.removeprefix(_PROJECTION_PREFIX)

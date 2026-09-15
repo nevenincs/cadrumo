@@ -46,7 +46,7 @@ class RequirednessBasis(StrEnum):
 
 
 #: The one token the derivation recognises, as it recognises it.
-_MANDATORY_TOKEN = "obligatorio"
+_MANDATORY_MARKER = "obligatorio"
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +69,7 @@ def classify_requiredness(validation: str | None) -> RequirednessBasis:
     """Classify the official validation cell into the state it actually expresses."""
     if validation is None or not validation.strip():
         return RequirednessBasis.DESIGN_SILENT
-    if validation.strip().casefold() == _MANDATORY_TOKEN:
+    if validation.strip().casefold() == _MANDATORY_MARKER:
         return RequirednessBasis.STATED_MANDATORY
     return RequirednessBasis.STATED_OTHERWISE
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.decimal.constants import ZERO
@@ -23,6 +23,20 @@ from ..iva.classification import InvoiceKind
 from ..iva.identification import identification_state_for_printed_tax_identifier
 from .errors import InvoiceValidationError
 from .validators import validate_counterparty_tax_id, validate_country_code
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+
+
+def _pinned_invoice_operation() -> PinnedAuthorityOperation:
+    """Require the enclosing invoice projection to use one pinned generation."""
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
+
+    operation = governed_facts_in_scope()
+    if not isinstance(operation, PinnedAuthorityOperation):
+        raise InvoiceValidationError("invoice counterparty identification requires a generation-pinned authority operation")
+    return operation
 
 
 def _coerce_date(value: object) -> date:
@@ -161,7 +175,9 @@ def normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obje
     if payload.get("counterparty_identification_state") is None:
         printed = payload.get("counterparty_tax_id")
         payload["counterparty_identification_state"] = (
-            identification_state_for_printed_tax_identifier(printed) if isinstance(printed, str) else None
+            identification_state_for_printed_tax_identifier(printed, operation=_pinned_invoice_operation())
+            if isinstance(printed, str)
+            else None
         )
     return payload
 

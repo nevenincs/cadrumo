@@ -34,6 +34,7 @@ class IrpfActivityKindCatalogue:
 
     @property
     def all_activity_kinds(self) -> frozenset[IrpfActivityKind]:
+        """Return every activity-kind token declared by the catalogue."""
         return frozenset(item.token for item in self.definitions)
 
     def require(self, value: object) -> IrpfActivityKind:

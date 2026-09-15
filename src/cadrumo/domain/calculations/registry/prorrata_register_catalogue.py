@@ -80,37 +80,46 @@ class ProrrataRegisterCatalogue:
 
     @property
     def all_regimes(self) -> frozenset[ProrrataRegisterRegime]:
+        """Return every register regime declared by the registry."""
         return frozenset(definition.token for definition in self.regimes)
 
     @property
     def apportioning_regimes(self) -> tuple[ProrrataRegisterRegime, ...]:
+        """Return registry regimes that apportion deductible amounts."""
         return tuple(definition.token for definition in self.regimes if definition.apportions)
 
     @property
     def non_apportioning_regimes(self) -> tuple[ProrrataRegisterRegime, ...]:
+        """Return registry regimes that do not apportion deductible amounts."""
         return tuple(definition.token for definition in self.regimes if not definition.apportions)
 
     @property
     def all_transition_kinds(self) -> frozenset[ProrrataEspecialTransitionKind]:
+        """Return every special-prorrata transition declared by the registry."""
         return frozenset(definition.token for definition in self.transition_kinds)
 
     @property
     def all_provenances(self) -> frozenset[ProrrataProvisionalProvenance]:
+        """Return every provisional provenance declared by the registry."""
         return frozenset(definition.token for definition in self.provenances)
 
     @property
     def all_sector_letters(self) -> frozenset[SectorDiferenciadoLetra]:
+        """Return every differentiated-sector letter declared by the registry."""
         return frozenset(definition.token for definition in self.sector_letters)
 
     @property
     def referenced_provenances(self) -> frozenset[ProrrataProvisionalProvenance]:
+        """Return provenances that require an authorisation reference."""
         return frozenset(definition.token for definition in self.provenances if definition.authorisation_required)
 
     @property
     def electable_provenances(self) -> tuple[ProrrataProvisionalProvenance, ...]:
+        """Return provenances that the operator may elect."""
         return tuple(definition.token for definition in self.provenances if definition.election_allowed)
 
     def require_regime(self, value: object) -> ProrrataRegisterRegime:
+        """Validate and return one registry-declared register regime."""
         token = _coerce_regime(value)
         if token not in self.all_regimes:
             raise RegistryValidationError(
@@ -119,6 +128,7 @@ class ProrrataRegisterCatalogue:
         return token
 
     def require_transition(self, value: object) -> ProrrataEspecialTransitionKind:
+        """Validate and return one registry-declared transition kind."""
         token = _coerce_transition(value)
         if token not in self.all_transition_kinds:
             raise RegistryValidationError(
@@ -127,6 +137,7 @@ class ProrrataRegisterCatalogue:
         return token
 
     def require_provenance(self, value: object) -> ProrrataProvisionalProvenance:
+        """Validate and return one registry-declared provisional provenance."""
         token = _coerce_provenance(value)
         if token not in self.all_provenances:
             raise RegistryValidationError(
@@ -135,6 +146,7 @@ class ProrrataRegisterCatalogue:
         return token
 
     def require_sector_letter(self, value: object) -> SectorDiferenciadoLetra:
+        """Validate and return one registry-declared differentiated-sector letter."""
         token = _coerce_sector_letter(value)
         if token not in self.all_sector_letters:
             raise RegistryValidationError(
@@ -147,14 +159,17 @@ class ProrrataRegisterCatalogue:
     # accessors keep consumers from copying either vocabulary or token values.
     @property
     def general_regime(self) -> ProrrataRegisterRegime:
+        """Return the first, general regime in registry order."""
         return self.regimes[0].token
 
     @property
     def especial_regime(self) -> ProrrataRegisterRegime:
+        """Return the second, special regime in registry order."""
         return self.regimes[1].token
 
     @property
     def no_prorrata_regime(self) -> ProrrataRegisterRegime:
+        """Return the sole non-apportioning regime declared by the registry."""
         non_apportioning = self.non_apportioning_regimes
         if len(non_apportioning) != 1:
             raise RegistryValidationError("0116 must declare exactly one non-apportioning register regime")
@@ -162,30 +177,37 @@ class ProrrataRegisterCatalogue:
 
     @property
     def opcion_transition(self) -> ProrrataEspecialTransitionKind:
+        """Return the first special-prorrata transition in registry order."""
         return self.transition_kinds[0].token
 
     @property
     def revocacion_transition(self) -> ProrrataEspecialTransitionKind:
+        """Return the second special-prorrata transition in registry order."""
         return self.transition_kinds[1].token
 
     @property
     def aeat_autorizada_provenance(self) -> ProrrataProvisionalProvenance:
+        """Return the AEAT-authorised provenance in registry order."""
         return self.provenances[0].token
 
     @property
     def inicio_actividad_provenance(self) -> ProrrataProvisionalProvenance:
+        """Return the activity-start provenance in registry order."""
         return self.provenances[1].token
 
     @property
     def carried_prior_definitiva_provenance(self) -> ProrrataProvisionalProvenance:
+        """Return the carried prior definitive provenance in registry order."""
         return self.provenances[2].token
 
     @property
     def interrumpida_tres_ultimos_provenance(self) -> ProrrataProvisionalProvenance:
+        """Return the three-period interruption provenance in registry order."""
         return self.provenances[3].token
 
     @property
     def provenance_precedence(self) -> tuple[ProrrataProvisionalProvenance, ...]:
+        """Return provisional provenances in their registry precedence order."""
         return tuple(definition.token for definition in self.provenances)
 
 
@@ -548,6 +570,7 @@ def require_prorrata_register_regime(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ProrrataRegisterRegime:
+    """Validate one value against the dated prorrata register vocabulary."""
     return resolve_prorrata_register_catalogue(effective_date=effective_date, authority=authority).require_regime(value)
 
 
@@ -557,6 +580,7 @@ def require_prorrata_transition(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ProrrataEspecialTransitionKind:
+    """Validate one value against the dated prorrata transition vocabulary."""
     return resolve_prorrata_register_catalogue(effective_date=effective_date, authority=authority).require_transition(
         value
     )
@@ -568,6 +592,7 @@ def require_prorrata_provenance(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ProrrataProvisionalProvenance:
+    """Validate one value against the dated prorrata provenance vocabulary."""
     return resolve_prorrata_register_catalogue(effective_date=effective_date, authority=authority).require_provenance(
         value
     )
@@ -579,6 +604,7 @@ def require_sector_diferenciado_letra(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> SectorDiferenciadoLetra:
+    """Validate one value against the dated differentiated-sector vocabulary."""
     return resolve_prorrata_register_catalogue(
         effective_date=effective_date, authority=authority
     ).require_sector_letter(value)
@@ -587,6 +613,7 @@ def require_sector_diferenciado_letra(
 def require_registry_declared_prorrata_register_regime(
     value: object, *, effective_date: date
 ) -> ProrrataRegisterRegime:
+    """Validate a prorrata regime against the candidate registry in scope."""
     authority = governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("prorrata register regime validation requires the candidate facts in scope")
@@ -596,6 +623,7 @@ def require_registry_declared_prorrata_register_regime(
 def require_registry_declared_prorrata_transition(
     value: object, *, effective_date: date
 ) -> ProrrataEspecialTransitionKind:
+    """Validate a prorrata transition against the candidate registry in scope."""
     authority = governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("prorrata transition validation requires the candidate facts in scope")
@@ -605,6 +633,7 @@ def require_registry_declared_prorrata_transition(
 def require_registry_declared_prorrata_provenance(
     value: object, *, effective_date: date
 ) -> ProrrataProvisionalProvenance:
+    """Validate a prorrata provenance against the candidate registry in scope."""
     authority = governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("prorrata provenance validation requires the candidate facts in scope")
@@ -614,6 +643,7 @@ def require_registry_declared_prorrata_provenance(
 def require_registry_declared_sector_diferenciado_letra(
     value: object, *, effective_date: date
 ) -> SectorDiferenciadoLetra:
+    """Validate a sector letter against the candidate registry in scope."""
     authority = governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("sector-letter validation requires the candidate facts in scope")

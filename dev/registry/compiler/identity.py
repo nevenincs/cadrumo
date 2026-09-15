@@ -53,7 +53,7 @@ from pydantic import BaseModel
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.package_version import PACKAGE_VERSION as __version__
+from cadrumo.core.package_version import PACKAGE_VERSION
 
 from .loader_cache import is_bundled_registry_root
 
@@ -188,7 +188,7 @@ def read_registry_identity_stamp(registry_root: Path) -> RegistryIdentityStamp |
         return None
     if stamp.schema_version != REGISTRY_IDENTITY_SCHEMA_VERSION:
         return None
-    if stamp.package_version != __version__:
+    if stamp.package_version != PACKAGE_VERSION:
         return None
     return stamp
 

@@ -43,6 +43,7 @@ class ForeignAssetObligationCatalogue:
 
     @property
     def group_choices(self) -> tuple[ForeignAssetObligationGroup, ...]:
+        """Return obligation groups in registry-authored order."""
         return tuple(item.token for item in self.groups)
 
     def require(self, value: object) -> ForeignAssetObligationGroup:

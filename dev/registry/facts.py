@@ -21,8 +21,6 @@ import hashlib
 import io
 import json
 import re
-import shutil
-import subprocess
 import sys
 import tokenize
 from collections import Counter
@@ -1114,68 +1112,15 @@ def _consumer_source_paths() -> dict[str, Any]:
     The ordinary signal deliberately audits the frozen Python universe.  That
     audit is intentionally expensive and includes historical discovery work,
     so it must not be a prerequisite for a facts-publication measurement.  A
-    facts-only run uses ripgrep's indexed text scan to narrow the AST pass to
-    files containing one of the closed query-family constructors.  The
-    pathlib fallback preserves portability when the developer tool is absent;
-    it remains conservative and reports that fallback in the result.
+    facts-only run uses a conservative pathlib scan to narrow the AST pass to
+    files containing one of the closed query-family constructors.
     """
-    query_pattern = r"(?:MappingFactQuery|ScalarFactQuery|EntitySetFactQuery|BracketFactQuery|OverrideFactQuery|EventFactQuery|MultiOutputFactQuery)\s*\("
-    rg = shutil.which("rg")
-    if rg is not None:
-        try:
-            result = subprocess.run(
-                [
-                    rg,
-                    "--files-with-matches",
-                    "--no-ignore-vcs",
-                    "--glob",
-                    "*.py",
-                    "--glob",
-                    "!**/tests/**",
-                    "--glob",
-                    "!**/test/**",
-                    "--glob",
-                    "!**/test_*.py",
-                    "--glob",
-                    "!**/*_test.py",
-                    "--glob",
-                    "!**/conftest.py",
-                    "-e",
-                    query_pattern,
-                    "src/cadrumo",
-                ],
-                cwd=REPO_ROOT,
-                capture_output=True,
-                check=False,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
-        except OSError as exc:
-            result = None
-            rg_error = f"rg-error:{type(exc).__name__}"
-        else:
-            rg_error = None if result.returncode in {0, 1} else f"rg-exit:{result.returncode}"
-        if result is not None and rg_error is None:
-            paths = sorted(
-                {
-                    line.replace("\\", "/").strip()
-                    for line in result.stdout.splitlines()
-                    if line.strip() and not _fd_excluded(PurePosixPath(line.replace("\\", "/").strip()))
-                }
-            )
-            return {
-                "paths": paths,
-                "method": "rg",
-                "errors": [],
-            }
-    else:
-        rg_error = "rg-unavailable"
-
+    query_pattern = (
+        r"(?:MappingFactQuery|ScalarFactQuery|EntitySetFactQuery|BracketFactQuery|"
+        r"OverrideFactQuery|EventFactQuery|MultiOutputFactQuery)\s*\("
+    )
     paths: list[str] = []
     fallback_errors: list[str] = []
-    if rg_error is not None:
-        fallback_errors.append(rg_error)
     try:
         candidates = SOURCE_ROOT.rglob("*.py")
         for path in candidates:
@@ -1193,7 +1138,7 @@ def _consumer_source_paths() -> dict[str, Any]:
         fallback_errors.append(f"{SOURCE_ROOT.as_posix()}:{type(exc).__name__}")
     return {
         "paths": sorted(set(paths)),
-        "method": "pathlib-fallback",
+        "method": "pathlib",
         "errors": sorted(set(fallback_errors)),
     }
 
@@ -1316,7 +1261,7 @@ def _literal_string_mapping(node: ast.AST | None) -> dict[str, str] | None:
     if not isinstance(node, ast.Dict) or any(key is None for key in node.keys):
         return None
     mapping: dict[str, str] = {}
-    for key_node, value_node in zip(node.keys, node.values):
+    for key_node, value_node in zip(node.keys, node.values, strict=True):
         key = _literal_string(key_node)
         value = _literal_string(value_node)
         if key is None or value is None or key in mapping:
@@ -2487,12 +2432,20 @@ def _module_literal_mapping_keys(tree: ast.AST, name: str) -> tuple[str, ...] | 
         return None
     assignments: list[ast.Dict] = []
     for statement in tree.body:
-        if isinstance(statement, ast.Assign) and name in _simple_assignment_names(statement.targets):
-            if isinstance(statement.value, ast.Dict):
-                assignments.append(statement.value)
-        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
-            if statement.target.id == name and isinstance(statement.value, ast.Dict):
-                assignments.append(statement.value)
+        if (
+            (
+                isinstance(statement, ast.Assign)
+                and name in _simple_assignment_names(statement.targets)
+                and isinstance(statement.value, ast.Dict)
+            )
+            or (
+                isinstance(statement, ast.AnnAssign)
+                and isinstance(statement.target, ast.Name)
+                and statement.target.id == name
+                and isinstance(statement.value, ast.Dict)
+            )
+        ):
+            assignments.append(statement.value)
     writes = sum(
         1
         for node in ast.walk(tree)
@@ -2518,9 +2471,13 @@ def _typed_date_axis_mapping_proof(tree: ast.AST, name: str) -> tuple[bool, tupl
         if isinstance(statement, ast.Assign) and name in _simple_assignment_names(statement.targets):
             if isinstance(statement.value, ast.Dict):
                 assignments.append(statement.value)
-        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
-            if statement.target.id == name and isinstance(statement.value, ast.Dict):
-                assignments.append(statement.value)
+        elif (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and statement.target.id == name
+            and isinstance(statement.value, ast.Dict)
+        ):
+            assignments.append(statement.value)
     writes = sum(
         1
         for node in ast.walk(tree)
@@ -2529,7 +2486,7 @@ def _typed_date_axis_mapping_proof(tree: ast.AST, name: str) -> tuple[bool, tupl
     if writes != 1 or len(assignments) != 1:
         return False, ()
     keys: list[str] = []
-    for key_node, value_node in zip(assignments[0].keys, assignments[0].values):
+    for key_node, value_node in zip(assignments[0].keys, assignments[0].values, strict=True):
         key = _literal_string(key_node)
         axis = _date_axis_name(value_node)
         if key is None or axis is None or key in keys:
@@ -4386,7 +4343,14 @@ def _discover_tax_enum_catalogues(source_root: Path = SOURCE_ROOT) -> list[dict[
         relative = path.relative_to(REPO_ROOT).as_posix() if path.is_relative_to(REPO_ROOT) else path.as_posix()
         direct_names, module_names = _enum_base_aliases(tree)
 
-        def visit(node: ast.AST, scope: str) -> None:
+        def visit(
+            node: ast.AST,
+            scope: str,
+            *,
+            direct_names: frozenset[str] = direct_names,
+            module_names: frozenset[str] = module_names,
+            relative: str = relative,
+        ) -> None:
             if not isinstance(node, ast.ClassDef):
                 for child in ast.iter_child_nodes(node):
                     visit(child, scope)
@@ -5751,7 +5715,7 @@ def _consumer_registry_resolution(
     symbols = _ast_registry_symbols(tree)
     snapshot_kind = kind in {"registry_snapshot", "snapshot"}
     definitions = _ast_function_definitions(tree)
-    graph, module_targets = _ast_function_call_graph(tree, definitions)
+    graph, _module_targets = _ast_function_call_graph(tree, definitions)
     reachable, scoped_present = _ast_scoped_registry_evidence(
         tree,
         symbols,

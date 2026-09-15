@@ -45,10 +45,11 @@ shape of it against no evidence.
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import re
-import subprocess
 import sys
+import urllib.parse
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -95,14 +96,19 @@ def verify(excerpt: Excerpt) -> tuple[bool, str]:
     """Compare a verifiable excerpt's claim against the BOE block it names."""
     if excerpt.api_url is None or excerpt.claimed is None:
         return True, "not verifiable"
-    result = subprocess.run(
-        ["curl", "-sS", "-H", "Accept: application/xml", "--max-time", "45", excerpt.api_url],
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode != 0:
+    parsed_url = urllib.parse.urlsplit(excerpt.api_url)
+    if parsed_url.scheme != "https" or parsed_url.netloc != "www.boe.es":
+        return True, "unsupported URL"
+    try:
+        target = parsed_url.path or "/"
+        if parsed_url.query:
+            target = f"{target}?{parsed_url.query}"
+        with http.client.HTTPSConnection(parsed_url.hostname, timeout=45) as connection:
+            connection.request("GET", target, headers={"Accept": "application/xml"})
+            payload = connection.getresponse().read()
+    except (http.client.HTTPException, OSError):
         return True, "fetch failed"
-    versions = _BLOCK_VIGENCIA.findall(result.stdout.decode("utf-8", errors="replace"))
+    versions = _BLOCK_VIGENCIA.findall(payload.decode("utf-8", errors="replace"))
     if not versions:
         return True, "no version in response"
     latest = max(versions)
@@ -113,6 +119,7 @@ def verify(excerpt: Excerpt) -> tuple[bool, str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Classify bundled vigencia claims and optionally verify them against BOE."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify", action="store_true", help="fetch each verifiable excerpt's BOE block")
     parser.add_argument("--json", action="store_true")

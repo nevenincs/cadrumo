@@ -214,6 +214,7 @@ class IvaComponentVocabulary:
         return token
 
     def require_component_presence(self, value: object) -> IvaComponentPresence:
+        """Validate and return one component-presence token."""
         return self._require(
             value,
             IvaComponentPresence,
@@ -222,6 +223,7 @@ class IvaComponentVocabulary:
         )
 
     def require_retencion_expectation(self, value: object) -> IvaRetencionExpectation:
+        """Validate and return one retencion-expectation token."""
         return self._require(
             value,
             IvaRetencionExpectation,
@@ -230,6 +232,7 @@ class IvaComponentVocabulary:
         )
 
     def require_retencion_role(self, value: object) -> IvaRetencionRole:
+        """Validate and return one retencion-role token."""
         return self._require(
             value,
             IvaRetencionRole,
@@ -238,6 +241,7 @@ class IvaComponentVocabulary:
         )
 
     def require_kind_applicability(self, value: object) -> IvaKindApplicability:
+        """Validate and return one kind-applicability token."""
         return self._require(
             value,
             IvaKindApplicability,
@@ -522,7 +526,7 @@ _CATEGORY_PROJECTION_NAMES = frozenset(
 )
 
 _CUOTA_SETTLEMENT_ORDER_KEY = "cuota_settlement.order"
-_CUOTA_SETTLEMENT_NO_TOKEN_KEY = "cuota_settlement.no_settlement"
+_CUOTA_SETTLEMENT_NO_SETTLEMENT_KEY = "cuota_settlement.no_settlement"
 _CUOTA_SETTLEMENT_PREFIX = "cuota_settlement."
 _COMPONENT_PRESENCE_ORDER_KEY = "component_presence.order"
 _RETENCION_EXPECTATION_ORDER_KEY = "retencion_expectation.order"
@@ -569,10 +573,10 @@ def _cuota_settlement_catalogue_from_entries(
     if not raw_tokens or len(set(raw_tokens)) != len(raw_tokens):
         raise IvaValidationError("IVA cuota-settlement membership must contain unique non-empty tokens")
 
-    no_settlement_value = entries.get(_CUOTA_SETTLEMENT_NO_TOKEN_KEY)
+    no_settlement_value = entries.get(_CUOTA_SETTLEMENT_NO_SETTLEMENT_KEY)
     if no_settlement_value is None or not no_settlement_value.strip():
         raise IvaValidationError(
-            f"IVA component mapping is missing {_CUOTA_SETTLEMENT_NO_TOKEN_KEY!r}",
+            f"IVA component mapping is missing {_CUOTA_SETTLEMENT_NO_SETTLEMENT_KEY!r}",
         )
     no_settlement_token = IvaCuotaSettlement(no_settlement_value.strip())
 
@@ -780,6 +784,7 @@ def registry_component_presence_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaComponentPresence:
+    """Resolve one component-presence token through the governed registry."""
     return registry_component_vocabulary(
         effective_date=effective_date,
         authority=authority,
@@ -792,6 +797,7 @@ def registry_retencion_expectation_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaRetencionExpectation:
+    """Resolve one retencion-expectation token through the governed registry."""
     return registry_component_vocabulary(
         effective_date=effective_date,
         authority=authority,
@@ -804,6 +810,7 @@ def registry_retencion_role_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaRetencionRole:
+    """Resolve one retencion-role token through the governed registry."""
     return registry_component_vocabulary(
         effective_date=effective_date,
         authority=authority,
@@ -816,6 +823,7 @@ def registry_kind_applicability_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaKindApplicability:
+    """Resolve one kind-applicability token through the governed registry."""
     return registry_component_vocabulary(
         effective_date=effective_date,
         authority=authority,
@@ -1043,6 +1051,7 @@ def category_components(
     Args:
         category: The declared IVA situation of the row being decomposed.
         kind: Whether the taxpayer issued or received the invoice.
+        component_catalogue: Optional already-projected Axis-A catalogue.
 
     Returns:
         The :class:`IvaCategoryComponents` row for the pair. A row whose
@@ -1099,6 +1108,7 @@ def category_bears_taxable_base(
     Args:
         category: The declared IVA situation.
         kind: Whether the taxpayer issued or received the invoice.
+        component_catalogue: Optional already-projected Axis-A catalogue.
 
     Returns:
         ``True`` when the pair requires a taxable base.
@@ -1131,6 +1141,7 @@ def category_cuota_is_zero_by_law(
     Args:
         category: The declared IVA situation.
         kind: Whether the taxpayer issued or received the invoice.
+        component_catalogue: Optional already-projected Axis-A catalogue.
 
     Returns:
         ``True`` when the cuota is zero by law for this pair.

@@ -288,12 +288,15 @@ def render_import_health(payload: dict[str, object]) -> str:
     hard = payload["hard_findings"]
     advisory = payload["advisories"]
     loadability = payload["loadability"]
-    assert isinstance(graph, dict) and isinstance(ratchet, dict)
-    assert isinstance(hard, dict) and isinstance(advisory, dict)
+    if not isinstance(graph, dict) or not isinstance(ratchet, dict):
+        raise TypeError("graph_authority and ratchet payloads must be mappings")
+    if not isinstance(hard, dict) or not isinstance(advisory, dict):
+        raise TypeError("hard_findings and advisories payloads must be mappings")
     if not isinstance(loadability, dict):
         raise TypeError("loadability payload must be a mapping")
     counts = ratchet["counts"]
-    assert isinstance(counts, dict)
+    if not isinstance(counts, dict):
+        raise TypeError("ratchet counts payload must be a mapping")
     return "\n".join(
         (
             f"VERDICT: {payload['verdict']}",
@@ -856,7 +859,8 @@ def _headline(
     if verdict == "failed":
         return "Import health failed: " + "; ".join(failed)
     counts = ratchet["counts"]
-    assert isinstance(counts, dict)
+    if not isinstance(counts, dict):
+        raise TypeError("ratchet counts payload must be a mapping")
     if verdict == "passing_with_debt":
         return (
             "Import health is passing with explicit debt: "

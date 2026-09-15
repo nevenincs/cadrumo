@@ -28,6 +28,7 @@ import pytest
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
@@ -131,4 +132,3 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
     )
 
 
-from dev.registry.compiler.authority import compiled_bundled_authority

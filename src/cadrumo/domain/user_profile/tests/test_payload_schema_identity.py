@@ -21,7 +21,12 @@ the default a freshly constructed record carries to the canonical version.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import (
+    load_user_profile_schema,
+)
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import ValidationError
 
 from ..values import (
@@ -104,6 +109,7 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
     """
     raw_payload = UserProfileSnapshot.from_profile(
         _record(),
+        context=_profile_creation_context_for_test(),
         snapshot_id=new_profile_snapshot_id(_PROFILE_ID),
     ).model_dump()
     assert isinstance(raw_payload, dict)

@@ -66,13 +66,14 @@ def _art_69_dos_services() -> tuple[IvaArt69DosService, ...]:
 
 
 _ART_69_DOS_SERVICES = _art_69_dos_services()
+_DEFAULT_RATE_TIER = IvaRateKind("general")
 
 
 def _outbound_service(
     *,
     customer_residency: IvaTerritorialScope,
     customer_tax_status: CustomerTaxStatus,
-    rate_tier: IvaRateKind | None = IvaRateKind("general"),
+    rate_tier: IvaRateKind | None = _DEFAULT_RATE_TIER,
     art_69_dos_service: IvaArt69DosService | None = None,
 ) -> IvaInvoiceClassificationCriteria:
     """A mainland issuer's general service, billed outward."""

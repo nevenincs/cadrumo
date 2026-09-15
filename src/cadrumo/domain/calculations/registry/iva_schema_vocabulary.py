@@ -68,9 +68,11 @@ class IvaCashAccountingTreatmentCatalogue:
 
     @property
     def all_treatments(self) -> frozenset[IvaCashAccountingTreatment]:
+        """Return every cash-accounting treatment declared by the registry."""
         return frozenset(definition.token for definition in self.definitions)
 
     def require(self, value: object) -> IvaCashAccountingTreatment:
+        """Validate and return one registry-declared cash-accounting treatment."""
         if isinstance(value, IvaCashAccountingTreatment):
             token = value
         elif isinstance(value, str):
@@ -84,6 +86,7 @@ class IvaCashAccountingTreatmentCatalogue:
         return token
 
     def definition(self, value: object) -> IvaCashAccountingTreatmentDefinition:
+        """Return the registry definition for one cash-accounting treatment."""
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
@@ -109,16 +112,20 @@ class IvaRegimeCatalogue:
 
     @property
     def all_regimes(self) -> frozenset[IVARegime]:
+        """Return every IVA regime declared by the registry."""
         return frozenset(definition.token for definition in self.definitions)
 
     @property
     def selectable_regimes(self) -> tuple[IVARegime, ...]:
+        """Return IVA regimes that may be selected by an operator."""
         return tuple(definition.token for definition in self.definitions if definition.token != self.no_aplica_token)
 
     def require(self, value: object) -> IVARegime:
+        """Validate and return one registry-declared IVA regime."""
         return _require_token(value, IVARegime, self.all_regimes, "IVA regime")
 
     def definition(self, value: object) -> IvaRegimeDefinition:
+        """Return the registry definition for one IVA regime."""
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
@@ -143,20 +150,24 @@ class M303TaxTerritoryCatalogue:
 
     @property
     def all_territories(self) -> frozenset[M303TaxTerritory]:
+        """Return every Modelo 303 tax territory declared by the registry."""
         return frozenset(definition.token for definition in self.definitions)
 
     @property
     def choices(self) -> tuple[M303TaxTerritory, ...]:
+        """Return Modelo 303 tax-territory choices in registry order."""
         return tuple(definition.token for definition in self.definitions)
 
     @property
     def foral_token(self) -> M303TaxTerritory:
+        """Return the sole foral territory declared by the registry."""
         matches = tuple(definition.token for definition in self.definitions if definition.is_foral)
         if len(matches) != 1:
             raise RegistryValidationError("Modelo 303 tax-territory catalogue must declare exactly one foral token")
         return matches[0]
 
     def require(self, value: object) -> M303TaxTerritory:
+        """Validate and return one registry-declared Modelo 303 territory."""
         if isinstance(value, M303TaxTerritory):
             token = value
         elif isinstance(value, str):
@@ -177,6 +188,7 @@ class M303TaxTerritoryCatalogue:
         return token
 
     def definition(self, value: object) -> M303TaxTerritoryDefinition:
+        """Return the registry definition for one Modelo 303 territory."""
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
@@ -200,13 +212,16 @@ class M303RegimeCompositionCatalogue:
 
     @property
     def all_compositions(self) -> frozenset[M303RegimeComposition]:
+        """Return every Modelo 303 regime composition declared by the registry."""
         return frozenset(definition.token for definition in self.definitions)
 
     @property
     def choices(self) -> tuple[M303RegimeComposition, ...]:
+        """Return Modelo 303 regime-composition choices in registry order."""
         return tuple(definition.token for definition in self.definitions)
 
     def require(self, value: object) -> M303RegimeComposition:
+        """Validate and return one registry-declared Modelo 303 composition."""
         if isinstance(value, M303RegimeComposition):
             token = value
         elif isinstance(value, str):
@@ -227,6 +242,7 @@ class M303RegimeCompositionCatalogue:
         return token
 
     def definition(self, value: object) -> M303RegimeCompositionDefinition:
+        """Return the registry definition for one Modelo 303 composition."""
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
@@ -248,12 +264,15 @@ class IvaExemptionArticleCatalogue:
 
     @property
     def all_articles(self) -> frozenset[IvaExemptionArticle]:
+        """Return every IVA exemption article declared by the registry."""
         return frozenset(definition.token for definition in self.definitions)
 
     def require(self, value: object) -> IvaExemptionArticle:
+        """Validate and return one registry-declared IVA exemption article."""
         return _require_token(value, IvaExemptionArticle, self.all_articles, "exemption article")
 
     def definition(self, value: object) -> IvaExemptionArticleDefinition:
+        """Return the registry definition for one IVA exemption article."""
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
@@ -275,17 +294,28 @@ class IvaArt69DosServiceCatalogue:
 
     @property
     def all_services(self) -> frozenset[IvaArt69DosService]:
+        """Return every Art. 69.Dos service declared by the registry."""
         return frozenset(definition.token for definition in self.definitions)
 
     def require(self, value: object) -> IvaArt69DosService:
+        """Validate and return one registry-declared Art. 69.Dos service."""
         return _require_token(value, IvaArt69DosService, self.all_services, "Art. 69.Dos service")
 
     def definition(self, value: object) -> IvaArt69DosServiceDefinition:
+        """Return the registry definition for one Art. 69.Dos service."""
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
 
-def _require_token(
+def _require_token[
+    TokenT: (
+        IVARegime,
+        M303RegimeComposition,
+        IvaCashAccountingTreatment,
+        IvaExemptionArticle,
+        IvaArt69DosService,
+    ),
+](
     value: object,
     token_type: type[TokenT],
     members: frozenset[TokenT],
@@ -379,6 +409,7 @@ def resolve_iva_cash_accounting_catalogue(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatmentCatalogue:
+    """Resolve the dated IVA cash-accounting vocabulary from governed facts."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaCashAccountingTreatmentDefinition] = []
     for raw_token in _csv_tokens(entries, _CASH_ORDER_KEY):
@@ -410,6 +441,7 @@ def resolve_iva_regime_catalogue(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaRegimeCatalogue:
+    """Resolve the dated IVA-regime vocabulary from governed facts."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaRegimeDefinition] = []
     for raw_token in _csv_tokens(entries, _REGIME_ORDER_KEY):
@@ -555,6 +587,7 @@ def resolve_iva_exemption_article_catalogue(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaExemptionArticleCatalogue:
+    """Resolve the dated IVA exemption-article vocabulary from governed facts."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaExemptionArticleDefinition] = []
     for raw_token in _csv_tokens(entries, _EXEMPTION_ORDER_KEY):
@@ -577,6 +610,7 @@ def resolve_iva_art69_dos_service_catalogue(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaArt69DosServiceCatalogue:
+    """Resolve the dated Art. 69.Dos service vocabulary from governed facts."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaArt69DosServiceDefinition] = []
     for raw_token in _csv_tokens(entries, _SERVICE_ORDER_KEY):
@@ -599,6 +633,7 @@ def default_iva_regime(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
+    """Return the registry-declared default IVA regime."""
     return resolve_iva_regime_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -611,6 +646,7 @@ def require_iva_regime(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
+    """Validate one value against the dated IVA-regime vocabulary."""
     return resolve_iva_regime_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -749,6 +785,7 @@ def iva_regime_choices(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> tuple[IVARegime, ...]:
+    """Return selectable IVA regimes in registry order."""
     return resolve_iva_regime_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -760,6 +797,7 @@ def iva_regime_no_aplica_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
+    """Return the registry-declared ``NO_APLICA`` IVA regime token."""
     return resolve_iva_regime_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -771,6 +809,7 @@ def iva_regime_self_assessment_tokens(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> frozenset[IVARegime]:
+    """Return IVA regimes marked for self-assessment by the registry."""
     return resolve_iva_regime_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -792,6 +831,7 @@ def iva_regime_simplificado_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
+    """Return the registry-declared simplified IVA regime token."""
     return _iva_regime_semantic_token(
         _REGIME_SIMPLIFICADO_KEY,
         effective_date=effective_date,
@@ -804,6 +844,7 @@ def iva_regime_reagp_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
+    """Return the registry-declared REAGP IVA regime token."""
     return _iva_regime_semantic_token(
         _REGIME_REAGP_KEY,
         effective_date=effective_date,
@@ -816,6 +857,7 @@ def iva_regime_exento_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
+    """Return the registry-declared exempt IVA regime token."""
     return _iva_regime_semantic_token(
         _REGIME_EXENTO_KEY,
         effective_date=effective_date,
@@ -828,6 +870,7 @@ def default_iva_cash_accounting_treatment(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
+    """Return the registry-declared default cash-accounting treatment."""
     return resolve_iva_cash_accounting_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -840,6 +883,7 @@ def require_iva_cash_accounting_treatment(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatment:
+    """Validate one value against the dated cash-accounting vocabulary."""
     return resolve_iva_cash_accounting_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -879,6 +923,7 @@ def require_iva_exemption_article(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaExemptionArticle:
+    """Validate one value against the dated IVA exemption-article vocabulary."""
     return resolve_iva_exemption_article_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -891,6 +936,7 @@ def require_iva_art69_dos_service(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaArt69DosService:
+    """Validate one value against the dated Art. 69.Dos service vocabulary."""
     return resolve_iva_art69_dos_service_catalogue(
         effective_date=effective_date,
         authority=authority,

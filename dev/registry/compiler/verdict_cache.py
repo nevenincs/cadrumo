@@ -37,7 +37,7 @@ from pydantic import BaseModel
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.package_version import PACKAGE_VERSION as __version__
+from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 
@@ -76,7 +76,7 @@ def compute_verdict_key(
     *,
     identity_digest: str,
     source_evidence_fingerprints: SourceEvidenceFingerprintTuples,
-    package_version: str = __version__,
+    package_version: str = PACKAGE_VERSION,
     loader_code_fingerprint_override: str | None = None,
 ) -> str:
     """Bind tree, evidence, and current registry validation code into one key.
@@ -111,7 +111,7 @@ def compute_verdict_key(
 def compute_shipped_verdict_key(
     *,
     identity_digest: str,
-    package_version: str = __version__,
+    package_version: str = PACKAGE_VERSION,
     loader_code_fingerprint_override: str | None = None,
 ) -> str:
     """Compute the install-stable key for the release-stamped bundled verdict.
@@ -222,7 +222,7 @@ def registry_validation_is_certified(
     *,
     verdict_key: str,
     identity: RegistryIdentity,
-    package_version: str = __version__,
+    package_version: str = PACKAGE_VERSION,
 ) -> bool:
     """Whether a persisted green verdict certifies this tree for ``root``.
 
@@ -267,7 +267,7 @@ def certify_registry_validation(
     root: Path,
     *,
     verdict_key: str,
-    package_version: str = __version__,
+    package_version: str = PACKAGE_VERSION,
 ) -> Path:
     """Persist a fresh green verdict for ``root``, returning the path written."""
     path = verdict_cache_path(root)

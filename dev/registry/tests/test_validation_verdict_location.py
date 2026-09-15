@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.config import override_settings
-from cadrumo.core.package_version import PACKAGE_VERSION as __version__
+from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
@@ -196,8 +196,8 @@ def test_a_shipped_verdict_cannot_certify_a_walked_tree(tmp_path: Path) -> None:
     write_verdict(
         shipped,
         RegistryValidationVerdict(
-            verdict_key=compute_shipped_verdict_key(identity_digest=identity.digest, package_version=__version__),
-            package_version=__version__,
+            verdict_key=compute_shipped_verdict_key(identity_digest=identity.digest, package_version=PACKAGE_VERSION),
+            package_version=PACKAGE_VERSION,
             outcome=VERDICT_OUTCOME_GREEN,
         ),
     )

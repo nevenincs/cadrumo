@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
@@ -309,4 +310,3 @@ def _minimal_revision(
     )
 
 
-from dev.registry.compiler.authority import compiled_bundled_authority

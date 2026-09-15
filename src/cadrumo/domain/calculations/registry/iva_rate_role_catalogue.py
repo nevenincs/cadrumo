@@ -31,6 +31,7 @@ class IvaRateRole(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct a rate-role token after registry validation."""
         if not _registry_validated:
             raise TypeError("IvaRateRole tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value.strip():

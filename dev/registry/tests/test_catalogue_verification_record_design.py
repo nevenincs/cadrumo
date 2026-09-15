@@ -178,15 +178,25 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         # until the temporal-design owner supplies that authority.
         "aeat-dr-036-v40": "AEAT's 2023 update to the 2021-y-siguientes design has no selection boundary",
         "aeat-dr-036-v35": "AEAT's 2021 update has no selection boundary against v40",
-        "aeat-dr-202-2025-mar-update": "AEAT's March 2026 update has no selection boundary against the active 2025 design",
-        "aeat-dr-202-2019-september-update": "AEAT's September 2019 update has no selection boundary against the active 2019 design",
+        "aeat-dr-202-2025-mar-update": (
+            "AEAT's March 2026 update has no selection boundary against the active 2025 design"
+        ),
+        "aeat-dr-202-2019-september-update": (
+            "AEAT's September 2019 update has no selection boundary against the active 2019 design"
+        ),
         "aeat-dr-202-2012-v32": "the official version label does not establish a filing-period window",
         "aeat-dr-202-2013-v33": "the official version label does not establish the boundary before the 3P 2013 design",
         "aeat-dr-202-2010-v13": "the official version label does not establish a filing-period window",
-        "aeat-dr-345-2023-archive": "the archive's 2023 design conflicts with the selected 2023 edition absent an effective boundary",
+        "aeat-dr-345-2023-archive": (
+            "the archive's 2023 design conflicts with the selected 2023 edition absent an effective boundary"
+        ),
         "aeat-dr-349-2002": "the historical order title does not establish a bounded filing window",
-        "aeat-dr-604-atf-spanish": "the Spanish ATF appendix is a translated logical design, not an independently dated epoch",
-        "aeat-dr-604-atf-english": "the English ATF appendix is a translated logical design, not an independently dated epoch",
+        "aeat-dr-604-atf-spanish": (
+            "the Spanish ATF appendix is a translated logical design, not an independently dated epoch"
+        ),
+        "aeat-dr-604-atf-english": (
+            "the English ATF appendix is a translated logical design, not an independently dated epoch"
+        ),
         # The modelo 184 ejercicio-2023 pair. Its revision cites BOTH the AEAT
         # diseno de registro and the BOE publication of the orden that
         # established it, so a bare "2023" would collide with the epoch

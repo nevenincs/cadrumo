@@ -199,6 +199,11 @@ def test_no_revision_spans_a_design_relayout() -> None:
     names every boundary, which signal saw it, and how many revisions the span
     actually needs, so nobody has to union two lists by hand to act on it.
     """
+    def description_suffix(evidence: tuple[str, ...]) -> str:
+        if len(evidence) == 1 and "unnumbered slot(s) re-described" in evidence[0]:
+            return " " + _DESCRIPTION_ONLY
+        return ""
+
     violations: list[str] = []
     for modelo, revision_id, revision in _filing_revisions():
         boundaries = _boundaries_for(modelo.id, revision)
@@ -214,7 +219,7 @@ def test_no_revision_spans_a_design_relayout() -> None:
             # A false positive on a boundary other signals already name costs nothing; one
             # that NAMES a boundary alone is the case a reader must judge rather than act
             # on, and it is invisible unless the verdict says so.
-            f"{' ' + _DESCRIPTION_ONLY if len(evidence) == 1 and 'unnumbered slot(s) re-described' in evidence[0] else ''}"
+            f"{description_suffix(evidence)}"
             f" ({' + '.join(evidence)})"
             for (earlier, later), evidence in sorted(boundaries.items())
         )

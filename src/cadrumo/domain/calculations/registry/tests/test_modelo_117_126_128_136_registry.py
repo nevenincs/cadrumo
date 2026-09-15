@@ -127,7 +127,7 @@ _CASES = (
 
 @pytest.mark.parametrize("case", _CASES, ids=[case.modelo_id for case in _CASES])
 def test_modelo_117_126_128_136_validators_accept_committed_definitions(case: _ModeloArithmeticCase) -> None:
-    modelo, catalogues = artifact_components(case.modelo_id)
+    modelo, _catalogues = artifact_components(case.modelo_id)
     assert modelo.id == case.modelo_id
     assert modelo.revisions, f"{case.modelo_id} must declare at least one revision"
 

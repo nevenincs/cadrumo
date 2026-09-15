@@ -16,7 +16,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_smoke_portals_namespace_and_registry() -> None:
     """The package is inert and the defining registry module is usable."""
-    package = sys.modules[portals_registry.__package__]
+    package_name = portals_registry.__package__
+    assert package_name is not None
+    package = sys.modules[package_name]
     portals_all = vars(package).get("__all__", ())
     portals_doc = vars(package).get("__doc__")
     assert portals_doc is not None

@@ -37,6 +37,7 @@ class NifIvaCatalogue:
 
     @property
     def prefixes(self) -> frozenset[NifIvaPrefix]:
+        """Return every NIF-IVA prefix declared by the catalogue."""
         return frozenset(item.prefix for item in self.definitions)
 
     def require_prefix(self, value: object) -> NifIvaPrefix:
@@ -57,6 +58,7 @@ class NifIvaCatalogue:
         return token
 
     def definition(self, value: object) -> NifIvaDefinition:
+        """Return the definition for a registry-declared prefix."""
         token = self.require_prefix(value)
         return next(item for item in self.definitions if item.prefix == token)
 
@@ -75,12 +77,14 @@ class NifIvaCatalogue:
         )
 
     def format_for_country(self, value: object) -> NifIvaFormatSpec | None:
+        """Return the structural format for a declared country or prefix."""
         prefix = self.prefix_for_country(value)
         if prefix is None:
             return None
         return self.definition(prefix).spec
 
     def iso_country_for_prefix(self, value: object) -> str:
+        """Return the canonical ISO country for a declared prefix."""
         return self.definition(value).iso_country
 
 

@@ -36,6 +36,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -258,4 +259,3 @@ def test_cent_rounding_is_not_reported_as_a_break() -> None:
     assert _accumulated_cuota_breaks(_scale("1000.01")) == []
 
 
-from dev.registry.compiler.authority import compiled_bundled_authority

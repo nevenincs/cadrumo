@@ -284,7 +284,7 @@ def _module_scope_nodes(tree: ast.AST) -> list[ast.AST]:
     and only a call at module scope defeats it.
     """
     collected: list[ast.AST] = []
-    pending = list(getattr(tree, "body", ()))
+    pending: list[ast.AST] = list(getattr(tree, "body", ()))
     while pending:
         node = pending.pop()
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):

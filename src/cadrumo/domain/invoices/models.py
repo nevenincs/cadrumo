@@ -953,15 +953,22 @@ class Invoice(BaseModel):
                 ),
             )
             return self
+        operation = governed_facts_in_scope()
+        from ..calculations.registry.authority import PinnedAuthorityOperation
+
+        if not isinstance(operation, PinnedAuthorityOperation):
+            raise RegistryValidationError("invoice OSS/IOSS validation requires a generation-pinned authority operation")
         try:
             transaction_kind = resolve_transaction_kind_catalogue(
                 self.operation_date or self.issued_at,
+                operation=operation,
             ).require(self.oss_transaction_kind)
         except IvaValidationError as exc:
             raise InvoiceValidationError("oss_transaction_kind must be declared by the facts registry") from exc
         try:
             catalogue = resolve_oss_ioss_regime_catalogue(
                 effective_date=self.operation_date or self.issued_at,
+                authority=operation,
             )
             regime = catalogue.require(self.oss_ioss_regime)
         except RegistryValidationError as exc:

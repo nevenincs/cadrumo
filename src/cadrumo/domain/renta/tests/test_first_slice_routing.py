@@ -20,10 +20,12 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     renta_first_slice_binding_target_casillas,
 )
 from ...categories.spending_category import SpendingCategory
+from ...categories.spending_category_catalogue import spending_category_tokens
 from .._first_slice_routing import (
     resolve_first_slice_expense_routing,
 )
@@ -31,17 +33,22 @@ from .._first_slice_routing import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _first_slice_expense_routing() -> dict[SpendingCategory, CasillaId]:
+def _first_slice_expense_routing(operation: PinnedAuthorityOperation) -> dict[SpendingCategory, CasillaId]:
     return resolve_first_slice_expense_routing(
         category_type=SpendingCategory,
+        category_tokens=lambda selected_authority, coordinate: spending_category_tokens(
+            effective_date=coordinate,
+            authority=selected_authority,
+        ),
         casilla_factory=validated_casilla_id,
         model_code="100",
         fact_id="modelo-100-first-slice-expense-routing-mapping",
         effective_date=date(2025, 12, 31),
+        authority=operation,
     )
 
 
-def test_first_slice_target_casillas_is_closed_set() -> None:
+def test_first_slice_target_casillas_is_closed_set(operation: PinnedAuthorityOperation) -> None:
     """The targets the routing table can resolve to are exactly these casillas.
 
     The set is closed by BOE prescription; a new entry should
@@ -50,7 +57,7 @@ def test_first_slice_target_casillas_is_closed_set() -> None:
     test failures so the migration is intentional.
     """
 
-    assert frozenset(_first_slice_expense_routing().values()) == frozenset(
+    assert frozenset(_first_slice_expense_routing(operation).values()) == frozenset(
         {
             "0183",
             "0186",
@@ -70,7 +77,7 @@ def test_first_slice_target_casillas_is_closed_set() -> None:
     )
 
 
-def test_every_spending_category_routes_to_a_first_slice_casilla() -> None:
+def test_every_spending_category_routes_to_a_first_slice_casilla(operation: PinnedAuthorityOperation) -> None:
     """No :class:`SpendingCategory` member is silently unrouted.
 
     Every deducible autónomo expense category resolves to a real
@@ -81,12 +88,13 @@ def test_every_spending_category_routes_to_a_first_slice_casilla() -> None:
     ``aeat-calculation-aggregation``).
     """
 
-    routing = _first_slice_expense_routing()
-    unrouted = [category for category in SpendingCategory if category not in routing]
+    routing = _first_slice_expense_routing(operation)
+    categories = spending_category_tokens(effective_date=date(2025, 12, 31), authority=operation)
+    unrouted = [category for category in categories if category not in routing]
     assert unrouted == []
 
 
-def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
+def test_first_slice_routing_targets_exist_in_modelo_100_registry(operation: PinnedAuthorityOperation) -> None:
     """Cross-domain integrity: every routing target is a casilla on M100.
 
     Loads the modelo-100 registry from bundled data and asserts that
@@ -102,7 +110,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     for revision in modelo_100.revisions.values():
         all_casilla_ids.update(casilla.id for casilla in revision.casillas)
 
-    missing = frozenset(_first_slice_expense_routing().values()) - all_casilla_ids
+    missing = frozenset(_first_slice_expense_routing(operation).values()) - all_casilla_ids
     assert not missing, f"first-slice routing targets casillas absent from modelo-100: {sorted(missing)!r}"
 
 
@@ -156,7 +164,9 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
     assert check_first_slice_routing("303", frozenset(), representative_targets) == []
 
 
-def test_renta_first_slice_binding_target_casillas_is_revision_scoped() -> None:
+def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The per-revision binding-target helper reflects real registry data.
 
     The 2020-2022 Modelo 100 revisions declare no
@@ -178,7 +188,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped() -> None:
     for year in ("2024", "2025"):
         revision = modelo_100.revisions[year]
         targets = renta_first_slice_binding_target_casillas(revision)
-        assert targets == frozenset(_first_slice_expense_routing().values())
+        assert targets == frozenset(_first_slice_expense_routing(operation).values())
         assert "0195" in targets
 
 

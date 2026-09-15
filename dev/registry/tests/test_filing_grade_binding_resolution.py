@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.bindings import validate_binding_selec
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.filing.errors import ModeloBuilderError
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -174,5 +175,3 @@ def test_filing_binding_provenance_is_copied_verbatim_from_validated_authority()
         binding_provenance(ungrounded)
     assert raised.value.translated_message == "application.filing.build_draft.errors.binding_provenance_missing"
 
-
-from dev.registry.compiler.authority import compiled_bundled_authority

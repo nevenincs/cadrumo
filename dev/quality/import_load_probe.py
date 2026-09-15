@@ -159,6 +159,7 @@ def compile_load_target_inventory(authority: Authority) -> dict[str, object]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the import-load probe or compile its checked target metadata."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--config", type=Path, default=None)

@@ -10,6 +10,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
+from ..binding_temporal import TargetPeriods
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloDefinition, RegistryCatalogues
@@ -178,7 +179,7 @@ def test_modelo_714_cuota_integra_escala_matches_boe_table(base_liquidable: str,
 
 
 def test_modelo_714_validator_accepts_committed_definition() -> None:
-    modelo, catalogues = _load_modelo_714()
+    modelo, _catalogues = _load_modelo_714()
     assert modelo.id == "714"
     assert modelo.revisions, "714 must declare at least one revision"
 
@@ -309,6 +310,7 @@ def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
         assert provider.declared_source_casilla_ids == (source_casilla_id,)
         assert provider.temporal.kind == "same_filing_year_periods"
         assert provider.temporal.source_periods == ("0A",)
+        assert isinstance(binding.applicability, TargetPeriods)
         assert binding.applicability.periods == ("0A",)
 
     requirements = relation_source_requirements(revision, filing_year=2024, period="0A")

@@ -19,6 +19,7 @@ class ProrrataRegisterRegime(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated register-regime token."""
         if not _registry_validated:
             raise TypeError("ProrrataRegisterRegime tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -31,6 +32,7 @@ class ProrrataRegisterRegime(str):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the projected register-regime token to Pydantic."""
         from pydantic_core import core_schema
 
         return core_schema.no_info_after_validator_function(
@@ -51,6 +53,7 @@ class ProrrataRegisterRegime(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical register-regime token text."""
         return str(self)
 
 
@@ -60,6 +63,7 @@ class ProrrataEspecialTransitionKind(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated special-prorrata transition token."""
         if not _registry_validated:
             raise TypeError("ProrrataEspecialTransitionKind tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -72,6 +76,7 @@ class ProrrataEspecialTransitionKind(str):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the projected transition token to Pydantic."""
         from pydantic_core import core_schema
 
         return core_schema.no_info_after_validator_function(
@@ -92,6 +97,7 @@ class ProrrataEspecialTransitionKind(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical transition token text."""
         return str(self)
 
 
@@ -108,6 +114,7 @@ class ProrrataProvisionalProvenance(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated provisional-provenance token."""
         if not _registry_validated:
             raise TypeError("ProrrataProvisionalProvenance tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -120,6 +127,7 @@ class ProrrataProvisionalProvenance(str):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the projected provenance token to Pydantic."""
         from pydantic_core import core_schema
 
         return core_schema.no_info_after_validator_function(
@@ -140,6 +148,7 @@ class ProrrataProvisionalProvenance(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical provenance token text."""
         return str(self)
 
 
@@ -149,6 +158,7 @@ class SectorDiferenciadoLetra(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated differentiated-sector letter token."""
         if not _registry_validated:
             raise TypeError("SectorDiferenciadoLetra tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -161,6 +171,7 @@ class SectorDiferenciadoLetra(str):
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the projected sector-letter token to Pydantic."""
         from pydantic_core import core_schema
 
         return core_schema.no_info_after_validator_function(
@@ -181,6 +192,7 @@ class SectorDiferenciadoLetra(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical sector-letter token text."""
         return str(self)
 
 

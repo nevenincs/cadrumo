@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignSheet,
 )
 from dev.registry.authoring.casilla_shard_generation import (
-    GenerationRefused,
+    GenerationRefusedError,
     WaveSpec,
     audit_sheet,
     derive_number,
@@ -129,7 +129,7 @@ class TestPlantedGrowthInsideARun:
                 field(34, 5, "Tramo de tipo de gravamen 1", type_code="Num"),
             ]
         )
-        with pytest.raises(GenerationRefused) as refusal:
+        with pytest.raises(GenerationRefusedError) as refusal:
             emit_records(spec, {SEGMENTO: grown})
         # Both slots moved, so neither may carry the prior edition's attributes.
         assert f"{SEGMENTO.lower()}.16-33" in str(refusal.value)
@@ -328,11 +328,11 @@ class TestEmissionIntegrity:
 
     def test_a_record_with_no_prior_and_no_rule_refuses(self, tmp_path: Path) -> None:
         spec = spec_for(tmp_path)
-        with pytest.raises(GenerationRefused, match="need adjudication"):
+        with pytest.raises(GenerationRefusedError, match="need adjudication"):
             emit_records(spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])})
 
     def test_a_missing_sheet_refuses(self, tmp_path: Path) -> None:
-        with pytest.raises(GenerationRefused, match="no such sheet"):
+        with pytest.raises(GenerationRefusedError, match="no such sheet"):
             emit_records(spec_for(tmp_path), {})
 
 
@@ -427,7 +427,7 @@ class TestIdsAreCarriedNotMinted:
         from dataclasses import replace
 
         spec = replace(spec_for(tmp_path, adjudicate=True), id_scheme="carried")
-        with pytest.raises(GenerationRefused, match="need adjudication"):
+        with pytest.raises(GenerationRefusedError, match="need adjudication"):
             emit_records(spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])})
 
 
@@ -678,7 +678,7 @@ class TestCollapseRowsByNumber:
         # files were on disk. Now it refuses, and this pins that it refuses for
         # the right reason rather than by accident.
         spec = spec_for(tmp_path, adjudicate=True)
-        with pytest.raises(GenerationRefused, match="more than once") as refusal:
+        with pytest.raises(GenerationRefusedError, match="more than once") as refusal:
             emit_records(spec, {SEGMENTO: self.split_date_sheet()})
         assert f"{SEGMENTO}:00805 x3" in str(refusal.value)
 
@@ -742,12 +742,12 @@ class TestDuplicateIdsRefuseBeforeAnyWrite:
 
     def test_a_duplicate_id_refuses(self, tmp_path: Path) -> None:
         spec = spec_for(tmp_path, adjudicate=True)
-        with pytest.raises(GenerationRefused, match="more than once"):
+        with pytest.raises(GenerationRefusedError, match="more than once"):
             emit_records(spec, {SEGMENTO: self.colliding_sheet()})
 
     def test_nothing_is_written_when_it_refuses(self, tmp_path: Path) -> None:
         spec = spec_for(tmp_path, adjudicate=True)
-        with pytest.raises(GenerationRefused):
+        with pytest.raises(GenerationRefusedError):
             emit_records(spec, {SEGMENTO: self.colliding_sheet()}, write=True)
         assert not spec.out_dir.exists() or not list(spec.out_dir.glob("*.toml")), (
             "a refusal must leave no partial emission on disk"
@@ -755,7 +755,7 @@ class TestDuplicateIdsRefuseBeforeAnyWrite:
 
     def test_the_refusal_names_the_id_and_its_count(self, tmp_path: Path) -> None:
         spec = spec_for(tmp_path, adjudicate=True)
-        with pytest.raises(GenerationRefused) as refusal:
+        with pytest.raises(GenerationRefusedError) as refusal:
             emit_records(spec, {SEGMENTO: self.colliding_sheet()})
         assert f"{SEGMENTO}:00805 x3" in str(refusal.value)
 
@@ -788,7 +788,7 @@ class TestDuplicateIdsRefuseBeforeAnyWrite:
             )
             for record in ("R1", "R2")
         }
-        with pytest.raises(GenerationRefused, match="shared.slug"):
+        with pytest.raises(GenerationRefusedError, match=r"shared\.slug"):
             emit_records(spec, sheets)
 
     def test_a_clean_emission_still_passes(self, tmp_path: Path) -> None:
@@ -901,7 +901,7 @@ class TestPlantedAttestationOnAnAlreadyWrittenRow:
         shard = sorted(spec.out_dir.glob("*.toml"))[0]
         self._stamp(shard)
 
-        with pytest.raises(GenerationRefused, match="attested") as refusal:
+        with pytest.raises(GenerationRefusedError, match="attested") as refusal:
             emit_records(
                 spec,
                 {

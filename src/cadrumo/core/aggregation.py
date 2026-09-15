@@ -804,6 +804,7 @@ class RetencionClave(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated withholding-key token."""
         if not _registry_validated:
             raise TypeError("RetencionClave tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -899,6 +900,7 @@ class TravelAgencyMediationType(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated travel-agency mediation token."""
         if not _registry_validated:
             raise TypeError("TravelAgencyMediationType tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -951,6 +953,7 @@ class ThirdPartyDeclarationRole(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated third-party declaration-role token."""
         if not _registry_validated:
             raise TypeError("ThirdPartyDeclarationRole tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:

@@ -95,6 +95,7 @@ class CatalogueWriteGuard:
     """
 
     def __init__(self) -> None:
+        """Start with no recorded catalogue fingerprints."""
         self._observed: dict[Path, str] = {}
 
     def read_text(self, path: Path) -> str:

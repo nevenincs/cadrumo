@@ -57,9 +57,13 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import Iterator
+from importlib import import_module
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING
 
+import pytest
 from dev.test_runs import logging as _run_logging
 
 # Keep pytest scratch and collection-time storage outside the checkout. The
@@ -84,8 +88,10 @@ never referenced again once overwritten.
 """
 os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(_PURE_STDLIB_COLLECTION_ROOT))
 
-from cadrumo.tests.collection_storage_root import collection_storage_root
-from cadrumo.tests.env_loader import bridge_env_file_into_environ  # noqa: E402
+_collection_storage_root = import_module("cadrumo.tests.collection_storage_root")
+collection_storage_root = _collection_storage_root.collection_storage_root
+register_collection_storage_root_cleanup = _collection_storage_root.register_collection_storage_root_cleanup
+bridge_env_file_into_environ = import_module("cadrumo.tests.env_loader").bridge_env_file_into_environ
 
 # Bridge the operator's development-only env/.env dotfile into os.environ
 # BEFORE any Cadrumo import resolves Settings (production Settings carries
@@ -97,25 +103,22 @@ from cadrumo.tests.env_loader import bridge_env_file_into_environ  # noqa: E402
 # against is already set by the pure-stdlib line above.
 bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
 
-from collections.abc import Iterator  # noqa: E402
-from typing import TYPE_CHECKING  # noqa: E402
-
-import pytest  # noqa: E402
-
-from cadrumo.tests._deselection_hook import apply as _report_deselection  # noqa: E402
-from cadrumo.tests._deselection_hook import record_collected_markers as _record_collected_markers  # noqa: E402
-from cadrumo.tests._host_load_hook import arm_pre_timeout_stamp as _arm_host_load_stamp  # noqa: E402
-from cadrumo.tests._host_load_hook import disarm_pre_timeout_stamp as _disarm_host_load_stamp  # noqa: E402
-from cadrumo.tests._lost_test_hook import apply as _report_lost_tests  # noqa: E402
-from cadrumo.tests._marker_hook import apply as _apply_marker_contract  # noqa: E402
-from cadrumo.tests._marker_hook import apply_banned_live_import_policy as _apply_banned_live_import_policy  # noqa: E402
-from cadrumo.tests._marker_hook import fail_session_on_held_serials as _fail_on_held_serials  # noqa: E402
-from cadrumo.tests._marker_hook import record_held_from_node as _record_held_serials  # noqa: E402
-from cadrumo.tests._marker_hook import report_held_serials as _report_held_serials  # noqa: E402
-from cadrumo.tests._marker_hook import reset_held_serials as _reset_held_serials  # noqa: E402
-from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers  # noqa: E402
-from cadrumo.tests.collection_storage_root import register_collection_storage_root_cleanup
-from cadrumo.tests.env import temporary_env
+_deselection_hook = import_module("cadrumo.tests._deselection_hook")
+_report_deselection = _deselection_hook.apply
+_record_collected_markers = _deselection_hook.record_collected_markers
+_host_load_hook = import_module("cadrumo.tests._host_load_hook")
+_arm_host_load_stamp = _host_load_hook.arm_pre_timeout_stamp
+_disarm_host_load_stamp = _host_load_hook.disarm_pre_timeout_stamp
+_report_lost_tests = import_module("cadrumo.tests._lost_test_hook").apply
+_marker_hook = import_module("cadrumo.tests._marker_hook")
+_apply_marker_contract = _marker_hook.apply
+_apply_banned_live_import_policy = _marker_hook.apply_banned_live_import_policy
+_fail_on_held_serials = _marker_hook.fail_session_on_held_serials
+_record_held_serials = _marker_hook.record_held_from_node
+_report_held_serials = _marker_hook.report_held_serials
+_reset_held_serials = _marker_hook.reset_held_serials
+_resolve_auto_num_workers = import_module("cadrumo.tests._worker_count_hook").resolve_auto_num_workers
+temporary_env = import_module("cadrumo.tests.env").temporary_env
 
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter

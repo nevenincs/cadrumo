@@ -8,6 +8,7 @@ export tree into a positive authority.
 from __future__ import annotations
 
 import shutil
+from collections.abc import Iterator
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -43,6 +44,7 @@ from cadrumo.core.prorrata_register import (
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
@@ -153,7 +155,7 @@ def _committed_tree_hashes(tree) -> tuple[tuple[str, str], ...]:
     return tuple((item.relative_path, item.sha256) for item in collect_export_fragment_output_digests(tree.committed))
 
 
-def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
+def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues, operation: PinnedAuthorityOperation):
     """Return one source-owned live DP30305 value arrival, without a test layout."""
     filing_year = snapshot.filing_year
     authority = compiled_bundled_authority()
@@ -214,7 +216,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
         for sector_id in ("a", "b")
         for index, kind in enumerate(contribution_kinds, start=1)
     )
-    regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot)
+    regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot, operation=operation)
     # From the module that owns the bundle rather than rebuilt here; the
     # projection refuses one resolved for another filing year, so it is asked
     # for THIS year, and the regularisation result below reuses its provenance.
@@ -273,7 +275,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     return snapshot, producer
 
 
-def _m303_2026_6919_regimen_evidence(snapshot):
+def _m303_2026_6919_regimen_evidence(snapshot, *, operation: PinnedAuthorityOperation):
     """Build two official 691.9 rows so the real f022 field carries their wire identity."""
     period = Period.from_year_and_code(snapshot.filing_year, "1T")
     scope = M303RegimenSimplificadoScopeDecision(
@@ -324,6 +326,7 @@ def _m303_2026_6919_regimen_evidence(snapshot):
         rows=rows,
         regimen_snapshot=regimen_snapshot,
         dana_2024_eligibility=None,
+        operation=operation,
     )
     return M303RegimenSimplificadoFilingEvidence(
         scope_decision=scope,
@@ -372,13 +375,20 @@ def _m303_2026_committed_snapshot(tmp_path: Path):
 
 
 @pytest.fixture(scope="module")
-def _m303_2026_real_envelope():
+def _m303_authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+@pytest.fixture(scope="module")
+def _m303_2026_real_envelope(_m303_authority_operation: PinnedAuthorityOperation):
     """Render one isolated, source-owned M303 filing instance for envelope assertions."""
     with TemporaryDirectory(prefix="s16-m303-envelope-", dir=Path.cwd()) as temporary:
         snapshot, catalogues = _m303_2026_committed_snapshot(Path(temporary))
         snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(
             snapshot=snapshot,
             catalogues=catalogues,
+            operation=_m303_authority_operation,
         )
         (layout,) = snapshot.revision.export_layouts
         request = FilingEnvelopeRenderRequest(
@@ -575,7 +585,9 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
         assert transport.encoding is ExportEncoding.ISO_8859_1
 
 
-def test_m303_dp30305_composes_its_two_declared_projection_families_once(tmp_path: Path) -> None:
+def test_m303_dp30305_composes_its_two_declared_projection_families_once(
+    tmp_path: Path, _m303_authority_operation: PinnedAuthorityOperation
+) -> None:
     """The committed mixed-family record is composed by its two canonical projectors.
 
     DP30305 interleaves prorrata activity slots and differentiated deduction
@@ -583,7 +595,11 @@ def test_m303_dp30305_composes_its_two_declared_projection_families_once(tmp_pat
     order.  A third real M303 family remains closed out at the dispatcher.
     """
     snapshot, catalogues = _m303_2026_committed_snapshot(tmp_path)
-    snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(snapshot=snapshot, catalogues=catalogues)
+    snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(
+        snapshot=snapshot,
+        catalogues=catalogues,
+        operation=_m303_authority_operation,
+    )
     (layout,) = snapshot.revision.export_layouts
     record = next(item for item in layout.records if item.id == "m303-prorrata-deducciones")
     refs = tuple(field.projection_ref for field in record.fields if field.projection_ref is not None)

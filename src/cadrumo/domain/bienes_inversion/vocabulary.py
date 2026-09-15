@@ -21,6 +21,7 @@ class BienInversionKind(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct a capital-goods kind token after registry validation."""
         if not _registry_validated:
             raise TypeError("BienInversionKind tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -43,6 +44,7 @@ class BienInversionKind(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose registry-only validation and string serialization to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -66,6 +68,7 @@ class BienInversionDisposalRegime(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct a disposal-regime token after registry validation."""
         if not _registry_validated:
             raise TypeError("BienInversionDisposalRegime tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -88,6 +91,7 @@ class BienInversionDisposalRegime(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose registry-only validation and string serialization to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),

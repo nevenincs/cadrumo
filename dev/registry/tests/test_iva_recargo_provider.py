@@ -56,7 +56,7 @@ def _authored_fact() -> GovernedFact:
 def test_authored_recargo_fact_emits_identity_unique_authority_variants() -> None:
     """The normalized fact holds one unambiguous authority variant per pairing."""
     fact = _authored_fact()
-    projected: set[tuple[Decimal, date, date | None]] = set()
+    projected: set[tuple[Decimal, date | None, date | None]] = set()
     for variant in fact.variants:
         assert isinstance(variant.payload, MappingFactPayload)
         assert {str(item.key) for item in variant.payload.entries} == {"recargo_rate", "notes"}

@@ -362,7 +362,7 @@ class SetupAnswers(BaseModel):
     def _parse_situacion_familiar(cls, value: object) -> Any:
         if value == "":
             return ""
-        if isinstance(value, SituacionFamiliar) or isinstance(value, str):
+        if isinstance(value, (SituacionFamiliar, str)):
             try:
                 return require_situacion_familiar(value)
             except RegistryValidationError as exc:

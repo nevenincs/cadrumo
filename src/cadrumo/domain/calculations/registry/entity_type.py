@@ -50,13 +50,16 @@ class EntityVocabulary:
 
     @property
     def all_entity_types(self) -> frozenset[EntityType]:
+        """Return every taxpayer entity type declared by the registry."""
         return frozenset(item.token for item in self.entity_types)
 
     @property
     def all_legal_entity_forms(self) -> frozenset[LegalEntityForm]:
+        """Return every legal-entity form declared by the registry."""
         return frozenset(item.token for item in self.legal_entity_forms)
 
     def require_entity_type(self, value: object) -> EntityType:
+        """Validate and return one registry-declared entity type."""
         if isinstance(value, EntityType):
             token = value
         elif isinstance(value, str):
@@ -76,6 +79,7 @@ class EntityVocabulary:
         return token
 
     def require_legal_entity_form(self, value: object) -> LegalEntityForm:
+        """Validate and return one registry-declared legal-entity form."""
         if isinstance(value, LegalEntityForm):
             token = value
         elif isinstance(value, str):
@@ -95,10 +99,12 @@ class EntityVocabulary:
         return token
 
     def entity_type_definition(self, value: object) -> EntityTypeDefinition:
+        """Return the registry definition for one entity type."""
         token = self.require_entity_type(value)
         return next(item for item in self.entity_types if item.token == token)
 
     def legal_entity_form_definition(self, value: object) -> LegalEntityFormDefinition:
+        """Return the registry definition for one legal-entity form."""
         token = self.require_legal_entity_form(value)
         return next(item for item in self.legal_entity_forms if item.token == token)
 
@@ -296,6 +302,7 @@ def entity_type_natural_person_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> EntityType:
+    """Return the registry-declared natural-person entity token."""
     return _entity_type_token("natural_person", effective_date=effective_date, authority=authority)
 
 
@@ -304,6 +311,7 @@ def entity_type_legal_entity_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> EntityType:
+    """Return the registry-declared legal-entity token."""
     return _entity_type_token("legal_entity", effective_date=effective_date, authority=authority)
 
 
@@ -312,6 +320,7 @@ def entity_type_attribution_entity_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> EntityType:
+    """Return the registry-declared attribution-entity token."""
     return _entity_type_token("attribution_entity", effective_date=effective_date, authority=authority)
 
 
@@ -320,6 +329,7 @@ def legal_entity_form_sin_fines_lucrativos_token(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> LegalEntityForm:
+    """Return the registry-declared non-profit legal-form token."""
     return resolve_entity_vocabulary(
         effective_date=effective_date,
         authority=authority,

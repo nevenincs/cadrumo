@@ -27,42 +27,50 @@ _MINIMAL_REVISION_TEXT = '[revisions."2025"]\nvalid_from = 2025-01-01\n'
 
 @cache
 def committed_registry_root() -> Path:
+    """Return the bundled AEAT registry root used by conformance fixtures."""
     return bundled_path("registry", "aeat")
 
 
 @cache
 def committed_modelos_dir() -> Path:
+    """Return the bundled modelos directory."""
     return committed_registry_root() / "modelos"
 
 
 @cache
 def committed_modelo_sources() -> tuple[ModeloSource, ...]:
+    """Return discovered bundled modelo sources in deterministic order."""
     return discover_modelo_sources(committed_modelos_dir())
 
 
 @cache
 def committed_modelo_sources_by_id() -> dict[str, ModeloSource]:
+    """Index bundled modelo sources by their canonical identifier."""
     return {source.modelo_id: source for source in committed_modelo_sources()}
 
 
 @cache
 def committed_modelo(modelo_id: str) -> ModeloDefinition:
+    """Load one bundled modelo definition by identifier."""
     return load_modelo_source(committed_modelo_sources_by_id()[modelo_id])
 
 
 @cache
 def committed_registry_modelos() -> tuple[ModeloDefinition, ...]:
+    """Load all bundled modelo definitions for registry conformance tests."""
     modelos, _catalogues = load_registry_tree(committed_registry_root())
     return modelos
 
 
 @cache
 def committed_modelo_toml_paths() -> tuple[Path, ...]:
+    """Return every bundled modelo TOML path."""
     return scan_directory(committed_modelos_dir(), pattern="*.toml", recursive=True)
 
 
 @cache
 def committed_toml_paths_by_modelo_id() -> dict[str, tuple[Path, ...]]:
+    """Group bundled TOML paths by modelo identifier."""
     paths_by_modelo_id: dict[str, list[Path]] = {}
     modelos_dir = committed_modelos_dir()
     for path in committed_modelo_toml_paths():
@@ -75,6 +83,7 @@ def committed_toml_paths_by_modelo_id() -> dict[str, tuple[Path, ...]]:
 
 @cache
 def committed_toml_paths_by_fragment_revision() -> dict[tuple[str, str], tuple[Path, ...]]:
+    """Group bundled fragment paths by modelo and revision."""
     paths_by_revision: dict[tuple[str, str], list[Path]] = {}
     modelos_dir = committed_modelos_dir()
     for path in committed_modelo_toml_paths():
@@ -86,6 +95,7 @@ def committed_toml_paths_by_fragment_revision() -> dict[tuple[str, str], tuple[P
 
 
 def standard_manifest_text(_description: str) -> str:
+    """Build the canonical minimal manifest text used by fixtures."""
     return """
 [modelo]
 id = "999"
@@ -117,10 +127,12 @@ def standard_revision_preamble_text(source_ref: str = "aeat-manual", *, declare_
 
 
 def write_standard_manifest(target_dir: Path, title: str) -> None:
+    """Write a canonical minimal manifest into ``target_dir``."""
     (target_dir / "manifest.toml").write_text(standard_manifest_text(title), encoding="utf-8", newline="\n")
 
 
 def write_standard_revision_preamble(path: Path) -> None:
+    """Write the canonical minimal revision preamble to ``path``."""
     path.write_text(standard_revision_preamble_text(), encoding="utf-8", newline="\n")
 
 
@@ -162,6 +174,7 @@ def write_modelo(
 
 
 def load_revision(modelo_dir: Path, *, revision_id: str = "2025") -> ModeloRevision:
+    """Load one fixture revision from a directory-mode modelo."""
     return load_modelo_directory(modelo_dir).revisions[revision_id]
 
 
@@ -329,10 +342,13 @@ def _revision_id_from_line(
         raise AssertionError(f"cannot determine revision id from TOML header {stripped!r}")
     group_1 = match.group(1)
     group_2 = match.group(2)
-    assert group_1 is None or isinstance(group_1, str)
-    assert group_2 is None or isinstance(group_2, str)
+    if group_1 is not None and not isinstance(group_1, str):
+        raise TypeError("revision header identifier must be text")
+    if group_2 is not None and not isinstance(group_2, str):
+        raise TypeError("revision header identifier must be text")
     revision_id = group_1 or group_2
-    assert revision_id is not None
+    if revision_id is None:
+        raise ValueError("revision header has no identifier")
     revision_lines_by_id.setdefault(revision_id, [])
     return revision_id
 

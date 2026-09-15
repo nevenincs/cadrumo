@@ -292,11 +292,20 @@ def _single_year_findings(
     proven, detail = _neighbour_divergence(modelo.id, revision_id, ordered)
     if not proven:
         if "UNPARSEABLE, not absent" in detail:
-            fix = "the design IS bundled but unreadable -- fix the extractor for the named file(s); acquiring another copy from AEAT would not help"
+            fix = (
+                "the design IS bundled but unreadable -- fix the extractor for the named file(s); "
+                "acquiring another copy from AEAT would not help"
+            )
         elif "ABSENT" in detail:
-            fix = "no design is bundled for this year at all -- bundle AEAT's published record design for an adjacent ejercicio so the split can be proven"
+            fix = (
+                "no design is bundled for this year at all -- bundle AEAT's published record design for an "
+                "adjacent ejercicio so the split can be proven"
+            )
         else:
-            fix = "identical to a neighbour -- merge this revision into it, the split introduced no design change and was unwarranted"
+            fix = (
+                "identical to a neighbour -- merge this revision into it, the split introduced no design change "
+                "and was unwarranted"
+            )
         return f"modelo {modelo.id} revision {revision_id!r}: single-year span, {detail} -- FIX: {fix}", None
     if "SINGLE SIGNAL, uncorroborated" in detail:
         # A real, legitimate PASS -- no corroboration threshold is imposed here, one

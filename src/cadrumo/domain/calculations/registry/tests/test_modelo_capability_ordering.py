@@ -22,18 +22,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelo_with(*capabilities: str, revision: ModeloRevision) -> ModeloDefinition:
-    return ModeloDefinition(
-        id="100",
-        title_localization_key="test.schema.modelo.100.title",
-        official_name_localization_key="test.schema.modelo.100.official_name",
-        tax_domain=TaxDomain("irpf"),
-        cadence="annual",
-        jurisdiction="ES-AEAT",
-        output_sensitivity=SensitivityClass.FINANCIAL,
-        capabilities=capabilities,
-        legal_refs=(_LEGAL_ID,),
-        source_refs=(_SOURCE_ID,),
-        revisions={revision.id: revision},
+    return ModeloDefinition.model_validate(
+        {
+            "id": "100",
+            "title_localization_key": "test.schema.modelo.100.title",
+            "official_name_localization_key": "test.schema.modelo.100.official_name",
+            "tax_domain": TaxDomain("irpf"),
+            "cadence": "annual",
+            "jurisdiction": "ES-AEAT",
+            "output_sensitivity": SensitivityClass.FINANCIAL,
+            "capabilities": capabilities,
+            "legal_refs": (_LEGAL_ID,),
+            "source_refs": (_SOURCE_ID,),
+            "revisions": {revision.id: revision},
+        }
     )
 
 

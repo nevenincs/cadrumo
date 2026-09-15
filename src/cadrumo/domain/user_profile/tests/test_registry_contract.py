@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.severity import BaseSeverity
+from ...calculations.registry.manual_input_selector import ManualInputProvider
 from ...calculations.registry.profile_bindings import ProfileProvider
 from ...calculations.registry.schema import BindingDefinition
 from ..registry_contract import (
@@ -311,10 +312,16 @@ def test_profile_binding_selectors_ignores_a_non_profile_typed_selector() -> Non
     than an attempted (and doomed) dict-style read on a BaseModel.
     """
 
-    class _UnrelatedSelector(BaseModel):
-        casilla_id: str
+    selector = ManualInputProvider.model_validate(
+        {
+            "casilla_id": "0003",
+            "data_type": "boolean",
+            "true_value": "S",
+            "false_value": "N",
+        },
+    )
 
-    assert profile_binding_selectors(_UnrelatedSelector(casilla_id="0003")) == ()
+    assert profile_binding_selectors(selector) == ()
 
 
 def test_a_dropped_profile_selector_field_is_refused_not_silently_missing() -> None:

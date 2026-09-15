@@ -33,10 +33,13 @@ class IdentifiedRecord(Protocol):
     """A record carrying a string id, which is all indexing by id requires."""
 
     @property
-    def id(self) -> str: ...
+    def id(self) -> str:
+        """Return the record's stable identifier."""
+        ...
 
 
 def records_by_id[RecordT: IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
+    """Index identified records by their stable identifiers."""
     return {record.id: record for record in records}
 
 
@@ -65,6 +68,7 @@ two stay in lock-step rather than one drifting to a bare ``object``.
 
 
 def collect_export_field_ids(revision: ModeloRevision) -> set[str]:
+    """Collect field identifiers declared by every export layout."""
     return {field.id for layout in revision.export_layouts for record in layout.records for field in record.fields}
 
 
@@ -80,6 +84,8 @@ def _exported_casilla_ids(revision: ModeloRevision) -> set[CasillaId]:
 
 @dataclass(frozen=True)
 class RevisionValidationContext:
+    """Pre-indexed revision data shared by construct validators."""
+
     ids_by_kind: dict[str, list[str]]
     export_layout_ids: list[str]
     extraction_profile_ids: list[str]
@@ -112,6 +118,7 @@ class RevisionValidationContext:
 
     @property
     def construct_member_objects(self) -> Mapping[str, Mapping[str, ConstructMemberObject]]:
+        """Return construct-member indexes grouped by schema kind."""
         return {
             "casilla": self.casilla_by_id,
             "formula": self.formula_by_id,
@@ -130,6 +137,7 @@ class RevisionValidationContext:
 
 
 def build_revision_validation_context(revision: ModeloRevision) -> RevisionValidationContext:
+    """Build lookup indexes needed to validate one modelo revision."""
     ids_by_kind = collect_record_id_lists(revision)
     formula_by_id = records_by_id(revision.formulas)
     binding_by_id = records_by_id(revision.bindings)

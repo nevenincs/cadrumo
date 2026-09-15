@@ -59,6 +59,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignRangeStartCorrection,
     RecordDesignSinglePositionCorrection,
 )
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.record_design import extract_record_design
 from ..compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions
@@ -552,5 +553,3 @@ def test_every_provenance_only_design_still_refuses_and_is_a_promotion_candidate
         "them excluded from the worklist: " + ", ".join(promotable)
     )
 
-
-from dev.registry.compiler.authority import compiled_bundled_authority

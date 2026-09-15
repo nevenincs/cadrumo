@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
-from cadrumo.core.package_version import PACKAGE_VERSION as __version__
+from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.tests.attribute_scope import scoped_attribute
 
 from ..compiler import identity as identity_module
@@ -89,7 +89,7 @@ def test_a_truncated_stamp_is_refused_rather_than_parsed(tmp_path: Path) -> None
     location = registry_identity_stamp_location(root)
     whole = RegistryIdentityStamp(
         schema_version=REGISTRY_IDENTITY_SCHEMA_VERSION,
-        package_version=__version__,
+        package_version=PACKAGE_VERSION,
         tree_digest=_LONG_DIGEST,
         entry_count=len(_LONG_DIGEST),
     ).model_dump_json()

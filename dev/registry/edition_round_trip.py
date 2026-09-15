@@ -549,10 +549,16 @@ def merge_orders(reference: ModeloDefinition, live: ModeloDefinition) -> dict[st
         )
         live_revision = live.revisions.get(revision_id)
         declared = None if live_revision is None else live_revision.predecessor
-        if isinstance(declared, DeclaredPredecessor):
-            predecessor_id = str(declared.revision_id)
-            if predecessor_id in reference.revisions and predecessor_id not in trail:
-                rows = merge_order(rows, order_of(predecessor_id, trail | {revision_id}))
+        storage_baseline = None if live_revision is None else live_revision.casilla_storage_baseline
+        predecessor_id = (
+            str(declared.revision_id)
+            if isinstance(declared, DeclaredPredecessor)
+            else str(storage_baseline)
+            if storage_baseline is not None
+            else None
+        )
+        if predecessor_id is not None and predecessor_id in reference.revisions and predecessor_id not in trail:
+            rows = merge_order(rows, order_of(predecessor_id, trail | {revision_id}))
         orders[revision_id] = rows
         return rows
 

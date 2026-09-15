@@ -16,6 +16,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler import validate_revision_rules as rules
 
@@ -66,5 +67,3 @@ def test_non_m210_modelo_is_a_noop() -> None:
     m303 = next(modelo for modelo in authority.modelos if modelo.id == "303")
     assert rules.validate_m210_tipo_renta_code_projection_parity(m303) == []
 
-
-from dev.registry.compiler.authority import compiled_bundled_authority

@@ -14,6 +14,7 @@ cannot silently relax them.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -24,6 +25,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..profile import CategoryProfile
 from ..registry import resolve_category_profiles
 from ..spending_category import SpendingCategory
+from ..spending_category_catalogue import spending_category_tokens
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,10 +38,12 @@ def profiles_2025(operation: PinnedAuthorityOperation) -> Mapping[SpendingCatego
 
 def test_registry_covers_every_spending_category(
     profiles_2025: Mapping[SpendingCategory, CategoryProfile],
+    operation: PinnedAuthorityOperation,
 ) -> None:
-    """Every enum member must have a concrete profile in the 2025 registry."""
+    """Every authority-declared category must have a concrete 2025 profile."""
 
-    assert set(profiles_2025) == set(SpendingCategory)
+    expected_categories = spending_category_tokens(effective_date=date(2025, 12, 31), authority=operation)
+    assert set(profiles_2025) == set(expected_categories)
 
 
 def test_every_profile_has_at_least_one_citation(

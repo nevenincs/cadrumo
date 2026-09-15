@@ -25,7 +25,6 @@ from ..maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
-    VesselRegistry,
     art_7p_eligible,
     calculate_art_7p_exemption,
     calculate_rebeca_exemption,
@@ -123,7 +122,7 @@ _REBECA_SELECTOR_CASES = (
         "rebeca-registry",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
-            vessel_registry=VesselRegistry.REBECA,
+            vessel_registry="REBECA",
         ),
         True,
     ),
@@ -131,7 +130,7 @@ _REBECA_SELECTOR_CASES = (
         "rebeca-eu-eea-registry",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
-            vessel_registry=VesselRegistry.REBECA_EU_EEA,
+            vessel_registry="rebeca_eu_eea",
         ),
         True,
     ),
@@ -139,7 +138,7 @@ _REBECA_SELECTOR_CASES = (
         "scheduled-canary-route",
         MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
-            vessel_registry=VesselRegistry.SCHEDULED_CANARY_ROUTE,
+            vessel_registry="scheduled_canary_route",
         ),
         True,
     ),
@@ -155,7 +154,7 @@ _REBECA_SELECTOR_CASES = (
         "missing-worker-class",
         MaritimeWorkerFacts(
             worker_class=None,
-            vessel_registry=VesselRegistry.REBECA,
+            vessel_registry="REBECA",
         ),
         False,
     ),
@@ -456,7 +455,7 @@ class TestCalculateRebecaExemption:
 
     _REBECA_FACTS = MaritimeWorkerFacts(
         worker_class="trabajador_del_mar",
-        vessel_registry=VesselRegistry.REBECA,
+        vessel_registry="REBECA",
     )
 
     def test_standard_case(self) -> None:
@@ -477,7 +476,7 @@ class TestCalculateRebecaExemption:
         # oracle for this input; structural invariants only.
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
-            vessel_registry=VesselRegistry.REBECA_EU_EEA,
+            vessel_registry="rebeca_eu_eea",
         )
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("40000"),
@@ -493,7 +492,7 @@ class TestCalculateRebecaExemption:
         # oracle for this input; structural invariants only.
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
-            vessel_registry=VesselRegistry.SCHEDULED_CANARY_ROUTE,
+            vessel_registry="scheduled_canary_route",
         )
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("50000"),
@@ -579,7 +578,7 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
     """
     facts = MaritimeWorkerFacts(
         worker_class="trabajador_del_mar",
-        vessel_registry=VesselRegistry.REBECA,
+        vessel_registry="REBECA",
     )
     obs = calculate_rebeca_exemption(
         gross_navigation_income=Decimal("30000"),
@@ -598,7 +597,7 @@ def test_calculations_resolve_fact_specific_temporal_axes_and_provenance() -> No
     )
     rebeca = calculate_rebeca_exemption(
         gross_navigation_income=Decimal("30000"),
-        facts=MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry=VesselRegistry.REBECA),
+        facts=MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry="REBECA"),
         authority=_AUTHORITY,
         devengo_date=_DEVENGO_DATE,
     )
@@ -637,7 +636,7 @@ def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
         gross_navigation_income=Decimal("30000"),
         facts=MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
-            vessel_registry=VesselRegistry.REBECA,
+            vessel_registry="REBECA",
         ),
     )
 

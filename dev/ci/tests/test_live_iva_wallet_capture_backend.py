@@ -35,6 +35,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationReconciliationDecision,
 )
 from cadrumo.entrypoints.live_state_composition import persist_and_reconcile_iva_compensation_wallet
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
@@ -408,5 +409,3 @@ def _secure_object_namespace_count(database_path: Path, namespace: str) -> int:
         ).fetchone()
     return int(row[0])
 
-
-from dev.registry.compiler.authority import compiled_bundled_authority

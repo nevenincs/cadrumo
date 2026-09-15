@@ -51,6 +51,7 @@ _SOURCE = ("aeat-dr-390-2025",)
 _TOTAL_CASILLA = validated_casilla_id("iva.anual.repercutido.super-reducido", surface="test.rate_box.total")
 _BOX_4PCT = validated_casilla_id("02", surface="test.rate_box.box")
 _BOX_2PCT = validated_casilla_id("668", surface="test.rate_box.box")
+_DEFAULT_RATE_KIND = IvaRateKind("super_reduced")
 
 
 def _binding(
@@ -58,7 +59,7 @@ def _binding(
     *,
     applied_rates: tuple[Decimal, ...] | None,
     fact: str = "iva_amount_sum",
-    rate_kind: IvaRateKind = IvaRateKind("super_reduced"),
+    rate_kind: IvaRateKind = _DEFAULT_RATE_KIND,
 ) -> BindingDefinition:
     selector: dict[str, object] = {
         "categories": (IvaCategory("domestic_super_reduced"),),

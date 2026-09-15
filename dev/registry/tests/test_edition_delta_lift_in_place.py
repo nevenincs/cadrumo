@@ -239,13 +239,14 @@ def test_an_existing_delta_finishes_changed_members_as_storage_overrides(tmp_pat
     assert (predecessor.predecessor, successor.predecessor) == (None, _PREDECESSOR)
     assert [edition.reviewed_against for edition in plan.editions] == [None, None]
     assert [edition.blocked for edition in plan.editions] == [(), ()]
-    assert [edition.kept for edition in plan.editions] == [{}, {}]
+    assert predecessor.kept == {}
+    assert successor.kept == {"new_lineage": 1}
     assert [work.root_declaration for work in works] == [None, None]
     # The lift itself: every row restates the shared run, so every stated row
     # drops it, and the families whose default derives are declared.
     assert [edition.source_default for edition in plan.editions] == [(_SOURCE_REF,), (_SOURCE_REF,)]
     assert [edition.source_default_withheld for edition in plan.editions] == [None, None]
-    assert (predecessor.lifted.row_source_refs, successor.lifted.row_source_refs) == (3, 2)
+    assert (predecessor.lifted.row_source_refs, successor.lifted.row_source_refs) == (3, 1)
     assert [dict(work.source.family_defaults) for work in works] == [
         {"formula_source_refs": (_SOURCE_REF,)},
         {"formula_source_refs": (_SOURCE_REF,)},
@@ -365,7 +366,7 @@ def test_a_modelo_naming_no_predecessor_still_plans_through_the_full_copy_path(t
     assert not plan.already_delta_authored
     predecessor, successor = plan.editions
     assert (predecessor.basis, predecessor.predecessor) == (PredecessorBasis.FIRST, None)
-    assert (successor.basis, successor.predecessor) == (PredecessorBasis.ADJACENT, _PREDECESSOR)
+    assert (successor.basis, successor.predecessor) == (PredecessorBasis.STORAGE, _PREDECESSOR)
     assert successor.is_delta
     # The full-copy path drops the rows the successor may inherit and states the
     # rest in materialised order, where the lift path states what was authored.

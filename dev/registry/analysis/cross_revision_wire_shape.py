@@ -25,6 +25,7 @@ The screen exits 0 whatever it finds. It reports; it does not gate.
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 from collections.abc import Iterator, Sequence
@@ -147,7 +148,7 @@ def cross_revision_wire_shape_transitions(modelos_root: Path | None = None) -> I
             continue
         shapes = _revision_shapes(modelo_root)
         revisions = sorted(shapes)
-        for earlier, later in zip(revisions, revisions[1:], strict=False):
+        for earlier, later in itertools.pairwise(revisions):
             for identity, (earlier_shape, earlier_type) in shapes[earlier].items():
                 if identity not in shapes[later]:
                     continue
