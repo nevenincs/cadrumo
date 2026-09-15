@@ -57,6 +57,8 @@ source_refs = [
     "boe-modelo-180-2014-form",
     "boe-modelo-180-2023-form",
 ]
+family_storage_baseline = "2019-2022"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2023-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -87,3 +89,371 @@ quarterly modelo 115, whose casilla 03 is computed as percent(02, irpf.urban_ren
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hfp-1284-2023:art-7", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form"]
 
+[[revisions.2023-y-siguientes.lineage_attestations]]
+family = "casillas"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+from_revision = "2019-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-complementaria-sustitutiva"
+from_revision = "2019-2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "aeat-dr-180-2014 y aeat-dr-180-2023, registro tipo 1, paginas 3-4, lineas 73-100 de sus extractos: C incorpora perceptores omitidos y S anula y sustituye una unica declaracion del mismo ejercicio; definiciones y condiciones identicas."
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.lineage_attestations]]
+family = "casillas"
+continuidad_id = "numero-identificativo-declaracion-anterior"
+from_revision = "2019-2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "aeat-dr-180-2014 y aeat-dr-180-2023, registro tipo 1, pagina 4, lineas 101-109 de sus extractos: identificador de la declaracion sustituida o complementada cuando se marca C o S, y ceros en otro caso; identidad y condicion conservadas."
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.lineage_attestations]]
+family = "casillas"
+continuidad_id = "numero-identificativo-declaracion"
+from_revision = "2019-2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "aeat-dr-180-2014 y aeat-dr-180-2023, registro tipo 1, pagina 3, lineas 67-72 de sus extractos: identificador secuencial de la declaracion cuyos tres primeros digitos son 180; misma declaracion identificada y mismo mandato."
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+from_revision = "2019-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.lineage_attestations]]
+family = "casillas"
+continuidad_id = "perc-base"
+from_revision = "2019-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.lineage_attestations]]
+family = "casillas"
+continuidad_id = "perc-retenciones"
+from_revision = "2019-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "decl.base-total" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], constraints = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }, form_number = "02", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "decl.complementaria-sustitutiva" }
+fields = { legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "decl.numero-identificativo-anterior" }
+fields = { legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "decl.numero-identificativo" }
+fields = { legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "decl.retenciones-total" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], constraints = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }, form_number = "03", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "decl.total-perceptores" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], form_number = "01", legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.base" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], constraints = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }, legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.ejercicio-devengo" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-bloque" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-calificador-numero" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-codigo-municipio" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-codigo-postal" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-complemento" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-escalera" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-localidad" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-municipio" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-nombre-via" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-numero-casa" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-planta" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-portal" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-provincia" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-puerta" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-tipo-numeracion" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.inmueble-tipo-via" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.modalidad" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.nif-representante-legal" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.nif" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.nombre" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.porcentaje-retencion" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.provincia" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.referencia-catastral" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.retenciones" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], constraints = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }, legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.casilla_overrides]]
+selector = { revision = "2019-2022", id = "perc.situacion-inmueble" }
+fields = { additional_source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"], legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-180-base-total"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-180-retenciones-total"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2019-2022", id = "modelo-180-anual"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2019-2022", id = "modelo-180-export-record"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 0, 2]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2019-2022", id = "modelo-180-dep-115"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [0, 1, 3, 2]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "constructs"
+selector = {revision = "2019-2022", id = "modelo-180-annual-summary"}
+sequence_additions = {application_links = ["modelo-180-portal-cross-reference", "modelo-180-filed-declarations-observation", "modelo-180-calculation", "modelo-180-filing", "modelo-180-export", "modelo-180-extractor", "modelo-180-review", "modelo-180-approval", "modelo-180-reconciliation", "modelo-180-workflow"], legal_refs = ["orden-hfp-1284-2023:art-7"], live_cross_references = ["modelo-180-static-official", "modelo-180-filed-declarations-read"], source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure", "boe-modelo-180-2023-form"], workbook_parity_refs = ["modelo-180-dr-pdf"]}
+sequence_removals = {application_links = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], live_cross_references = [0, 1], source_refs = [0], workbook_parity_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [3, 0, 1, 4, 2, 5]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-deadline"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7", "rd-439-2007:art-108"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_order = {legal_refs = [3, 0, 1, 4, 2]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-115-base-anual"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-115-perceptores-anual"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-180-115-retenciones-anual"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2019-2022", id = "modelo-180-annual-summary-verification"}
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [0, 2, 1, 3]}
+
+[[revisions.2023-y-siguientes.family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2019-2022", id = "aeat-dr-180-2014"}
+replacement_id = "aeat-dr-180-2023"
+sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2023-form"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 6, 4, 5], source_refs = [1, 0, 2]}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "live_cross_references"
+selector = {revision = "2019-2022", id = "modelo-180-2014-filed-declarations-read"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "live_cross_references"
+selector = {revision = "2019-2022", id = "modelo-180-2014-static-official"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-approval"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-calculation"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-export"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-extractor"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-filed-declarations-observation"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-filing"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-portal-cross-reference"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-reconciliation"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-review"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-180-2014-workflow"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2022", id = "modelo-180-2022-0a"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "export_layouts"
+selector = {revision = "2019-2022", id = "modelo-180-fichero-boe-2014"}
+
+[[revisions.2023-y-siguientes.family_removals]]
+family = "workbook_parity_refs"
+selector = {revision = "2019-2022", id = "modelo-180-dr-pdf-2014"}

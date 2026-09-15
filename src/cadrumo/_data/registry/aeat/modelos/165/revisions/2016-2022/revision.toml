@@ -86,3 +86,31 @@ calendar windows for 2016-2022 are bundled. A date is not inferred from a
 recurring legal month; this revision therefore declares none."""
 legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure"]
+
+[[revisions."2016-2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2013-2015"
+to_revision = "2016-2022"
+origin = "seeded"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[[revisions."2016-2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2013-2015"
+to_revision = "2016-2022"
+origin = "seeded"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[[revisions."2016-2022".casilla_overrides]]
+selector = { revision = "2013-2015", id = "decl.ejercicio" }
+fields = { source_refs = ["enrolled-modelo-165-procedure"] }
+removed_fields = []
+
+[[revisions."2016-2022".casilla_overrides]]
+selector = { revision = "2013-2015", id = "decl.tipo-declaracion" }
+fields = { source_refs = ["enrolled-modelo-165-procedure"] }
+removed_fields = []

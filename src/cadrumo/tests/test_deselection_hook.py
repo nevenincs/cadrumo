@@ -31,8 +31,8 @@ See Also:
 
 from __future__ import annotations
 
+import asyncio
 import os
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -89,6 +89,27 @@ def test_deselected():
 """
 
 
+async def _capture_probe_output(command: list[str], *, cwd: Path, env: dict[str, str]) -> str:
+    """Capture one fixed pytest child without shell interpretation."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        cwd=cwd,
+        env=env,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    try:
+        stdout, _ = await asyncio.wait_for(
+            process.communicate(),
+            timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+        )
+    except TimeoutError:
+        process.kill()
+        await process.communicate()
+        raise
+    return stdout.decode("utf-8", errors="replace")
+
+
 def _probe_output(probe_body: str, *extra_args: str) -> str:
     """Boot a real pytest subprocess over a throwaway tree wired to the real hook.
 
@@ -111,16 +132,13 @@ def _probe_output(probe_body: str, *extra_args: str) -> str:
         (tmp_path / "conftest.py").write_text(_PROBE_CONFTEST, encoding="utf-8")
         (tmp_path / "test_probe.py").write_text(probe_body, encoding="utf-8")
 
-        result = subprocess.run(  # noqa: S603 - fixed interpreter argv; extra args are test-local literals.
-            [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "test_probe.py", *extra_args],
-            cwd=tmp_path,
-            env=dict(os.environ),
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+        return asyncio.run(
+            _capture_probe_output(
+                [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "test_probe.py", *extra_args],
+                cwd=tmp_path,
+                env=dict(os.environ),
+            )
         )
-        return result.stdout + result.stderr
 
 
 def test_a_fully_deselected_run_is_reported_as_nothing_ran() -> None:

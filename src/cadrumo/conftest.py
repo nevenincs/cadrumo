@@ -54,19 +54,19 @@ _COLLECTION_STORAGE_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.ge
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 """Process-private local-storage root set before child conftests import Cadrumo."""
 
-# Safe to import cadrumo.* below this point: the storage-root env var any of
-# these modules' own import surfaces might trigger a premature
-# configure_logging() against is already set by the pure-stdlib lines above.
-from .core.external_constants import UTF_8_ENCODING  # noqa: E402
-from .tests.collection_storage_root import register_collection_storage_root_cleanup  # noqa: E402
-from .tests.env_scope import release_settings_storage_directories  # noqa: E402
-
 # The other half of what apply_collection_storage_root(overwrite=True) used
 # to do in one call: register the atexit cleanup and stale-sibling sweep for
 # the root set above. Splitting the env-var write from this registration is
 # exactly the point -- the write must happen before any cadrumo import, the
 # registration is only safe (and only needed) after.
-register_collection_storage_root_cleanup(_COLLECTION_STORAGE_ROOT)
+def _register_collection_storage_root_cleanup() -> None:
+    """Register cleanup only after the collection root is established."""
+    from .tests.collection_storage_root import register_collection_storage_root_cleanup
+
+    register_collection_storage_root_cleanup(_COLLECTION_STORAGE_ROOT)
+
+
+_register_collection_storage_root_cleanup()
 
 _SRC_CADRUMO_ROOT: Path = Path(__file__).resolve().parent
 """Root of the ``src/cadrumo/`` source tree (the directory hosting this conftest)."""
@@ -115,6 +115,7 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     # Imported here, not at module scope: this module's imports must stay below the
     # storage-root env assignment above, and a function-local import keeps that
     # ordering constraint off the module surface entirely.
+    from .core.external_constants import UTF_8_ENCODING
     from .tests.inventory import package_python_files, prime_ast_cache
 
     cache: dict[Path, ast.AST] = {}
@@ -320,4 +321,6 @@ def _release_settings_storage_directories() -> Iterator[None]:
     sweep as well as an ``atexit`` hook.
     """
     yield
+    from .tests.env_scope import release_settings_storage_directories
+
     release_settings_storage_directories()

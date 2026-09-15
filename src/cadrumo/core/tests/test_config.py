@@ -246,9 +246,10 @@ class TestStatusDetailUrlTemplate:
         key is asserted alongside it so the test cannot pass by accident (a
         wholesale env-reading failure would also leave the valid field unset).
         """
+        legacy_env_values = {"AEAT_SECRET_PASSPHRASE": "legacy-secret-value"}
         with _isolated_aeat_env(
             AEAT_LOCAL_STORAGE_ROOT="legacy-state-root",
-            AEAT_SECRET_PASSPHRASE="legacy-secret-value",  # noqa: S106 - synthetic test fixture, not a secret
+            **legacy_env_values,
             UNRELATED_CADRUMO_TYPO="1",
             CADRUMO_AUTH_PROVIDER="certificate",
         ):

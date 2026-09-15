@@ -45,6 +45,7 @@ orden_aplicabilidad = [
     "orden-eha-3377-2011:art-1",
 ]
 source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+family_storage_baseline = "2023"
 
 [revisions."2024".family_dispositions.parameters]
 reason = """
@@ -57,3 +58,52 @@ source_refs = ["aeat-modelo-193-procedure"]
 reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. Modelo 193's record design declares three fixed records -- declarante, perceptor and the gastos relationship, none of which repeats a projection -- and no field of kind 'projection' exists in any authored surface. The family has no repeated endpoint to admit and nothing an entry here could name; authoring a repeated projection row into the layout is what would make this family apply."
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1"]
 source_refs = ["aeat-dr-193-2024", "aeat-dr-193-2024"]
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.retenciones-ingresadas" }
+fields = { binding = "modelo-193-retenciones-ingresadas", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.total-perceptores" }
+fields = { binding = "modelo-193-123-perceptores-anual", input_kind = "bound" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.base-total" }
+fields = { formula = "modelo-193-base-total", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.retenciones-total" }
+fields = { formula = "modelo-193-retenciones-total", input_kind = "computed" }
+removed_fields = []
+
+[[revisions."2024".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2023", id = "modelo-193-anual"}
+sequence_additions = {profile_conditions = [{field = "pays_capital_income_with_retencion", op = "equals", value = true, explanation = "Retenedor que satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion y presenta el resumen anual Modelo 193.", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-modelo-193-procedure"]}], source_refs = ["aeat-modelo-193-procedure"]}
+sequence_removals = {profile_conditions = [0], source_refs = [1]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-193-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-193-procedure"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-193-filing"}
+sequence_additions = {source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-193-2023-0a"}
+replacement_id = "modelo-193-2024-0a"
+fields = {closes_on = 2025-01-31, filing_year = 2024, opens_on = 2025-01-01, period = "2024 0A"}
+sequence_additions = {applicability_conditions = [{field = "pays_capital_income_with_retencion", op = "equals", value = true, explanation = "Retenedor que satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion y presenta el resumen anual.", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-modelo-193-procedure"]}], source_refs = ["aeat-modelo-193-procedure", "aeat-calendario-contribuyente-2025"]}
+sequence_removals = {applicability_conditions = [0], source_refs = [1]}
+sequence_order = {source_refs = [1, 2, 0]}

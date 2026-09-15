@@ -37,6 +37,8 @@ ejercicios-anteriores page. Closing this era at 2024 would refuse ejercicio 2025
 that no orden has withdrawn. The five hoja-resumen casillas remain manual input, no export layout is \
 declared, and no authority grade is promoted."""
 reviewed_at = 2026-08-30
+family_storage_baseline = "2023"
+scoped_families = ["workbook_parity_refs", "verification_expectations"]
 
 [[revisions."2024".lineage_attestations]]
 family = "casillas"

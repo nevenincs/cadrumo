@@ -119,10 +119,13 @@ def _capped_prose_fields() -> Mapping[tuple[str, str], _StaticField]:
             continue
         aliases: set[str] = set()
         for statement in tree.body:
-            if isinstance(statement, (ast.Assign, ast.AnnAssign)) and statement.value is not None:
-                if _contains_elider(statement.value, set()):
-                    targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
-                    aliases.update(target.id for target in targets if isinstance(target, ast.Name))
+            if (
+                isinstance(statement, (ast.Assign, ast.AnnAssign))
+                and statement.value is not None
+                and _contains_elider(statement.value, set())
+            ):
+                targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
+                aliases.update(target.id for target in targets if isinstance(target, ast.Name))
         for node in ast.walk(tree):
             if not isinstance(node, ast.ClassDef):
                 continue

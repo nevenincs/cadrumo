@@ -248,7 +248,7 @@ def place_of_supply_years(*, operation: PinnedAuthorityOperation) -> frozenset[i
     return years_covered_by_every_group([window] for window in windows)
 
 
-def place_of_supply_rule(  # noqa: D417
+def place_of_supply_rule(
     rule_id: str,
     *,
     on: date,
@@ -260,6 +260,8 @@ def place_of_supply_rule(  # noqa: D417
     Args:
         rule_id: The classification rule's declared id.
         on: A date in the filing year whose table applies.
+        operation: The pinned authority operation supplying the place-of-supply table.
+        projected_year: The filing year whose grounded rules are required.
 
     Returns:
         :class:`IvaPlaceOfSupplyRule`: The grounding row.

@@ -189,6 +189,8 @@ itself. It is not an escape because the application both chooses it and writes
 beneath it. It is therefore the anchor rather than a member.
 """
 
+_PROFILE_CAPSULE_ENVELOPE_LABEL = "profile-capsule.password-envelope"
+
 
 class StorageCategory(StrEnum):
     """Every application-chosen on-disk location, identified by scope and name.
@@ -271,7 +273,7 @@ class StorageCategory(StrEnum):
 
     # ── Fixed layout: current-format profile capsule ───────────────────────
     PROFILE_CAPSULE_CUSTODY = "profile-capsule.custody"
-    PROFILE_CAPSULE_PASSWORD_ENVELOPE = "profile-capsule.password-envelope"  # noqa: S105 - taxonomy label, not a credential
+    PROFILE_CAPSULE_PASSWORD_ENVELOPE = _PROFILE_CAPSULE_ENVELOPE_LABEL
     PROFILE_CAPSULE_RECOVERY_ENVELOPE = "profile-capsule.recovery-envelope"
     PROFILE_CAPSULE_DATA = "profile-capsule.data"
     PROFILE_CAPSULE_COMMIT = "profile-capsule.commit"

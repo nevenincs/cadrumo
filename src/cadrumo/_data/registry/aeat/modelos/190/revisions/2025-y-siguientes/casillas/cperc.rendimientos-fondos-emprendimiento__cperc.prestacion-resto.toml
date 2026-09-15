@@ -1,0 +1,78 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.rendimientos-fondos-emprendimiento"
+continuidad_id = "rendimientos-trabajo-fondos-emprendimiento"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-190-2024 declara 389-500 BLANCOS al final del registro tipo 2. aeat-dr-190-2025, paginas 51-53, introduce el campo 389, rendimientos del trabajo por gestion de fondos vinculados al emprendimiento (clave A); los indicadores de prestaciones corresponden a clave B.01. Orden HAC/1431/2025 articulo 2 incorpora estos datos. La reserva vacia del diseno anterior prueba la introduccion, no un cambio de numero de un campo existente."
+number = "389"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_startup_fund_rendimientos_clave"
+# Clave 0/1, recorded only for clave A rows whose payments include D.A. 53a
+# rendimientos; both claves are recorded facts, never defaults.
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-jubilacion"
+continuidad_id = "prestacion-jubilacion"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-190-2024 declara 389-500 BLANCOS al final del registro tipo 2. aeat-dr-190-2025, paginas 51-53, introduce el campo 390, jubilacion; los indicadores de prestaciones corresponden a clave B.01. Orden HAC/1431/2025 articulo 2 incorpora estos datos. La reserva vacia del diseno anterior prueba la introduccion, no un cambio de numero de un campo existente."
+number = "390"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_jubilacion"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-viudedad"
+continuidad_id = "prestacion-viudedad"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-190-2024 declara 389-500 BLANCOS al final del registro tipo 2. aeat-dr-190-2025, paginas 51-53, introduce el campo 391, viudedad; los indicadores de prestaciones corresponden a clave B.01. Orden HAC/1431/2025 articulo 2 incorpora estos datos. La reserva vacia del diseno anterior prueba la introduccion, no un cambio de numero de un campo existente."
+number = "391"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_viudedad"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-incapacidad"
+continuidad_id = "prestacion-incapacidad"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-190-2024 declara 389-500 BLANCOS al final del registro tipo 2. aeat-dr-190-2025, paginas 51-53, introduce el campo 392, incapacidad permanente total o parcial; los indicadores de prestaciones corresponden a clave B.01. Orden HAC/1431/2025 articulo 2 incorpora estos datos. La reserva vacia del diseno anterior prueba la introduccion, no un cambio de numero de un campo existente."
+number = "392"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_incapacidad"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-no-contributiva"
+continuidad_id = "prestacion-no-contributiva"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-190-2024 declara 389-500 BLANCOS al final del registro tipo 2. aeat-dr-190-2025, paginas 51-53, introduce el campo 393, pensiones no contributivas por invalidez o jubilacion; los indicadores de prestaciones corresponden a clave B.01. Orden HAC/1431/2025 articulo 2 incorpora estos datos. La reserva vacia del diseno anterior prueba la introduccion, no un cambio de numero de un campo existente."
+number = "393"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_no_contributiva"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "perc.prestacion-resto"
+continuidad_id = "prestacion-resto"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-190-2024 declara 389-500 BLANCOS al final del registro tipo 2. aeat-dr-190-2025, paginas 51-53, introduce el campo 394, resto de prestaciones del articulo 17.2.a).1 de la Ley 35/2006; los indicadores de prestaciones corresponden a clave B.01. Orden HAC/1431/2025 articulo 2 incorpora estos datos. La reserva vacia del diseno anterior prueba la introduccion, no un cambio de numero de un campo existente."
+number = "394"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_prestacion_resto"
+# One 0/1 flag per prestacion type, always recorded for clave B.01.
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-17", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025"]

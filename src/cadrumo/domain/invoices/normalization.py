@@ -35,7 +35,9 @@ def _pinned_invoice_operation() -> PinnedAuthorityOperation:
 
     operation = governed_facts_in_scope()
     if not isinstance(operation, PinnedAuthorityOperation):
-        raise InvoiceValidationError("invoice counterparty identification requires a generation-pinned authority operation")
+        raise InvoiceValidationError(
+            "invoice counterparty identification requires a generation-pinned authority operation",
+        )
     return operation
 
 

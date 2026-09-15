@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
 
-def verify_table_legal_refs(  # noqa: D417
+def verify_table_legal_refs(
     table: str,
     citations: Sequence[tuple[str, Sequence[str]]],
     *,
@@ -65,6 +65,7 @@ def verify_table_legal_refs(  # noqa: D417
         table: The table's name, used to head the refusal.
         citations: One ``(row_label, reference_ids)`` pair per row, in the order
             the rows were parsed.
+        operation: The pinned authority operation supplying legal references and evidence.
 
     Raises:
         IvaCatalogueError: When any cited provision is absent from the legal

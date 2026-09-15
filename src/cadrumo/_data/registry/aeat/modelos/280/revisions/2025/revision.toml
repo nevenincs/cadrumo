@@ -1,4 +1,5 @@
 [revisions."2025"]
+casilla_storage_baseline = "2022-2024"
 casilla_source_refs = ["boe-modelo-280-base-order"]
 authority_grade = "applicability"
 # Modelo 280, declaración informativa anual de Planes de Ahorro a Largo Plazo.
@@ -86,6 +87,7 @@ declared; the open selector asserts nothing about a calendar year whose window i
 NOT CLAIMED -- authority grade is unchanged at applicability; opening a span promotes \
 nothing."""
 reviewed_at = 2026-09-12
+family_storage_baseline = "2022-2024"
 
 [revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
@@ -104,3 +106,258 @@ source_refs = [
     "boe-modelo-280-2022-amendment-hfp-1192",
 ]
 
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "declarante-nif" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "ejercicio-declaracion" }
+fields = { additional_source_refs = ["aeat-modelo-280-procedure", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "declarado-nif" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "declarado-nombre" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "clave-alta" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "aportaciones-ejercicio" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "rendimientos-positivos-ejercicio" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "rendimientos-negativos-ejercicio" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "extincion-plan" }
+fields = { additional_source_refs = ["boe-modelo-280-2022-amendment-hfp-1192", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "fecha-extincion" }
+fields = { additional_source_refs = ["boe-modelo-280-2022-amendment-hfp-1192", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "rendimientos-positivos-acumulados" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "rendimientos-negativos-acumulados" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "declarante-razon-social" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "persona-relacion" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "numero-identificativo-declaracion" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "declaracion-complementaria-sustitutiva" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded", semantic_role_cardinality = "intentional_singleton", semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes." }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "numero-identificativo-anterior" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "numero-total-declarados" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "importe-total-aportaciones" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "base-retenciones" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "representante-legal-nif" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "tipo-plan-ahorro" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], constraints = { additional_source_refs = ["aeat-dr-280-2022"] }, continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "tipo-identificador" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], constraints = { additional_source_refs = ["aeat-dr-280-2022"] }, continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "identificador-producto" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], constraints = { additional_source_refs = ["aeat-dr-280-2022"] }, continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "fecha-apertura" }
+fields = { additional_source_refs = ["aeat-dr-280-2022"], constraints = { additional_source_refs = ["aeat-dr-280-2022"] }, continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "base-retencion-practicada" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2022-2024", id = "rendimientos-negativos-imputables" }
+fields = { additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_positions]]
+id = "declarante-nif"
+position = 0
+
+[[revisions."2025".casilla_positions]]
+id = "ejercicio-declaracion"
+position = 1
+
+[[revisions."2025".casilla_positions]]
+id = "declarado-nombre"
+position = 3
+
+[[revisions."2025".casilla_positions]]
+id = "clave-alta"
+position = 4
+
+[[revisions."2025".casilla_positions]]
+id = "aportaciones-ejercicio"
+position = 5
+
+[[revisions."2025".casilla_positions]]
+id = "rendimientos-positivos-ejercicio"
+position = 6
+
+[[revisions."2025".casilla_positions]]
+id = "rendimientos-negativos-ejercicio"
+position = 7
+
+[[revisions."2025".casilla_positions]]
+id = "extincion-plan"
+position = 8
+
+[[revisions."2025".casilla_positions]]
+id = "fecha-extincion"
+position = 9
+
+[[revisions."2025".casilla_positions]]
+id = "rendimientos-positivos-acumulados"
+position = 10
+
+[[revisions."2025".casilla_positions]]
+id = "rendimientos-negativos-acumulados"
+position = 11
+
+[[revisions."2025".casilla_positions]]
+id = "declarante-razon-social"
+position = 12
+
+[[revisions."2025".casilla_positions]]
+id = "persona-relacion"
+position = 13
+
+[[revisions."2025".casilla_positions]]
+id = "numero-identificativo-declaracion"
+position = 14
+
+[[revisions."2025".casilla_positions]]
+id = "declaracion-complementaria-sustitutiva"
+position = 15
+
+[[revisions."2025".casilla_positions]]
+id = "numero-identificativo-anterior"
+position = 16
+
+[[revisions."2025".casilla_positions]]
+id = "numero-total-declarados"
+position = 17
+
+[[revisions."2025".casilla_positions]]
+id = "importe-total-aportaciones"
+position = 18
+
+[[revisions."2025".casilla_positions]]
+id = "base-retenciones"
+position = 19
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2022-2024", id = "modelo-280-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-280-procedure"]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2024", id = "modelo-280-2022-0a"}
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2024", id = "modelo-280-2023-0a"}
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2024", id = "modelo-280-2024-0a"}

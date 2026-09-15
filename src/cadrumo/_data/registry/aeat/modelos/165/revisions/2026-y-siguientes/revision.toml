@@ -22,6 +22,7 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent: current AEAT design headed Ejercicio 2026, with the post-2016 EMPRESA EMERGENTE field and two complete 500-byte records"
 reviewed_at = 2026-08-26
+family_storage_baseline = "2023-2025"
 
 [revisions."2026-y-siguientes".family_dispositions.applicability]
 reason = "Modelo 165's registered scope is established by the approving Orden and is consumed through its temporal selector. This informative emitter declaration has no taxpayer-profile predicate or alternative applicability branch to model, so no applicability rule can be authored without inventing one."
@@ -76,3 +77,43 @@ source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
 reason = "Verification predicates express conditional checks over verification expectations. With no calculation or reconciliation expectation in this informative revision, there is no predicate subject to declare."
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2023-2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2023-2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2023-2025", id = "decl.ejercicio" }
+fields = { source_refs = ["enrolled-modelo-165-procedure"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2023-2025", id = "decl.tipo-declaracion" }
+fields = { source_refs = ["enrolled-modelo-165-procedure"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023-2025", id = "modelo-165-2023-0a"}
+
+[[revisions."2026-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023-2025", id = "modelo-165-2024-0a"}
+
+[[revisions."2026-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023-2025", id = "modelo-165-2025-0a"}

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ..corpus_text import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
 from ..corpus_text import normalise_corpus_text as normalise_corpus_text_owner
@@ -36,7 +37,7 @@ def test_normaliser_imports_without_configuration_or_domain_loading() -> None:
         "assert 'cadrumo.core.config' not in sys.modules\n"
         "assert not any(name.startswith('cadrumo.domain') for name in sys.modules)\n"
     )
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and inline probe exercise the import boundary.
+    completed = run_audited_process(
         [sys.executable, "-c", probe],
         check=False,
         capture_output=True,

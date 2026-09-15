@@ -17,8 +17,9 @@ for every ordinary pytest worker.
 
 from __future__ import annotations
 
-import subprocess
+import asyncio
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -59,16 +60,36 @@ print("PROFESSIONAL_70PCT:" + str(profile.professional_income_withholding_ge_70p
 """
 
 
+@dataclass(frozen=True)
+class _ChildResult:
+    """Captured result from the audited child-process boundary."""
+
+    returncode: int
+    stdout: str
+    stderr: str
+
+
+async def _run_child_async(*, cwd: Path) -> _ChildResult:
+    """Run the fixed projection probe without importing the wizard in-process."""
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        _CHILD_SCRIPT,
+        cwd=cwd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+    return _ChildResult(
+        returncode=int(process.returncode),
+        stdout=stdout.decode("utf-8", errors="replace"),
+        stderr=stderr.decode("utf-8", errors="replace"),
+    )
+
+
 def test_the_projection_runs_in_a_process_that_never_built_a_setup_ui(tmp_path: Path) -> None:
     """A schedule is computed from stored facts, not from a question catalogue."""
-    child = subprocess.run(  # noqa: S603 - fixed interpreter and in-module script constant
-        [sys.executable, "-c", _CHILD_SCRIPT],
-        capture_output=True,
-        text=True,
-        timeout=300,
-        check=False,
-        cwd=tmp_path,
-    )
+    child = asyncio.run(_run_child_async(cwd=tmp_path))
     out = child.stdout
     detail = f"\n--- stdout ---\n{out}\n--- stderr ---\n{child.stderr}"
 

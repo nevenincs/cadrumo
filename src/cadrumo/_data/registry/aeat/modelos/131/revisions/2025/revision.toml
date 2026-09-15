@@ -48,6 +48,8 @@ source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-131-2007-form",
 ]
+family_storage_baseline = "2024"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 [revisions."2025".family_dispositions.projection_endpoints]
@@ -88,3 +90,1173 @@ source_refs = [
 # Original bindings modelo-131-volumen-ingresos-agrario commentary: #    rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario. Las
 # Original bindings modelo-131-volumen-ingresos-agrario commentary: #    subvenciones CORRIENTES si computan, y las instrucciones AEAT del modelo lo
 # Original bindings modelo-131-volumen-ingresos-agrario commentary: #    dicen expresamente.
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-minoracion-inversion"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-b"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-indice-pequena-dimension"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-indice-temporada"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-indice-inicio-actividad"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-pequena-dimension-ignorado-flag"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-previo"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-minorado"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-modulos"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irpf-pf-modulos-rendimiento-neto-actividad"
+from_revision = "2024"
+to_revision = "2025"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:da-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "01" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "02" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "03" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "04" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "05" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "06" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "07" }
+fields = { constraints = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }, source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "08" }
+fields = { constraints = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }, source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "09" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "10" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "11" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "12" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "13" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "14" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "15" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-epigrafe" }
+fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-1-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-1-unidades-anterior" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:instruccion-2-2-a"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-2-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-3-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-4-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-5-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-6-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-7-unidades" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:art-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-minoracion-inversion" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:instruccion-2-2-b"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-b"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-indice-pequena-dimension" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-indice-temporada" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-indice-inicio-actividad" }
+fields = { constraints = { legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"] }, legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-pequena-dimension-ignorado-flag" }
+fields = { legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-temporada-inicio-actividad-conflicto-flag" }
+fields = { legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-rendimiento-neto-previo" }
+fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-rendimiento-neto-minorado" }
+fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-rendimiento-neto-modulos" }
+fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "modulos-rendimiento-neto-actividad" }
+fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:da-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "saldo-negativo-fin-periodo" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+removed_fields = []
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-131-modulos-pequena-dimension-ignorado-flag"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["El índice corrector para empresas de pequeña dimensión no será aplicable a las"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-131-modulos-rendimiento-neto-actividad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:da-1"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["reducción general del 5 por 100"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-131-modulos-rendimiento-neto-minorado"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [1, 2], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-131-modulos-rendimiento-neto-modulos"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Fase 3ª: Determinación del rendimiento neto de módulos"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [1, 2, 3, 4, 5], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-131-modulos-rendimiento-neto-previo"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuando resulte aplicable el índice corrector de temporada no se aplicará el índice"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-131-saldo-negativo-fin-periodo"}
+sequence_additions = {source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-131-objective-estimation-instalment"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b", "orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"], source_refs = ["aeat-dr-131-2025", "aeat-renta-2025-manual-parte1"]}
+sequence_removals = {legal_refs = [2, 3, 4, 5, 6, 7, 8, 9, 10], source_refs = [3]}
+sequence_order = {legal_refs = [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 2, 3], source_refs = [0, 4, 1, 2, 5, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "irpf.objective_agriculture_fractional_payment_rate"}
+sequence_additions = {values = [{value = "2", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "irpf.objective_no_base_fractional_payment_rate"}
+sequence_additions = {values = [{value = "2", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "m131-modulos-coeficiente-incremento-asalariados"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:instruccion-2-2-a"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Coeficiente por incremento del número de personas asalariadas: 0,40"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "0.40", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "m131-modulos-coeficiente-tramos-asalariados"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "1.00", fixed_addition = "0", marginal_rate = "0.10", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "1.00", upper_bound = "3.00", fixed_addition = "0.10", marginal_rate = "0.15", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "3.00", upper_bound = "5.00", fixed_addition = "0.40", marginal_rate = "0.20", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "5.00", upper_bound = "8.00", fixed_addition = "0.80", marginal_rate = "0.25", valid_from = 2025-01-01, valid_to = 2025-12-31}, {lower_bound = "8.00", fixed_addition = "1.55", marginal_rate = "0.30", valid_from = 2025-01-01, valid_to = 2025-12-31}], legal_refs = ["orden-hac-1347-2024:instruccion-2-2-a"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Hasta 1,00 0,10", "Entre 1,01 y 3,00 0,15", "Entre 5,01 y 8,00 0,25", "Más de 8,00 0,30"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {brackets = [0, 1, 2, 3, 4], legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "m131-modulos-coeficientes"}
+sequence_additions = {keyed_brackets = [{key = "721.2:1", value = "1346.27", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "721.2:2", value = "7656.89", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "721.2:3", value = "45.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "722:1", value = "2728.59", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "722:2", value = "10090.99", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "722:3", value = "126.21", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "972.1:1", value = "3161.90", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "972.1:2", value = "9649.47", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "972.1:3", value = "94.48", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "972.1:4", value = "81.88", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.4:1", value = "3709.88", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.4:2", value = "17434.55", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.4:3", value = "201.55", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.4:4", value = "585.77", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.4:5", value = "1077.06", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.4:6", value = "3810.65", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.5:1", value = "3602.80", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.5:2", value = "16174.82", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.5:3", value = "125.97", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.5:4", value = "220.45", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.5:5", value = "1077.06", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.5:6", value = "3810.65", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "672.1:1", value = "1448.68", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "672.1:2", value = "13743.56", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "672.1:3", value = "478.69", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "672.1:4", value = "377.92", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "672.1:5", value = "957.39", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "672.1:6", value = "3747.67", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.1:1", value = "4056.30", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.1:2", value = "15538.66", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.1:3", value = "321.23", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.1:4", value = "233.04", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.1:5", value = "371.62", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.1:6", value = "957.39", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.1:7", value = "2903.66", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.2:1", value = "1643.93", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.2:2", value = "11413.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.2:3", value = "94.48", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.2:4", value = "119.67", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.2:5", value = "163.76", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.2:6", value = "806.23", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.2:7", value = "2947.75", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.1:1", value = "2355.68", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.1:2", value = "10991.07", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.1:3", value = "35.90", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.1:4", value = "81.88", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.1:5", value = "39.05", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.5:1", value = "3382.36", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.5:2", value = "11337.49", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.5:3", value = "25.19", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.5:4", value = "27.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.5:5", value = "58.57", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.6:1", value = "2254.90", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.6:2", value = "11098.14", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.6:3", value = "27.71", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.6:4", value = "69.28", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "642.6:5", value = "35.90", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "643.1:1", value = "3823.25", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "643.1:2", value = "13296.36", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "643.1:3", value = "36.53", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "643.1:4", value = "113.37", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "643.1:5", value = "28.98", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.1:1", value = "6248.22", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.1:2", value = "1058.17", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.1:3", value = "14530.89", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.1:4", value = "49.13", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.1:5", value = "34.01", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.1:6", value = "125.97", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.1:7", value = "629.86", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.2:1", value = "6134.85", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.2:2", value = "1039.27", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.2:3", value = "14266.34", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.2:4", value = "48.50", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.2:5", value = "33.38", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.2:6", value = "125.97", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.2:7", value = "629.86", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.3:1", value = "6367.89", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.3:2", value = "1014.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.3:3", value = "12912.15", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.3:4", value = "43.46", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.3:5", value = "34.01", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.3:6", value = "113.37", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.3:7", value = "522.78", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.6:1", value = "6852.88", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.6:2", value = "2254.90", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.6:3", value = "13214.47", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.6:4", value = "27.71", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.6:5", value = "21.41", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "644.6:6", value = "36.53", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.1:1", value = "1026.67", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.1:2", value = "10839.90", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.1:3", value = "20.15", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.1:4", value = "68.65", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.1:5", value = "8.81", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.2:1", value = "1788.80", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.2:2", value = "10827.31", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.2:3", value = "23.31", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "647.2:4", value = "32.75", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.1:1", value = "3010.74", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.1:2", value = "13812.85", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.1:3", value = "38.42", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.1:4", value = "35.28", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.1:5", value = "107.07", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.2:1", value = "2569.83", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.2:2", value = "13995.51", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.2:3", value = "49.13", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.2:4", value = "56.69", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.3:1", value = "2198.21", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.3:2", value = "11998.85", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.3:3", value = "47.87", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.3:4", value = "75.58", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.4:1", value = "1902.18", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.4:2", value = "10291.93", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.4:3", value = "28.98", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.4:4", value = "58.57", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.6:1", value = "3130.41", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.6:2", value = "13453.83", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.6:3", value = "27.71", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "651.6:4", value = "52.27", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "652.2:1", value = "3722.48", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "652.2:2", value = "12786.18", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "652.2:3", value = "31.49", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "652.2:4", value = "18.27", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "652.2:5", value = "55.43", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.1:1", value = "4075.20", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.1:2", value = "16200.02", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.1:3", value = "50.39", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.1:4", value = "16.38", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.2:1", value = "2884.77", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.2:2", value = "14656.86", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.2:3", value = "100.78", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.2:4", value = "36.53", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.2:5", value = "113.37", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.3:1", value = "3709.88", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.3:2", value = "15116.66", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.3:3", value = "51.02", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.3:4", value = "21.41", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.4:1", value = "3061.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.4:2", value = "16527.55", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.4:3", value = "94.48", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.4:4", value = "8.81", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.9:1", value = "4950.71", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.9:2", value = "20061.07", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.9:3", value = "81.88", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "653.9:4", value = "39.68", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.2:1", value = "3098.92", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.2:2", value = "17018.84", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.2:3", value = "201.55", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.2:4", value = "617.26", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.5:1", value = "9422.71", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.5:2", value = "18858.03", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.5:3", value = "39.05", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.5:4", value = "132.27", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.6:1", value = "2746.19", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.6:2", value = "14222.25", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.6:3", value = "119.67", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "654.6:4", value = "377.92", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.2:1", value = "4157.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.2:2", value = "16521.25", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.2:3", value = "56.69", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.2:4", value = "17.01", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.3:1", value = "7174.12", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.3:2", value = "19273.74", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.3:3", value = "119.67", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.3:4", value = "1070.76", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.6:1", value = "2916.26", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.6:2", value = "13258.56", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.6:3", value = "138.57", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.6:4", value = "32.75", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.7:1", value = "4988.50", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.7:2", value = "16124.43", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.7:3", value = "258.24", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "662.2:1", value = "4868.82", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "662.2:2", value = "9429.01", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "662.2:3", value = "28.98", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "662.2:4", value = "37.79", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.1:1", value = "1398.29", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.1:2", value = "13989.21", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.1:3", value = "113.37", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.2:1", value = "2991.84", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.2:2", value = "13982.91", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.2:3", value = "239.34", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.3:1", value = "2613.92", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.3:2", value = "11186.32", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.3:3", value = "151.16", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.4:1", value = "3678.39", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.4:2", value = "12641.30", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.4:3", value = "113.37", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.9:1", value = "5448.29", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.9:2", value = "10537.57", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "663.9:3", value = "283.44", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "681:1", value = "6223.02", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "681:2", value = "20438.98", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "681:3", value = "371.62", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "682:1", value = "5145.96", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "682:2", value = "17541.62", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "682:3", value = "270.85", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "683:1", value = "4478.31", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "683:2", value = "14587.57", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "683:3", value = "132.27", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.1:1", value = "4314.54", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.1:2", value = "15538.66", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.1:3", value = "17.01", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.2:1", value = "4157.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.2:2", value = "17094.42", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.2:3", value = "27.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "692:1", value = "4409.02", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "692:2", value = "18146.29", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "692:3", value = "94.48", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "699:1", value = "3703.58", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "699:2", value = "15230.03", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "699:3", value = "88.18", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "721.1:1", value = "2981.02", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "721.1:2", value = "16016.97", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "721.1:3", value = "121.40", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4a:1", value = "4648.37", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4a:2", value = "17176.30", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4a:3", value = "57.94", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4a:4", value = "30.86", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4a:5", value = "535.38", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4b:1", value = "3476.83", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4b:2", value = "17220.39", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4b:3", value = "403.11", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "659.4b:4", value = "844.02", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.9a:1", value = "1845.50", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.9a:2", value = "10014.78", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.9a:3", value = "125.97", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.9b:1", value = "4094.10", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.9b:2", value = "16187.42", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "691.9b:3", value = "45.35", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "751.5:1", value = "4667.27", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "751.5:2", value = "19191.86", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "751.5:3", value = "30.23", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "757:1", value = "2566.32", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "757:2", value = "10175.13", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "757:3", value = "48.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "849.5:1", value = "2728.59", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "849.5:2", value = "10090.99", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "849.5:3", value = "126.21", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "933.1:1", value = "3067.42", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "933.1:2", value = "20596.45", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "933.1:3", value = "774.72", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "933.1:4", value = "258.24", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "933.9:1", value = "1253.49", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "933.9:2", value = "15727.62", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "933.9:3", value = "62.36", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "967.2:1", value = "7035.55", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "967.2:2", value = "14215.95", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "967.2:3", value = "34.01", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "971.1:1", value = "4553.90", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "971.1:2", value = "16773.19", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "971.1:3", value = "45.98", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "972.2:1", value = "1788.80", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "972.2:2", value = "14896.21", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "972.2:3", value = "88.18", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "972.2:4", value = "55.43", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "973.3:1", value = "4125.59", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "973.3:2", value = "17044.03", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "973.3:3", value = "541.68", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "641:1", value = "2387.18", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "641:2", value = "10581.66", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "641:3", value = "57.94", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "641:4", value = "88.18", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "641:5", value = "1.01", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "675:1", value = "2802.88", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "675:2", value = "14461.60", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "675:3", value = "107.07", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "675:4", value = "26.45", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "676:1", value = "2418.67", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "676:2", value = "20016.97", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "676:3", value = "541.68", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "676:4", value = "220.45", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "676:5", value = "806.23", valid_from = 2025-01-01, valid_to = 2025-12-31}], legal_refs = ["orden-hac-1347-2024:art-4"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2025"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {keyed_brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272], legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "m131-modulos-cuantia-exceso"}
+sequence_additions = {keyed_brackets = [{key = "972.1", value = "18051.81", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "721.2", value = "33640.86", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "722", value = "33640.86", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.4", value = "51617.08", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "671.5", value = "38081.38", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "672.1", value = "39070.26", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.1", value = "30586.03", valid_from = 2025-01-01, valid_to = 2025-12-31}, {key = "673.2", value = "19084.78", valid_from = 2025-01-01, valid_to = 2025-12-31}], legal_refs = ["orden-hac-1347-2024:instruccion-2-3-b-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Cuantía a efectos del índice corrector de exceso: 30.586,03 euros"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {keyed_brackets = [0, 1, 2, 3, 4, 5, 6, 7], legal_refs = [0], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "m131-modulos-indice-exceso"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:instruccion-2-3-b-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["índice corrector de exceso, debido"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "1.30", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "m131-modulos-reduccion-general"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:da-1"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["reducción general del 5 por 100"]}], source_refs = ["aeat-renta-2025-manual-parte1"], values = [{value = "5", date_axis = "filing_period", valid_from = 2025-01-01, valid_to = 2025-12-31}]}
+sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "advisory-when-computed-diverges:modulos-computed-diverges-de-c01"}
+fields = {predicate_id = "modelo-131-2025-modulos-computed-diverges-de-c01"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1"]}
+sequence_removals = {legal_refs = [1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "advisory-when-positive:modulos-pequena-dimension-ignorado-especial"}
+fields = {predicate_id = "modelo-131-2025-modulos-pequena-dimension-ignorado-especial"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "advisory-when-positive:modulos-temporada-inicio-actividad-incompatibles"}
+fields = {predicate_id = "modelo-131-2025-modulos-temporada-inicio-actividad-incompatibles"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "cap-le-when-positive:c11-cap-by-c10"}
+fields = {predicate_id = "modelo-131-2025-c11-cap-by-c10"}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-autotaxi"}
+fields = {predicate_id = "modelo-131-2025-modulos-indice-exceso-incompatible-autotaxi"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "casilla-equals-implies-diverges:modulos-indice-exceso-incompatible-mercancias"}
+fields = {predicate_id = "modelo-131-2025-modulos-indice-exceso-incompatible-mercancias"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]}
+sequence_removals = {legal_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "implies-nonzero:pago-fraccionado-determinado-cuando-rendimientos-positivos"}
+fields = {predicate_id = "modelo-131-2025-pago-fraccionado-determinado-cuando-rendimientos-positivos"}
+
+[[revisions."2025".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2024", id = "implies-nonzero:rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"}
+fields = {predicate_id = "modelo-131-2025-rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.did.iban"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.ano-inicio-actividad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.carga-superior-1000kg"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.deduccion-ceuta-melilla-la-palma"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.dias-actividad-temporada"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.dias-ejercicio-trimestre"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.epigrafe-iae"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.incentivos-empleo"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.incentivos-inversion"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.indicador-auxiliar-actividad-iae"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.indice-corrector-especial"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.indice-corrector-exceso"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.indice-corrector-nueva-actividad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.indice-corrector-pequena-dimension"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.indice-corrector-temporada"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.local-unico"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.mesas-1-capacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.mesas-1-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.mesas-2-capacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.mesas-2-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.mesas-3-capacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.mesas-3-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.mesas-4-capacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.mesas-4-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-1-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-1-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-2-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-2-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-3-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-3-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-4-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-4-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-5-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-5-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-6-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-6-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-7-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.modulo-7-unidades"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.municipio-actividad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.participacion-comunidad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.personal-asalariado-discapacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.personal-asalariado-horas-convenio"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.personal-asalariado-mayor-19"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.personal-asalariado-menor-19"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.personal-no-asalariado-conyuge"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.personal-no-asalariado-hijos"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.personal-no-asalariado-titular"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.porcentaje-superior"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.resto-personal-asalariado-discapacidad"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.resto-personal-asalariado-horas-convenio"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.resto-personal-asalariado-mayor-19"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.resto-personal-asalariado-menor-19"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.tractocamion-sin-semirremolque"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.tractocamion-unico-sin-semirremolque"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.vehiculos-afectos"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-1-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-1-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-1-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-1-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-2-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-2-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-2-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-2-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-3-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-3-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-3-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-3-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-4-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-4-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-4-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-4-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-5-epigrafe"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-5-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-5-rendimiento-neto"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.actividad-5-resultado"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-ingresos-generales-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla-la-palma"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-ingresos-ordinarias-generales"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4", "real-decreto-ley-13-2025:art-2"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 4, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla-la-palma"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-ingresos-prioritarias-generales"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4", "real-decreto-ley-13-2025:art-2"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 4, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-ingresos-territoriales-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-vivienda-base"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-vivienda-limite"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.agraria-vivienda-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.declaracion-complementaria"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.deduccion-art-110-cuantia"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.deduccion-art-110-tramo"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.discapacidad-33"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.justificante-anterior"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.sin-datos-base-ceuta-melilla-la-palma"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4", "real-decreto-ley-13-2025:art-2"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2, 4], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 5, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.sin-datos-base-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.sin-datos-base-vivienda-base"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.sin-datos-base-vivienda-limite"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.sin-datos-base-vivienda-porcentaje"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.sin-datos-base-volumen"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.vivienda-deduccion-aplicada"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.page1.vivienda-derecho-deduccion"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "export_layouts"
+selector = {revision = "2024", id = "modelo-131-fichero-boe"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], records = [{id = "modelo-131-2025-envelope-header", record_type = "envelope_header", order = 0, encoding = "iso-8859-1", line_ending = "none", fields = [{id = "modelo-131-2025-envelope-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-modelo", offset = 3, length = 3, kind = "literal", literal = "131", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-discriminante", offset = 6, length = 1, kind = "literal", literal = "0", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-ejercicio", offset = 7, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-periodo", offset = 11, length = 2, kind = "draft", draft_attribute = "period_code", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-marker", offset = 13, length = 5, kind = "literal", literal = "0000>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-aux-open", offset = 18, length = 5, kind = "literal", literal = "<AUX>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-reserved-1", offset = 23, length = 70, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-reserved-2", offset = 97, length = 4, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-reserved-3", offset = 110, length = 213, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-envelope-aux-close", offset = 323, length = 6, kind = "literal", literal = "</AUX>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}]}, {id = "modelo-131-2025-page-01", record_type = "page_1", order = 1, encoding = "iso-8859-1", line_ending = "none", binding_record = "page_1", fields = [{id = "modelo-131-2025-page-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-page-modelo", offset = 3, length = 3, kind = "literal", literal = "131", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-page-number", offset = 6, length = 5, kind = "literal", literal = "01000", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-page-end", offset = 11, length = 1, kind = "literal", literal = ">", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-complementaria-indicator", offset = 12, length = 1, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-declaration-type", offset = 13, length = 1, kind = "header", producer_key = "filing.result_disposition", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-tax-id", offset = 14, length = 9, kind = "header", producer_key = "taxpayer.tax_id", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-declarante-apellidos", offset = 23, length = 60, kind = "header", producer_key = "taxpayer.surnames", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-declarante-nombre", offset = 83, length = 20, kind = "header", producer_key = "taxpayer.given_name", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-devengo-ejercicio", offset = 103, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-devengo-periodo", offset = 107, length = 2, kind = "draft", draft_attribute = "period_code", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-01", offset = 325, length = 17, kind = "casilla", casilla_id = "01", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-02", offset = 342, length = 17, kind = "casilla", casilla_id = "02", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-03", offset = 390, length = 17, kind = "casilla", casilla_id = "03", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-04", offset = 407, length = 17, kind = "casilla", casilla_id = "04", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-05", offset = 488, length = 17, kind = "casilla", casilla_id = "05", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-06", offset = 505, length = 17, kind = "casilla", casilla_id = "06", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-07", offset = 522, length = 17, kind = "casilla", casilla_id = "07", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-08", offset = 539, length = 17, kind = "casilla", casilla_id = "08", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-09", offset = 562, length = 17, kind = "casilla", casilla_id = "09", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-10", offset = 579, length = 17, kind = "casilla", casilla_id = "10", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-11", offset = 596, length = 17, kind = "casilla", casilla_id = "11", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-12", offset = 624, length = 17, kind = "casilla", casilla_id = "12", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-13", offset = 641, length = 17, kind = "casilla", casilla_id = "13", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-14", offset = 658, length = 17, kind = "casilla", casilla_id = "14", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-casilla-15", offset = 675, length = 17, kind = "casilla", casilla_id = "15", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-page-close", offset = 820, length = 12, kind = "literal", literal = "</T13101000>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}]}, {id = "modelo-131-2025-dpa", record_type = "DPA", order = 2, encoding = "iso-8859-1", line_ending = "none", repeat = "binding_rows", binding_record = "DPA", fields = [{id = "modelo-131-2025-dpa-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-dpa-modelo", offset = 3, length = 3, kind = "literal", literal = "131", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-dpa-page", offset = 6, length = 5, kind = "literal", literal = "DPA00", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-dpa-end", offset = 11, length = 1, kind = "literal", literal = ">", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-dpa-complementaria-indicator", offset = 12, length = 1, kind = "computed", computed_key = "complementaria_page_marker", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-dpa-close", offset = 587, length = 12, kind = "literal", literal = "</T131DPA00>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}]}, {id = "modelo-131-2025-did", record_type = "DID", order = 3, encoding = "iso-8859-1", line_ending = "none", required = false, binding_record = "DID", requires_positive_casilla_id = "15", fields = [{id = "modelo-131-2025-did-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-did-modelo", offset = 3, length = 3, kind = "literal", literal = "131", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-did-page", offset = 6, length = 5, kind = "literal", literal = "DID00", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-did-end", offset = 11, length = 1, kind = "literal", literal = ">", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}, {id = "modelo-131-2025-did-close", offset = 246, length = 12, kind = "literal", literal = "</T131DID00>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2025"]}]}], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], records = [0, 1, 2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2024", id = "modelo-131-dr-xlsx"}
+fields = {fixture_id = "modelo-131-2025-record-design-layout", workbook_source = "aeat-dr-131-2025"}
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024", id = "modelo-131-calculation-verification"}
+sequence_additions = {source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024", id = "modelo-131-reconcile-when-present"}
+sequence_additions = {source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2025".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2024", id = "aeat-dr-131-2024"}
+replacement_id = "aeat-dr-131-2025"
+sequence_additions = {legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b", "orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"], source_refs = ["aeat-dr-131-2025"]}
+sequence_removals = {legal_refs = [3, 4, 5, 6, 7, 8, 9, 10, 11], source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-131-2024-1t"}
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-131-2024-2t"}
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-131-2024-3t"}
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-131-2024-4t"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.actividad-dana"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.actividad-la-palma"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.actividad-lorca"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.numero-bateas-barcos-auxiliares"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.reduccion-dana"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.reduccion-la-palma"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-131.dpa.reduccion-lorca"}

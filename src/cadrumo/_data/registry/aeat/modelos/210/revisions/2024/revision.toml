@@ -54,6 +54,8 @@ source_refs = [
     # Orden HAC/56/2024 approves the form from 2024-02-01; 2023 must not cite it.
     "boe-modelo-210-2024-form-layout",
 ]
+family_storage_baseline = "2023"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 [revisions."2024".family_dispositions.live_cross_references]
@@ -320,3 +322,75 @@ source_refs = ["aeat-dr-210-2022", "aeat-modelo-210-procedure"]
 # Original bindings fragment 0001-declarations.toml: # BOE treaty reference from this same field; the retired TaxpayerProfile
 # Original bindings fragment 0001-declarations.toml: # convenio_aplicable static-lookup property has been deleted in favour of
 # Original bindings fragment 0001-declarations.toml: # this resolution path.
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "m210-imputacion-no-catastral-base-fraction"}
+sequence_additions = {values = [{value = "0.50", date_axis = "filing_period", valid_from = 2024-01-01}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "m210-imputacion-rate-old-or-no-revision"}
+sequence_additions = {values = [{value = "0.02", date_axis = "filing_period", valid_from = 2024-01-01}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "m210-imputacion-rate-recent-revision"}
+sequence_additions = {values = [{value = "0.011", date_axis = "filing_period", valid_from = 2024-01-01}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "m210-pension-tarifa"}
+sequence_additions = {brackets = [{lower_bound = "0", upper_bound = "12000", fixed_addition = "0", marginal_rate = "0.08", valid_from = 2024-01-01}, {lower_bound = "12000", upper_bound = "18700", fixed_addition = "960", marginal_rate = "0.30", valid_from = 2024-01-01}, {lower_bound = "18700", fixed_addition = "2970", marginal_rate = "0.40", valid_from = 2024-01-01}]}
+sequence_removals = {brackets = [0, 1, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "m210-tipo-gravamen"}
+sequence_additions = {keyed_brackets = [{key = "general", value = "0.24", valid_from = 2024-01-01}, {key = "ue_residente", value = "0.19", valid_from = 2024-01-01}, {key = "ganancia_patrimonial", value = "0.19", valid_from = 2024-01-01}, {key = "inmobiliaria", value = "0.24", valid_from = 2024-01-01}, {key = "interest", value = "0.19", valid_from = 2024-01-01}, {key = "dividend", value = "0.19", valid_from = 2024-01-01}, {key = "canones", value = "0.24", valid_from = 2024-01-01}]}
+sequence_removals = {keyed_brackets = [0, 1, 2, 3, 4, 5, 6]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "m210-tipo-renta-code"}
+sequence_additions = {keyed_brackets = [{key = "01", value = "1", valid_from = 2024-01-01}, {key = "02", value = "1", valid_from = 2024-01-01}, {key = "03", value = "1", valid_from = 2024-01-01}, {key = "04", value = "1", valid_from = 2024-01-01}, {key = "05", value = "1", valid_from = 2024-01-01}, {key = "06", value = "1", valid_from = 2024-01-01}, {key = "07", value = "1", valid_from = 2024-01-01}, {key = "08", value = "1", valid_from = 2024-01-01}, {key = "09", value = "1", valid_from = 2024-01-01}, {key = "10", value = "1", valid_from = 2024-01-01}, {key = "11", value = "1", valid_from = 2024-01-01}, {key = "12", value = "1", valid_from = 2024-01-01}, {key = "14", value = "1", valid_from = 2024-01-01}, {key = "15", value = "1", valid_from = 2024-01-01}, {key = "16", value = "1", valid_from = 2024-01-01}, {key = "17", value = "1", valid_from = 2024-01-01}, {key = "18", value = "1", valid_from = 2024-01-01}, {key = "21", value = "1", valid_from = 2024-01-01}, {key = "22", value = "1", valid_from = 2024-01-01}, {key = "24", value = "1", valid_from = 2024-01-01}, {key = "25", value = "1", valid_from = 2024-01-01}, {key = "26", value = "1", valid_from = 2024-01-01}, {key = "28", value = "1", valid_from = 2024-01-01}, {key = "29", value = "1", valid_from = 2024-01-01}, {key = "30", value = "1", valid_from = 2024-01-01}, {key = "32", value = "1", valid_from = 2024-01-01}, {key = "33", value = "1", valid_from = 2024-01-01}, {key = "34", value = "1", valid_from = 2024-01-01}, {key = "35", value = "1", valid_from = 2024-01-01}, {key = "36", value = "1", valid_from = 2024-01-01}, {key = "37", value = "1", valid_from = 2024-01-01}, {key = "38", value = "1", valid_from = 2024-01-01}]}
+sequence_removals = {keyed_brackets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]}
+
+[[revisions."2024".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2023", id = "casilla-equals-implies-nonzero:inmobiliaria-implica-base-imponible"}
+fields = {predicate_id = "modelo-210-2024-inmobiliaria-implica-base-imponible"}
+
+[[revisions."2024".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2023", id = "casilla-equals-implies-profile-flag:ue-residente-requiere-residencia-ue-eee"}
+fields = {predicate_id = "modelo-210-2024-ue-residente-requiere-residencia-ue-eee"}
+
+[[revisions."2024".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2023", id = "implies-nonzero:rendimientos-integros-implica-base-imponible"}
+fields = {predicate_id = "modelo-210-2024-rendimientos-integros-implica-base-imponible"}
+
+[[revisions."2024".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2023", id = "modelo-210-procedure-2025"}
+fields = {fixture_id = "modelo-210-2024-procedure-skeleton"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-210-2023-0a-arrendamiento-ingreso"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-210-2023-0a-cuota-cero"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-210-2023-0a-devolucion"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-210-2023-0a-renta-imputada"}

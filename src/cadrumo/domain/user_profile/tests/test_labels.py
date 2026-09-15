@@ -21,7 +21,9 @@ from ..labels import (
     profile_section_title,
     profile_section_title_key,
 )
-from ._schema_loader_fixtures import module_scoped_schema  # noqa: F401
+from ._schema_loader_fixtures import module_scoped_schema
+
+__all__ = ["module_scoped_schema"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

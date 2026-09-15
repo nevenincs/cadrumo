@@ -32,6 +32,8 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
+family_storage_baseline = "2019-2022"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2023-2024".family_dispositions.projection_endpoints]
 reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. A type-level exclusion, not missing work; it changes only if the union gains a 202 member, which is a code change in core, not a registry one."
@@ -154,3 +156,421 @@ origin = "grounded"
 evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the amount of the allowance expressly identified by article 34 LIS. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-mod-40-3-b2-importe-pago-fraccionado"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "seeded"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "25"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "seeded"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "01" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "02" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "03" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "04" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "05" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "06" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "07" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "08" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "13" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "14" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "16" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "17" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "18" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "19" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "20" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "21" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "22" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"], constraints = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] } }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "23" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "24" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "25" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"], constraints = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] } }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "26" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "27" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "28" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"], constraints = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] } }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "29" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "30" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"], constraints = { source_refs = ["aeat-modelo-202-instructions-2023-2024"] } }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "31" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "32" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "33" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "34" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "37" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "38" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "39" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "40" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "42" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "44" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "45" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "46" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "47" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "48" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "49" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "50" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "51" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".casilla_overrides]]
+selector = { revision = "2019-2022", id = "52" }
+fields = { additional_source_refs = ["aeat-modelo-202-instructions-2023-2024"] }
+removed_fields = []
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-base-imponible-corregida"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave [16]", "sin poder ser negativa"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-base-imponible-previa"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave 13 = clave 04 + clave 38 - clave 39"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-cantidad-a-ingresar"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave [34]", "cantidad a ingresar", "mayor de las claves"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-importe-pago-fraccionado-b2-tipo-1"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave [22] sera"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-importe-pago-fraccionado-b2-tipo-2"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave [25]", "clave [23]"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-modalidad-40-2-a-ingresar"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave [03]", "porcentaje del 18%"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-modalidad-40-3-resultado"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave [32]", "es un importe calculado", "(o clave [26])"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-resultado-previo-b1"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave [18]", "(clave [16] x clave [17])"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-resultado-previo-b2"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["la clave [26]", "clave [22] + clave [25] + clave [50]"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-total-correcciones-aumentos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave 38 = clave 05 + clave 07"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2022", id = "modelo-202-total-correcciones-disminuciones"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["clave 39 = clave 06 + clave 37 + clave 08"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2019-2022", id = "modelo-202-trimestral"}
+sequence_additions = {profile_conditions = [{field = "taxpayer.entity_type", op = "equals", value = "legal_entity", explanation = "Las entidades juridicas contribuyentes del Impuesto sobre Sociedades presentan el Modelo 202 en abril, octubre y diciembre.", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-modelo-202-instructions-2023-2024"]}], source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {profile_conditions = [0], source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "live_cross_references"
+selector = {revision = "2019-2022", id = "modelo-202-static-documentation"}
+fields = {guard_policy_id = "modelo-202-2023-2024-static-documentation-only"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2019-2022", id = "modelo-202-dep-self-prior-pagos"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "constructs"
+selector = {revision = "2019-2022", id = "modelo-202-foundation"}
+sequence_additions = {legal_refs = ["orden-hfp-312-2023:art-unico-1-anexo-i"], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "boe-modelo-202-2023-amendment"]}
+sequence_removals = {legal_refs = [5], source_refs = [1, 2, 4]}
+sequence_order = {source_refs = [0, 2, 3, 4, 5, 1, 6]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-approval"}
+sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-filing"}
+sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-portal"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-review"}
+sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-workflow"}
+sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2019-2022", id = "is.modalidad_cuota.percentage"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["porcentaje del 18%", "base del pago fraccionado"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"], values = [{value = "18", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2024-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2022", id = "modelo-202-pagos-fraccionados-anteriores"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["pagos fraccionados"]}], source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2019-2022", id = "modelo-202-dr-xlsx"}
+fields = {fixture_id = "modelo-202-2023-2024-record-design-layout", workbook_source = "aeat-dr-202-2023"}
+sequence_additions = {legal_refs = ["orden-hfp-312-2023:art-unico-1-anexo-i"], source_refs = ["aeat-dr-202-2023", "boe-modelo-202-2023-amendment"]}
+sequence_removals = {legal_refs = [5], source_refs = [0, 2]}
+sequence_order = {source_refs = [1, 0, 2]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2019-2022", id = "modelo-202-cuota-chain-verification"}
+sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2019-2022", id = "aeat-dr-202-2019"}
+replacement_id = "aeat-dr-202-2023"
+sequence_additions = {source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023-2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2022", id = "modelo-202-2022-1p"}
+
+[[revisions."2023-2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2022", id = "modelo-202-2022-2p"}
+
+[[revisions."2023-2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2022", id = "modelo-202-2022-3p"}

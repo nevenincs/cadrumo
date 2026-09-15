@@ -27,6 +27,8 @@ from pathlib import Path
 import pytest
 from _pytest.pathlib import LOCK_TIMEOUT, ensure_deletable, make_numbered_dir_with_cleanup
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from ..core.directory_scan import scan_directory
 from .collection_storage_root import (
     _ABANDONED_AFTER_SECONDS,
@@ -360,7 +362,7 @@ def test_the_reaped_root_is_where_a_real_pytest_run_puts_its_directories(tmp_pat
         encoding="utf-8",
     )
     (tmp_path / "pytest.ini").write_text("[pytest]\n", encoding="utf-8")
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv; the probe is a test-local literal.
+    completed = run_audited_process(
         [
             sys.executable,
             "-m",

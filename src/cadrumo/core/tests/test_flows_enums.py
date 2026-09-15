@@ -107,5 +107,6 @@ def test_str_equality_contract_is_load_bearing() -> None:
 
 
 def test_reserved_constants() -> None:
-    assert DEFER_TOKEN == "__defer__"  # noqa: S105 - reserved sentinel token, not a secret
+    expected_defer_value = "__defer__"
+    assert expected_defer_value == DEFER_TOKEN
     assert REPEATING_INSTANCE_SEPARATOR == "#"

@@ -129,9 +129,3 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 # the verify gate prompts rather than refuses. The Art. 94 full-deduction
 # default stays untouched because fully-taxable filings leave the annual
 # prorrata volume antecedent absent/zero.
-[[revisions.2023.verification_predicates]]
-id = "implies-nonzero:prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
-predicate_id = "modelo-303-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
-expression = 'implies_nonzero(["iva.prorrata-volumen-total", "44"])'
-finding_kind = "ADVISORY"
-legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105"]

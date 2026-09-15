@@ -327,7 +327,7 @@ def _catalogued_country_codes(
     )
 
 
-def stated_country_code_status(  # noqa: D417
+def stated_country_code_status(
     stated_code: str | None,
     *,
     operation: PinnedAuthorityOperation,
@@ -343,6 +343,7 @@ def stated_country_code_status(  # noqa: D417
         stated_code: The code as printed or as a structured record states it, or
             ``None``. Surrounding whitespace and letter case are normalised, the
             same way every other reader of this axis normalises them.
+        operation: The pinned authority operation supplying the country vocabulary.
 
     Returns:
         The status, or ``None`` when nothing that could be an alpha-2 code was
@@ -409,7 +410,7 @@ def _scope_for_catalogued_country(
     return iva_territorial_scope_alias("third_country", operation=operation)
 
 
-def territorial_scope_for_country(  # noqa: D417
+def territorial_scope_for_country(
     country_code: str | None,
     *,
     operation: PinnedAuthorityOperation,
@@ -458,6 +459,7 @@ def territorial_scope_for_country(  # noqa: D417
             therefore checked before that validator is consulted, so the
             validator stays the single authority on what a well-formed code is
             without an exception being used for ordinary control flow.
+        operation: The pinned authority operation supplying the country vocabulary.
 
     Returns:
         the registry-projected EU-member token for a Member State other than
@@ -486,7 +488,7 @@ def territorial_scope_for_country(  # noqa: D417
     return _scope_for_catalogued_country(normalised, operation=operation)
 
 
-def country_code_for_printed_tax_identifier(  # noqa: D417
+def country_code_for_printed_tax_identifier(
     printed_identifier: str | None,
     *,
     operation: PinnedAuthorityOperation,
@@ -520,6 +522,7 @@ def country_code_for_printed_tax_identifier(  # noqa: D417
         printed_identifier: The identifier as transcribed, or ``None``. Spacing
             and separator punctuation are normalised away, because an issuer
             prints ``BE 0123.456.789`` as readily as ``BE0123456789``.
+        operation: The pinned authority operation supplying the IVA prefix vocabulary.
 
     Returns:
         The ISO 3166-1 alpha-2 code -- ``GR`` for a Greek ``EL`` number, since
@@ -586,7 +589,7 @@ def _excluded_territories_by_prefix(
     return {prefix: require_iva_territorial_scope(record.scope, operation=operation) for prefix, record in records}
 
 
-def territorial_scope_for_spanish_postal_code(  # noqa: D417
+def territorial_scope_for_spanish_postal_code(
     postal_code: str | None,
     *,
     operation: PinnedAuthorityOperation,
@@ -603,6 +606,7 @@ def territorial_scope_for_spanish_postal_code(  # noqa: D417
             normalised; anything that is not five digits is treated as absent
             rather than coerced, because a document prints what it prints and
             unreadable evidence is a normal outcome of reading.
+        operation: The pinned authority operation supplying the territorial registry.
 
     Returns:
         the registry-projected Canarias or Ceuta/Melilla token for a prefix the
@@ -632,7 +636,7 @@ def territorial_scope_for_spanish_postal_code(  # noqa: D417
     )
 
 
-def country_code_for_stated_country_code(  # noqa: D417
+def country_code_for_stated_country_code(
     stated_code: str | None,
     *,
     operation: PinnedAuthorityOperation,
@@ -665,6 +669,7 @@ def country_code_for_stated_country_code(  # noqa: D417
             system, or ``None``. Surrounding whitespace and letter case are
             normalised, because the value is machine-produced but the case
             convention is the issuer's.
+        operation: The pinned authority operation supplying the country vocabulary.
 
     Returns:
         The upper-case ISO 3166-1 alpha-2 code, or ``None`` when the element is
@@ -713,7 +718,7 @@ def country_code_for_stated_country_code(  # noqa: D417
     return None
 
 
-def record_country_code_status(  # noqa: D417
+def record_country_code_status(
     stated_code: str | None,
     *,
     operation: PinnedAuthorityOperation,
@@ -776,6 +781,7 @@ def record_country_code_status(  # noqa: D417
         stated_code: The token the record's country element carries, or ``None``.
             Surrounding whitespace and letter case are normalised, the way every
             reader of this axis normalises them.
+        operation: The pinned authority operation supplying the country vocabulary.
 
     Returns:
         The status, or ``None`` when the element stated nothing -- absent or
@@ -806,7 +812,7 @@ def record_country_code_status(  # noqa: D417
     return None
 
 
-def country_code_for_printed_country_name(  # noqa: D417
+def country_code_for_printed_country_name(
     printed_name: str | None,
     *,
     operation: PinnedAuthorityOperation,
@@ -832,6 +838,7 @@ def country_code_for_printed_country_name(  # noqa: D417
         printed_name: The country name transcribed from the document, or
             ``None``. Case, surrounding and repeated whitespace, and combining
             accents are normalised away; nothing else is.
+        operation: The pinned authority operation supplying the country vocabulary.
 
     Returns:
         The upper-case ISO 3166-1 alpha-2 code, or ``None`` when the name is

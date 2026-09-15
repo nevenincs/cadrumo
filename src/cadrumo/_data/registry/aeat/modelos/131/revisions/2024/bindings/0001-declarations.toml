@@ -4,106 +4,6 @@ provider = { kind = "manual_input", record = "page_1", field = "discapacidad-33"
 value = { data_type = "boolean", channel = "boolean" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 [[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-1-epigrafe"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-1-epigrafe", offset = 110, length = 4, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-1-rendimiento-neto"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-1-rendimiento-neto", offset = 114, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-1-porcentaje"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-1-porcentaje", offset = 131, length = 5, data_type = "decimal", decimals = 2 }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-1-resultado"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-1-resultado", offset = 136, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-2-epigrafe"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-2-epigrafe", offset = 153, length = 4, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-2-rendimiento-neto"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-2-rendimiento-neto", offset = 157, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-2-porcentaje"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-2-porcentaje", offset = 174, length = 5, data_type = "decimal", decimals = 2 }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-2-resultado"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-2-resultado", offset = 179, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-3-epigrafe"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-3-epigrafe", offset = 196, length = 4, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-3-rendimiento-neto"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-3-rendimiento-neto", offset = 200, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-3-porcentaje"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-3-porcentaje", offset = 217, length = 5, data_type = "decimal", decimals = 2 }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-3-resultado"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-3-resultado", offset = 222, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-4-epigrafe"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-4-epigrafe", offset = 239, length = 4, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-4-rendimiento-neto"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-4-rendimiento-neto", offset = 243, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-4-porcentaje"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-4-porcentaje", offset = 260, length = 5, data_type = "decimal", decimals = 2 }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-4-resultado"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-4-resultado", offset = 265, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-5-epigrafe"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-5-epigrafe", offset = 282, length = 4, data_type = "text" }
-value = { data_type = "text", channel = "text" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-5-rendimiento-neto"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-5-rendimiento-neto", offset = 286, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-5-porcentaje"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-5-porcentaje", offset = 303, length = 5, data_type = "decimal", decimals = 2 }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.actividad-5-resultado"
-provider = { kind = "manual_input", record = "page_1", field = "actividad-5-resultado", offset = 308, length = 17, data_type = "money", signed = true }
-value = { data_type = "money", channel = "decimal" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
 id = "modelo-131.page1.sin-datos-base-ceuta-melilla-la-palma"
 provider = { kind = "manual_input", record = "page_1", field = "sin-datos-base-ceuta-melilla-la-palma", offset = 359, length = 1, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
@@ -202,11 +102,6 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359
 id = "modelo-131.page1.declaracion-complementaria"
 provider = { kind = "manual_input", record = "page_1", field = "declaracion-complementaria", offset = 692, length = 1, data_type = "boolean" }
 value = { data_type = "boolean", channel = "boolean" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
-[[revisions."2024".bindings]]
-id = "modelo-131.page1.justificante-anterior"
-provider = { kind = "manual_input", record = "page_1", field = "justificante-anterior", offset = 693, length = 13, data_type = "text" }
-value = { data_type = "text", channel = "text" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 [[revisions."2024".bindings]]
 id = "modelo-131.dpa.epigrafe-iae"

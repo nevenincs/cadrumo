@@ -101,7 +101,7 @@ def load_recargo_rate_table(
     return tuple(records)
 
 
-def recargo_rate_for_applied_rate(  # noqa: D417
+def recargo_rate_for_applied_rate(
     applied_rate: Decimal,
     on_date: date,
     *,
@@ -116,6 +116,7 @@ def recargo_rate_for_applied_rate(  # noqa: D417
     Args:
         applied_rate: The IVA rate the line actually carried, as a fraction.
         on_date: The operation date, which selects among windowed pairings.
+        operation: The pinned authority operation supplying dated recargo pairings.
 
     Returns:
         The paired recargo rate, which may legitimately be zero. ``None`` when

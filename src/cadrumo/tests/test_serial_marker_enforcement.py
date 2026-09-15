@@ -37,6 +37,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.audited_process import run_audited_process
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MARKER_HOOK_MODULE = Path(__file__).resolve().parent / "_marker_hook.py"
@@ -91,7 +93,7 @@ def test_needs_isolation():
 
 def _nested_pytest(package: Path, *args: str) -> subprocess.CompletedProcess[str]:
     """Run a real nested pytest over ``package`` with the shared hook installed."""
-    return subprocess.run(  # noqa: S603 - fixed interpreter argv over a repository-owned harness
+    return run_audited_process(
         [
             sys.executable,
             "-m",

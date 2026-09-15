@@ -54,6 +54,8 @@ source_refs = [
     # with the second. Neither was cited.
     "aeat-dr-210-2026",
 ]
+family_storage_baseline = "2025"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 [revisions."2026-y-siguientes".family_dispositions.live_cross_references]
@@ -193,3 +195,344 @@ to_revision = "2026-y-siguientes"
 origin = "seeded"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-base-imponible-directa-i"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-exencion-dividendos"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-ganancia-valor-transmision"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-ganancia-valor-adquisicion"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-ganancia-diferencia"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-ganancia-importe"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-mejora-valor-transmision"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-mejora-valor-adquisicion"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-mejora-diferencia"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-mejora-ganancia"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-base-imponible-ganancias-h"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-base-imponible-directa-g"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-exenciones-ley-irnr-indicador"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-convenio-indicador"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-deduccion-donativos"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-cuota-ley-irnr"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-porcentaje-convenio"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-limite-convenio"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-reduccion-convenio"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-cuota-integra-reducida"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-ingreso-devolucion-anterior"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "base_imponible_directa_i" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "exencion_dividendos" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"], constraints = { source_refs = ["aeat-dr-210-2026"] } }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "ganancia_valor_transmision" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "ganancia_valor_adquisicion" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "ganancia_diferencia" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "ganancia_importe" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "mejora_valor_transmision" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "mejora_valor_adquisicion" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "mejora_diferencia" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "mejora_ganancia" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "base_imponible_ganancias_h" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "base_imponible_directa_g" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "exenciones_ley_irnr_indicador" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"], constraints = { source_refs = ["aeat-dr-210-2026"] } }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "convenio_indicador" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"], constraints = { source_refs = ["aeat-dr-210-2026"] } }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "deduccion_donativos" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"], constraints = { source_refs = ["aeat-dr-210-2026"] } }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "cuota_ley_irnr" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "porcentaje_convenio" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"], constraints = { source_refs = ["aeat-dr-210-2026"] } }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "limite_convenio" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"], constraints = { source_refs = ["aeat-dr-210-2026"] } }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "reduccion_convenio" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "cuota_integra_reducida" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".casilla_overrides]]
+selector = { revision = "2025", id = "ingreso_devolucion_anterior" }
+fields = { additional_source_refs = ["aeat-dr-210-2026"] }
+removed_fields = []
+
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2025", id = "modelo-210-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-210-2026"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2025", id = "m210-irnr-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-210-2026"]}
+sequence_removals = {source_refs = [3]}
+
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-210-export"}
+sequence_additions = {source_refs = ["aeat-dr-210-2026"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2025", id = "modelo-210-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-210-2026"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2025", id = "aeat-modelo-210-procedure"}
+sequence_additions = {source_refs = ["aeat-dr-210-2026"]}
+sequence_removals = {source_refs = [2]}
+
+[[revisions."2026-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2025", id = "modelo-210-2025-0a-arrendamiento-ingreso"}
+
+[[revisions."2026-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2025", id = "modelo-210-2025-0a-cuota-cero"}
+
+[[revisions."2026-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2025", id = "modelo-210-2025-0a-devolucion"}
+
+[[revisions."2026-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2025", id = "modelo-210-2025-0a-renta-imputada"}

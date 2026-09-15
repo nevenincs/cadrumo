@@ -728,6 +728,10 @@ __all__ = [
 # package cannot resolve that itself -- its hierarchy binds error codes while
 # still being defined, so reaching here from its module scope re-enters a
 # half-built module. This is the first point at which both halves exist.
-from .errors.error_codes import complete_error_envelope_model  # noqa: E402 - see comment above
+def _complete_error_envelope_model() -> None:
+    from .errors.error_codes import complete_error_envelope_model
 
-complete_error_envelope_model()
+    complete_error_envelope_model()
+
+
+_complete_error_envelope_model()

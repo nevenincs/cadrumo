@@ -63,3 +63,247 @@ not modelled; no export layout of either kind is declared. This review reaches s
 and applicability only, which is what the applicability rung asserts. NOT CLAIMED -- all 3 \
 locales are complete for the 2 labels, but the strings were not audited for accuracy."""
 reviewed_at = 2026-08-21
+family_storage_baseline = "2003-2025"
+scoped_families = ["workbook_parity_refs"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2003-2025"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2003-2025"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure"]
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2003-2025", id = "decl.ejercicio" }
+fields = { legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"], source_refs = ["enrolled-modelo-185-procedure"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2003-2025", id = "decl.tipo-declaracion" }
+fields = { legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"], source_refs = ["enrolled-modelo-185-procedure"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2003-2025", id = "modelo-185-deadline"}
+sequence_additions = {legal_refs = ["orden-hac-1197-2025:art-4"], source_refs = ["enrolled-modelo-185-procedure"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2003-2025", id = "modelo-185-filing"}
+sequence_additions = {legal_refs = ["orden-hac-1197-2025:art-1"], source_refs = ["enrolled-modelo-185-procedure"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2003-2025", id = "modelo-185-orden-static-layout"}
+fields = {fixture_id = "modelo-185-orden-hac-1197-2025-layout", workbook_source = "enrolled-modelo-185-layout"}
+sequence_additions = {legal_refs = ["orden-hac-1197-2025:art-1"], source_refs = ["enrolled-modelo-185-layout"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-01"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-02"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-03"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-04"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-05"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-06"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-07"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-08"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-09"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-10"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-11"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2022-12"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-01"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-02"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-03"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-04"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-05"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-06"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-07"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-08"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-09"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-10"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-11"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2023-12"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-01"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-02"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-03"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-04"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-05"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-06"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-07"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-08"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-09"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-10"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-11"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2024-12"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-01"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-02"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-03"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-04"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-05"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-06"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-07"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-08"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-09"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-10"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-11"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2003-2025", id = "modelo-185-2025-12"}

@@ -1,4 +1,5 @@
 [revisions."2019-y-siguientes"]
+casilla_storage_baseline = "2016-2018"
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2019"] } }
 casilla_source_refs = ["aeat-dr-308-2019"]
 live_cross_reference_source_refs = ["aeat-modelo-308-procedure"]
@@ -49,6 +50,8 @@ source_refs = [
     "aeat-modelo-308-procedure",
     "boe-modelo-308-2008-form",
 ]
+family_storage_baseline = "2016-2018"
+scoped_families = ["workbook_parity_refs"]
 
 [revisions."2019-y-siguientes".family_dispositions.applicability]
 reason = "Modelo 308 is filed AD-HOC, one declaration per settlement period as the intra-community operations occur: the filing condition is the operation itself, modeled by the filing_schedules AD-HOC entry, not a periodic taxpayer-condition profile state. The applicability family has no periodic condition to declare."
@@ -99,4 +102,54 @@ reason = "A verification predicate guards a CALCULATED result -- characteristica
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 
+[[revisions."2019-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2018", id = "decl.ejercicio" }
+fields = { continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 both identify Ejercicio devengo (AAAA) in M30800 and Devengo - Ejercicio in M30801. The field continues to identify the refund declaration's tax year under Orden EHA/3786/2008 art. 2; broader legal references in this revision do not change that role.", continuidad_origin = "grounded", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"] }
+removed_fields = []
+restate_provenance = true
 
+[[revisions."2019-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2018", id = "decl.periodo" }
+fields = { continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 identify the same settlement period in both record designs: M30800 Periodo (PP) at offset 11 length 2 and M30801 Devengo - Periodo at offset 107 length 2, under Orden EHA/3786/2008 art. 2. The 2019 registry surface is intentionally represented as number 11-12, text, and declaracion_periodo in the declarante/liquidacion section while the 2016 surface is period_code in the declaration header; this is an application representation change, not a label- or number-only inference and not a retirement. The 2019 M30801 design additionally admits 01-12 for the applicable Tipo Tributacion, while M30800 retains the quarter/annual codes.", continuidad_origin = "grounded", data_type = "text", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"], number = "11-12", section = ["declarante", "liquidacion"], semantic_role = "declaracion_periodo" }
+removed_fields = ["input_kind", "required"]
+restate_provenance = true
+
+[[revisions."2019-y-siguientes".casilla_positions]]
+id = "decl.tipo-solicitud"
+position = 1
+
+[[revisions."2019-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2016-2018", id = "modelo-308-ad-hoc"}
+sequence_additions = {legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]}
+sequence_order = {legal_refs = [1, 2, 0, 3]}
+
+[[revisions."2019-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2016-2018", id = "modelo-308-iva-solicitud-devolucion"}
+fields = {live_cross_references = ["modelo-308-static-documentation", "modelo-308-filed-declarations-read"]}
+sequence_additions = {casilla_ids = ["decl.tipo-solicitud"], legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"], source_refs = ["aeat-dr-308-2019"], workbook_parity_refs = ["modelo-308-dr"]}
+sequence_removals = {casilla_ids = [1], source_refs = [0], workbook_parity_refs = [0]}
+sequence_order = {legal_refs = [2, 3, 0, 1, 4], source_refs = [2, 0, 1]}
+
+[[revisions."2019-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2018", id = "modelo-308-deadline"}
+sequence_additions = {legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]}
+sequence_order = {legal_refs = [1, 2, 0, 3]}
+
+[[revisions."2019-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2018", id = "modelo-308-filing"}
+sequence_additions = {legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]}
+sequence_order = {legal_refs = [1, 2, 0, 3]}
+
+[[revisions."2019-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2018", id = "modelo-308-portal"}
+sequence_additions = {legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]}
+sequence_order = {legal_refs = [1, 2, 0, 3]}
+
+[[revisions."2019-y-siguientes".family_removals]]
+family = "workbook_parity_refs"
+selector = {revision = "2016-2018", id = "modelo-308-dr-static-layout"}

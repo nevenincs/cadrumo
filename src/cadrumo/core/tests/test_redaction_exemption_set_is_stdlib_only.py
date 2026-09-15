@@ -24,10 +24,11 @@ from __future__ import annotations
 
 import json
 import logging
-import subprocess
 import sys
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ..logging import _STANDARD_LOG_RECORD_FIELDS, SecretScrubbingFilter
 
@@ -44,7 +45,7 @@ _install_run_context_record_factory()
 for name in [n for n in sys.modules if n.startswith('cadrumo')]:
     del sys.modules[name]
 
-import cadrumo.core.logging  # noqa: F401,E402
+import cadrumo.core.logging
 """
 
 #: Installs a factory that stamps an extra field, then reports what the freshly
@@ -64,7 +65,7 @@ _PROBE = (
 
 def _exemption_set_after_factory_install() -> list[str]:
     """Import the module in a process where a factory is already installed."""
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and inline probe reproduce the import order.
+    completed = run_audited_process(
         [sys.executable, "-c", _PROBE],
         check=False,
         capture_output=True,
@@ -90,7 +91,7 @@ def test_the_module_imports_while_its_own_factory_is_installed() -> None:
     which adds a field but imports nothing -- only the real one reaches the
     observability layer, and that reach is what closes the cycle.
     """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and inline probe reproduce the import order.
+    completed = run_audited_process(
         [sys.executable, "-c", _CYCLE_PROBE],
         check=False,
         capture_output=True,

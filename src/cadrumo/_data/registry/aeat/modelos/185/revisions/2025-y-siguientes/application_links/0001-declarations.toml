@@ -1,18 +1,4 @@
 [[revisions."2025-y-siguientes".application_links]]
-id = "modelo-185-filing"
-surface = "filing"
-consumer = "cadrumo.application.filing"
-requires_snapshot = true
-legal_refs = ["orden-hac-1197-2025:art-1", "ley-58-2003:art-93"]
-
-[[revisions."2025-y-siguientes".application_links]]
-id = "modelo-185-deadline"
-surface = "deadline"
-consumer = "cadrumo.domain.deadlines"
-requires_snapshot = true
-legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-
-[[revisions."2025-y-siguientes".application_links]]
 id = "modelo-185-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"

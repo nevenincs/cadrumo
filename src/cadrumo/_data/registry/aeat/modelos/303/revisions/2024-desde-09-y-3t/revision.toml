@@ -51,6 +51,8 @@ source_refs = [
     "boe-orden-hfp-1359-2023-iva-authority",
     "boe-modelo-303-2008-form",
 ]
+family_storage_baseline = "2024-hasta-08-y-2t"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions.2024-desde-09-y-3t.period_selector]
 year_from = 2024
@@ -64,7 +66,7 @@ reason = "Modelo 303 applicability is defined by filing_schedules and orden_apli
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late"]
 
-[[revisions."2024-desde-09-y-3t".lineage_attestations]]
+[[revisions.2024-desde-09-y-3t.lineage_attestations]]
 family = "casillas"
 continuidad_id = "dr303-64"
 from_revision = "2024-hasta-08-y-2t"
@@ -73,7 +75,7 @@ origin = "seeded"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure"]
 
-[[revisions."2024-desde-09-y-3t".lineage_attestations]]
+[[revisions.2024-desde-09-y-3t.lineage_attestations]]
 family = "casillas"
 continuidad_id = "dr303-66"
 from_revision = "2024-hasta-08-y-2t"
@@ -82,7 +84,7 @@ origin = "seeded"
 legal_refs = ["rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure"]
 
-[[revisions."2024-desde-09-y-3t".lineage_attestations]]
+[[revisions.2024-desde-09-y-3t.lineage_attestations]]
 family = "casillas"
 continuidad_id = "dr303-71"
 from_revision = "2024-hasta-08-y-2t"
@@ -91,7 +93,7 @@ origin = "seeded"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure"]
 
-[[revisions."2024-desde-09-y-3t".lineage_attestations]]
+[[revisions.2024-desde-09-y-3t.lineage_attestations]]
 family = "casillas"
 continuidad_id = "iva-autoconsumo-promotor-base"
 from_revision = "2024-hasta-08-y-2t"
@@ -100,7 +102,7 @@ origin = "seeded"
 legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late"]
 
-[[revisions."2024-desde-09-y-3t".lineage_attestations]]
+[[revisions.2024-desde-09-y-3t.lineage_attestations]]
 family = "casillas"
 continuidad_id = "iva-autoconsumo-promotor-cuota"
 from_revision = "2024-hasta-08-y-2t"
@@ -109,7 +111,7 @@ origin = "seeded"
 legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late"]
 
-[[revisions."2024-desde-09-y-3t".lineage_attestations]]
+[[revisions.2024-desde-09-y-3t.lineage_attestations]]
 family = "casillas"
 continuidad_id = "iva-resultado-autoliquidacion"
 from_revision = "2024-hasta-08-y-2t"
@@ -117,3 +119,1771 @@ to_revision = "2024-desde-09-y-3t"
 origin = "seeded"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
 source_refs = ["aeat-dr-303-2024-late", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2024-desde-09-y-3t.casilla_overrides]]
+selector = { revision = "2024-hasta-08-y-2t", id = "18" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"] }
+removed_fields = ["binding", "input_kind"]
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "formulas"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-cuota-devengada-total"}
+sequence_additions = {"expression.args" = [{casilla_id = "iva.repercutido.super-reducido.transitorio"}, {casilla_id = "170"}], source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {"expression.args" = [0, 1, 2, 3, 14, 4, 5, 6, 7, 8, 9, 10, 15, 11, 12, 13], source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-mensual"}
+sequence_additions = {periods = ["09", "10", "11", "12"]}
+sequence_removals = {periods = [0, 1, 2, 3, 4, 5, 6, 7]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-trimestral"}
+sequence_additions = {periods = ["3T", "4T"]}
+sequence_removals = {periods = [0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-dep-self-prior-quarter"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "constructs"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-autoliquidacion"}
+sequence_additions = {casilla_ids = ["170", "165"], deadline_windows = ["modelo-303-2024-09-mensual", "modelo-303-2024-10-mensual", "modelo-303-2024-11-mensual", "modelo-303-2024-12-mensual", "modelo-303-2024-3t", "modelo-303-2024-4t"], formulas = ["modelo-303-dr303-166-rate", "modelo-303-dr303-167-projection"], legal_refs = ["orden-hac-819-2024:art-unico"], source_refs = ["aeat-dr-303-2024-late", "aeat-calendario-contribuyente-2025"], workbook_parity_refs = ["modelo-303-dr-late"]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], workbook_parity_refs = [0]}
+sequence_order = {casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 48, 39, 40, 41, 42, 43, 44, 49, 45, 46, 47], formulas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 26, 17, 27, 18, 19, 20, 21, 22, 23, 24, 25], legal_refs = [0, 1, 42, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41], source_refs = [0, 1, 6, 2, 3, 7, 4, 5]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "parameters"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-bien-inversion-divisor-inmueble"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"], values = [{value = "10", date_axis = "filing_period", valid_from = 2024-09-01, valid_to = 2024-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "parameters"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-bien-inversion-divisor-mueble"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"], values = [{value = "5", date_axis = "filing_period", valid_from = 2024-09-01, valid_to = 2024-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "parameters"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-bien-inversion-regularizacion-umbral-puntos"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"], values = [{value = "10", date_axis = "filing_period", valid_from = 2024-09-01, valid_to = 2024-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "parameters"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-bien-inversion-ventana-anos-inmueble"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"], values = [{value = "9", date_axis = "filing_period", valid_from = 2024-09-01, valid_to = 2024-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "parameters"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-bien-inversion-ventana-anos-mueble"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"], values = [{value = "4", date_axis = "filing_period", valid_from = 2024-09-01, valid_to = 2024-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "parameters"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-dr303-154-transitional-rate-percent"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "parameters"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-dr303-166-transitional-rate-percent"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "parameters"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-especial-obligatoria-margen-porcentaje"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"], values = [{value = "10", date_axis = "filing_period", valid_from = 2024-09-01, valid_to = 2024-12-31, comparison = "inclusive"}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-domestic-current-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-domestic-current-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-domestic-current-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-domestic-current-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-domestic-investment-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-domestic-investment-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-domestic-investment-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-domestic-investment-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-import-current-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-import-current-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-import-current-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-import-current-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-import-investment-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-import-investment-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-import-investment-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-import-investment-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-intra-eu-current-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-intra-eu-current-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-intra-eu-current-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-intra-eu-current-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-intra-eu-investment-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-intra-eu-investment-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-intra-eu-investment-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-intra-eu-investment-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-investment-regularisation.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-investment-regularisation.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-reagp-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-reagp-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-reagp-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-reagp-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-rectification-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-rectification-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-rectification-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-rectification-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-total.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-differentiated-deduction:field-total.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-activity-code.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-activity-code.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-activity-code.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-activity-code.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-activity-code.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-activity-code.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-exonerado-390-operaciones-terceros"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-cnae.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-cnae.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-cnae.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-cnae.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-cnae.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-total.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-total.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-total.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-total.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-operaciones-total.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-porcentaje.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-porcentaje.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-porcentaje.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-porcentaje.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-porcentaje.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-tipo.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-tipo.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-tipo.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-tipo.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-prorrata-activity:field-tipo.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-activity:cohort-agricola.field-activity-code.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-activity:cohort-agricola.field-activity-code.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-auxiliary-activity-indicator.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-auxiliary-activity-indicator.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-iae-epigrafe.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-iae-epigrafe.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-compensaciones-reagp-cuarto-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-compensaciones-reagp-cuarto-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-devengada.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-devengada.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-soportada-operaciones-corrientes.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-soportada-operaciones-corrientes.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuotas-soportadas-cuarto-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuotas-soportadas-cuarto-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-indice-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-indice-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-ingreso-cuenta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-ingreso-cuenta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-porcentaje-ingreso-cuenta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-porcentaje-ingreso-cuenta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-volumen-ingresos.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-volumen-ingresos.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-actividad-temporada-dias-ejercicio-anio-anterior.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-actividad-temporada-dias-ejercicio-anio-anterior.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-actividad-temporada-dias-ejercicio-cuarto-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-actividad-temporada-dias-ejercicio-cuarto-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-compensaciones-reagp-cuarto-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-compensaciones-reagp-cuarto-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-devengada-operaciones-corrientes.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-devengada-operaciones-corrientes.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-minima.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-minima.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-cuarto-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-cuarto-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-operaciones-corrientes.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-operaciones-corrientes.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-devolucion-cuotas-soportadas-otros-paises.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-devolucion-cuotas-soportadas-otros-paises.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dias-ejercicio-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dias-ejercicio-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividad-temporada.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividad-temporada.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividades-temporada.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividades-temporada.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-ingreso-cuenta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-ingreso-cuenta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-lorca-elegible.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-lorca-elegible.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-1.sub-index-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-1.sub-index-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-1.sub-index-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-1.sub-index-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-2.sub-index-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-2.sub-index-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-2.sub-index-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-2.sub-index-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-1.sub-index-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-1.sub-index-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-1.sub-index-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-1.sub-index-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-2.sub-index-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-2.sub-index-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-2.sub-index-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-2.sub-index-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-1.sub-index-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-1.sub-index-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-1.sub-index-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-1.sub-index-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-2.sub-index-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-2.sub-index-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-2.sub-index-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-2.sub-index-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-convenio-colectivo.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-convenio-colectivo.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-discapacidad-33.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-discapacidad-33.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-mayores-19.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-mayores-19.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-menores-19-o-formacion.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-menores-19-o-formacion.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-conyuge.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-conyuge.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-hijos-menores-18.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-hijos-menores-18.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-titular.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-titular.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-titular-discapacidad-33.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-titular-discapacidad-33.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-cuota-minima.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-cuota-minima.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-ingreso-cuenta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-ingreso-cuenta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reducciones.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reducciones.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-resultado-cuarto-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-resultado-cuarto-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2024-hasta-08-y-2t", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-bienes-inversion-regularizacion-casilla-43"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-casilla-120-no-sujetas-localizacion-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-casilla-59-entregas-intracomunitarias-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-casilla-60-exportaciones-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-compensacion-pendiente-anteriores"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-criterio-caja-adquisiciones-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-criterio-caja-adquisiciones-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-criterio-caja-entregas-art75-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-criterio-caja-entregas-art75-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-autorepercutido-interior-devengado-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-general-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-general-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-reducido-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-reducido-transitorio-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-reducido-transitorio-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-super-reducido-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-super-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-super-reducido-transitorio-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-repercutido-super-reducido-transitorio-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-soportado-importaciones-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-soportado-interiores-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-soportado-interiores-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-profile-state-attribution-ratio"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-prorrata-regularizacion-casilla-44"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-recargo-equivalencia-general-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-recargo-equivalencia-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "bindings"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-recargo-equivalencia-super-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-iva-chain-verification"}
+removed_fields = ["externally_grounded_casilla_ids"]
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-reconcile-when-present"}
+removed_fields = ["externally_grounded_casilla_ids"]
+sequence_additions = {reconcile_when_present_casilla_ids = ["166", "167"], source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 11, 12], source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-total-cuota-verification"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2024-hasta-08-y-2t", id = "aeat-dr-303-2024-early"}
+replacement_id = "aeat-dr-303-2024-late"
+sequence_additions = {casillas = [{casilla_id = "165", number = "165"}, {casilla_id = "166", number = "166"}, {casilla_id = "167", number = "167"}, {casilla_id = "170", number = "170"}], source_refs = ["aeat-dr-303-2024-late"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 72, 73, 74, 67, 68, 75, 69, 70, 71], source_refs = [2, 0, 1]}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-01-mensual"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-02-mensual"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-03-mensual"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-04-mensual"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-05-mensual"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-06-mensual"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-07-mensual"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-08-mensual"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-1t"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-2024-2t"}
+
+[[revisions.2024-desde-09-y-3t.family_removals]]
+family = "workbook_parity_refs"
+selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-dr-early"}

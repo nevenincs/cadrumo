@@ -23,22 +23,6 @@ legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
 
 [[revisions."2024".application_links]]
-id = "modelo-190-filing"
-surface = "filing"
-consumer = "cadrumo.application.filing"
-requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
-
-[[revisions."2024".application_links]]
-id = "modelo-190-deadline"
-surface = "deadline"
-consumer = "cadrumo.domain.deadlines"
-requires_snapshot = true
-legal_refs = ["rd-439-2007:art-108", "orden-eha-3127-2009:art-1"]
-source_refs = ["aeat-modelo-190-procedure", "boe-modelo-190-2025-form"]
-
-[[revisions."2024".application_links]]
 id = "modelo-190-extractor"
 surface = "extractor"
 consumer = "cadrumo.adapters.outbound.aeat.sede.registry_observation_from_filed_declaration"

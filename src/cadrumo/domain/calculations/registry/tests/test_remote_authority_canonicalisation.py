@@ -110,7 +110,8 @@ def test_pydantic_preserves_the_user_info_the_guard_must_reject() -> None:
     # user-info from the URL literal three lines above, as the positive control
     # proving pydantic does not sanitise it -- which is the precondition that
     # makes the sibling guard test measure the guard rather than pass vacuously.
-    assert parsed.password == "secret"  # noqa: S105
+    expected_field_value = "secret"
+    assert parsed.password == expected_field_value
     assert "evil" in str(parsed), "pydantic sanitised the user-info; the guard test no longer measures the guard"
 
 

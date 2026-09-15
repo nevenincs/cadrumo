@@ -138,7 +138,9 @@ def _prose_caps(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> Mappin
     """Return caps from Pydantic field declarations in the production source AST."""
     trees = source_tree_ast or dict(production_ast_items())
     caps: dict[tuple[str, str], int] = {}
-    for _path, tree in sorted(trees.items()):
+    for path, tree in sorted(trees.items()):
+        if not isinstance(tree, ast.Module):
+            raise TypeError(f"expected an AST module for {path}")
         constants: dict[str, int] = {}
         for statement in tree.body:
             if (

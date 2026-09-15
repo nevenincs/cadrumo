@@ -22,19 +22,3 @@ required_text = ["Modelo 151"]
 # Cuota diferencial: suma de la cuota íntegra general (e.1º) y la cuota íntegra
 # del ahorro (e.2º) menos las retenciones e ingresos a cuenta (pagos a cuenta de
 # la letra f), que son distintos de la cuota).
-[[revisions."2025-y-siguientes".formulas]]
-id = "modelo-151-cuota-diferencial"
-target_casilla_id = "impatriado.cuota-diferencial"
-expression = { op = "subtract", args = [
-    { op = "add", args = [
-        { casilla_id = "impatriado.cuota-integra-general" },
-        { casilla_id = "impatriado.cuota-integra-ahorro" },
-    ] },
-    { casilla_id = "impatriado.retenciones" },
-] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-93"]
-
-[[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-151-procedure"
-required_text = ["Modelo 151"]

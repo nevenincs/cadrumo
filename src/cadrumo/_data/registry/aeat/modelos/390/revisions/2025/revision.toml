@@ -52,6 +52,8 @@ source_refs = [
     "aeat-modelo-390-procedure",
     "boe-modelo-390-2009-form",
 ]
+family_storage_baseline = "2024"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2025".family_dispositions.projection_endpoints]
 reason = """
@@ -144,3 +146,452 @@ source_refs = ["aeat-dr-390-2025"]
 # Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # being established separately, and writing a rate box into the record before the
 # Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # shortfall refusal covers it would render an unpopulated money field as 0,00 --
 # Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # turning a silence into a false nil.
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-inversion.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-inversion.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-inversion.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-servicios.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-servicios.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-servicios.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.intragrupo.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.intragrupo.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.intragrupo.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.criterio-caja.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.bienes-usados.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.interiores-corrientes.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.interiores-corrientes.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.interiores-inversion.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.interiores-inversion.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.interiores-inversion.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.interiores-inversion.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.intragrupo-inversion.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.intragrupo-inversion.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.importaciones-corrientes.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.importaciones-corrientes.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.importaciones-inversion.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.importaciones-inversion.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-corrientes.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.recargo.tipo-1.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.recargo.tipo-0-62.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.recargo.tipo-0-26.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.tipo-7-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.tipo-7-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.tipo-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.tipo-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.tipo-2.base" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "iva.anual.repercutido.tipo-2.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2025".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2024", id = "modelo-390-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024", id = "modelo-390-dep-303"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {source_refs = [0, 3, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-390-iva-resumen-anual"}
+sequence_additions = {deadline_windows = ["modelo-390-2025-0a"], export_layouts = ["generated-modelo-390-2025-fichero"], source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {deadline_windows = [0], export_layouts = [0], legal_refs = [11], source_refs = [2]}
+sequence_order = {source_refs = [0, 1, 4, 2, 3]}
+
+[[revisions."2025".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-390-2024-0a"}
+replacement_id = "modelo-390-2025-0a"
+fields = {closes_on = 2026-01-30, filing_year = 2025, opens_on = 2026-01-01, period = "2025 0A"}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-recargo-equivalencia-tipo-1-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-repercutido-tipo-2-base"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [3], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-repercutido-tipo-2-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [3], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-repercutido-tipo-5-base"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [3], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-repercutido-tipo-5-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [3], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-repercutido-tipo-7-5-base"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [3], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390-iva-repercutido-tipo-7-5-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [3], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2024", id = "modelo-390-dr"}
+fields = {fixture_id = "modelo-390-2025-record-design-layout", workbook_source = "aeat-dr-390-2025"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024", id = "modelo-390-iva-annual-chain-verification"}
+removed_fields = ["externally_grounded_casilla_ids"]
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024", id = "modelo-390-reconcile-when-present"}
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2024", id = "aeat-dr-390-2024"}
+replacement_id = "aeat-dr-390-2025"
+sequence_additions = {source_refs = ["aeat-dr-390-2025"]}
+sequence_removals = {legal_refs = [28], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termin"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municip"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reducciones-total"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-el-termin"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municip"}
+
+[[revisions."2025".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total"}

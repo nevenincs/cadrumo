@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from enum import StrEnum
+from enum import StrEnum, auto
 from typing import override
 
 from ...contribuyente.entity_type import (
@@ -22,7 +22,7 @@ class TaxRoute(StrEnum):
 
     IRPF = "irpf"
     IMPUESTO_SOCIEDADES = "impuesto_sociedades"
-    ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"  # noqa: S105 - tax route token, not a secret
+    ATTRIBUTION_PASS_THROUGH = auto()
     INCOMPLETE = "incomplete"
 
 

@@ -19,6 +19,8 @@ source_refs = [
     "enrolled-modelo-763-layout",
     "boe-modelo-763-2018-amendment",
 ]
+family_storage_baseline = "2018-4t"
+scoped_families = ["workbook_parity_refs"]
 
 [[revisions."2019-y-siguientes".lineage_attestations]]
 family = "casillas"
@@ -37,3 +39,18 @@ to_revision = "2019-y-siguientes"
 origin = "seeded"
 legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2018-4t", id = "modelo-763-autoliquidacion"}
+sequence_additions = {deadline_windows = ["modelo-763-2019-1t", "modelo-763-2019-2t", "modelo-763-2019-3t", "modelo-763-2019-4t", "modelo-763-2020-1t", "modelo-763-2020-2t", "modelo-763-2020-3t", "modelo-763-2020-4t", "modelo-763-2021-1t", "modelo-763-2021-2t", "modelo-763-2021-3t", "modelo-763-2021-4t", "modelo-763-2022-1t", "modelo-763-2022-2t", "modelo-763-2022-3t", "modelo-763-2022-4t", "modelo-763-2023-1t", "modelo-763-2023-2t", "modelo-763-2023-3t", "modelo-763-2023-4t", "modelo-763-2024-1t", "modelo-763-2024-2t", "modelo-763-2024-3t", "modelo-763-2024-4t", "modelo-763-2025-1t", "modelo-763-2025-2t", "modelo-763-2025-3t", "modelo-763-2025-4t", "modelo-763-2026-1t", "modelo-763-2026-2t", "modelo-763-2026-3t", "modelo-763-2026-4t"]}
+sequence_removals = {deadline_windows = [0]}
+
+[[revisions."2019-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2018-4t", id = "modelo-763-static-layout"}
+fields = {fixture_id = "modelo-763-2019-y-siguientes-layout"}
+
+[[revisions."2019-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2018-4t", id = "modelo-763-2018-4t"}

@@ -234,8 +234,16 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
     """
     from datetime import date
 
-    from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-    from ...calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+    from ....core.aggregation import BindingAggregation, BindingAggregationOp
+    from ...calculations.registry.binding_value_contract import (
+        BindingDataType,
+        BindingValueChannel,
+        BindingValueContract,
+    )
+    from ...calculations.registry.ledger_iva_bindings import (
+        LedgerIvaProvider,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
     from ...calculations.registry.schema import BindingDefinition, ModeloRevision
     from ...calculations.registry.schema_references import PeriodSelector
     from ..invoice_classification import invoice_line_to_iva_observation
@@ -243,19 +251,21 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
     def _rate_box(binding_id: str, rate: Decimal) -> BindingDefinition:
         return BindingDefinition(
             id=binding_id,
-            source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-            selector={
-                "categories": (IvaCategory("domestic_super_reduced"),),
-                "rate_kinds": (IvaRateKind("super_reduced"),),
-                "flow_direction": IvaFlowDirection._from_registry("repercutido"),
-                "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
-                "cash_accounting_treatments": (
-                    IvaCashAccountingTreatment("none"),
-                    IvaCashAccountingTreatment("supplier_regime"),
-                ),
-                "applied_rates": (rate,),
-                "fact": "base_amount_sum",
-            },
+            provider=LedgerIvaProvider.model_validate(
+                {
+                    "categories": (IvaCategory("domestic_super_reduced"),),
+                    "rate_kinds": (IvaRateKind("super_reduced"),),
+                    "flow_direction": IvaFlowDirection._from_registry("repercutido"),
+                    "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+                    "cash_accounting_treatments": (
+                        IvaCashAccountingTreatment("none"),
+                        IvaCashAccountingTreatment("supplier_regime"),
+                    ),
+                    "applied_rates": (rate,),
+                    "fact": "base_amount_sum",
+                },
+            ),
+            value=BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL),
             aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
             legal_refs=("ley-37-1992:art-91",),
             source_refs=("aeat-dr-390-2025",),

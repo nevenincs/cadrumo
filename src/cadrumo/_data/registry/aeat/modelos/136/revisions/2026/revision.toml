@@ -62,6 +62,9 @@ export layout is declared, neither fixed-width nor xml dictionary; 4 construct-e
 gaps remain open (filing gaps 0). NOT CLAIMED -- all 3 \
 locales are complete for the 24 labels, but the translated strings were not audited for accuracy."""
 reviewed_at = 2026-08-21
+family_storage_baseline = "2022-2025"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
 [revisions."2026".family_dispositions.projection_endpoints]
 reason = """
 FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming this modelo's own casillas can validate while the union carries no modelo-136 member. It carries none. The union is not single-modelo -- it holds m303_ and m200_ members -- so this is stated as a scoping rule rather than as a member count or a prefix, both of \
@@ -343,3 +346,90 @@ origin = "grounded"
 evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 823-826 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Codigo IBAN account field for the payment amount; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"]
 source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
+
+[[revisions."2026".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2022-2025", id = "modelo-136-trimestral"}
+sequence_additions = {source_refs = ["aeat-modelo-136-procedure"]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2026".family_overrides]]
+family = "constructs"
+selector = {revision = "2022-2025", id = "modelo-136-calculation-construct"}
+sequence_additions = {source_refs = ["aeat-modelo-136-procedure", "aeat-modelo-136-procedure-record"]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2022-2025", id = "modelo-136-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-136-procedure"]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2026".family_overrides]]
+family = "application_links"
+selector = {revision = "2022-2025", id = "modelo-136-filing"}
+sequence_additions = {source_refs = ["aeat-modelo-136-procedure", "aeat-modelo-136-procedure-record"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2022-1t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2022-2t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2022-3t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2022-4t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2023-1t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2023-2t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2023-3t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2023-4t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2024-1t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2024-2t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2024-3t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2024-4t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2025-1t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2025-2t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2025-3t"}
+
+[[revisions."2026".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022-2025", id = "modelo-136-2025-4t"}

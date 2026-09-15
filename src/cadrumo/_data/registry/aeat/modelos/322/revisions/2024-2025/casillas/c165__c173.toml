@@ -1,0 +1,102 @@
+
+# Modelo 322 casillas for the 2024-2025 revision.
+#
+# Mirrored from the 2026-y-siguientes sibling and scoped by THIS revision's own
+# diseño de registro (aeat-dr-322-2024-2025): a casilla lands here only where
+# that design prints a slot for it, or where a landed casilla's formula reads
+# it. Box [112] is deliberately absent -- it is a 2026 addition and the earlier
+# record has no anchor for it -- and so is anything else the sibling declares
+# that this edition does not print.
+
+[[revisions."2024-2025".casillas]]
+id = "165"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-base-imponible"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:145 (sha256 a70f3a2ca7dd) prints box [165]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [165] and retires none"
+number = "165"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_base_imponible"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2024-2025".casillas]]
+id = "166"
+continuidad_id = "166"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:148 (sha256 a70f3a2ca7dd) prints box [166]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [166] and retires none"
+number = "166"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2024-2025".casillas]]
+id = "167"
+continuidad_id = "167"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:151 (sha256 a70f3a2ca7dd) prints box [167]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [167] and retires none"
+number = "167"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2024-2025".casillas]]
+id = "168"
+continuidad_id = "168"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:154 (sha256 a70f3a2ca7dd) prints box [168]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [168] and retires none"
+number = "168"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imponible"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2024-2025".casillas]]
+id = "169"
+continuidad_id = "169"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:157 (sha256 a70f3a2ca7dd) prints box [169]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [169] and retires none"
+number = "169"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2024-2025".casillas]]
+id = "170"
+continuidad_id = "170"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:160 (sha256 a70f3a2ca7dd) prints box [170]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [170] and retires none"
+number = "170"
+section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2024-2025".casillas]]
+id = "171"
+continuidad_id = "171"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:136 (sha256 a70f3a2ca7dd) prints box [171]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [171] and retires none"
+number = "171"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_imponible"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2024-2025".casillas]]
+id = "172"
+continuidad_id = "172"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:139 (sha256 a70f3a2ca7dd) prints box [172]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [172] and retires none"
+number = "172"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
+data_type = "ratio"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions."2024-2025".casillas]]
+id = "173"
+continuidad_id = "173"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:142 (sha256 a70f3a2ca7dd) prints box [173]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md (sha256 540805f09ca3) prints no box [173] and retires none"
+number = "173"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
