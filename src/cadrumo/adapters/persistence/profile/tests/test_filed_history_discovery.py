@@ -44,7 +44,7 @@ from cadrumo.application.live.filed_data_capture import (
     filed_history_discovery_report,
     recapture_divergence_notices,
 )
-from cadrumo.application.live.tests.filed_observation_test_support import _UnavailableFiledDataCapturePort
+from cadrumo.application.live.tests.filed_observation_test_support import UnavailableFiledDataCapturePort
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
@@ -456,7 +456,7 @@ def test_discovery_classifies_the_live_offered_options_at_its_owning_boundary() 
     excluded = next(iter(sorted(_confidently_excluded(profile))))
     availability = _availability((excluded, (2025,)))
 
-    class _DiscoveryPort(_UnavailableFiledDataCapturePort):
+    class _DiscoveryPort(UnavailableFiledDataCapturePort):
         @override
         async def discover_availability(self, *, operation: str) -> _AvailabilityReport:
             assert operation == "live-expedientes-read"

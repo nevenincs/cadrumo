@@ -59,8 +59,8 @@ from cadrumo.application.operator_surface.manifest import CommandSchemaRef
 from cadrumo.core.json_contract import OutputSchema, ResolvedActionReference
 from cadrumo.core.operator_action_enums import ActionArgumentStatus
 
-from ._call_runtime import run_captured
 from ._cli_executable import installed_cli_executable
+from .call_runtime import run_captured
 
 
 class _WireOutputSchema(OutputSchema):

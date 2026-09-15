@@ -26,10 +26,10 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
-)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from cadrumo.application.auth.sessions import ClaveAuthFacts, clave_auth_facts_from_profile_values
 from cadrumo.application.user_profile.profile_record_repository import (

@@ -50,7 +50,7 @@ from cadrumo.adapters.persistence.storage.master_key.login_throttle import evalu
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError

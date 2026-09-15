@@ -5,7 +5,7 @@ full-copy authoring shape every member of the family restates that citation.
 The loader already knows how to supply it once: ``ModeloRevision`` carries a
 source-default field for every family the domain pairs with one, beside
 ``casilla_source_refs``, and
-:func:`dev.registry.compiler._loader_internals._apply_edition_reference_defaults`
+:func:`dev.registry.compiler.loader_materialisation._apply_edition_reference_defaults`
 fills them into the members that state none. What the corpus lacks is the
 declaration, so the restatement stands unlifted and the edition-delta screen
 reports it as ``family_default_undeclared``.

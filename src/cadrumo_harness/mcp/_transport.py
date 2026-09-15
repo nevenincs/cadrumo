@@ -4,7 +4,7 @@ This is the SDK-independent layer that :mod:`cadrumo_harness.mcp.server` compose
 run a verb. Local ``READ`` and ``MUTATE`` verbs run warm in-process
 (:func:`~cadrumo_harness.mcp.inprocess.dispatch_verb_in_process`); the AEAT-sede /
 open-world ``LIVE`` family stays on the supervised subprocess
-(:func:`~cadrumo_harness.mcp._call_runtime.run_supervised`). Both transports return the
+(:func:`~cadrumo_harness.mcp.call_runtime.run_supervised`). Both transports return the
 same :class:`SubprocessToolOutcome` and parse through the same
 :func:`~cadrumo_harness.mcp.inprocess.parse_cli_envelope`, so the envelope cannot fork
 between them. :func:`_run_tool` is the single entry point the server's direct and
@@ -42,9 +42,9 @@ from cadrumo.core.json_contract import (
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
-from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
 from ._meta_tools import ToolRunOutcome
 from ._settings import load_mcp_settings
+from .call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
 from .inprocess import (
     CompletedCliRun,
     dispatch_verb_in_process,
@@ -280,7 +280,7 @@ def _run_subprocess_tool(
     named ``arguments`` the client supplied - positional arguments in CLI order,
     then options - so the retired ``{args: [string]}`` bag has no path back in.
 
-    The call runs through :func:`~cadrumo_harness.mcp._call_runtime.run_supervised`
+    The call runs through :func:`~cadrumo_harness.mcp.call_runtime.run_supervised`
     with a per-tier wall-clock ceiling derived from the command's annotations:
     a hung call is terminated together with
     its whole process tree (a live pull spawns a browser child) and returns an

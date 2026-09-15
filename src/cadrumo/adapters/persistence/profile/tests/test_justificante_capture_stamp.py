@@ -28,7 +28,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.cli._app_live_justificante_composition import build_justificante_registration_ports
+from cadrumo.entrypoints.cli.app_live_justificante_composition import build_justificante_registration_ports
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 

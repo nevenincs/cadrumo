@@ -34,7 +34,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus

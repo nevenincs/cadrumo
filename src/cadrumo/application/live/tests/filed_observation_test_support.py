@@ -458,7 +458,7 @@ class _UnavailableFiledDataRegister:
         )
 
 
-class _UnavailableFiledDataCapturePort:
+class UnavailableFiledDataCapturePort:
     """Application-only filed-data port that never opens a real Sede session."""
 
     @asynccontextmanager
@@ -514,7 +514,7 @@ def in_memory_filed_observation_test_bundle() -> InMemoryFiledObservationTestBun
             bucket_event_repository=_InMemoryBucketEventRepository(),
             baseline_import=_InMemoryBaselineImport(),
         ),
-        filed_data_port=_UnavailableFiledDataCapturePort(),
+        filed_data_port=UnavailableFiledDataCapturePort(),
         iva_remote_state_port=_UnavailableIvaRemoteStatePort(),
     )
 

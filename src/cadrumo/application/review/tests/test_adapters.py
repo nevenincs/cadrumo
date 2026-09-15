@@ -40,7 +40,7 @@ from ..enums import ReviewSeverity
 from ..errors import ReviewSourceLoadError
 from ..models import FindingReviewItem, InvoiceReviewItem, TransactionReviewItem
 from ..source_adapters import drafts_pending, invoices_pending, transactions_pending
-from ._fakes import draft_review_ports
+from .draft_review_test_support import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

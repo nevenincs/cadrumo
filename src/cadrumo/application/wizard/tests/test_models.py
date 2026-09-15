@@ -22,7 +22,7 @@ from ..models import (
     WizardSection,
     WizardWidget,
 )
-from ._support import EmptyAnswersBase
+from .registry_setup_flow_support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

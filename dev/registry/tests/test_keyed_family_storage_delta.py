@@ -9,8 +9,8 @@ import pytest
 from cadrumo.domain.calculations.registry.keyed_families import family_spec
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ..compiler._loader_internals import _inherit_keyed_family, _patch_family_sequences
-from ..compiler.loader import load_modelo_directory
+from ..compiler.loader import inherit_keyed_family, load_modelo_directory
+from ..compiler.loader_materialisation import patch_family_sequences
 from .test_restated_family_merge import (
     _BASE_FORMULA,
     _CUOTA_FORMULA,
@@ -94,13 +94,17 @@ def test_deadline_storage_reconstruction_is_separate_from_period_eligibility(
     assert spec is not None
     member = {"id": "deadline-2024", "filing_year": 2024, "period": "2024 0A"}
 
-    result = _inherit_keyed_family(
+    result = inherit_keyed_family(
         "deadline fixture",
         revision_id="2025",
         predecessor_id="2024",
         predecessor={"deadline_windows": (member,)},
         storage_only=storage_only,
-        family=spec,
+        section=spec.section,
+        identity=spec.identity,
+        identity_fields=spec.identity_fields,
+        casilla_identity_fields=spec.casilla_identity_fields,
+        period_scoped=spec.period_scoped,
         inherited=(member,),
         inherited_casillas=(),
         successor_casillas=(),
@@ -111,7 +115,7 @@ def test_deadline_storage_reconstruction_is_separate_from_period_eligibility(
 
 
 def test_sequence_delta_reuses_members_and_restores_exact_order() -> None:
-    result = _patch_family_sequences(
+    result = patch_family_sequences(
         "sequence fixture",
         {"claim": {"refs": ("a", "b", "c")}},
         {"claim.refs": ("d",)},

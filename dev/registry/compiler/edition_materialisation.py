@@ -15,14 +15,14 @@ from pathlib import Path
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
-from ._loader_internals import (
+from ._toml_helpers import as_toml_table
+from .loader_cache import validate_modelo_directory_source
+from .loader_materialisation import (
     _PREDECESSOR_FIELD,
     _load_modelo_manifest,
     _load_modelo_revisions,
     _materialise_revisions,
 )
-from ._toml_helpers import as_toml_table
-from .loader_cache import validate_modelo_directory_source
 
 
 @dataclass(frozen=True, slots=True)

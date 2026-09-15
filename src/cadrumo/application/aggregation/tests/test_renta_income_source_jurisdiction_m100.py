@@ -23,14 +23,14 @@ from ..renta_income_ledger import (
 from .renta_income_aggregation_support import (
     _ANNUAL_2024,
     _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-    _M130_INGRESOS_CASILLA,
-    _M130_MODELO,
     _Q1_2024,
+    M130_INGRESOS_CASILLA,
+    M130_MODELO,
     _actividad_transaction_with_source,
     _catalogue_read_ports,
     _income_transaction,
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -73,10 +73,10 @@ def test_renta_income_observation_preserves_es_source_jurisdiction() -> None:
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     assert len(result.observations) == 1
@@ -118,15 +118,15 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     # Art. 8 universal-base: both rows enter the casilla aggregation.
     assert len(result.observations) == 2
-    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == es_amount + fr_amount
+    assert result.casilla_aggregation.casilla_values[M130_INGRESOS_CASILLA] == es_amount + fr_amount
     # Distinct-preservation witness: each observation carries its own
     # jurisdiction unchanged.
     by_id = {obs.transaction_id: obs for obs in result.observations}
@@ -158,8 +158,8 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
         period=_ANNUAL_2024,
         modelo=_M100_MODELO,
         target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     assert all(o.target_casilla_id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA for o in result.observations)
@@ -194,8 +194,8 @@ def test_partitioned_m100_aggregation_reports_out_of_period_catalogue_transactio
         period=_ANNUAL_2024,
         modelo=_M100_MODELO,
         target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
@@ -227,8 +227,8 @@ def test_partitioned_m100_aggregation_matches_full_scan() -> None:
         period=_ANNUAL_2024,
         modelo=_M100_MODELO,
         target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
@@ -240,8 +240,8 @@ def test_partitioned_m100_aggregation_matches_full_scan() -> None:
         period=_ANNUAL_2024,
         modelo=_M100_MODELO,
         target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     assert set(partitioned.observations) == set(full_scan.observations)
@@ -270,8 +270,8 @@ def test_m100_annual_income_rejects_non_annual_period() -> None:
             period=_Q1_2024,
             modelo=_M100_MODELO,
             target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-            activity_category_matcher=_m130_activity_category_matcher,
-            employment_category_matcher=_m130_employment_category_matcher,
+            activity_category_matcher=m130_activity_category_matcher,
+            employment_category_matcher=m130_employment_category_matcher,
         )
 
 
@@ -298,8 +298,8 @@ def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
         period=_ANNUAL_2024,
         modelo=_M100_MODELO,
         target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)

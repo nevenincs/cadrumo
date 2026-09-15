@@ -21,7 +21,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..enums import ReviewState
 from ..operator import project_review_queue
-from ._fakes import draft_review_ports
+from .draft_review_test_support import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

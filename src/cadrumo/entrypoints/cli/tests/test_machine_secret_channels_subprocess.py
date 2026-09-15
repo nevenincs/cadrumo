@@ -16,10 +16,10 @@ from cadrumo.tests.audited_process import run_audited_process
 
 from ....tests.inventory import SRC_CADRUMO
 from ._machine_secret_channels_support import (
-    _CERTIFICATE_SECRET,
+    _CERTIFICATE_INPUT,
     _HARNESS,
-    _NEW_PROFILE_SECRET,
-    _PROFILE_SECRET,
+    _NEW_PROFILE_INPUT,
+    _PROFILE_INPUT,
     _WINDOWS_HANDLE_HARNESS,
     _assert_success,
     _base_interpreter_pythonpath,
@@ -45,7 +45,7 @@ def _cleanup_keychain(tmp_path: Path) -> None:
 def test_login_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
     root = tmp_path / "login"
     _register(root)
-    payload = json.dumps({"passphrase": _PROFILE_SECRET})
+    payload = json.dumps({"passphrase": _PROFILE_INPUT})
     args = ["--format", "json", "config", "login", "s13-operator"]
     result = (
         _run(root, [*args, "--secrets-stdin"], stdin=payload)
@@ -163,7 +163,7 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
 def test_profile_create_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
     root = tmp_path / f"create-{channel}"
-    payload = json.dumps({"passphrase": _PROFILE_SECRET, "passphrase_confirmation": _PROFILE_SECRET})
+    payload = json.dumps({"passphrase": _PROFILE_INPUT, "passphrase_confirmation": _PROFILE_INPUT})
     result = _run_profile_create_with_recovery(root, channel=channel, payload=payload)
     document = _assert_success(result, root)
     assert document["result"]["status"] == "created"
@@ -177,9 +177,9 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
     _register(root)
     payload = json.dumps(
         {
-            "current_passphrase": _PROFILE_SECRET,
-            "new_passphrase": _NEW_PROFILE_SECRET,
-            "new_passphrase_confirmation": _NEW_PROFILE_SECRET,
+            "current_passphrase": _PROFILE_INPUT,
+            "new_passphrase": _NEW_PROFILE_INPUT,
+            "new_passphrase_confirmation": _NEW_PROFILE_INPUT,
         }
     )
     args = ["--format", "json", "config", "passphrase", "change"]
@@ -212,7 +212,7 @@ def test_both_restore_doors_succeed_through_each_leaf_channel(tmp_path: Path, ch
         args.extend(("--artifact", str(artifact)))
         payload = json.dumps({"recovery_secret": phrase})
     else:
-        payload = json.dumps({"passphrase": _PROFILE_SECRET})
+        payload = json.dumps({"passphrase": _PROFILE_INPUT})
     result = (
         _run(root, [*args, "--secrets-stdin"], stdin=payload)
         if channel == "stdin"
@@ -228,7 +228,7 @@ def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
     result = _run(
         root,
         ["--format", "json", "config", "login", outcome.profile_id, "--secrets-fd", "0"],
-        stdin=json.dumps({"passphrase": _PROFILE_SECRET}),
+        stdin=json.dumps({"passphrase": _PROFILE_INPUT}),
         assert_closed_fd_zero=True,
     )
     assert _assert_success(result, root)["command"] == "config.login"
@@ -241,7 +241,7 @@ def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(tmp_path: Path
     result = _run(
         root,
         ["--format", "json", "--profile-secrets-stdin", "config", "profile", "history", "root-reader"],
-        stdin=json.dumps({"profile_passphrase": _PROFILE_SECRET}),
+        stdin=json.dumps({"profile_passphrase": _PROFILE_INPUT}),
     )
     document = _assert_success(result, root)
     assert document["command"] == "config.bucket.history"
@@ -257,8 +257,8 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
     root = tmp_path / "certificate"
     _register(root, label="cert-operator")
     _register_certificate_source(root, name="s13-cert")
-    profile_payload = json.dumps({"profile_passphrase": _PROFILE_SECRET})
-    leaf_payload = json.dumps({"certificate_passphrase": _CERTIFICATE_SECRET})
+    profile_payload = json.dumps({"profile_passphrase": _PROFILE_INPUT})
+    leaf_payload = json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT})
     args = ["--format", "json"]
     inherited: list[str] = []
     stdin: str | None = None
@@ -305,7 +305,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
                 "history",
                 "posix-reader",
             ],
-            inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_SECRET}),),
+            inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_INPUT}),),
             assert_closed_index=0,
         )
         document = _assert_success(result, root)
@@ -319,7 +319,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
     _register(root, label="windows-reader")
     reader, writer = os.pipe()
     try:
-        os.write(writer, json.dumps({"profile_passphrase": _PROFILE_SECRET}).encode())
+        os.write(writer, json.dumps({"profile_passphrase": _PROFILE_INPUT}).encode())
         os.close(writer)
         writer = -1
         handle = msvcrt.get_osfhandle(reader)
@@ -445,7 +445,7 @@ def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: P
             ],
             cwd=SRC_CADRUMO,
             env=env,
-            input=json.dumps({"passphrase": _PROFILE_SECRET, "passphrase_confirmation": _PROFILE_SECRET}),
+            input=json.dumps({"passphrase": _PROFILE_INPUT, "passphrase_confirmation": _PROFILE_INPUT}),
             text=True,
             encoding="utf-8",
             errors="replace",
@@ -525,7 +525,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path:
             ],
             cwd=SRC_CADRUMO,
             env=env,
-            input=json.dumps({"passphrase": _PROFILE_SECRET, "passphrase_confirmation": _PROFILE_SECRET}),
+            input=json.dumps({"passphrase": _PROFILE_INPUT, "passphrase_confirmation": _PROFILE_INPUT}),
             text=True,
             encoding="utf-8",
             capture_output=True,
@@ -575,8 +575,8 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
                 "s13-posix-cert",
                 "--secrets-stdin",
             ],
-            stdin=json.dumps({"certificate_passphrase": _CERTIFICATE_SECRET}),
-            inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_SECRET}),),
+            stdin=json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT}),
+            inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_INPUT}),),
             assert_closed_index=0,
         )
         document = _assert_success(result, root)
@@ -592,7 +592,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
     _register_certificate_source(root, name="s13-windows-cert")
     reader, writer = os.pipe()
     try:
-        os.write(writer, json.dumps({"profile_passphrase": _PROFILE_SECRET}).encode())
+        os.write(writer, json.dumps({"profile_passphrase": _PROFILE_INPUT}).encode())
         os.close(writer)
         writer = -1
         handle = msvcrt.get_osfhandle(reader)
@@ -631,7 +631,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
             ],
             cwd=SRC_CADRUMO,
             env=env,
-            input=json.dumps({"certificate_passphrase": _CERTIFICATE_SECRET}),
+            input=json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT}),
             text=True,
             encoding="utf-8",
             errors="replace",

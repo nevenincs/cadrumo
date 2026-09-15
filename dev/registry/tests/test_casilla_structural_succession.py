@@ -18,10 +18,10 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
 
-from ..compiler._validate_cross_revision_evolution import strict_continuity_evolution_failures
-from ..compiler._validate_revision_closure import validate_revision_reference_surfaces
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
+from ..compiler.validate_cross_revision_evolution import strict_continuity_evolution_failures
 from ..compiler.validate_evidence import EvidenceValidator
+from ..compiler.validate_revision_closure import validate_revision_reference_surfaces
 from ..compiler.validate_semantic_roles import semantic_role_consistency_failures
 from .test_revision_edition_materialisation import _casilla, _modelo_root, _retirement, _write_edition
 

@@ -22,7 +22,7 @@ import pytest
 import yaml
 
 from .._workspace import _PluginPythonCohort, materialise_plugin
-from ..mcp._call_runtime import run_captured
+from ..mcp.call_runtime import run_captured
 from ..resources import harness_root, iter_personas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

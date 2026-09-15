@@ -11,7 +11,7 @@ These tests build an isolated temp fragment tree whose two ``casillas/``
 filenames are chosen so that Windows' case-folded ordering and the canonical
 code-point ordering disagree, and pin the canonical (platform-independent)
 order at both surfaces that discover a fragmented revision's file set: the
-production merge order in ``_loader_internals`` and the revision-source
+production merge order in ``loader_materialisation`` and the revision-source
 discovery in ``loader_cache``.
 """
 

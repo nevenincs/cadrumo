@@ -300,7 +300,7 @@ def fragment_sort_key(path: Path) -> str:
     paths directly makes the merge order silently platform-dependent. The
     POSIX-style path string compares by Unicode code point on every platform,
     which is what both this module's ``fragment_paths`` discovery and the
-    canonical fragment-merge order in ``_loader_internals`` key on; neither
+    canonical fragment-merge order in ``loader_materialisation`` key on; neither
     re-sorts with the platform-default :class:`~pathlib.Path` ordering.
     """
     return path.as_posix()

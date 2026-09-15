@@ -28,7 +28,7 @@ from cadrumo.adapters.persistence.storage.custody.records import ProfileCustodyE
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.recovery_key import RecoveryKey, generate_recovery_key
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore

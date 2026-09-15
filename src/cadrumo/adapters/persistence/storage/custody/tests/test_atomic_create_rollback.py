@@ -32,7 +32,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import list_current_profile_custody_capsule_ids
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import profile_storage_root_fixture
 from cadrumo.application.user_profile.registration import register_profile_with_credentials

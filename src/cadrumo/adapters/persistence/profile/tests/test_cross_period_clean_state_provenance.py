@@ -65,7 +65,7 @@ from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_suppor
 from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
     store_ready_profile as _store_ready_profile,
 )
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,

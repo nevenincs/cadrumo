@@ -35,8 +35,8 @@ from pydantic import BaseModel, ConfigDict
 from cadrumo.application.operator_surface.command_ports import VerbInputSchema, cli_argv_for
 from cadrumo.core.json_contract import OutputSchemaError, validate_registered_envelope_document
 
-from ._call_runtime import CallTier, run_captured
 from ._cli_executable import installed_cli_executable
+from .call_runtime import CallTier, run_captured
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -47,7 +47,7 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 # the wire. Because the redirect target is a process global, two concurrent
 # in-process calls would clobber each other's capture and corrupt the pipe, so
 # the whole capture-and-run section is serialised under this lock. The bounded
-# call concurrency (the ``_call_runtime`` capacity limiter) still lets the event
+# call concurrency (the ``call_runtime`` capacity limiter) still lets the event
 # loop and any subprocess-transport calls proceed; only the in-process
 # stream-capture window is mutually exclusive.
 _CAPTURE_LOCK = threading.Lock()

@@ -49,7 +49,11 @@ from cadrumo.domain.iva.errors import IvaCatalogueError
 from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule
 
 from ...compiler.loader import load_registry_tree
-from ...compiler.runtime_catalogues import _read, _records, _regulations
+from ...compiler.runtime_catalogues import (
+    published_iva_regulations,
+    read_catalogue_document,
+    validated_catalogue_records,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -146,7 +150,7 @@ def _narrow_by_rewriting_citation_windows(source: Path, year: int) -> None:
 
 
 def _iva_catalogue_years(source: Path) -> frozenset[int]:
-    regulations = _regulations(_read(source))
+    regulations = published_iva_regulations(read_catalogue_document(source))
     return years_covered_by_every_group(
         [
             ValidityWindow(valid_from=citation.valid_from, valid_to=citation.valid_to)
@@ -158,7 +162,9 @@ def _iva_catalogue_years(source: Path) -> frozenset[int]:
 
 
 def _place_of_supply_years(source: Path) -> frozenset[int]:
-    rules = _records(_read(source), "place_of_supply_rules", PublishedIvaPlaceOfSupplyRule, "rule_id")
+    rules = validated_catalogue_records(
+        read_catalogue_document(source), "place_of_supply_rules", PublishedIvaPlaceOfSupplyRule, "rule_id"
+    )
     return years_covered_by_every_group(
         [ValidityWindow(valid_from=rule.valid_from, valid_to=rule.valid_to)]
         for rule in rules.values()

@@ -95,7 +95,7 @@ def local_live_calendar_events(
     from ...application.live.notifications import NotificationsService
     from ...core.config import load_settings
     from ..live_state_composition import compose_notifications_ports
-    from ._app_live_justificante_composition import build_justificante_capture_service
+    from .app_live_justificante_composition import build_justificante_capture_service
 
     try:
         from ...application.live.expedientes import ExpedientesService
@@ -291,7 +291,7 @@ def local_calendar_filing_evidence(
         from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
         from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-        from ._app_live_justificante_composition import build_justificante_capture_service
+        from .app_live_justificante_composition import build_justificante_capture_service
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())

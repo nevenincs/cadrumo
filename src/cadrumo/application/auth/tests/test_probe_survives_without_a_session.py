@@ -21,7 +21,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import override_settings
 
 from ._operator_probe_fakes import fake_operator_probe_ports
-from ._operator_projection_support import build_live_auth_preflight_report
+from .operator_projection_test_support import build_live_auth_preflight_report
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

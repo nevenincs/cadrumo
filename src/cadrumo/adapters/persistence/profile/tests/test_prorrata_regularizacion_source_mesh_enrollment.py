@@ -31,7 +31,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
 from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh

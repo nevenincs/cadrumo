@@ -32,15 +32,15 @@ from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import unlock_profile_custody_password
 from cadrumo.application.user_profile.login_session import logout_active_profile
 from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
 from cadrumo.core.credentials import (
-    PROFILE_CREDENTIAL_INPUT_MAX_SCALARS,
-    PROFILE_CREDENTIAL_INPUT_MIN_SCALARS,
+    PROFILE_PASSWORD_MAX_SCALARS,
+    PROFILE_PASSWORD_MIN_SCALARS,
     PassphraseStrength,
     ProfilePasswordRefusalReason,
     assess_profile_password,
@@ -201,7 +201,7 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
             register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Too Short",
-                passphrase="a" * (PROFILE_CREDENTIAL_INPUT_MIN_SCALARS - 1),
+                passphrase="a" * (PROFILE_PASSWORD_MIN_SCALARS - 1),
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )
@@ -218,7 +218,7 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
             {"reason": "too_few_scalars", "scalar_count": 7, "utf8_byte_count": 7, "minimum_scalars": 8},
         ),
         (
-            "a" * (PROFILE_CREDENTIAL_INPUT_MAX_SCALARS + 1),
+            "a" * (PROFILE_PASSWORD_MAX_SCALARS + 1),
             ProfilePasswordRefusalReason.TOO_MANY_SCALARS,
             "application.user_profile.errors.profile_password_too_many_scalars",
             {"reason": "too_many_scalars", "scalar_count": 257, "utf8_byte_count": 257, "maximum_scalars": 256},
@@ -285,8 +285,8 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
 @pytest.mark.parametrize(
     "candidate",
     (
-        "a" * PROFILE_CREDENTIAL_INPUT_MIN_SCALARS,
-        "a" * PROFILE_CREDENTIAL_INPUT_MAX_SCALARS,
+        "a" * PROFILE_PASSWORD_MIN_SCALARS,
+        "a" * PROFILE_PASSWORD_MAX_SCALARS,
         "\U0001f600" * 256,
     ),
 )
@@ -308,8 +308,8 @@ def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path,
 def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_path: Path) -> None:
     """Visually equivalent credentials stay distinct; registration never normalises."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    composed = "\u00e9" * PROFILE_CREDENTIAL_INPUT_MIN_SCALARS
-    decomposed = "e\u0301" * PROFILE_CREDENTIAL_INPUT_MIN_SCALARS
+    composed = "\u00e9" * PROFILE_PASSWORD_MIN_SCALARS
+    decomposed = "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         composed_profile = register_profile_with_credentials(
@@ -371,11 +371,11 @@ def test_strength_is_advisory_and_profile_policy_is_the_hard_gate() -> None:
     of its band. Asserting acceptance here pins that the band is
     advice, not a second gate.
     """
-    too_short = assess_profile_password("a" * (PROFILE_CREDENTIAL_INPUT_MIN_SCALARS - 1))
+    too_short = assess_profile_password("a" * (PROFILE_PASSWORD_MIN_SCALARS - 1))
     assert too_short.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS
     assert not too_short.accepted
 
-    long_enough = assess_profile_password("a" * PROFILE_CREDENTIAL_INPUT_MIN_SCALARS)
+    long_enough = assess_profile_password("a" * PROFILE_PASSWORD_MIN_SCALARS)
     assert long_enough.strength is PassphraseStrength.WEAK
     assert long_enough.accepted
 

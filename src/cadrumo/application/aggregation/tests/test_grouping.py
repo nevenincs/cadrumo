@@ -24,10 +24,10 @@ from ..retenciones import RetencionObservation
 from .renta_income_aggregation_support import (
     _M130_ACCEPT_ACTIVITY_MARKER,
     _M130_GASTOS_CASILLA,
-    _M130_INGRESOS_CASILLA,
-    _M130_MODELO,
-    _m130_activity_category_matcher,
-    _m130_employment_category_matcher,
+    M130_INGRESOS_CASILLA,
+    M130_MODELO,
+    m130_activity_category_matcher,
+    m130_employment_category_matcher,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -405,16 +405,16 @@ def test_cumulative_year_to_date_window_is_the_one_the_m130_halves_share() -> No
         empty,
         bucket_id="b",
         period=period,
-        modelo=_M130_MODELO,
-        target_casilla_id=_M130_INGRESOS_CASILLA,
-        activity_category_matcher=_m130_activity_category_matcher,
-        employment_category_matcher=_m130_employment_category_matcher,
+        modelo=M130_MODELO,
+        target_casilla_id=M130_INGRESOS_CASILLA,
+        activity_category_matcher=m130_activity_category_matcher,
+        employment_category_matcher=m130_employment_category_matcher,
     )
     gasto = aggregate_renta_gasto_ledger(
         empty,
         bucket_id="b",
         period=period,
-        modelo=_M130_MODELO,
+        modelo=M130_MODELO,
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=_M130_ACCEPT_ACTIVITY_MARKER,
     )

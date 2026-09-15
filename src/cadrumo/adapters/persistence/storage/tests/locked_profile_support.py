@@ -17,10 +17,10 @@ from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
-)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....core.bucket_pointer import BucketPointer, write_pointer

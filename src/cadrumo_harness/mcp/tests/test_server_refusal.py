@@ -12,7 +12,7 @@ import shutil
 
 import pytest
 
-from .._call_runtime import run_captured
+from ..call_runtime import run_captured
 from ..server import emit_missing_sdk_refusal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

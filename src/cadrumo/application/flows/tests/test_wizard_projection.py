@@ -25,7 +25,7 @@ from ....core.flows import (
     FlowWidgetKind,
 )
 from ...wizard.models import WizardFlow, WizardQuestion, WizardVisibility
-from ...wizard.tests._support import registry_setup_flow as registry_setup_flow
+from ...wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from ..definition import FlowCondition, FlowDefinition, FlowPage, FlowVisibility
 from ..engine import start_flow, visible_sequence
 from ..wizard_projection import flow_definition_from_wizard_flow

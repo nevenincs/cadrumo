@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
-from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 
 from ....domain.deadlines.profiles import MODELO_IVA_BLOCK_CLAIMING_PATHS, MODELO_IVA_BLOCK_REQUIRED_PATHS
 from ..models import WizardCondition, WizardQuestion, WizardVisibility

@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
-from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ...user_profile.profile_keys import profile_keys as catalogue_profile_keys

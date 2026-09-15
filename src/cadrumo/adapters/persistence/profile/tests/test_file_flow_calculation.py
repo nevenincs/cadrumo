@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
     M130_EXPENSE_CASILLA,
@@ -23,7 +24,6 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     verify_revision,
     workflow_gate,
 )
-from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )

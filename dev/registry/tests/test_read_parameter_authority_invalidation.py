@@ -21,10 +21,10 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
 from cadrumo.domain.calculations.registry.schema_formula import DatedValue, ParameterDefinition
-from cadrumo.domain.calculations.registry.tests._artifact_runtime_support import (
-    _minimal_catalogues,
-    _minimal_modelo,
-    _minimal_revision,
+from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
+    minimal_catalogues,
+    minimal_modelo,
+    minimal_revision,
 )
 from cadrumo.domain.user_profile.schema import (
     ProfileFieldDefinition,
@@ -72,7 +72,7 @@ def _profile_schema() -> ProfileSchemaDefinition:
 
 def _artifact(value: str) -> AuthorityArtifact:
     """Build one immutable authority generation carrying the fixture rate."""
-    catalogues = _minimal_catalogues()
+    catalogues = minimal_catalogues()
     legal_id = next(iter(catalogues.legal))
     source_id = next(iter(catalogues.sources))
     parameter = ParameterDefinition(
@@ -90,13 +90,13 @@ def _artifact(value: str) -> AuthorityArtifact:
         legal_refs=(legal_id,),
         source_refs=(source_id,),
     )
-    revision = _minimal_revision().model_copy(update={"parameters": (parameter,)})
+    revision = minimal_revision().model_copy(update={"parameters": (parameter,)})
     build_identity = AuthorityBuildIdentity.from_inputs(
         sha256_hex(f"fixture-source:{value}".encode()),
         sha256_hex(b"fixture-authority-compiler"),
     )
     return AuthorityArtifact(
-        modelos=(_minimal_modelo(revision),),
+        modelos=(minimal_modelo(revision),),
         catalogues=catalogues,
         identity_digest=build_identity.identity_digest,
         build_identity=build_identity,

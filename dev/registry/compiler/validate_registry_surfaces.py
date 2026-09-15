@@ -63,6 +63,7 @@ def validate_cross_reference_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> list[str]:
+    """Return failures for one registry cross-reference declaration."""
     failures: list[str] = []
     oracle_bindings: dict[str, str] = {}
     for cross_reference in revision.live_cross_references:
@@ -109,6 +110,7 @@ def validate_workbook_parity_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
 ) -> list[str]:
+    """Return failures for one workbook-parity declaration."""
     failures: list[str] = []
     for workbook in revision.workbook_parity_refs:
         owner = f"workbook parity {workbook.id}"
@@ -174,6 +176,7 @@ def validate_verification_expectation_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> list[str]:
+    """Return failures for one verification-expectation declaration."""
     failures: list[str] = []
     casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -306,6 +309,7 @@ def validate_application_link_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> list[str]:
+    """Return failures for one application-link declaration."""
     failures: list[str] = []
     for link in revision.application_links:
         owner = f"application link {link.id}"
@@ -343,6 +347,7 @@ def validate_deadline_window_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> list[str]:
+    """Return failures for one filing deadline-window declaration."""
     failures: list[str] = []
     for window in revision.deadline_windows:
         owner = f"deadline window {window.id}"

@@ -15,7 +15,7 @@ from typing import Any
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.tests.audited_process import run_audited_process
 

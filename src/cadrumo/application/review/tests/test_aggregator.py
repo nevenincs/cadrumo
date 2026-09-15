@@ -36,7 +36,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._aggregator import ReviewQueue
 from ..enums import ReviewItemKind, ReviewSeverity, ReviewState
-from ._fakes import draft_review_ports
+from .draft_review_test_support import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")

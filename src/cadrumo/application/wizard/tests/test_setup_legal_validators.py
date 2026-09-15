@@ -25,7 +25,7 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.application.wizard.models import WizardFlow
-from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from cadrumo.domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_monoparental_required
 from cadrumo.domain.contribuyente.renta_codes import SituacionFamiliar
 

@@ -166,12 +166,13 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
-    from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
+    from cadrumo.application.wizard.catalogue import build_setup_flow
     from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
     from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.contribuyente.ccaa import CCAA
     from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
     from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
@@ -187,6 +188,8 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     apoderado_scope_values = tuple(scope.code.lower() for scope in load_default_catalogue().scopes)
     topic_slugs = tuple(topic.slug for topic in load_topic_catalogue().topics)
     row_fields = scan_detail_row_fields()
+    with bundled_indexed_authority().operation() as operation:
+        wizard_flows = (build_setup_flow(operation),)
 
     return (
         *_wizard_choice_label_registrations(
@@ -205,9 +208,9 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             irpf_estimation_regime=IrpfEstimationRegime,
             fiscal_residency=FiscalResidency,
         ),
-        *_wizard_question_registrations(wizard_flows=WIZARD_FLOWS),
+        *_wizard_question_registrations(wizard_flows=wizard_flows),
         *_dynamic_family_registrations(
-            wizard_flows=WIZARD_FLOWS,
+            wizard_flows=wizard_flows,
             apoderado_scope_values=apoderado_scope_values,
             context_label_keys=ERROR_CONTEXT_LABEL_KEYS,
             profile_validation_codes=PROFILE_VALIDATION_ISSUE_CODES,

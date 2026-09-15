@@ -19,7 +19,7 @@ from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_sessi
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
-from cadrumo.entrypoints.cli._app_live_justificante_composition import (
+from cadrumo.entrypoints.cli.app_live_justificante_composition import (
     build_justificante_authenticity_verifier,
     build_justificante_capture_service,
     build_justificante_live_read_port,

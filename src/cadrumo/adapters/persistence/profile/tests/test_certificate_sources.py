@@ -30,7 +30,7 @@ from cadrumo.application.auth.certificate_source_operations import (
 )
 from cadrumo.application.auth.credentials import resolve_active_certificate_credentials
 from cadrumo.application.auth.operator_results import CertificateSourceNotFoundError
-from cadrumo.application.auth.tests._operator_projection_support import (
+from cadrumo.application.auth.tests.operator_projection_test_support import (
     configure_operator_auth,
     inspect_operator_auth,
 )

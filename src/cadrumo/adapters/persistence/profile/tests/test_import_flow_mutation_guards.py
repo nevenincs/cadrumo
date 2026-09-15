@@ -13,7 +13,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M111_ACTIVITY_AMOUNT_CASILLA,
