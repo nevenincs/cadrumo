@@ -135,6 +135,7 @@ def client_venv_template() -> Path:
     ):
         completed = run_command(
             argv,
+            cwd=REPO_ROOT,
             environment=environment,
         )
         if completed.returncode != 0:

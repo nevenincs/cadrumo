@@ -150,9 +150,14 @@ async def _run_process(
     except TimeoutError as exc:
         process.kill()
         stdout_bytes, stderr_bytes = await process.communicate()
+        if timeout_seconds is None:
+            raise RuntimeError("process timed out without a configured timeout") from exc
         raise subprocess.TimeoutExpired(command, timeout_seconds, output=stdout_bytes, stderr=stderr_bytes) from exc
+    returncode = process.returncode
+    if returncode is None:
+        raise RuntimeError("process completed without a return code")
     return (
-        process.returncode,
+        returncode,
         _decode_output(stdout_bytes, errors=errors),
         _decode_output(stderr_bytes, errors=errors),
     )

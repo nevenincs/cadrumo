@@ -760,9 +760,7 @@ def _flow_choice_values(flow: _FlowLike, question_id: str, *, described: bool = 
         for question in section.questions:
             if question.id != question_id:
                 continue
-            return tuple(
-                choice.value for choice in question.choices if not described or choice.description is not None
-            )
+            return tuple(choice.value for choice in question.choices if not described or choice.description is not None)
     raise LookupError(f"wizard flow has no question {question_id!r}")
 
 

@@ -45,7 +45,7 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, override
+from typing import Any, TypeGuard, override
 
 from hatchling.builders.config import BuilderConfig
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
@@ -57,6 +57,13 @@ _TARGET_PREFIX = "cadrumo_data/_data/corpus"
 # ``cadrumo-data-manuals`` owns ``manuals``; the two sets are disjoint and their
 # union is every corpus subtree carrying source binaries.
 _OWNED_SUBDIRS = frozenset({"aeat_official", "eu_official", "normatives"})
+
+
+def _is_string_mapping(value: object) -> TypeGuard[dict[str, str]]:
+    """Recognize Hatch's force-include mapping without trusting its Any payload."""
+    return isinstance(value, dict) and all(
+        isinstance(key, str) and isinstance(item, str) for key, item in value.items()
+    )
 
 
 def _corpus_root(hook_root: Path) -> Path | None:
@@ -87,7 +94,9 @@ class CustomBuildHook(BuildHookInterface[BuilderConfig]):
         corpus_root = _corpus_root(Path(self.root))
         if corpus_root is None:
             return
-        force_include: dict[str, str] = build_data.setdefault("force_include", {})
+        force_include = build_data.setdefault("force_include", {})
+        if not _is_string_mapping(force_include):
+            raise TypeError("hatch build_data force_include must map string paths to string destinations")
         for path in sorted(corpus_root.rglob("*")):
             if not path.is_file() or path.suffix.lower() not in _CORPUS_BINARY_SUFFIXES:
                 continue

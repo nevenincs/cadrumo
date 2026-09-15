@@ -13,6 +13,7 @@ from email.parser import Parser
 from pathlib import Path
 
 import pytest
+from dev.packaging.cohort_attestation import add_test_runtime_wheelhouse, add_test_source_archive
 from dev.packaging.hashing import sha256_path
 from dev.packaging.lane_verification_core import (
     build_companion_wheels,
@@ -22,7 +23,6 @@ from dev.packaging.lane_verification_core import (
     run_checked,
 )
 from dev.packaging.python_cohort import attest_command_specs
-from dev.packaging.tests._cohort_attestation import add_test_runtime_wheelhouse, add_test_source_archive
 from dev.packaging.uv_constraints import export_runtime_constraints
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -76,7 +76,12 @@ def _wheel_requirements(wheel: Path) -> tuple[str, ...]:
         metadata_names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
         assert len(metadata_names) == 1
         metadata = Parser().parsestr(archive.read(metadata_names[0]).decode("utf-8"))
-    return tuple(metadata.get_all("Requires-Dist", []))
+    requirements = metadata.get_all("Requires-Dist")
+    if requirements is None:
+        return ()
+    if not all(isinstance(requirement, str) for requirement in requirements):
+        raise AssertionError("wheel metadata contains a non-string Requires-Dist value")
+    return tuple(requirements)
 
 
 def _conditional_companion_pin_wheel(

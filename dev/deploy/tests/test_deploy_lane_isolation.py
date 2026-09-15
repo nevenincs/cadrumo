@@ -154,7 +154,7 @@ _DELIVERY_WORKFLOW = "docs-publish.yml"
 _DELIVERY_ENVIRONMENT = "docs"
 
 
-def _dump(justfile: Path) -> dict[str, object]:
+def _dump(justfile: Path) -> dict[str, dict[str, object]]:
     """Return just's own parse of a justfile.
 
     The parse comes from ``just`` rather than from a regex over the text: the
@@ -174,9 +174,31 @@ def _dump(justfile: Path) -> dict[str, object]:
             "--dump-format",
             "json",
         ],
+        cwd=_REPO_ROOT,
     )
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)["recipes"]
+    decoded: object = json.loads(result.stdout)
+    if not isinstance(decoded, dict):
+        raise AssertionError("just dump must be a JSON object")
+    payload: dict[str, object] = {}
+    for key, value in decoded.items():
+        if not isinstance(key, str):
+            raise AssertionError("just dump object keys must be strings")
+        payload[key] = value
+    raw_recipes = payload.get("recipes")
+    if not isinstance(raw_recipes, dict):
+        raise AssertionError("just dump must contain a recipes object")
+    recipes: dict[str, dict[str, object]] = {}
+    for name, raw_body in raw_recipes.items():
+        if not isinstance(name, str) or not isinstance(raw_body, dict):
+            raise AssertionError("just dump recipes must map names to objects")
+        body: dict[str, object] = {}
+        for key, value in raw_body.items():
+            if not isinstance(key, str):
+                raise AssertionError("just dump recipe fields must have string names")
+            body[key] = value
+        recipes[name] = body
+    return recipes
 
 
 def _recipe_graph(justfile: Path) -> dict[str, set[str]]:
@@ -190,9 +212,24 @@ def _recipe_graph(justfile: Path) -> dict[str, set[str]]:
     names = set(recipes)
     graph: dict[str, set[str]] = {}
     for name, body in recipes.items():
-        edges = {dep["recipe"] for dep in body.get("dependencies", [])}
+        raw_dependencies = body.get("dependencies", [])
+        if not isinstance(raw_dependencies, list):
+            raise AssertionError(f"just dump recipe {name!r} has invalid dependencies")
+        edges: set[str] = set()
+        for dependency in raw_dependencies:
+            if not isinstance(dependency, dict):
+                raise AssertionError(f"just dump recipe {name!r} has an invalid dependency")
+            recipe = dependency.get("recipe")
+            if not isinstance(recipe, str):
+                raise AssertionError(f"just dump recipe {name!r} has an invalid dependency name")
+            edges.add(recipe)
         fragments: list[str] = []
-        for line in body.get("body", []):
+        raw_body = body.get("body", [])
+        if not isinstance(raw_body, list):
+            raise AssertionError(f"just dump recipe {name!r} has invalid body lines")
+        for line in raw_body:
+            if not isinstance(line, list):
+                raise AssertionError(f"just dump recipe {name!r} has an invalid body line")
             fragments.extend(part if isinstance(part, str) else json.dumps(part) for part in line)
         edges |= _recipes_invoked_in("\n".join(fragments), names)
         graph[name] = edges
@@ -346,11 +383,16 @@ def test_outward_documentation_recipes_stay_in_the_docs_group() -> None:
     """Outward documentation authorities remain visible in the docs namespace."""
     recipes = _dump(_JUSTFILE)
     for name in sorted(_DEPLOY_RECIPES):
-        groups = {
-            attribute.get("group")
-            for attribute in recipes[name].get("attributes", [])
-            if isinstance(attribute, dict) and attribute.get("group")
-        }
+        raw_attributes = recipes[name].get("attributes", [])
+        if not isinstance(raw_attributes, list):
+            raise AssertionError(f"{name} has invalid just attributes")
+        groups: set[str] = set()
+        for attribute in raw_attributes:
+            if not isinstance(attribute, dict):
+                continue
+            group = attribute.get("group")
+            if isinstance(group, str) and group:
+                groups.add(group)
         assert groups == {"docs"}, f"{name} escaped the docs namespace: {sorted(groups)}"
 
 

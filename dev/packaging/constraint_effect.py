@@ -130,6 +130,7 @@ def enumerate_installed_distributions(python_exe: Path) -> dict[str, str]:
     """Return the normalised name -> version map of ``python_exe``'s installed set."""
     completed = run_command(
         [str(python_exe), "-c", _ENUMERATE_SNIPPET],
+        cwd=Path.cwd(),
         errors="strict",
     )
     if completed.returncode != 0:

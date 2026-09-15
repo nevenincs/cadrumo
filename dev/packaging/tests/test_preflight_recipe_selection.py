@@ -152,11 +152,13 @@ def parse_node_ids(output: str) -> frozenset[str]:
     Returns:
         Every node id the run listed.
     """
-    node_ids = set()
+    node_ids: set[str] = set()
     for line in output.splitlines():
         match = _NODE_ID.match(line.rstrip())
         if match is not None:
-            node_ids.add(match.group("node_id"))
+            node_id = match.groupdict().get("node_id")
+            if isinstance(node_id, str):
+                node_ids.add(node_id)
     return frozenset(node_ids)
 
 
@@ -335,9 +337,12 @@ def _directory_selection(marker_expression: str) -> frozenset[str]:
     Returns:
         The node ids selected.
     """
+    # An explicit tautology overrides the repository's restrictive addopts
+    # while keeping the shared command runner's non-empty-argv contract.
+    marker_arguments = ("-m", marker_expression or "perf or not perf")
     return _collect(
         f"selection -m {marker_expression!r}",
-        ("-q", "-m", marker_expression, _TARGET_DIRECTORY),
+        ("-q", *marker_arguments, _TARGET_DIRECTORY),
     )
 
 

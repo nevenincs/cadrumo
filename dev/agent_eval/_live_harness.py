@@ -160,7 +160,7 @@ def accept_all_confirmations(
     Returns:
         A :class:`ElicitationAction`.
     """
-    return (ElicitationAction.ACCEPT, {})
+    return (ElicitationAction.ACCEPT, dict[str, ElicitationContentValue]())
 
 
 class ScriptedPersonaDriver:

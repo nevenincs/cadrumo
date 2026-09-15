@@ -34,7 +34,10 @@ _EXPECTED_JOBS: Final = {
 
 
 def _quick_document() -> dict[str, Any]:
-    return yaml.safe_load(_QUICK.read_text(encoding="utf-8"))
+    document = yaml.safe_load(_QUICK.read_text(encoding="utf-8"))
+    if True in document and "on" not in document:
+        document["on"] = document.pop(True)
+    return document
 
 
 def _run_surface(document: dict[str, Any]) -> str:
@@ -113,7 +116,7 @@ def test_quick_workflow_mints_no_promotable_evidence() -> None:
 def test_quick_workflow_triggers_on_artifact_relevant_pushes() -> None:
     """Main pushes complete the quick workflow while superseded pull requests cancel."""
     document = _quick_document()
-    triggers = document[True] if True in document else document["on"]
+    triggers = document["on"]
     assert set(triggers) == {"workflow_dispatch", "push", "pull_request"}
     push = triggers["push"]
     assert push["branches"] == ["main"]

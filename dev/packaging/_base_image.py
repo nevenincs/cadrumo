@@ -57,4 +57,7 @@ def linux_base_image() -> str:
             f"{path} declares no `ARG PYTHON_BASE_IMAGE=<image>` line; "
             "it is the single declaration point for the shared Linux base image."
         )
-    return match.group("image")
+    image = match.groupdict().get("image")
+    if not isinstance(image, str):
+        raise RuntimeError(f"{path} declares an invalid `PYTHON_BASE_IMAGE` value")
+    return image

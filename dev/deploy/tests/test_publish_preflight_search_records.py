@@ -25,6 +25,7 @@ from __future__ import annotations
 import contextlib
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -32,9 +33,13 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
 from dev.docs.pagefind_index import (
     DECIDED_INJECTED_RECORD_KINDS,
+    InjectCallback,
     build_search_index,
     injected_record_kinds_in_index,
 )
+
+if TYPE_CHECKING:
+    from pagefind.index import PagefindIndex
 
 from ..docs_static_site import (
     _language_site_url,
@@ -71,7 +76,7 @@ def _page_corpus(tmp_path: Path, name: str) -> Path:
     return site
 
 
-async def _inject_one_record_per_kind(index: object) -> None:
+async def _inject_one_record_per_kind(index: PagefindIndex) -> None:
     """Add one real custom record per decided kind through Pagefind's own API.
 
     The same ``add_custom_record`` seam the production injector writes through.
@@ -83,7 +88,7 @@ async def _inject_one_record_per_kind(index: object) -> None:
     The row COUNT is not the property under test, so one per kind is enough.
     """
     for kind in sorted(DECIDED_INJECTED_RECORD_KINDS):
-        await index.add_custom_record(  # type: ignore[attr-defined]
+        await index.add_custom_record(
             url=f"/records/{kind}.html",
             content=f"a real injected {kind} record for the publish preflight proof",
             language="en",
@@ -92,7 +97,7 @@ async def _inject_one_record_per_kind(index: object) -> None:
         )
 
 
-def _build_in_place(site: Path, inject: object) -> None:
+def _build_in_place(site: Path, inject: InjectCallback | None) -> None:
     """Build ``site``'s index with the CWD held inside the scratch tree.
 
     Plain isolation now. It was originally containment: an unpathed second
@@ -105,7 +110,7 @@ def _build_in_place(site: Path, inject: object) -> None:
     invoked from.
     """
     with contextlib.chdir(site.parent):
-        build_search_index(site, inject=inject)  # type: ignore[arg-type]
+        build_search_index(site, inject=inject)
 
 
 @pytest.fixture(scope="module")

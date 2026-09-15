@@ -10,7 +10,7 @@ import inspect
 import json
 import textwrap
 import threading
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Final, override
 
@@ -350,9 +350,9 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
         _validate_language_roots(tmp_path)
 
 
-def _direct_calls(function: object) -> list[str]:
+def _direct_calls(function: Callable[..., object]) -> list[str]:
     """Return the plain-name calls a function makes, in source order."""
-    tree = ast.parse(textwrap.dedent(inspect.getsource(function)))  # type: ignore[arg-type]
+    tree = ast.parse(textwrap.dedent(inspect.getsource(function)))
     return [node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)]
 
 

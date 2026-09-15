@@ -115,7 +115,7 @@ def environment_fingerprint() -> str:
     uv = shutil.which("uv")
     uv_version = "uv-absent"
     if uv is not None:
-        result = run_command([uv, "--version"])
+        result = run_command([uv, "--version"], cwd=Path.cwd())
         if result.returncode != 0:
             raise RuntimeError(f"uv --version failed: {result.stderr.strip()}")
         uv_version = result.stdout.strip()

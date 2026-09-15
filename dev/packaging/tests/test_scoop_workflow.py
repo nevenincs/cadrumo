@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 import yaml
 
@@ -14,8 +16,127 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _WORKFLOW = REPO_ROOT / ".github" / "workflows" / "packaging-scoop.yml"
 
 
-def _workflow() -> dict[str, object]:
-    return yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+_Step = TypedDict(
+    "_Step",
+    {
+        "name": str,
+        "id": str,
+        "shell": str,
+        "uses": str,
+        "run": str,
+        "if": str,
+        "env": dict[str, str],
+        "with": dict[str, str | bool],
+    },
+    total=False,
+)
+_Job = TypedDict(
+    "_Job",
+    {
+        "name": str,
+        "runs-on": list[str],
+        "timeout-minutes": int,
+        "permissions": dict[str, str],
+        "steps": list[_Step],
+    },
+    total=False,
+)
+
+
+class _Workflow(TypedDict, total=False):
+    name: str
+    jobs: dict[str, _Job]
+    permissions: dict[str, str]
+
+
+def _required_string(value: object, *, field: str) -> str:
+    if not isinstance(value, str):
+        raise AssertionError(f"workflow field {field!r} is not a string")
+    return value
+
+
+def _string_list(value: object, *, field: str) -> list[str]:
+    if not isinstance(value, list):
+        raise AssertionError(f"workflow field {field!r} is not a list")
+    result: list[str] = []
+    for item in value:
+        result.append(_required_string(item, field=field))
+    return result
+
+
+def _string_mapping(value: object, *, field: str) -> dict[str, str]:
+    if not isinstance(value, dict):
+        raise AssertionError(f"workflow field {field!r} is not a mapping")
+    result: dict[str, str] = {}
+    for key, item in value.items():
+        result[_required_string(key, field=field)] = _required_string(item, field=field)
+    return result
+
+
+def _string_bool_mapping(value: object, *, field: str) -> dict[str, str | bool]:
+    if not isinstance(value, dict):
+        raise AssertionError(f"workflow field {field!r} is not a mapping")
+    result: dict[str, str | bool] = {}
+    for key, item in value.items():
+        if not isinstance(item, (str, bool)):
+            raise AssertionError(f"workflow field {field!r} contains a non-string/bool value")
+        result[_required_string(key, field=field)] = item
+    return result
+
+
+def _step(value: object) -> _Step:
+    if not isinstance(value, dict):
+        raise AssertionError("workflow step is not a mapping")
+    step: _Step = {}
+    for field in ("name", "id", "shell", "uses", "run", "if"):
+        if field in value:
+            step[field] = _required_string(value[field], field=field)
+    if "env" in value:
+        step["env"] = _string_mapping(value["env"], field="env")
+    if "with" in value:
+        step["with"] = _string_bool_mapping(value["with"], field="with")
+    return step
+
+
+def _job(value: object) -> _Job:
+    if not isinstance(value, dict):
+        raise AssertionError("workflow job is not a mapping")
+    job: _Job = {}
+    if "name" in value:
+        job["name"] = _required_string(value["name"], field="name")
+    if "runs-on" in value:
+        job["runs-on"] = _string_list(value["runs-on"], field="runs-on")
+    if "timeout-minutes" in value:
+        timeout = value["timeout-minutes"]
+        if not isinstance(timeout, int):
+            raise AssertionError("workflow field 'timeout-minutes' is not an integer")
+        job["timeout-minutes"] = timeout
+    if "permissions" in value:
+        job["permissions"] = _string_mapping(value["permissions"], field="permissions")
+    raw_steps = value.get("steps")
+    if not isinstance(raw_steps, list):
+        raise AssertionError("workflow field 'steps' is not a list")
+    job["steps"] = [_step(step) for step in raw_steps]
+    return job
+
+
+def _workflow() -> _Workflow:
+    raw = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise AssertionError("workflow document is not a mapping")
+    raw_jobs = raw.get("jobs")
+    if not isinstance(raw_jobs, dict):
+        raise AssertionError("workflow field 'jobs' is not a mapping")
+    jobs: dict[str, _Job] = {}
+    for name, job in raw_jobs.items():
+        jobs[_required_string(name, field="jobs")] = _job(job)
+    workflow: _Workflow = {
+        "name": _required_string(raw.get("name"), field="name"),
+        "jobs": jobs,
+    }
+    if "permissions" in raw:
+        workflow["permissions"] = _string_mapping(raw["permissions"], field="permissions")
+    return workflow
 
 
 def test_scoop_workflow_declares_the_native_release_row() -> None:
@@ -120,8 +241,9 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     # write` is the watchdog's cancel capability and belongs to that job alone.
     assert document["permissions"] == {"actions": "read", "contents": "read"}
     assert job["permissions"] == {"actions": "read", "contents": "read"}
-    assert jobs_granting(document, "actions", "write") == ("runner-queue-watchdog",)
-    assert jobs_granting(document, "contents", "write") == ()
+    raw_document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    assert jobs_granting(raw_document, "actions", "write") == ("runner-queue-watchdog",)
+    assert jobs_granting(raw_document, "contents", "write") == ()
 
 
 def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> None:

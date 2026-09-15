@@ -160,15 +160,17 @@ def _canonical_population_rows() -> tuple[tuple[str, frozenset[str], tuple[str, 
         markers = marker_sets_in(_ROOT / relative)
         assert markers is not None, f"tracked test markers could not be read: {relative_path}"
         for item in markers:
-            owners = tuple(
-                sorted(
-                    {
-                        lane.recipe
-                        for lane in lanes
-                        if lane.covers(relative_path) and expression_selects(lane.marker_expression, item.markers)
-                    }
-                )
-            )
+            owner_names: set[str] = set()
+            for lane in lanes:
+                recipe = lane.recipe
+                if (
+                    not isinstance(recipe, str)
+                    or not lane.covers(relative_path)
+                    or not expression_selects(lane.marker_expression, item.markers)
+                ):
+                    continue
+                owner_names.add(recipe)
+            owners = tuple(sorted(owner_names))
             rows.append((f"{relative_path}::{item.test}", item.markers, owners))
     return tuple(rows)
 

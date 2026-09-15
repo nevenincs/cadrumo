@@ -78,9 +78,9 @@ def _upward_root(value: ast.expr, origin: Path) -> Path | None:
     return parents[index] if index < len(parents) else None
 
 
-def _declared_repository_roots() -> tuple[tuple[Path, str, Path | None], ...]:
+def _declared_repository_roots() -> tuple[tuple[Path, str, Path], ...]:
     """Return every module-level repository-root constant and where it lands."""
-    declared: list[tuple[Path, str, Path | None]] = []
+    declared: list[tuple[Path, str, Path]] = []
     for tree_name in _SCANNED_TREES:
         for path in scan_directory(_REPOSITORY_ROOT / tree_name, pattern="*.py", recursive=True):
             if _EXCLUDED_PARTS & set(path.relative_to(_REPOSITORY_ROOT).parts):
@@ -110,19 +110,20 @@ def _declared_repository_roots() -> tuple[tuple[Path, str, Path | None], ...]:
                 )
                 continue
             for node in module.body:
-                targets = (
-                    [node.target]
-                    if isinstance(node, ast.AnnAssign)
-                    else node.targets
-                    if isinstance(node, ast.Assign)
-                    else []
-                )
+                if isinstance(node, ast.AnnAssign):
+                    targets = [node.target]
+                    value = node.value
+                elif isinstance(node, ast.Assign):
+                    targets = node.targets
+                    value = node.value
+                else:
+                    continue
                 for target in targets:
                     if not isinstance(target, ast.Name) or not _repository_named(target.id):
                         continue
-                    if node.value is None:  # pragma: no cover - a bare annotation declares no path
+                    if value is None:  # pragma: no cover - a bare annotation declares no path
                         continue
-                    resolved = _upward_root(node.value, path)
+                    resolved = _upward_root(value, path)
                     if resolved is not None:
                         declared.append((path, target.id, resolved))
     return tuple(declared)

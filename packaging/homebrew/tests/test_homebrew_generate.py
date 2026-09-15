@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 from dev.packaging._distribution_names import normalise_distribution_name
+from dev.packaging.cohort_attestation import add_test_runtime_wheelhouse, add_test_source_archive
 from dev.packaging.hashing import sha256_path
 from dev.packaging.lane_verification_core import (
     build_companion_wheels,
@@ -21,7 +22,6 @@ from dev.packaging.lane_verification_core import (
     run_checked,
 )
 from dev.packaging.python_cohort import attest_command_specs
-from dev.packaging.tests._cohort_attestation import add_test_runtime_wheelhouse, add_test_source_archive
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 

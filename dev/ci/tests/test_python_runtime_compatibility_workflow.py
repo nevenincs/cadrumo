@@ -39,14 +39,14 @@ _REQUIRED_PATHS: Final = frozenset(
 )
 
 
-def _document() -> dict[str, Any]:
+def _document() -> dict[str | bool, Any]:
     """Load the checked-in workflow using the repository's YAML convention."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     assert isinstance(document, dict)
     return document
 
 
-def _triggers(document: dict[str, Any]) -> dict[str, Any]:
+def _triggers(document: dict[str | bool, Any]) -> dict[str, Any]:
     """Return the trigger mapping across YAML 1.1 and 1.2 loaders."""
     triggers = document[True] if True in document else document["on"]
     assert isinstance(triggers, dict)

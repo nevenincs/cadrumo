@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -49,32 +50,33 @@ def _transaction(source_path: Path) -> Transaction:
 
 
 def _invoice(bucket_id: str) -> Invoice:
-    line = InvoiceLine(
-        description="Runtime enrollment service",
-        quantity=Decimal("1"),
-        unit_price=Decimal("100.00"),
-        subtotal=Decimal("100.00"),
-        iva_rate=IvaRate.RATE_21,
-        iva_amount=Decimal("21.00"),
-    )
-    return Invoice.model_validate(
-        {
-            "bucket_id": bucket_id,
-            "kind": InvoiceKind.RECEIVED,
-            "invoice_number": "RUNTIME-001",
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "lines": (line,),
-            "payment_status": PaymentStatus.PENDING,
-            "linked_transaction_ids": (),
-        },
-    )
+    with bundled_indexed_authority().operation():
+        line = InvoiceLine(
+            description="Runtime enrollment service",
+            quantity=Decimal("1"),
+            unit_price=Decimal("100.00"),
+            subtotal=Decimal("100.00"),
+            iva_rate=IvaRate.from_registry("rate_21"),
+            iva_amount=Decimal("21.00"),
+        )
+        return Invoice.model_validate(
+            {
+                "bucket_id": bucket_id,
+                "kind": InvoiceKind.RECEIVED,
+                "invoice_number": "RUNTIME-001",
+                "issued_at": date(2026, 4, 1),
+                "counterparty_name": "Proveedor SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "base_total": Decimal("100.00"),
+                "iva_total": Decimal("21.00"),
+                "grand_total": Decimal("121.00"),
+                "currency": "EUR",
+                "lines": (line,),
+                "payment_status": PaymentStatus.PENDING,
+                "linked_transaction_ids": (),
+            },
+        )
 
 
 def test_transaction_repository_default_uses_runtime_created_bucket_store(tmp_path: Path) -> None:

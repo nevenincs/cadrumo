@@ -1555,9 +1555,7 @@ def _po_message_identity(message: object) -> str:
     message_id_value = getattr(message, "id", None)
     if not isinstance(message_id_value, (str, tuple, list)):
         raise TypeError("gettext message id must be text or plural forms")
-    if isinstance(message_id_value, (tuple, list)) and not all(
-        isinstance(item, str) for item in message_id_value
-    ):
+    if isinstance(message_id_value, (tuple, list)) and not all(isinstance(item, str) for item in message_id_value):
         raise TypeError("gettext plural message ids must contain text")
     message_id = _po_message_id(message_id_value)
     context = getattr(message, "context", None)

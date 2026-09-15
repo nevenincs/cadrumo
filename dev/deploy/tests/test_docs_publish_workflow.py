@@ -44,7 +44,8 @@ def _run_surface() -> str:
 
 def test_it_runs_after_a_release_rather_than_during_one() -> None:
     """Downstream of publication, and dispatchable for a manual retry."""
-    triggers = _document()[True]
+    document = _document()
+    triggers = next(value for key, value in document.items() if key is True)
     assert set(triggers) == {"release", "workflow_dispatch"}
     assert triggers["release"]["types"] == ["published"]
 

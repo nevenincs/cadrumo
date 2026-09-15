@@ -38,7 +38,7 @@ def _python_files(root: Path) -> tuple[Path, ...]:
 @cache
 def project_test_modules() -> tuple[Path, ...]:
     """Return project-level ``test_*.py`` modules outside ``src/cadrumo``."""
-    collected: set = set()
+    collected: set[Path] = set()
     for root in PROJECT_TEST_ROOTS:
         if not root.exists():
             continue

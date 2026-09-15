@@ -5,8 +5,9 @@ from __future__ import annotations
 import ast
 import hashlib
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Final
+from typing import Final, Protocol
 
 import pytest
 
@@ -38,6 +39,14 @@ _REHOMED_TEXT_DIGEST_SITES: Final[tuple[str, ...]] = (
     "dev/packaging/python_cohort.py",
     "dev/ci/python_runtime_compatibility.py",
 )
+
+
+class _TextDigestModule(Protocol):
+    sha256_text: Callable[[str], str]
+
+
+class _PathDigestModule(Protocol):
+    sha256_path: Callable[[Path], str]
 
 
 def test_sha256_path_hashes_real_multichunk_bytes(tmp_path: Path) -> None:
@@ -217,7 +226,7 @@ def test_rehomed_text_digest_site_declares_no_private_text_helper(relative_path:
 
 
 @pytest.mark.parametrize("module", (smoke_homebrew, distribution_evidence_emit, evidence, proof_cache))
-def test_rehomed_text_digest_module_uses_the_canonical_helper(module: object) -> None:
+def test_rehomed_text_digest_module_uses_the_canonical_helper(module: _TextDigestModule) -> None:
     """The re-homed module resolves string digests through the one owner."""
     assert module.sha256_text is sha256_text
 
@@ -259,7 +268,7 @@ def test_rehomed_digest_site_declares_no_private_digest_helper(relative_path: st
 
 
 @pytest.mark.parametrize("module", (cohort_manifest, smoke_homebrew))
-def test_rehomed_digest_module_uses_the_canonical_helper(module: object) -> None:
+def test_rehomed_digest_module_uses_the_canonical_helper(module: _PathDigestModule) -> None:
     """The re-homed module resolves file digests through the one owner."""
     assert module.sha256_path is sha256_path
 

@@ -256,7 +256,9 @@ def _protocol_environment_overrides(
     overrides: Mapping[str, str] | None,
 ) -> dict[str, str]:
     """Bind the harness command port to the attested sibling CLI executable."""
-    environment = dict(overrides or {})
+    environment: dict[str, str] = {}
+    if overrides is not None:
+        environment.update(overrides)
     environment["CADRUMO_CLI_EXECUTABLE"] = str(sibling_cli)
     return environment
 

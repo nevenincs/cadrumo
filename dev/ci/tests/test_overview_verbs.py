@@ -32,6 +32,7 @@ from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.json_contract import ResolvedNoticeAction
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import (
     ModeloDraft,
@@ -174,10 +175,13 @@ def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocatio
     )
 
 
-def test_overview_status_period_filter_matches_typed_draft_period() -> None:
+def test_overview_status_period_filter_matches_typed_draft_period(
+    operation: PinnedAuthorityOperation,
+) -> None:
     q1_draft = build_registry_filing_draft(
         modelo="130",
         period=Period.from_year_and_code(2026, "1T"),
+        operation=operation,
         casilla_values=_valid_modelo_130_inputs(),
         binding_values=_valid_modelo_130_bindings(),
         status=ModeloDraftStatus.BORRADOR,
@@ -185,6 +189,7 @@ def test_overview_status_period_filter_matches_typed_draft_period() -> None:
     q2_draft = build_registry_filing_draft(
         modelo="130",
         period=Period.from_year_and_code(2026, "2T"),
+        operation=operation,
         casilla_values=_valid_modelo_130_inputs(),
         binding_values=_valid_modelo_130_bindings(),
         status=ModeloDraftStatus.BORRADOR,

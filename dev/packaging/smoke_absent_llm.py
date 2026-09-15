@@ -426,7 +426,7 @@ print("SURFACE_OUTCOMES:" + json.dumps(outcomes))
     line = next((row for row in result.stdout.splitlines() if row.startswith(marker)), None)
     if line is None:
         raise SystemExit(f"the surface driver produced no outcomes; stdout was: {result.stdout!r}")
-    parsed: list[dict[str, str]] = json.loads(line[len(marker) :])
+    parsed = _parse_surface_outcomes(json.loads(line[len(marker) :]))
     if not parsed:
         raise SystemExit(
             "the surface driver returned an empty outcome set, so every assertion over it holds "
@@ -442,6 +442,23 @@ def _install_core_without_extras(work_dir: Path, cohort: PythonCohort, venv_path
         install_targets(cohort, root_artifact=cohort.root_wheel, extras=()),
         venv_path,
     )
+
+
+def _parse_surface_outcomes(raw: object) -> list[dict[str, str]]:
+    """Validate the JSON driver's string-valued outcome rows structurally."""
+    if not isinstance(raw, list):
+        raise SystemExit(f"the surface driver returned a non-list outcome payload: {raw!r}")
+    outcomes: list[dict[str, str]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            raise SystemExit(f"the surface driver returned a non-object outcome row: {item!r}")
+        outcome: dict[str, str] = {}
+        for key, value in item.items():
+            if not isinstance(key, str) or not isinstance(value, str):
+                raise SystemExit(f"the surface driver returned a non-string outcome field: {item!r}")
+            outcome[key] = value
+        outcomes.append(outcome)
+    return outcomes
 
 
 def _assert_extra_is_real_in_the_artifact(wheel: Path) -> frozenset[str]:

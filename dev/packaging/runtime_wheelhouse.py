@@ -182,7 +182,11 @@ def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tup
 def _marker_environment(target: TargetPlatform, python_version: str) -> dict[str, str]:
     python_minor = _canonical_python_minor(python_version)
     python_full_version = f"{python_minor}.0"
-    environment = dict(default_environment())
+    environment: dict[str, str] = {}
+    for key, value in default_environment().items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            raise TypeError("packaging marker environment must contain string keys and values")
+        environment[key] = value
     environment.update(
         {
             "implementation_name": "cpython",

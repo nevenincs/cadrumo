@@ -82,16 +82,21 @@ def _recorded_claims(tree: ast.AST) -> set[str]:
     by the gate.
     """
     dead = _unreachable_nodes(tree)
-    return {
-        node.args[0].value
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "record_proof"
-        and node.args
-        and isinstance(node.args[0], ast.Constant)
-        and id(node) not in dead
-    }
+    claims: set[str] = set()
+    for node in ast.walk(tree):
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "record_proof"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+            and id(node) not in dead
+        ):
+            continue
+        claim = node.args[0].value
+        if isinstance(claim, str):
+            claims.add(claim)
+    return claims
 
 
 def _declared_claims(tree: ast.AST) -> set[str]:

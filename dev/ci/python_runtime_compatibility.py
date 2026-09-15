@@ -47,7 +47,7 @@ from dev.packaging.lane_verification_core import (
     venv_cadrumo_path,
     venv_python_path,
 )
-from dev.packaging.python_cohort import digest_install_target, load_python_cohort
+from dev.packaging.python_cohort import PythonCohort, digest_install_target, load_python_cohort
 from dev.packaging.runtime_wheelhouse import extract_runtime_wheelhouse, load_runtime_wheelhouse
 from dev.source_tree import content_digest, repository_files
 
@@ -663,7 +663,7 @@ def _installed_probe(venv: Path, *, work_dir: Path) -> tuple[list[CommandEvidenc
     if install_root is None:
         # Windows has already been handled above; this message remains explicit
         # on unusual virtualenv layouts rather than silently weakening the probe.
-        install_root = venv / ("Lib" / "site-packages" if os.name == "nt" else "lib")
+        install_root = (venv / "Lib" / "site-packages") if os.name == "nt" else (venv / "lib")
     code = (
         "import json,sys; from pathlib import Path; import cadrumo; "
         "origins=[str(Path(m.__file__).resolve()) for n,m in sys.modules.items() "
@@ -771,7 +771,7 @@ def _load_binary_artifacts(
     cohort_dir: Path,
     *,
     repo_root: Path,
-) -> tuple[Any, tuple[tuple[str, Path], ...], str, str, str | None]:
+) -> tuple[PythonCohort, tuple[tuple[str, Path], ...], str, str, str | None]:
     """Load an existing Python cohort and return its exact install artifacts."""
     resolved = cohort_dir.resolve(strict=True)
     # The compatibility workflow normally receives the extracted Python cohort;
