@@ -5,29 +5,10 @@ tags:
 date: '2026-09-15'
 modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:faa849a595c9d79be7bbfa351dc18688c81817eb62756b1e4d2e6d0e279b068c'
+body_hash: 'sha256:f6affb205da7fbb96e2a9e2046bd6c27a348ac7b8b6321bb8ba3da76518daeba'
 related:
   - "[[2026-09-15-runtime-verification-lane02-r01-authority-read-audit]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace runtime-verification with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `runtime-verification` audit: `lane03-r01 binding target resolution`
 

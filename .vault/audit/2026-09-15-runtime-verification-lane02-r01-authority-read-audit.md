@@ -5,29 +5,10 @@ tags:
 date: '2026-09-15'
 modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:00a6ab5616be5dc5aac79baf2bf69b1fba466b1236567e0f2796d54333648b56'
+body_hash: 'sha256:837b3e65279936d7dfdcac0f3a3bf513874e391ce4de2f7fda9a2daf8094a475'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r01-cli-reachability-audit]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace runtime-verification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `runtime-verification` audit: `lane02-r01 published authority read`
 
@@ -39,7 +20,57 @@ Checkout: branch `main`, HEAD `c36b855520f7664f57d3d5517097ab6cccefbfb9`. The wo
 
 Observation window (UTC): 2026-09-15T14:38:03.935Z to 2026-09-15T14:38:14.812Z.
 
-Command: a standalone Python script piped to `uv run --no-sync python -` from the worktree root. It read the selector via `bundled_authority_descriptor_path()` and `AuthorityDescriptor.read`, opened `bundled_indexed_authority()`, took an `operation()` pin, and decoded `modelo_directory` for the lexicographically first id from `modelo_ids()`. It then compared `pin.logical_generation` with the descriptor and re-read the selector bytes. The script text is recorded in the lane02-r01 briefing.
+Command, run once in PowerShell from the worktree root by the evidence agent. No pytest or other check ran:
+
+```powershell
+@'
+import hashlib
+import json
+
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_authority_descriptor_path,
+    bundled_indexed_authority,
+)
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+
+path = bundled_authority_descriptor_path()
+before = path.read_bytes()
+descriptor = AuthorityDescriptor.read(path)
+
+owner = bundled_indexed_authority()
+try:
+    with owner.operation() as operation:
+        pin = operation.pin()
+        modelos = operation.modelo_ids()
+        if not modelos:
+            raise RuntimeError("Published authority exposes no modelo identities")
+
+        selected = sorted(modelos)[0]
+        directory = operation.modelo_directory(selected)
+
+        if pin.logical_generation != descriptor.logical_generation:
+            raise RuntimeError("Operation generation differs from observed selector")
+
+        if path.read_bytes() != before:
+            raise RuntimeError("Selector changed during observation; evidence is inconclusive")
+
+        print(json.dumps({
+            "descriptor_path": str(path.resolve()),
+            "descriptor_sha256": hashlib.sha256(before).hexdigest(),
+            "database": descriptor.database,
+            "database_sha256": descriptor.database_sha256,
+            "logical_generation": pin.logical_generation,
+            "reader_incarnation": pin.reader_incarnation,
+            "selected_modelo": selected,
+            "decoded_type": type(directory).__name__,
+            "selector_stable": True,
+        }, sort_keys=True))
+finally:
+    owner.close()
+'@ | uv run --no-sync python -
+$probeExit = $LASTEXITCODE
+Write-Output "probe_exit=$probeExit"
+```
 
 Exit code: 0. No stderr.
 
@@ -57,7 +88,9 @@ Final signal: PROVEN.
 
 Observed: the probe exited 0. The published authority returned modelo identities, and modelo `036` decoded as `ModeloRevisionDirectory`. The operation pin's logical generation `2bdbfabc…2c66` equals the one declared by `authority.current.json` (sha256 `f7c4e2c2…d118`), which selects the SQLite artifact `authority-06f66544…a2dd.sqlite3`. The selector bytes were identical before and after the read. This is a confirming finding, not a defect.
 
-Not observed: the script did not independently hash the SQLite file. `database_sha256` is the descriptor's declared value, and its match with the filename is by naming only.
+This matches the descriptor, generation, and database that the lane01 audit's `L01-R01-F02` identified by read-only SQLite inspection. Here they are confirmed through the runtime reader API instead.
+
+Not observed: the script did not independently hash the SQLite file. `database_sha256` is the descriptor's declared value, and its match with the filename is by naming only. The probe also did not examine whether `modelo_directory` goes through `ModeloDirectoryMetadata.materialize`, the single-revision construction `L01-R01-F02` implicates. This result neither confirms nor clears that defect.
 
 ### l02-r01-f02 | low | Reader incarnation and logical generation are distinct, but incarnation lifetime is unproven
 

@@ -5,28 +5,9 @@ tags:
 date: '2026-09-15'
 modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc64eb7cf4dfb11ba9c207984d39774ea7d0814653c66e71a08e3b88bdb7cc7a'
+body_hash: 'sha256:615b431070c018f3248d438aea06b1f2a302b52807de48a9a2fc71d29917fa26'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace runtime-verification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `runtime-verification` audit: `CLI reachability evidence`
 
@@ -56,7 +37,25 @@ Consequence: one invalid modelo aborts the whole listing, so no registry rows re
 
 Unproven: which boundary drops `2024-desde-06` before validation (temporal envelope or edition selection filtering out the predecessor, the published authority generation lacking it, or a source-to-definition hydration defect); whether other modelos fail the same way; whether `aeat app modelo bindings list` also fails, since P02 only proves help-level reachability.
 
+### L01-R01-F02 | high | runtime `materialize` builds single-revision modelo views that the whole-modelo `reviewed_against` validator rejects
+
+Follow-up trace of F01's unproven boundary, using read-only source inspection, git history, and a read-only (`mode=ro`) SQLite query of the published generation. No product command or test was rerun.
+
+The authority document is confirmed: `src/cadrumo/_data/registry/authority/authority.current.json` (format `cadrumo-authority-descriptor-v1`, logical generation `2bdbfabc…2c66`) selects `authority-06f66544…a2dd.sqlite3` (82059264 bytes). Both files are dated 2026-09-15 14:13:44 and were committed in `2aa0fec2d0` (14:23 +0200), after the last 038 source commit `427d431bd7` (07:10). Neither file has uncommitted changes. Runtime opens the descriptor through `bundled_indexed_authority()` → `IndexedRegistryAuthority` → `SQLiteAuthorityReader` (`src/cadrumo/domain/calculations/registry/authority.py:841-912`).
+
+The published generation is complete for 038. It has a `modelo_directory/038` component whose `revisions` metadata lists `2024-desde-06` and `2025-y-siguientes`, plus one `modelo_revision` component for each. So the predecessor is not lost by publication or the temporal envelope.
+
+The drop happens at runtime materialization. The call chain is `list_modelos` (`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py:194`) → `registry_list_modelos` (`src/cadrumo/application/modelo/registry_discovery.py:98`) → operation-backed `list_modelos`/`iter_modelo_definitions` (`src/cadrumo/domain/calculations/registry/queries.py:865-884`). For each modelo, that code picks the latest revision and calls `ModeloDirectoryMetadata.materialize` (`src/cadrumo/domain/calculations/registry/temporal.py:101-106`), which constructs `ModeloDefinition(..., revisions={revision.id: revision})`. Constructing it runs `ModeloDefinition._validate_revisions` (`src/cadrumo/domain/calculations/registry/schema.py:1365-1386`), which requires `reviewed_against` to name a revision inside that same map. A single-revision view can never satisfy this when the revision was reviewed against its predecessor.
+
+Introduction order from `git log -S`: the single-revision `materialize` arrived in `e1750fc549` (2026-09-14 13:42). The dangling-review check arrived in `dbf893a38f` (2026-09-14 19:29). The 038 `reviewed_against` data predates both (`6799c36830`, 2026-09-12). The check therefore conflicts with an existing runtime projection. The data did not change.
+
+Blast radius: authored source holds about 50 revisions across about 35 modelos (for example 131, 184, 303, 390, 714) whose `reviewed_against` names another revision. `038` fails first only because iteration is sorted by modelo id. Other `materialize` call sites (`authority.py:749` selected-snapshot path, `queries.py:1060` query context, `entrypoints/tui/launcher.py:682`) share the construction and are expected to refuse the same revisions. That expectation is inferred from the code and was not exercised.
+
+Unproven: whether any consumer besides `modelo list` actually fails at runtime (not executed), and whether the full compile/publish path still validates `reviewed_against` against the complete revision map (inferred from publication success, not traced).
+
 ## Recommendations
+
+- For `L01-R01-F02`: the follow-on decision is which invariant owns `reviewed_against` integrity. One option is to validate it only at whole-modelo compile or publication and keep single-revision runtime views free of cross-revision references. The other is to have runtime views carry, or check against, the directory's full revision identity set. It needs an ADR or an amendment to the governing authority decision before remediation. The smallest evidence probe that follows is one execution of a selected-snapshot consumer (for example `aeat app modelo describe 131`) to confirm that the blast radius extends beyond `modelo list`.
 
 - For `L01-R01-F01`: next evidence lane should establish which authority `aeat app modelo list` consumes (published generation versus source) and whether that artifact carries `038/2024-desde-06`. If the loader intentionally omits out-of-envelope predecessors, the follow-on decision is whether `reviewed_against` validation runs against the full authored revision set or the selected one; that choice belongs in an ADR, not here.
 - Remediation is not authorized by this lane.
