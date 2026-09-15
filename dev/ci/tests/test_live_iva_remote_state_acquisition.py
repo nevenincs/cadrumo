@@ -775,43 +775,43 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
 
 
 def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    ports = _remote_state_port(tmp_path / "remote-state")
-
-    async def run() -> None:
-        await capture_iva_remote_state(
-            ports=ports,
-            year_from=2026,
-            year_to=2026,
-            target_year=2026,
-            target_period=_TARGET_2T,
-        )
-
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        ports = _remote_state_port(tmp_path / "remote-state")
+
+        async def run() -> None:
+            await capture_iva_remote_state(
+                ports=ports,
+                year_from=2026,
+                year_to=2026,
+                target_year=2026,
+                target_period=_TARGET_2T,
+            )
+
         asyncio.run(run())
 
 
 def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    ports = _remote_state_port(tmp_path / "remote-state")
-
-    async def run() -> None:
-        await capture_iva_compensation_wallet(ports=ports, target_year=2026, target_period=_TARGET_2T)
-
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        ports = _remote_state_port(tmp_path / "remote-state")
+
+        async def run() -> None:
+            await capture_iva_compensation_wallet(ports=ports, target_year=2026, target_period=_TARGET_2T)
+
         asyncio.run(run())
 
 
 def test_standalone_iva_history_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    ports = _remote_state_port(tmp_path / "history")
-
-    async def run() -> None:
-        await capture_iva_compensation_history(
-            ports=ports,
-            year_from=2026,
-            year_to=2026,
-            output_root=tmp_path / "history",
-        )
-
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+        ports = _remote_state_port(tmp_path / "history")
+
+        async def run() -> None:
+            await capture_iva_compensation_history(
+                ports=ports,
+                year_from=2026,
+                year_to=2026,
+                output_root=tmp_path / "history",
+            )
+
         asyncio.run(run())
 
 
