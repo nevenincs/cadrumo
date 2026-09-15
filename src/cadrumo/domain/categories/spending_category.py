@@ -54,7 +54,8 @@ class SpendingCategory(str):
         if isinstance(value, str):
             from .spending_category_catalogue import require_spending_category
 
-            return require_spending_category(value)
+            token = require_spending_category(value)
+            return cls._from_registry(token.value)
         raise CoreValidationError("SpendingCategory must be a registry-projected token")
 
     @classmethod

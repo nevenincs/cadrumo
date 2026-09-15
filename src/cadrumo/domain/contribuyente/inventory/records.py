@@ -561,15 +561,34 @@ class MovementRecord(BaseModel):
         movement_date = info.data.get("movement_date")
         if not isinstance(movement_date, date):
             raise InventoryValidationError("inventory IVA default requires a valid movement_date")
+        from ...calculations.registry.authority import PinnedAuthorityOperation
+        from ...calculations.registry.governed_fact_scope import governed_facts_in_scope
         from ...calculations.registry.iva_category_catalogue import require_iva_category
         from ...calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
         from ...iva.lookup import lookup_rate
         from ...iva.schema import spanish_eu_member_state
 
-        rate_kind = resolve_iva_rate_kind_catalogue(effective_date=movement_date).for_category(
-            require_iva_category("domestic_general", effective_date=movement_date),
+        operation = governed_facts_in_scope()
+        if not isinstance(operation, PinnedAuthorityOperation):
+            raise InventoryValidationError(
+                "inventory IVA default requires a generation-pinned authority operation",
+            )
+        rate_kind = resolve_iva_rate_kind_catalogue(
+            effective_date=movement_date,
+            authority=operation,
+        ).for_category(
+            require_iva_category(
+                "domestic_general",
+                effective_date=movement_date,
+                authority=operation,
+            ),
         )
-        return lookup_rate(spanish_eu_member_state(effective_date=movement_date), rate_kind, movement_date).pct
+        return lookup_rate(
+            spanish_eu_member_state(effective_date=movement_date, authority=operation),
+            rate_kind,
+            movement_date,
+            operation=operation,
+        ).pct
 
     @classmethod
     def from_purchase_acquisition(

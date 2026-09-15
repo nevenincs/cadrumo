@@ -77,6 +77,7 @@ class IrpfIncomeCategory(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated IRPF income-category token."""
         if not _registry_validated:
             raise TypeError("IRPF income-category tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -99,6 +100,7 @@ class IrpfIncomeCategory(str):
         source_type: type[object],
         handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected token contract to Pydantic."""
         del source_type, handler
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
@@ -108,10 +110,12 @@ class IrpfIncomeCategory(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical income-category token text."""
         return str(self)
 
     @property
     def name(self) -> str:
+        """Return the canonical income-category token name."""
         return str(self)
 
 
@@ -121,6 +125,7 @@ class IrpfEstimationRegime(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated IRPF estimation-regime token."""
         if not _registry_validated:
             raise TypeError("IRPF estimation-regime tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -143,6 +148,7 @@ class IrpfEstimationRegime(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected token contract to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -151,10 +157,12 @@ class IrpfEstimationRegime(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical estimation-regime token text."""
         return str(self)
 
     @property
     def name(self) -> str:
+        """Return the canonical estimation-regime token name."""
         return str(self)
 
 
@@ -164,6 +172,7 @@ class IrpfActivityKind(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated IRPF activity-kind token."""
         if not _registry_validated:
             raise TypeError("IRPF activity-kind tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -186,6 +195,7 @@ class IrpfActivityKind(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected token contract to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -194,10 +204,12 @@ class IrpfActivityKind(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical activity-kind token text."""
         return str(self)
 
     @property
     def name(self) -> str:
+        """Return the canonical activity-kind token name."""
         return str(self)
 
 
@@ -207,6 +219,7 @@ class IrpfSpecialRegime(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated IRPF special-regime token."""
         if not _registry_validated:
             raise TypeError("IRPF special-regime tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -229,6 +242,7 @@ class IrpfSpecialRegime(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected token contract to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -237,10 +251,12 @@ class IrpfSpecialRegime(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical special-regime token text."""
         return str(self)
 
     @property
     def name(self) -> str:
+        """Return the canonical special-regime token name."""
         return str(self)
 
 
@@ -414,6 +430,7 @@ class M303TaxTerritory(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated Modelo 303 territory token."""
         if not _registry_validated:
             raise TypeError("M303TaxTerritory tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -461,6 +478,7 @@ class M303RegimeComposition(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated Modelo 303 regime-composition token."""
         if not _registry_validated:
             raise TypeError("M303 regime-composition tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
@@ -483,6 +501,7 @@ class M303RegimeComposition(str):
         source_type: type[object],
         handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected token contract to Pydantic."""
         del source_type, handler
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
@@ -492,10 +511,12 @@ class M303RegimeComposition(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical regime-composition token text."""
         return str(self)
 
     @property
     def name(self) -> str:
+        """Return the canonical regime-composition token name."""
         return str(self)
 
 

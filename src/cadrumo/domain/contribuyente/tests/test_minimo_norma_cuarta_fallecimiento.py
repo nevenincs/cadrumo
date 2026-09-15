@@ -19,8 +19,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..descendant import DescendantInfo
+from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ._registry_thresholds import (
     registry_birth_order_amounts,
@@ -32,6 +34,11 @@ from ._registry_thresholds import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 FILING_YEAR = 2024
+_FACT_CONTEXT = FamilyFactResolutionContext(
+    compiled_bundled_authority(),
+    date(FILING_YEAR, 12, 31),
+    date(FILING_YEAR, 12, 31),
+)
 
 #: The figures the bundled AEAT Renta manual prints under "Mínimo por
 #: descendientes / Cuantías aplicables", transcribed once here so the expected
@@ -58,6 +65,7 @@ def _total(*descendientes: DescendantInfo) -> Decimal:
         menor_tres_supplement=registry_menor_tres_supplement(FILING_YEAR),
         fallecimiento_amount=registry_fallecimiento_amount(FILING_YEAR),
         thresholds=_THRESHOLDS,
+        context=_FACT_CONTEXT,
     )
 
 

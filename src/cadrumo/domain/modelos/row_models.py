@@ -94,7 +94,7 @@ def _registry_detail_catalogue(
         raise ValueError("detail-row registry resolution requires a generation-pinned authority operation or scope")
     if (filing_year is None) != (period is None):
         raise ValueError("M349 registry selection requires both filing_year and period")
-    periods: frozenset[str] = frozenset()
+    periods = frozenset[str]()
     if filing_year is not None and period is not None:
         if not isinstance(authority, PinnedAuthorityOperation):
             raise ValueError("M349 registry selection requires a generation-pinned authority operation")

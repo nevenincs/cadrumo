@@ -7,6 +7,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority_artifact import (
+    AuthorityComponentQuery,
     GovernedFactComponentQuery,
     RuntimeCatalogueComponentQuery,
 )
@@ -17,7 +18,7 @@ from ....domain.calculations.registry.tests.authority_fakes import FakeAuthority
 def operation() -> PinnedAuthorityOperation:
     """Expose compiled deadline facts and runtime bands through one operation."""
     authority = compiled_bundled_authority()
-    components = {
+    components: dict[AuthorityComponentQuery, object] = {
         **{
             GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()
         },

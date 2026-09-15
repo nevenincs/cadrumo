@@ -153,11 +153,10 @@ def resolve_retencion_clave(
             raise RegistryValidationError(f"retencion clave {token!r} has invalid model applicability")
         if token == value:
             applicable_models = models
-    if modelo is not None:
-        if modelo not in applicable_models:
-            raise RegistryValidationError(
-                f"retencion clave {value!r} is not applicable to Modelo {modelo!r}",
-            )
+    if modelo is not None and modelo not in applicable_models:
+        raise RegistryValidationError(
+            f"retencion clave {value!r} is not applicable to Modelo {modelo!r}",
+        )
     return RetencionClave._from_registry(value)
 
 

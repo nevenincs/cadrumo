@@ -34,19 +34,26 @@ it cites, so a widening that would turn this gate green reds that one instead.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Collection
+from collections.abc import Collection
+from typing import Protocol
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ..catalogue import iva_catalogue_years
 from ..place_of_supply import place_of_supply_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+class _YearCoverageLoader(Protocol):
+    def __call__(self, *, operation: PinnedAuthorityOperation) -> Collection[int]: ...
+
+
 #: Each exact-year-keyed IVA corpus, named by the registry directory it loads,
 #: paired with the loader whose keys are its covered filing years.
-_YEAR_KEYED_IVA_CORPORA: tuple[tuple[str, Callable[[], Collection[int]]], ...] = (
+_YEAR_KEYED_IVA_CORPORA: tuple[tuple[str, _YearCoverageLoader], ...] = (
     ("aeat/iva/catalogues.toml", iva_catalogue_years),
     ("aeat/iva/place_of_supply.toml", place_of_supply_years),
 )
@@ -69,10 +76,11 @@ def _supported_filing_years() -> tuple[int, ...]:
 )
 def test_year_keyed_iva_corpus_covers_every_supported_filing_year(
     corpus: str,
-    loader: Callable[[], Collection[int]],
+    loader: _YearCoverageLoader,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     supported = _supported_filing_years()
-    covered = set(loader())
+    covered = set(loader(operation=operation))
     missing = sorted(year for year in supported if year not in covered)
 
     assert not missing, (

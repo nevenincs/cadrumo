@@ -368,6 +368,7 @@ class ProportionalityKind:
         requires_exclusive_use: bool,
         _registry_validated: bool = False,
     ) -> Self:
+        """Create one registry-projected proportionality token."""
         if not _registry_validated:
             raise TypeError("ProportionalityKind tokens must be projected from the facts registry")
         if not isinstance(token, str) or not token.strip():
@@ -409,6 +410,7 @@ class ProportionalityKind:
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected proportionality token to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -417,34 +419,42 @@ class ProportionalityKind:
 
     @property
     def value(self) -> str:
+        """Return the canonical proportionality token text."""
         return self._token
 
     @property
     def name(self) -> str:
+        """Return the canonical proportionality token name."""
         return self._token
 
     @property
     def is_full_deductible(self) -> bool:
+        """Return whether this role allows full deduction."""
         return self._is_full_deductible
 
     @property
     def is_usage_ratio(self) -> bool:
+        """Return whether this role uses a declared usage ratio."""
         return self._is_usage_ratio
 
     @property
     def is_statutory_cap(self) -> bool:
+        """Return whether this role applies a statutory cap."""
         return self._is_statutory_cap
 
     @property
     def requires_fixed_pct(self) -> bool:
+        """Return whether this role requires a fixed percentage."""
         return self._requires_fixed_pct
 
     @property
     def is_non_deductible(self) -> bool:
+        """Return whether this role disallows deduction."""
         return self._is_non_deductible
 
     @property
     def requires_exclusive_use(self) -> bool:
+        """Return whether this role requires exclusive use."""
         return self._requires_exclusive_use
 
     @override
@@ -473,6 +483,7 @@ class StatutoryCapPeriod:
     __slots__ = ("_is_per_person", "_token")
 
     def __new__(cls, token: str, *, is_per_person: bool, _registry_validated: bool = False) -> Self:
+        """Create one registry-projected statutory-cap period token."""
         if not _registry_validated:
             raise TypeError("StatutoryCapPeriod tokens must be projected from the facts registry")
         if not isinstance(token, str) or not token.strip():
@@ -498,6 +509,7 @@ class StatutoryCapPeriod:
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected statutory-cap period to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -506,14 +518,17 @@ class StatutoryCapPeriod:
 
     @property
     def value(self) -> str:
+        """Return the canonical statutory-cap period token text."""
         return self._token
 
     @property
     def name(self) -> str:
+        """Return the canonical statutory-cap period token name."""
         return self._token
 
     @property
     def is_per_person(self) -> bool:
+        """Return whether the cap is evaluated per person."""
         return self._is_per_person
 
     @override

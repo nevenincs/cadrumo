@@ -15,7 +15,7 @@ from .schema_base import DateAxis
 
 _FACT_ID = "travel-agency-mediation-catalogue"
 _ORDER_KEY = "travel_agency_mediation.order"
-_AIR_TOKEN_KEY = "travel_agency_mediation.air_passenger_transport_token"
+_AIR_PASSENGER_TRANSPORT_KEY = "travel_agency_mediation.air_passenger_transport_token"
 _PREFIX = "travel_agency_mediation."
 
 
@@ -137,7 +137,7 @@ def _catalogue(entries: Mapping[str, str]) -> TravelAgencyMediationCatalogue:
         )
     if len(definitions) != len({item.token for item in definitions}):
         raise RegistryValidationError("travel-agency mediation catalogue contains duplicate tokens")
-    air_token = TravelAgencyMediationType._from_registry(_required(entries, _AIR_TOKEN_KEY))
+    air_token = TravelAgencyMediationType._from_registry(_required(entries, _AIR_PASSENGER_TRANSPORT_KEY))
     if air_token not in {item.token for item in definitions}:
         raise RegistryValidationError("travel-agency mediation air token is not in the declared order")
     return TravelAgencyMediationCatalogue(

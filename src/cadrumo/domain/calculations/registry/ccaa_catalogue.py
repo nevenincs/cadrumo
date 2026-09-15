@@ -47,10 +47,12 @@ class CcaaCatalogue:
 
     @property
     def choices(self) -> tuple[CCAA, ...]:
+        """Return CCAA tokens in registry-authored order."""
         return tuple(definition.token for definition in self.definitions)
 
     @property
     def tokens(self) -> frozenset[CCAA]:
+        """Return the set of CCAA tokens declared by the catalogue."""
         return frozenset(self.choices)
 
     def require(self, value: object) -> CCAA:

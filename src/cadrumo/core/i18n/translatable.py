@@ -25,6 +25,7 @@ class Translatable(str):
         source_type: type[object],
         handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
+        """Expose translation-key values to Pydantic as strings."""
         del source_type, handler
         return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
 

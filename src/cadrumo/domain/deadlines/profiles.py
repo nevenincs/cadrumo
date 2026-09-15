@@ -81,10 +81,9 @@ def taxpayer_profile_from_mapping(
     and to ``iva_regime_default`` for profiles that still require an
     IVA regime declaration.
     """
-    if iva_regime_default is None:
-        iva_regime_default = _default_iva_regime()
-    else:
-        iva_regime_default = require_iva_regime(iva_regime_default)
+    iva_regime_default = (
+        _default_iva_regime() if iva_regime_default is None else require_iva_regime(iva_regime_default)
+    )
     canonical, padded = _canonicalize_and_pad(values, tax_id_default=tax_id_default)
     typed = project_setup_answers(padded)
     return _build_taxpayer_profile(

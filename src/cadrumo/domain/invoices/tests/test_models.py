@@ -29,6 +29,7 @@ from ..models import (
 from ..normalization import normalise_invoice_monetary_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_DEFAULT_RATE_21 = IvaRate._from_registry("RATE_21")
 
 
 def _valid_line(
@@ -36,7 +37,7 @@ def _valid_line(
     description: str = "Consultoría mensual",
     quantity: str = "1",
     unit_price: str = "100.00",
-    iva_rate: IvaRate = IvaRate._from_registry("RATE_21"),
+    iva_rate: IvaRate = _DEFAULT_RATE_21,
     on_date: date = date(2026, 4, 1),
 ) -> InvoiceLine:
     quantity_dec = Decimal(quantity)

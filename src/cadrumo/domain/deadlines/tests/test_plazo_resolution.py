@@ -6,6 +6,7 @@ from datetime import date
 from typing import cast
 
 import pytest
+from pydantic import TypeAdapter, ValidationError
 
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
@@ -232,22 +233,17 @@ def test_resolution_never_borrows_a_following_or_future_filing_year_window() -> 
     )
 
 
-@pytest.mark.parametrize(
-    ("resultado", "tipo_renta_code"),
-    [
-        ("I", "01"),
-        (ResultDisposition.INGRESO, "99"),
-    ],
-)
-def test_public_resolver_refuses_invalid_qualifier_context_before_authority_lookup(
-    resultado: object,
-    tipo_renta_code: str,
-) -> None:
-    with pytest.raises(DeadlineValidationError, match=r"resultado|canonical official"):
+def test_strict_result_disposition_boundary_refuses_a_raw_code_string() -> None:
+    with pytest.raises(ValidationError):
+        TypeAdapter(ResultDisposition).validate_python("I", strict=True)
+
+
+def test_public_resolver_refuses_invalid_tipo_renta_code_before_authority_lookup() -> None:
+    with pytest.raises(DeadlineValidationError, match="canonical official"):
         resolve_filing_window(
             "210",
             _YEAR,
             _PERIOD,
-            resultado=resultado,  # type: ignore[arg-type]
-            tipo_renta_code=tipo_renta_code,
+            resultado=ResultDisposition.INGRESO,
+            tipo_renta_code="99",
         )

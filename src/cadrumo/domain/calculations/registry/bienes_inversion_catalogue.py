@@ -63,10 +63,12 @@ class BienInversionCatalogue:
 
     @property
     def kind_choices(self) -> tuple[BienInversionKind, ...]:
+        """Return capital-goods kinds in registry order."""
         return tuple(item.token for item in self.kinds)
 
     @property
     def disposal_regime_choices(self) -> tuple[BienInversionDisposalRegime, ...]:
+        """Return capital-goods disposal regimes in registry order."""
         return tuple(item.token for item in self.disposal_regimes)
 
     def require_kind(self, value: object) -> BienInversionKind:
@@ -112,9 +114,11 @@ class BienInversionCatalogue:
         return token
 
     def is_real_estate_kind(self, value: object) -> bool:
+        """Return whether a value is the registry's real-estate kind."""
         return self.require_kind(value) == self.real_estate_kind
 
     def is_subject_not_exempt_regime(self, value: object) -> bool:
+        """Return whether a value is the taxable disposal regime."""
         return self.require_disposal_regime(value) == self.subject_not_exempt_regime
 
 
@@ -279,6 +283,7 @@ def require_bien_inversion_kind(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> BienInversionKind:
+    """Validate one value against the dated capital-goods kind vocabulary."""
     return resolve_bienes_inversion_catalogue(effective_date=effective_date, authority=authority).require_kind(value)
 
 
@@ -287,6 +292,7 @@ def bien_inversion_kind_choices(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[BienInversionKind, ...]:
+    """Return capital-goods kind choices in registry order."""
     return resolve_bienes_inversion_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -299,6 +305,7 @@ def require_bien_inversion_disposal_regime(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> BienInversionDisposalRegime:
+    """Validate one value against the dated disposal-regime vocabulary."""
     return resolve_bienes_inversion_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -310,6 +317,7 @@ def bien_inversion_disposal_regime_choices(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[BienInversionDisposalRegime, ...]:
+    """Return disposal-regime choices in registry order."""
     return resolve_bienes_inversion_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -321,6 +329,7 @@ def minimum_bien_inversion_acquisition_year(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> int:
+    """Return the registry-declared minimum capital-goods acquisition year."""
     return resolve_bienes_inversion_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -334,6 +343,7 @@ def is_bien_inversion_kind(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> bool:
+    """Test a capital-goods kind against a named registry projection."""
     catalogue = resolve_bienes_inversion_catalogue(effective_date=effective_date, authority=authority)
     token = catalogue.require_kind(value)
     if projection == _KIND_REAL_ESTATE_KEY:
@@ -350,6 +360,7 @@ def is_bien_inversion_disposal_regime(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> bool:
+    """Test a disposal regime against a named registry projection."""
     catalogue = resolve_bienes_inversion_catalogue(effective_date=effective_date, authority=authority)
     token = catalogue.require_disposal_regime(value)
     if projection == _DISPOSAL_REGIME_SUBJECT_NOT_EXEMPT_KEY:

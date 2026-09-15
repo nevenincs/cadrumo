@@ -47,6 +47,7 @@ class ResourceCacheRepository[T, K: Hashable]:
     """
 
     def __init__(self) -> None:
+        """Initialize an empty in-memory resource cache."""
         self._cache: dict[K, T] = {}
 
     def get(self, key: K) -> T:

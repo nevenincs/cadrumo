@@ -70,12 +70,12 @@ def setup_answer_declarations(
         parts = encoded.split("|", 2)
         if len(parts) != 3 or parts[1] not in {"str", "bool"}:
             raise RegistryValidationError(f"invalid setup answer declaration {key!r}")
-        path, type_token, default_token = parts
+        path, value_type, default_token = parts
         if not path:
             raise RegistryValidationError(f"setup answer declaration {key!r} has no profile path")
         declarations[key.removeprefix(prefix)] = (
             path,
-            bool if type_token == "bool" else str,
+            bool if value_type == "bool" else str,
             default_token or None,
         )
     if not declarations:

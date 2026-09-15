@@ -82,6 +82,7 @@ class IdReferenceChecker:
     )
 
     def __init__(self, snapshot: RegistrySnapshot) -> None:
+        """Index the snapshot IDs used by the reference-walking helpers."""
         revision = snapshot.revision
         self.prefix = f"snapshot modelo {snapshot.modelo.id} revision {revision.id}"
         self.failures: list[str] = []
@@ -115,18 +116,21 @@ class IdReferenceChecker:
         }
 
     def chk(self, field_path: str, value: str, id_set: set[str]) -> None:
+        """Record a failure when a required reference is not indexed."""
         if value not in id_set:
             self.failures.append(f"{self.prefix}: {field_path} references unknown id {value!r}")
         elif id_set is self.legal_ids:
             self._chk_legal_authority(field_path, value)
 
     def chk_opt(self, field_path: str, value: str | None, id_set: set[str]) -> None:
+        """Record a failure when an optional reference is present but unknown."""
         if value is not None and value not in id_set:
             self.failures.append(f"{self.prefix}: {field_path} references unknown id {value!r}")
         elif value is not None and id_set is self.legal_ids:
             self._chk_legal_authority(field_path, value)
 
     def chk_tuple(self, field_path: str, values: tuple[str, ...], id_set: set[str]) -> None:
+        """Record failures for unknown IDs in a reference tuple."""
         for value in values:
             if value not in id_set:
                 self.failures.append(f"{self.prefix}: {field_path} references unknown id {value!r}")

@@ -14,6 +14,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.tipos_actividad import TipoActividad
 from ...calculations.registry.authority import ValidatedRegistryAuthority
+from ...calculations.registry.facts.schema import EntitySetFactPayload
 from ..tipo_actividad_partitions import tipo_actividad_code_set
 from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
@@ -88,7 +89,9 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     supplies the product vocabulary used to interpret its declared tokens.
     """
     fact = compiled_bundled_authority().catalogues.facts.facts[_EXCLUDED_FACT]
-    declared = frozenset(ConceptoIngreso(token) for token in fact.variants[0].payload.entities)
+    payload = fact.variants[0].payload
+    assert isinstance(payload, EntitySetFactPayload)
+    declared = frozenset(ConceptoIngreso(token) for token in payload.entities)
 
     assert declared == {
         ConceptoIngreso._from_registry("subvencion_capital"),

@@ -143,7 +143,7 @@ def load_tipo_actividad_selectors(
             previous = seen.get(code)
             if previous is not None:
                 raise TransactionValidationError(
-                    f"activity code {code.value!r} is declared by both {previous!r} and "
+                    f"activity code {code!r} is declared by both {previous!r} and "
                     f"{fact_id!r}; a code must select at most one registry selector",
                 )
             seen[code] = fact_id

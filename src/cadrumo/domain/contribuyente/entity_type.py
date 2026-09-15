@@ -30,6 +30,7 @@ class EntityType(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated taxpayer entity-type token."""
         if not _registry_validated:
             raise TypeError("EntityType tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -52,6 +53,7 @@ class EntityType(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected entity-type token to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -60,10 +62,12 @@ class EntityType(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical entity-type token text."""
         return str(self)
 
     @property
     def name(self) -> str:
+        """Return the canonical entity-type token name."""
         return str(self)
 
 
@@ -105,24 +109,28 @@ def legal_entity_form_choice_description_tokens(*, effective_date: date | None =
 
 
 def entity_type_natural_person_token(*, effective_date: date | None = None) -> EntityType:
+    """Return the registry-declared natural-person entity token."""
     from ..calculations.registry.entity_type import entity_type_natural_person_token as _token
 
     return _token(effective_date=effective_date)
 
 
 def entity_type_legal_entity_token(*, effective_date: date | None = None) -> EntityType:
+    """Return the registry-declared legal-entity token."""
     from ..calculations.registry.entity_type import entity_type_legal_entity_token as _token
 
     return _token(effective_date=effective_date)
 
 
 def entity_type_attribution_entity_token(*, effective_date: date | None = None) -> EntityType:
+    """Return the registry-declared attribution-entity token."""
     from ..calculations.registry.entity_type import entity_type_attribution_entity_token as _token
 
     return _token(effective_date=effective_date)
 
 
 def legal_entity_form_sin_fines_lucrativos_token(*, effective_date: date | None = None) -> LegalEntityForm:
+    """Return the registry-declared non-profit legal-form token."""
     from ..calculations.registry.entity_type import legal_entity_form_sin_fines_lucrativos_token as _token
 
     return _token(effective_date=effective_date)
@@ -143,6 +151,7 @@ class LegalEntityForm(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated legal-entity-form token."""
         if not _registry_validated:
             raise TypeError("LegalEntityForm tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -165,6 +174,7 @@ class LegalEntityForm(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected legal-form token to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -173,8 +183,10 @@ class LegalEntityForm(str):
 
     @property
     def value(self) -> str:
+        """Return the canonical legal-form token text."""
         return str(self)
 
     @property
     def name(self) -> str:
+        """Return the canonical legal-form token name."""
         return str(self)

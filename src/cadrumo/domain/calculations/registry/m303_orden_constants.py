@@ -41,6 +41,7 @@ class _GeneratedSourceShape(Protocol):
 
 
 def validate_generated_source_counts(source: _GeneratedSourceShape) -> None:
+    """Validate generated M303 source counts against structural expectations."""
     expected_agricultural_count = EXPECTED_AGRICULTURAL_AXIS_COUNTS.get(source.ejercicio)
     if source.activity_table_count != EXPECTED_ACTIVITY_COUNT:
         raise RegistryValidationError("annual Orden manifest has the wrong activity table count")
@@ -57,6 +58,7 @@ def validate_generated_source_counts(source: _GeneratedSourceShape) -> None:
 
 
 def validate_generated_source_axis_shape(source: _GeneratedSourceShape) -> None:
+    """Validate that generated M303 source axes have the required shape."""
     if source.non_agricultural_ingreso_a_cuenta_row_count != EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT:
         raise RegistryValidationError("annual Orden manifest has the wrong IAE ingreso-a-cuenta row count")
     validate_seasonal_index_shape(

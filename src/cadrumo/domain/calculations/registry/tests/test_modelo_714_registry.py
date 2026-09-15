@@ -179,7 +179,7 @@ def test_modelo_714_cuota_integra_escala_matches_boe_table(base_liquidable: str,
 
 
 def test_modelo_714_validator_accepts_committed_definition() -> None:
-    modelo, catalogues = _load_modelo_714()
+    modelo, _catalogues = _load_modelo_714()
     assert modelo.id == "714"
     assert modelo.revisions, "714 must declare at least one revision"
 

@@ -53,6 +53,7 @@ class ConceptoIngreso(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Create a validated income-concept token."""
         if not _registry_validated:
             raise TypeError("ConceptoIngreso tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -75,6 +76,7 @@ class ConceptoIngreso(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Expose the projected income-concept token to Pydantic."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),

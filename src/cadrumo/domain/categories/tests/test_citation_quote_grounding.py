@@ -81,7 +81,7 @@ def test_every_verified_quotation_is_contained_in_its_own_provision(operation: P
         assert citation.legal_ref is not None, (
             f"verified citation {citation.locator!r} carries no legal_ref to be checked against"
         )
-        reference = catalogue[citation.legal_ref]
+        catalogue[citation.legal_ref]
         if not authority.legal_quotation_is_grounded(citation.legal_ref, citation.quote):
             uncontained.append((citation.legal_ref, citation.locator))
 

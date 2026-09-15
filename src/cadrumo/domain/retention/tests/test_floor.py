@@ -45,7 +45,7 @@ def test_record_satisfies_protocol() -> None:
     assert isinstance(record, RetainableFilingRecord)
 
 
-def _safe_erase_date(filed_at: datetime, *, floor_years: int | None = None) -> datetime:
+def _safe_erase_date(filed_at: datetime) -> datetime:
     """Read one record's safe-erase instant back off the real assessment.
 
     The assessment is the production surface that applies the floor, so the
@@ -53,8 +53,7 @@ def _safe_erase_date(filed_at: datetime, *, floor_years: int | None = None) -> d
     second entry point that only restates the calendar shift.
     """
     record = _FiledRecord(_FILING_ID_1, "303", filed_at.year - 1, filed_at)
-    kwargs = {} if floor_years is None else {"floor_years": floor_years}
-    assessment = assess_retention_floor((record,), as_of=filed_at, **kwargs)
+    assessment = assess_retention_floor((record,), as_of=filed_at)
     return assessment.retained[0].earliest_safe_erase_date
 
 
@@ -68,7 +67,7 @@ def test_leap_day_filed_at_clamps_to_28_february() -> None:
     # 2020-02-29 + 4 years would be 2024-02-29 (leap) — still valid.
     assert _safe_erase_date(_dt(2020, 2, 29)) == _dt(2024, 2, 29)
     # A one-year floor from a leap day into a non-leap year clamps to 28 Feb.
-    assert _safe_erase_date(_dt(2020, 2, 29), floor_years=1) == _dt(2021, 2, 28)
+    assert shift_by_calendar_years(_dt(2020, 2, 29), 1) == _dt(2021, 2, 28)
 
 
 def test_prescription_year_addition_preserves_date_or_datetime_kind() -> None:
