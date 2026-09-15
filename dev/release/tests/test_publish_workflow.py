@@ -132,6 +132,18 @@ def test_the_job_checks_out_the_tag_it_publishes() -> None:
     assert checkout["with"]["ref"] == "${{ inputs.tag }}"
 
 
+def test_publication_promotes_the_validated_packaging_cohort_without_rebuilding() -> None:
+    """The irreversible upload uses the bytes proven by platform/channel runs."""
+    document = _document()
+    build = document["jobs"]["build"]
+    executed = _executed(build)
+    assert "gh run download" in executed
+    assert "PACKAGING_RUN_ID" in executed
+    assert "--name cadrumo-release-cohort" in executed
+    assert "dev.packaging.release_cohort verify" in executed
+    assert "uv build" not in executed
+
+
 def test_the_gate_notices_a_publication_path_that_lost_its_guard() -> None:
     """Detector teeth: this exact regression is what the gate exists to catch.
 
