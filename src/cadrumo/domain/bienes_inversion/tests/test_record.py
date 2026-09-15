@@ -229,23 +229,17 @@ def test_in_window_records_excludes_a_good_disposed_at_or_before_the_year() -> N
     disposed_same_year = _record(
         "disposed-same-year",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(
-            year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     disposed_earlier_year = _record(
         "disposed-earlier-year",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(
-            year=2023, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2023, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     disposed_later_year = _record(
         "disposed-later-year",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(
-            year=2025, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2025, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     never_disposed = _record("never-disposed", acquisition_year=2022)
     register = BienesInversionIvaRegister(
@@ -260,16 +254,12 @@ def test_disposed_records_filters_by_disposal_year_and_remaining_window() -> Non
     in_scope = _record(
         "in-scope",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(
-            year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     different_year = _record(
         "different-year",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(
-            year=2023, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2023, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     no_disposal = _record("no-disposal", acquisition_year=2022)
     register = BienesInversionIvaRegister(records=(in_scope, different_year, no_disposal))
@@ -294,9 +284,7 @@ def test_registro_transmisiones_folds_disposed_goods_into_casilla_43() -> None:
         prorrata_inicial_pct=Decimal("60"),
         kind=BienInversionKind.from_registry("mueble"),
         prorrata_sector_id="sector-muebles",
-        disposal=BienInversionDisposal(
-            year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     regla_segunda = _record(
         "bi-regla-2",
@@ -341,9 +329,7 @@ def test_registro_transmisiones_applies_the_supplied_cap_per_identifier() -> Non
         cuota_soportada=Decimal("10000.00"),
         prorrata_inicial_pct=Decimal("60"),
         kind=BienInversionKind.from_registry("mueble"),
-        disposal=BienInversionDisposal(
-            year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     register = BienesInversionIvaRegister(records=(regla_primera,))
     projection = compute_registro_transmisiones(
@@ -363,9 +349,7 @@ def test_registro_transmisiones_excludes_a_disposal_with_no_window_time_remainin
     out_of_window_disposal = _record(
         "no-window-left",
         acquisition_year=2018,
-        disposal=BienInversionDisposal(
-            year=2027, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2027, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     register = BienesInversionIvaRegister(records=(out_of_window_disposal,))
     projection = compute_registro_transmisiones(register, disposal_year=2027, parameters=_params_for(2027))
