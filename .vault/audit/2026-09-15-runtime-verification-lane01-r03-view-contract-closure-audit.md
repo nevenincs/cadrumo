@@ -5,7 +5,7 @@ tags:
 date: '2026-09-15'
 modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:0edf036d25a8527e9958455d28d972a760f2bab51ce0b2bc756f0b6e92d271fc'
+body_hash: 'sha256:80c4262dd60492ce871790f260dc055c15127facf3d61143e30821149defd661'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r02-revision-view-repair-audit]]"
 ---
@@ -88,15 +88,18 @@ Targeted source check of `ModeloDefinition._directory_revision_ids` (`schema.py:
 
 Residual, not a present defect: pydantic `model_copy` copies private attributes. A future runtime caller that did `view.model_copy(update={"revisions": <full map>})` would get an object that looks complete but keeps view scope. On revalidation it would skip `validate_revision_predecessors` and `structural_succession_failures`. No such caller exists. No test was added because the failure mode has no current path.
 
-### l01-r03-f04 | low | independent re-verification confirms the delivered count and test claims
+### l01-r03-f04 | low | independent re-check confirms the console count; V03's tested inputs are not established
 
-A separate session re-checked this lane at 18:26–18:35 +02:00. That session had not written the lane's changes and changed no product or test file. Checkout: HEAD `eedac16053`. Inputs unchanged since the lane's own run: `queries.py` last written 17:56:13, `test_modelo_revision_directory_view.py` 17:56:06, `schema.py` 17:30:12.
+A separate session re-checked this lane at 18:26–18:35 +02:00. That session had not written the lane's changes and changed no product or test file. Checkout at the start: HEAD `eedac16053`, with uncommitted changes to `queries.py`, `snapshot.py`, `tests/published_authority.py`, `tests/test_modelo_100_imputed_real_estate_art85.py` and `tests/test_modelo_revision_directory_view.py`, and an untracked `tests/test_irnr_registry_tokens.py`. Before the run, the file timestamps were `queries.py` 17:56:13, `test_modelo_revision_directory_view.py` 17:56:06 and `schema.py` 17:30:12. V03 reported 10 passed, exit 0. Relevant source and test files changed during execution. No content snapshot or hashes were captured, so the exact tested inputs cannot be established. V03 is supplemental execution evidence only and does not independently verify a specific r03 or r04 source state.
+
+Observed file changes: V03 started at 18:28:44. `queries.py` was rewritten at 18:29:38 and `test_modelo_revision_directory_view.py` at 18:29:53, with support-matrix changes (`build_support_matrix_from_directory_views` and a `_pinned_service` test helper). These were later committed in `735b1247a6` (18:34:50) and `53a45a04ef` (18:42:05).
 
 - `V01` | console count | `uv run --no-sync aeat app modelo list` | exit 0 | header plus 58 rows. `036` 2, `038` 2, `100` 6, `131` 4, `303` 6. This matches `R03-C02`.
 - `V02` | vault validation | `uv run --no-sync vaultspec-core vault check all --feature runtime-verification` | exit 0 | no warnings, run before this entry was appended.
-- `V03` | focused regression | `uv run --no-sync pytest -o addopts= -p no:randomly -n 0 --strict-config --strict-markers --capture=sys --tb=short -ra -q src/cadrumo/domain/calculations/registry/tests/test_modelo_revision_directory_view.py` | exit 0 | `10 passed in 299.62s`. This matches `R03-C03`. The run log is under `.logs/test-runs/2026-09-15/20260915T162844.499313Z-pytest-46084-f4b3c213`.
+- `V03` | focused regression | `uv run --no-sync pytest -o addopts= -p no:randomly -n 0 --strict-config --strict-markers --capture=sys --tb=short -ra -q src/cadrumo/domain/calculations/registry/tests/test_modelo_revision_directory_view.py` | exit 0 | `10 passed in 299.62s`. The run log is under `.logs/test-runs/2026-09-15/20260915T162844.499313Z-pytest-46084-f4b3c213`.
 
-The static checks `R03-C01` were not re-run. This entry does not re-examine the source analysis in `l01-r03-f02` or `l01-r03-f03`.
+The static checks `R03-C01` were not re-run. This entry does not re-examine the source analysis in `l01-r03-f02` or `l01-r03-f03`. The lane's own evidence (`R03-C01` to `R03-C03`) stands as originally recorded.
+
 
 ## Recommendations
 

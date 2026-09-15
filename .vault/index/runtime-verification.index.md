@@ -6,7 +6,7 @@ tags:
 date: '2026-09-15'
 modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:9af3831ff60cdd4cf529df1e64967c93386f5bfebcb8a3cefdeeae8728b078fd'
+body_hash: 'sha256:583168a98888a84a71f46fa9bda5a4eea1155dcc986640279b780d7a2b6dfa72'
 related:
   - '[[2026-09-15-runtime-verification-lane01-r01-cli-reachability-audit]]'
   - '[[2026-09-15-runtime-verification-lane01-r02-revision-view-repair-audit]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-09-15-runtime-verification-lane03-r01-binding-target-audit]]'
   - '[[2026-09-15-runtime-verification-lane03-r02-binding-target-audit]]'
   - '[[2026-09-15-runtime-verification-lane03-r03-binding-value-audit]]'
+  - '[[2026-09-15-runtime-verification-lane03-r04-complete-baseline-values-audit]]'
 ---
 
 # `runtime-verification` feature index
@@ -34,3 +35,4 @@ Auto-generated index of all documents tagged with `#runtime-verification`.
 - `2026-09-15-runtime-verification-lane03-r01-binding-target-audit` - `runtime-verification` audit: `lane03-r01 binding target resolution`
 - `2026-09-15-runtime-verification-lane03-r02-binding-target-audit` - `runtime-verification` audit: `lane03-r02 binding target resolution`
 - `2026-09-15-runtime-verification-lane03-r03-binding-value-audit` - `runtime-verification` audit: `lane03-r03 binding value resolution`
+- `2026-09-15-runtime-verification-lane03-r04-complete-baseline-values-audit` - `runtime-verification` audit: `lane03-r04 complete baseline value resolution`

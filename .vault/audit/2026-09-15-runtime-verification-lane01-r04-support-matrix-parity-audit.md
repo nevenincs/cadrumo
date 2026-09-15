@@ -5,7 +5,7 @@ tags:
 date: '2026-09-15'
 modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:2dce780a15663421a20805c1f70999cb1fc23e2ae1cb18408bfaa0b2fd8ddc5e'
+body_hash: 'sha256:40d9e6615be39dc5ae1272a25312529d36c6a53e3aec8e3b2160f8086983a9ec'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r03-view-contract-closure-audit]]"
 ---
@@ -24,9 +24,17 @@ Authorized work:
 
 Not authorized, and not done: commit, push, authority publication, and any TUI, calculation, filing or packaging work.
 
-Checkout: worktree `Y:/code/cadrumo-worktrees/main`, branch `main`, HEAD `eedac16053` at start. HEAD moved during the session to `9fe7a274c5`: the worktree's sync automation added three commits, and nobody in this session committed. Commit `735b1247a6` captured the three changed source files, including the earlier r03 diff, and `3877e71430` captured this audit's scaffold. At the start, `queries.py` and the test file carried only the uncommitted r03 diff (79 insertions, 14 deletions). Other contributors had changed `snapshot.py`, `tests/published_authority.py` and `tests/test_modelo_100_imputed_real_estate_art85.py`, and added `tests/test_irnr_registry_tokens.py` untracked. None of those was touched.
+Checkout: worktree `Y:/code/cadrumo-worktrees/main`, branch `main`. HEAD was `eedac16053` at the start. At that point `queries.py` and the test file carried only the uncommitted r03 diff (79 insertions, 14 deletions). Other contributors had changed `snapshot.py`, `tests/published_authority.py` and `tests/test_modelo_100_imputed_real_estate_art85.py`, and added `tests/test_irnr_registry_tokens.py` untracked. None of those was touched.
 
-Execution: 2026-09-15, 18:28–18:36 +02:00, Windows 11, PowerShell. Coordinator: Opus 5 (1M context), medium effort. No subagent was dispatched.
+Commit state, distinguishing what was tested from later HEAD movement:
+
+- Tested content: every check in the ledger below ran against the working-tree state of the three changed source files at 18:30–18:35 +02:00.
+- Source commit: the worktree's sync automation committed exactly that content in `735b1247a6`. Nobody in this session committed.
+- Audit scaffold: committed by the same automation in `3877e71430`.
+- Later movement: HEAD reached `53a45a04ef` by session close. None of the commits after `735b1247a6` was tested by this lane.
+- This audit: its final body edits remain uncommitted.
+
+Execution: 2026-09-15, 18:28–18:45 +02:00, Windows 11, PowerShell. Coordinator: Opus 5 (1M context), medium effort. No subagent was dispatched.
 
 Changed files, committed by sync automation in `735b1247a6` rather than left uncommitted as instructed:
 
@@ -82,25 +90,24 @@ Eager-to-pinned comparison over the same controlled inputs was not added. The ea
 
 - The pinned `modelo list --year` defect (`l01-r03-f01`) was found by reading source. Its CLI symptom was never reproduced. The regression test proves the corrected filter, not the historical CLI failure.
 - `test_a_published_snapshot_keeps_its_cross_revision_view_valid_when_nested` supplies the cross-revision snapshot coverage that r02's C13 test lacked. C13's 322/2023 case has no cross-revision identity reference.
-- r03's single vault check (`vault check all --feature runtime-verification --fix`) exited 1: 1816 errors under `.vault/.trash/`, plus a stale feature index. The index was then regenerated successfully, but no later check was run in r03, so r03 never established that the feature was clean after that step. This session previewed the feature check without `--fix` (`R04-C07`: `vaultspec-core vault check all --feature runtime-verification`, exit 1). Its findings, apart from the unchanged trash errors, were limited to two mechanical items: this audit's stale modified stamp, and a stale feature index (6 links for 7 documents). Only those were applied, through `--fix` and `vaultspec-core vault feature index -f runtime-verification`.
+- r03's single vault check exited 1: 1816 errors under `.vault/.trash/`, plus a stale feature index. The index was then regenerated successfully, but no later check was run in r03, so r03 never established that the feature was clean after that step.
 
-Application results:
+Vault reconciliation in this session:
 
-- `R04-C08` (`--fix`) exited 1 with 4 fixed. Inspecting the affected paths showed three things:
-  - This audit was re-stamped.
-  - The r03 audit's `body_hash` was re-attested, with no body change against HEAD.
-  - A new, empty `lane03-r03-binding-value-audit` scaffold, created at the same time by another session, now raises three body-section warnings. It is not this lane's document and was left untouched.
-- `R04-C09` (`feature index`) exited 0.
+- `R04-C07`, a feature check without `--fix`, exited 1. Its only findings besides the trash errors were this audit's stale modified stamp and a stale feature index (6 links for 7 documents).
+- `R04-C08`, the feature check with `--fix`, exited 1 with 4 fixed. It re-stamped this audit and re-attested the r03 audit's `body_hash`, with no body change against HEAD. It also flagged the `lane03-r03-binding-value-audit`, which another session was authoring at the same time and which was left untouched.
+- `R04-C09`, `vaultspec-core vault feature index -f runtime-verification`, exited 0.
+- `R04-C10`, the feature check with `--fix` after the commit-state correction, exited 1. The only remaining errors were the 1816 trash errors; `features`, `body-sections` and `modified-stamp` were clean, with 1 fixed (this audit's stamp).
 
-After the source-state correction above, one more `--fix` run re-stamped this audit. No check after it establishes final cleanliness.
+This closing record was written with one guarded body edit instead of another feature-wide fixer, so no later feature check was run.
 
-### l01-r04-f03 | low | 036 `latest` column renders a digest-like revision id; observed, not investigated
+### l01-r04-f03 | low | 036 `latest` column shows `sha256:04bcf3b9-siguientes`; unclassified observation
 
-In `R04-C02`, modelo 036's `latest` column read `sha256:04bcf3b9-siguientes`, while every other row showed a plain revision id. It is unrelated to the count defect and outside this lane's scope. It may be a display redaction of an identifier or an authored id, and neither was checked.
+In `R04-C02`, modelo 036's `latest` column read `sha256:04bcf3b9-siguientes`, while every other row showed a plain revision id. This lane did not investigate it. Its appearance alone does not establish a defect, and it is recorded without classification.
 
 ## Recommendations
 
-- For `l01-r04-f03`: a separately scoped evidence question is whether the pinned 036 directory's latest revision id is authored as shown or is rewritten by CLI rendering. Compare `operation.modelo_directory("036").revisions` with the text renderer.
-- Remaining limitations from lane01-r03 still stand:
-  - Untested consumers: TUI launcher capture, casillas/formulas/bindings queries, calculation, preview and filing paths, and built-package adoption.
-  - The documented latent `model_copy` view-scope risk, which has no current caller and is not a work item.
+- For `l01-r04-f03`: if pursued, a separately scoped evidence question is whether 036's latest revision id is authored as shown or is rewritten during rendering.
+- Closing status: the revision-view repair, the listing metadata and the support-matrix metadata are verified within the boundaries recorded in the lane01-r02, lane01-r03 and lane01-r04 audits.
+- Still unverified: the TUI, other queries (casillas, formulas, bindings), calculation, preview and filing paths, and built-package adoption.
+- The latent `model_copy` view-scope risk stays documented, with no current caller and no work item.

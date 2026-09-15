@@ -52,6 +52,7 @@ from cadrumo.domain.calculations.registry.authority_store import (
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.source_byte_availability import embedded_source_ids
 
 from ..compiler.authority_database import build_authority_database
 from ..compiler.authority_state import canonical_authoring_root_pair
@@ -231,18 +232,11 @@ def _project_evidence(
         )
         for reference_id, reference in sorted(legal.items())
     )
-    runtime_source_ids = _runtime_xml_source_ids(sources)
     source_entries = tuple(
         _project_source_evidence(sources[source_id], source_root=source_root)
-        for source_id in sorted(runtime_source_ids)
+        for source_id in sorted(embedded_source_ids(sources))
     )
     return AuthorityEvidenceProjection(legal=entries, sources=source_entries)
-
-
-def _runtime_xml_source_ids(sources: Mapping[str, SourceReference]) -> frozenset[str]:
-    """Select catalogued source kinds whose bytes shipped XML workflows consume."""
-    runtime_kinds = frozenset({"dictionary", "xsd"})
-    return frozenset(str(source_id) for source_id, source in sources.items() if source.kind in runtime_kinds)
 
 
 def _project_source_evidence(reference: SourceReference, *, source_root: Path) -> PublishedSourceEvidence:
