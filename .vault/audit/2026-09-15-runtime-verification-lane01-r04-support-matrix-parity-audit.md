@@ -5,7 +5,7 @@ tags:
 date: '2026-09-15'
 modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:18af501d816e7d5de2bc13abcc02217ca6cc95457848448595e74cdd8fdbf291'
+body_hash: 'sha256:2dce780a15663421a20805c1f70999cb1fc23e2ae1cb18408bfaa0b2fd8ddc5e'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r03-view-contract-closure-audit]]"
 ---
