@@ -519,7 +519,7 @@ def _occurrence_inventory(
                 for occurrence in group
             }
         )
-        test_scoped = _module_is_test_scoped(first.source_module)
+        test_scoped = module_is_test_scoped(first.source_module)
         if test_scoped:
             test += len(group)
         else:
@@ -834,7 +834,7 @@ def _valid_retirement(raw: object, repository: Path, capability: str) -> bool:
     return isinstance(checks, dict) and set(checks) == required_checks and all(checks.values())
 
 
-def _module_is_test_scoped(module: str) -> bool:
+def module_is_test_scoped(module: str) -> bool:
     parts = module.split(".")
     return "tests" in parts or "conftest" in parts or any(
         part.startswith("test_") or part.endswith("_test") for part in parts

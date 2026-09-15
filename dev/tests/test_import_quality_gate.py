@@ -28,7 +28,7 @@ from dev.quality.import_checker import (
     read_authority,
 )
 from dev.quality.import_gate import run_import_gate, run_import_linter, run_subordinate
-from dev.quality.import_health import _module_is_test_scoped
+from dev.quality.import_health import module_is_test_scoped
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -48,7 +48,7 @@ _FORCE_CHECKER_ENV = "CADRUMO_IMPORT_GATE_FORCE_CHECKER_EXCEPTION"
     ),
 )
 def test_conftest_modules_are_test_scoped(module: str) -> None:
-    assert _module_is_test_scoped(module)
+    assert module_is_test_scoped(module)
 
 
 def _write_package(root: Path, dotted: str, source: str = "") -> None:
