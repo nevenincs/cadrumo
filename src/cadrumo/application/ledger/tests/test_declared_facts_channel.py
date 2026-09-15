@@ -180,9 +180,7 @@ class TestTheChannelReachesTheAssembly:
                     customer_tax_status=DeclaredFact(
                         value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
-                    issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
-                    ),
+                    issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED),
                     customer_scope=DeclaredFact(
                         value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),

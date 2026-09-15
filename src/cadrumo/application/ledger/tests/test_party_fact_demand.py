@@ -133,12 +133,8 @@ class TestARegistrationSettlesNoPlace:
                     customer_tax_status=DeclaredFact(
                         value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
-                    issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
-                    ),
-                    customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
-                    ),
+                    issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED),
+                    customer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED),
                 ),
                 operation=_authority_operation_for_test,
             )
@@ -161,9 +157,7 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                     customer_tax_status=DeclaredFact(
                         value=CustomerTaxStatus.from_registry("b2c_consumer"), source=_ASSERTED
                     ),
-                    issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
-                    ),
+                    issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED),
                     customer_scope=DeclaredFact(
                         value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
@@ -192,12 +186,8 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                     customer_tax_status=DeclaredFact(
                         value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
-                    issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
-                    ),
-                    customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
-                    ),
+                    issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED),
+                    customer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED),
                 ),
                 customer_identifier=_GERMAN_IVA_NUMBER,
                 operation=_authority_operation_for_test,
@@ -218,12 +208,8 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                     customer_tax_status=DeclaredFact(
                         value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
-                    issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
-                    ),
-                    customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
-                    ),
+                    issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED),
+                    customer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED),
                 ),
                 operation=_authority_operation_for_test,
             )
@@ -242,12 +228,8 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                     customer_tax_status=DeclaredFact(
                         value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
-                    issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
-                    ),
-                    customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
-                    ),
+                    issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED),
+                    customer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED),
                     customer_identification_state=DeclaredFact(value=require_eu_member_state("FR"), source=_ASSERTED),
                 ),
                 operation=_authority_operation_for_test,
@@ -277,9 +259,7 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
                         value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
                     issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED),
-                    customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
-                    ),
+                    customer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED),
                 ),
                 operation=_authority_operation_for_test,
             )

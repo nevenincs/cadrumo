@@ -206,9 +206,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
     assert key is not None
     assert key == confirmed_counterparty_facts_key("SE 556677889901"), "separators are not identity"
 
-    stored = _confirm(
-        repository, tax_identifier="SE556677889901", scope=IvaTerritorialScope.from_registry("eu_member")
-    )
+    stored = _confirm(repository, tax_identifier="SE556677889901", scope=IvaTerritorialScope.from_registry("eu_member"))
     assert stored.counterparty_key == key
     resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
