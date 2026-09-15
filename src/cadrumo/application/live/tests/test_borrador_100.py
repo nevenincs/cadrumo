@@ -164,7 +164,10 @@ def test_borrador_show_refuses_persisted_registry_revision_divergence() -> None:
         )
     )
 
-    with bundled_indexed_authority().operation() as operation, pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+    with (
+        bundled_indexed_authority().operation() as operation,
+        pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"),
+    ):
         service.show(snapshot.snapshot_id, operation=operation)
 
 

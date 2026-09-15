@@ -237,6 +237,7 @@ def test_fingerprint_is_stable_across_identical_builds() -> None:
                 ),
             ),
         )
+
     assert build().fingerprint == build().fingerprint
 
 

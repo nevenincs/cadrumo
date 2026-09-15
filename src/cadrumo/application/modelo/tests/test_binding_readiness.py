@@ -25,7 +25,7 @@ def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog
             bucket_id="operator",
             filing_year=2026,
             period=None,
-                operation=_authority_operation_for_test,
+            operation=_authority_operation_for_test,
         )
 
         assert resolved == frozenset()
@@ -47,7 +47,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
             modelo="not-a-modelo",
             bucket_id="operator",
             filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+            period=Period.from_year_and_code(2026, "1T"),
             operation=_authority_operation_for_test,
         )
 
@@ -60,11 +60,14 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
 
 def test_typed_period_scope_must_match_filing_year() -> None:
     """The helper refuses contradictory typed coordinates before querying the registry."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(RegistryValidationError):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(RegistryValidationError),
+    ):
         profile_resolvable_binding_ids(
             modelo="303",
             bucket_id="operator",
             filing_year=2025,
             period=Period.from_year_and_code(2026, "1T"),
             operation=_authority_operation_for_test,
-            )
+        )

@@ -110,7 +110,10 @@ def test_an_unresolvable_own_territory_refuses_rather_than_defaulting(postcode: 
     -- it is "something was present and nobody could read it", which is exactly
     the case a permissive parse turns into a confident mainland answer.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(PurchaseInvoiceEvidenceInputError):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(PurchaseInvoiceEvidenceInputError),
+    ):
         resolve_filer_territorial_scope(profile_record=_profile(postcode), operation=_authority_operation_for_test)
 
 
@@ -143,7 +146,10 @@ def test_no_unresolvable_input_ever_returns_a_territory() -> None:
 
 def test_a_missing_profile_refuses_rather_than_assuming_a_territory() -> None:
     """No profile is not an empty profile, and neither is a territory."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(PurchaseInvoiceEvidenceInputError):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(PurchaseInvoiceEvidenceInputError),
+    ):
         resolve_filer_territorial_scope(profile_record=None, operation=_authority_operation_for_test)
 
 

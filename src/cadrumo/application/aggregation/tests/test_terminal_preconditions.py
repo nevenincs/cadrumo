@@ -402,9 +402,10 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
             "invoice_count": 1,
             "missing_binding_count": 1,
         }
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(
-        AggregationValidationError
-    ) as raised:
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(AggregationValidationError) as raised,
+    ):
         _raise_if_screened_invoice_iva_would_be_silent(
             context=context,
             screened_bindings=invoice_ledger_screen_binding_ids(

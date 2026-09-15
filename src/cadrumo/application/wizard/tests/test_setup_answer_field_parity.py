@@ -98,9 +98,7 @@ def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: Wi
     """
     questions = tuple(question for section in registry_setup_flow.sections for question in section.questions)
     values = {
-        question.profile_key: _non_default_token(question)
-        for question in questions
-        if question.profile_key is not None
+        question.profile_key: _non_default_token(question) for question in questions if question.profile_key is not None
     }
     values["identity.tax_id"] = "12345678Z"
     values["iva.regime"] = "GENERAL"

@@ -40,6 +40,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 type _NestedTraversalAlias = Mapping[str, tuple[int, ...]]
 
 if TYPE_CHECKING:
+
     class MissingWorkspaceType: ...
 
 
