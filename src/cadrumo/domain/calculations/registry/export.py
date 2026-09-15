@@ -280,7 +280,7 @@ def _canales_representacion_casillas_oficiales(
             addressed.update(fixed_width_record_casilla_ids(layout.records))
             has_binding_fields = has_binding_fields or _layout_has_binding_fields(layout)
             continue
-        if layout.format is ExportLayoutFormat.XML_DICTIONARY:
+        else:
             addressed.update(
                 entry.casilla_id
                 for entry in xml_dictionary_entries(

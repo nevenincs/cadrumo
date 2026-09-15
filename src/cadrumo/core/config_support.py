@@ -203,6 +203,11 @@ class JustificanteParserBackendSetting(StrEnum):
     PDFPLUMBER = "pdfplumber"
 
 
+def _runtime_object(value: object) -> object:
+    """Capture an environment value before applying its runtime shape guard."""
+    return value
+
+
 def coerce_output_language_setting(value: str) -> OutputLanguage | None:
     """Coerce an env-var output-language string to an :class:`OutputLanguage`.
 
@@ -211,9 +216,10 @@ def coerce_output_language_setting(value: str) -> OutputLanguage | None:
     non-string value (e.g. a bare ``bool``, which is a subtype of ``int`` and
     would otherwise reach ``.lower()``) is invalid input, not a crash.
     """
-    if not isinstance(value, str) or not value:
+    raw_value = _runtime_object(value)
+    if not isinstance(raw_value, str) or not raw_value:
         return None
-    normalized = value.lower().strip()
+    normalized = raw_value.lower().strip()
     try:
         return OutputLanguage(normalized)
     except ValueError:

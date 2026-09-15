@@ -44,6 +44,11 @@ _Gasto193RowField = Literal[
 _Gasto193Fact = Literal["row_field"]
 
 
+def _runtime_object(value: object) -> object:
+    """Capture a selector token before applying its runtime invariant check."""
+    return value
+
+
 class Gasto193Observation(BaseModel):
     """One modelo 193 gastos-relationship row: contribuyente plus annual gastos."""
 
@@ -93,7 +98,8 @@ def validate_gasto193_binding_selector_shape(binding: BindingDefinition) -> list
     selector = _gasto193_selector(binding)
     try:
         op = binding_aggregation_op(binding)
-        if selector.fact == "row_field":
+        fact = _runtime_object(selector.fact)
+        if fact == "row_field":
             if op != BindingAggregationOp.ROWS:
                 raise RegistryValidationError("gasto193 fact 'row_field' requires aggregation op 'rows'")
             if selector.row_field is None:

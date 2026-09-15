@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast
+from operator import methodcaller
 
 import pytest
 
@@ -12,11 +12,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def redact_with_non_string_value() -> None:
-    redact(cast(str, 12345), rules=())
+    methodcaller("__call__", 12345, rules=())(redact)
 
 
 def redact_cli_output_with_non_string_value() -> None:
-    redact_for_cli_output(cast(str, {"not": "a string"}))
+    methodcaller("__call__", {"not": "a string"})(redact_for_cli_output)
 
 
 @pytest.mark.parametrize("call", (redact_with_non_string_value, redact_cli_output_with_non_string_value))

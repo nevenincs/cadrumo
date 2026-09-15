@@ -157,11 +157,11 @@ def _blocking_pipe_completion_child() -> None:
             reader_errors.append(exc)
 
     reader = threading.Thread(target=_drain_pipe, daemon=True)
-    reader_started = False
+    reader_started = threading.Event()
     outcome = 0
     try:
         reader.start()
-        reader_started = True
+        reader_started.set()
         try:
             _write_all(write_fd, _PIPE_PAYLOAD)
         finally:
@@ -171,12 +171,12 @@ def _blocking_pipe_completion_child() -> None:
         reader.join(timeout=_READER_JOIN_TIMEOUT_SECONDS)
         if reader.is_alive() or reader_errors:
             outcome = _EXIT_READER_FAILURE
-        elif outcome == 0 and received != _PIPE_PAYLOAD:
+        elif received != _PIPE_PAYLOAD:
             outcome = _EXIT_INCOMPLETE
     finally:
         _close_fd(write_fd)
         _close_fd(read_fd)
-        if reader_started:
+        if reader_started.is_set():
             reader.join(timeout=0.25)
     raise SystemExit(outcome)
 

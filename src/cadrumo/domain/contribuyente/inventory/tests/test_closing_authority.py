@@ -118,11 +118,12 @@ def _continuity(**overrides: object) -> PriorAuthoritativeClosingLink:
         "evidence": evidence,
     }
     fields.update(overrides)
-    actividad_id = fields["actividad_id"]
-    prior_filing_year = fields["prior_filing_year"]
-    prior_authoritative_closing_value = fields["prior_authoritative_closing_value"]
-    prior_authoritative_source_fingerprint = fields["prior_authoritative_source_fingerprint"]
-    continuity_evidence = fields["evidence"]
+    fingerprint_inputs = dict(fields)
+    actividad_id = fingerprint_inputs["actividad_id"]
+    prior_filing_year = fingerprint_inputs["prior_filing_year"]
+    prior_authoritative_closing_value = fingerprint_inputs["prior_authoritative_closing_value"]
+    prior_authoritative_source_fingerprint = fingerprint_inputs["prior_authoritative_source_fingerprint"]
+    continuity_evidence = fingerprint_inputs["evidence"]
     if (
         "prior_authoritative_closing_fingerprint" not in fields
         and isinstance(actividad_id, str)
@@ -137,7 +138,7 @@ def _continuity(**overrides: object) -> PriorAuthoritativeClosingLink:
             filing_year=prior_filing_year,
             authoritative_closing_value=prior_authoritative_closing_value,
             authoritative_source_fingerprint=prior_authoritative_source_fingerprint,
-            evidence=tuple(item for item in continuity_evidence if isinstance(item, PriorClosingContinuityEvidence)),
+            evidence=continuity_evidence,
         )
     return PriorAuthoritativeClosingLink.model_validate(fields)
 

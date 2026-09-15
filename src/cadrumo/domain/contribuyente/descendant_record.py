@@ -714,7 +714,7 @@ class DescendantRecordBase(DescendantRecordFields):
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
             return False
-        if self.discapacidad_grado and self.discapacidad_grado > 0:
+        if self.discapacidad_grado:
             return True
         return self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-descendant-ordinary-maximum-age")
 

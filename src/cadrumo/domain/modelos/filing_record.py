@@ -278,7 +278,7 @@ def _require_filing_record_status(record: ModeloRecord) -> None:
     """Require lifecycle metadata to match the record's current or superseded state."""
     if record.status is ModeloRecordStatus.VIGENTE:
         _require_current_filing_record(record)
-    elif record.status is ModeloRecordStatus.SUPERSEDIDO:
+    else:
         _require_superseded_filing_record(record)
 
 

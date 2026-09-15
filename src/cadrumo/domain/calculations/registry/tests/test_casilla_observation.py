@@ -8,7 +8,6 @@ formula runtime emits as primary storage of
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -89,7 +88,7 @@ def test_casilla_observation_value_must_be_decimal_not_bool() -> None:
     with pytest.raises(ValidationError, match="Input should be an instance of Decimal"):
         CasillaObservation(
             casilla_id=_VALUE_TYPE_TEST_CASILLA,
-            value=cast(Decimal, True),
+            value=True,
             legal_refs=_LEGAL_REFS,
             source_refs=_SOURCE_REFS,
         )

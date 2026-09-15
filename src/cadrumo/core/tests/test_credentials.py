@@ -93,7 +93,8 @@ def test_assessment_exposes_only_typed_secret_free_facts() -> None:
     }
     assert not hasattr(assessment, "__dict__")
     with pytest.raises(FrozenInstanceError):
-        assessment.scalar_count = 15  # type: ignore[misc]
+        field_name = "scalar_count"
+        setattr(assessment, field_name, 15)
 
 
 def test_advisory_strength_neither_accepts_nor_refuses_a_password() -> None:

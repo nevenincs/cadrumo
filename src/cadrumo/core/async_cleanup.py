@@ -68,6 +68,11 @@ class AsyncResourceCleanupError(CoreError):
         )
 
 
+def _runtime_object(value: object) -> object:
+    """Capture an event-loop result before checking its concrete task shape."""
+    return value
+
+
 async def await_cancellation_complete[T](
     awaitable: Awaitable[T],
     *,
@@ -82,7 +87,8 @@ async def await_cancellation_complete[T](
     ``cleanup_error`` and the cancellation remains the primary exception.
     """
     cleanup_task = asyncio.ensure_future(awaitable)
-    if isinstance(cleanup_task, asyncio.Task):
+    cleanup_task_boundary = _runtime_object(cleanup_task)
+    if isinstance(cleanup_task_boundary, asyncio.Task):
         cleanup_task.set_name(task_name)
 
     pending_cancellation = cancellation

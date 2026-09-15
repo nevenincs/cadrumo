@@ -155,7 +155,7 @@ def _validate_work_unit_state(unit: WorkUnit) -> None:
             raise ModeloValidationError(
                 "draft work unit must not carry discard metadata (discarded_at / discarded_by / discard_reason)",
             )
-    elif unit.state is WorkUnitState.DESCARTADO:
+    else:
         if unit.discarded_at is None or unit.discarded_by is None:
             raise ModeloValidationError("discarded work unit must carry discarded_at and discarded_by")
         if unit.discarded_at < unit.created_at:

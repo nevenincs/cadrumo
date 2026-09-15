@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+
 from ...core.errors.hierarchy import CadrumoError
 
 
@@ -37,36 +38,15 @@ class PdfExtractionCoverageMixin:
             (``Decimal``).  ``None`` when the error is not a coverage failure.
     """
 
-    def __init__(
+    def _set_extraction_coverage(
         self,
-        message: str | None = None,
         *,
-        context: Mapping[str, object] | None = None,
-        translated_message: str | None = None,
         missing: tuple[str, ...] = (),
         malformed: tuple[str, ...] = (),
         ambiguous: tuple[str, ...] = (),
         coverage: Decimal | None = None,
     ) -> None:
-        """Initialise the error with optional structured extraction-coverage context.
-
-        Args:
-            message: Human-readable error message.
-            context: Optional structured context forwarded to the
-                :class:`core.errors.CadrumoError` boundary.
-            translated_message: Optional locale key rendered at the CLI
-                boundary.
-            missing: Target identifiers that produced no match in the PDF text.
-            malformed: Target identifiers whose captured value could not be coerced.
-            ambiguous: Target identifiers that matched more than one region.
-            coverage: Fraction of required targets successfully extracted,
-                or ``None`` when the error is not a coverage failure.
-        """
-        super().__init__(
-            message,
-            context=context,
-            translated_message=translated_message,
-        )
+        """Attach the shared extraction-coverage fields to a concrete error."""
         self.missing: tuple[str, ...] = missing
         self.malformed: tuple[str, ...] = malformed
         self.ambiguous: tuple[str, ...] = ambiguous
@@ -85,6 +65,26 @@ class JustificanteParseError(PdfExtractionCoverageMixin, JustificanteError):
     so callers can assert on typed attributes rather than parsing the message
     string.
     """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        missing: tuple[str, ...] = (),
+        malformed: tuple[str, ...] = (),
+        ambiguous: tuple[str, ...] = (),
+        coverage: Decimal | None = None,
+    ) -> None:
+        """Initialise the registered error and its extraction-coverage fields."""
+        super().__init__(message, context=context, translated_message=translated_message)
+        self._set_extraction_coverage(
+            missing=missing,
+            malformed=malformed,
+            ambiguous=ambiguous,
+            coverage=coverage,
+        )
 
 
 class JustificanteCsvNotFoundError(JustificanteParseError):

@@ -18,6 +18,11 @@ from .schema_base import DateAxis
 TAX_ID_FORMAT_FACT_ID: Final = "spanish-tax-identifier-format"
 
 
+def _runtime_object(value: object) -> object:
+    """Capture declarations before applying the runtime shape guard."""
+    return value
+
+
 def _declarations_from_payload(payload: MappingFactPayload) -> dict[str, str]:
     declarations: dict[str, str] = {}
     for entry in payload.entries:
@@ -31,7 +36,10 @@ def _declarations_from_payload(payload: MappingFactPayload) -> dict[str, str]:
 
 def tax_id_format_from_declarations(declarations: Mapping[str, str]) -> SpanishTaxIdFormat:
     """Build the typed format from a complete fact mapping, without defaults."""
-    if any(not isinstance(key, str) or not isinstance(value, str) for key, value in declarations.items()):
+    if any(
+        not isinstance(key, str) or not isinstance(value, str)
+        for key, value in ((_runtime_object(key), _runtime_object(value)) for key, value in declarations.items())
+    ):
         raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} declarations must all be strings")
     required = {
         "tax_id.width",

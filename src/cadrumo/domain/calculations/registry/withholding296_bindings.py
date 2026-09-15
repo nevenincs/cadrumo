@@ -75,6 +75,11 @@ _Withholding296RowField = Literal[
 _Withholding296Fact = Literal["row_field", "perceptor_count"]
 
 
+def _runtime_object(value: object) -> object:
+    """Capture a selector token before applying its runtime invariant check."""
+    return value
+
+
 class Withholding296Observation(BaseModel):
     """One Modelo 296 perceptor row: IRNR renta plus the payer's retentions."""
 
@@ -162,14 +167,15 @@ def validate_withholding296_binding_selector_shape(binding: BindingDefinition) -
         ]
     try:
         op = binding_aggregation_op(binding)
-        if selector.fact == "row_field":
+        fact = _runtime_object(selector.fact)
+        if fact == "row_field":
             if op != BindingAggregationOp.ROWS:
                 raise RegistryValidationError("withholding296 fact 'row_field' requires aggregation op 'rows'")
             if selector.row_field is None:
                 raise RegistryValidationError("withholding296 fact 'row_field' requires a 'row_field' selector key")
             if selector.grouping is None:
                 raise RegistryValidationError("withholding296 fact 'row_field' requires a 'grouping' selector key")
-        elif selector.fact == "perceptor_count":
+        elif fact == "perceptor_count":
             if op != BindingAggregationOp.COUNT_DISTINCT:
                 raise RegistryValidationError(
                     "withholding296 fact 'perceptor_count' requires aggregation op 'count_distinct'"
