@@ -90,6 +90,7 @@ from ...domain.calculations.registry.schema_surfaces import (
     CasillaDefinition,
 )
 from ...domain.calculations.registry.schema_verification import fold_reconciliation_total_casilla_ids
+from ...domain.calculations.registry.source_byte_availability import embedded_source_ids
 from ...domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 from ...domain.filing.protocols import CasillaCollection, CasillaSchema
@@ -665,11 +666,7 @@ def _schema_provider_for_operation(
             context={"filing_year": str(filing_year), "period": period.registry_token},
         )
     sources = {source_id: source for snapshot in snapshots.values() for source_id, source in snapshot.sources.items()}
-    source_evidence = tuple(
-        operation.source_evidence(str(source_id))
-        for source_id, source in sorted(sources.items())
-        if str(source.kind) in {"dictionary", "xsd"}
-    )
+    source_evidence = tuple(operation.source_evidence(source_id) for source_id in sorted(embedded_source_ids(sources)))
     evidence = AuthorityEvidenceProjection(sources=source_evidence)
     return RegistrySchemaAccessor(
         collections={modelo_id: collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
