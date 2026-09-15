@@ -33,6 +33,12 @@ def _scaffold_args(tmp_path: Path, *extra: str) -> list[str]:
         _THROWAWAY_REVISION_ID,
         "--registry-modelos-root",
         str(tmp_path),
+        "--valid-from",
+        "2026-01-01",
+        "--year-from",
+        "2026",
+        "--period",
+        "0A",
         *extra,
     ]
 
@@ -48,33 +54,14 @@ def test_cli_scaffold_writes_tree_and_prints_checklist(tmp_path: Path) -> None:
     assert (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").is_file()
 
 
-def test_cli_scaffold_check_exits_nonzero_when_tree_absent(tmp_path: Path) -> None:
-    """``newmodelo scaffold --check`` exits 1 and lists missing files when nothing is scaffolded."""
+def test_cli_requires_real_applicability_coordinates(tmp_path: Path) -> None:
     result = CliRunner().invoke(
         app,
-        _scaffold_args(tmp_path, "--check"),
+        ["scaffold", _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, "--registry-modelos-root", str(tmp_path)],
     )
 
-    assert result.exit_code == 1
-    assert result.stderr == "", "the scaffold report is the command's sole stdout contract, never a diagnostic stream"
-    assert "missing" in result.stdout
-    assert not (tmp_path / _THROWAWAY_MODELO_ID).exists()
-
-
-def test_cli_scaffold_check_exits_zero_after_real_scaffold(tmp_path: Path) -> None:
-    """``newmodelo scaffold --check`` is conformant immediately after a real scaffold run."""
-    first = CliRunner().invoke(app, _scaffold_args(tmp_path))
-    assert first.exit_code == 0
-    assert first.stderr == "", "the scaffold report is the command's sole stdout contract, never a diagnostic stream"
-
-    second = CliRunner().invoke(
-        app,
-        _scaffold_args(tmp_path, "--check"),
-    )
-
-    assert second.exit_code == 0
-    assert second.stderr == "", "the scaffold report is the command's sole stdout contract, never a diagnostic stream"
-    assert "conformant" in second.stdout
+    assert result.exit_code != 0
+    assert "--valid-from" in result.stderr
 
 
 def test_cli_checklist_command_prints_all_items() -> None:
@@ -90,7 +77,7 @@ def test_cli_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:
     """A malformed modelo id exits non-zero with an instructive error, not a traceback."""
     result = CliRunner().invoke(
         app,
-        ["scaffold", "AB", _THROWAWAY_REVISION_ID, "--registry-modelos-root", str(tmp_path)],
+        _scaffold_args(tmp_path)[:1] + ["AB"] + _scaffold_args(tmp_path)[2:],
     )
 
     assert result.exit_code == 1

@@ -1,4 +1,4 @@
-"""Real-behaviour tests for NewModeloScaffoldManager scaffold/check against a real filesystem."""
+"""Real-behaviour tests for NewModeloScaffoldManager against a real filesystem."""
 
 from __future__ import annotations
 
@@ -85,54 +85,6 @@ def test_scaffold_invalidates_the_conformance_snapshot_cache_only_when_it_writes
     assert load_locale_coverage_index() is after_write, "a no-op scaffold must leave the cache intact"
 
 
-def test_scaffold_force_overwrites_existing_placeholders(tmp_path: Path) -> None:
-    """--force re-writes every planned file even when it already exists."""
-    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
-
-    manifest_path = tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml"
-    manifest_path.write_text("# hand-mutated\n", encoding="utf-8")
-
-    forced = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, force=True)
-    assert Path("manifest.toml") in forced.written
-    assert "hand-mutated" not in manifest_path.read_text(encoding="utf-8")
-
-
-def test_check_reports_missing_files_without_writing(tmp_path: Path) -> None:
-    """check() reports drift and writes nothing, even when the tree is entirely absent."""
-    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-
-    drift = manager.check(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
-    assert not drift.is_conformant
-    assert not drift.already_present
-    assert drift.missing
-    assert not (tmp_path / _THROWAWAY_MODELO_ID).exists(), "check() must never write to disk"
-
-
-def test_check_is_conformant_after_a_real_scaffold(tmp_path: Path) -> None:
-    """check() reports zero drift immediately after scaffold() on the same ids."""
-    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
-
-    drift = manager.check(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
-    assert drift.is_conformant
-    assert not drift.missing
-
-
-def test_check_detects_partial_drift_after_manual_deletion(tmp_path: Path) -> None:
-    """Deleting one scaffolded file causes check() to report exactly that file as missing."""
-    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
-
-    target = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "casillas" / "0001-casillas.toml"
-    assert target.is_file()
-    target.unlink()
-
-    drift = manager.check(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
-    assert not drift.is_conformant
-    assert Path("revisions") / _THROWAWAY_REVISION_ID / "casillas" / "0001-casillas.toml" in drift.missing
-
-
 def test_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:
     """A modelo id that is not exactly three digits is refused, matching ModeloId's pattern."""
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
@@ -168,8 +120,7 @@ def test_scaffold_refuses_to_graft_a_revision_onto_a_real_foreign_modelo(tmp_pat
     with a not-yet-existing revision id silently wrote 12 new placeholder files into
     modelo 100's live directory tree because only per-file existence was checked, not
     whether the modelo directory already belongs to real content. The guard refuses
-    unless the existing manifest.toml carries this scaffold's own sentinel, or the
-    caller passes force=True.
+    unless the caller selects the narrowly scoped existing-modelo route.
     """
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     foreign_modelo_dir = tmp_path / _THROWAWAY_MODELO_ID
@@ -179,26 +130,30 @@ def test_scaffold_refuses_to_graft_a_revision_onto_a_real_foreign_modelo(tmp_pat
         encoding="utf-8",
     )
 
-    with pytest.raises(NewModeloError, match="refusing to add a revision skeleton"):
+    with pytest.raises(NewModeloError, match="modelo already exists"):
         manager.scaffold(_THROWAWAY_MODELO_ID, "2099-y-siguientes")
 
     # Confirm nothing was written into the foreign modelo's revisions tree.
     assert not (foreign_modelo_dir / "revisions" / "2099-y-siguientes").exists()
 
 
-def test_scaffold_force_bypasses_the_foreign_manifest_guard(tmp_path: Path) -> None:
-    """force=True explicitly bypasses the foreign-manifest guard, as documented."""
+def test_new_edition_preserves_existing_manifest_and_declarations(tmp_path: Path) -> None:
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     foreign_modelo_dir = tmp_path / _THROWAWAY_MODELO_ID
     foreign_modelo_dir.mkdir(parents=True)
-    (foreign_modelo_dir / "manifest.toml").write_text(
-        '[modelo]\nid = "987"\ntitle = "Real, already-modelled modelo"\n',
-        encoding="utf-8",
-    )
+    manifest = foreign_modelo_dir / "manifest.toml"
+    manifest.write_text('[modelo]\nid = "987"\ntax_domain = "iva"\n', encoding="utf-8")
+    existing = foreign_modelo_dir / "revisions" / "2026" / "casillas" / "0001.toml"
+    existing.parent.mkdir(parents=True)
+    existing.write_text("# existing declaration\n", encoding="utf-8")
+    before_manifest = manifest.read_bytes()
+    before_existing = existing.read_bytes()
 
-    result = manager.scaffold(_THROWAWAY_MODELO_ID, "2099-y-siguientes", force=True)
+    result = manager.scaffold(_THROWAWAY_MODELO_ID, "2099-y-siguientes", existing_modelo=True)
     assert (foreign_modelo_dir / "revisions" / "2099-y-siguientes" / "revision.toml").is_file()
-    assert result.written
+    assert result.written == (Path("revisions/2099-y-siguientes/revision.toml"),)
+    assert manifest.read_bytes() == before_manifest
+    assert existing.read_bytes() == before_existing
 
 
 def test_scaffolded_tree_is_refused_by_the_directory_mode_loader(tmp_path: Path) -> None:
@@ -313,8 +268,8 @@ def test_a_first_edition_declares_no_predecessor_key_at_all(tmp_path: Path) -> N
     assert "predecessor" not in declared
 
 
-def test_a_successor_edition_declares_the_latest_existing_edition_as_predecessor(tmp_path: Path) -> None:
-    """The newest edition BY DECLARED valid_from is offered, not the last one by name.
+def test_a_successor_edition_uses_latest_edition_only_as_storage_baseline(tmp_path: Path) -> None:
+    """Storage reuse follows declared dates without manufacturing legal continuity.
 
     Directory order and edition order disagree in the real corpus: modelo 303
     carries `2024-desde-09-y-3t` and `2024-hasta-08-y-2t`, where the edition
@@ -326,21 +281,20 @@ def test_a_successor_edition_declares_the_latest_existing_edition_as_predecessor
 
     _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2024-hasta-08-y-2t", "2024-01-01")
     _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2024-desde-09-y-3t", "2024-09-01")
-    (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").write_text(
-        "# Scaffolded modelo manifest — test fixture\n",
-        encoding="utf-8",
-    )
+    (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").write_text('[modelo]\nid = "987"\n', encoding="utf-8")
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, "2025")
+    manager.scaffold(_THROWAWAY_MODELO_ID, "2025", existing_modelo=True)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / "2025" / "revision.toml"
     declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"]["2025"]
-    assert declared["predecessor"] == "2024-desde-09-y-3t"
+    assert declared["casilla_storage_baseline"] == "2024-desde-09-y-3t"
+    assert declared["family_storage_baseline"] == "2024-desde-09-y-3t"
+    assert "predecessor" not in declared
 
 
-def test_a_rescaffolded_edition_is_never_offered_its_own_name_as_predecessor(tmp_path: Path) -> None:
-    """Re-running the scaffold over a written edition must not make it its own predecessor.
+def test_a_rescaffolded_new_modelo_is_a_no_op(tmp_path: Path) -> None:
+    """Re-running a new-modelo scaffold preserves every authored file.
 
     The edition being scaffolded is on disk from the first run, so a scan that
     did not exclude it would name it -- a self-edge the predecessor forest
@@ -350,11 +304,12 @@ def test_a_rescaffolded_edition_is_never_offered_its_own_name_as_predecessor(tmp
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, force=True)
+    result = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
     declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
-    assert declared.get("predecessor") != _THROWAWAY_REVISION_ID
+    assert "predecessor" not in declared
+    assert not result.written
 
 
 def test_the_revision_manifest_declares_the_editions_casilla_source_default(tmp_path: Path) -> None:

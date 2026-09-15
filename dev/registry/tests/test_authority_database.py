@@ -337,3 +337,42 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
         with exclusive_file_lock(descriptor_path, timeout=0, retry_backoff=0.01):
             finish_preparation.set()
         assert publication.result(timeout=5) is published_descriptor
+
+
+def test_receipt_drift_after_preparation_refuses_before_installation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Locked admission reports input drift and preserves the accepted pointer."""
+    destination = tmp_path / "published"
+    destination.mkdir()
+    descriptor_path = destination / "authority.current.json"
+    accepted_descriptor = b"previously accepted descriptor"
+    descriptor_path.write_bytes(accepted_descriptor)
+    prepared_candidate = SimpleNamespace(
+        artifact=object(),
+        registry_root=tmp_path / "registry",
+        source_root=tmp_path / "source",
+        profile_schema_path=tmp_path / "schema.toml",
+        receipt=object(),
+    )
+
+    monkeypatch.setattr(authority_publication, "validate_authority_candidate", lambda **_kwargs: prepared_candidate)
+    monkeypatch.setattr(authority_publication, "_capture_receipt", lambda *_args, **_kwargs: object())
+
+    def unexpected_install(*_args: object, **_kwargs: object) -> None:
+        pytest.fail("receipt drift must refuse before database installation")
+
+    monkeypatch.setattr(authority_publication, "_install_validated_authority_database", unexpected_install)
+
+    with pytest.raises(RegistryValidationError, match="input receipt changed") as refusal:
+        authority_publication.publish_sqlite_authority_candidate(
+            registry_root=tmp_path / "registry",
+            source_root=tmp_path / "source",
+            profile_schema_path=tmp_path / "schema.toml",
+            destination=destination,
+        )
+
+    assert "lock" not in str(refusal.value).lower()
+    assert "stale" not in str(refusal.value).lower()
+    assert descriptor_path.read_bytes() == accepted_descriptor

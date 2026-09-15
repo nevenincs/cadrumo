@@ -7,21 +7,17 @@ Generates the standard per-modelo, per-revision directory layout the loader
 (casillas, formulas, bindings, completeness_manifest, verification_expectations,
 extraction_profiles, application_links).
 
-The emitted skeleton is *edition-delta shaped*. An edition declares its defaults
-once in ``revision.toml`` — the ``predecessor`` it is authored relative to, and
-the ``casilla_source_refs`` the loader fills into every row stating none — so a
-scaffolded row restates neither, and carries no edition year in the identifiers
-it names. That is the shape the corpus is authored in; a scaffold that proposed
-the full-copy shape instead taught every new edition to restate what its edition
-already says, one row at a time.
+The emitted revision is *edition-delta shaped*. Storage baselines select reusable
+payload independently of legal ``predecessor`` continuity, which this tool never
+manufactures.
 
 The scaffolded tree is a *skeleton*: every section fragment starts empty (a
 commented placeholder, since registry section fields default to ``()``/``None``
 and the loader tolerates an absent or empty fragment file). The tree does not
 validate as calc-grade on its own — a contributor fills in the regulated
 content named by the contributor checklist in
-:mod:`dev.registry.newmodelo.checklist`. ``scaffold(..., check=True)`` never
-writes; it reports whether the expected skeleton exists.
+:mod:`dev.registry.newmodelo.checklist`. File presence is deliberately not a
+registry-validity or enrollment signal.
 """
 
 from __future__ import annotations
@@ -123,12 +119,6 @@ class ScaffoldResult:
     already_present: tuple[Path, ...] = ()
     missing: tuple[Path, ...] = field(default_factory=tuple)
 
-    @property
-    def is_conformant(self) -> bool:
-        """Return whether the expected skeleton is fully present (used by ``--check``)."""
-        return not self.missing
-
-
 def _validate_modelo_id(modelo_id: str) -> None:
     if not _MODELO_ID_RE.match(modelo_id):
         raise NewModeloError(f"{modelo_id!r}: modelo id must be exactly three digits, e.g. '410'")
@@ -172,28 +162,26 @@ def _manifest_toml(modelo_id: str, title: str) -> str:
     )
 
 
-def _predecessor_block(predecessor: str | None) -> str:
-    """Render the ``predecessor`` declaration, or the note that stands in for it.
-
-    A first edition declares no predecessor at all: absence is the grounded
-    statement that this edition copies from no sibling, and a placeholder key
-    naming nothing would be a claim the scaffold cannot make.
-    """
-    if predecessor is None:
-        return (
-            "# No `predecessor` key: this modelo has no earlier edition on disk, so this\n"
-            "# edition states every row itself. An edition that DOES follow a sibling must\n"
-            "# declare it, or the delta shape reads as a full copy.\n"
+def _revision_toml(
+    modelo_id: str,
+    revision_id: str,
+    *,
+    valid_from: date,
+    year_from: int,
+    periods: tuple[str, ...],
+    valid_to: date | None,
+    storage_baseline: str | None,
+) -> str:
+    storage = ""
+    if storage_baseline is not None:
+        storage = (
+            "# Storage reuse is independent of legal continuity. Add `predecessor` only\n"
+            "# after continuity has been grounded against the applicable authority.\n"
+            f'casilla_storage_baseline = "{storage_baseline}"\n'
+            f'family_storage_baseline = "{storage_baseline}"\n'
         )
-    return (
-        "# The latest edition of this modelo already on disk, offered as this edition's\n"
-        "# predecessor. TODO: confirm it is the edition this form actually succeeds --\n"
-        "# the delta is read against whatever is named here.\n"
-        f'predecessor = "{predecessor}"\n'
-    )
-
-
-def _revision_toml(modelo_id: str, revision_id: str, predecessor: str | None) -> str:
+    end = f"valid_to = {valid_to.isoformat()}\n" if valid_to is not None else ""
+    rendered_periods = ", ".join(f'"{period}"' for period in periods)
     return (
         f'# Scaffolded revision metadata for modelo {modelo_id}, revision "{revision_id}".\n'
         "# TODO fill in per the contributor checklist, item 2: 'Ground the revision window\n"
@@ -204,10 +192,10 @@ def _revision_toml(modelo_id: str, revision_id: str, predecessor: str | None) ->
         f"#   python -m dev.locales set es {revision_locale_key(modelo_id, revision_id)} "
         f'"TODO: human-readable label for revision {revision_id}"\n'
         f'[revisions."{revision_id}"]\n'
-        f"{_predecessor_block(predecessor)}"
-        "valid_from = 2026-01-01  # TODO: real applicability start date\n"
-        "# valid_to = 2026-12-31  # TODO: uncomment + set if this revision has a known end\n"
-        'period_selector = { year_from = 2026, periods = ["0A"] }  # TODO\n'
+        f"{storage}"
+        f"valid_from = {valid_from.isoformat()}\n"
+        f"{end}"
+        f"period_selector = {{ year_from = {year_from}, periods = [{rendered_periods}] }}\n"
         "legal_refs = []  # TODO\n"
         "source_refs = []  # TODO\n"
         "# The edition's DEFAULT source grounding for its casilla rows, declared once here\n"
@@ -272,13 +260,13 @@ def _casillas_fragment_toml(modelo_id: str, revision_id: str, checklist_hint: st
 
 
 _SECTION_CHECKLIST_HINTS: dict[str, str] = {
-    "casillas": "author every casilla with legal grounding (checklist item 3).",
+    "casillas": "author only new or changed casillas with legal grounding (checklist item 3).",
     "formulas": (
-        "author formulas for every computed casilla (checklist item 4); id them by what "
+        "author only new or changed formulas needed by the hydrated edition (checklist item 4); id them by what "
         "they compute, with no edition year inside the id."
     ),
     "bindings": (
-        "author bindings for every data-sourced casilla (checklist item 5); id them by "
+        "author only new or changed bindings needed by the hydrated edition (checklist item 5); id them by "
         "what they bind, with no edition year inside the id."
     ),
     "completeness_manifest": "close the calculation-completeness manifest (checklist item 6).",
@@ -365,32 +353,18 @@ class NewModeloScaffoldManager:
         """Return the absolute directory a modelo's registry tree lives under."""
         return self.registry_modelos_root / modelo_id
 
-    @staticmethod
-    def _refuse_foreign_manifest(root: Path, plan: tuple[ScaffoldPlanEntry, ...]) -> None:
-        """Refuse to scaffold onto a modelo directory whose manifest is not ours.
-
-        A ``manifest.toml`` that exists but does not start with this
-        scaffold's own sentinel line is real, already-modelled registry
-        content (or foreign content of unknown origin); writing revision
-        fragments alongside it would silently graft a skeleton revision onto
-        a live modelo. Only ``force=True`` may bypass this.
-
-        Raises:
-            NewModeloError: If a foreign ``manifest.toml`` is present.
-        """
-        manifest_entry = next(entry for entry in plan if entry.relative_path == Path("manifest.toml"))
-        manifest_path = root / manifest_entry.relative_path
-        if not manifest_path.is_file():
-            return
-        existing = manifest_path.read_text(encoding=_UTF_8)
-        if not existing.startswith(_SCAFFOLDED_MANIFEST_SENTINEL):
-            raise NewModeloError(
-                f"{root}: manifest.toml already exists and was not written by this scaffold "
-                "(it looks like real registry content); refusing to add a revision skeleton "
-                "onto it. Pass force=True / --force only if you are certain this is intended.",
-            )
-
-    def plan(self, modelo_id: str, revision_id: str, *, title: str | None = None) -> tuple[ScaffoldPlanEntry, ...]:
+    def plan(
+        self,
+        modelo_id: str,
+        revision_id: str,
+        *,
+        valid_from: date | None = None,
+        year_from: int | None = None,
+        periods: tuple[str, ...] = ("0A",),
+        valid_to: date | None = None,
+        title: str | None = None,
+        existing_modelo: bool = False,
+    ) -> tuple[ScaffoldPlanEntry, ...]:
         """Compute the full skeleton file plan without writing anything.
 
         Reads the modelo's existing editions to offer the newest of them as the
@@ -408,16 +382,42 @@ class NewModeloScaffoldManager:
         """
         _validate_modelo_id(modelo_id)
         _validate_revision_id(revision_id)
+        inferred_year = int(revision_id[:4]) if revision_id[:4].isdigit() else None
+        if valid_from is None:
+            if inferred_year is None:
+                raise NewModeloError("valid_from is required when the revision id has no leading year")
+            valid_from = date(inferred_year, 1, 1)
+        if year_from is None:
+            if inferred_year is None:
+                raise NewModeloError("year_from is required when the revision id has no leading year")
+            year_from = inferred_year
         resolved_title = title or f"TODO: title for modelo {modelo_id}"
-        predecessor = _latest_existing_edition(self.modelo_root(modelo_id), revision_id)
+        root = self.modelo_root(modelo_id)
+        storage_baseline = _latest_existing_edition(root, revision_id) if existing_modelo else None
+        if not periods:
+            raise NewModeloError("at least one filing period is required")
+        if valid_to is not None and valid_to < valid_from:
+            raise NewModeloError("valid_to must not be earlier than valid_from")
 
-        entries: list[ScaffoldPlanEntry] = [
-            ScaffoldPlanEntry(Path("manifest.toml"), _manifest_toml(modelo_id, resolved_title)),
+        entries: list[ScaffoldPlanEntry] = []
+        if not existing_modelo:
+            entries.append(ScaffoldPlanEntry(Path("manifest.toml"), _manifest_toml(modelo_id, resolved_title)))
+        entries.append(
             ScaffoldPlanEntry(
                 Path("revisions") / revision_id / "revision.toml",
-                _revision_toml(modelo_id, revision_id, predecessor),
+                _revision_toml(
+                    modelo_id,
+                    revision_id,
+                    valid_from=valid_from,
+                    year_from=year_from,
+                    periods=periods,
+                    valid_to=valid_to,
+                    storage_baseline=storage_baseline,
+                ),
             ),
-        ]
+        )
+        if existing_modelo:
+            return tuple(entries)
         for section in _SECTION_DIRECTORIES:
             hint = _SECTION_CHECKLIST_HINTS[section]
             content = (
@@ -438,22 +438,18 @@ class NewModeloScaffoldManager:
         modelo_id: str,
         revision_id: str,
         *,
+        valid_from: date | None = None,
+        year_from: int | None = None,
+        periods: tuple[str, ...] = ("0A",),
+        valid_to: date | None = None,
         title: str | None = None,
-        force: bool = False,
+        existing_modelo: bool = False,
     ) -> ScaffoldResult:
         """Write the skeleton registry tree for a new modelo revision.
 
-        Idempotent for a *repeated scaffold of the same modelo*: re-running
-        with the same ids leaves existing files untouched (reported in
-        ``already_present``) unless ``force=True``, which overwrites every
-        planned file with the canonical placeholder content.
-
-        Refuses (unless ``force=True``) to scaffold a *new* revision onto a
-        modelo directory that already carries an unrelated ``manifest.toml``
-        this exact scaffold did not author (e.g. a real, already-modelled
-        modelo such as ``100``) — this is the guard that stops a mistyped
-        modelo id from grafting a skeleton revision onto live registry
-        content instead of failing loudly.
+        Re-running with the same ids leaves existing files untouched. A new
+        modelo scaffold refuses an authored manifest; the explicit existing
+        modelo route writes only the new revision manifest.
 
         Returns:
             A :class:`ScaffoldResult` summarising what was written.
@@ -461,21 +457,34 @@ class NewModeloScaffoldManager:
         Raises:
             NewModeloError: If the ids are malformed, if the modelo root
                 already exists as a file (not a directory), or if the modelo
-                root already carries a manifest this scaffold run does not
-                own (only bypassed with ``force=True``).
+                root already carries a manifest incompatible with the selected
+                route.
         """
-        plan = self.plan(modelo_id, revision_id, title=title)
+        plan = self.plan(
+            modelo_id,
+            revision_id,
+            valid_from=valid_from,
+            year_from=year_from,
+            periods=periods,
+            valid_to=valid_to,
+            title=title,
+            existing_modelo=existing_modelo,
+        )
         root = self.modelo_root(modelo_id)
         if root.exists() and not root.is_dir():
             raise NewModeloError(f"{root}: exists and is not a directory")
-        if not force:
-            self._refuse_foreign_manifest(root, plan)
+        manifest = root / "manifest.toml"
+        if existing_modelo:
+            if not manifest.is_file() or manifest.read_text(encoding=_UTF_8).startswith(_SCAFFOLDED_MANIFEST_SENTINEL):
+                raise NewModeloError(f"{root}: new-edition requires an existing authored modelo manifest")
+        elif manifest.exists() and not manifest.read_text(encoding=_UTF_8).startswith(_SCAFFOLDED_MANIFEST_SENTINEL):
+            raise NewModeloError(f"{root}: modelo already exists; use the new-edition command")
 
         written: list[Path] = []
         already_present: list[Path] = []
         for entry in plan:
             target = root / entry.relative_path
-            if target.is_file() and not force:
+            if target.is_file():
                 already_present.append(entry.relative_path)
                 continue
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -495,33 +504,4 @@ class NewModeloScaffoldManager:
             modelo_root=root,
             written=tuple(written),
             already_present=tuple(already_present),
-        )
-
-    def check(self, modelo_id: str, revision_id: str, *, title: str | None = None) -> ScaffoldResult:
-        """Report which skeleton files are missing without writing anything.
-
-        Returns:
-            A :class:`ScaffoldResult` whose ``missing`` field lists every
-            planned relative path that does not yet exist on disk;
-            :attr:`ScaffoldResult.is_conformant` is ``True`` when the full
-            skeleton is already present.
-        """
-        plan = self.plan(modelo_id, revision_id, title=title)
-        root = self.modelo_root(modelo_id)
-
-        present: list[Path] = []
-        missing: list[Path] = []
-        for entry in plan:
-            target = root / entry.relative_path
-            if target.is_file():
-                present.append(entry.relative_path)
-            else:
-                missing.append(entry.relative_path)
-
-        return ScaffoldResult(
-            modelo_id=modelo_id,
-            revision_id=revision_id,
-            modelo_root=root,
-            already_present=tuple(present),
-            missing=tuple(missing),
         )

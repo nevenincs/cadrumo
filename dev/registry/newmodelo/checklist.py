@@ -47,16 +47,17 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
             "revisions/<revision-id>/revision.toml: valid_from/valid_to, period_selector, "
             "legal_refs, source_refs, and the mandatory orden_aplicabilidad citing the "
             "Orden(es) ministeriales that approve or amend this revision's form. Declare "
-            "the edition's two delta defaults here too: predecessor, the sibling edition "
-            "this one is authored relative to (omitted only by a first edition, which "
-            "states every row itself), and casilla_source_refs, the default source "
-            "grounding the loader fills into every casilla row stating none."
+            "Select casilla_storage_baseline and family_storage_baseline only for lossless "
+            "payload reuse. Legal predecessor continuity is a separate evidenced claim and "
+            "must never be inferred from storage ancestry. casilla_source_refs supplies the "
+            "default source grounding for rows that state none."
         ),
     ),
     ChecklistItem(
-        title="Author every casilla with legal grounding",
+        title="Author the casilla delta and verify hydrated coverage",
         detail=(
-            "revisions/<revision-id>/casillas/*.toml: one CasillaDefinition per box, each "
+            "revisions/<revision-id>/casillas/*.toml: only new or changed boxes; verify the "
+            "hydrated edition still contains every required CasillaDefinition, each "
             "carrying legal_refs to the specific binding provision that establishes it "
             "(aeat-calculation-grounding), not just the framework article. A row restates "
             "none of its edition's defaults: no source_refs equal to casilla_source_refs "
@@ -67,18 +68,18 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         ),
     ),
     ChecklistItem(
-        title="Author formulas for every computed casilla",
+        title="Author changed formulas and verify formula closure",
         detail=(
-            "revisions/<revision-id>/formulas/*.toml: a FormulaDefinition per derived "
-            "casilla; the formula and every casilla it references must resolve inside the "
+            "revisions/<revision-id>/formulas/*.toml: only new or changed FormulaDefinitions; "
+            "on the hydrated edition every derived casilla and reference must resolve inside the "
             "revision's calculation closure (no orphan formula targets)."
         ),
     ),
     ChecklistItem(
-        title="Author bindings for every data-sourced casilla",
+        title="Author changed bindings and verify hydrated binding coverage",
         detail=(
-            "revisions/<revision-id>/bindings/*.toml: a BindingDefinition per casilla "
-            "fed from the ledger, profile, counterpart, or another modelo. Use the single "
+            "revisions/<revision-id>/bindings/*.toml: only new or changed bindings. Verify the "
+            "hydrated edition binds every required ledger, profile, counterpart, or cross-modelo casilla. Use the single "
             "canonical BindingSourceKind taxonomy (aeat-registry-bindings) and "
             "enroll a new source resolver in the live calculate mesh "
             "(aeat-calculation-aggregation) rather than leaving it dormant."
@@ -87,18 +88,18 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
     ChecklistItem(
         title="Close the calculation-completeness manifest",
         detail=(
-            "revisions/<revision-id>/completeness_manifest/*.toml: enumerate the "
-            "revision's full calculation closure (every formula target, formula-expression "
+            "Verify the hydrated revision's full calculation closure (every formula target, formula-expression "
             "reference, binding/relation endpoint, verification-expectation operand) keyed "
-            "by canonical casilla_id plus reviewed segment/number metadata "
+            "by canonical casilla_id plus reviewed segment/number metadata. Author a "
+            "completeness_manifest delta only where the inherited declaration differs "
             "(modelo-export-mirrors-official-structure)."
         ),
     ),
     ChecklistItem(
         title="Author verification expectations and predicates",
         detail=(
-            "revisions/<revision-id>/verification_expectations/*.toml: declare "
-            "computed / reconcile-when-present casillas and any BLOCKING_RULE or ADVISORY "
+            "revisions/<revision-id>/verification_expectations/*.toml: declare only changed "
+            "computed / reconcile-when-present expectations or predicates, then verify the hydrated "
             "verification_predicates (no-silent-under-declaration); ground every predicate "
             "against a bundled AEAT-authoritative oracle before marking it "
             "externally_grounded (no-silent-under-declaration)."
@@ -165,11 +166,11 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         ),
     ),
     ChecklistItem(
-        title="Publish the modelo id through registry authority",
+        title="Verify source installation, publication and runtime adoption separately",
         detail=(
-            "Author the modelo definition and revision records under "
-            "src/cadrumo/_data/registry/aeat/modelos/<code>/ so the compiled registry "
-            "authority publishes membership and enumeration (aeat-registry-authority-flow). "
+            "First prove the authored source and independent delta minimality. Where applicable, "
+            "publish generated targets, then publish the indexed authority and verify the runtime/package "
+            "consume that exact generation. A successful scaffold, compile, or temporary candidate is not publication. "
             "Production code represents an individual identifier with the syntax-only "
             'Modelo("<code>") value type; do not add a second core catalogue.'
         ),
