@@ -67,7 +67,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationReconciliationDecision,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history(

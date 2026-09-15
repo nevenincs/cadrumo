@@ -53,7 +53,7 @@ from ...storage.crypto.encrypted_columns import HashedLookup
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ..inventory import InventoryLedgerRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _PRIVATE_COMPONENT_ID = "S165-PRIVATE-FREIGHT-COMPONENT"
 _PRIVATE_INVOICE_REFERENCE = "S165-PRIVATE-PURCHASE-INVOICE-EVIDENCE"

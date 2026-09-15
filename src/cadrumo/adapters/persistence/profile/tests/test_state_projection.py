@@ -79,7 +79,7 @@ from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None

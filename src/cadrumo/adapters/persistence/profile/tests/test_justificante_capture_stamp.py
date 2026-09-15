@@ -34,7 +34,7 @@ isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"i
 
 __all__ = ["isolated_backend"]
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_stamp_registers_justificante_and_marks_filing_live_captured() -> None:

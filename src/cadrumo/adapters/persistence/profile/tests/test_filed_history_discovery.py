@@ -54,7 +54,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _TODAY = date(2026, 8, 7)
 _ACTIVITY_START = date(2024, 3, 1)

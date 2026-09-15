@@ -67,7 +67,7 @@ from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationRecordRepository, modelo_reconciliation_record_key
 from ..modelos_work_units import WorkUnitCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"

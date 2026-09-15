@@ -51,7 +51,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
@@ -339,8 +339,8 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
     assert baseline.prorrata_apportionment is None
     assert apportioned.prorrata_apportionment is not None
     assert apportioned.prorrata_apportionment.percentage == Decimal("80")
-    assert apportioned.prorrata_apportionment.regime is ProrrataRegisterRegime.from_registry("general")
-    assert apportioned.prorrata_apportionment.provenance is ProrrataProvisionalProvenance.from_registry(
+    assert apportioned.prorrata_apportionment.regime == ProrrataRegisterRegime.from_registry("general")
+    assert apportioned.prorrata_apportionment.provenance == ProrrataProvisionalProvenance.from_registry(
         "carried_prior_definitiva"
     )
     assert apportioned_values[_DEDUCIBLE_CUOTA_BINDING] < baseline_values[_DEDUCIBLE_CUOTA_BINDING]
@@ -408,7 +408,7 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(
         )
 
     assert aggregation.prorrata_apportionment is not None
-    assert aggregation.prorrata_apportionment.regime is ProrrataRegisterRegime.from_registry("general")
+    assert aggregation.prorrata_apportionment.regime == ProrrataRegisterRegime.from_registry("general")
     # 10.50 * 80/100 == 8.400, exactly as the pre-especial flat multiplier produced.
     assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("10.50") * (Decimal("80") / Decimal("100"))
     assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("8.400")
@@ -460,7 +460,7 @@ def test_especial_regime_routes_each_input_by_art_106_classification(
         )
 
     assert aggregation.prorrata_apportionment is not None
-    assert aggregation.prorrata_apportionment.regime is ProrrataRegisterRegime.from_registry("especial")
+    assert aggregation.prorrata_apportionment.regime == ProrrataRegisterRegime.from_registry("especial")
     # regla 1.ª (100%) + regla 2.ª (0%) + regla 3.ª (general 80%): 10.50 + 0 + 8.40.
     assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("10.50") + Decimal("10.50") * (Decimal("80") / Decimal("100"))
     assert values[_DEDUCIBLE_CUOTA_BINDING] == Decimal("18.900")
@@ -528,7 +528,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(
         )
 
     assert especial.prorrata_apportionment is not None
-    assert especial.prorrata_apportionment.regime is ProrrataRegisterRegime.from_registry("especial")
+    assert especial.prorrata_apportionment.regime == ProrrataRegisterRegime.from_registry("especial")
     assert especial_bytes == general_bytes
 
 

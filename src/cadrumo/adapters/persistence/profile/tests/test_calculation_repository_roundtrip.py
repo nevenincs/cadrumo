@@ -59,7 +59,7 @@ from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATA
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "df5dd25a-ff53-4086-9cc4-a13e61538a09"  # was 'modelo-runtime'
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 45, 0, tzinfo=UTC)

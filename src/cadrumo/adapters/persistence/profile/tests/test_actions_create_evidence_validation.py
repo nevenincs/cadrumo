@@ -27,7 +27,7 @@ from .ledger_action_persistence_support import (
     purchase_invoice,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _seed_evidence_free_transaction(secure_objects: SecureObjectRepository, *, idempotency_key: str) -> str:

@@ -61,6 +61,7 @@ from .....domain.calculations.registry.runtime_graph import expression_casilla_r
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from .....domain.calculations.registry.source_byte_availability import layout_embedded_source_ids
 from .....domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from .....domain.iva_compensation.filed_derivation import (
     CompensationCasillaDeclarations,
@@ -171,9 +172,14 @@ def _published_source_payloads(
     snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
 ) -> Mapping[str, bytes]:
-    """Return source bytes from the published authority projection for submitted-file parsing."""
+    """Return the embedded source bytes the resolved layout's parser reads.
+
+    Citation-only sources such as the record design stay in the layout's
+    ``source_refs`` and in every casilla's provenance; their bytes are never
+    requested because a published generation does not hold them.
+    """
     layout = resolve_export_layout(snapshot).layout
-    source_ids = {str(source_id) for source_id in layout.source_refs}
+    source_ids = layout_embedded_source_ids((layout,), sources=snapshot.sources)
     return {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
 
 

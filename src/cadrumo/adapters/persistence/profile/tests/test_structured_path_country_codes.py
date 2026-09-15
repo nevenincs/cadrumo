@@ -39,7 +39,6 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -76,13 +75,6 @@ def _registry_legends(operation):
     """Resolve the registry vocabulary on the test's pinned authority lease."""
     period = default_invoice_extraction_period()
     return resolve_regime_legends(operation=operation, effective_date=period.end_date)
-
-
-@pytest.fixture
-def operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease the published generation, whose runtime catalogues structured extraction reads."""
-    with _indexed_authority_for_test().operation() as leased:
-        yield leased
 
 
 # The Facturae specimen states both parties' countries in full, in the alpha-3

@@ -41,7 +41,7 @@ from ...storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...storage.errors import SecureObjectRowIdentityError
 from ..justificante import JustificanteRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _PRESENTED_AT = datetime(2026, 5, 27, 11, 15, 0, tzinfo=UTC)
 _CSV_A = "AAAA11112222BBBB"

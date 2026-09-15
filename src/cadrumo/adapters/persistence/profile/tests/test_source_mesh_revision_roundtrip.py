@@ -52,11 +52,13 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
-from .....domain.modelos.work_unit import derive_work_unit_id
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
 from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -83,6 +85,30 @@ __all__ = ["secure_objects"]
 @pytest.fixture
 def bucket_id() -> str:
     return _BUCKET_ID
+
+
+def _repository_with_parent_work_unit(secure_objects: SecureObjectRepository) -> CalculationRevisionCatalogueRepository:
+    """Persist the parent WorkUnit a revision's registry coordinate must match, then return the repository."""
+    period = Period.from_year_and_code(_REGISTRY_SNAPSHOT_REF.modelo_year, _REGISTRY_SNAPSHOT_REF.period)
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo=_REGISTRY_SNAPSHOT_REF.modelo,
+            filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
+            period=period,
+            revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode(_REGISTRY_SNAPSHOT_REF.modelo),
+        filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
+        period=period,
+        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        name="303-2026-1T",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    WorkUnitCatalogueRepository(objects=secure_objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
+    return CalculationRevisionCatalogueRepository(objects=secure_objects)
 
 
 def _source_provenance() -> tuple[CalculationSourceRef, ...]:
@@ -209,7 +235,7 @@ def test_row_casilla_materialization_roundtrips_only_through_encrypted_revision(
     assert "row_casilla_values" not in original.model_dump()
     assert "row_casilla_provenance" not in original.model_dump_json()
 
-    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
     assert repository.load().get(original.calculation_revision_id) == original
@@ -245,7 +271,7 @@ def test_row_source_identity_roundtrips_only_through_encrypted_revision(
         row_set_grouping=grouping,
     )
     original = _revision(_source_provenance(), row_identity=identity)
-    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository = _repository_with_parent_work_unit(secure_objects)
 
     assert canary not in original.model_dump_json()
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
@@ -321,7 +347,7 @@ def test_row_casilla_secure_contract_refuses_missing_or_duplicate_coordinates(
         ),
         with_row_materialization=True,
     )
-    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
     mutate_encrypted_secure_object_json(
         secure_objects._engine,
@@ -348,7 +374,7 @@ def test_row_source_identity_corruption_is_value_free(
             fingerprint="3" * 64,
         ),
     )
-    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
     mutate_encrypted_secure_object_json(
         secure_objects._engine,
@@ -371,7 +397,7 @@ def test_row_source_identity_corruption_is_value_free(
 def test_source_provenance_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
     provenance = _source_provenance()
     original = _revision(provenance)
-    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository = _repository_with_parent_work_unit(secure_objects)
 
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
     loaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(original.calculation_revision_id)
@@ -440,7 +466,7 @@ def test_legacy_source_provenance_without_required_identity_is_rejected_at_encry
     from .....core.classification.policies import SensitivityClass
 
     original = _revision(_source_provenance())
-    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
     record = secure_objects.load(
         MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
@@ -481,7 +507,7 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_obje
     from .....core.classification.policies import SensitivityClass
 
     original = _revision(_source_provenance())
-    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
     record = secure_objects.load(
@@ -527,7 +553,7 @@ def test_source_provenance_dropped_dependency_treatment_breaks_content_identity(
     from .....core.classification.policies import SensitivityClass
 
     original = _revision(_source_provenance())
-    repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
     record = secure_objects.load(

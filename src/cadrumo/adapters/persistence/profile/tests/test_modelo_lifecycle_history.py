@@ -22,7 +22,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.errors import ModeloValidationError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _T0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)

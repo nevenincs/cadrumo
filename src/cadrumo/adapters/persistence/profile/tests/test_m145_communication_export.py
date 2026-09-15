@@ -38,7 +38,7 @@ from .....domain.calculations.registry.schema_exports import ExportFieldDefiniti
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 
 def _field_values(**overrides: str) -> dict[str, str]:

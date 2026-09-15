@@ -47,11 +47,20 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
+from .secure_objects_fixture import secure_objects
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET_ID = "26262626-2626-4262-8262-262626262626"
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
 
 
 _M303_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.repercutido.general")

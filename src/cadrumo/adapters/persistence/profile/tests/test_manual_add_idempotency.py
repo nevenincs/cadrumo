@@ -41,7 +41,7 @@ from .ledger_action_persistence_support import (
     parsed_import_transaction,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 _DEFAULT_AMOUNT = Decimal("25.00")
 _DEFAULT_BOOKED_DATE = date(2026, 5, 2)
 _DEFAULT_OCCURRED_AT = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)

@@ -63,7 +63,7 @@ from ....persistence.storage.errors import EnvelopeVersionError, SecureObjectRev
 from ....persistence.storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:

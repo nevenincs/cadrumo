@@ -76,7 +76,7 @@ from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionC
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 # Chain 2 — M369 OSS/IOSS (ledger_oss_aggregation): live invoice projection
 # ---------------------------------------------------------------------------

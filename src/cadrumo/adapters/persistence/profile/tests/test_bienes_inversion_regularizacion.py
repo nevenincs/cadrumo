@@ -47,7 +47,7 @@ from cadrumo.domain.calculations.registry.bindings import (
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 #: An explicit bundle. These tests exercise the surrounding wiring, not the law;

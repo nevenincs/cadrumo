@@ -67,7 +67,7 @@ def _observation(
         perceptor_legal_name="Perceptor Ejemplo SL",
         country_code="ES",
         transaction_date=date(2024, 3, 15),
-        clave=RetencionClave(clave),
+        clave=RetencionClave.from_registry(clave),
         subclave=subclave,
         percibido_dinerario=dinerario,
         percibido_especie=Decimal("50"),
