@@ -30,7 +30,7 @@ from cadrumo.domain.deadlines.models import IrpfSpecialRegime
 from ....application.ledger.source_jurisdiction import OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
 from .._ledger_support import _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS, resolve_source_jurisdiction
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_an_undeclared_residency_resolves_to_none_not_es() -> None:

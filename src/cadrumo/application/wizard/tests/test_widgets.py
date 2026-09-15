@@ -24,7 +24,7 @@ from ..models import (
 )
 from ..widgets import validate_widget_answer
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _TEXT_PROMPT = tr("wizard.setup.profile.tax-id.prompt")
 _SELECT_PROMPT = tr("wizard.setup.profile.iva-regime.prompt")

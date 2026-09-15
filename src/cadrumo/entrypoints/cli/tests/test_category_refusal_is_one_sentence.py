@@ -32,7 +32,7 @@ from ....domain.categories.spending_category_catalogue import spending_category_
 from .._ledger_support import validate_category_id as rules_validator
 from .._ledger_support import validate_category_id as support_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _LOCALES = ("en", "es", "ca", "hu")
 _LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"

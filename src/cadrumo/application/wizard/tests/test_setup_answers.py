@@ -21,7 +21,7 @@ from ....core.errors.error_codes import build_error_envelope
 from ....domain.user_profile.setup_answers import SetupAnswers
 from ..errors import WizardAnswerTypeError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 # ── Registry / envelope contract ─────────────────────────────────────────────

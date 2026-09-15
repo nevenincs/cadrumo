@@ -30,7 +30,7 @@ from ....domain.calculations.registry.withholding_bindings import (
 )
 from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _RAW = (
     '{"source_id": "row-1", "perceptor_tax_id": "12345678A", "transaction_date": "2024-06-01",'

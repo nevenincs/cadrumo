@@ -197,9 +197,9 @@ def _persist_blocked_review(
 
 
 def test_review_record_round_trips_through_registered_schema_envelope(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture, *, operation: PinnedAuthorityOperation
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, *, authority_operation: PinnedAuthorityOperation
 ) -> None:
-    with _persist_blocked_review(tmp_path, operation=operation) as (review, report, objects):
+    with _persist_blocked_review(tmp_path, operation=authority_operation) as (review, report, objects):
         result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
         notices = verification_report_notices(report)
         envelope_cls = cast(Any, SchemaEnvelope)[WorkReviewResult]
@@ -268,9 +268,9 @@ def test_review_record_round_trips_through_registered_schema_envelope(
 
 
 def test_review_payload_refuses_raw_identity_fields_without_echoing_value(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
+    tmp_path: Path, *, authority_operation: PinnedAuthorityOperation
 ) -> None:
-    with _persist_blocked_review(tmp_path, operation=operation) as (review, _, _):
+    with _persist_blocked_review(tmp_path, operation=authority_operation) as (review, _, _):
         payload = WorkReviewPayload.from_review(review).model_dump(mode="python")
         payload["row_source_identity"] = _RAW_ROW_IDENTITY
 

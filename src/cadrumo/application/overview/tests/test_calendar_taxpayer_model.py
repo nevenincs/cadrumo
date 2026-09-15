@@ -34,34 +34,34 @@ def _landlord_profile() -> TaxpayerProfile:
         tax_id="X1234567L",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
-        iva_regime=IVARegime("exento"),
+        iva_regime=IVARegime("EXENTO"),
     )
 
 
 def _undeclared_profile() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("general"))
+    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
 
 
-def test_calendar_landlord_never_shows_modelo_130(calendar_operation: PinnedAuthorityOperation) -> None:
+def test_calendar_landlord_never_shows_modelo_130(authority_operation: PinnedAuthorityOperation) -> None:
     """The wrong-guidance fix at the calendar surface: a pure
     landlord's calendar must not list Modelo 130, even across a full
     year where every quarterly window is registered."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_landlord_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_landlord_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     assert cal.taxpayer_model_declared is True
     modelos = {entry.modelo for entry in cal.entries}
     assert "130" not in modelos
     assert "303" not in modelos
 
 
-def test_calendar_autonomo_still_shows_modelo_130(calendar_operation: PinnedAuthorityOperation) -> None:
+def test_calendar_autonomo_still_shows_modelo_130(authority_operation: PinnedAuthorityOperation) -> None:
     """The autónomo persona is unchanged: Modelo 130 still appears."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     modelos = {entry.modelo for entry in cal.entries}
     assert "130" in modelos
 
@@ -81,12 +81,12 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
         tax_id="X1234567L",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
 def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130_quarters(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Operator repro fix: an actividad-económica profile with no declared
     estimation regime owes the four Modelo 130 quarterly pago-fraccionado
@@ -109,7 +109,7 @@ def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130
     # The range includes the closing 2025 4T filing window in January
     # 2026 and all four filing-year 2026 quarterly windows.
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
-    cal = build_overview_calendar(profile, rng, operation=calendar_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 4, 1))
 
     assert cal.taxpayer_model_declared is True
     m130_entries = sorted(
@@ -145,7 +145,7 @@ def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130
 
 
 def test_calendar_pure_landlord_without_regime_owes_no_m130(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The directa default must not over-include a non-owing profile.
 
@@ -157,18 +157,18 @@ def test_calendar_pure_landlord_without_regime_owes_no_m130(
     """
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
-    cal = build_overview_calendar(_landlord_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_landlord_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     assert "130" not in {entry.modelo for entry in cal.entries}
 
 
 def test_calendar_undeclared_profile_yields_incomplete_empty_calendar(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """An undeclared taxpayer model yields an empty calendar flagged
     taxpayer_model_declared=False — never the autónomo guess."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_undeclared_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_undeclared_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     assert cal.taxpayer_model_declared is False
     assert cal.entries == ()
     assert cal.incomplete_reason is not None
@@ -177,7 +177,7 @@ def test_calendar_undeclared_profile_yields_incomplete_empty_calendar(
 
 
 def test_calendar_undeclared_profile_preserves_observed_events(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Observed AEAT events remain visible even when obligations cannot be derived."""
 
@@ -208,7 +208,7 @@ def test_calendar_undeclared_profile_preserves_observed_events(
     cal = build_overview_calendar(
         _undeclared_profile(),
         rng,
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2026, 4, 1),
         events=events,
     )
@@ -233,7 +233,7 @@ def _fully_enrolled_autonomo() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=True,
         pays_professionals_with_retencion=True,
         pays_rent_with_retencion=True,
@@ -259,12 +259,12 @@ def _objetiva_autonomo() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
-        iva_regime=IVARegime("simplificado"),
+        iva_regime=IVARegime("SIMPLIFICADO"),
     )
 
 
 def test_calendar_excludes_non_applicable_modelos(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A modelo the taxpayer model does not positively trigger must
     never appear as a confident calendar row.
@@ -280,7 +280,7 @@ def test_calendar_excludes_non_applicable_modelos(
 
     profile = _objetiva_autonomo()
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(profile, rng, operation=calendar_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 4, 1))
 
     calendar_modelos = {entry.modelo for entry in cal.entries}
     # Modelo 130 is NOT_APPLICABLE for an objetiva autónomo...
@@ -334,7 +334,7 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
 
 
 def test_calendar_year_without_windows_only_does_not_raise(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A range whose primary year has no registered deadline windows
     does not raise, and the taxpayer-model state is answered.
@@ -357,7 +357,7 @@ def test_calendar_year_without_windows_only_does_not_raise(
     rng = OverviewCalendarRange(from_date=date(2027, 1, 1), to_date=date(2027, 12, 31))
 
     # The contract: this call does not raise.
-    cal = build_overview_calendar(profile, rng, operation=calendar_operation, today=date(2027, 6, 1))
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2027, 6, 1))
 
     assert isinstance(cal, OverviewCalendar)
     assert cal.taxpayer_model_declared is True
@@ -369,7 +369,7 @@ def test_calendar_year_without_windows_only_does_not_raise(
 
 
 def test_calendar_spanning_a_year_without_windows_does_not_raise(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A range crossing into a year with no registered deadline windows
     must succeed instead of raising.
@@ -393,11 +393,11 @@ def test_calendar_spanning_a_year_without_windows_does_not_raise(
     populated_only = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
 
     # The contract: neither call raises on the empty 2027 year.
-    multi_cal = build_overview_calendar(profile, multi_year, operation=calendar_operation, today=date(2026, 4, 1))
+    multi_cal = build_overview_calendar(profile, multi_year, operation=authority_operation, today=date(2026, 4, 1))
     populated_cal = build_overview_calendar(
         profile,
         populated_only,
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2026, 4, 1),
     )
 
@@ -469,7 +469,7 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
 
 
 def test_undeclared_profile_message_resolves_to_real_localised_text(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The undeclared-profile guidance must be a shipped locale string,
     not the raw translation key.
@@ -497,7 +497,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text(
 
     # The calendar surface delivers exactly that resolved text.
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_undeclared_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_undeclared_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
     assert cal.incomplete_reason == tr(key)
     assert cal.incomplete_reason is not None
     assert cal.incomplete_reason != key
@@ -517,7 +517,7 @@ def _legal_entity() -> TaxpayerProfile:
         tax_id="B12345674",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -527,12 +527,12 @@ def _attribution_entity() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="E12345674",
         entity_type=EntityType.from_registry("attribution_entity"),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
 def test_calendar_legal_entity_is_never_shown_an_irpf_cuota(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A legal entity's calendar must never list an IRPF cuota modelo.
 
@@ -546,7 +546,7 @@ def test_calendar_legal_entity_is_never_shown_an_irpf_cuota(
     IRPF tarifa obligation (corporate-entity contract §4)."""
 
     rng = OverviewCalendarRange(from_date=date(2024, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, operation=calendar_operation, today=date(2025, 7, 1))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(2025, 7, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     # No IRPF cuota modelo reaches a legal entity's calendar.
@@ -555,14 +555,14 @@ def test_calendar_legal_entity_is_never_shown_an_irpf_cuota(
 
 
 def test_calendar_natural_person_shows_irpf_not_corporate(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A natural person's calendar shows the IRPF obligations and never
     a corporate-tax modelo. An autónomo en estimación directa keeps
     Modelo 130 / 303; Modelo 200 / 202 never reach the calendar."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "130" in surfaced
@@ -571,7 +571,7 @@ def test_calendar_natural_person_shows_irpf_not_corporate(
 
 
 def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A default foreign-asset false profile must not receive active M721 rows."""
 
@@ -579,7 +579,7 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
         tax_id="X1234567L",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
         bienes_extranjero_above_threshold=False,
         monedas_virtuales_extranjero_above_threshold=False,
     )
@@ -588,7 +588,7 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
     cal = build_overview_calendar(
         profile,
         rng,
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2025, 1, 15),
         show_suppressed=True,
     )
@@ -600,7 +600,7 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
 
 
 def test_calendar_attribution_entity_is_shown_no_cuota_obligation(
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """An attribution entity's calendar lists no IS and no IRPF cuota.
 
@@ -615,7 +615,7 @@ def test_calendar_attribution_entity_is_shown_no_cuota_obligation(
     cal = build_overview_calendar(
         _attribution_entity(),
         rng,
-        operation=calendar_operation,
+        operation=authority_operation,
         today=date(2025, 7, 1),
     )
 

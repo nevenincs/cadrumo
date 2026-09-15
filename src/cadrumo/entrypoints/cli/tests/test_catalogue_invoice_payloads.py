@@ -24,7 +24,7 @@ from .._ledger_catalogue_invoice_payloads import (
 )
 from ..command_schema import command_schema_types
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 class _InvoiceMutationContractComposition(BaseModel):

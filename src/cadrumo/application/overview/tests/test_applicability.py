@@ -49,7 +49,7 @@ from ....domain.deadlines.models import (
 )
 from .calendar_test_support import profile as _autonomo
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _ProfileFactory = Callable[[], TaxpayerProfile]
 

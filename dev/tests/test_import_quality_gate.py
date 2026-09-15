@@ -9,10 +9,12 @@ by reading that file, so this test contains no second dependency matrix.
 from __future__ import annotations
 
 import configparser
+import json
 import os
 import shutil
 import subprocess
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
@@ -28,7 +30,7 @@ from dev.quality.import_checker import (
     read_authority,
 )
 from dev.quality.import_gate import run_import_gate, run_import_linter, run_subordinate
-from dev.quality.import_health import module_is_test_scoped
+from dev.quality.import_health import build_import_health, module_is_test_scoped, render_import_health
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -786,3 +788,86 @@ def test_clean_fixture_has_a_nonzero_governed_scan_and_passes_the_component(tmp_
     assert returncode == 0, output
     assert "check-import-boundaries: passed" in output
     assert "governed Python file" not in output
+
+
+def _approve_occurrences(root: Path, *, target_roots: frozenset[str]) -> int:
+    """Write a well-formed ratchet approving every live occurrence into ``target_roots``."""
+    authority = read_authority(root).authority
+    assert authority is not None
+    occurrences = [
+        occurrence
+        for occurrence in check_authority(authority).occurrences
+        if occurrence.target_module.partition(".")[0] in target_roots
+    ]
+    today = date.today()
+    entries = [
+        {
+            "capability": "fixture-debt",
+            "contract": occurrence.contract,
+            "created_on": today.isoformat(),
+            "expires_on": (today + timedelta(days=30)).isoformat(),
+            "fingerprint": occurrence.fingerprint,
+            "import_form": occurrence.import_form,
+            "imported_symbols": list(occurrence.imported_symbols),
+            "lexical_scope": occurrence.lexical_scope,
+            "multiplicity": 1,
+            "owner": "fixture owner",
+            "reason": "fixture approval",
+            "source_module": occurrence.source_module,
+            "status": "active",
+            "target_module": occurrence.target_module,
+        }
+        for occurrence in occurrences
+    ]
+    ratchet = root / "dev" / "quality" / "metadata" / "import_boundary_ratchet.json"
+    ratchet.parent.mkdir(parents=True, exist_ok=True)
+    ratchet.write_text(
+        json.dumps({"entries": entries, "schema_version": 1}, indent=2) + "\n",
+        encoding=UTF_8,
+        newline="\n",
+    )
+    return len(entries)
+
+
+def _health_verdict(root: Path) -> tuple[int, str]:
+    """Reconcile the real graph and checker evidence for ``root`` against its ratchet."""
+    read = read_authority(root)
+    assert read.authority is not None and not read.findings, read.findings
+    authority = read.authority
+    linter = run_import_linter(authority)
+    checker = check_authority(authority)
+    payload, exit_status = build_import_health(
+        authority=authority,
+        authority_findings=read.findings,
+        linter_returncode=linter.returncode,
+        linter_output=linter.output,
+        checker=checker,
+        loadability={"attempted": 0, "failed": 0, "loaded": 0, "root_cause_count": 0, "scope": "fixture"},
+        load_returncode=0,
+        source_snapshot_before="fixture",
+        source_snapshot_after="fixture",
+        component_durations={},
+    )
+    return exit_status, render_import_health(payload) + "\n" + json.dumps(payload, sort_keys=True)
+
+
+def test_a_ratchet_cannot_approve_a_shipped_test_module_reaching_a_repository_only_root(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "cadrumo.application.module", "VALUE = 1\n")
+    _write_module(root, "cadrumo.domain.tests.test_layer_debt", "from ...application.module import VALUE\n")
+
+    assert _approve_occurrences(root, target_roots=frozenset({"cadrumo"})) == 1
+    exit_status, output = _health_verdict(root)
+    assert exit_status == 0, output
+    assert "VERDICT: passing_with_debt" in output
+    assert "Repository-only reach (not ratchetable): 0 occurrence(s)" in output
+
+    _write_module(root, "cadrumo.domain.tests.test_repository_reach", "import dev.exit_codes\n")
+    repository_reach = _approve_occurrences(root, target_roots=frozenset({"cadrumo", "dev"})) - 1
+    assert repository_reach >= 1
+    exit_status, output = _health_verdict(root)
+    assert exit_status == 1, output
+    assert f"Repository-only reach (not ratchetable): {repository_reach} occurrence(s)" in output
+    assert "Approved debt: 1 occurrence(s)" in output
+    assert "src/cadrumo/domain/tests/test_repository_reach.py:1 imports dev.exit_codes" in output
+    assert "a shipped root reaching a repository-only root is not debt" in output

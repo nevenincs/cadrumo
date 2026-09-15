@@ -31,7 +31,7 @@ import pytest
 from ....core.i18n.render import tr
 from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 #: EVERY string describing the ``--descendiente`` format. There are two, and
 #: guarding one is how the other drifted: the flag-verb help was corrected and

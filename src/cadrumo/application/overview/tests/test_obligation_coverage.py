@@ -59,7 +59,7 @@ from ..coverage import (
     build_obligation_coverage,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 _TODAY = date(2026, 7, 1)
@@ -72,7 +72,7 @@ def _paying_autonomo() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=True,
     )
 
@@ -82,7 +82,7 @@ def _landlord() -> TaxpayerProfile:
         tax_id="X1234567L",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
-        iva_regime=IVARegime("exento"),
+        iva_regime=IVARegime("EXENTO"),
     )
 
 
@@ -91,7 +91,7 @@ def _sociedad_limitada() -> TaxpayerProfile:
         tax_id="B12345674",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -315,7 +315,7 @@ def _dispositions(report: ObligationCoverageReport) -> set[str]:
 
 
 def test_calendar_attaches_coverage_by_default(
-    calendar_operation: PinnedAuthorityOperation, *, operation: PinnedAuthorityOperation
+    authority_operation: PinnedAuthorityOperation, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A default calendar build (show_suppressed=False) still carries coverage.
 
@@ -325,7 +325,7 @@ def test_calendar_attaches_coverage_by_default(
     calendar = build_overview_calendar(
         _paying_autonomo(),
         OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
-        operation=calendar_operation,
+        operation=authority_operation,
         today=_TODAY,
     )
     _assert_total_partition(calendar.coverage, operation=operation)

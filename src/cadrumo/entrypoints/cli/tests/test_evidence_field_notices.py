@@ -378,7 +378,9 @@ def test_the_refusal_reaches_the_operator_with_the_reason_the_check_computed() -
     assert grounded[0].note in notice.message
 
 
-def test_the_identity_resolver_really_emits_the_located_but_unroled_shape(operation: PinnedAuthorityOperation) -> None:
+def test_the_identity_resolver_really_emits_the_located_but_unroled_shape(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Reachability, from the producer rather than from a fixture.
 
     The shape above is only worth a notice of its own if something actually
@@ -396,7 +398,7 @@ def test_the_identity_resolver_really_emits_the_located_but_unroled_shape(operat
         candidates=(IdentityCandidate(value="B12345674", anchor="B-12345674", role_evidence=""),),
         taxpayer_tax_id="A82645177",
         origin=FieldOrigin.TEXT_LAYER,
-        operation=operation,
+        operation=authority_operation,
     )
     envelope = resolution.provenance
 

@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import os
+import threading
+import time
 from pathlib import Path
-from typing import Literal, TypedDict
+from types import TracebackType
+from typing import Final, Literal, TypedDict
 
 import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
+from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, ExportJustification, ExportPadding
@@ -104,21 +109,104 @@ def _transport_profile() -> ExportTreeTransportProfile:
     return transport
 
 
+#: Name prefixes of every artifact publication creates beside a registry root:
+#: its transaction journal and lock sidecar, rollback backup, and staging sibling.
+_PUBLICATION_ARTIFACT_PREFIXES: Final = (
+    ".generated-export-transaction-",
+    ".generated-export-backup-",
+    ".generated-export-stage-",
+)
+
+
+class _PublicationArtifactObserver:
+    """Record every publication-shaped entry that appears directly under watched roots.
+
+    A polling thread observes the roots while the block runs, so a journal or
+    backup that a publication creates and removes within one call is recorded,
+    not only what remains afterwards.
+    """
+
+    def __init__(self, roots: tuple[Path, ...]) -> None:
+        self._roots = roots
+        self._stop = threading.Event()
+        self._seen: set[Path] = set()
+        self._thread = threading.Thread(target=self._poll, daemon=True)
+
+    def __enter__(self) -> _PublicationArtifactObserver:
+        self._scan()
+        self._thread.start()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        self._stop.set()
+        self._thread.join()
+        self._scan()
+
+    @property
+    def seen(self) -> frozenset[Path]:
+        """Every publication-shaped path observed so far."""
+        return frozenset(self._seen)
+
+    def _poll(self) -> None:
+        while not self._stop.wait(0.002):
+            self._scan()
+
+    def _scan(self) -> None:
+        for root in self._roots:
+            try:
+                entries = tuple(os.scandir(root))
+            except FileNotFoundError:
+                continue
+            self._seen.update(
+                Path(entry.path) for entry in entries if entry.name.startswith(_PUBLICATION_ARTIFACT_PREFIXES)
+            )
+
+
+def test_publication_artifact_observer_records_a_transient_journal_and_its_lock(tmp_path: Path) -> None:
+    """The observer sees a lock sidecar and a journal that exists only while the block runs."""
+    stem = f".generated-export-transaction-{ISOLATED_TREE.modelo}-{ISOLATED_TREE.revision}"
+    journal = tmp_path / f"{stem}.json"
+
+    with _PublicationArtifactObserver((tmp_path,)) as observer, exclusive_file_lock(tmp_path / stem) as lock_path:
+        journal.write_bytes(b"{}")
+        deadline = time.monotonic() + 30
+        while journal not in observer.seen and time.monotonic() < deadline:
+            time.sleep(0.001)
+        journal.unlink()
+
+    assert not journal.exists()
+    assert journal in observer.seen
+    assert lock_path in observer.seen
+
+
 def test_check_regenerates_in_isolation_and_preserves_published_hashes(tmp_path: Path) -> None:
     """A real candidate must match every current target member without target mutation."""
     context, joined, semantic_map, target_export_root = _check_inputs(tmp_path)
     render_profile, render_evidence = isolated_render_profile()
     before = _tree_hashes(context.target_registry_root)
-
-    checked = check_generated_export_tree(
-        context=context,
-        joined=joined,
-        semantic_map=semantic_map,
-        transport_profile=_transport_profile(),
-        render_profile=render_profile,
-        render_profile_source_evidence=render_evidence,
+    watched_roots = (
+        tmp_path,
+        context.temporary_root,
+        context.target_registry_root,
+        context.validation.registry_root,
     )
 
+    with _PublicationArtifactObserver(watched_roots) as observer:
+        checked = check_generated_export_tree(
+            context=context,
+            joined=joined,
+            semantic_map=semantic_map,
+            transport_profile=_transport_profile(),
+            render_profile=render_profile,
+            render_profile_source_evidence=render_evidence,
+        )
+
+    assert observer.seen == frozenset(), f"check mode created publication artifacts: {sorted(observer.seen)}"
     assert _tree_hashes(context.target_registry_root) == before
     assert checked.candidate.snapshot.revision.export_layouts == (checked.candidate.layout,)
     assert checked.published_manifest == checked.candidate.provenance_manifest

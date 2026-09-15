@@ -30,11 +30,11 @@ def _write_evidence(
 
 
 def test_cli_loads_complete_m303_evidence_before_revision_creation(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
+    tmp_path: Path, *, authority_operation: PinnedAuthorityOperation
 ) -> None:
     period = Period.from_year_and_code(2026, "1T")
     evidence_path = tmp_path / "m303-filing-evidence.json"
-    _write_evidence(evidence_path, period, operation=operation)
+    _write_evidence(evidence_path, period, operation=authority_operation)
 
     evidence = m303_filing_instance_evidence_from_cli(
         modelo="303",

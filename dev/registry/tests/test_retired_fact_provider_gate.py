@@ -178,7 +178,7 @@ def test_the_gate_applies_only_to_a_registry_that_enrolls_fact_providers(monkeyp
 
 
 _STAGED_MODELO = "210"
-#: The modelo's root edition, which claims no predecessor, so an isolated copy compiles whole.
+#: An edition of the modelo's delta chain; staging resolves it into the complete edition it stands for.
 _STAGED_REVISION = "2025"
 _REMOVED_FACT_ID = "lirpf-art-101:retencion-administrador-general"
 _REMOVED_FACT_FILE = "0001-lirpf-art-101-retencion-administrador-general.toml"
@@ -214,5 +214,5 @@ def test_a_copy_of_the_bundled_tree_missing_one_migrated_fact_is_refused_by_name
     candidate_root = _staged_bundled_copy(tmp_path)
     (candidate_root / "facts" / _REMOVED_FACT_FILE).unlink()
 
-    with pytest.raises(RegistryValidationError, match=f"migrated legal-parameter fact '{_REMOVED_FACT_ID}' is not"):
+    with pytest.raises(RegistryValidationError, match=f"retired-provider fact '{_REMOVED_FACT_ID}' is not authored"):
         compile_validated_authority(candidate_root, bundled_path())

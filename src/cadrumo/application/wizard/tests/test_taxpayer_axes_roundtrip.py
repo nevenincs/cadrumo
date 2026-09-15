@@ -23,7 +23,7 @@ from ....domain.deadlines.profiles import taxpayer_profile_from_mapping
 from ....domain.user_profile.setup_answers import SetupAnswers
 from ..persistence import project_answers, serialise_answers
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _fully_populated_answers() -> SetupAnswers:

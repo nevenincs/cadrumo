@@ -111,6 +111,7 @@ def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
     assert option.show_choices is False
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_tax_residence_ccaa_choices_match_the_ccaa_enum() -> None:
     """The CCAA choice tokens are the canonical CCAA enum plus foral redirects.
 

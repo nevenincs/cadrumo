@@ -62,7 +62,7 @@ from ..ledger_business_payloads import (
     InventoryStockLayerPayload,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 def _transaction_payload(**overrides: object) -> dict[str, object]:

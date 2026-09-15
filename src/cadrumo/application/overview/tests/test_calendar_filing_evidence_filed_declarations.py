@@ -32,7 +32,7 @@ from .calendar_test_support import (
     modelo_record as _modelo_record,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_filed_declaration_observation_with_stored_justificante_marks_verified() -> None:

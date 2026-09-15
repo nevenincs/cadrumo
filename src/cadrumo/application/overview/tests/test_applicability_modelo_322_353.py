@@ -14,7 +14,7 @@ from ....domain.deadlines.models import (
     TaxpayerProfile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _legal_entity_with_iva_group_role(

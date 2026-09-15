@@ -8,7 +8,7 @@ from ....domain.calculations.registry.applicability import ApplicabilityVerdict,
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_modelo_193_tracks_modelo_123_capital_income_payer_fact() -> None:
@@ -16,7 +16,7 @@ def test_modelo_193_tracks_modelo_123_capital_income_payer_fact() -> None:
         tax_id="B12345674",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
         pays_capital_income_with_retencion=True,
     )
 
@@ -41,7 +41,7 @@ def test_modelo_193_is_incomplete_when_capital_income_payer_fact_is_undeclared()
         tax_id="B12345674",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
     result = derive_modelo_applicability(profile, "193")

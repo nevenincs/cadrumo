@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 
+from ..compiler.loader import load_modelo_directory
 from ._export_tree import RenderedExportTree
 from ._generated_tree_test_support import (
     ISOLATED_TREE,
@@ -80,6 +83,38 @@ def test_generated_tree_validation_selects_from_the_isolated_registry_not_the_pu
         _validate(replace(context, continuity_metadata_modelo_root=None), joined, semantic_map, rendered)
 
 
+def test_generated_tree_validation_selects_candidate_facts_through_the_continuity_witness(tmp_path: Path) -> None:
+    """With a continuity witness, the selected snapshot carries the isolated candidate's own revision facts.
+
+    Only the candidate's revision attribution is changed on disk. The published
+    registry keeps its original reviewer, so the snapshot naming the changed one
+    proves selection compiled the candidate registry rather than the bundle.
+    """
+    context, joined, semantic_map, rendered, export_root = write_isolated_generated_authority_tree(tmp_path)
+    assert context.continuity_metadata_modelo_root is not None
+    published_reviewer = (
+        load_modelo_directory(bundled_path("registry", "aeat", "modelos", ISOLATED_TREE.modelo))
+        .revisions[ISOLATED_TREE.revision]
+        .reviewed_by
+    )
+    candidate_reviewer = "isolated-candidate-reviewer"
+    assert published_reviewer is not None
+    assert published_reviewer != candidate_reviewer
+    revision_toml = export_root.parent / "revision.toml"
+    authored = revision_toml.read_text(encoding="utf-8")
+    published_stamp = f"reviewed_by = '{published_reviewer}'"
+    assert authored.count(published_stamp) == 1, "the staged candidate must declare the published reviewer once"
+    revision_toml.write_text(
+        authored.replace(published_stamp, f"reviewed_by = '{candidate_reviewer}'"),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    validated = _validate(context, joined, semantic_map, rendered)
+
+    assert validated.snapshot.revision.reviewed_by == candidate_reviewer
+
+
 def test_generated_tree_validation_refuses_partial_or_non_generated_export_siblings(tmp_path: Path) -> None:
     """Missing output and a non-generated sibling both refuse before any publication path exists."""
     context, joined, semantic_map, rendered, export_root = write_isolated_generated_authority_tree(tmp_path)
@@ -139,7 +174,12 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(tmp
     with pytest.raises(RegistryError, match="no revision for year"):
         _validate(replace(context, period="1T"), joined, semantic_map, rendered)
 
-    with pytest.raises(RegistryValidationError, match="'303'"):
+    with pytest.raises(
+        RegistryValidationError,
+        match=re.escape(
+            f"generated registry modelos root must contain exactly ['303'], got ['{ISOLATED_TREE.modelo}']",
+        ),
+    ):
         _validate(
             replace(context, target=context.target.model_copy(update={"modelo": "303"})),
             joined,
@@ -147,7 +187,12 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(tmp
             rendered,
         )
 
-    with pytest.raises(RegistryValidationError, match="'2026'"):
+    with pytest.raises(
+        RegistryValidationError,
+        match=re.escape(
+            f"generated modelo revisions directory must contain exactly ['2026'], got ['{ISOLATED_TREE.revision}']",
+        ),
+    ):
         _validate(
             replace(context, target=context.target.model_copy(update={"revision_id": "2026"})),
             joined,

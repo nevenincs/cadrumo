@@ -26,7 +26,7 @@ from ..errors import OverviewExplainError
 from ..explain import OverviewExplain, _out_of_plazo_warning, build_overview_explain
 from .calendar_test_support import profile as _autonomo_profile
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _undeclared_profile() -> TaxpayerProfile:

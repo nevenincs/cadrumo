@@ -28,7 +28,7 @@ from ..flow_validators import (
     register_taxpayer_projection_validator,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _FALLBACK_MESSAGE_KEY = "errors.refused.refused_user_profile_validation"
 

@@ -42,7 +42,7 @@ from ..setup_legal_validators import (
     validate_unidad_familiar_conjunta,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _JOINT = RentaDeclaracionType.JOINT.value
 _INDIVIDUAL = RentaDeclaracionType.INDIVIDUAL.value

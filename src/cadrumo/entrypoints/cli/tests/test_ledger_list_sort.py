@@ -28,7 +28,7 @@ from ....domain.transactions.models import BucketTransactionRef, Transaction, Tr
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._ledger_list import project_ledger_list
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 def _transaction(

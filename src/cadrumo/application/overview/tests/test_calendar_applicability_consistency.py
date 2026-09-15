@@ -50,7 +50,7 @@ def _autonomo() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -59,7 +59,7 @@ def _sociedad_limitada() -> TaxpayerProfile:
         tax_id="B12345674",
         entity_type=EntityType.from_registry("legal_entity"),
         irpf_income_categories=frozenset(),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -68,7 +68,7 @@ def _landlord() -> TaxpayerProfile:
         tax_id="X9876543K",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -77,7 +77,7 @@ def _attribution_entity() -> TaxpayerProfile:
         tax_id="E12345674",
         entity_type=EntityType.from_registry("attribution_entity"),
         irpf_income_categories=frozenset(),
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -135,7 +135,7 @@ def _collect_verdicts_from_explain(
 )
 def test_calendar_and_explain_agree_on_applicability_verdict(
     profile_factory: Callable[[], TaxpayerProfile],
-    calendar_operation: PinnedAuthorityOperation,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Calendar and explain surfaces agree on the verdict for every modelo.
 
@@ -147,7 +147,7 @@ def test_calendar_and_explain_agree_on_applicability_verdict(
     regression in either surface will be caught by this test.
     """
     profile = profile_factory()
-    calendar_verdicts = _collect_verdicts_from_calendar(profile, operation=calendar_operation)
+    calendar_verdicts = _collect_verdicts_from_calendar(profile, operation=authority_operation)
 
     assert calendar_verdicts, (
         f"No obligations produced for profile {profile.entity_type}; "
@@ -158,7 +158,7 @@ def test_calendar_and_explain_agree_on_applicability_verdict(
     explain_verdicts = _collect_verdicts_from_explain(
         profile,
         set(calendar_verdicts),
-        operation=calendar_operation,
+        operation=authority_operation,
     )
 
     mismatches: list[str] = []
