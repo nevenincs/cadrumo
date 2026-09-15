@@ -26,6 +26,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, reconcile_iva_compensation_wallet
@@ -43,6 +44,9 @@ def _reason(*, found_but_unusable: bool) -> IvaCompensationDecisionReason:
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "1T"),
+        target_registry_snapshot_ref=compiled_bundled_authority()
+        .snapshot("303", filing_year=2026, period="1T")
+        .snapshot_ref,
         wallet=None,
         local_recurrence_amount=None,
         decided_at=_DECIDED_AT,

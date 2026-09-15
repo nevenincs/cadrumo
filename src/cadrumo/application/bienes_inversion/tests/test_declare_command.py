@@ -58,7 +58,7 @@ def _command(**overrides: object) -> BienInversionDeclarationCommand:
         "acquisition_ledger_id": "a" * 64,
         "cuota_soportada": Decimal("2100.00"),
         "prorrata_inicial_pct": Decimal("60"),
-        "kind": next(iter(BienInversionKind)),
+        "kind": BienInversionKind._from_registry("mueble"),
     }
     payload.update(overrides)
     return BienInversionDeclarationCommand.model_validate(payload)
