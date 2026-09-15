@@ -7,7 +7,7 @@ trigger: always_on
 
 ## Placement and dependency direction
 
-- Put Python application code under `src/cadrumo/`; do not create parallel top-level implementations or ad-hoc import roots.
+- Put product Python code under its owning `src/` package and development-only registry compilation, authoring and migration tooling under `dev/registry/`. Runtime must not import the development compiler. Do not create parallel implementations or ad-hoc import roots.
 - Preserve the accepted dependency direction: domain code is independent of adapters; application services coordinate domain behavior; inbound, outbound, persistence, entrypoint, and core responsibilities remain separate.
 - Put every Python test below the narrowest owning `tests/` directory, never beside implementation modules as a naked `test_*.py`.
 - Keep the CLI root surface to `config` and `app`; extend the established hierarchy instead of adding a third root family.
@@ -18,7 +18,7 @@ trigger: always_on
 - Consumers import directly from that defining module. This applies to production code, tests, development tooling, plugins, dynamic imports, and type-only imports.
 - Package `__init__.py` files are inert namespace markers. Do not add exports, lazy maps, `__getattr__`, import forwarding, initialization side effects, or compatibility surfaces.
 - Do not create facade modules, re-export layers, alias modules, forwarding wrappers, duplicate definitions, or cross-package imports from private underscore modules.
-- Registry binding or resolver families live in their own public defining modules under `domain/calculations/registry/`, with their typed model, validator, and dispatch enrollment colocated at the owning boundary.
+- Registry domain declarations and runtime resolvers belong to their public defining domain modules; source compilation and corpus validation belong to the development compiler. Enroll each implementation at its owning dispatch boundary without moving development dependencies into runtime.
 
 ## Changes
 

@@ -8,6 +8,7 @@ trigger: always_on
 ## Preserve uncertainty
 
 - Missing, unknown, unsupported, deferred, advisory, not applicable, and proven zero are distinct states. Do not collapse any of them to zero, empty text, false, or a complete total.
+- Absence of an authored edition or override is not necessarily absent data: resolve canonical hydration and temporal projection first. Explicit deletions and genuinely missing taxpayer inputs must not be filled by that distinction.
 - A filing-grade result is complete only when every legally required input and dependency is present, validated, and covered by authority for the active filing context.
 - Suspicious zeros or absences at filing-bound fields produce a structured advisory or refusal with modelo, revision, field, source family, and reason. Diagnostics must reach the user-facing handoff.
 - A local calculation or prefill is not an official AEAT value. Label its origin and authority honestly.

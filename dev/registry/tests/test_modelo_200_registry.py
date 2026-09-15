@@ -32,6 +32,14 @@ def _m200_casilla(value: object, *, surface: str = "test_modelo_200_registry.cas
     return validated_casilla_id(value, surface=surface)
 
 
+def _projection_slot(reference: FilingProjectionRef) -> int:
+    """Read the slot shared by the M200 projection-ref members."""
+    slot = reference.model_dump(mode="python").get("slot")
+    if not isinstance(slot, int):
+        raise AssertionError(f"M200 projection reference has no integer slot: {reference!r}")
+    return slot
+
+
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:00552",
@@ -235,7 +243,7 @@ def test_modelo_200_projection_endpoints_keep_design_derived_slot_caps_and_no_ca
     assert {type(reference) for reference in m200_references} == core_m200_types
     for model_type in core_m200_types:
         references = tuple(reference for reference in m200_references if type(reference) is model_type)
-        declared_slots = {reference.slot for reference in references}
+        declared_slots = {_projection_slot(reference) for reference in references}
         slot_cap = max(declared_slots)
         upper_bound = {metadata.le for metadata in model_type.model_fields["slot"].metadata if hasattr(metadata, "le")}
 

@@ -15,8 +15,10 @@ from datetime import date
 from enum import StrEnum
 from pathlib import PurePosixPath
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
+
+from ....core.type_guards import is_object_list, is_object_mapping
 
 __all__ = [
     "ArtifactCatalogue",
@@ -401,12 +403,27 @@ def _date_value(record: Mapping[str, object], key: str) -> date:
         raise ValueError(f"manifest record {key!r} must begin with an ISO date") from error
 
 
+def _object_mapping_rows(value: object, *, subject: str) -> tuple[Mapping[str, object], ...]:
+    """Validate an array of string-keyed objects from a decoded manifest."""
+    if not is_object_list(value):
+        raise ValueError(f"{subject} must be a list of objects")
+    rows: list[Mapping[str, object]] = []
+    for item in value:
+        if not is_object_mapping(item):
+            raise ValueError(f"{subject} must be a list of objects")
+        row: dict[str, object] = {}
+        for key, member in item.items():
+            if not isinstance(key, str):
+                raise ValueError(f"{subject} objects must have string keys")
+            row[key] = member
+        rows.append(row)
+    return tuple(rows)
+
+
 def _artefacts_value(manifest: Mapping[str, object]) -> Sequence[Mapping[str, object]]:
     """Return declared artefact rows and reject an untyped manifest shape."""
     value = _mapping_value(manifest, "artefacts")
-    if not isinstance(value, list) or not all(isinstance(item, Mapping) for item in value):
-        raise ValueError("manifest 'artefacts' must be a list of objects")
-    return cast(Sequence[Mapping[str, object]], value)
+    return _object_mapping_rows(value, subject="manifest 'artefacts'")
 
 
 def _identity_from_manifest_row(
@@ -514,13 +531,12 @@ def declared_dispositions(
     artefacts = declaration.get("artefacts")
     if artefacts is None:
         return (ArtifactDisposition(declaration_path=catalogued_declaration_path, target_path=None, reason=reason),)
-    if not isinstance(artefacts, list) or not all(isinstance(item, Mapping) for item in artefacts):
-        raise ValueError("disposition 'artefacts' must be a list of objects")
+    rows = _object_mapping_rows(artefacts, subject="disposition 'artefacts'")
     return tuple(
         ArtifactDisposition(
             declaration_path=catalogued_declaration_path,
             target_path=parent / _bundled_path(_string_value(row, "stored_path"), field_name="stored_path"),
             reason=reason,
         )
-        for row in artefacts
+        for row in rows
     )

@@ -43,6 +43,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from typing import TypeGuard
 
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
@@ -157,13 +158,21 @@ class ProfileCompletenessError(RentaError):
 #
 
 
+def _is_str_enum_type(value: object) -> TypeGuard[type[StrEnum]]:
+    """Narrow a dynamically built enum class after checking its bases."""
+    return isinstance(value, type) and issubclass(value, StrEnum)
+
+
 def vessel_registry_enum(schema: ProfileSchemaDefinition) -> type[StrEnum]:
     """Build the typed vessel vocabulary from an operation-pinned schema."""
     values = schema.field("maritime_worker.vessel_registry").enum_values
-    return StrEnum(
+    vessel_registry: object = StrEnum(
         "VesselRegistry",
         {value.upper(): value for value in values},
     )
+    if _is_str_enum_type(vessel_registry):
+        return vessel_registry
+    raise TypeError("the vessel registry vocabulary must be a StrEnum class")
 
 
 @dataclass(frozen=True, slots=True)

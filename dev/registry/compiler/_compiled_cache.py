@@ -48,7 +48,7 @@ import typing
 from collections.abc import Iterable, Iterator
 from functools import cache
 from pathlib import Path
-from typing import Final, NamedTuple, TypeGuard
+from typing import Final, NamedTuple, TypeGuard, override
 
 from pydantic import BaseModel, TypeAdapter
 
@@ -108,6 +108,7 @@ _SAFE_PICKLE_PREFIXES: Final[tuple[str, ...]] = ("cadrumo.", "dev.registry.")
 class _CompiledCacheUnpickler(pickle.Unpickler):
     """Load only the first-party model graph and inert value types."""
 
+    @override
     def find_class(self, module: str, name: str) -> object:
         if module == "builtins" and name in _SAFE_PICKLE_BUILTINS:
             return super().find_class(module, name)

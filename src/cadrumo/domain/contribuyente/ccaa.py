@@ -7,6 +7,7 @@ the dated vocabulary is resolved by :mod:`ccaa_catalogue`.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import Self
 
 from pydantic import GetCoreSchemaHandler
@@ -18,7 +19,7 @@ from ...core.errors.hierarchy import CoreValidationError, ProfileAnswerTypeError
 class _CCAAType(type):
     """Expose registry-projected choices through the historical type surface."""
 
-    def __iter__(cls):  # type: ignore[no-untyped-def]
+    def __iter__(cls: _CCAAType) -> Iterator[CCAA]:
         from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 
         return iter(resolve_ccaa_catalogue().choices)

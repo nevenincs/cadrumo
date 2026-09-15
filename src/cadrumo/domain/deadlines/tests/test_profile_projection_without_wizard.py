@@ -80,8 +80,11 @@ async def _run_child_async(*, cwd: Path) -> _ChildResult:
         stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+    returncode = process.returncode
+    if returncode is None:
+        raise RuntimeError("the child process did not finish after communicate()")
     return _ChildResult(
-        returncode=int(process.returncode),
+        returncode=returncode,
         stdout=stdout.decode("utf-8", errors="replace"),
         stderr=stderr.decode("utf-8", errors="replace"),
     )

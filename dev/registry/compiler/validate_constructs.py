@@ -16,7 +16,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from typing import Protocol, runtime_checkable
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
@@ -25,6 +26,15 @@ from ._validate_helpers import missing_refs as _missing_refs
 from .validate_evidence import EvidenceValidator
 
 __all__ = ["CONSTRUCT_MEMBER_ATTRIBUTES", "validate_construct_closure"]
+
+
+@runtime_checkable
+class _ConstructMember(Protocol):
+    """Grounding fields shared by every construct-member schema record."""
+
+    legal_refs: Iterable[str]
+    source_refs: Iterable[str]
+
 
 CONSTRUCT_MEMBER_ATTRIBUTES = {
     "casilla": "casilla_ids",
@@ -87,6 +97,8 @@ def validate_construct_closure(
                 if member is None:
                     failures.append(f"{scope}: construct {construct.id!r} references unknown {kind} {member_id!r}")
                     continue
+                if not isinstance(member, _ConstructMember):
+                    raise AttributeError(f"{kind} {member_id!r} does not expose legal_refs and source_refs")
                 # Every member kind in ``CONSTRUCT_MEMBER_ATTRIBUTES`` declares
                 # ``legal_refs`` and ``source_refs`` (verified across all 14
                 # kinds' classes: casilla, formula, parameter, binding,

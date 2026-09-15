@@ -222,12 +222,14 @@ class AuthorityComponentReader(Protocol):
 
     def pin(self) -> AuthorityGenerationPin:
         """Pin the currently published reader incarnation for one operation."""
+        ...
 
     def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
         """Load one component from exactly ``pin`` or refuse a stale/cross-reader pin."""
 
     def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
         """Return deterministic addresses without hydrating component payloads."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)

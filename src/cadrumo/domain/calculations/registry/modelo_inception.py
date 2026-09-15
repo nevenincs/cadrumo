@@ -25,7 +25,6 @@ period that predates it is wrong as law whether or not anybody has noticed.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Annotated, Final
 
 from pydantic import (
@@ -38,6 +37,7 @@ from pydantic import (
 )
 
 from ....core.filing_year import FilingYear
+from ....core.type_guards import is_object_mapping
 from .errors import RegistryValidationError
 from .ids import LegalRefId, SourceRefId
 from .schema_base import LegalRefs, RegistryModel
@@ -95,7 +95,7 @@ def _inception_declaration_kind(value: object) -> str | None:
         return _DECLARED_INCEPTION_TAG
     if isinstance(value, UnauthoredBefore):
         return _UNAUTHORED_KEY
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         if "earliest_authored" in value:
             return _UNAUTHORED_KEY
         if "filing_year" in value:
@@ -112,7 +112,7 @@ def _normalise_inception(value: object) -> object:
     """
     if value is None:
         return value
-    if isinstance(value, Mapping) and set(value) == {_UNAUTHORED_KEY}:
+    if is_object_mapping(value) and set(value) == {_UNAUTHORED_KEY}:
         value = value[_UNAUTHORED_KEY]
     if _inception_declaration_kind(value) is None:
         raise RegistryValidationError(_INCEPTION_KIND_REFUSAL)

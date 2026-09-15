@@ -20,6 +20,7 @@ minutes and would prove the checkers rather than the harness.
 from __future__ import annotations
 
 import subprocess
+import sys
 
 import pytest
 
@@ -28,6 +29,7 @@ from ..types import (
     Diagnostic,
     _ExternalGap,
     _is_irreducible_external_gap,
+    main,
     require_report,
 )
 
@@ -134,3 +136,33 @@ def test_a_diagnostic_differing_in_any_part_is_not_suppressed(field: str, value:
 def test_nothing_is_suppressed_while_the_list_is_empty() -> None:
     """The live predicate, so it cannot rot while the list stays empty."""
     assert not _is_irreducible_external_gap(_diagnostic())
+
+
+@pytest.mark.parametrize(
+    ("diagnostics", "expected_count"),
+    [
+        ([], "0\n"),
+        ([_diagnostic(), _diagnostic(checker="basedpyright")], "2\n"),
+    ],
+)
+def test_count_mode_emits_only_the_aggregate_integer(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    diagnostics: list[Diagnostic],
+    expected_count: str,
+) -> None:
+    """The machine signal stays one integer without a recipe-runner error suffix."""
+    by_checker = {
+        "ty": [diagnostic for diagnostic in diagnostics if diagnostic.checker == "ty"],
+        "pyrefly": [diagnostic for diagnostic in diagnostics if diagnostic.checker == "pyrefly"],
+        "basedpyright": [diagnostic for diagnostic in diagnostics if diagnostic.checker == "basedpyright"],
+    }
+    monkeypatch.setattr("dev.quality.types.collect_ty", lambda: by_checker["ty"])
+    monkeypatch.setattr("dev.quality.types.collect_pyrefly", lambda: by_checker["pyrefly"])
+    monkeypatch.setattr("dev.quality.types.collect_basedpyright", lambda: by_checker["basedpyright"])
+    monkeypatch.setattr(sys, "argv", ["dev.quality.types", "--count"])
+
+    assert main() == 0
+    captured = capsys.readouterr()
+    assert captured.out == expected_count
+    assert captured.err == ""

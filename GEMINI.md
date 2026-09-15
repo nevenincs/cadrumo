@@ -33,7 +33,7 @@ trigger: always_on
 
 ## Placement and dependency direction
 
-- Put Python application code under `src/cadrumo/`; do not create parallel top-level implementations or ad-hoc import roots.
+- Put product Python code under its owning `src/` package and development-only registry compilation, authoring and migration tooling under `dev/registry/`. Runtime must not import the development compiler. Do not create parallel implementations or ad-hoc import roots.
 - Preserve the accepted dependency direction: domain code is independent of adapters; application services coordinate domain behavior; inbound, outbound, persistence, entrypoint, and core responsibilities remain separate.
 - Put every Python test below the narrowest owning `tests/` directory, never beside implementation modules as a naked `test_*.py`.
 - Keep the CLI root surface to `config` and `app`; extend the established hierarchy instead of adding a third root family.
@@ -44,7 +44,7 @@ trigger: always_on
 - Consumers import directly from that defining module. This applies to production code, tests, development tooling, plugins, dynamic imports, and type-only imports.
 - Package `__init__.py` files are inert namespace markers. Do not add exports, lazy maps, `__getattr__`, import forwarding, initialization side effects, or compatibility surfaces.
 - Do not create facade modules, re-export layers, alias modules, forwarding wrappers, duplicate definitions, or cross-package imports from private underscore modules.
-- Registry binding or resolver families live in their own public defining modules under `domain/calculations/registry/`, with their typed model, validator, and dispatch enrollment colocated at the owning boundary.
+- Registry domain declarations and runtime resolvers belong to their public defining domain modules; source compilation and corpus validation belong to the development compiler. Enroll each implementation at its owning dispatch boundary without moving development dependencies into runtime.
 
 ## Changes
 
@@ -88,9 +88,9 @@ trigger: always_on
 ## Filing-grade authority
 
 - A filing-affecting formula, rate, threshold, classification, or relationship must be grounded in the official AEAT/BOE authority that governs the exact modelo, revision, period, territory, and taxpayer conditions.
-- Cite the specific provision, official instruction, record design, schema, or worked example used. A generic landing page, search result, third-party summary, or another year is not sufficient authority.
+- Cite the specific provision, official instruction, record design, schema, or worked example used. A generic landing page, search result or third-party summary is not sufficient grounding. Preserve source-year and applicability scope; projection does not turn an earlier source into newly reviewed target-year evidence.
 - Preserve provenance from source capture through the compiled registry, calculation result, explanation, and filing handoff. A value without traceable authority cannot be promoted to filing grade.
-- Load behavior through the validated registry authority. Raw TOML inspection is useful for diagnosis but does not establish compiled behavior.
+- Runtime calculations consume validated published authority. Authoring and repair use the candidate-inspection and validation boundaries defined in `aeat-registry-authority-flow`; a missing published generation must not prevent evidence-backed source repair.
 
 ## Implementation
 
@@ -140,6 +140,7 @@ trigger: always_on
 - Write concise, outcome-oriented documentation in the user's language. State prerequisites, exact commands, observable results, failure behavior, and recovery where those facts matter.
 - Use the product name Cadrumo consistently. Use AEAT names, Spanish domain terms, and command tokens exactly as the product exposes them; do not invent synonyms for canonical concepts.
 - Keep each fact in one authoritative home. Link to that home instead of duplicating command inventories, schemas, legal claims, or status across documents.
+- Registry task briefs and handoffs name the target boundary: source edit, candidate verification, live source installation, authority publication or runtime adoption. State deliverables and measurable acceptance for the requested boundary; do not use ambiguous "live", "validated" or "done" for all of them.
 - Generated API and CLI references are owned by their generators. Change the source or generator, regenerate, and verify the diff; never hand-edit generated reference files.
 - Examples must be safe, runnable, and free of credentials, taxpayer data, machine-specific paths, and stale campaign state.
 
@@ -188,6 +189,8 @@ trigger: always_on
 - Use PowerShell-native quoting and path handling on Windows. Do not publish Unix-only command recipes as the sole project workflow.
 - Validate the narrow changed surface first, then the owning subsystem, then broader gates in proportion to risk. Re-run dependent commands sequentially when concurrent runs could contend for the same cache, database, port, or generated output.
 - Preserve the actual command, exit status, and complete failure identity. A truncated excerpt, passing retry without explanation, or background launch is not evidence of success.
+- A tool wait window is not a process failure. Resume the owned session to obtain its final result, and confirm the intended tests actually ran; default marker selections may exclude integration tests.
+- When proving a source transformation, identify both source and interpreting-tool dependencies. Use stable captured inputs and revalidate receipts before application; do not test a copied registry with changing compiler code and call the result current.
 - Use isolated temporary locations for destructive or detector-teeth checks. Resolve and verify exact paths before delete, move, overwrite, or cleanup operations.
 - Do not substitute a mocked service for a repository gate that claims to exercise the real integration. If an external dependency is unavailable, report that limitation explicitly.
 
@@ -270,8 +273,9 @@ that: the operations above destroy state that exists nowhere else.
 - To compare against a baseline, create a separate worktree
   (`git worktree add --detach <dir> HEAD`) and read from it. Never mutate the
   working tree to get a clean state.
-- To test whether a local edit causes a failure, copy the file aside and restore
-  it by copy, or evaluate the question from `git diff` output.
+- To test whether a local edit causes a failure, reproduce it in an isolated
+  fixture or snapshot, or evaluate the question from `git diff` output. Do not
+  temporarily overwrite shared files and later restore a potentially stale copy.
 - If work genuinely must be set aside, stop and ask the operator. Removing
   someone's uncommitted changes is their decision, never the agent's.
 
@@ -295,11 +299,20 @@ trigger: always_on
 - A gate exercises the real authority path, parser, compiler, resolver, calculation, or serializer whose contract it names. Mocking the production behavior under test is not acceptance evidence.
 - Test outcomes and invariants, not implementation trivia, frozen corpus counts, campaign milestones, or the mere presence of a string.
 - Positive tests prove the supported path. Negative tests prove malformed, ambiguous, unsupported, stale, and incomplete inputs fail closed at the owning boundary.
-- Round-trip tests compare canonical typed meaning, including absence, zero, precision, ordering, provenance, and revision identity; lossy equality is not sufficient.
+- Round-trip tests compare canonical typed meaning, including absence, zero, precision, contract-defined ordering, provenance, and revision identity. Mapping-key serialization order is not sequence order; exclusions require an explicit representation contract and independent checks of the meaning they omit.
+- Hydrated equivalence does not prove compact authoring. Delta acceptance independently measures redundant payload and overrides, unresolved shapes, coverage and idempotence. Discover the complete live inventory; a successful no-op or representative modelo is not registry-wide acceptance.
 
 ## Detector teeth
 
 A gate that protects a declaration or generated relationship must demonstrate that a representative defect is detected. Use an isolated fixture, temporary registry tree, or explicit test input; do not monkeypatch production modules globally or mutate the contributor's working tree. The defect proof and the normal path must both pass in the same test suite.
+
+## Repository enumeration
+
+Never use Git commands, the Git index, tracked-file lists, commit history, or branch state as the authority for a quality, completeness, parity, or packaging gate. Derive the expected set in-process from the current source tree and its checked-in inclusion, exclusion, catalogue, or schema policy.
+
+- Good: enumerate current files with `dev.source_tree.repository_files`, then project them through the packaging or corpus policy and compare that set with the built artifact.
+- Good: use Git in an explicitly named release workflow to inspect or publish a commit, where commit identity itself is the subject—not as a test oracle.
+- Bad: define expected wheel members, registry completeness, source coverage, or corpus parity with `git ls-files`, `git status`, or a commit diff.
 
 ## Layered validation
 
@@ -307,6 +320,7 @@ A gate that protects a declaration or generated relationship must demonstrate th
 - Overlapping gates are justified when they catch distinct failure modes. Remove duplicate tests that assert the same implementation detail without adding detection value.
 - Generated-reference checks compare generated output with the committed artifact through the owning generator.
 - A change is not complete while it introduces a new lint, type, test, schema, or Vaultspec failure. Pre-existing unrelated failures are reported separately with evidence.
+- Apply the stage-specific acceptance boundaries in `aeat-registry-authority-flow`. Name the failed invariant and affected input, distinguish new or worsened findings from unchanged baseline findings, and do not substitute an aggregate red/green status for that classification.
 
 ---
 name: aeat-registry-authority-flow
@@ -315,27 +329,35 @@ trigger: always_on
 
 # AEAT registry authority flow
 
-## Single authority path
+## Source, candidate and runtime boundaries
 
-- Registry source data is compiled, validated, and published through `ValidatedRegistryAuthority` and the established loader. Filing, calculation, pull, support reporting, and development diagnostics consume that authority rather than parsing raw files independently.
-- Registry source files are declarations, not a second runtime API. Direct file reads may diagnose source shape but cannot establish filing-grade behavior.
-- Public registry symbols are defined in semantically named public modules and imported directly. A curated re-export layer is still a facade and is forbidden; package initializers remain inert.
+- Authored source is the registry data physically stored on disk. A staged candidate is an isolated proposed replacement; it is not installed source or published authority.
+- Development authoring uses the canonical compiler, parser and hydrator. `inspect_authoring_candidate()` exposes typed candidate components, source/evidence fingerprints and validation findings; those components are not a `ValidatedRegistryAuthority`. This path is available when inspecting unpublished edits, including before the first publication.
+- `compile_validated_authority()` establishes full candidate validation. Successful compilation is not publication. Product runtime consumes the published authority through the canonical reader; it must not compile mutable source or fall back to raw TOML.
+- Raw-file comparisons may measure authored structure and duplication. Claims about hydrated meaning use canonical typed loading; claims about runtime behavior use the published generation. Never invent a second loader to cross these boundaries.
 
-## Registry identity and selection
+## Delta authoring and hydration
 
-- Modelo identity uses the canonical typed modelo representation. Revisions, filing periods, legal windows, and territorial or taxpayer applicability are explicit and validated.
-- Select a revision from the applicable law and filing context, never from filename ordering, newest-available fallback, or string comparison.
-- Fragmented declarations compile into one validated revision. Duplicate ownership, missing fragments, ambiguous casilla identity, invalid references, or conflicting declarations fail before publication.
-- Values used by calculations come from typed registry fields or their canonical configuration mechanism. Do not scatter regulatory constants through runtime code.
-- Cross-revision continuity is accepted only when the chain and its evolutions are grounded. A repeated box number or similar label is candidate evidence, not identity.
+- Store a baseline plus genuine field/value differences, new members, explicit removals and required ordering/scope metadata. Do not repeat a whole row or family merely because one field or evidence reference changes.
+- An omitted override inherits; an explicit removal deletes. Empty values, false, zero, sequence order and revision-specific assertions retain their typed meaning. A changed default must not silently change inherited provenance.
+- Storage selectors and baselines address payload, not legal identity. Missing `continuidad_id`, a lower capability grade or a changed physical representation is not by itself a prohibition on lossless storage reuse.
+- Preserve real continuity, review and capability claims with their original scope. Do not invent evidence, advance a review date or promote capability because payload is shared. A failed migration is a tool diagnostic, not a new legal no-predecessor declaration.
+- Conversion is modelo-independent and discovers authored revisions and dependencies from canonical metadata. Existing delta chains still undergo remaining-family conversion and redundant-override assessment; they are not automatically complete.
 
-## Publication and failure
+## Temporal selection
 
-- The authority publishes only a completely validated snapshot and never exposes a partially constructed generation.
-- Cache identity includes the authoritative source state and invalidates on relevant source or evidence changes. Callers receive isolated validated snapshots rather than mutable shared registry state.
-- Unsupported or insufficiently grounded capability fails closed or remains explicitly advisory. It must not be upgraded by a consumer-side fallback.
+- A projected edition supplies a missing temporal coordinate from the nearest eligible authored source through the canonical resolver, backward or forward and across internal gaps. It creates no copied source edition and asserts no new target-year review.
+- Resolve applicability branches, periods, ties and explicit divergences through the same typed selection contract for loaders, facts, runtime and support reporting. Do not select by lexical filenames or a consumer-specific newest-year fallback.
+- The registry's canonical support declaration owns the temporal envelope. Consumers must not introduce separate floor/ceiling constants or ranges. Historical sources outside the request envelope may remain required storage baselines.
+- Available projected data and eligibility for a particular operation are separate results. Preserve capability limitations without falsely treating an un-authored but resolvable edition as missing data.
 
-Authority: accepted registry/compiler and import-centralization architecture decisions plus the live registry authority tests.
+## Application, publication and completion
+
+- Prove source replacement with effective typed equivalence, independent minimality, complete assessment scope, idempotence and stable input receipts. Intentional semantic corrections need their own grounded change evidence rather than a claim of unchanged meaning.
+- Report unchanged publication-readiness defects separately from defects introduced by a representation rewrite. Unrelated unchanged defects do not automatically forbid a proven source-only replacement; full publication validation remains mandatory.
+- Installing source means the actual authoring tree matches the accepted candidate. Publishing means the active descriptor references the accepted content-addressed artifact. A temporary database, retained lock sidecar or passing compile is neither of those outcomes.
+- Publication verifies current source/evidence/compiler receipts and never exposes an incomplete generation. Runtime and packaging checks must identify the generation they actually consume; caches invalidate on relevant input or generation changes.
+- State completion separately for candidate validation, installed source, published authority and runtime/package adoption. Do not mark overall rollout complete while a required boundary remains unverified.
 
 ---
 name: aeat-registry-bindings
@@ -345,7 +367,7 @@ trigger: always_on
 # AEAT registry bindings
 
 - Each relationship family has a typed declaration, a typed validator enrolled in the canonical dispatch table, and a resolver at its owning public module.
-- Validation rejects unknown family names, invalid selectors, ambiguous targets, incompatible revisions, missing provenance, and unresolvable legal references. Do not accept a generic mapping and defer interpretation to callers.
+- Validation rejects unknown family names, invalid selectors, ambiguous targets, incompatible applicability, missing required provenance, and unresolvable legal references. Resolve inherited and projected declarations before evaluating the relationship; absent local payload is not itself a missing binding. Typed mapping-valued families are legitimate; unvalidated arbitrary mappings are not a substitute for their contract.
 - Aggregation source families use the canonical typed aggregation enum and resolver. A binding must not introduce a private summation path.
 - Source taxonomy distinguishes filing-grade, advisory, deferred, unsupported, and absent states. Consumers preserve that classification instead of converting it to a boolean or zero.
 - Binding provenance identifies the registry declaration and governing authority and survives into the resolved result and explanation.
@@ -510,6 +532,7 @@ trigger: always_on
 # Modelo export mirrors official structure
 
 - A modelo export derives its record order, field positions, widths, repetitions, encodings, and conditional sections from the official record design or schema for the selected revision.
+- Evaluate the hydrated selected layout, not whether that layout is fully copied into the requested edition. Storage reuse must preserve edition-local identity and conditions; it does not by itself establish filing eligibility for a projected request.
 - One canonical export builder and formula path owns both preview and emitted filing data. Do not maintain a second hand-built serializer or recompute values differently for display.
 - Every exported field maps to a validated registry concept and carries the same typed meaning, formatting, sign, rounding, and provenance used by calculation.
 - Fixed-width completeness is value-aware: distinguish absent, required blank, permitted blank, zero, and populated values. Padding a missing required value does not make a record complete.
@@ -526,6 +549,7 @@ trigger: always_on
 
 - Before the project declares a released public compatibility floor, remove displaced commands, imports, schemas, configuration keys, aliases, facades, wrappers, and data shapes in the same change that replaces them.
 - A passing old caller or test is not by itself a reason to preserve a legacy surface. Update repository consumers to the canonical contract and delete the old path.
+- Inherited baseline data is not obsolete merely because it is historical. Remove displaced duplicate payload only after proving reconstruction; retain required baselines and evidence. Keep recovery copies outside live authoring and packaging scope.
 - After a public compatibility floor exists, compatibility requires an explicit owner, supported-version window, migration or upgrader path, deprecation signal, and removal condition. Keep it at the boundary; do not duplicate domain implementations.
 - Persistent data migrations are forward, deterministic, idempotent, and tested from every supported stored version. Silent coercion or fallback from an unknown shape is forbidden.
 - Do not create a shim merely to stage an internal relocation. Canonical definitions and all consumers move atomically under `aeat-architecture-boundaries`.
@@ -540,6 +564,7 @@ trigger: always_on
 ## Preserve uncertainty
 
 - Missing, unknown, unsupported, deferred, advisory, not applicable, and proven zero are distinct states. Do not collapse any of them to zero, empty text, false, or a complete total.
+- Absence of an authored edition or override is not necessarily absent data: resolve canonical hydration and temporal projection first. Explicit deletions and genuinely missing taxpayer inputs must not be filled by that distinction.
 - A filing-grade result is complete only when every legally required input and dependency is present, validated, and covered by authority for the active filing context.
 - Suspicious zeros or absences at filing-bound fields produce a structured advisory or refusal with modelo, revision, field, source family, and reason. Diagnostics must reach the user-facing handoff.
 - A local calculation or prefill is not an official AEAT value. Label its origin and authority honestly.
@@ -564,9 +589,10 @@ trigger: always_on
 
 ## Storage and transport
 
-- Taxpayer, credential, banking, ledger, invoice, filing, and evidence payloads are stored only through the project's approved encrypted persistence boundary.
+- Private taxpayer, credential, banking, ledger, invoice, filing and associated evidence payloads are stored only through the project's approved encrypted persistence boundary.
+- Public AEAT/BOE publications, public registry definitions and synthetic fixtures are not private taxpayer evidence merely because they concern taxation. They may use the repository's canonical source/corpus storage. Check content for embedded private data; never use this distinction to reclassify a real filing or secret as public.
 - Do not write sensitive payloads to source files, fixtures, logs, exceptions, command history, caches, plaintext databases, temporary files, generated references, vault documents, or agent transcripts.
-- Persist evidence as encrypted bytes with integrity and provenance metadata. A filesystem path or remote URL is not a secure stored copy.
+- Persist private evidence as encrypted bytes with integrity and provenance metadata. A filesystem path or remote URL is not a secure stored copy.
 - Secrets come from the approved secret boundary and are never committed, echoed, serialized with domain data, or passed in command-line arguments when a safer channel exists.
 - Off-host transfer requires the explicitly approved encrypted integration and the minimum necessary fields. Do not upload real financial data to search, AI, analytics, paste, or debugging services.
 
@@ -574,7 +600,7 @@ trigger: always_on
 
 - Tests use synthetic or irreversibly anonymized data. A production-shaped fixture must still contain no real identity or secret.
 - Logs and user-visible diagnostics expose stable identifiers and remediation, not raw payloads. Redaction happens before serialization or transport.
-- Local development and automated agents must never submit, amend, sign, or otherwise write a live AEAT filing. Live remote behavior is read-only unless the operator gives explicit transaction-specific authorization through the product's guarded workflow.
+- Local registry source replacement and authority publication are not AEAT filing submissions. They require the authorization and verification for their own workflow. Writing or signing a real remote filing requires explicit transaction-specific authorization through the product's guarded workflow; ordinary development authorization does not permit it.
 - Cleanup of decrypted material is fail-safe and verified. If a workflow cannot guarantee secure lifetime and disposal, it must refuse the operation.
 
 Verification covers encryption at rest, redaction, temporary-material cleanup, secret handling, and refusal of unauthorized live writes.

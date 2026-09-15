@@ -10,6 +10,7 @@ test-owned cache directory; only the cache directory is isolated.
 
 from __future__ import annotations
 
+import pickle
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ import pytest
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
 
+from ..compiler._compiled_cache import _COMPILED_CACHE_SCHEMA_VERSION, _FRAME_SEPARATOR, _payload_digest
 from ..compiler.compiled_cache import (
     CompiledRegistryPayload,
     compiled_cache_path,
@@ -111,10 +113,11 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
         path.parent.mkdir(parents=True, exist_ok=True)
         # A frame with a valid schema version and a matching digest, but a foreign
         # payload object -- integrity passes, the structural type-check must not.
-        store_compiled_registry_cache(  # type: ignore[arg-type]
-            root,
-            fingerprints,
-            ("not", "a", "compiled", "registry"),
+        foreign_bytes = pickle.dumps(("not", "a", "compiled", "registry"), protocol=pickle.HIGHEST_PROTOCOL)
+        path.write_bytes(
+            _FRAME_SEPARATOR.join(
+                (_COMPILED_CACHE_SCHEMA_VERSION, _payload_digest(foreign_bytes), foreign_bytes),
+            ),
         )
 
         assert load_compiled_registry_cache(root, fingerprints) is None

@@ -462,8 +462,11 @@ async def _run_forge_command(command: list[str]) -> tuple[int, str, str]:
         process.kill()
         await process.wait()
         raise
+    returncode = process.returncode
+    if returncode is None:
+        raise RuntimeError("forge subprocess completed without a return code")
     return (
-        process.returncode,
+        returncode,
         stdout.decode(_UTF_8, errors="replace"),
         stderr.decode(_UTF_8, errors="replace"),
     )

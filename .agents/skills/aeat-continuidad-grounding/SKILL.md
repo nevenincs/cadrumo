@@ -1,7 +1,7 @@
 ---
 name: aeat-continuidad-grounding
-description: Ground or review cross-revision casilla continuity using the validated
-  registry authority and official AEAT/BOE evidence. Use when assigning a continuidad_id,
+description: Ground or review cross-revision casilla continuity using canonical typed
+  registry data and official AEAT/BOE evidence. Use when assigning a continuidad_id,
   authoring evolution records, resolving an ambiguous chain, or preparing a continuity
   worklist.
 ---
@@ -13,7 +13,9 @@ Continuity means two revision-specific casillas represent the same legal concept
 ## Guardrails
 
 - Work from the live repository and current registry schema. Do not reuse frozen corpus counts, copied inventories, or embedded scratch scripts.
-- Inspect compiled definitions through `bundled_authority()` from `cadrumo.domain.calculations.registry.authority`. Raw TOML is the authoring surface, not evidence of validated runtime behavior.
+- For deployed-state questions, inspect the published authority through `bundled_authority()` from `cadrumo.domain.calculations.registry.authority`.
+- For authoring and repair, inspect the intended current source or isolated candidate with `inspect_authoring_candidate()` from `dev.registry.compiler.authority`, whether or not a published generation exists. It uses the canonical parser, hydrator, typed definitions and full validator, captures registry and source-evidence fingerprints, and returns explicit findings. Its `components` are inspected candidate data, not a `ValidatedRegistryAuthority` and not runtime authority. A published snapshot is not evidence of unpublished edits.
+- Follow `aeat-registry-authority-flow` for delta storage, temporal projection and publication boundaries. Storage ancestry is not legal continuity; a projected edition is not newly authored or newly reviewed evidence. Missing continuity evidence alone does not prohibit lossless payload reuse.
 - Use official AEAT instructions, record designs, forms, and BOE provisions for identity. Treat search results and third-party summaries only as discovery aids.
 - Never infer continuity solely from a casilla number. Numbers can be reused, split, merged, or repurposed.
 - Do not mark a chain covered while a material semantic ambiguity remains. Leave it ungrounded and record the missing evidence.
@@ -22,7 +24,7 @@ Continuity means two revision-specific casillas represent the same legal concept
 
 ### 1. Build the candidate dossier
 
-Load the bundled validated authority and compare the relevant modelo revisions. For each candidate, collect:
+Identify whether the subject is deployed authority or current authoring source, load it through the corresponding canonical boundary above, and compare the relevant modelo revisions. Preserve the input identity and inspection fingerprints with the dossier. If `publication_valid` is false, investigate the returned findings and do not publish that candidate. A validator diagnostic is not itself legal evidence that a concept retired; resolve its cause against the source and official evidence. The absence of a published generation does not prevent this authoring workflow. For each candidate, collect:
 
 - modelo, revision, casilla identifier, label key, section, value type, unit, sign, formula or source role, applicability, and legal references;
 - predecessor and successor candidates, including number changes;
@@ -53,25 +55,25 @@ Assign one stable `continuidad_id` to the proven concept across revisions.
 
 ### 4. Author stamps and evolutions
 
-Stamp every member of the proven chain. For each divergent transition, add the required evolution record at the revision boundary where the change becomes effective.
+Ensure every member of the proven chain resolves to the grounded identity. Author only the necessary delta fields; do not restate inherited rows or fabricate an edition for a projected year. For each divergent transition, add the required evolution record at the revision boundary where the change becomes effective, preserving its revision-local evidence scope.
 
 The evolution records the exact semantic change, affected predecessor/successor, and official evidence. Do not use an evolution entry to excuse an identity break. Splits, merges, and repurposing must follow the live cross-revision schema and validator rather than prose conventions.
 
-Edit only the authoritative registry declarations. Locale reuse follows from grounded continuity; do not force shared translations before the chain is valid.
+When implementation is requested, apply corrections to the actual authoring declarations within the agreed scope; a scratch candidate alone is not a live correction. Review-only requests do not authorize source edits. Locale reuse follows from grounded continuity; do not force shared translations before the chain is valid.
 
 ### 5. Validate before claiming coverage
 
 Run the focused gates sequentially so failures remain attributable:
 
 ```powershell
-uv run pytest tests/test_cross_revision_drift.py -q
-uv run pytest tests/test_registry_locales_parity.py -q
-uv run pytest tests/test_casilla_fragment_naming.py -q
-uv run pytest tests/test_continuidad_completeness_ratchet.py -q
+uv run --no-sync pytest -o addopts='' -n 0 -q dev/registry/tests/test_cross_revision_drift.py
+uv run --no-sync pytest -o addopts='' -n 0 -q dev/registry/tests/test_registry_locales_parity.py
+uv run --no-sync pytest -o addopts='' -n 0 -q dev/registry/tests/test_casilla_fragment_naming.py
+uv run --no-sync pytest -o addopts='' -n 0 -q dev/registry/tests/test_continuidad_completeness_ratchet.py
 ```
 
-Also run the owning modelo registry tests when declarations changed. A successful raw-file parse is not sufficient; the compiled authority and strict cross-revision validator must accept the chain.
+Also run the owning modelo registry tests when declarations changed. A successful raw-file parse or typed inspection is not sufficient. Before publication, `compile_validated_authority()` must succeed and return the validated object; inspection findings must be empty and the strict cross-revision validator must accept the chain. Never convert an inspected candidate into runtime authority or bypass a finding.
 
 ## Handoff
 
-Report the chain identifier, revisions and casillas covered, official evidence used, evolution classifications, files changed, commands and exit statuses, and any candidates deliberately left ambiguous. Do not report a reduced baseline or a passing count as proof that identity was grounded.
+Report the chain identifier, revisions and casillas covered, official evidence used, evolution classifications, files changed, commands and exit statuses, and any candidates deliberately left ambiguous. Distinguish inspected candidate, installed source, compiled authority and published/runtime state. Do not report a reduced baseline or a passing count as proof that identity was grounded.

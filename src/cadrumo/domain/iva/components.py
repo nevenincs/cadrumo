@@ -14,11 +14,12 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Any, Literal, Self, override
+from typing import Literal, Self, override
 
 from pydantic import Field, ValidationInfo, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.type_guards import is_object_list, is_object_mapping, is_str_keyed_dict
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import (
     GovernedFactSource,
@@ -335,7 +336,7 @@ class IvaCategoryComponents(IvaStrictFrozen):
         """Enforce the internal coherence the table's readers rely on."""
         label = f"IvaCategoryComponents[{self.category.value}/{self.kind.value}]"
         component_vocabulary: IvaComponentVocabulary | None = None
-        if isinstance(info.context, Mapping):
+        if is_object_mapping(info.context):
             context_vocabulary = info.context.get("component_vocabulary")
             if isinstance(context_vocabulary, IvaComponentVocabulary):
                 component_vocabulary = context_vocabulary
@@ -347,7 +348,7 @@ class IvaCategoryComponents(IvaStrictFrozen):
         self._validate_applicability(label, component_vocabulary)
         self._validate_reference_integrity(label)
         no_settlement_token: IvaCuotaSettlement | None = None
-        if isinstance(info.context, Mapping):
+        if is_object_mapping(info.context):
             context_token = info.context.get("cuota_settlement_no_token")
             if isinstance(context_token, IvaCuotaSettlement):
                 no_settlement_token = context_token
@@ -694,10 +695,10 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
         if raw_row is None:
             raise IvaValidationError(f"IVA component mapping is missing row {row_key!r}")
         try:
-            decoded = json.loads(raw_row)
+            decoded: object = json.loads(raw_row)
         except json.JSONDecodeError as exc:
             raise IvaValidationError(f"IVA component row {row_key!r} is not valid JSON") from exc
-        if not isinstance(decoded, Mapping):
+        if not is_str_keyed_dict(decoded):
             raise IvaValidationError(f"IVA component row {row_key!r} must decode as an object")
         for field in observed:
             value = decoded.get(field)
@@ -953,10 +954,10 @@ def _project_component_catalogue(
         if raw_row is None:
             raise IvaValidationError(f"IVA component mapping is missing row {row_key!r}")
         try:
-            decoded: Any = json.loads(raw_row)
+            decoded: object = json.loads(raw_row)
         except json.JSONDecodeError as exc:
             raise IvaValidationError(f"IVA component row {row_key!r} is not valid JSON") from exc
-        if not isinstance(decoded, Mapping):
+        if not is_str_keyed_dict(decoded):
             raise IvaValidationError(f"IVA component row {row_key!r} must decode as an object")
         if "cuota_settlement" not in decoded:
             raise IvaValidationError(f"IVA component row {row_key!r} is missing cuota settlement")
@@ -975,7 +976,7 @@ def _project_component_catalogue(
                 ) from exc
         for reference_field in ("legal_refs", "pending_legal_refs"):
             raw_references = decoded.get(reference_field, ())
-            if not isinstance(raw_references, list) or any(not isinstance(item, str) for item in raw_references):
+            if not is_object_list(raw_references) or any(not isinstance(item, str) for item in raw_references):
                 raise IvaValidationError(
                     f"IVA component row {row_key!r} has invalid {reference_field}",
                 )

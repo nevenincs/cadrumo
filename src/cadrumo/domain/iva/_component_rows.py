@@ -8,19 +8,18 @@ conversion boundary used by callers that already queried that registry.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
 
 from .components import IvaCategoryComponents, IvaComponentVocabulary, IvaCuotaSettlement
 
 
 def component_row_from_registry(
-    payload: Mapping[str, Any],
+    payload: Mapping[str, object],
     *,
     cuota_settlement_no_token: IvaCuotaSettlement | None = None,
     component_vocabulary: IvaComponentVocabulary | None = None,
 ) -> IvaCategoryComponents:
     """Validate one registry-projected component row as the typed model."""
-    context = None
+    context: dict[str, object] | None = None
     if cuota_settlement_no_token is not None or component_vocabulary is not None:
         context = {}
         if cuota_settlement_no_token is not None:

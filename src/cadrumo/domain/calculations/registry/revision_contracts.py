@@ -27,6 +27,7 @@ from pydantic import (
 )
 
 from ....core.toml import freeze_toml_value
+from ....core.type_guards import is_object_mapping
 from .errors import RegistryValidationError
 from .ids import RegistryRevisionNodeId, RevisionId
 from .period_selector_overlap import period_selectors_overlap
@@ -122,7 +123,7 @@ def _predecessor_declaration_kind(value: object) -> str | None:
         return _DECLARED_PREDECESSOR_TAG
     if isinstance(value, NoPredecessor):
         return _NO_PREDECESSOR_KEY
-    if isinstance(value, Mapping) and set(value) == {_NO_PREDECESSOR_KEY}:
+    if is_object_mapping(value) and set(value) == {_NO_PREDECESSOR_KEY}:
         return _NO_PREDECESSOR_KEY
     return None
 
@@ -134,7 +135,7 @@ def _hydrate_declared_predecessor(value: object) -> object:
 
 
 def _hydrate_no_predecessor(value: object) -> object:
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         return freeze_toml_value(value[_NO_PREDECESSOR_KEY])
     return value
 
@@ -360,7 +361,7 @@ def validate_predecessor_date_agreement(
             predecessor.period_selector,
         ):
             continue
-        if predecessor.valid_from < successor.valid_from:  # type: ignore[operator]
+        if predecessor.valid_from < successor.valid_from:
             continue
         raise RegistryValidationError(
             f"{subject_kind} {subject_id!r} revision {edition!r} {_describe(successor)} declares predecessor "
@@ -373,20 +374,20 @@ def _describe(window: RevisionWindow) -> str:
     valid_from = window.valid_from
     valid_to = window.valid_to
     selector = window.period_selector
-    end = valid_to.isoformat() if valid_to is not None else "open"  # type: ignore[union-attr]
+    end = valid_to.isoformat() if valid_to is not None else "open"
     if selector is None:
         years = "any year"
         periods = "any period"
     elif selector.years:
         years = ", ".join(str(year) for year in selector.years)
         periods = ", ".join(str(period) for period in selector.declared_periods)
-    elif selector.year_from is None:  # type: ignore[union-attr]
+    elif selector.year_from is None:
         years = "any year"
         periods = ", ".join(str(period) for period in selector.declared_periods)
     else:
         years = f"{selector.year_from} to {selector.year_to if selector.year_to is not None else 'open'}"
         periods = ", ".join(str(period) for period in selector.declared_periods)
-    return f"(valid {valid_from.isoformat()} to {end}; years {years}; periods {periods})"  # type: ignore[union-attr]
+    return f"(valid {valid_from.isoformat()} to {end}; years {years}; periods {periods})"
 
 
 def _period_scopes_overlap(left: PeriodSelector | None, right: PeriodSelector | None) -> bool:

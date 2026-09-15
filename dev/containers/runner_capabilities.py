@@ -78,6 +78,7 @@ def version_probe(executable: str) -> tuple[bool, str]:
         return False, "not on PATH"
     completed = run_command(
         [resolved, "--version"],
+        cwd=Path.cwd(),
     )
     if completed.returncode != 0:
         return False, f"present at {resolved} but --version failed: {completed.stderr.strip()[:120]}"
@@ -143,6 +144,7 @@ def _check_docker_for_nested_smoke() -> Finding | None:
         return Finding("docker", ok=False, detail="not on PATH; packaging-smoke's container lane cannot run")
     completed = run_command(
         [resolved, "version", "--format", "{{.Server.Version}}"],
+        cwd=Path.cwd(),
     )
     if completed.returncode != 0:
         return Finding(

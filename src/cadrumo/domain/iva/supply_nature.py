@@ -56,13 +56,18 @@ class StatutoryCitation(BaseModel):
     establishes: SupplyNature | None = None
 
 
+def _empty_category_citations() -> dict[IvaCategory, tuple[str, ...]]:
+    """Build the typed default for a projected category-to-citation map."""
+    return {}
+
+
 @dataclass(frozen=True, slots=True)
 class CitationCatalogue:
     """Registry-projected citation rows and namespace qualifiers."""
 
     citations: tuple[StatutoryCitation, ...]
     qualifiers: tuple[str, ...]
-    category_citations: Mapping[IvaCategory, tuple[str, ...]] = field(default_factory=dict)
+    category_citations: Mapping[IvaCategory, tuple[str, ...]] = field(default_factory=_empty_category_citations)
 
 
 class SupplyNatureDerivationOutcome(StrEnum):

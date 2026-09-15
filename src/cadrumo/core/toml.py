@@ -32,7 +32,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import date, datetime, time
 from pathlib import Path
 
-from .type_guards import is_object_dict, is_object_list
+from .type_guards import is_object_dict, is_object_list, is_object_list_or_tuple, is_object_mapping
 
 #: A table's position in a rendered document: its keys, with the index of the
 #: element for each array of tables it sits in.
@@ -161,7 +161,7 @@ def _render_table(
     nested: list[tuple[str, object]] = []
     for raw_key, value in table.items():
         key = _table_key(raw_key)
-        (nested if isinstance(value, Mapping) or _is_table_array(value) else plain).append((key, value))
+        (nested if is_object_mapping(value) or _is_table_array(value) else plain).append((key, value))
     comment = comments.get(path)
     if comment is not None:
         if lines and lines[-1]:
@@ -176,23 +176,37 @@ def _render_table(
         lines.append(f"[[{dotted}]]" if array_element else f"[{dotted}]")
     lines.extend(f"{_render_key(key)} = {_render_inline(value)}" for key, value in plain)
     for key, value in nested:
-        if isinstance(value, Mapping):
-            _render_table(value, (*keys, key), (*path, key), comments, lines, header=True)
+        if is_object_mapping(value):
+            _render_table(_str_keyed_mapping(value), (*keys, key), (*path, key), comments, lines, header=True)
             continue
         for index, element in enumerate(_as_sequence(value)):
-            if isinstance(element, Mapping):
+            if is_object_mapping(element):
                 _render_table(
-                    element, (*keys, key), (*path, key, index), comments, lines, header=True, array_element=True
+                    _str_keyed_mapping(element),
+                    (*keys, key),
+                    (*path, key, index),
+                    comments,
+                    lines,
+                    header=True,
+                    array_element=True,
                 )
 
 
 def _is_table_array(value: object) -> bool:
     elements = _as_sequence(value)
-    return bool(elements) and all(isinstance(element, Mapping) for element in elements)
+    return bool(elements) and all(is_object_mapping(element) for element in elements)
 
 
 def _as_sequence(value: object) -> Sequence[object]:
-    return value if isinstance(value, list | tuple) else ()
+    return value if is_object_list_or_tuple(value) else ()
+
+
+def _str_keyed_mapping(value: Mapping[object, object]) -> Mapping[str, object]:
+    """Copy a mapping after validating that every table key is a string."""
+    result: dict[str, object] = {}
+    for key, item in value.items():
+        result[_table_key(key)] = item
+    return result
 
 
 def _table_key(key: object) -> str:
@@ -229,9 +243,9 @@ def _render_inline(value: object) -> str:
         return _render_string(value)
     if isinstance(value, datetime | date | time):
         return value.isoformat()
-    if isinstance(value, Mapping):
+    if is_object_mapping(value):
         items = ", ".join(f"{_render_key(_table_key(key))} = {_render_inline(item)}" for key, item in value.items())
         return f"{{ {items} }}" if items else "{}"
-    if isinstance(value, list | tuple):
+    if is_object_list_or_tuple(value):
         return "[" + ", ".join(_render_inline(item) for item in value) + "]"
     raise TypeError(f"value of type {type(value).__name__} has no TOML form")
