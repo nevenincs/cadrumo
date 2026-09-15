@@ -134,7 +134,10 @@ def test_the_grounding_row_reads_the_two_articles_the_manual_reasons_through() -
             operation=_authority_operation_for_test,
         )
         rule = place_of_supply_rule(
-            result.matched_rule_id, on=date(oracle["source"]["year"], 6, 15), operation=_authority_operation_for_test
+            result.matched_rule_id,
+            on=date(oracle["source"]["year"], 6, 15),
+            operation=_authority_operation_for_test,
+            projected_year=date(oracle["source"]["year"], 6, 15).year,
         )
 
         assert expected["located_by"] in rule.legal_references

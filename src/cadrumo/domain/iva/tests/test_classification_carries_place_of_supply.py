@@ -110,7 +110,10 @@ def test_cross_border_result_carries_its_governing_article_and_nature() -> None:
         assert (
             grounding.supply_nature
             == place_of_supply_rule(
-                result.matched_rule_id, on=_GROUNDED_DAY, operation=_authority_operation_for_test
+                result.matched_rule_id,
+                on=_GROUNDED_DAY,
+                operation=_authority_operation_for_test,
+                projected_year=_GROUNDED_DAY.year,
             ).supply_nature
         )
 
