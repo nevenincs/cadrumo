@@ -768,7 +768,7 @@ test-pytest-harness:
 [doc('Run the unit test suite in parallel. Streams failure identities as they happen.')]
 [group('test')]
 test-unit durations="":
-    @uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{calculation_exclusions}} {{ if durations == "" { "" } else { "--durations=" + durations } }}
+    @uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{harness_exclusions}} {{calculation_exclusions}} {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Focused subsystem selectors use the same explicit offline-capability boundary
 # as the full lanes. Each runs ordinary tests under xdist and isolation-sensitive
