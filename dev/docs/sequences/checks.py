@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.command_execution import run_command
 
 from .compare import check_transcript, evaluate_expectations
 from .contracts import read_sequence_contract
@@ -449,15 +450,11 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
         environment = _english_pinned_env()
         environment[_PROGRESS_JOURNAL_ENV] = str(journal)
         try:
-            result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
+            result = run_command(
                 command,
                 cwd=REPO_ROOT,
-                env=environment,
-                capture_output=True,
-                text=True,
-                encoding=_UTF_8,
-                timeout=timeout,
-                check=False,
+                environment=environment,
+                timeout_seconds=timeout,
             )
         except subprocess.TimeoutExpired as exc:
             raise SequenceEngineError(_timeout_progress_diagnostic(journal, timeout=timeout)) from exc

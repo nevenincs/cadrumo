@@ -37,7 +37,7 @@ from ....core.config import Settings, load_settings
 from ....core.config_support import SecretStoreBackend
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
-from ....core.package_version import PACKAGE_VERSION as __version__
+from ....core.package_version import PACKAGE_VERSION
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ._isolated_profile_storage_fixtures import _isolated_state
@@ -335,7 +335,7 @@ def test_installed_console_exposes_contextual_product_identity(tmp_path: Path) -
     )
 
     assert version.returncode == 0, version.stderr
-    assert version.stdout == f"{PRODUCT_IDENTITY.display_name} {__version__}\n"
+    assert version.stdout == f"{PRODUCT_IDENTITY.display_name} {PACKAGE_VERSION}\n"
     assert help_result.returncode == 0, help_result.stderr
     assert help_result.stdout.startswith(f"{PRODUCT_IDENTITY.display_name} -")
     assert f"{PRODUCT_IDENTITY.cli_executable} config" in help_result.stdout

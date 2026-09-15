@@ -95,7 +95,7 @@ _MISSING_PARAMETER_PREFIXES: tuple[tuple[str, str, str, str], ...] = (
 
 def _localised_missing_prefix(rendered: str) -> str:
     """Swap Typer's English ``Missing …`` prefix for its localised equivalent."""
-    for match_prefix, key, default, strip_prefix in _MISSING_PARAMETER_PREFIXES:
+    for match_prefix, key, _default, strip_prefix in _MISSING_PARAMETER_PREFIXES:
         if rendered.startswith(match_prefix):
             return f"{tr(key)}{rendered.removeprefix(strip_prefix)}"
     return rendered

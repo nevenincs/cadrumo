@@ -19,13 +19,14 @@ what a consumer downloads.
 from __future__ import annotations
 
 import shutil
-import subprocess
 import tarfile
 from pathlib import PurePosixPath
 
 import pytest
 
 from dev._paths import REPO_ROOT
+
+from ..command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -57,13 +58,12 @@ def sdist_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
     if uv is None:
         raise AssertionError("uv binary not found on PATH; the sdist test-tree gate cannot build its subject")
     out_dir = tmp_path_factory.mktemp("sdist-test-tree")
-    subprocess.run(  # noqa: S603 - argv is an explicit internal build command.
+    completed = run_command(
         [uv, "build", "--sdist", "--out-dir", str(out_dir)],
         cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
     )
+    if completed.returncode != 0:
+        raise RuntimeError(f"uv sdist build failed: {completed.stderr}")
     archives = sorted(out_dir.glob("cadrumo-*.tar.gz"))
     if len(archives) != 1:
         raise AssertionError(f"expected exactly one cadrumo-*.tar.gz in {out_dir}; got {[p.name for p in archives]!r}")

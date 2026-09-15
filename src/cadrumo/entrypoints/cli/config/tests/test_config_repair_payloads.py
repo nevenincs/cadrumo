@@ -17,15 +17,6 @@ def _repair_payload() -> dict[str, object]:
         "package_version": "1.0.0",
         "python_version": "3.13",
         "log_file": "cadrumo.log",
-        "registry": {
-            "available": True,
-            "registry_root": "registry",
-            "modelo_count": 1,
-            "revision_count": 1,
-            "casilla_count": 2,
-            "formula_count": 2,
-            "revision_ids": ["modelo-303-v1"],
-        },
         "setup": None,
         "secure_objects": {
             "namespaces": [{"namespace": "workflow", "readable": 1, "unreadable": 0}],
@@ -50,7 +41,6 @@ def test_config_repair_payload_projects_all_nested_sections() -> None:
     result = ConfigRepairResult.model_validate(_repair_payload())
 
     assert result.overall == "warn"
-    assert result.registry.revision_ids == ["modelo-303-v1"]
     assert result.secure_objects.namespaces[0].namespace == "workflow"
     assert result.checks[0].findings[0].requirement == "required"
     check_payload = result.checks[0].model_dump(mode="json")

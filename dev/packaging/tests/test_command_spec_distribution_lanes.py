@@ -17,6 +17,7 @@ import pytest
 
 from dev.source_tree import repository_files, snapshot
 
+from ..command_execution import run_command
 from ..python_cohort import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -157,7 +158,14 @@ print(json.dumps({
 
 
 def _run(command: list[str], *, cwd: Path) -> None:
-    subprocess.run(command, cwd=cwd, check=True, capture_output=True, text=True)  # noqa: S603
+    completed = run_command(command, cwd=cwd)
+    if completed.returncode != 0:
+        raise subprocess.CalledProcessError(
+            completed.returncode,
+            command,
+            output=completed.stdout,
+            stderr=completed.stderr,
+        )
 
 
 def _tracked_checkout(tmp_path: Path) -> Path:
@@ -209,13 +217,10 @@ def _install_and_probe(*, uv: str, artifact: Path, target: Path, checkout: Path)
     environment["AEAT_INSTALL_SITE"] = str(target)
     dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
     environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
-    completed = subprocess.run(  # noqa: S603
+    completed = run_command(
         [sys.executable, "-S", "-c", _PROBE],
         cwd=checkout.parent,
-        env=environment,
-        check=False,
-        capture_output=True,
-        text=True,
+        environment=environment,
     )
     assert completed.returncode == 0, completed.stderr
     return cast("dict[str, object]", json.loads(completed.stdout))

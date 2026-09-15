@@ -177,6 +177,21 @@ def test_nonminimal_unchanged_candidate_is_reported_as_a_converter_defect(tmp_pa
     assert result["source_apply_readiness"] == verification.CheckStatus.FAILED
 
 
+def test_canonical_converter_carries_cross_model_dependency_closure_into_idempotence(tmp_path: Path) -> None:
+    source = verification.REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "390"
+    candidate = tmp_path / "candidates" / "390" / "registry" / "aeat" / "modelos" / "390"
+    candidate.parent.mkdir(parents=True)
+    shutil.copytree(source, candidate)
+
+    verification.canonical_converter(source, candidate)
+    first = verification.fingerprint_digest(verification.fingerprint_tree(candidate))
+    assert (candidate.parent / "303").is_dir()
+
+    verification.canonical_converter(candidate, candidate)
+
+    assert verification.fingerprint_digest(verification.fingerprint_tree(candidate)) == first
+
+
 def test_typed_comparison_preserves_absence_false_zero_empty_and_order(tmp_path: Path) -> None:
     source = _build_modelo(tmp_path / "source")
     before = verification.load_modelo_directory(source)

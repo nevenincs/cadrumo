@@ -57,6 +57,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _SUPPLY_DATE = date(2025, 7, 15)
+_DEFAULT_OSS_REGIME = OssIossRegime("union_scheme")
+_DEFAULT_DESTINATION = EUMemberState._from_registry("de")
+_DEFAULT_RATE_KIND = IvaRateKind("general")
+_DEFAULT_TRANSACTION_KIND = TransactionKind("oss_union_services")
 
 
 @cache
@@ -69,11 +73,11 @@ def _candidate(
     *,
     ledger_id: str = "ledger-1",
     transaction_date: date = _SUPPLY_DATE,
-    regime: OssIossRegime = OssIossRegime("union_scheme"),
-    destination: EUMemberState = EUMemberState._from_registry("de"),
-    rate_kind: IvaRateKind = IvaRateKind("general"),
+    regime: OssIossRegime = _DEFAULT_OSS_REGIME,
+    destination: EUMemberState = _DEFAULT_DESTINATION,
+    rate_kind: IvaRateKind = _DEFAULT_RATE_KIND,
     direction: InvoiceKind = InvoiceKind.ISSUED,
-    transaction_kind: TransactionKind = TransactionKind("oss_union_services"),
+    transaction_kind: TransactionKind = _DEFAULT_TRANSACTION_KIND,
     base: Decimal = Decimal("100"),
     iva: Decimal = Decimal("19"),
 ) -> OssIossLedgerCandidate:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import TypeVar, override
+from typing import override
 
 from .....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .....application.auth.operator_scope_ports import OperatorScopePorts
@@ -34,7 +34,6 @@ from .declarations_capture import (
 from .declarations_schema import Declaracion
 from .schema import FiledDeclaracionArtefact
 
-_T = TypeVar("_T")
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
 
 
@@ -47,7 +46,7 @@ def _translate_adapter_error(operation: str, exc: Exception) -> LiveApplicationE
     )
 
 
-async def _call_adapter(operation: str, callback: Callable[[], Awaitable[_T]]) -> _T:
+async def _call_adapter[T](operation: str, callback: Callable[[], Awaitable[T]]) -> T:
     """Invoke one Sede capability and translate its exception at this boundary."""
     try:
         return await callback()

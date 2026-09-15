@@ -35,6 +35,7 @@ _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _Q2_2026 = Period.from_year_and_code(2026, "2T")
 _Q3_2026 = Period.from_year_and_code(2026, "3T")
 _Q4_2027 = Period.from_year_and_code(2027, "4T")
+_DEFAULT_CASH_ACCOUNTING_TREATMENT = IvaCashAccountingTreatment("none")
 
 
 def _revision_303():
@@ -69,7 +70,7 @@ def _transaction(
     booked_date: date,
     taxable_base: Decimal,
     iva_amount: Decimal,
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment("none"),
+    cash_accounting_treatment: IvaCashAccountingTreatment = _DEFAULT_CASH_ACCOUNTING_TREATMENT,
     operation_date: date | None = None,
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = (),
 ) -> Transaction:

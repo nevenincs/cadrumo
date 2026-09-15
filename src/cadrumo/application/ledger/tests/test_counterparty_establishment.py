@@ -67,13 +67,14 @@ _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _SUPPLIER_CIF = "B12345674"
 _OTHER_CIF = "B87654321"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
+_DEFAULT_SCOPE = IvaTerritorialScope._from_registry("es_canarias")
 
 
 def _confirm(
     repository: CounterpartyEstablishmentRepositoryProtocol,
     *,
     tax_identifier: str = _SUPPLIER_CIF,
-    scope: IvaTerritorialScope = IvaTerritorialScope._from_registry("es_canarias"),
+    scope: IvaTerritorialScope = _DEFAULT_SCOPE,
     note: str = "",
 ) -> ConfirmedCounterpartyFacts:
     return record_confirmed_counterparty_facts(

@@ -39,6 +39,7 @@ the second converted gate inherits this convention instead of inventing its own.
 
 from __future__ import annotations
 
+import asyncio
 import subprocess
 import sys
 import time
@@ -213,6 +214,42 @@ class SubprocessTiming:
     stderr: str
 
 
+async def _communicate_child(
+    argv: Sequence[str],
+    *,
+    env: Mapping[str, str] | None,
+    cwd: str | None,
+    timeout_s: float,
+    accounting: WindowsJobCpuAccounting | None = None,
+) -> tuple[str, str, int]:
+    """Spawn an explicit child, optionally enrolling it in Windows accounting."""
+    process = await asyncio.create_subprocess_exec(
+        *argv,
+        cwd=cwd,
+        env=env,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    if accounting is not None:
+        raw_process = process._transport.get_extra_info("subprocess")
+        if raw_process is None:
+            process.kill()
+            await process.communicate()
+            raise ProcessCpuMeasurementError("asyncio did not expose the Windows child handle")
+        accounting.assign(raw_process)
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout_s)
+    except TimeoutError as error:
+        process.kill()
+        await process.communicate()
+        raise subprocess.TimeoutExpired(list(argv), timeout_s) from error
+    return (
+        stdout.decode(_UTF_8, errors="strict"),
+        stderr.decode(_UTF_8, errors="strict"),
+        process.returncode,
+    )
+
+
 def timed_subprocess(
     argv: Sequence[str],
     *,
@@ -239,25 +276,17 @@ def timed_subprocess(
         accounting = WindowsJobCpuAccounting()
         try:
             started = time.monotonic()
-            process = subprocess.Popen(  # noqa: S603 - fixed resolved executable and declarative argv
-                argv_list,
-                cwd=run_cwd,
-                env=run_env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding=_UTF_8,
-                errors="strict",
+            stdout, stderr, returncode = asyncio.run(
+                _communicate_child(
+                    argv_list,
+                    env=run_env,
+                    cwd=run_cwd,
+                    timeout_s=timeout_s,
+                    accounting=accounting,
+                )
             )
-            accounting.assign(process)
-            try:
-                stdout, stderr = process.communicate(timeout=timeout_s)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                raise
             elapsed = time.monotonic() - started
             cpu_seconds = accounting.cpu_seconds()
-            returncode = process.returncode
         finally:
             accounting.close()
     else:
@@ -265,21 +294,17 @@ def timed_subprocess(
 
         before = resource.getrusage(resource.RUSAGE_CHILDREN)
         started = time.monotonic()
-        completed = subprocess.run(  # noqa: S603 - fixed resolved executable and declarative argv
-            argv_list,
-            cwd=run_cwd,
-            env=run_env,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
-            errors="strict",
-            timeout=timeout_s,
-            check=False,
+        stdout, stderr, returncode = asyncio.run(
+            _communicate_child(
+                argv_list,
+                env=run_env,
+                cwd=run_cwd,
+                timeout_s=timeout_s,
+            )
         )
         elapsed = time.monotonic() - started
         after = resource.getrusage(resource.RUSAGE_CHILDREN)
         cpu_seconds = (after.ru_utime - before.ru_utime) + (after.ru_stime - before.ru_stime)
-        stdout, stderr, returncode = completed.stdout, completed.stderr, completed.returncode
 
     return SubprocessTiming(
         wall_seconds=elapsed,

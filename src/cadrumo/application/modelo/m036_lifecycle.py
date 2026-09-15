@@ -126,8 +126,9 @@ class M036DeclarationResult(BaseModel):
     bucket scope of the record, and the timestamp at which the local
     record was written. The ``bucket_id`` field bridges the persistence
     capability's bucket cross-check when loading and saving records (it refuses
-    payloads whose bucket disagrees with the repository binding). Downstream consumers (stale-cascade engine, profile-state
-    re-derivation) read these fields to decide what to recompute.
+    payloads whose bucket disagrees with the repository binding). Downstream
+    consumers (stale-cascade engine, profile-state re-derivation) read these
+    fields to decide what to recompute.
 
     The record is the payload model for the application-owned declaration
     repository capability.

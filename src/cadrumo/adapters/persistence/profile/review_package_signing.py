@@ -27,6 +27,7 @@ class ReviewPackageSigningKeypairAdapter:
     """Concrete signing-keypair capability backed by encrypted storage."""
 
     def __init__(self, *, repository: SecureObjectRepository, bucket_id: str) -> None:
+        """Bind signing-key storage to one canonical bucket."""
         self._repository = repository
         self._bucket_id = canonical_bucket_id(bucket_id)
 

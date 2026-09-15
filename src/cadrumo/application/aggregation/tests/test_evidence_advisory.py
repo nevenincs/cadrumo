@@ -39,6 +39,7 @@ from ..evidence_advisory import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 
 def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
@@ -69,7 +70,7 @@ def _tx(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
-    iva_category: IvaCategory | None = IvaCategory("domestic_general"),
+    iva_category: IvaCategory | None = _DEFAULT_IVA_CATEGORY,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
     attachment_ids: tuple[str, ...] = (),
     purchase_invoice_evidence_id: str | None = None,

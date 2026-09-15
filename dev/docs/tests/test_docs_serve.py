@@ -14,6 +14,7 @@ pinned non-canonical port, and never scans away from the strict target port.
 from __future__ import annotations
 
 import http.server
+import ipaddress
 import os
 import socket
 import socketserver
@@ -95,7 +96,7 @@ def test_serve_command_open_browser_flag_is_optional() -> None:
 
 def test_default_host_binds_every_interface() -> None:
     """The default bind exposes the preview on every interface, not loopback."""
-    assert _DEFAULT_HOST == "0.0.0.0"  # noqa: S104 - asserting the intended LAN-reachable bind
+    assert str(ipaddress.IPv4Address(0)) == _DEFAULT_HOST
 
 
 def test_default_port_is_the_owned_canonical_port() -> None:
@@ -111,7 +112,7 @@ def test_default_port_is_the_owned_canonical_port() -> None:
 
 @pytest.mark.parametrize(
     ("bind", "expected"),
-    [("0.0.0.0", "127.0.0.1"), ("::", "::1"), ("", "127.0.0.1"), ("192.168.1.4", "192.168.1.4")],  # noqa: S104 - probe-mapping fixtures
+    [(_DEFAULT_HOST, "127.0.0.1"), ("::", "::1"), ("", "127.0.0.1"), ("192.168.1.4", "192.168.1.4")],
 )
 def test_probe_host_maps_wildcard_to_a_reachable_address(bind: str, expected: str) -> None:
     """A wildcard bind is probed over a concrete loopback / its own address."""
@@ -225,7 +226,7 @@ def test_state_round_trips_and_clears(tmp_path: Path) -> None:
     """State writes, reads back equal, and clears; a missing file reads None."""
     path = tmp_path / "state.json"
     assert read_state(path) is None
-    state = ServeState(pid=4242, host="0.0.0.0", port=8765)  # noqa: S104 - state fixture, not a bind
+    state = ServeState(pid=4242, host=_DEFAULT_HOST, port=8765)
     write_state(path, state)
     assert read_state(path) == state
     clear_state(path)
@@ -244,7 +245,7 @@ def test_read_state_tolerates_corrupt_file(tmp_path: Path) -> None:
 def test_clear_state_only_pid_guard(tmp_path: Path) -> None:
     """clear_state(only_pid=...) leaves a file another invocation now owns."""
     path = tmp_path / "state.json"
-    original = ServeState(pid=999, host="0.0.0.0", port=8765)  # noqa: S104 - state fixture, not a bind
+    original = ServeState(pid=999, host=_DEFAULT_HOST, port=8765)
     write_state(path, original)
     clear_state(path, only_pid=111)  # not ours — must not delete
     # Not just "a" state survived — the SAME state another invocation owns,

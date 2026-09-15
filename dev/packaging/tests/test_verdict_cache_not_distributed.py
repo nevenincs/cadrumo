@@ -34,7 +34,6 @@ here, so a rename cannot leave this gate asserting a path nothing produces.
 from __future__ import annotations
 
 import shutil
-import subprocess
 import tarfile
 import zipfile
 from pathlib import Path
@@ -45,6 +44,8 @@ import pytest
 from dev._paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.identity import REGISTRY_IDENTITY_STAMP_FILENAME
 from dev.registry.compiler.verdict_cache import shipped_verdict_location
+
+from ..command_execution import run_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
 
@@ -115,13 +116,12 @@ def _build(root: Path) -> tuple[frozenset[str], frozenset[str]]:
     if uv is None:
         raise AssertionError("uv binary not found on PATH; the verdict-cache gate cannot build its subject")
     out_dir = root / "dist-out"
-    subprocess.run(  # noqa: S603 - argv is an explicit internal build command.
+    completed = run_command(
         [uv, "build", "--sdist", "--wheel", "--out-dir", str(out_dir)],
         cwd=root,
-        capture_output=True,
-        text=True,
-        check=True,
     )
+    if completed.returncode != 0:
+        raise RuntimeError(f"uv build failed: {completed.stderr}")
     sdists = sorted(out_dir.glob("cadrumo-*.tar.gz"))
     wheels = sorted(out_dir.glob("cadrumo-*.whl"))
     if len(sdists) != 1 or len(wheels) != 1:

@@ -17,11 +17,11 @@ from __future__ import annotations
 
 import argparse
 import shutil
-import subprocess
 from pathlib import Path
 from typing import Final
 
 from dev._paths import UTF_8
+from dev.packaging.command_execution import run_command
 
 from ._acquire_common import PYTHON_COHORT_WHEEL_NAMES, AcquisitionError, run_installed_cli_oracle, venv_executable
 from .cohort_manifest import load_release_cohort
@@ -89,14 +89,10 @@ def run_oracle_emit_cohort(
     work.mkdir(parents=True, exist_ok=True)
     venv = work / "venv"
 
-    create = subprocess.run(  # noqa: S603 - resolved uv executable and declarative argv
+    create = run_command(
         [str(uv), "venv", str(venv), "--python", python, "--seed"],
         cwd=work,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
         errors="replace",
-        check=False,
     )
     if create.returncode != 0:
         raise AcquisitionError(f"could not create the cohort virtualenv: {create.stderr.strip()[:200]}")
@@ -105,7 +101,7 @@ def run_oracle_emit_cohort(
     wheels = {name: python_cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES}
     root_wheel = python_cohort.root_wheel
     manuals_wheel, official_wheel = python_cohort.companion_wheels
-    install = subprocess.run(  # noqa: S603 - resolved uv executable and cohort file paths
+    install = run_command(
         [
             str(uv),
             "pip",
@@ -117,11 +113,7 @@ def run_oracle_emit_cohort(
             f"cadrumo-data-official @ {official_wheel.resolve().as_uri()}",
         ],
         cwd=work,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
         errors="replace",
-        check=False,
     )
     if install.returncode != 0:
         raise AcquisitionError(

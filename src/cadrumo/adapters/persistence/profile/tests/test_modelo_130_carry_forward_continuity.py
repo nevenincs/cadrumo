@@ -498,7 +498,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos, *, operatio
 def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    wu_repo, cr_repo, bv_repo, obs_repo, vr_repo, filing_repo = repos
+    _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     q1 = _calculate_quarter(
         repos,
         period="1T",

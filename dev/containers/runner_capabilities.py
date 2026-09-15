@@ -33,10 +33,11 @@ import argparse
 import os
 import platform
 import shutil
-import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+from dev.packaging.command_execution import run_command
 
 # Homebrew prefixes exactly as `packaging-homebrew.yml`'s matrix declares them.
 _BREW_PATHS = {
@@ -75,8 +76,8 @@ def version_probe(executable: str) -> tuple[bool, str]:
     resolved = shutil.which(executable)
     if resolved is None:
         return False, "not on PATH"
-    completed = subprocess.run(  # noqa: S603 - `shutil.which`-resolved executable, fixed argv
-        [resolved, "--version"], capture_output=True, text=True, check=False
+    completed = run_command(
+        [resolved, "--version"],
     )
     if completed.returncode != 0:
         return False, f"present at {resolved} but --version failed: {completed.stderr.strip()[:120]}"
@@ -140,11 +141,8 @@ def _check_docker_for_nested_smoke() -> Finding | None:
     resolved = shutil.which("docker")
     if resolved is None:
         return Finding("docker", ok=False, detail="not on PATH; packaging-smoke's container lane cannot run")
-    completed = subprocess.run(  # noqa: S603 - `shutil.which`-resolved executable, fixed argv
+    completed = run_command(
         [resolved, "version", "--format", "{{.Server.Version}}"],
-        capture_output=True,
-        text=True,
-        check=False,
     )
     if completed.returncode != 0:
         return Finding(

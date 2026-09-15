@@ -29,8 +29,10 @@ from textual.app import App
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Select
 
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+from cadrumo.entrypoints.adapter_composition import build_verification_repository_bundle
 
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -152,7 +154,7 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
         async with ScreenHostApp(app).run_test(size=size) as pilot:
             await pilot.pause()
             await pilot.pause()
-            _assert_horizontally_contained(cast(App[object], app), size, "profile manager")
+            _assert_horizontally_contained(app.app, size, "profile manager")
             pilot.app.exit(None)
 
 
@@ -175,7 +177,7 @@ async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size
         async with app.run_test(size=size) as pilot:
             await pilot.pause()
             await pilot.pause()
-            _assert_horizontally_contained(cast(App[object], app), size, "login screen")
+            _assert_horizontally_contained(app.app, size, "login screen")
             app.app.exit(None)
 
 
@@ -201,7 +203,11 @@ def _operation_runtime(tmp_path: Path) -> Generator[tuple[OperationComposedServi
             passphrase_callback=lambda: _PASSWORD,
             profile_decode_context=authority_operation.profile_decode_context(),
         )
-        verify_definition = build_modelo_work_verify_definition(operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        verify_definition = build_modelo_work_verify_definition(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            verification_repository_bundle_factory=build_verification_repository_bundle,
+        )
         registry = OperationRegistry(
             definitions=(verify_definition,),
             public_registrations=(build_modelo_work_verify_registration(verify_definition),),
@@ -262,7 +268,7 @@ def test_the_operation_surface_fits_every_terminal_width(tmp_path: Path, size: t
                         break
                 assert isinstance(host.screen, OperationModal)
                 await pilot.pause()
-                _assert_horizontally_contained(cast(App[object], host), size, "operation modal")
+                _assert_horizontally_contained(host.app, size, "operation modal")
                 await host.action_quit()
 
         asyncio.run(run())

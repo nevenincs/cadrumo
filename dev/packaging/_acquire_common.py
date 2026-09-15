@@ -29,6 +29,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import UTF_8
 
 from .cohort_manifest import LoadedReleaseCohort
+from .command_execution import run_command
 from .evidence import CommandTranscript
 from .hashing import sha256_path
 from .python_cohort import PythonCohort
@@ -431,25 +432,20 @@ def capture_owned_server_launch(
         )
     )
     started_at = datetime.now(UTC)
-    process = subprocess.Popen(  # noqa: S603 - the executable is the client's own installed server
-        argv,
-        cwd=str(cwd),
-        env=dict(env),
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding=_UTF_8,
-    )
     try:
-        stdout, stderr = process.communicate(input=handshake, timeout=timeout_seconds)
+        completed = run_command(
+            argv,
+            cwd=cwd,
+            environment=env,
+            timeout_seconds=timeout_seconds,
+            input_text=handshake,
+        )
     except subprocess.TimeoutExpired as exc:
-        process.kill()
-        process.communicate()
         raise AcquisitionError(
             f"installed MCP server did not complete the launch handshake within {timeout_seconds}s: {argv!r}",
         ) from exc
     completed_at = datetime.now(UTC)
+    stdout, stderr = completed.stdout, completed.stderr
 
     server_name = _initialize_server_name(stdout)
     if server_name != expected_server_name:
@@ -457,9 +453,9 @@ def capture_owned_server_launch(
             f"installed MCP server launch did not identify as {expected_server_name!r} "
             f"(got {server_name!r}); stderr: {stderr.strip()[:200]}",
         )
-    if process.returncode != 0:
+    if completed.returncode != 0:
         raise AcquisitionError(
-            f"installed MCP server did not exit cleanly on stdin EOF (rc={process.returncode}); "
+            f"installed MCP server did not exit cleanly on stdin EOF (rc={completed.returncode}); "
             f"stderr: {stderr.strip()[:200]}",
         )
     return CommandTranscript.from_output(
@@ -467,7 +463,7 @@ def capture_owned_server_launch(
         cwd=str(cwd),
         started_at=started_at,
         completed_at=completed_at,
-        exit_status=process.returncode,
+        exit_status=completed.returncode,
         stdout=stdout,
         stderr=stderr,
         relevant_output=(f"initialize serverInfo.name={server_name}",),

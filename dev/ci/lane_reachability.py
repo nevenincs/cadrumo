@@ -119,7 +119,6 @@ import ast
 import re
 import shlex
 import shutil
-import subprocess
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -130,6 +129,7 @@ import yaml
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import UTF_8
+from dev.packaging.command_execution import run_command
 from dev.source_tree import repository_files
 
 from .workflow_job_gates import job_gate, narrowed_events
@@ -842,14 +842,12 @@ def _just_variables(root: Path) -> dict[str, str]:
     indistinguishable from a correct empty result.
     """
     just = resolve_just_executable()
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
+    completed = run_command(
         [just, "--evaluate"],
         cwd=root,
-        capture_output=True,
-        check=True,
     )
     variables: dict[str, str] = {}
-    for line in completed.stdout.decode(_UTF_8).splitlines():
+    for line in completed.stdout.splitlines():
         match = _JUST_EVALUATE_LINE.match(line)
         if match is not None:
             variables[match.group("name")] = match.group("value")

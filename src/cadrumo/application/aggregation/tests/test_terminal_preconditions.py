@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import ast
 import inspect
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from types import ModuleType
 from typing import override
@@ -15,6 +16,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
+from ....core.aggregation import AggregationCaptureKind
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
@@ -60,6 +62,19 @@ class _EmptyRetencionObservationRepository:
 
     def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
         return ()
+
+    def replace_observations(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observations: Sequence[RetencionObservation],
+        source_kind: AggregationCaptureKind,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> None:
+        del modelo, filing_year, period, observations, source_kind, captured_at, source_metadata
 
 
 def _contract(

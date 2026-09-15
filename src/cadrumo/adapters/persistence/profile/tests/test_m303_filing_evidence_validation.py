@@ -50,6 +50,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "e3030000-0000-4000-8000-000000000058"
 _CLOCK = datetime(2026, 4, 1, tzinfo=UTC)
+_DEFAULT_M303_REGIME_COMPOSITION = M303RegimeComposition._from_registry("general")
 
 
 def _general_scope() -> M303RegimenSimplificadoScopeDecision:
@@ -229,7 +230,7 @@ def _activity_rows(reference: FilingEvidenceReference) -> tuple[M303Exonerado390
 
 def _store_profile(
     *,
-    composition: M303RegimeComposition = M303RegimeComposition._from_registry("general"),
+    composition: M303RegimeComposition = _DEFAULT_M303_REGIME_COMPOSITION,
     iae_epigraph: str | None = None,
 ) -> None:
     seed_test_profile_record(

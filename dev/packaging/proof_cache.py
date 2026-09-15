@@ -32,7 +32,6 @@ from __future__ import annotations
 import os
 import platform
 import shutil
-import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
@@ -41,6 +40,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cadrumo.core.directory_scan import iter_directory
 from dev._paths import UTF_8
+from dev.packaging.command_execution import run_command
 from dev.source_tree import content_digest, repository_files
 
 from .hashing import sha256_text
@@ -115,9 +115,10 @@ def environment_fingerprint() -> str:
     uv = shutil.which("uv")
     uv_version = "uv-absent"
     if uv is not None:
-        uv_version = subprocess.run(  # noqa: S603 - fixed argv on the resolved uv
-            [uv, "--version"], capture_output=True, text=True, check=True
-        ).stdout.strip()
+        result = run_command([uv, "--version"])
+        if result.returncode != 0:
+            raise RuntimeError(f"uv --version failed: {result.stderr.strip()}")
+        uv_version = result.stdout.strip()
     parts = (
         platform.system(),
         platform.machine(),

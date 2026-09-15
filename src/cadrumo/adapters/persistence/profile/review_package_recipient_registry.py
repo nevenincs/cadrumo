@@ -32,7 +32,7 @@ from ..storage.sql.secure_objects import SecureObjectRepository
 T = TypeVar("T")
 
 
-def _translate_registry_failure(operation: str, action: Callable[[], T]) -> T:
+def _translate_registry_failure[T](operation: str, action: Callable[[], T]) -> T:
     """Translate secure-object failures to the application registry contract."""
     try:
         return action()
@@ -50,6 +50,7 @@ class RecipientFingerprintRegistryAdapter(RecipientFingerprintRegistryRepository
     """Bind the trusted-recipient port to one bucket's encrypted object store."""
 
     def __init__(self, *, repository: SecureObjectRepository) -> None:
+        """Bind the encrypted trusted-recipient repository."""
         self._repository = repository
 
     @override

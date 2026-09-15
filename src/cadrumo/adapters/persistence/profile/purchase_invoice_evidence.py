@@ -36,13 +36,16 @@ class LedgerEvidenceRepositoryAdapter:
     """Translate encrypted evidence documents into application record tuples."""
 
     def __init__(self, *, objects: SecureObjectRepository) -> None:
+        """Bind the encrypted purchase-evidence object repository."""
         self._repository = PurchaseInvoiceEvidenceRepository(objects=objects)
 
     def load(self, *, bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
+        """Load evidence records for one bucket."""
         document = self._repository.load(bucket_id)
         return () if document is None else tuple(document.records)
 
     def save(self, *, bucket_id: str, records: Sequence[PurchaseInvoiceEvidence]) -> None:
+        """Persist evidence records for one bucket."""
         self._repository.save(
             PurchaseInvoiceEvidenceDocument(bucket_id=bucket_id, records=tuple(records)),
         )
@@ -52,9 +55,11 @@ class LedgerEvidenceAttachmentIngestor:
     """Translate application ingestion facts into attachment-service inputs."""
 
     def __init__(self, *, store: AttachmentStore) -> None:
+        """Bind the attachment store used for evidence ingestion."""
         self._store = store
 
     def ingest(self, request: EvidenceAttachmentIngestRequest) -> ContentDigest:
+        """Ingest one evidence file and return its content digest."""
         if request.media_kind == "pdf":
             kind = AttachmentKind.INVOICE_PDF
         elif request.media_kind == "image":

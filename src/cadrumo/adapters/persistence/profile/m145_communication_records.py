@@ -40,7 +40,7 @@ class _M145AdapterInputError(CadrumoError):
 T = TypeVar("T")
 
 
-def _translate_adapter_failure(operation: str, action: Callable[[], T]) -> T:
+def _translate_adapter_failure[T](operation: str, action: Callable[[], T]) -> T:
     """Run one adapter operation and expose only the application contract."""
     try:
         return action()
@@ -78,6 +78,7 @@ class M145CommunicationRecordRepositoryAdapter(M145CommunicationRecordRepository
     """Translate the generic secure snapshot repository to the records port."""
 
     def __init__(self, *, repository: SecureSnapshotRepository[M145CommunicationRecord]) -> None:
+        """Bind the encrypted Modelo 145 communication repository."""
         self._repository = repository
 
     @override
@@ -121,6 +122,7 @@ class M145CommunicationEventRepositoryAdapter(BucketEventHistoryRepositoryProtoc
     """Translate bucket-event persistence to the records application contract."""
 
     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
+        """Bind the encrypted bucket-event history repository."""
         self._repository = repository
 
     @override

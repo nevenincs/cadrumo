@@ -55,10 +55,11 @@ _ORDINARY_DAY = date(2025, 6, 15)
 #: This is the reachable silence; the test below records why the table's OWN
 #: silence cannot be reached through a validly-constructed invoice.
 _EXEMPT_SLOT = IvaRate._from_registry("EXEMPT")
+_DEFAULT_RATE = IvaRate._from_registry("RATE_21")
 
 
 def _recargo_invoice(
-    *, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate = IvaRate._from_registry("RATE_21")
+    *, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate = _DEFAULT_RATE
 ) -> Invoice:
     """A retailer's purchase invoice bearing recargo de equivalencia.
 

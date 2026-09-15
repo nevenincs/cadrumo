@@ -243,7 +243,8 @@ def execute_reviewed_decision(
                 bucket_event_repository=ports.bucket_event_repository if ports is not None else None,
                 occurred_at=occurred_at,
             )
-        assert ports is not None
+        if ports is None:
+            raise AssertionError("ports are required for a non-draft rejection")
         return reject_llm_suggestion(
             suggestion,
             bucket_id=bucket_id,
@@ -270,7 +271,8 @@ def execute_reviewed_decision(
                 settings=settings if settings is not None else load_settings(),
             )
         if isinstance(suggestion, LLMSaturatedSuggestion):
-            assert ports is not None
+            if ports is None:
+                raise AssertionError("ports are required for a saturated classification")
             return apply_saturated_llm_classification(
                 suggestion,
                 bucket_id=bucket_id,
@@ -281,7 +283,8 @@ def execute_reviewed_decision(
                 occurred_at=occurred_at,
             )
         if isinstance(suggestion, LLMClassificationSuggestion):
-            assert ports is not None
+            if ports is None:
+                raise AssertionError("ports are required for a classification")
             return apply_llm_classification(
                 suggestion,
                 bucket_id=bucket_id,
@@ -299,7 +302,8 @@ def execute_reviewed_decision(
 
     if decision is LlmReviewDecision.SPLIT:
         if isinstance(suggestion, LLMSplitSuggestion):
-            assert ports is not None
+            if ports is None:
+                raise AssertionError("ports are required for an evidence split")
             return apply_evidence_split(
                 suggestion,
                 bucket_id=bucket_id,

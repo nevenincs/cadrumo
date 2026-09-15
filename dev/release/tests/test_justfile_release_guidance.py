@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import ast
-import subprocess
 
 import pytest
 
 from dev._paths import REPO_ROOT
 from dev.ci.lane_reachability import resolve_just_executable
+from dev.packaging.command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -18,12 +18,9 @@ _CAMPAIGN_SOURCE = _REPO_ROOT / "dev" / "packaging" / "campaign.py"
 
 def _render_recipe(recipe: str, *args: str) -> str:
     just = resolve_just_executable()
-    result = subprocess.run(  # noqa: S603 - execute the resolved real just binary against repository recipes.
+    result = run_command(
         [just, "--dry-run", recipe, *args],
         cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
     )
     assert result.returncode == 0, result.stderr
     return f"{result.stdout}\n{result.stderr}"
@@ -31,13 +28,12 @@ def _render_recipe(recipe: str, *args: str) -> str:
 
 def _recipe_summary() -> set[str]:
     just = resolve_just_executable()
-    result = subprocess.run(  # noqa: S603 - resolved real just binary.
+    result = run_command(
         [just, "--summary"],
         cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
     )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr)
     return set(result.stdout.split())
 
 

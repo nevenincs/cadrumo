@@ -8,7 +8,6 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 import tarfile
 import zipfile
@@ -22,6 +21,7 @@ from packaging.requirements import Requirement
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.command_execution import CommandResult, run_command
 from dev.source_tree import content_digest, repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
@@ -353,14 +353,10 @@ class PythonCohort:
         return (self.root_wheel, self.manuals_wheel, self.official_wheel)
 
 
-def _run(argv: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
-    completed = subprocess.run(  # noqa: S603 - argv is an explicit internal build command.
+def _run(argv: list[str], *, cwd: Path) -> CommandResult:
+    completed = run_command(
         argv,
         cwd=cwd,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
         errors="strict",
     )
     if completed.returncode != 0:
@@ -552,14 +548,10 @@ def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[
             "aeat app modelo work calculate",
         ):
             environment["AEAT_COMMAND_SPEC_PROBE_MODE"] = mode
-            completed = subprocess.run(  # noqa: S603 - fixed installed-artifact attestation probe.
+            completed = run_command(
                 [sys.executable, "-S", "-c", _COMMAND_SPEC_PROBE],
                 cwd=work_root,
-                env=environment,
-                check=False,
-                capture_output=True,
-                text=True,
-                encoding=_UTF_8,
+                environment=environment,
                 errors="strict",
             )
             if completed.returncode != 0:

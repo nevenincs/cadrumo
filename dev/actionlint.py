@@ -40,17 +40,18 @@ installed to install something.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import http.client
 import os
 import platform
 import shutil
-import subprocess
 import sys
 import tarfile
 import tempfile
-import urllib.request
 import zipfile
 from pathlib import Path
+from urllib.parse import urlsplit
 
 VERSION = "1.7.12"
 
@@ -111,8 +112,21 @@ def _cache_root() -> Path:
 
 def _download(url: str, into: Path) -> None:
     """Fetch `url` to `into`, failing loudly rather than partially."""
-    with urllib.request.urlopen(url, timeout=120) as response:  # noqa: S310
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or parsed.hostname != "github.com":
+        raise ValueError(f"actionlint downloads require an HTTPS github.com URL: {url}")
+    target = parsed.path or "/"
+    if parsed.query:
+        target = f"{target}?{parsed.query}"
+    connection = http.client.HTTPSConnection(parsed.hostname, port=parsed.port or 443, timeout=120)
+    try:
+        connection.request("GET", target, headers={"User-Agent": "cadrumo-actionlint"})
+        response = connection.getresponse()
+        if not 200 <= response.status < 300:
+            raise OSError(f"actionlint download returned HTTP {response.status}")
         into.write_bytes(response.read())
+    finally:
+        connection.close()
 
 
 def _verify(archive: Path, expected: str) -> None:
@@ -244,7 +258,13 @@ def main(argv: list[str] | None = None) -> int:
     # missing external linter, so leaving them implicit means the gate checks
     # a different set of things on every machine and nobody can tell which.
     command = [str(binary), "-no-color", "-shellcheck=", "-pyflakes=", *args]
-    return subprocess.call(command)  # noqa: S603
+    return asyncio.run(_run_actionlint(command))
+
+
+async def _run_actionlint(command: list[str]) -> int:
+    """Run the validated actionlint argv and inherit its diagnostic streams."""
+    process = await asyncio.create_subprocess_exec(*command)
+    return await process.wait()
 
 
 if __name__ == "__main__":

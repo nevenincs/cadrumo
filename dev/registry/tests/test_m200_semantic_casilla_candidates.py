@@ -57,7 +57,7 @@ def target_identity_worklist(target_identity_inputs):
 def _candidate() -> subject.M200CasillaCandidate:
     return subject.M200CasillaCandidate(
         export_field_id="m200-2024.dp200018.f0172",
-        authored_token="588",  # noqa: S106 - official casilla token, not a credential
+        authored_token=_CASILLA_588,
         disposition=subject.M200CasillaDisposition.SEGMENT_QUALIFIED_IDENTITY,
         reason="segment ownership cannot be inferred",
         source_ref="aeat-dr-200-2024",
@@ -75,6 +75,11 @@ def _candidate() -> subject.M200CasillaCandidate:
         label="[00588]",
         proposed_casilla_id="DP200014B:00588",
     )
+
+
+_CASILLA_588 = "588"
+_CASILLA_2971 = "2971"
+_CASILLA_1683 = "1683"
 
 
 def test_review_toml_is_deterministic_and_serializes_disposition() -> None:
@@ -215,7 +220,7 @@ def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
         target_field,
         None,
         None,
-        authored_token="2971",  # noqa: S106 - official casilla token
+        authored_token=_CASILLA_2971,
         target_ids_by_number={"00355": ("00355",)},
     )
 
@@ -231,7 +236,7 @@ def test_current_2024_casilla_identity_beats_later_sibling_filler() -> None:
         target_field,
         None,
         None,
-        authored_token="1683",  # noqa: S106 - official casilla token
+        authored_token=_CASILLA_1683,
         target_ids_by_number={},
     )
 

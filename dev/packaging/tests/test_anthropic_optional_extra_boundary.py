@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 import shutil
-import subprocess
 import sys
 import textwrap
 from pathlib import Path
@@ -19,6 +18,7 @@ import pytest
 
 from cadrumo.core.optional_extras import ANTHROPIC_EXTRA
 
+from ..command_execution import run_command
 from ..lane_verification_core import (
     build_companion_wheels,
     build_root_snapshot,
@@ -116,16 +116,12 @@ def test_client_and_provider_loader_preserve_the_registered_extra_facts(
         )
         """,
     )
-    completed = subprocess.run(  # noqa: S603 - fixed installed interpreter and test-owned driver source
+    completed = run_command(
         [str(python), "-c", code],
         cwd=work_dir,
-        env=_isolated_environment(work_dir),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
+        environment=_isolated_environment(work_dir),
         errors="replace",
-        timeout=120,
-        check=False,
+        timeout_seconds=120,
     )
 
     assert completed.returncode == 0, completed.stderr

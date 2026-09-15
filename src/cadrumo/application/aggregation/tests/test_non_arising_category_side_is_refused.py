@@ -66,6 +66,7 @@ _ON = date(2024, 11, 6)
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
 COMPONENT_CATALOGUE = registry_component_catalogue()
+_DEFAULT_EU_MEMBER_STATE = EUMemberState._from_registry("de")
 
 
 def _transaction(
@@ -73,7 +74,7 @@ def _transaction(
     *,
     direction: TransactionDirection,
     category: IvaCategory,
-    eu_member_state: EUMemberState | None = EUMemberState._from_registry("de"),
+    eu_member_state: EUMemberState | None = _DEFAULT_EU_MEMBER_STATE,
     iva_rate: Decimal = Decimal("0.21"),
     iva_amount: Decimal = _CUOTA,
 ) -> Transaction:

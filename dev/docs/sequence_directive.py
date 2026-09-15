@@ -193,7 +193,7 @@ def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
 def _with_live_version(body: str) -> str:
     """Substitute the running version back into a rendered golden body.
 
-    The golden stores :data:`PACKAGE_VERSION_TOKEN` rather than a version
+    The golden stores :data:`PACKAGE_VERSION_PLACEHOLDER` rather than a version
     literal, so it never rots at a release and never disagrees with the build the
     reader has. Rendering resolves it from the package's single release-managed
     declaration, which is what makes the displayed version derived rather than
@@ -201,9 +201,9 @@ def _with_live_version(body: str) -> str:
     """
     from cadrumo.core.package_version import PACKAGE_VERSION
 
-    from .sequences.golden_store import PACKAGE_VERSION_TOKEN
+    from .sequences.golden_store import PACKAGE_VERSION_PLACEHOLDER
 
-    return body.replace(PACKAGE_VERSION_TOKEN, PACKAGE_VERSION)
+    return body.replace(PACKAGE_VERSION_PLACEHOLDER, PACKAGE_VERSION)
 
 
 def _stderr_view(golden_frame: GoldenFrame) -> dict[str, str] | None:

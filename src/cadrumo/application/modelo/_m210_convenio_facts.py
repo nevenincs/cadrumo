@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import TypeAlias
 
 from ...core.irnr import TipoRentaIrnr
 from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -12,7 +11,7 @@ from ...domain.calculations.registry.convenio import (
     resolve_convenio_override,
 )
 
-ResolvedM210ConvenioOverride: TypeAlias = ResolvedConvenioOverride
+type ResolvedM210ConvenioOverride = ResolvedConvenioOverride
 
 
 def resolve_m210_convenio_override(

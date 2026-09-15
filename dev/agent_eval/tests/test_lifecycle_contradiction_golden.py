@@ -40,9 +40,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
-)
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
 from cadrumo_harness.mcp.tools import build_tool_descriptors
@@ -56,6 +53,7 @@ from ._scripted_registration_channels import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytest_plugins = ("cadrumo.adapters.persistence.storage.tests.secure_sql",)
 
 _PROFILE_ID = "operator"
 _MODELO = "347"
@@ -211,7 +209,7 @@ def test_mutating_commands_are_confirmed_non_read_only_on_the_live_manifest() ->
 
 
 def test_registry_grounding_closed_the_readiness_verify_contradiction(
-    _isolated_cli_backend: Path,  # noqa: F811
+    isolated_cli_backend: Path,
 ) -> None:
     """Closure regression / reinstatement tripwire: readiness no longer says ready.
 

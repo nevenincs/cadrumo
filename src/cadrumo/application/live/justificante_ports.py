@@ -50,37 +50,57 @@ class JustificanteSnapshotPersistencePort(Protocol):
     """Bucket-bound encrypted persistence for capture snapshots."""
 
     @property
-    def bucket_id(self) -> str: ...
+    def bucket_id(self) -> str:
+        """Return the bucket identity that owns these snapshots."""
+        ...
 
-    def exists(self, snapshot_id: str) -> bool: ...
+    def exists(self, snapshot_id: str) -> bool:
+        """Return whether a snapshot identifier is persisted."""
+        ...
 
-    def load(self, snapshot_id: str) -> object: ...
+    def load(self, snapshot_id: str) -> object:
+        """Load one persisted snapshot by identifier."""
+        ...
 
-    def list_snapshots(self) -> Sequence[object]: ...
+    def list_snapshots(self) -> Sequence[object]:
+        """Return the persisted snapshots visible to this bucket."""
+        ...
 
-    def resolve(self, snapshot_id: str) -> object: ...
+    def resolve(self, snapshot_id: str) -> object:
+        """Resolve one snapshot identifier to its persisted record."""
+        ...
 
-    def save(self, snapshot: object) -> None: ...
+    def save(self, snapshot: object) -> None:
+        """Persist one capture snapshot through the encrypted store."""
+        ...
 
 
 class JustificanteMetadataPort(Protocol):
     """Durable metadata registration for a parsed receipt."""
 
-    def save(self, justificante: Justificante) -> None: ...
+    def save(self, justificante: Justificante) -> None:
+        """Persist parsed receipt metadata."""
+        ...
 
 
 class JustificanteFilingPort(Protocol):
     """Load and save the local filing catalogue."""
 
-    def load(self) -> ModeloRecordCatalogue: ...
+    def load(self) -> ModeloRecordCatalogue:
+        """Load the local filing catalogue."""
+        ...
 
-    def save(self, catalogue: ModeloRecordCatalogue) -> None: ...
+    def save(self, catalogue: ModeloRecordCatalogue) -> None:
+        """Persist the local filing catalogue."""
+        ...
 
 
 class JustificanteEventPort(Protocol):
     """Append the capture's lifecycle event through the owning history store."""
 
-    def emit(self, events: tuple[BucketEvent, ...]) -> None: ...
+    def emit(self, events: tuple[BucketEvent, ...]) -> None:
+        """Append lifecycle events for the capture."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,9 +121,13 @@ class JustificanteLiveReadPort(Protocol):
         *,
         modelo: str,
         year: int,
-    ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]: ...
+    ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
+        """Read declarations and their matching procedure-tree entries."""
+        ...
 
-    async def capture(self, *, expediente_id: str) -> CapturedJustificante: ...
+    async def capture(self, *, expediente_id: str) -> CapturedJustificante:
+        """Capture one authenticated receipt for an expediente."""
+        ...
 
 
 class JustificanteAuthenticityVerifierPort(Protocol):
@@ -115,4 +139,6 @@ class JustificanteAuthenticityVerifierPort(Protocol):
         *,
         browser: object | None = None,
         browser_session_factory: Callable[[], object] | None = None,
-    ) -> Awaitable[bool]: ...
+    ) -> Awaitable[bool]:
+        """Verify a receipt CSV through the live cotejo operation."""
+        ...

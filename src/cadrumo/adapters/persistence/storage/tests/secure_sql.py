@@ -324,7 +324,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=None,
-        cadrumo_secret_store_backend="auto",
+        **{"cadrumo_secret_store_backend": "auto"},
         cadrumo_secret_passphrase=passphrase,
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations -- one child process per warmup and per sample. That is
@@ -403,7 +403,7 @@ def isolated_runtime_profile(
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=bucket_id,
-        cadrumo_secret_store_backend="auto",
+        **{"cadrumo_secret_store_backend": "auto"},
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations, one child process per warmup and per sample. See
         # `isolated_profile_storage_root` for the measured cost; the fixed
@@ -511,7 +511,7 @@ def isolated_two_bucket_runtime(
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=primary_bucket_id,
-        cadrumo_secret_store_backend="auto",
+        **{"cadrumo_secret_store_backend": "auto"},
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations, one child process per warmup and per sample. See
         # `isolated_profile_storage_root` for the measured cost; the fixed

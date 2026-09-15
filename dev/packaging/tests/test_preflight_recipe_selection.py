@@ -80,6 +80,7 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ..campaign import campaign_pytest_argv
+from ..command_execution import run_command
 from ._justfile_recipes import Recipe, packaging_pytest_recipes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -283,7 +284,7 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
         argument for argument in arguments if argument not in {"-q", "--quiet", "-v", "--verbose"}
     )
     try:
-        completed = subprocess.run(  # noqa: S603 - fixed interpreter argv; arguments come from the tracked justfile.
+        completed = run_command(
             [
                 sys.executable,
                 "-m",
@@ -296,12 +297,8 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
                 "-n0",
             ],
             cwd=_REPO_ROOT,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
             errors="replace",
-            check=False,
-            timeout=_COLLECT_TIMEOUT_SECONDS,
+            timeout_seconds=_COLLECT_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired as expiry:
         # Chained on purpose: the expiry carries the argv and the elapsed budget,

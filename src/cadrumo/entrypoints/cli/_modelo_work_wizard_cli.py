@@ -263,7 +263,7 @@ def _run_wizard_calculation_attempt(
             ports=ports,
         )
     except RegistryValidationError as exc:
-        follow_up = modelo_work_wizard_follow_up_step(exc, unit=wizard.unit)
+        follow_up = modelo_work_wizard_follow_up_step(exc, unit=wizard.unit, operation=ports.operation)
         if follow_up is None:
             raise deps.bad_parameter_from_error(exc) from exc
         prompted.extend(_run_wizard_steps(wizard, (follow_up,)))

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+from dev.packaging.command_execution import CommandResult, run_command
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -24,11 +25,11 @@ class Proof:
     assertion: str
 
 
-def _run(node: str) -> subprocess.CompletedProcess[str]:
+def _run(node: str) -> CommandResult:
     uv = shutil.which("uv")
     if uv is None:
         raise RuntimeError("uv is required to prove the check-set guards")
-    return subprocess.run(  # noqa: S603 - resolved executable and closed proof table
+    return run_command(
         [
             uv,
             "run",
@@ -42,11 +43,7 @@ def _run(node: str) -> subprocess.CompletedProcess[str]:
             f"{_TEST}::{node}",
         ],
         cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
         errors="replace",
-        check=False,
     )
 
 

@@ -45,6 +45,7 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -221,6 +222,7 @@ def _store_sentinel_at_derived_path() -> None:
         resolve_active_bucket_id() or "",
         (UserProfileFact(path=_DERIVED_PATH, value=_SENTINEL),),
         require_complete=False,
+        schema=load_user_profile_schema(),
     )
 
 

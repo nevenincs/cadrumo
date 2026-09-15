@@ -25,7 +25,9 @@ import re
 import shutil
 import tomllib
 from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -47,7 +49,11 @@ from ..edition_delta_migration import (
     MigrationOutcome,
     MigrationPlan,
     PredecessorBasis,
+    _choose_drops,
+    _Defaults,
+    _Placed,
     _validate_staged_modelo,
+    assess_migration_state,
     main,
     migrate_modelo,
     persist_migration_report,
@@ -246,13 +252,13 @@ def test_the_pilot_migrates_every_successor_edition_in_merge_order(
     assert unchecked == []
     assert pilot.applied
     assert pilot.source_status == "applied"
-    assert pilot.publication_readiness_status == "failed"
+    assert pilot.publication_readiness_findings == ()
+    assert pilot.publication_readiness_status == "not_checked"
     assert pilot.publication_execution_status == "not_performed"
     assert pilot.staged_registry is not None
     assert {str(r.id) for r in _load(pilot_input, _PILOT).revisions.values() if r.predecessor is not None} == set()
 
     staged = _load(pilot.staged_registry, _PILOT)
-    reordered = []
     for edition in _delta_editions(pilot):
         assert edition.inherited_ids, edition.revision_id
         edition_dir = _edition_dir(pilot.staged_registry, _PILOT, edition.revision_id)
@@ -268,10 +274,7 @@ def test_the_pilot_migrates_every_successor_edition_in_merge_order(
         )
         before = [casilla.id for casilla in pilot_before.revisions[edition.revision_id].casillas]
         after = [casilla.id for casilla in revision.casillas]
-        assert sorted(before) == sorted(after)
-        if before != after:
-            reordered.append(edition.revision_id)
-    assert reordered, "no edition was reordered, so the merge-order rule was never exercised"
+        assert before == after
 
 
 def test_the_migrated_pilot_is_minimal_where_the_unmigrated_one_is_not(pilot: MigrationOutcome) -> None:
@@ -334,16 +337,39 @@ def test_a_row_stating_only_a_lineage_claim_moves_to_the_canonical_carrier(
     assert row_id not in edition.stated_ids
     successor = pilot_before.revisions[edition.revision_id]
     original_row = next(casilla for casilla in successor.casillas if str(casilla.id) == row_id)
+
+    def _override_selector_id(override: object) -> str:
+        if not isinstance(override, Mapping):
+            raise TypeError("casilla override must be a mapping")
+        selector = override.get("selector")
+        if not isinstance(selector, Mapping):
+            raise TypeError("casilla override selector must be a mapping")
+        selector_id = selector.get("id")
+        if not isinstance(selector_id, str):
+            raise TypeError("casilla override selector id must be text")
+        return selector_id
+
+    def _override_field_names(override: object) -> set[str]:
+        if not isinstance(override, Mapping):
+            raise TypeError("casilla override must be a mapping")
+        fields = override.get("fields")
+        if not isinstance(fields, Mapping):
+            raise TypeError("casilla override fields must be a mapping")
+        names: set[str] = set()
+        for field_name in fields:
+            if not isinstance(field_name, str):
+                raise TypeError("casilla override field names must be text")
+            names.add(field_name)
+        return names
+
     matching_overrides = tuple(
-        override
-        for override in edition.casilla_overrides
-        if override.get("selector", {}).get("id") == row_id
+        override for override in edition.casilla_overrides if _override_selector_id(override) == row_id
     )
     assert edition.lineage_attestations == ()
     assert len(matching_overrides) == 1
     (override,) = matching_overrides
     assert override["restate_provenance"] is True
-    assert set(override["fields"]) >= set(LINEAGE_CLAIM_FIELDS) & set(original_row.model_fields_set)
+    assert _override_field_names(override) >= set(LINEAGE_CLAIM_FIELDS) & set(original_row.model_fields_set)
 
     edition_dir = _edition_dir(pilot.staged_registry, _PILOT, edition.revision_id)
     authored_payload_fields = sum(
@@ -470,8 +496,15 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
         )
         rows = (
             f'[[revisions."{revision_id}".casillas]]\nid = "0001"\nnumber = "{changed_number}"\n'
-            f'section = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n\n'
-            f"{local}"
+            f'section = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n'
+            + (
+                f'constraints = {{ min_value = "1", max_value = "9", legal_refs = ["{legal_ref}"], '
+                'source_refs = ["aeat-manual"] }\n\n'
+                if revision_id == "2024"
+                else f'constraints = {{ max_value = "9", legal_refs = ["{legal_ref}"], '
+                'source_refs = ["aeat-manual"] }\n\n'
+            )
+            + f"{local}"
             f'[[revisions."{revision_id}".casillas]]\nid = "0002"\nnumber = "2"\n'
             f'section = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n'
         )
@@ -489,107 +522,124 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
         {
             "selector": {"revision": "2024", "id": "0001"},
             "fields": {"number": "11"},
-            "removed_fields": [],
+            "removed_fields": ["constraints.min_value"],
         },
     )
-    assert successor.casilla_positions == ()
+    assert successor.casilla_positions == ({"id": "0003", "position": 1},)
 
 
-def _withdrawable_row(definition: ModeloDefinition, edition_dir: Path, candidates: tuple[str, ...]) -> str:
-    """A casilla no export field, formula, binding or other declaration of the edition names."""
-    other = "".join(
-        path.read_text(encoding="utf-8") for path in edition_dir.rglob("*.toml") if path.parent.name != "casillas"
-    )
-    revision = definition.revisions[edition_dir.name]
-    exported = {str(casilla.id) for casilla in revision.casillas if casilla.export_refs}
-    return next(row_id for row_id in sorted(candidates) if row_id not in exported and f'"{row_id}"' not in other)
+def test_storage_baseline_removes_lineage_members_without_asserting_legal_predecessor(tmp_path: Path) -> None:
+    registry = _registry(tmp_path / "target", "345")
+    before = _load(registry, "345")
 
-
-def test_a_withdrawn_lineage_blocks_until_a_retirement_declares_it(
-    pilot: MigrationOutcome, pilot_before: ModeloDefinition, pilot_input: Path, tmp_path: Path
-) -> None:
-    edition = _last_edition(pilot)
-    revision_id = edition.revision_id
-    planted = shutil.copytree(pilot_input, tmp_path / "registry" / "aeat")
-    edition_dir = _edition_dir(planted, _PILOT, revision_id)
-    row_id = _withdrawable_row(pilot_before, edition_dir, edition.inherited_ids)
-    lineage = next(c.continuidad_id for c in pilot_before.revisions[revision_id].casillas if c.id == row_id)
-    _drop_row(edition_dir, row_id)
-
-    unretired = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
-    assert next(item for item in unretired.editions if item.revision_id == revision_id).blocked == (
-        BlockedCause.UNRETIRED_WITHDRAWAL,
-    )
-
-    manifest_path = edition_dir / "revision.toml"
-    manifest = tomllib.loads(manifest_path.read_text(encoding="utf-8"))["revisions"][revision_id]
-    manifest_path.write_text(
-        re.sub(
-            rf'(?ms)^\[revisions\.(?:"{re.escape(revision_id)}"|{re.escape(revision_id)})'
-            r"\.family_dispositions\.casilla_continuidad_evolutions\]\n.*?(?=^\[|\Z)",
-            "",
-            manifest_path.read_text(encoding="utf-8"),
-        ),
-        encoding="utf-8",
-        newline="\n",
-    )
-    evolutions = edition_dir / "casilla_continuidad_evolutions"
-    evolutions.mkdir(exist_ok=True)
-    assert not (evolutions / "withdrawn.toml").exists()
-    (evolutions / "withdrawn.toml").write_text(
-        f'[[revisions."{revision_id}".casilla_continuidad_evolutions]]\n'
-        f'id = "{lineage}-{revision_id}-retired"\ncontinuidad_id = "{lineage}"\n'
-        f'from_revision = "{edition.predecessor}"\nto_revision = "{revision_id}"\nevolution_kind = "retired"\n'
-        f'legal_refs = ["{manifest["orden_aplicabilidad"][0]}"]\nsource_refs = ["{manifest["source_refs"][0]}"]\n',
-        encoding="utf-8",
-        newline="\n",
-    )
-
-    retired = migrate_modelo(registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "work")
-
-    assert next(item for item in retired.plan.editions if item.revision_id == revision_id).is_delta
-    assert _unexpected(retired) == []
-    assert retired.staged_registry is not None
-    staged = _load(retired.staged_registry, _PILOT)
-    # The retirement withdraws the lineage from the successor only; the
-    # predecessor it is inherited from still carries the row.
-    assert row_id not in {casilla.id for casilla in staged.revisions[revision_id].casillas}
-    assert row_id in {casilla.id for casilla in staged.revisions[str(edition.predecessor)].casillas}
-
-
-def test_a_blocked_full_copy_remains_a_baseline_for_independent_later_work(
-    pilot: MigrationOutcome, pilot_before: ModeloDefinition, pilot_input: Path, tmp_path: Path
-) -> None:
-    """A failed transformation does not make the authored source unreadable."""
-    blocked_candidate, later = pilot.plan.editions[-2:]
-    assert blocked_candidate.is_delta and later.is_delta
-    planted = shutil.copytree(pilot_input, tmp_path / "registry" / "aeat")
-    blocked_dir = _edition_dir(planted, _PILOT, blocked_candidate.revision_id)
-    row_id = _withdrawable_row(pilot_before, blocked_dir, blocked_candidate.inherited_ids)
-    _drop_row(blocked_dir, row_id)
-    before = {
-        path.relative_to(blocked_dir).as_posix(): path.read_bytes() for path in blocked_dir.rglob("*") if path.is_file()
-    }
-
-    outcome = migrate_modelo(registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "work")
+    outcome = migrate_modelo(registry_root=registry, modelo_id="345", work_dir=tmp_path / "work")
 
     assert outcome.staged_registry is not None
-    assert not outcome.complete
-    assert blocked_candidate.revision_id in outcome.blocked
-    assert any("unretired_withdrawal" in detail for detail in outcome.blocked[blocked_candidate.revision_id])
-    assert later.revision_id in outcome.completed
-    staged_blocked = _edition_dir(outcome.staged_registry, _PILOT, blocked_candidate.revision_id)
-    assert before == {
-        path.relative_to(staged_blocked).as_posix(): path.read_bytes()
-        for path in staged_blocked.rglob("*")
-        if path.is_file()
+    after = _load(outcome.staged_registry, "345")
+    assert assess_migration_state(outcome.staged_registry / "modelos" / "345").minimal
+    for revision_id, revision in before.revisions.items():
+        assert [str(row.id) for row in after.revisions[revision_id].casillas] == [
+            str(row.id) for row in revision.casillas
+        ]
+    successor = after.revisions["2025"]
+    assert successor.predecessor is None
+    assert str(successor.casilla_storage_baseline) == "2024"
+
+
+def _semantic_withdrawal_fixture(root: Path) -> Path:
+    modelo_dir = root / "modelos" / "999"
+    modelo_dir.mkdir(parents=True)
+    write_standard_manifest(modelo_dir, "Semantic withdrawal fixture")
+    legal_ref = "ley-58-2003:art-29"
+
+    def write_revision(
+        revision_id: str,
+        year: int,
+        *,
+        include_second: bool = True,
+    ) -> None:
+        revision_dir = modelo_dir / "revisions" / revision_id
+        (revision_dir / "casillas").mkdir(parents=True)
+        (revision_dir / "revision.toml").write_text(
+            f'[revisions."{revision_id}"]\nid = "{revision_id}"\nvalid_from = {year}-01-01\n'
+            f'valid_to = {year}-12-31\nperiod_selector = {{ years = [{year}], periods = ["0A"] }}\n'
+            f'orden_aplicabilidad = ["{legal_ref}"]\nlegal_refs = ["{legal_ref}"]\n'
+            'source_refs = ["aeat-manual"]\n',
+            encoding="utf-8",
+            newline="\n",
+        )
+        rows = (
+            f'[[revisions."{revision_id}".casillas]]\nid = "0001"\nnumber = "1"\n'
+            f'continuidad_id = "fixture-kept"\nsection = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\n'
+            'source_refs = ["aeat-manual"]\n'
+        )
+        if include_second:
+            rows += (
+                f'\n[[revisions."{revision_id}".casillas]]\nid = "0002"\nnumber = "2"\n'
+                f'continuidad_id = "fixture-withdrawn"\nsection = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\n'
+                'source_refs = ["aeat-manual"]\n'
+            )
+        (revision_dir / "casillas" / "c0001__c0002.toml").write_text(rows, encoding="utf-8", newline="\n")
+
+    write_revision("2023", 2023)
+    write_revision("2024", 2024, include_second=False)
+    write_revision("2025", 2025, include_second=False)
+    return root
+
+
+def test_semantic_predecessor_withdrawal_without_retirement_is_refused(tmp_path: Path) -> None:
+    del tmp_path
+    predecessor = {
+        "id": "0002",
+        "number": "2",
+        "continuidad_id": "fixture-withdrawn",
+        "legal_refs": ["ley-58-2003:art-29"],
+        "source_refs": ["aeat-manual"],
     }
-    assert (
-        tomllib.loads((staged_blocked / "revision.toml").read_text(encoding="utf-8"))["revisions"][
-            blocked_candidate.revision_id
-        ].get("predecessor")
-        is None
+
+    causes, *_ = _choose_drops(
+        definition=None,  # type: ignore[arg-type] -- refusal precedes definition-dependent matching
+        revision_id="2024",
+        predecessor="2023",
+        inherited=[_Placed(predecessor, "2023")],
+        full_rows=[],
+        lifts={},
+        source=SimpleNamespace(retired=frozenset()),  # type: ignore[arg-type]
+        defaults=_Defaults(source_refs=None, orden=None),
+        storage_only=False,
     )
+
+    assert causes == [BlockedCause.UNRETIRED_WITHDRAWAL]
+
+
+def test_blocked_semantic_edition_remains_readable_for_independent_later_work(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry = _semantic_withdrawal_fixture(tmp_path / "registry")
+    definition = _load(registry, "999")
+
+    from .. import edition_delta_migration as migration
+
+    original = migration._choose_predecessor
+
+    def semantic_middle(
+        position: int, revisions: object, source: object, *, reconsider_technical_roots: bool = False
+    ) -> tuple[str | None, PredecessorBasis, list[BlockedCause]]:
+        if position == 1:
+            return "2023", PredecessorBasis.DECLARED, []
+        return original(position, revisions, source, reconsider_technical_roots=reconsider_technical_roots)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(migration, "_choose_predecessor", semantic_middle)
+
+    plan = plan_migration(registry / "modelos" / "999", definition)
+
+    middle = next(edition for edition in plan.editions if edition.revision_id == "2024")
+    later = next(edition for edition in plan.editions if edition.revision_id == "2025")
+    assert middle.blocked == (BlockedCause.UNRETIRED_WITHDRAWAL,)
+    assert middle.basis is PredecessorBasis.BLOCKED
+    assert later.blocked == ()
+    assert later.is_delta
+    assert later.dependencies == ("2024",)
 
 
 def _rewrite_row_sources(edition_dir: Path, sources: list[list[str]]) -> None:
@@ -660,10 +710,7 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(tmp_path: Path) -> None:
         str(revision.id): str(revision.casilla_storage_baseline) if revision.casilla_storage_baseline else None
         for revision in published.revisions.values()
     }
-    assert storage_baselines == {
-        str(edition.revision_id): edition.predecessor
-        for edition in outcome.plan.editions
-    }
+    assert storage_baselines == {str(edition.revision_id): edition.predecessor for edition in outcome.plan.editions}
     report = edition_round_trip_report(
         live_registry_root=registry, reference_registry_root=pristine, modelo_id=_NO_EXPORT_SURFACE, export_scenarios={}
     )

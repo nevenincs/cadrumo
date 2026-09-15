@@ -555,7 +555,7 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(
         _seed_profile(bucket_id=_BUCKET_ID, incn=None)
         _seed_prior_m200_evidence(bucket_id=_BUCKET_ID, operation=operation)
         work_repo = WorkUnitCatalogueRepository()
-        calc_repo = CalculationRevisionCatalogueRepository()
+        CalculationRevisionCatalogueRepository()
         snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period="1P")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

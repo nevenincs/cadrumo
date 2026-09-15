@@ -13,6 +13,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from ..command_execution import run_command
 from ..lane_verification_core import installed_product_env, venv_bin_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -90,13 +91,10 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
         "CADRUMO_SECRET_PASSPHRASE": "hostile-passphrase",
         "PYTHONPATH": str(tmp_path / "checkout-imports"),
     }
-    result = subprocess.run(  # noqa: S603 - fixed interpreter and test-authored worker source.
+    result = run_command(
         [sys.executable, "-c", worker, str(isolated_storage)],
         cwd=REPO_ROOT,
-        env=host_env,
-        capture_output=True,
-        text=True,
-        check=False,
+        environment=host_env,
     )
 
     assert result.returncode == 0, result.stderr

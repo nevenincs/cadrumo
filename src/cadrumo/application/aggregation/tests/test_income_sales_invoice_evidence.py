@@ -61,6 +61,7 @@ _M130_INGRESOS_CASILLA = validated_casilla_id("01")
 _M100_ACTIVIDAD_INGRESOS_CASILLA = validated_casilla_id("0171")
 _is_activity_income = _m130_activity_category_matcher
 _is_employment_income = _m130_employment_category_matcher
+_DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 
 def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
@@ -105,7 +106,7 @@ def _invoice(
     retention_amount: str | None = "150.00",
     retention_rate: str = "0.15",
     number: str = "F-2024-001",
-    iva_category: IvaCategory | None = IvaCategory("domestic_general"),
+    iva_category: IvaCategory | None = _DEFAULT_IVA_CATEGORY,
 ) -> Invoice:
     rate = iva_rate_percentage(IvaRate._from_registry("RATE_21"), date(2026, 1, 1))
     assert rate is not None

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import subprocess
 import sys
 
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 
 from .. import prepare_cli_demo, render_cli_demo
 
@@ -30,16 +30,12 @@ def test_demo_authorities_use_only_cadrumo_product_paths_and_commands() -> None:
 
 def test_demo_bootstrap_runs_the_real_cadrumo_help_surface() -> None:
     """The exact subprocess bootstrap used by the demo reaches the live Cadrumo CLI."""
-    completed = subprocess.run(  # noqa: S603 - executable and bootstrap are repository-owned constants
+    completed = run_command(
         [sys.executable, "-c", prepare_cli_demo._CLI_BOOTSTRAP, "--help"],
         cwd=REPO_ROOT,
-        env=prepare_cli_demo.demo_environment(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
+        environment=prepare_cli_demo.demo_environment(),
         errors="replace",
-        timeout=120,
-        check=False,
+        timeout_seconds=120,
     )
 
     assert completed.returncode == 0, completed.stderr

@@ -27,8 +27,8 @@ The checks map one-to-one onto defects that shipped in this image:
 
 from __future__ import annotations
 
+import importlib
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -38,7 +38,8 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.containers"
 
-from dev.ci.lane_reachability import resolve_just_executable  # noqa: E402
+resolve_just_executable = importlib.import_module("dev.ci.lane_reachability").resolve_just_executable
+run_command = importlib.import_module("dev.packaging.command_execution").run_command
 
 _VENV_ROOT = Path("/workspace/.venv")
 
@@ -88,8 +89,8 @@ def _check_just() -> None:
             "postCreateCommand is `just setup` — the image would "
             "build and then fail at container creation."
         ) from error
-    completed = subprocess.run(  # noqa: S603 - `shutil.which`-resolved executable, fixed argv, no caller input
-        [executable, "--version"], capture_output=True, text=True, check=False
+    completed = run_command(
+        [executable, "--version"],
     )
     if completed.returncode != 0:
         raise SystemExit(f"FAIL: `just` at {executable} is present but not runnable.")
@@ -98,11 +99,8 @@ def _check_just() -> None:
 
 def _check_unit_collection() -> None:
     """Confirm the unit suite collects against the baked source tree."""
-    completed = subprocess.run(
+    completed = run_command(
         [sys.executable, "-m", "pytest", "--collect-only", "-q", "-m", "unit"],
-        capture_output=True,
-        text=True,
-        check=False,
     )
     if completed.returncode != 0:
         sys.stdout.write(completed.stdout)

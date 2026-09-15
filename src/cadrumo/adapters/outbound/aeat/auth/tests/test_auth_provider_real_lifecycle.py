@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ......adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
 from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......application.auth.diagnostics import load_auth_diagnostic
 from ......application.auth.providers import AuthProvider
@@ -311,7 +312,7 @@ async def test_authenticated_representation_landing_records_phone_acceptance_wit
         assert raised.value.context is not None
         diagnostic_id = raised.value.context["diagnostic_id"]
         assert isinstance(diagnostic_id, str)
-        detail = load_auth_diagnostic(diagnostic_id)
+        detail = load_auth_diagnostic(diagnostic_id, persistence=build_auth_diagnostic_persistence())
 
     assert detail is not None
     assert detail.phone_state == "app_prompted_and_accepted"

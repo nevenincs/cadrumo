@@ -326,13 +326,15 @@ def test_register_capture_empty_nif_carries_translated_message() -> None:
         declaration_copy_link_text=None,
     )
 
-    register = DeclaracionesRegisterSession(
-        session,
-        cast(Page, object()),
-        cast(BrowserContext, object()),
-    )
-    with pytest.raises(SedeNavigationError) as exc_info:
-        asyncio.run(register.capture_observation(declaration))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        register = DeclaracionesRegisterSession(
+            session,
+            cast(Page, object()),
+            cast(BrowserContext, object()),
+            operation=_authority_operation_for_test,
+        )
+        with pytest.raises(SedeNavigationError) as exc_info:
+            asyncio.run(register.capture_observation(declaration))
 
     assert exc_info.value.translated_message is not None
     assert "adapters.sede.errors.empty_identity_nif" not in exc_info.value.translated_message

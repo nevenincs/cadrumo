@@ -32,7 +32,7 @@ from ..suggestions import OperatorIvaDerivationResult
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _TRANSACTION_ID = cast("TransactionId", "a" * 64)
-_A_CATEGORY = next(iter(IvaCategory))
+_A_CATEGORY = IvaCategory("domestic_general")
 
 
 def _non_derivable() -> OperatorIvaDerivationResult:

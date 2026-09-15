@@ -58,7 +58,7 @@ def test_restore_stashed_transaction_returns_it_to_active_with_event_and_lineage
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
-        stashed_summary = summarize_manual_transactions(
+        summarize_manual_transactions(
             bucket_id=_BUCKET_ID,
             ports=ports,
         )

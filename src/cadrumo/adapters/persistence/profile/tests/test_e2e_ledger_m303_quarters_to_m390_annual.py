@@ -580,9 +580,9 @@ def _calculate_m303_quarter_revision(
 ) -> tuple[WorkUnit, CalculationRevision]:
     """Run the live bucket-aggregation M303 calc for one quarter without projecting filed observations."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    event_repo = BucketEventHistoryRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    CalculationRevisionCatalogueRepository(objects=secure_objects)
+    BucketEventHistoryRepository(objects=secure_objects)
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     typed_period = Period.from_year_and_code(filing_year, period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -724,9 +724,9 @@ def _calculate_m390_annual(
 ) -> CalculationRevision:
     """Run the live M390/annual calc, leaving the 303-reconciliation relations to fold."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    CalculationRevisionCatalogueRepository(objects=secure_objects)
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    InvoiceCatalogueRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("390", filing_year=filing_year, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,

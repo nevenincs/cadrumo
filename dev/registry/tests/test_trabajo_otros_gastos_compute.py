@@ -52,7 +52,7 @@ _ART_19_2F_OTROS_GASTOS_EUR = Decimal("2000")
 
 @lru_cache
 def _revision(year: str):
-    modelo, _catalogues = _committed_modelo("100")
+    modelo = _committed_modelo("100")
     return modelo.revisions[year]
 
 

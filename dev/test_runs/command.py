@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import contextlib
 import json
 import os
 import re
-import subprocess
 import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final, TypeGuard
+from typing import Any, Final, TypeGuard
 
 from dev._paths import REPO_ROOT, UTF_8
 
@@ -1336,21 +1336,68 @@ def _compact_locale_summary(summary: dict[str, object]) -> dict[str, object]:
     return projected
 
 
-def _stop_interrupted_process(process: subprocess.Popen[str]) -> None:
+async def _stop_interrupted_process(process: asyncio.subprocess.Process) -> None:
     """Bound cleanup of a child when the command wrapper receives Ctrl+C."""
-    if process.poll() is not None:
+    if process.returncode is not None:
         return
     try:
         process.terminate()
-        process.wait(timeout=_CHILD_STOP_TIMEOUT_SECONDS)
-    except subprocess.TimeoutExpired:
+        await asyncio.wait_for(process.wait(), timeout=_CHILD_STOP_TIMEOUT_SECONDS)
+    except TimeoutError:
         process.kill()
-        with contextlib.suppress(subprocess.TimeoutExpired):
-            process.wait(timeout=_CHILD_STOP_TIMEOUT_SECONDS)
+        with contextlib.suppress(TimeoutError):
+            await asyncio.wait_for(process.wait(), timeout=_CHILD_STOP_TIMEOUT_SECONDS)
     except OSError:
         # The child can exit between poll() and terminate() after receiving the
         # same console interrupt as this wrapper.
         pass
+
+
+async def _stream_process(
+    command: tuple[str, ...],
+    *,
+    repository: Path,
+    environment: dict[str, str],
+    processor: Any,
+    label: str,
+    run_id: str,
+    transcript: Any,
+) -> tuple[int, bool]:
+    """Stream one explicit child command and report whether interruption handled it."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        cwd=str(repository),
+        env=environment,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    assert process.stdout is not None
+    try:
+        while line := await process.stdout.readline():
+            decoded = line.decode(_UTF_8, errors="replace")
+            if processor is None:
+                print(decoded, end="", flush=True)
+            else:
+                progress = processor.consume(decoded)
+                if isinstance(progress, dict):
+                    progress_text = json.dumps(
+                        {
+                            "command": label,
+                            **progress,
+                            "run_id": run_id,
+                            "schema_version": 1,
+                        },
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                    print(progress_text, flush=True)
+                    transcript.write(progress_text + "\n")
+            transcript.write(decoded)
+            transcript.flush()
+        return await process.wait(), False
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        await _stop_interrupted_process(process)
+        return _INTERRUPTED_EXIT_STATUS, True
 
 
 def _write_run_metadata(
@@ -1470,51 +1517,29 @@ def run(
         if start_envelope_text is not None:
             transcript.write(start_envelope_text + "\n")
         transcript.flush()
-        process: subprocess.Popen[str] | None = None
         try:
-            process = subprocess.Popen(  # noqa: S603 - argv is the explicit operator command; shell=False.
-                command,
-                cwd=repository,
-                env=environment,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding=_UTF_8,
-                errors="replace",
+            exit_status, interrupted = asyncio.run(
+                _stream_process(
+                    command,
+                    repository=repository,
+                    environment=environment,
+                    processor=processor,
+                    label=label,
+                    run_id=run_dir.name,
+                    transcript=transcript,
+                )
             )
-            assert process.stdout is not None
-            for line in process.stdout:
-                if processor is None:
-                    print(line, end="", flush=True)
-                else:
-                    progress = processor.consume(line)
-                    if isinstance(progress, dict):
-                        progress_text = json.dumps(
-                            {
-                                "command": label,
-                                **progress,
-                                "run_id": run_dir.name,
-                                "schema_version": 1,
-                            },
-                            sort_keys=True,
-                            separators=(",", ":"),
-                        )
-                        print(progress_text, flush=True)
-                        transcript.write(progress_text + "\n")
-                transcript.write(line)
-                transcript.flush()
-            exit_status = process.wait()
             normalized_processors = (
                 _ImportBoundariesProcessor,
                 _LocalesStatusSignalProcessor,
                 _PytestSummaryProcessor,
             )
-            if isinstance(processor, normalized_processors):
+            if not interrupted and isinstance(processor, normalized_processors):
                 exit_status = processor.effective_exit_status(exit_status)
         except KeyboardInterrupt:
             exit_status = _INTERRUPTED_EXIT_STATUS
-            if process is not None:
-                _stop_interrupted_process(process)
+            interrupted = True
+        if interrupted:
             transcript.write(f"INTERRUPTED exit={exit_status}\n")
         finished = datetime.now(tz=UTC)
         transcript.write(f"FINISH {finished.isoformat()} exit={exit_status}\n")

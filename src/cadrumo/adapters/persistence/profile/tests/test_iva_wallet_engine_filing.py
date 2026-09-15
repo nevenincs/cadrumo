@@ -199,7 +199,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert report_1t.decision.divergence == "first_period_zero"
 
         work_repo, calc_repo, event_repo = _work_unit_repositories()
-        filing_repo = ModeloRecordCatalogueRepository()
+        ModeloRecordCatalogueRepository()
         work_unit_1t = _create_modelo_303_work_unit(
             snapshot_1t,
             work_unit_repository=work_repo,

@@ -768,7 +768,7 @@ def _resolve_cli_path(command_path: tuple[str, ...]) -> None:
 
 
 def _invoke_cli(argv: tuple[str, ...]) -> int:
-    from .. import main
+    from ..main import main
 
     sys.argv = ["aeat", *argv]
     try:

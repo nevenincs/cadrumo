@@ -45,6 +45,7 @@ from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
+from cadrumo.entrypoints.adapter_composition import build_verification_repository_bundle
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -86,6 +87,7 @@ def _registry() -> OperationRegistry:
         filing_action_ports_factory=_unreachable_capability_factory,
         work_lifecycle_ports_factory=_unreachable_capability_factory,
         receipt_repository_factory=_unreachable_capability_factory,
+        verification_repository_bundle_factory=build_verification_repository_bundle,
     )
     return OperationRegistry(
         definitions=definitions,

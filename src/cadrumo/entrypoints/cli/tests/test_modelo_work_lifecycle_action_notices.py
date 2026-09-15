@@ -3,20 +3,21 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import cast
 
 import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
 from .cli_runner import semantic_cli_output
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -92,7 +93,6 @@ def _discarded_natural_target() -> list[str]:
 
 
 def test_work_list_and_status_resolve_canonical_actions_with_localized_messages(
-    _isolated_cli_backend: Path,
 ) -> None:
     """The application continuation drives a live, locale-neutral action envelope."""
     _create_profile()
@@ -183,7 +183,6 @@ def test_work_list_and_status_resolve_canonical_actions_with_localized_messages(
 
 
 def test_discarded_work_status_exposes_terminal_state_without_calculate_action(
-    _isolated_cli_backend: Path,
 ) -> None:
     """A discarded unit has an explicit closed continuation and real calculate refusal."""
     _create_profile()
@@ -214,7 +213,6 @@ def test_discarded_work_status_exposes_terminal_state_without_calculate_action(
 
 
 def test_discarded_work_transport_guards_preserve_terminal_schema_and_state(
-    _isolated_cli_backend: Path,
 ) -> None:
     """Every rejected discarded-state verb retains facts and terminal outcome on its real transport."""
     _create_profile()

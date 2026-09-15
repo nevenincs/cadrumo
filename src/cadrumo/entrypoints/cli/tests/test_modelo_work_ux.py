@@ -23,14 +23,13 @@ pin the modelo-work findings reported by the persona fleet:
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -44,10 +43,12 @@ from ._modelo_work_ux_support import (
     _invoke,
 )
 
+__all__ = ["_isolated_cli_backend"]
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> None:
+def test_work_history_records_creation_event() -> None:
     """M17: a freshly-created work unit's history starts with a
     ``modelo.work_unit.created`` event - not an empty stream."""
 
@@ -72,7 +73,7 @@ def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> Non
     assert notice["action"]["action"]["action_id"] == "operator.modelo.work.status"
 
 
-def test_first_work_calculate_binding_error_guides_the_operator(_isolated_cli_backend: Path) -> None:
+def test_first_work_calculate_binding_error_guides_the_operator() -> None:
     """M18: the first ``work calculate`` that hits an unsatisfied binding
     fails with guidance toward ``--binding KEY=VALUE`` and the
     bindings-list discovery command - not a bare refusal."""
@@ -96,7 +97,7 @@ def test_first_work_calculate_binding_error_guides_the_operator(_isolated_cli_ba
     assert "bindings list" in result.output and "--missing" in result.output
 
 
-def test_work_revisions_accepts_a_positional_work_unit_id(_isolated_cli_backend: Path) -> None:
+def test_work_revisions_accepts_a_positional_work_unit_id() -> None:
     """`work revisions <id>` must accept the work-unit id positionally,
     matching its sibling `work status <id>` - the inconsistency where
     `revisions` demanded `--work-unit-id` is gone."""
@@ -110,7 +111,7 @@ def test_work_revisions_accepts_a_positional_work_unit_id(_isolated_cli_backend:
     assert payload["work_unit_id_filter"] == work_unit_id
 
 
-def test_work_status_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
+def test_work_status_resolves_a_visible_filing_target() -> None:
     """`work status` accepts the operator-facing modelo/year/period target."""
 
     _create_profile()
@@ -134,7 +135,7 @@ def test_work_status_resolves_a_visible_filing_target(_isolated_cli_backend: Pat
     assert notice["action"]["action"]["action_id"] == "operator.modelo.work.calculate"
 
 
-def test_displayed_short_work_unit_id_drives_status_and_calculate(_isolated_cli_backend: Path) -> None:
+def test_displayed_short_work_unit_id_drives_status_and_calculate() -> None:
     """The short id surfaced by `work list` is a usable operator handle."""
     _create_profile()
     work_unit_id = _create_calculable_work_unit()
@@ -149,7 +150,7 @@ def test_displayed_short_work_unit_id_drives_status_and_calculate(_isolated_cli_
     assert _payload(calculated.output)["work_unit_id"] == work_unit_id
 
 
-def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path) -> None:
+def test_work_list_surfaces_revision_pointer_fields() -> None:
     """`work list` exposes current/filed calculation pointers for discovery."""
 
     _create_profile()
@@ -172,7 +173,6 @@ def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path)
 
 
 def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(
-    _isolated_cli_backend: Path,
 ) -> None:
     """The list cannot bind one target until the operator selects a work unit."""
     _create_profile()
@@ -190,7 +190,6 @@ def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(
 
 
 def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders(
-    _isolated_cli_backend: Path,
 ) -> None:
     """Profile-scoped text uses the operator label, never a storage identity."""
     _create_profile()
@@ -258,7 +257,6 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
 
 
 def test_work_list_with_multiple_units_requires_an_explicit_selection(
-    _isolated_cli_backend: Path,
 ) -> None:
     """A multi-row list never projects an action with an invented target."""
     _create_profile()
@@ -300,7 +298,7 @@ def test_work_list_with_multiple_units_requires_an_explicit_selection(
     }
 
 
-def test_work_status_and_list_show_presentado_after_file(_isolated_cli_backend: Path) -> None:
+def test_work_status_and_list_show_presentado_after_file() -> None:
     _create_profile(activity_start_date="2025-10-01")
     created = _invoke(
         [
@@ -360,7 +358,7 @@ def test_work_status_and_list_show_presentado_after_file(_isolated_cli_backend: 
     assert matching[0]["filed_calculation_revision_id"] == filed_revision_id
 
 
-def test_work_revisions_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
+def test_work_revisions_resolves_a_visible_filing_target() -> None:
     """`work revisions` can filter by modelo/year/period instead of raw id."""
 
     _create_profile()
@@ -397,7 +395,7 @@ def test_work_revisions_resolves_a_visible_filing_target(_isolated_cli_backend: 
     assert "casillas" in _payload(detail.output)
 
 
-def test_work_calculate_resolves_a_visible_filing_target(_isolated_cli_backend: Path) -> None:
+def test_work_calculate_resolves_a_visible_filing_target() -> None:
     """`work calculate` can use modelo/year/period instead of a work-unit id."""
 
     _create_profile()
@@ -416,7 +414,7 @@ def test_work_calculate_resolves_a_visible_filing_target(_isolated_cli_backend: 
     assert payload["saved"] is True
 
 
-def test_work_verify_defaults_to_current_draft_for_visible_target(_isolated_cli_backend: Path) -> None:
+def test_work_verify_defaults_to_current_draft_for_visible_target() -> None:
     """`work verify` defaults to the current draft under a natural target."""
 
     _create_profile()
@@ -448,7 +446,7 @@ def test_work_verify_defaults_to_current_draft_for_visible_target(_isolated_cli_
     assert _payload(status.output)["current_calculation_revision_id"] == revision_id
 
 
-def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli_backend: Path) -> None:
+def test_work_file_defaults_to_current_verified_for_visible_target() -> None:
     """`work file` selects the current verified revision before workflow gating."""
 
     _create_profile()
@@ -495,7 +493,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli
     assert "NO_PENDING_OBLIGATION" in result.output
 
 
-def test_work_file_help_exposes_explicit_result_elections(_isolated_cli_backend: Path) -> None:
+def test_work_file_help_exposes_explicit_result_elections() -> None:
     result = _invoke(["app", "modelo", "work", "file", "--help"])
     assert result.exit_code == 0, result.output
     assert "--refund-election" in result.output
@@ -503,7 +501,7 @@ def test_work_file_help_exposes_explicit_result_elections(_isolated_cli_backend:
     assert "--disposition" not in result.output
 
 
-def test_work_dependencies_lists_cross_period_inventory(_isolated_cli_backend: Path) -> None:
+def test_work_dependencies_lists_cross_period_inventory() -> None:
     """`work dependencies` exposes the registry-derived filing-history inventory."""
 
     _create_profile()
@@ -535,7 +533,7 @@ def test_work_dependencies_lists_cross_period_inventory(_isolated_cli_backend: P
         assert "source_presence_groups" in dependency
 
 
-def test_work_dependencies_surfaces_current_clean_state_blockers(_isolated_cli_backend: Path) -> None:
+def test_work_dependencies_surfaces_current_clean_state_blockers() -> None:
     """A target read includes concrete blocker codes for missing upstream filings."""
 
     _create_profile()
@@ -567,7 +565,6 @@ def test_work_dependencies_surfaces_current_clean_state_blockers(_isolated_cli_b
 
 
 def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
-    _isolated_cli_backend: Path,
 ) -> None:
     """`work dependencies` threads the profile's activity-start-date into the
     clean-state evaluation, so a prior-period dependency that falls strictly
@@ -613,7 +610,7 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
     )
 
 
-def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path) -> None:
+def test_work_calculate_confirms_the_draft_was_saved() -> None:
     """After `work calculate` the operator is told the result was
     persisted as a draft revision and how to resume / re-inspect it -
     the bare casilla table left no save signal."""
@@ -636,7 +633,7 @@ def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path
     assert "persisted" in confirmation
 
 
-def test_work_revision_shows_persisted_casilla_values(_isolated_cli_backend: Path) -> None:
+def test_work_revision_shows_persisted_casilla_values() -> None:
     """`work revision <id>` shows a stored revision's persisted casilla
     values without recomputing - the operator can re-inspect a saved
     calculation instead of re-running it."""
@@ -660,7 +657,7 @@ def test_work_revision_shows_persisted_casilla_values(_isolated_cli_backend: Pat
     assert payload["casilla_values"] == saved_values
 
 
-def test_work_revision_rejects_an_unknown_revision_id(_isolated_cli_backend: Path) -> None:
+def test_work_revision_rejects_an_unknown_revision_id() -> None:
     """An absent revision id is refused cleanly, not surfaced as an
     opaque internal error."""
 
@@ -672,7 +669,7 @@ def test_work_revision_rejects_an_unknown_revision_id(_isolated_cli_backend: Pat
     assert unknown in result.output
 
 
-def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> None:
+def test_idempotent_work_create_reports_reuse() -> None:
     """Re-creating an existing (modelo, year, period, revision) work unit
     must report the reuse plainly - status `reused`, not a silent
     `modelo.work.create` that reads as a fresh creation."""
@@ -708,7 +705,7 @@ def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> No
     assert second_payload["name_applied"] is None
 
 
-def test_work_create_without_revision_resumes_existing_visible_target(_isolated_cli_backend: Path) -> None:
+def test_work_create_without_revision_resumes_existing_visible_target() -> None:
     """A natural-key create searches by visible filing target before revision defaults."""
 
     _create_profile()
@@ -738,7 +735,6 @@ def test_work_create_without_revision_resumes_existing_visible_target(_isolated_
 
 
 def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
-    _isolated_cli_backend: Path,
 ) -> None:
     """A fresh create without ``--revision`` binds to the law-selected registry revision."""
 
@@ -819,9 +815,7 @@ def test_modelo_303_workflow_json_resolves_each_2025_quarter_once() -> None:
     )
 
 
-def test_m131_modulos_manual_entry_calculates_without_ledger_observations(
-    _isolated_cli_backend: Path,
-) -> None:
+def test_m131_modulos_manual_entry_calculates_without_ledger_observations() -> None:
     register_cli_profile(
         label="operator",
         facts={
@@ -891,7 +885,7 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations(
     assert Decimal(casillas["modulos-rendimiento-neto-actividad"]) != Decimal(casillas["01"])
 
 
-def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_backend: Path) -> None:
+def test_idempotent_work_create_applies_a_new_name_as_a_rename() -> None:
     """A different --name supplied on an idempotent re-create is not
     silently dropped: it is applied as a rename and the result says so."""
 
@@ -926,7 +920,7 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_bac
     assert _payload(status.output)["name"] == "Renamed Unit"
 
 
-def test_overview_next_step_not_import_after_manual_ledger_entry(_isolated_cli_backend: Path) -> None:
+def test_overview_next_step_not_import_after_manual_ledger_entry() -> None:
     """M19: after ``ledger add`` records a transaction, ``overview
     status`` next-step guidance must not suggest importing a bank
     statement - the operator already has ledger data."""
@@ -953,7 +947,6 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(_isolated_cli_b
 
 
 def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(
-    _isolated_cli_backend: Path,
 ) -> None:
     """A non-resident M210 profile gets discovery/Sede guidance, not work-create."""
 
@@ -979,7 +972,6 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(
 
 
 def test_work_create_rejects_revision_that_does_not_cover_filing_year(
-    _isolated_cli_backend: Path,
 ) -> None:
     """Supplying a revision whose period_selector excludes the filing year
     must be refused with a clear error naming both the revision and the
@@ -1018,7 +1010,6 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
 
 
 def test_work_calculate_rejects_decimal_override_for_text_casilla(
-    _isolated_cli_backend: Path,
 ) -> None:
     """Supplying a numeric value for a text-type casilla via --casilla must
     be refused before reaching the engine.

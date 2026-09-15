@@ -22,7 +22,6 @@ materialises and edits source trees, so it belongs under ``dev/registry``.
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -31,6 +30,7 @@ import pytest
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.packaging.command_execution import run_command
 
 from ..compiler.identity import (
     RegistryIdentity,
@@ -264,14 +264,13 @@ def test_a_mutable_tree_edit_is_seen_in_the_production_disk_cache_regime(tmp_pat
     for marker in ("PYTEST_CURRENT_TEST", "PYTEST_XDIST_WORKER", "PYTEST_VERSION"):
         env.pop(marker, None)
 
-    completed = subprocess.run(  # noqa: S603 -- fixed literal interpreter and program
+    completed = run_command(
         [sys.executable, "-c", _CHILD_PROGRAM],
-        check=True,
-        capture_output=True,
-        env=env,
-        text=True,
-        timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+        cwd=Path.cwd(),
+        environment=env,
+        timeout_seconds=_SUBPROCESS_TIMEOUT_SECONDS,
     )
+    assert completed.returncode == 0, completed.stderr
     reported = dict(line.split("=", 1) for line in completed.stdout.splitlines() if "=" in line)
     assert reported["before"] == "01", f"child did not compile the pre-edit tree: {completed.stdout}"
     assert int(reported["pickles"]) == 1, (

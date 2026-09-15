@@ -189,7 +189,7 @@ def test_create_rejects_unknown_revision_with_helpful_list(
 
 
 def test_history_for_missing_work_unit_raises(repos: _Repos) -> None:
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    _wu_repo, _cr_repo, _fr_repo, _vr_repo, _bv_repo = repos
     with pytest.raises(WorkUnitNotFoundError) as exc_info:
         assemble_work_unit_history(
             "no-such-work-unit",
@@ -203,7 +203,7 @@ def test_history_records_creation_event(repos: _Repos, operation: PinnedAuthorit
     """``create_work_unit`` emits a ``modelo.work_unit.created`` event so
     the work-unit history is complete from its first moment. The
     creation event names when and by whom the unit was provisioned."""
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -247,7 +247,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(
     """Re-running ``create_work_unit`` on the same four-axis key reloads
     the existing unit and emits no second creation event - the original
     creation event already stands."""
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
     first = create_work_unit(
@@ -281,7 +281,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(
 
 
 def test_history_records_discard_event(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 
@@ -321,7 +321,7 @@ def test_history_records_discard_event(repos: _Repos, operation: PinnedAuthority
 
 
 def test_history_excludes_events_from_other_work_units(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 
@@ -376,7 +376,7 @@ def test_a_real_assembled_row_satisfies_the_tightened_identities(
     imposing on it: the row comes off the real assembler over a real emitted
     event, and its identity is a content address and its actor a real label.
     """
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",

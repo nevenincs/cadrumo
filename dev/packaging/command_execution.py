@@ -7,6 +7,7 @@ result, so both are public here rather than internals of the packaging lanes.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 import sys
@@ -97,18 +98,16 @@ def run_command(
     started_at = datetime.now(UTC)
     started = time.monotonic()
     try:
-        completed = subprocess.run(  # noqa: S603 - callers supply resolved internal or operator-approved argv.
-            command,
-            cwd=cwd,
-            env=dict(environment) if environment is not None else None,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
-            errors=errors,
-            check=False,
-            timeout=timeout_seconds,
-            input=input_text,
-            **cast(Any, _inheritance_options(inherited_descriptors)),
+        returncode, stdout, stderr = asyncio.run(
+            _run_process(
+                command,
+                cwd=cwd,
+                environment=environment,
+                timeout_seconds=timeout_seconds,
+                errors=errors,
+                input_text=input_text,
+                inherited_descriptors=inherited_descriptors,
+            ),
         )
     finally:
         _close_inheritance_window(inherited_descriptors)
@@ -119,10 +118,49 @@ def run_command(
         started_at=started_at,
         completed_at=completed_at,
         duration_seconds=round(time.monotonic() - started, 3),
-        returncode=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
+        returncode=returncode,
+        stdout=stdout,
+        stderr=stderr,
     )
+
+
+async def _run_process(
+    command: tuple[str, ...],
+    *,
+    cwd: Path,
+    environment: Mapping[str, str] | None,
+    timeout_seconds: float | None,
+    errors: Literal["strict", "replace"],
+    input_text: str | None,
+    inherited_descriptors: Sequence[int],
+) -> tuple[int, str, str]:
+    """Execute one explicit argv with bounded capture and optional input."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        cwd=str(cwd),
+        env=dict(environment) if environment is not None else None,
+        stdin=asyncio.subprocess.PIPE if input_text is not None else None,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        **cast(Any, _inheritance_options(inherited_descriptors)),
+    )
+    encoded_input = None if input_text is None else input_text.encode(_UTF_8)
+    try:
+        stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(encoded_input), timeout_seconds)
+    except TimeoutError as exc:
+        process.kill()
+        stdout_bytes, stderr_bytes = await process.communicate()
+        raise subprocess.TimeoutExpired(command, timeout_seconds, output=stdout_bytes, stderr=stderr_bytes) from exc
+    return (
+        process.returncode,
+        _decode_output(stdout_bytes, errors=errors),
+        _decode_output(stderr_bytes, errors=errors),
+    )
+
+
+def _decode_output(payload: bytes, *, errors: Literal["strict", "replace"]) -> str:
+    """Match ``subprocess.run(text=True)`` universal-newline decoding."""
+    return payload.decode(_UTF_8, errors=errors).replace("\r\n", "\n").replace("\r", "\n")
 
 
 __all__ = ["CommandResult", "run_command"]

@@ -58,14 +58,14 @@ def test_wizard_prose_localizes_and_resolves_under_both_overrides(*, registry_se
     re-sequencing of the first page cannot break the test without breaking
     the property it pins.
     """
-    _TITLE_KEY = str(registry_setup_flow.title)
-    _PROMPT_KEY = str(registry_setup_flow.sections[0].questions[0].prompt)
+    title_key = str(registry_setup_flow.title)
+    prompt_key = str(registry_setup_flow.sections[0].questions[0].prompt)
     with override_settings(cadrumo_output_language="en"):
-        title_en, prompt_en = tr(_TITLE_KEY), tr(_PROMPT_KEY)
+        title_en, prompt_en = tr(title_key), tr(prompt_key)
     with override_settings(cadrumo_output_language="es"):
-        title_es, prompt_es = tr(_TITLE_KEY), tr(_PROMPT_KEY)
+        title_es, prompt_es = tr(title_key), tr(prompt_key)
 
-    assert title_en != _TITLE_KEY and prompt_en != _PROMPT_KEY
-    assert title_es != _TITLE_KEY and prompt_es != _PROMPT_KEY
+    assert title_en != title_key and prompt_en != prompt_key
+    assert title_es != title_key and prompt_es != prompt_key
     assert title_en != title_es
     assert prompt_en != prompt_es

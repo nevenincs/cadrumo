@@ -146,7 +146,7 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
 
 def test_file_of_unverified_revision_still_hard_refuses(repos: Repos) -> None:
     """A BORRADOR (not VERIFICADO_COMPLETO) revision still raises - the no-op is scoped to PRESENTADO."""
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, _fr_repo, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,

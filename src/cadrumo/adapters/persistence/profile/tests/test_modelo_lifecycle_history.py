@@ -114,7 +114,7 @@ class TestAssembly:
         The teeth for the drift this service was extracted to fix: the event is
         emitted by production code, and the literal set it replaced dropped it.
         """
-        _, _, _, _, bv_repo = repos
+        _, _, _, _, _bv_repo = repos
         created = _create(repos, operation=operation)
 
         history = assemble_modelo_lifecycle_history("130", ports=_history_ports(repos))
@@ -128,14 +128,14 @@ class TestAssembly:
         self, repos: _Repos, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Selection is on the event's own subject key, so an unrelated modelo sees nothing."""
-        _, _, _, _, bv_repo = repos
+        _, _, _, _, _bv_repo = repos
         _create(repos, operation=operation)
 
         assert assemble_modelo_lifecycle_history("303", ports=_history_ports(repos)).events == ()
 
     def test_filing_year_narrows_the_history(self, repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
         """A filing year the events do not declare yields nothing; the declared one yields rows."""
-        _, _, _, _, bv_repo = repos
+        _, _, _, _, _bv_repo = repos
         _create(repos, operation=operation)
 
         assert assemble_modelo_lifecycle_history("130", filing_year=2025, ports=_history_ports(repos)).events == ()
@@ -143,7 +143,7 @@ class TestAssembly:
 
     def test_period_narrows_the_history(self, repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
         """Two periods of the same modelo stay separable."""
-        _, _, _, _, bv_repo = repos
+        _, _, _, _, _bv_repo = repos
         first = _create(repos, period="1T", operation=operation)
         _create(repos, period="2T", operation=operation)
 
@@ -188,7 +188,7 @@ class TestAssembly:
         fact from an identifier that could never have had one, and collapsing
         the two hides the operator's typo behind a plausible answer.
         """
-        _, _, _, _, bv_repo = repos
+        _, _, _, _, _bv_repo = repos
 
         with pytest.raises(ModeloValidationError):
             assemble_modelo_lifecycle_history("abc", ports=_history_ports(repos))
@@ -204,7 +204,7 @@ class TestAssembly:
         the filing-year fallback below turns on, so dropping it here would have
         hidden the evidence for the decision it informs.
         """
-        _, _, _, _, bv_repo = repos
+        _, _, _, _, _bv_repo = repos
         _create(repos, operation=operation)
 
         events = assemble_modelo_lifecycle_history("130", ports=_history_ports(repos)).events

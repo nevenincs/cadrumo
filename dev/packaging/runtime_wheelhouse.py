@@ -17,15 +17,15 @@ import re
 import shutil
 import tempfile
 import tomllib
-import urllib.parse
-import urllib.request
 import uuid
 import zipfile
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from http.client import HTTPConnection, HTTPSConnection
 from pathlib import Path
 from typing import Any, Final
+from urllib.parse import unquote, urlparse, urlsplit
 
 from packaging.markers import default_environment
 from packaging.requirements import Requirement
@@ -287,7 +287,7 @@ def _wheel_rank(filename: str, target: TargetPlatform, python_version: str) -> t
 
 
 def _wheel_filename(url: str) -> str:
-    filename = Path(urllib.parse.unquote(urllib.parse.urlparse(url).path)).name
+    filename = Path(unquote(urlparse(url).path)).name
     if not filename.endswith(".whl") or Path(filename).name != filename:
         raise SystemExit(f"lock wheel URL has an invalid filename: {url!r}")
     return filename
@@ -471,14 +471,33 @@ def _manifest_document(
 def _download(wheel: LockedWheel, destination: Path) -> None:
     digest = hashlib.sha256()
     size = 0
-    with (
-        urllib.request.urlopen(wheel.url, timeout=_DOWNLOAD_TIMEOUT_SECONDS) as response,  # noqa: S310
-        destination.open("xb") as handle,
-    ):
-        while chunk := response.read(1024 * 1024):
-            handle.write(chunk)
-            digest.update(chunk)
-            size += len(chunk)
+    parsed = urlsplit(wheel.url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise SystemExit(f"runtime lock wheel URL is not an HTTP(S) resource: {wheel.url!r}")
+    try:
+        port = parsed.port
+    except ValueError as error:
+        raise SystemExit(f"runtime lock wheel URL has an invalid port: {wheel.url!r}") from error
+    connection_type = HTTPSConnection if parsed.scheme == "https" else HTTPConnection
+    connection = connection_type(parsed.hostname, port, timeout=_DOWNLOAD_TIMEOUT_SECONDS)
+    try:
+        request_path = parsed.path or "/"
+        if parsed.query:
+            request_path = f"{request_path}?{parsed.query}"
+        connection.request("GET", request_path, headers={"User-Agent": "cadrumo-runtime-wheelhouse"})
+        response = connection.getresponse()
+        if response.status < 200 or response.status >= 300:
+            raise SystemExit(
+                f"runtime wheel download failed for {wheel.filename!r}: "
+                f"HTTP {response.status} {response.reason}"
+            )
+        with response, destination.open("xb") as handle:
+            while chunk := response.read(1024 * 1024):
+                handle.write(chunk)
+                digest.update(chunk)
+                size += len(chunk)
+    finally:
+        connection.close()
     if size != wheel.size or digest.hexdigest() != wheel.sha256:
         destination.unlink(missing_ok=True)
         raise SystemExit(

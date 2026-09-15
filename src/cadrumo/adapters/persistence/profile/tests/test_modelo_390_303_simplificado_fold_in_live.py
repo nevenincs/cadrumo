@@ -13,7 +13,7 @@ from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -134,7 +134,7 @@ def _inward_export_ports(
     filing: ModeloRecordCatalogueRepositoryProtocol,
 ) -> ModeloExportPorts:
     """Provide inward fakes for authorities unused by this handoff gate."""
-    authority = Mock()
+    authority = SimpleNamespace()
     return ModeloExportPorts(
         calculation=calculation,
         work_unit=work_unit,
@@ -147,7 +147,7 @@ def _inward_export_ports(
         prorrata_register=authority,
         bienes_inversion=authority,
         transaction=authority,
-        draft_review_ports=Mock(),
+        draft_review_ports=SimpleNamespace(),
     )
 
 

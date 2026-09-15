@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_transaction_catalogue_fixture,
 )
@@ -184,6 +185,7 @@ def _walkthrough(
     preflight_report = preflight_ledger_tax_readiness(
         bucket_id=_BUCKET_ID,
         period=_PERIOD_1T_2026,
+        usage_ratio_profile_loader=load_usage_ratios,
         transaction_repository=tx_repository,
         operation=operation,
     )

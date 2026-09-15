@@ -19,10 +19,18 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.append(str(_REPO_ROOT))
 
-from dev.packaging._distribution_names import normalise_distribution_name  # noqa: E402
-from dev.packaging.hashing import sha256_path  # noqa: E402
-from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
-from dev.packaging.uv_constraints import export_runtime_constraints  # noqa: E402
+
+def _load_packaging_helpers():
+    """Load repository tooling after direct-script path bootstrapping."""
+    from dev.packaging._distribution_names import normalise_distribution_name
+    from dev.packaging.hashing import sha256_path
+    from dev.packaging.python_cohort import load_python_cohort
+    from dev.packaging.uv_constraints import export_runtime_constraints
+
+    return normalise_distribution_name, sha256_path, load_python_cohort, export_runtime_constraints
+
+
+normalise_distribution_name, sha256_path, load_python_cohort, export_runtime_constraints = _load_packaging_helpers()
 
 _DISTRIBUTIONS = (
     ("cadrumo", "cadrumo-*.whl"),

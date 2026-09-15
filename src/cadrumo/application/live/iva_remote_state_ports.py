@@ -31,20 +31,30 @@ class IvaRemoteStatePort(Protocol):
     """Concrete capabilities required by the live IVA application service."""
 
     @property
-    def wallet_target_url(self) -> str: ...
+    def wallet_target_url(self) -> str:
+        """Return the live IVA wallet endpoint selected by composition."""
+        ...
 
-    def active_storage_span(self) -> AbstractContextManager[None]: ...
+    def active_storage_span(self) -> AbstractContextManager[None]:
+        """Open the storage scope required for the live acquisition."""
+        ...
 
-    def list_history(self, *, as_of_year: int | None) -> IvaCompensationHistoryReport: ...
+    def list_history(self, *, as_of_year: int | None) -> IvaCompensationHistoryReport:
+        """Read persisted IVA compensation history through the port."""
+        ...
 
-    def persist_manifest(self, manifest: IvaRemoteStateAcquisitionManifest) -> None: ...
+    def persist_manifest(self, manifest: IvaRemoteStateAcquisitionManifest) -> None:
+        """Persist one acquisition manifest through the secure boundary."""
+        ...
 
     def active_verified_session(
         self,
         *,
         operation: str,
         target_url: str | None,
-    ) -> Awaitable[tuple[AeatSession, Settings]]: ...
+    ) -> Awaitable[tuple[AeatSession, Settings]]:
+        """Open the active verified AEAT session for an operation."""
+        ...
 
     def ensure_authenticated_session(
         self,
@@ -52,7 +62,9 @@ class IvaRemoteStatePort(Protocol):
         *,
         operation: str,
         target_url: str | None,
-    ) -> Awaitable[AuthenticatedAeatSessionResult]: ...
+    ) -> Awaitable[AuthenticatedAeatSessionResult]:
+        """Ensure an AEAT session is authenticated for an operation."""
+        ...
 
     def capture_history(
         self,
@@ -63,7 +75,9 @@ class IvaRemoteStatePort(Protocol):
         year_to: int,
         output_root: Path,
         progress_context: dict[str, object] | None,
-    ) -> Awaitable[IvaCompensationHistoryCaptureReport]: ...
+    ) -> Awaitable[IvaCompensationHistoryCaptureReport]:
+        """Capture IVA compensation history for the requested year range."""
+        ...
 
     def capture_wallet(
         self,
@@ -75,7 +89,9 @@ class IvaRemoteStatePort(Protocol):
         taxpayer_nif: str | None,
         output_root: Path | None,
         progress_context: dict[str, object] | None,
-    ) -> Awaitable[IvaWalletCaptureReport]: ...
+    ) -> Awaitable[IvaWalletCaptureReport]:
+        """Capture IVA wallet state for one target year and period."""
+        ...
 
 
 __all__ = ["IvaRemoteStatePort"]

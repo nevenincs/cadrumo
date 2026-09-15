@@ -238,6 +238,8 @@ def _inherit_keyed_family(
     inherited, removed, positions, patched = _apply_family_storage_delta(
         context, predecessor_id=predecessor_id, family=family, inherited=inherited, successor=successor
     )
+    inherited_casillas_by_id = _casillas_by_id(inherited_casillas)
+    successor_casillas_by_id = _casillas_by_id(successor_casillas)
     retired = _keyed_retirements(successor, revision_id, family) | removed
     superseders: dict[str, object] = {}
     for member in stated:
@@ -287,8 +289,8 @@ def _inherit_keyed_family(
                     identity,
                     member,
                     superseders[identity],
-                    inherited_casillas=inherited_casillas,
-                    successor_casillas=successor_casillas,
+                    inherited_casillas_by_id=inherited_casillas_by_id,
+                    successor_casillas_by_id=successor_casillas_by_id,
                 )
             members.append(superseders[identity])
             superseded.add(identity)
@@ -303,8 +305,8 @@ def _inherit_keyed_family(
                 identity,
                 member,
                 member,
-                inherited_casillas=inherited_casillas,
-                successor_casillas=successor_casillas,
+                inherited_casillas_by_id=inherited_casillas_by_id,
+                successor_casillas_by_id=successor_casillas_by_id,
             )
         members.append(member)
     for member in stated:
@@ -499,8 +501,8 @@ def _refuse_undeclared_repurpose(
     inherited: object,
     stated: object,
     *,
-    inherited_casillas: tuple[object, ...],
-    successor_casillas: tuple[object, ...],
+    inherited_casillas_by_id: Mapping[str, tuple[object, ...]],
+    successor_casillas_by_id: Mapping[str, tuple[object, ...]],
 ) -> None:
     """Refuse a supersession that changes what the member IS rather than what it declares.
 
@@ -519,7 +521,7 @@ def _refuse_undeclared_repurpose(
         before = _field_at(inherited, path)
         after = _field_at(stated, path)
         unchanged = (
-            _same_casilla_identity(before, after, inherited_casillas, successor_casillas)
+            _same_casilla_identity(before, after, inherited_casillas_by_id, successor_casillas_by_id)
             if path in family.casilla_identity_fields
             else before == after
         )
@@ -531,7 +533,7 @@ def _refuse_undeclared_repurpose(
             )
     if family.section == "formulas":
         _refuse_reinterpreted_formula_operands(
-            context, identity, inherited, stated, inherited_casillas, successor_casillas
+            context, identity, inherited, stated, inherited_casillas_by_id, successor_casillas_by_id
         )
 
 
@@ -540,8 +542,8 @@ def _refuse_reinterpreted_formula_operands(
     identity: str,
     inherited: object,
     stated: object,
-    inherited_casillas: tuple[object, ...],
-    successor_casillas: tuple[object, ...],
+    inherited_casillas_by_id: Mapping[str, tuple[object, ...]],
+    successor_casillas_by_id: Mapping[str, tuple[object, ...]],
 ) -> None:
     """An unchanged expression cannot silently read different fiscal concepts.
 
@@ -555,7 +557,9 @@ def _refuse_reinterpreted_formula_operands(
     if before != after:
         return
     for reference in expression_casilla_refs(before):
-        if not _same_casilla_identity(reference, reference, inherited_casillas, successor_casillas):
+        if not _same_casilla_identity(
+            reference, reference, inherited_casillas_by_id, successor_casillas_by_id
+        ):
             raise RegistryLoadError(
                 f"{context}: formulas {identity!r} inherits an unchanged expression whose casilla operand "
                 f"{reference!r} no longer identifies the predecessor's concept; state the successor's "
@@ -566,8 +570,8 @@ def _refuse_reinterpreted_formula_operands(
 def _same_casilla_identity(
     before: object,
     after: object,
-    inherited: tuple[object, ...],
-    successor: tuple[object, ...],
+    inherited_by_id: Mapping[str, tuple[object, ...]],
+    successor_by_id: Mapping[str, tuple[object, ...]],
 ) -> bool:
     """Compare unique declared concepts, retaining exact ids only for unchained rows.
 
@@ -575,8 +579,8 @@ def _same_casilla_identity(
     requires a unique, shared chain on both ends; absent or ambiguous targets
     cannot establish identity.
     """
-    before_rows = tuple(row for row in inherited if _row_id(row) == before)
-    after_rows = tuple(row for row in successor if _row_id(row) == after)
+    before_rows = inherited_by_id.get(before, ()) if isinstance(before, str) else ()
+    after_rows = successor_by_id.get(after, ()) if isinstance(after, str) else ()
     if before == after and not before_rows and not after_rows:
         return True
     if len(before_rows) != 1 or len(after_rows) != 1:
@@ -586,6 +590,16 @@ def _same_casilla_identity(
     if before_lineage is not None or after_lineage is not None:
         return before_lineage is not None and before_lineage == after_lineage
     return before == after
+
+
+def _casillas_by_id(rows: tuple[object, ...]) -> dict[str, tuple[object, ...]]:
+    """Index casillas once while retaining duplicate rows for ambiguity checks."""
+    grouped: dict[str, list[object]] = {}
+    for row in rows:
+        row_id = _row_id(row)
+        if row_id is not None:
+            grouped.setdefault(row_id, []).append(row)
+    return {row_id: tuple(matches) for row_id, matches in grouped.items()}
 
 
 def _field_at(member: object, path: str) -> object:
@@ -1235,6 +1249,7 @@ def _apply_casilla_storage_delta(
         by_id[row_id] = index
     seen: set[str] = set()
     removed: set[str] = set()
+    overridden: set[str] = set()
     result = list(inherited)
     origins = None if inherited_label_origins is None else list(inherited_label_origins)
     for declaration in removals:
@@ -1267,12 +1282,15 @@ def _apply_casilla_storage_delta(
         result[by_id[identity]] = _patch_family_table(
             f"{context}: casilla {identity!r}", patched, declaration.fields, declaration.removed_fields
         )
+        resulting_id = _row_id(result[by_id[identity]])
+        if resulting_id is not None:
+            overridden.add(resulting_id)
         if origins is not None:
             origins[by_id[identity]] = None
     kept_indexes = [index for index, row in enumerate(result) if (_row_id(row) or "") not in removed]
     kept_rows = tuple(result[index] for index in kept_indexes)
     kept_origins = None if origins is None else tuple(origins[index] for index in kept_indexes)
-    return kept_rows, kept_origins, frozenset(str(declaration.selector.id) for declaration in overrides)
+    return kept_rows, kept_origins, frozenset(overridden)
 
 
 def _apply_casilla_positions(

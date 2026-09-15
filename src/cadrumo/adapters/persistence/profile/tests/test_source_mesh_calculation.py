@@ -180,7 +180,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
+    wu_repo, cr_repo, _tx_repo, _invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
         wu_repo,
         modelo=modelo,
@@ -207,7 +207,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
 def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
+    wu_repo, cr_repo, tx_repo, _invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
         wu_repo,
         modelo="349",
@@ -247,7 +247,7 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A March 20 raw intracom row remains inside the March monthly period and fails closed."""
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
+    wu_repo, cr_repo, tx_repo, _invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
         wu_repo,
         modelo="349",
@@ -296,7 +296,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
+    wu_repo, cr_repo, _tx_repo, _invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
         wu_repo,
         modelo=modelo,

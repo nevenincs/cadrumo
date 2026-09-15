@@ -34,7 +34,6 @@ from cadrumo.domain.calculations.registry.authority import (
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.applicability import iter_modelo_applicability_rules
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.modelo_obligation_scope import (
     OUT_OF_SCOPE_OBLIGATIONS,
     UNMODELED_OBLIGATIONS,

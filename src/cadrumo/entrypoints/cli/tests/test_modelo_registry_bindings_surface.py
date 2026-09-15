@@ -6,6 +6,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.directory_scan import scan_directory
+from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
@@ -647,12 +648,13 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
     assert result.exit_code == 0, result.output
     rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
 
-    # Cross-check against the authoritative snapshot: every relation's
-    # target_binding must surface that relation id on the listed binding row.
+    # Cross-check against the authoritative snapshot: every relation-prefill
+    # binding's own id must surface as its relation input on the listed row.
     snapshot = compiled_bundled_authority().snapshot("200", filing_year=2025, period="0A")
-    expected: dict[str, set[str]] = {}
-    for relation in snapshot.revision.relations:
-        expected.setdefault(str(relation.target_binding), set()).add(str(relation.id))
+    expected = {
+        str(binding.id): {str(binding.id)}
+        for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+    }
     assert expected, "Modelo 200 declares relations feeding bindings; fixture must exercise them"
 
     for binding_id, relation_ids in expected.items():

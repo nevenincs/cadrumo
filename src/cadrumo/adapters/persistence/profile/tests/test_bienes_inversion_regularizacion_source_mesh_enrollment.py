@@ -25,7 +25,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -81,8 +81,8 @@ def _source_mesh_ports(
     """Bind the real profile repositories while keeping unrelated authorities inward and deterministic."""
     transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
     invoice_repository = InvoiceCatalogueRepository(bucket_id=bucket_id, objects=objects)
-    work_unit_repository = Mock()
-    bucket_event_repository = Mock()
+    work_unit_repository = SimpleNamespace()
+    bucket_event_repository = SimpleNamespace()
     return CalculationActionPorts(
         operation=operation,
         work_unit_repository=work_unit_repository,
@@ -90,32 +90,32 @@ def _source_mesh_ports(
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
         ),
-        calculation_repository=Mock(),
+        calculation_repository=SimpleNamespace(),
         bucket_event_repository=bucket_event_repository,
         transaction_repository=transaction_repository,
-        usage_ratio_profile_loader=Mock(return_value={}),
+        usage_ratio_profile_loader=lambda: {},
         profile_read_ports=empty_profile_read_ports(),
         invoice_repository=invoice_repository,
         invoice_catalogue_read_ports=InvoiceCatalogueReadPorts(
             invoice_reader=invoice_repository,
             transaction_reader=transaction_repository,
         ),
-        filing_repository=Mock(),
+        filing_repository=SimpleNamespace(),
         prorrata_register_repository=ProrrataRegisterRepository(objects=objects),
         bienes_inversion_repository=bienes_repository,
-        inventory_repository=Mock(),
+        inventory_repository=SimpleNamespace(),
         observation_repository=CalculationObservationRepository(objects=objects),
         invoice_source_ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repository),
         percepciones_observation_ports=PercepcionObservationPorts(
             repository=PercepcionObservationRepositoryAdapter(objects=objects),
         ),
-        iva_compensation_history_repository=Mock(),
-        iva_compensation_decision_repository=Mock(),
-        borrador_snapshot_repository=Mock(),
+        iva_compensation_history_repository=SimpleNamespace(),
+        iva_compensation_decision_repository=SimpleNamespace(),
+        borrador_snapshot_repository=SimpleNamespace(),
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
         ),
-        relation_override_migration=Mock(),
+        relation_override_migration=SimpleNamespace(),
     )
 
 

@@ -19,9 +19,6 @@ from .ledger_action_persistence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["secure_objects"]
-
-
 def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     secure_objects: SecureObjectRepository,
 ) -> None:

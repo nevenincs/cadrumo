@@ -61,7 +61,7 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
     """A borrador revision cannot be filed; only verificado-completo
     revisions are eligible."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, _fr_repo, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,

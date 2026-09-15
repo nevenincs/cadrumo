@@ -48,7 +48,11 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.schema import (
+    GovernedFact,
+    GovernedFactCatalogue,
+    ScalarFactPayload,
+)
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -387,6 +391,7 @@ def test_the_reduction_fact_resolves_only_for_the_lawful_2024_window() -> None:
         ),
         authority_digest="0" * 64,
     )
+    assert isinstance(resolved.payload, ScalarFactPayload)
     assert str(resolved.payload.value) == "0.25"
     assert resolved.valid_from == date(2024, 11, 13)
     assert resolved.valid_to == date(2024, 12, 31)

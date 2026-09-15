@@ -188,7 +188,6 @@ def _persist_blocked_review(
             modelo,
             filing_year,
             period,
-            authority=authority,
             work_unit_repository=work_repository,
             calculation_repository=calculation_repository,
             verification_repository=verification_repository,

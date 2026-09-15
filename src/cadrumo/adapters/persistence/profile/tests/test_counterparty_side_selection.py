@@ -262,7 +262,7 @@ def test_an_issued_document_with_no_billed_party_read_refuses_rather_than_substi
     Both guards are inert here, so nothing but the selection can produce this
     refusal.
     """
-    repository = InvoiceCatalogueRepository(objects=secure_objects)
+    InvoiceCatalogueRepository(objects=secure_objects)
     evidence_id = _stored_evidence(
         _ONE_PARTY_PRINTED,
         settings=isolated_settings,

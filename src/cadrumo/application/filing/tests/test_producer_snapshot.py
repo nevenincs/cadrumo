@@ -22,7 +22,6 @@ from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.prorrata_register import ProrrataEspecialTransitionKind
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -43,7 +42,6 @@ from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import (
     ChargeAccount,
-    M303RegimeComposition,
     ModeloIVAProfile,
     RefundAccount,
     TaxpayerProfile,

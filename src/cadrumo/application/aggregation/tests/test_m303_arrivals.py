@@ -43,13 +43,14 @@ _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _Q2_2026 = Period.from_year_and_code(2026, "2T")
 _Q4_2026 = Period.from_year_and_code(2026, "4T")
 _DECEMBER_2026 = Period.from_year_and_code(2026, "12")
+_DEFAULT_CASH_ACCOUNTING_TREATMENT = IvaCashAccountingTreatment("none")
 
 
 def _observation(
     ledger_id: str,
     *,
     transaction_date: date = date(2026, 2, 11),
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment("none"),
+    cash_accounting_treatment: IvaCashAccountingTreatment = _DEFAULT_CASH_ACCOUNTING_TREATMENT,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,

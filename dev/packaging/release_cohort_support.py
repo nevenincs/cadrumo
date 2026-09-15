@@ -35,7 +35,6 @@ import functools
 import os
 import platform
 import shutil
-import subprocess
 import sys
 import tempfile
 import zipfile
@@ -43,6 +42,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 
 from ._acquire_common import venv_bin_dir
 from .cohort_manifest import (
@@ -91,12 +91,9 @@ def _real_product_wheel() -> Path:
     such project to build.
     """
     output = _session_scratch_root("cadrumo-real-cohort-wheels-")
-    completed = subprocess.run(  # noqa: S603 - fixed uv build argv over repository-owned paths.
+    completed = run_command(
         [_uv_executable(), "build", "--wheel", "--out-dir", str(output)],
         cwd=REPO_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
     )
     if completed.returncode != 0:
         raise RuntimeError(f"real wheel fixture build failed: {completed.stderr}")
@@ -136,12 +133,9 @@ def client_venv_template() -> Path:
         [uv, "venv", "--python", sys.executable, str(template)],
         [uv, "pip", "install", "--python", str(interpreter), str(_real_product_wheel())],
     ):
-        completed = subprocess.run(  # noqa: S603 - fixed uv argv over fixture-owned paths.
+        completed = run_command(
             argv,
-            check=False,
-            capture_output=True,
-            text=True,
-            env=environment,
+            environment=environment,
         )
         if completed.returncode != 0:
             raise RuntimeError(f"client venv fixture build failed: {argv!r}\n{completed.stderr}")

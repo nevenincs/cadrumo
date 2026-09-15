@@ -30,6 +30,7 @@ import yaml
 from ....adapters.outbound.llm.consent import OffHostEvidenceReadOutcome, classify_off_host_evidence_read
 from ....core.config_support import LLMProvider
 from ....core.i18n.render import tr
+from ...adapter_composition import build_ledger_evidence_ports
 from .._ledger_evidence_cli import _OFF_HOST_REFUSAL_LOCALE_KEYS, _mint_extract_consent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -59,6 +60,7 @@ def _mint(*, provider: LLMProvider | None, acknowledged: bool, evidence_id: str 
         evidence_id=evidence_id,
         off_host_provider=provider,
         acknowledged=acknowledged,
+        evidence_ports=build_ledger_evidence_ports(bucket_id=_BUCKET),
     )
 
 

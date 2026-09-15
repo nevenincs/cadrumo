@@ -32,9 +32,9 @@ def test_cadrumo_package_imports_in_process() -> None:
     the eager chain raises here.
     """
 
-    from ..core.package_version import PACKAGE_VERSION as __version__
+    from ..core.package_version import PACKAGE_VERSION
 
-    assert __version__
+    assert PACKAGE_VERSION
 
 
 def test_cadrumo_package_imports_in_subprocess() -> None:

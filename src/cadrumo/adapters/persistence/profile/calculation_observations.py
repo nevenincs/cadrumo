@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime
-from typing import ClassVar, TypeVar, override
+from typing import ClassVar, override
 
 from pydantic import BaseModel, ValidationError
 
@@ -57,10 +57,8 @@ from ..storage.secure_object_namespaces import (
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
 )
 
-_T = TypeVar("_T")
 
-
-def _translate_storage_failure(operation: str, callback: Callable[[], _T]) -> _T:
+def _translate_storage_failure[T](operation: str, callback: Callable[[], T]) -> T:
     """Translate known persistence failures at the application port boundary."""
     try:
         return callback()

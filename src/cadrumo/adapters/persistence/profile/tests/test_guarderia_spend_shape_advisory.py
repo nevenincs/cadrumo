@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -93,10 +93,10 @@ def _collect(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourceDia
         bucket_id=_BUCKET_ID,
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
-        observation_repository=Mock(),
-        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=Mock(),
-        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+        observation_repository=SimpleNamespace(),
+        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=SimpleNamespace(),
+        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
     )
     return tuple(diagnostic for diagnostic in diagnostics if diagnostic.source_kind.startswith("guarderia_"))
 
@@ -152,10 +152,10 @@ def test_it_reaches_the_operator_through_the_coordinator() -> None:
         bucket_id=_BUCKET_ID,
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
-        observation_repository=Mock(),
-        prorrata_register_repository=Mock(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=Mock(),
-        transaction_repository=Mock(bucket_id=_BUCKET_ID),
+        observation_repository=SimpleNamespace(),
+        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        bienes_inversion_repository=SimpleNamespace(),
+        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
     )
 
     assert _KIND in {d.source_kind for d in diagnostics}

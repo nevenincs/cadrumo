@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import importlib
 import json
 import os
 import platform
 import shutil
-import subprocess
 import sys
 import tempfile
 import uuid
@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import UTF_8
+from dev.packaging.command_execution import CommandResult, run_command
 
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parents[1]
@@ -28,29 +29,28 @@ for _import_root in (str(_REPO_ROOT), str(_SOURCE_ROOT)):
 if not __package__:
     __package__ = "dev.packaging"
 
-from cadrumo.core.directory_scan import scan_directory  # noqa: E402
-from dev.source_tree import content_digest, repository_files, snapshot  # noqa: E402
-
-from .build_scratch_reclaim import (  # noqa: E402
-    RELEASE_STAGING_FAMILY,
-    matching_family,
-    sweep_var_scratch,
-    var_scratch_name,
-)
-from .cohort_manifest import (  # noqa: E402
-    ArtifactKind,
-    BuildIdentity,
-    LoadedReleaseCohort,
-    SourceIdentity,
-    create_manifest,
-    load_release_cohort,
-    write_manifest,
-)
-from .hashing import sha256_path  # noqa: E402
-from .python_cohort import (  # noqa: E402
-    PythonCohort,
-    build_python_cohort,
-)
+scan_directory = importlib.import_module("cadrumo.core.directory_scan").scan_directory
+_SOURCE_TREE = importlib.import_module("dev.source_tree")
+content_digest = _SOURCE_TREE.content_digest
+repository_files = _SOURCE_TREE.repository_files
+snapshot = _SOURCE_TREE.snapshot
+_BUILD_SCRATCH = importlib.import_module("dev.packaging.build_scratch_reclaim")
+RELEASE_STAGING_FAMILY = _BUILD_SCRATCH.RELEASE_STAGING_FAMILY
+matching_family = _BUILD_SCRATCH.matching_family
+sweep_var_scratch = _BUILD_SCRATCH.sweep_var_scratch
+var_scratch_name = _BUILD_SCRATCH.var_scratch_name
+_COHORT_MANIFEST = importlib.import_module("dev.packaging.cohort_manifest")
+ArtifactKind = _COHORT_MANIFEST.ArtifactKind
+BuildIdentity = _COHORT_MANIFEST.BuildIdentity
+LoadedReleaseCohort = _COHORT_MANIFEST.LoadedReleaseCohort
+SourceIdentity = _COHORT_MANIFEST.SourceIdentity
+create_manifest = _COHORT_MANIFEST.create_manifest
+load_release_cohort = _COHORT_MANIFEST.load_release_cohort
+write_manifest = _COHORT_MANIFEST.write_manifest
+sha256_path = importlib.import_module("dev.packaging.hashing").sha256_path
+_PYTHON_COHORT = importlib.import_module("dev.packaging.python_cohort")
+PythonCohort = _PYTHON_COHORT.PythonCohort
+build_python_cohort = _PYTHON_COHORT.build_python_cohort
 
 _UTF_8: Final[str] = UTF_8
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
@@ -70,15 +70,11 @@ def _run(
     *,
     cwd: Path,
     env: dict[str, str] | None = None,
-) -> subprocess.CompletedProcess[str]:
-    completed = subprocess.run(  # noqa: S603 - explicit repository-owned tool argv.
+) -> CommandResult:
+    completed = run_command(
         argv,
         cwd=cwd,
-        env=env,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
+        environment=env,
         errors="strict",
     )
     if completed.returncode != 0:

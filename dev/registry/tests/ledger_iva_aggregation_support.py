@@ -66,6 +66,7 @@ from cadrumo.domain.iva.schema import (
     IvaRateKind,
 )
 from cadrumo.domain.iva_compensation.filed_derivation import M303CompensationBasis
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 _M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
@@ -81,7 +82,6 @@ def _deduction_provenance(
         source_locator=source_locator,
         evidence_digest="a" * 64,
     )
-
 
 _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.interior.devengado"
@@ -404,6 +404,3 @@ def _calculate_390_from_observations_and_303_filings(
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
-
-
-from dev.registry.compiler.authority import compiled_bundled_authority  # noqa: E402

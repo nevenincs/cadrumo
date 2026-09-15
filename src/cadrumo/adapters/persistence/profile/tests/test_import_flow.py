@@ -82,7 +82,7 @@ _IMPORTED_REVISION_CASILLAS = (
 
 def test_import_persists_filed_calculation_revision(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     outcome = _drive_import_persists_filing(repos, operation=operation)
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
             outcome.filing.calculation_revision_id,
@@ -96,7 +96,7 @@ def test_import_persists_registry_grounded_casilla_observations(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     outcome = _drive_import_persists_filing(repos, operation=operation)
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
             outcome.filing.calculation_revision_id,
@@ -120,7 +120,7 @@ def test_import_persists_casilla_value(
     repos: _Repos, casilla_id: CasillaId, expected: Decimal, *, operation: PinnedAuthorityOperation
 ) -> None:
     outcome = _drive_import_persists_filing(repos, operation=operation)
-    _, cr_repo, _, _, _ = repos
+    _, _cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
             outcome.filing.calculation_revision_id,
@@ -131,7 +131,7 @@ def test_import_persists_casilla_value(
 
 def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     outcome = _drive_import_persists_filing(repos, operation=operation)
-    wu_repo, _, _, _, _ = repos
+    _wu_repo, _, _, _, _ = repos
     refreshed_wu = get_work_unit(
         outcome.work_unit.work_unit_id,
         ports=build_work_lifecycle_ports(bucket_id=outcome.work_unit.bucket_id),
@@ -181,7 +181,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos, *, operation: Pin
     is captured; the new filing's bucket-event references the prior
     via ``supersedes_filing_record_id``."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _cr_repo, _fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
     _persist_matching_justificante(
         "JUSTFIRST01",
@@ -246,7 +246,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: P
     externally-filed return: import official evidence, then amend
     locally with the corrected casilla values."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _cr_repo, _fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
     _persist_matching_justificante(
         "JUSTBASELINE1",

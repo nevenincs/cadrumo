@@ -47,6 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFESIONAL = RetencionScheme("actividades_profesionales")
 _FX_RATE_SOURCE = "test_reference"
+_DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 
 def _invoice(
@@ -60,7 +61,7 @@ def _invoice(
     tax_id: str = "B12345674",
     currency: str = "EUR",
     fx_rate: str | None = None,
-    category: IvaCategory = IvaCategory("domestic_general"),
+    category: IvaCategory = _DEFAULT_IVA_CATEGORY,
 ) -> Invoice:
     subtotal = Decimal(base)
     rate = iva_rate_percentage(IvaRate._from_registry("RATE_21"), date(2026, 1, 1))

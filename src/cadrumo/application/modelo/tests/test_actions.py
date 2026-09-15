@@ -35,7 +35,6 @@ from ....domain.calculations.registry.iva_compensation_annual_partition_bindings
 )
 from ....domain.calculations.registry.iva_schema_vocabulary import (
     iva_regime_simplificado_token,
-    require_iva_regime,
 )
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind

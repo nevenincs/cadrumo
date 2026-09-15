@@ -42,7 +42,6 @@ from ....domain.iva.components import (
     registry_component_catalogue,
 )
 from ....domain.iva.flow import derive_flow_for_classification, is_deducible_flow
-from ....domain.iva.schema import IvaCategory
 from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger import resolve_iva_ledger_binding_values
 

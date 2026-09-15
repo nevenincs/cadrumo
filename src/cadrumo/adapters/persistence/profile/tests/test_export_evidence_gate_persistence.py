@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 
@@ -38,6 +38,7 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -50,9 +51,9 @@ _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILL
 active_profile = active_profile_isolated_backend_fixture(autouse=False, name="active_profile")
 
 
-def _inward_export_ports(*, calculation: object) -> ModeloExportPorts:
+def _inward_export_ports(*, calculation: CalculationRevisionCatalogueRepositoryProtocol) -> ModeloExportPorts:
     """Provide application-owned fakes for authorities unused by this gate."""
-    authority = Mock()
+    authority = SimpleNamespace()
     return ModeloExportPorts(
         calculation=calculation,
         work_unit=authority,
@@ -65,7 +66,7 @@ def _inward_export_ports(*, calculation: object) -> ModeloExportPorts:
         prorrata_register=authority,
         bienes_inversion=authority,
         transaction=authority,
-        draft_review_ports=Mock(),
+        draft_review_ports=SimpleNamespace(),
     )
 
 

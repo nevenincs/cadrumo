@@ -577,6 +577,20 @@ def _storage_difference(
     return visit(baseline, target), tuple(removed)
 
 
+def _existing_storage_removals(baseline: Mapping[str, object], removed_fields: Sequence[str]) -> tuple[str, ...]:
+    """Keep removals that address leaves physically present on the inherited row."""
+    existing: list[str] = []
+    for path in removed_fields:
+        value: object = baseline
+        for segment in path.split("."):
+            if not isinstance(value, Mapping) or segment not in value:
+                break
+            value = value[segment]
+        else:
+            existing.append(path)
+    return tuple(existing)
+
+
 def _apply_storage_difference(
     baseline: Mapping[str, object], fields: Mapping[str, object], removed_fields: Sequence[str]
 ) -> _Row:
@@ -1797,9 +1811,7 @@ def _plan(
                 )
             semantic_predecessor = source.manifest.get("predecessor")
             storage_predecessor = source.manifest.get("casilla_storage_baseline")
-            predecessor = str(
-                semantic_predecessor if isinstance(semantic_predecessor, str) else storage_predecessor
-            )
+            predecessor = str(semantic_predecessor if isinstance(semantic_predecessor, str) else storage_predecessor)
             storage_only = not isinstance(semantic_predecessor, str)
             if predecessor not in materialised:
                 raise MigrationRefusedError(
@@ -1861,7 +1873,7 @@ def _plan(
                     attestation for attestation in attestations if attestation.identity in stated_lineages
                 ),
             )
-            materialised[revision_id] = [_Placed(row, revision_id) for row in full_rows]
+            materialised[revision_id] = [_Placed(lift.lifts[_row_id(row)].row, revision_id) for row in full_rows]
             work.append(_EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None))
             continue
         source_default, withheld, lifts = lift.source_default, lift.withheld, lift.lifts
@@ -1905,6 +1917,9 @@ def _plan(
                     lifts=lifts,
                     source=source,
                     defaults=new_defaults,
+                    # The baseline supplies canonical merge placement, while
+                    # successor-local positions preserve any effective order
+                    # the authored full copy deliberately changes.
                     normalise_order=predecessor in order_normalised,
                     storage_only=basis is PredecessorBasis.STORAGE,
                 )
@@ -1926,9 +1941,11 @@ def _plan(
             lineage_attestations = ()
             reconstructed_order = tuple(_row_id(row) for row in full_rows)
             normalised = False
-        if basis in {PredecessorBasis.FIRST, PredecessorBasis.DECLARED_ROOT, PredecessorBasis.BLOCKED}:
+        if basis is PredecessorBasis.BLOCKED:
             full_by_id = {_row_id(row): row for row in full_rows}
             materialised[revision_id] = [_Placed(full_by_id[row_id], revision_id) for row_id in reconstructed_order]
+        elif basis in {PredecessorBasis.FIRST, PredecessorBasis.DECLARED_ROOT}:
+            materialised[revision_id] = [_Placed(lifts[row_id].row, revision_id) for row_id in reconstructed_order]
         else:
             # `_choose_drops` has already proved that the generated operations
             # reconstruct this full-copy edition.  Seed the next planning step
@@ -2186,6 +2203,7 @@ def _choose_existing_drops(
             orden=defaults.orden,
         ).row
         fields, removed_fields = _storage_difference(comparison_baseline, target)
+        removed_fields = _existing_storage_removals(baseline, removed_fields)
         if _ROW_SOURCE in fields:
             removed_fields = tuple(field for field in removed_fields if field != _ROW_SOURCE_ADDITIONS)
         unsupported_nested = tuple(
@@ -2240,7 +2258,7 @@ def _choose_drops(
 ]:
     causes: list[BlockedCause] = []
     stated_lineages = {_lineage(row) for row in full_rows}
-    if any(
+    if not storage_only and any(
         (lineage := _lineage(placed.row)) is not None
         and lineage not in stated_lineages
         and lineage not in source.retired
@@ -2284,6 +2302,10 @@ def _choose_drops(
             declarations=source.declarations,
         )
         payload_row = _without_lineage_claims(row)
+        if materialised is None:
+            kept[KeptReason.NOT_EXACT] += 1
+            not_exact.append(f"{row_id}: inherited references do not resolve in the successor")
+            continue
         if materialised != payload_row:
             target = lifts[row_id].row
             pending_attestation: LineageAttestation | None = None
@@ -2304,6 +2326,7 @@ def _choose_drops(
                 orden=defaults.orden,
             ).row
             fields, removed_fields = _storage_difference(baseline, target)
+            removed_fields = _existing_storage_removals(_without_lineage_claims(candidate.row), removed_fields)
             if _ROW_SOURCE in fields:
                 removed_fields = tuple(field for field in removed_fields if field != _ROW_SOURCE_ADDITIONS)
             unsupported_nested = tuple(
@@ -2332,7 +2355,9 @@ def _choose_drops(
             continue
         if storage_only and any(claim in lifts[row_id].row for claim in _LINEAGE_CLAIMS):
             target = lifts[row_id].row
-            fields, removed_fields = _storage_difference(_without_lineage_claims(candidate.row), target)
+            raw_baseline = _without_lineage_claims(candidate.row)
+            fields, removed_fields = _storage_difference(raw_baseline, target)
+            removed_fields = _existing_storage_removals(raw_baseline, removed_fields)
             overrides.append(
                 {
                     "selector": {"revision": predecessor, "id": _row_id(candidate.row)},
@@ -2359,7 +2384,7 @@ def _choose_drops(
     removals: tuple[_Row, ...] = tuple(
         {"selector": {"revision": predecessor, "id": _row_id(placed.row)}}
         for placed in inherited
-        if _lineage(placed.row) is None
+        if (storage_only or _lineage(placed.row) is None)
         and _row_id(placed.row) not in successor_ids
         and _row_id(placed.row) not in matched_storage_ids
     )
@@ -2407,43 +2432,9 @@ def _choose_drops(
     )
     if refused is not None:
         return [refused], set(), Counter(), [], (), (), (), (), (), False
-    # Preserve authored order unless the full copy merely reverses the inherited
-    # baseline.  That strictly descending inherited sequence is the canonical
-    # detector for representation-only fragment reversal: encoding thousands
-    # of positions for it would defeat merge-order normalisation.  Other order
-    # changes are effective registry data and must round-trip exactly.
-    overridden_ids = {
-        str(fields.get("id", selector.get("id")))
-        for override in overrides
-        if isinstance((selector := override.get("selector")), Mapping)
-        and isinstance((fields := override.get("fields", {})), Mapping)
-    }
-    movable_ids = stated | overridden_ids
     expected_ids = [_row_id(row) for row in full_rows]
-    current_ids = [_row_id(placed.row) for placed in merged]
-    expected_inherited = [item for item in expected_ids if item not in movable_ids]
-    current_inherited = [item for item in current_ids if item not in movable_ids]
-    shared_inherited = set(expected_inherited) & set(current_inherited)
-    expected_shared = [item for item in expected_inherited if item in shared_inherited]
-    current_shared = [item for item in current_inherited if item in shared_inherited]
-    # A fresh full-copy source has no authored storage-order operation.  Its
-    # physical row order is therefore representation, and conversion adopts
-    # the canonical merge order (inherited members in baseline order,
-    # superseders in place, additions appended).  An existing delta may carry
-    # explicit positions whose effective order must remain unchanged while we
-    # finish its remaining authored rows.
-    canonical_merge_order = not _delta_authored(source.manifest)
-    representation_only_reversal = (
-        normalise_order
-        or canonical_merge_order
-        or (
-            len(expected_shared) > 1
-            and expected_shared != current_shared
-            and expected_shared == list(reversed(current_shared))
-        )
-    )
     positions_list: list[_Row] = []
-    if not representation_only_reversal:
+    if not normalise_order:
         for position, expected_id in enumerate(expected_ids):
             current = next(
                 (index for index, placed in enumerate(merged) if _row_id(placed.row) == expected_id),
@@ -2499,7 +2490,7 @@ def _choose_drops(
         positions,
         tuple(lineage_attestations),
         tuple(_row_id(placed.row) for placed in merged),
-        representation_only_reversal,
+        normalise_order,
     )
 
 

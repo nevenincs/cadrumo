@@ -14,13 +14,12 @@ data-prep walkthrough's operator contract from #260:
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....application.overview.data_prep import DataPrepStepId, DataPrepStepState
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
@@ -28,10 +27,12 @@ from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._overview_payloads import OverviewPrepareStepPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 
+__all__ = ["_isolated_cli_backend"]
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def test_prepare_shows_import_step_pending_on_fresh_profile(_isolated_cli_backend: Path) -> None:
+def test_prepare_shows_import_step_pending_on_fresh_profile() -> None:
     """A brand-new profile with no ledger data: the first checklist step is
     pending and names the exact ``ledger import`` command to run next."""
 
@@ -86,7 +87,7 @@ def test_prepare_shows_import_step_pending_on_fresh_profile(_isolated_cli_backen
         )
 
 
-def test_prepare_advances_import_step_after_manual_ledger_entry(_isolated_cli_backend: Path) -> None:
+def test_prepare_advances_import_step_after_manual_ledger_entry() -> None:
     """After a manual ledger entry lands inside the requested period, the
     import step must flip from pending to done - the operator must not keep
     being told to import when the data already exists."""
@@ -118,7 +119,7 @@ def test_prepare_advances_import_step_after_manual_ledger_entry(_isolated_cli_ba
     assert classify_step["next_action"]["action"]["action_id"] == "operator.ledger.classify"
 
 
-def test_prepare_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend: Path) -> None:
+def test_prepare_is_read_only_and_safe_to_run_repeatedly() -> None:
     """Running the walkthrough twice in a row must be a pure read: the second
     invocation reports identical state, proving no mutation occurred."""
 
@@ -135,7 +136,7 @@ def test_prepare_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend: 
     assert _payload(first.output) == _payload(second.output)
 
 
-def test_prepare_rejects_unknown_modelo_with_registry_grounded_message(_isolated_cli_backend: Path) -> None:
+def test_prepare_rejects_unknown_modelo_with_registry_grounded_message() -> None:
     """An unknown/mistyped modelo code refuses loudly rather than silently
     defaulting to an empty checklist."""
 

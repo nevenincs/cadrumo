@@ -417,6 +417,7 @@ def _input_checked(node: object) -> bool:
 
 
 def wallet_execute_gate_status(html: str, *, expected_path: str) -> str:
+    """Classify whether the wallet HTML exposes the expected execute form."""
     soup = parse_html(html)
     form = soup.select_one(PRE303.wallet_form_selector)
     if form is None:
@@ -433,6 +434,7 @@ def wallet_execute_gate_status(html: str, *, expected_path: str) -> str:
 
 
 def wallet_execute_form_method(html: str) -> str:
+    """Return the wallet execute form's HTTP method, defaulting to ``GET``."""
     soup = parse_html(html)
     form = soup.select_one(PRE303.wallet_form_selector)
     if form is None:
@@ -442,6 +444,7 @@ def wallet_execute_form_method(html: str) -> str:
 
 
 def has_wallet_table(html: str) -> bool:
+    """Return whether HTML contains a table with the wallet headers."""
     soup = parse_html(html)
     for table in soup.find_all("table"):
         header = _normalised_text(table.get_text(" "))
@@ -477,6 +480,7 @@ class _WalletPageShape(TypedDict):
 
 
 def wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShape:
+    """Build bounded structural diagnostics for one wallet page."""
     soup = parse_html(html)
     wallet_entrypoints = tuple(
         entrypoint
@@ -700,6 +704,7 @@ def _cell_value_text(cell: Tag) -> str:
 
 
 def looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:
+    """Return whether a parsed page is the executed-empty wallet response."""
     title_and_heading = _normalised_text(
         f"{_normalised_title(soup)} {' '.join(node.get_text(' ') for node in soup.find_all(['h1', 'h2']))}",
     )

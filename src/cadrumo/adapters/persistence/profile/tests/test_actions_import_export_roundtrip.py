@@ -24,9 +24,6 @@ from .ledger_action_persistence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["secure_objects"]
-
-
 @pytest.mark.parametrize("export_format", [ExportSerializationFormat.CSV, ExportSerializationFormat.JSONL])
 def test_import_ledger_source_honors_explicit_direction_column_on_positive_amount_in_exports(
     secure_objects: SecureObjectRepository,

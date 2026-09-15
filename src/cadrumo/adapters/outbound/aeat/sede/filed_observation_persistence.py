@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar, override
+from typing import TYPE_CHECKING, override
 
 from .....adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -72,16 +72,15 @@ if TYPE_CHECKING:
     from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
-_T = TypeVar("_T")
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
 
 
-def _call_adapter(
+def _call_adapter[T](
     operation: str,
-    callback: Callable[[], _T],
+    callback: Callable[[], T],
     *,
     fallback_key: str = _DEFAULT_FAILURE_KEY,
-) -> _T:
+) -> T:
     """Invoke one adapter and translate its exception at the app boundary."""
     try:
         return callback()
@@ -466,20 +465,23 @@ class BaselineImportAdapter(FiledBaselineImportPort):
         clock: datetime,
     ) -> ModeloRecord:
         """Import one complete filed observation as an amendable baseline."""
-        return _call_adapter(
-            "import_filed_baseline",
-            lambda: import_external_filing_source(
-                source,
-                bucket_id=bucket_id,
-                actor=actor,
-                work_lifecycle_ports=self._work_lifecycle_ports,
-                calculation_repository=self._calculation_repository,
-                filing_repository=self._filing_repository,
-                justificante_repository=self._justificante_repository,
-                observation_repository=self._observation_repository,
-                clock=clock,
-            ),
-        )
+
+        def import_with_authority() -> ModeloRecord:
+            with bundled_indexed_authority().operation() as operation:
+                return import_external_filing_source(
+                    source,
+                    bucket_id=bucket_id,
+                    actor=actor,
+                    work_lifecycle_ports=self._work_lifecycle_ports,
+                    operation=operation,
+                    calculation_repository=self._calculation_repository,
+                    filing_repository=self._filing_repository,
+                    justificante_repository=self._justificante_repository,
+                    observation_repository=self._observation_repository,
+                    clock=clock,
+                )
+
+        return _call_adapter("import_filed_baseline", import_with_authority)
 
 
 __all__ = [

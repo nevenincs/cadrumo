@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import shutil
-import subprocess
 import sys
 import textwrap
 from collections.abc import Iterable, Mapping
@@ -27,6 +26,7 @@ from cadrumo.application.provisioning_contracts import ProvisioningPreconditionC
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 
+from ..command_execution import CommandResult, run_command
 from ..lane_verification_core import (
     build_companion_wheels,
     build_root_snapshot,
@@ -168,16 +168,12 @@ def _run_provisioning_matrix(*, work_dir: Path, python: Path, state_name: str) -
         )
         """,
     )
-    completed = subprocess.run(  # noqa: S603 - fixed installed interpreter and test-owned driver source
+    completed = run_command(
         [str(python), "-c", driver],
         cwd=work_dir,
-        env=_isolated_environment(work_dir, locale="en", state_name=state_name),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
+        environment=_isolated_environment(work_dir, locale="en", state_name=state_name),
         errors="replace",
-        timeout=180,
-        check=False,
+        timeout_seconds=180,
     )
     assert completed.returncode == 0, f"provisioning driver failed:\n{completed.stdout}\n{completed.stderr}"
     line = next((item for item in completed.stdout.splitlines() if item.startswith(_PROVISIONING_MARKER)), None)
@@ -236,7 +232,7 @@ def _assert_projection_chain(row: Mapping[str, object], *, expected_condition: s
     )
 
 
-def _json_envelope(completed: subprocess.CompletedProcess[str], *, command: str) -> dict[str, object]:
+def _json_envelope(completed: CommandResult, *, command: str) -> dict[str, object]:
     """Recover the actual JSON error/success envelope without inspecting prose."""
     for stream in (completed.stdout, completed.stderr):
         try:
@@ -260,27 +256,19 @@ def _overview_console_matrix(cohort: _InstalledCohort) -> dict[str, dict[str, ob
     """Invoke the public overview surface in JSON and text for every locale."""
     matrix: dict[str, dict[str, object]] = {}
     for locale in SUPPORTED_OUTPUT_LANGUAGES:
-        json_result = subprocess.run(  # noqa: S603 - fixed installed console argv
+        json_result = run_command(
             [str(cohort.core_cli), "--format", "json", "app", "overview", "status"],
             cwd=cohort.work_dir,
-            env=_isolated_environment(cohort.work_dir, locale=locale, state_name=f"overview-{locale}"),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
+            environment=_isolated_environment(cohort.work_dir, locale=locale, state_name=f"overview-{locale}"),
             errors="replace",
-            timeout=120,
-            check=False,
+            timeout_seconds=120,
         )
-        text_result = subprocess.run(  # noqa: S603 - fixed installed console argv
+        text_result = run_command(
             [str(cohort.core_cli), "--format", "text", "app", "overview", "status"],
             cwd=cohort.work_dir,
-            env=_isolated_environment(cohort.work_dir, locale=locale, state_name=f"overview-{locale}-text"),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
+            environment=_isolated_environment(cohort.work_dir, locale=locale, state_name=f"overview-{locale}-text"),
             errors="replace",
-            timeout=120,
-            check=False,
+            timeout_seconds=120,
         )
         matrix[locale] = {
             "json_exit_code": json_result.returncode,

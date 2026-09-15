@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+
+from dev.packaging.command_execution import run_command
 
 from ..analysis.governed_literal_discovery import CandidateKind, discover_governed_literal_candidates, main
 
@@ -143,11 +144,9 @@ def test_empty_root_reports_zero_and_missing_root_is_invalid(
 def test_live_module_entrypoint_remains_report_only(tmp_path: Path) -> None:
     (tmp_path / "policy.py").write_text("TAX_RATE = 21\n", encoding="utf-8")
 
-    completed = subprocess.run(  # noqa: S603 - the interpreter and module are fixed test inputs
+    completed = run_command(
         [sys.executable, "-m", "dev.registry.analysis.governed_literal_discovery", "--source-root", str(tmp_path)],
-        check=False,
-        capture_output=True,
-        text=True,
+        cwd=Path.cwd(),
     )
 
     assert completed.returncode == 0

@@ -42,6 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 _CIF = "B12345674"
+_DEFAULT_SCOPE = IvaTerritorialScope._from_registry("es_mainland")
 
 
 class _InMemoryCounterpartyEstablishmentRepository(CounterpartyEstablishmentRepositoryProtocol):
@@ -72,7 +73,7 @@ def repository() -> CounterpartyEstablishmentRepositoryProtocol:
 def _confirm(
     repository: CounterpartyEstablishmentRepositoryProtocol,
     *,
-    scope: IvaTerritorialScope = IvaTerritorialScope._from_registry("es_mainland"),
+    scope: IvaTerritorialScope = _DEFAULT_SCOPE,
     identification_state: EUMemberState | None = None,
     note: str = "",
 ):

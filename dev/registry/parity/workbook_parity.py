@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Callable, Generator, Iterable, Mapping
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
@@ -53,6 +53,7 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from dev.packaging.command_execution import CommandResult, run_command
 
 from .workbook_parity_models import (
     SyntheticInputSet,
@@ -448,7 +449,20 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     )
 
 
-def _subprocess_failure_detail(completed: subprocess.CalledProcessError | subprocess.CompletedProcess[str]) -> str:
+def _run_libreoffice(command: Sequence[str], *, timeout_seconds: float) -> CommandResult:
+    """Run a resolved LibreOffice command and expose subprocess-like failures."""
+    completed = run_command(command, cwd=Path.cwd(), timeout_seconds=timeout_seconds)
+    if completed.returncode != 0:
+        raise subprocess.CalledProcessError(
+            completed.returncode,
+            list(command),
+            output=completed.stdout,
+            stderr=completed.stderr,
+        )
+    return completed
+
+
+def _subprocess_failure_detail(completed: subprocess.CalledProcessError | CommandResult) -> str:
     """Summarize a failed LibreOffice invocation from fields this project owns.
 
     ``completed.stdout``/``completed.stderr`` are text the external LibreOffice
@@ -514,7 +528,7 @@ def run_workbook_with_libreoffice(
         finally:
             workbook.close()
         try:
-            completed = subprocess.run(  # noqa: S603 - resolved runner executable, fixed argv, no caller input
+            completed = _run_libreoffice(
                 [
                     str(runner),
                     "--headless",
@@ -528,10 +542,7 @@ def run_workbook_with_libreoffice(
                     str(output_dir),
                     str(working_copy),
                 ],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=60,
+                timeout_seconds=60,
             )
         except subprocess.TimeoutExpired as exc:
             raise RegistryValidationError("LibreOffice workbook recalculation timed out") from exc
@@ -666,7 +677,7 @@ def _converted_binary_xls_path(
             return
         user_installation = (tmp_path / "lo-profile").resolve().as_uri()
         try:
-            completed = subprocess.run(  # noqa: S603 - resolved runner executable, fixed argv, no caller input
+            completed = _run_libreoffice(
                 [
                     str(runner),
                     "--headless",
@@ -680,10 +691,7 @@ def _converted_binary_xls_path(
                     str(output_dir),
                     str(context.resolved_path),
                 ],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=120,
+                timeout_seconds=120,
             )
         except subprocess.TimeoutExpired as exc:
             raise _BinaryXlsConversionError("LibreOffice binary XLS conversion timed out") from exc

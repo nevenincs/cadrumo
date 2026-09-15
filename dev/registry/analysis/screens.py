@@ -27,7 +27,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Final, Literal
 
-from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from ..compiler.authority import compiled_bundled_authority
@@ -453,7 +452,7 @@ def run_corpus_screens() -> tuple[tuple[str, int, str], ...]:
 def main() -> int:
     """Print one census row per screen and a closing total; always exit 0."""
     authority = compiled_bundled_authority()
-    modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
+    modelo_ids = tuple(sorted(str(modelo.id) for modelo in authority.modelos))
     results = run_screens(authority, modelo_ids)
     for name, count, meaning in results:
         sys.stdout.write(f"screen name={name} rows={count} counts={meaning!r}\n")

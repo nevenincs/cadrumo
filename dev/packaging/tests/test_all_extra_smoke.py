@@ -16,12 +16,12 @@ and every extra.
 from __future__ import annotations
 
 import pathlib
-import subprocess
 import sys
 
 import pytest
 
 from ..all_extra_smoke import COMPANION_MODULES, build_parser, declared_claims, optional_import_probe_source
+from ..command_execution import CommandResult, run_command
 from ..lane_verification_core import optional_extra_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -139,7 +139,7 @@ def _plant(root: pathlib.Path, records, present) -> None:
             (root / f"{name}.py").write_text("", encoding="utf-8")
 
 
-def _run(root: pathlib.Path, program: str) -> subprocess.CompletedProcess[str]:
+def _run(root: pathlib.Path, program: str) -> CommandResult:
     """Run one probe program in a child interpreter that sees only the stub tree.
 
     ``-S`` drops site-packages and ``-E`` drops ``PYTHONPATH``, so the only
@@ -147,12 +147,9 @@ def _run(root: pathlib.Path, program: str) -> subprocess.CompletedProcess[str]:
     that the dev environment's own ``ofxtools`` would satisfy the import the
     absence test needs to fail, and the teeth would be theatre.
     """
-    return subprocess.run(  # noqa: S603 - fixed argv, interpreter is this repo's own
+    return run_command(
         [sys.executable, "-S", "-E", "-c", program],
         cwd=root,
-        capture_output=True,
-        text=True,
-        check=False,
     )
 
 

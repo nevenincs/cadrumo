@@ -6,6 +6,7 @@ import ast
 import os
 import tomllib
 import warnings
+from importlib import import_module
 
 # Pin the CLI output language to English BEFORE any project module is imported.
 # CLI help strings are tr() values resolved at import time; the sphinx-click
@@ -25,9 +26,9 @@ from sphinx.deprecation import RemovedInSphinx90Warning
 _PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
-from cadrumo.core.directory_scan import scan_directory  # noqa: E402
-from cadrumo.core.external_constants import OutputLanguage  # noqa: E402
-from cadrumo.core.product_identity import PRODUCT_IDENTITY  # noqa: E402
+scan_directory = import_module("cadrumo.core.directory_scan").scan_directory
+OutputLanguage = import_module("cadrumo.core.external_constants").OutputLanguage
+PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTITY
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 

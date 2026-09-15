@@ -43,6 +43,7 @@ from ..build_scratch_reclaim import (
     sweep_var_scratch,
     var_scratch_name,
 )
+from ..command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -443,11 +444,17 @@ def test_sweep_does_not_follow_a_link_named_like_scratch(tmp_path: Path) -> None
         if sys.platform == "win32":
             command_shell = shutil.which("cmd")
             assert command_shell is not None
-            subprocess.run(  # noqa: S603 - resolved shell with a fixed, test-owned argv.
+            completed = run_command(
                 [command_shell, "/c", "mklink", "/J", str(link), str(target)],
-                check=True,
-                capture_output=True,
+                cwd=REPO_ROOT,
             )
+            if completed.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    completed.returncode,
+                    list(completed.argv),
+                    output=completed.stdout,
+                    stderr=completed.stderr,
+                )
         else:
             link.symlink_to(target, target_is_directory=True)
     except (OSError, subprocess.CalledProcessError) as exc:

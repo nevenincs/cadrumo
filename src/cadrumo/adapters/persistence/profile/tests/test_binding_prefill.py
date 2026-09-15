@@ -71,6 +71,7 @@ _M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compe
 _M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
 _M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+_DEFAULT_FLOW = IvaFlowDirection._from_registry("repercutido")
 
 
 @cache
@@ -112,7 +113,7 @@ def _observation(
     *,
     ledger_id: str,
     txn_date: date,
-    flow: IvaFlowDirection = IvaFlowDirection._from_registry("repercutido"),
+    flow: IvaFlowDirection = _DEFAULT_FLOW,
     iva: Decimal,
 ) -> IvaLedgerObservation:
     deduction_fact_kind: IvaDeductionFactKind | None = None

@@ -53,7 +53,6 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-import subprocess
 import sys
 import tempfile
 from collections.abc import Iterable, Mapping, Sequence
@@ -65,6 +64,7 @@ import grimp
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 from dev.quality.unread_inputs import report_unread
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
@@ -97,8 +97,6 @@ COLD_REGIME_ENV: Final[tuple[str, ...]] = (
 )
 
 #: Named once, as this tree requires of a module doing text IO.
-_UTF_8: Final[str] = "utf-8"
-
 TRACE_REGIMES: Final[tuple[str, ...]] = ("warm", "cold", "inspection_snapshot")
 
 
@@ -451,17 +449,15 @@ def evaluated_string_sequence(module: str, name: str) -> tuple[str, ...] | None:
             "sys.stdout.write(json.dumps(list(value)) if ok else str())",
         )
     )
-    completed = subprocess.run(  # noqa: S603 - resolved interpreter, fixed argv, no caller input
+    completed = run_command(
         [sys.executable, "-c", script, module, name],
-        capture_output=True,
-        check=False,
         cwd=REPO_ROOT,
     )
     if completed.returncode != 0 or not completed.stdout.strip():
         return None
     try:
-        members = json.loads(completed.stdout.decode(_UTF_8))
-    except (ValueError, UnicodeDecodeError):
+        members = json.loads(completed.stdout)
+    except ValueError:
         return None
     if not isinstance(members, list):
         return None
@@ -808,13 +804,10 @@ def trace_regime(regime: str) -> frozenset[str]:
                 isolated = area / f"cold-{index}"
                 isolated.mkdir()
                 environment[variable] = str(isolated)
-        completed = subprocess.run(  # noqa: S603
+        completed = run_command(
             [sys.executable, str(script), str(output)],
             cwd=REPO_ROOT,
-            env=environment,
-            capture_output=True,
-            text=True,
-            check=False,
+            environment=environment,
         )
         if completed.returncode != 0 or not output.exists():
             raise LoadCensusError(f"{regime} trace failed:\n{completed.stderr}")

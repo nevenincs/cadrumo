@@ -54,11 +54,11 @@ from .runner import CapturedValue, EnvelopeSource, SequenceTranscript
 from .schema import FrameKind, SequenceId
 
 __all__ = [
-    "PACKAGE_VERSION_TOKEN",
+    "PACKAGE_VERSION_PLACEHOLDER",
     "PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS",
-    "REPO_ROOT_TOKEN",
-    "SANDBOX_STORAGE_ROOT_TOKEN",
-    "SANDBOX_WORKDIR_TOKEN",
+    "REPO_ROOT_PLACEHOLDER",
+    "SANDBOX_STORAGE_ROOT_PLACEHOLDER",
+    "SANDBOX_WORKDIR_PLACEHOLDER",
     "GoldenFrame",
     "SequenceGolden",
     "build_golden",
@@ -77,10 +77,10 @@ __all__ = [
 _UTF_8: Final[str] = UTF_8
 
 #: Stable token replacing the per-run isolated storage root in text frames.
-SANDBOX_STORAGE_ROOT_TOKEN: str = "<sandbox-storage-root>"  # noqa: S105 - a display placeholder, not a secret
+SANDBOX_STORAGE_ROOT_PLACEHOLDER: str = "<sandbox-storage-root>"
 
 #: Stable token replacing the per-run sandbox working directory in text frames.
-SANDBOX_WORKDIR_TOKEN: str = "<sandbox-workdir>"  # noqa: S105 - a display placeholder, not a secret
+SANDBOX_WORKDIR_PLACEHOLDER: str = "<sandbox-workdir>"
 
 #: Stable token replacing the per-run sandbox root's OWN parent directory —
 #: the outer per-sequence temporary directory that ``storage_root`` and
@@ -89,14 +89,14 @@ SANDBOX_WORKDIR_TOKEN: str = "<sandbox-workdir>"  # noqa: S105 - a display place
 #: store (deliberately anchored on the sandbox root rather than nested inside
 #: ``storage_root`` — the production custody split), which otherwise leaks a
 #: run-specific temp path into diagnostic-log text frames.
-SANDBOX_ROOT_TOKEN: str = "<sandbox-root>"  # noqa: S105 - a display placeholder, not a secret
+SANDBOX_ROOT_PLACEHOLDER: str = "<sandbox-root>"
 
 #: Stable token replacing the repository checkout root wherever it surfaces in a
 #: frame's output. Corpus and data paths carry the absolute checkout path (stable
 #: on one machine, different on CI and every other checkout), so a golden is only
 #: machine-portable once the checkout root is tokenised the same value-anchored
 #: way as the per-run sandbox paths.
-REPO_ROOT_TOKEN: str = "<repo-root>"  # noqa: S105 - a display placeholder, not a secret
+REPO_ROOT_PLACEHOLDER: str = "<repo-root>"
 
 #: Stands in for the running package version in captured output.
 #:
@@ -106,13 +106,13 @@ REPO_ROOT_TOKEN: str = "<repo-root>"  # noqa: S105 - a display placeholder, not 
 #: the version the reader actually has. The version is release-managed in one
 #: place, so the golden stores this token and the render substitutes the live
 #: value back.
-PACKAGE_VERSION_TOKEN: str = "<version>"  # noqa: S105 - a display placeholder, not a secret
+PACKAGE_VERSION_PLACEHOLDER: str = "<version>"
 
 _PATH_TOKENS: tuple[str, ...] = (
-    SANDBOX_STORAGE_ROOT_TOKEN,
-    SANDBOX_WORKDIR_TOKEN,
-    SANDBOX_ROOT_TOKEN,
-    REPO_ROOT_TOKEN,
+    SANDBOX_STORAGE_ROOT_PLACEHOLDER,
+    SANDBOX_WORKDIR_PLACEHOLDER,
+    SANDBOX_ROOT_PLACEHOLDER,
+    REPO_ROOT_PLACEHOLDER,
 )
 
 
@@ -150,10 +150,10 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
     """
     replacements: list[tuple[str, str]] = []
     for raw, token in (
-        (workdir, SANDBOX_WORKDIR_TOKEN),
-        (storage_root, SANDBOX_STORAGE_ROOT_TOKEN),
-        (str(Path(storage_root).parent), SANDBOX_ROOT_TOKEN),
-        (str(_repo_root()), REPO_ROOT_TOKEN),
+        (workdir, SANDBOX_WORKDIR_PLACEHOLDER),
+        (storage_root, SANDBOX_STORAGE_ROOT_PLACEHOLDER),
+        (str(Path(storage_root).parent), SANDBOX_ROOT_PLACEHOLDER),
+        (str(_repo_root()), REPO_ROOT_PLACEHOLDER),
     ):
         native = str(raw)
         posix = native.replace("\\", "/")
@@ -489,7 +489,7 @@ def normalise_text_output(
     never a digit pattern, so it cannot over-match an unrelated number.
     """
     replacements = _path_replacements(storage_root=storage_root, workdir=workdir)
-    replacements.append((_running_version(), PACKAGE_VERSION_TOKEN))
+    replacements.append((_running_version(), PACKAGE_VERSION_PLACEHOLDER))
     for value in masked_values:
         if value:
             replacements.append((value, MASK_SENTINEL))

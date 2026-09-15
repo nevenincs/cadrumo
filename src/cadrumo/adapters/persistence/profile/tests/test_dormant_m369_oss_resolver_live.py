@@ -84,6 +84,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _M369_BUCKET = "36900000-0000-4000-8000-000000000013"
 _M369_REVISION = "esquema-union"
 _M369_YEAR = 2026
+_DEFAULT_OSS_REGIME = OssIossRegime("union_scheme")
 
 
 class _EmptyInvoiceCatalogueReader:
@@ -212,7 +213,7 @@ def _m369_invoice(
     base_amount: Decimal,
     iva_amount: Decimal,
     operation_date: date | None = None,
-    regime: OssIossRegime = OssIossRegime("union_scheme"),
+    regime: OssIossRegime = _DEFAULT_OSS_REGIME,
 ) -> Invoice:
     line = InvoiceLine(
         description=f"OSS supply {invoice_number}",

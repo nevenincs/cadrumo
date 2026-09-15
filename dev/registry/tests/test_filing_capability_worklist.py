@@ -548,10 +548,10 @@ def _blocker(
             "map and authorized export form after the design extraction is checked for partial overlap"
         ),
         owners=(_EXPORT_OWNER,),
-          reconsideration=(
-              "the export owner lands and reviews the semantic map, render profile, generated tree, and emitted-byte "
-              "proof"
-          ),
+        reconsideration=(
+            "the export owner lands and reviews the semantic map, render profile, generated tree, and emitted-byte "
+            "proof"
+        ),
     )
 
 

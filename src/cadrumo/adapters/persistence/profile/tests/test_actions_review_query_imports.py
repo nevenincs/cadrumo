@@ -21,9 +21,6 @@ from .ledger_action_persistence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["secure_objects"]
-
-
 def test_query_ledger_review_rows_filters_quarter_import_and_issue_events(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,

@@ -37,6 +37,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
+from ..command_execution import run_command
 from ._justfile_recipes import packaging_pytest_recipes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -91,7 +92,7 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
         AssertionError: If the collection did not finish inside its bound.
     """
     try:
-        completed = subprocess.run(  # noqa: S603 - fixed interpreter argv; arguments come from the tracked justfile.
+        completed = run_command(
             [
                 sys.executable,
                 "-m",
@@ -103,12 +104,8 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
                 _NO_WORKERS,
             ],
             cwd=_REPO_ROOT,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
             errors="replace",
-            check=False,
-            timeout=_COLLECT_TIMEOUT_SECONDS,
+            timeout_seconds=_COLLECT_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired as expiry:
         message = (

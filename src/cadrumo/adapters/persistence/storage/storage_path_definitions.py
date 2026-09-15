@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import Final, TypeVar
+from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -97,16 +97,13 @@ BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 SECRET_INDEX_FILENAME = "index.json"  # noqa: S105 - filename, not a credential
 SECRET_INDEX_SCHEMA_VERSION = 1
-_ValidationResultT = TypeVar("_ValidationResultT")
-
-
-def _pydantic_namespace_validator(
-    function: Callable[..., _ValidationResultT],
-) -> Callable[..., _ValidationResultT]:
+def _pydantic_namespace_validator[ValidationResultT](
+    function: Callable[..., ValidationResultT],
+) -> Callable[..., ValidationResultT]:
     """Translate the registered path refusal at Pydantic's callback edge."""
 
     @wraps(function)
-    def wrapped(*args: object, **kwargs: object) -> _ValidationResultT:
+    def wrapped(*args: object, **kwargs: object) -> ValidationResultT:
         try:
             return function(*args, **kwargs)
         except NamespaceRegistryError as exc:

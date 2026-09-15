@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -36,6 +35,7 @@ from typing import Final
 from packaging.markers import InvalidMarker, Marker
 
 from dev._paths import UTF_8
+from dev.packaging.command_execution import run_command
 
 from ._distribution_names import normalise_distribution_name
 
@@ -128,13 +128,9 @@ def parse_constraint_lines(constraint_lines: Sequence[str]) -> dict[str, Constra
 
 def enumerate_installed_distributions(python_exe: Path) -> dict[str, str]:
     """Return the normalised name -> version map of ``python_exe``'s installed set."""
-    completed = subprocess.run(  # noqa: S603 - fixed stdlib snippet, caller-provided interpreter
+    completed = run_command(
         [str(python_exe), "-c", _ENUMERATE_SNIPPET],
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
         errors="strict",
-        check=False,
     )
     if completed.returncode != 0:
         raise ConstraintDriftError(

@@ -34,9 +34,9 @@ from ..compare import (
 )
 from ..errors import SequenceGoldenError, SequenceGoldenMismatchError
 from ..golden_store import (
-    REPO_ROOT_TOKEN,
-    SANDBOX_STORAGE_ROOT_TOKEN,
-    SANDBOX_WORKDIR_TOKEN,
+    REPO_ROOT_PLACEHOLDER,
+    SANDBOX_STORAGE_ROOT_PLACEHOLDER,
+    SANDBOX_WORKDIR_PLACEHOLDER,
     SequenceGolden,
     _repo_root,
     build_golden,
@@ -282,8 +282,10 @@ class TestTextFrameComparison:
             masked_values=("abc-123-flap",),
         )
         assert native_root not in normalised and posix_root not in normalised
-        assert f"stored under {SANDBOX_STORAGE_ROOT_TOKEN} (also {SANDBOX_STORAGE_ROOT_TOKEN})" in normalised
-        assert f"workdir {SANDBOX_WORKDIR_TOKEN}" in normalised
+        assert (
+            f"stored under {SANDBOX_STORAGE_ROOT_PLACEHOLDER} (also {SANDBOX_STORAGE_ROOT_PLACEHOLDER})" in normalised
+        )
+        assert f"workdir {SANDBOX_WORKDIR_PLACEHOLDER}" in normalised
         assert f"snapshot {MASK_SENTINEL}" in normalised
 
     def test_token_rooted_suffix_uses_one_cross_platform_separator(self) -> None:
@@ -294,7 +296,7 @@ class TestTextFrameComparison:
             storage_root=r"C:\Temp\sequence\store",
             workdir=r"C:\Temp\sequence\workdir",
         )
-        assert normalised == f"path\t{SANDBOX_STORAGE_ROOT_TOKEN}/logs/cadrumo.log\n"
+        assert normalised == f"path\t{SANDBOX_STORAGE_ROOT_PLACEHOLDER}/logs/cadrumo.log\n"
 
     def test_unrelated_windows_path_keeps_its_native_separators(self) -> None:
         """Separator canonicalisation cannot rewrite an unknown operator path."""
@@ -367,7 +369,7 @@ class TestEnvelopePathNormalisation:
         detail = self._first_detail(golden)
         assert storage not in detail
         assert self._REPO_ROOT not in detail and self._REPO_ROOT.replace("\\", "/") not in detail
-        assert SANDBOX_STORAGE_ROOT_TOKEN in detail and REPO_ROOT_TOKEN in detail
+        assert SANDBOX_STORAGE_ROOT_PLACEHOLDER in detail and REPO_ROOT_PLACEHOLDER in detail
 
     def test_two_runs_with_different_sandbox_paths_compare_clean(self) -> None:
         golden = build_golden(
