@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
 
 from .. import runtime
 from ..lexical_index import build_lexical_index, iter_corpus_chunks, search_lexical
+from ..models import CorpusChunk, CorpusIndexBuildResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -92,10 +94,10 @@ def test_index_without_identity_metadata_is_rebuilt(
     calls = 0
     real_builder = runtime.build_lexical_index
 
-    def counted_build(path: Path, chunks: object) -> object:
+    def counted_build(path: Path, chunks: Iterable[CorpusChunk]) -> CorpusIndexBuildResult:
         nonlocal calls
         calls += 1
-        return real_builder(path, chunks)  # type: ignore[arg-type]
+        return real_builder(path, chunks)
 
     monkeypatch.setattr(runtime, "build_lexical_index", counted_build)
     runtime.ensure_corpus_index()
