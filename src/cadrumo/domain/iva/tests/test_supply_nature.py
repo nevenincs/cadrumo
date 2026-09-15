@@ -19,12 +19,14 @@ See Also:
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from datetime import date
 
 import pytest
 
 from ....core.corpus_text import resolve_anchored_extracted_unit
 from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..schema import IvaCategory
 from ..supply_nature import (
@@ -44,7 +46,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # would go stale the moment the module moves, and it silently resolves to a
 # directory that does not exist rather than saying so.
 _BUNDLED_ROOT = bundled_path()
-_CITATION_CATALOGUE = registry_citation_catalogue(effective_date=date.today())
+with bundled_indexed_authority().operation() as _module_operation:
+    _CITATION_CATALOGUE = registry_citation_catalogue(effective_date=date.today(), authority=_module_operation)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _citation_authority_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
+
 
 # Words the statute itself uses for each limb. The check below reads the bundled
 # article and asks which limbs its rubric and opening reach; these are the tokens

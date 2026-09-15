@@ -39,6 +39,7 @@ from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..classification import InvoiceKind
 from ..components import (
@@ -55,6 +56,7 @@ from ..components import (
     cuota_less_m303_categories_from_table,
     registry_category_projection,
     registry_component_catalogue,
+    registry_component_vocabulary,
 )
 from ..schema import IvaCategory
 
@@ -62,15 +64,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Iterator
 
 #: Sentinel categories that declare no IVA treatment at all. They are the only
 #: rows permitted to answer ``UNKNOWN``; every other category must commit.
 _SENTINEL_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {IvaCategory("unknown"), IvaCategory("erroneous_invoice")},
 )
-COMPONENT_CATALOGUE = registry_component_catalogue()
-CATEGORY_CATALOGUE = resolve_iva_category_catalogue()
+with bundled_indexed_authority().operation():
+    COMPONENT_CATALOGUE = registry_component_catalogue()
+    CATEGORY_CATALOGUE = resolve_iva_category_catalogue()
+    _CUOTA_LESS_CATEGORIES = registry_category_projection("cuota_less_m303")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _component_authority_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _category_id(category: IvaCategory) -> str:
@@ -140,7 +150,7 @@ def test_lookup_returns_the_keyed_row_for_every_member() -> None:
     """The public accessor resolves every member without falling through."""
     for category in CATEGORY_CATALOGUE.all_categories:
         for kind in InvoiceKind:
-            assert category_components(category, kind) is COMPONENT_CATALOGUE[(category, kind)]
+            assert category_components(category, kind) == COMPONENT_CATALOGUE[(category, kind)]
 
 
 # --------------------------------------------------------------------------- #
@@ -171,7 +181,7 @@ def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCatego
         row
         for kind in InvoiceKind
         for row in (COMPONENT_CATALOGUE[(category, kind)],)
-        if row.applicability is IvaKindApplicability.from_registry("arises")
+        if row.applicability == IvaKindApplicability.from_registry("arises")
     ]
     assert arising, f"{category.value} declares no arising kind at all"
     # Mirrors the derivation's quantifier: a category is cuota-less only when
@@ -179,8 +189,8 @@ def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCatego
     # fixed kind here would disagree with the derivation for a category whose
     # sides differ, and DOMESTIC_REVERSE_CHARGE is exactly that category.
     declared_cuota_less = all(
-        row.cuota is IvaComponentPresence.from_registry("zero_by_law")
-        or row.cuota_settlement is IvaCuotaSettlement("regimen_especial")
+        row.cuota == IvaComponentPresence.from_registry("zero_by_law")
+        or row.cuota_settlement == IvaCuotaSettlement("regimen_especial")
         for row in arising
     )
     cuota_less = registry_category_projection("cuota_less_m303")
@@ -225,7 +235,7 @@ def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> 
 
 @pytest.mark.parametrize(
     "category",
-    tuple(sorted(registry_category_projection("cuota_less_m303"), key=_category_id)),
+    tuple(sorted(_CUOTA_LESS_CATEGORIES, key=_category_id)),
     ids=_category_id,
 )
 def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategory) -> None:
@@ -237,7 +247,7 @@ def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategor
     """
     for kind in InvoiceKind:
         row = COMPONENT_CATALOGUE[(category, kind)]
-        if row.applicability is IvaKindApplicability.from_registry("does_not_arise"):
+        if row.applicability == IvaKindApplicability.from_registry("does_not_arise"):
             continue
         assert category_bears_taxable_base(category, kind), (
             f"{category.value}/{kind.value} is cuota-less but must still carry a taxable base"
@@ -247,13 +257,13 @@ def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategor
 def test_only_sentinel_categories_answer_unknown() -> None:
     """Every real category commits to an expectation; only sentinels may abstain."""
     for (category, kind), row in COMPONENT_CATALOGUE.items():
-        if row.applicability is IvaKindApplicability.from_registry("does_not_arise"):
+        if row.applicability == IvaKindApplicability.from_registry("does_not_arise"):
             continue
         del kind
         abstains = (
-            row.base is IvaComponentPresence.from_registry("unknown")
-            or row.cuota is IvaComponentPresence.from_registry("unknown")
-            or row.retencion is IvaRetencionExpectation.from_registry("unknown")
+            row.base == IvaComponentPresence.from_registry("unknown")
+            or row.cuota == IvaComponentPresence.from_registry("unknown")
+            or row.retencion == IvaRetencionExpectation.from_registry("unknown")
         )
         if category in _SENTINEL_CATEGORIES:
             assert abstains, f"{category.value} is a sentinel and must declare UNKNOWN components"
@@ -270,7 +280,7 @@ def test_zero_by_law_cuota_is_exactly_the_determinable_zero_predicate() -> None:
     """
     for (category, kind), row in COMPONENT_CATALOGUE.items():
         assert category_cuota_is_zero_by_law(category, kind) is (
-            row.cuota is IvaComponentPresence.from_registry("zero_by_law")
+            row.cuota == IvaComponentPresence.from_registry("zero_by_law")
         )
 
 
@@ -404,16 +414,24 @@ def _valid_row_kwargs() -> dict[str, Any]:
     }
 
 
+def _validated_row(kwargs: dict[str, Any]) -> IvaCategoryComponents:
+    """Validate one row against the component vocabulary the registry projects."""
+    return IvaCategoryComponents.model_validate(
+        kwargs,
+        context={"component_vocabulary": registry_component_vocabulary(), "cuota_settlement_no_token": "none"},
+    )
+
+
 def test_the_reference_row_kwargs_build_a_valid_row() -> None:
     """Positive control: the refusal cases below differ from this by one field only."""
-    assert IvaCategoryComponents(**_valid_row_kwargs()).category == IvaCategory("domestic_exempt")
+    assert _validated_row(_valid_row_kwargs()).category == IvaCategory("domestic_exempt")
 
 
 def test_zero_by_law_cuota_must_declare_no_settlement() -> None:
     """A structurally-zero cuota cannot also name someone who settles it."""
     kwargs: dict[str, Any] = _valid_row_kwargs() | {"cuota_settlement": IvaCuotaSettlement("repercutida")}
     with pytest.raises(ValidationError, match="zero-by-law cuota"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 def test_a_settled_cuota_cannot_be_declared_zero_by_law() -> None:
@@ -423,7 +441,7 @@ def test_a_settled_cuota_cannot_be_declared_zero_by_law() -> None:
         "cuota_settlement": IvaCuotaSettlement("none"),
     }
     with pytest.raises(ValidationError, match="zero-by-law cuota"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 def test_weak_retencion_grounding_without_a_note_is_refused() -> None:
@@ -433,7 +451,7 @@ def test_weak_retencion_grounding_without_a_note_is_refused() -> None:
         "retencion_note": "   ",
     }
     with pytest.raises(ValidationError, match="requires a retencion_note"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 def test_live_source_only_grounding_without_a_pending_ref_is_refused() -> None:
@@ -444,14 +462,14 @@ def test_live_source_only_grounding_without_a_pending_ref_is_refused() -> None:
         "pending_legal_refs": (),
     }
     with pytest.raises(ValidationError, match="no pending_legal_refs"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 def test_bundled_grounding_without_legal_refs_is_refused() -> None:
     """A bundled-corpus claim must cite the corpus it claims."""
     kwargs: dict[str, Any] = _valid_row_kwargs() | {"legal_refs": ()}
     with pytest.raises(ValidationError, match="claims bundled corpus"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 def test_not_expected_retencion_without_a_note_is_refused_even_when_bundled() -> None:
@@ -468,7 +486,7 @@ def test_not_expected_retencion_without_a_note_is_refused_even_when_bundled() ->
     accepted = _valid_row_kwargs()
     assert accepted["retencion_note"] == "", "positive control must carry no note"
     assert accepted["retencion_grounding"] is IvaGroundingConfidence.BUNDLED_CORPUS
-    IvaCategoryComponents(**accepted)
+    _validated_row(accepted)
 
     refused = accepted | {
         "retencion": IvaRetencionExpectation.from_registry("not_expected"),
@@ -477,10 +495,10 @@ def test_not_expected_retencion_without_a_note_is_refused_even_when_bundled() ->
         "retencion_role": IvaRetencionRole.from_registry("none"),
     }
     with pytest.raises(ValidationError, match="not-expected retención requires a retencion_note"):
-        IvaCategoryComponents(**refused)
+        _validated_row(refused)
 
     restored = refused | {"retencion_note": "RIRPF art. 76.1.c/d carve-outs restore the obligation."}
-    IvaCategoryComponents(**restored)
+    _validated_row(restored)
 
 
 def test_duplicate_legal_refs_are_refused() -> None:
@@ -489,14 +507,14 @@ def test_duplicate_legal_refs_are_refused() -> None:
         "legal_refs": ("ley-37-1992:art-20", "ley-37-1992:art-20"),
     }
     with pytest.raises(ValidationError, match="legal_refs must be unique"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 def test_a_ref_cannot_be_both_bundled_and_pending_on_one_row() -> None:
     """The model refuses the contradiction the table-level gate also checks."""
     kwargs: dict[str, Any] = _valid_row_kwargs() | {"pending_legal_refs": ("ley-37-1992:art-20",)}
     with pytest.raises(ValidationError, match="both bundled and pending"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 # --------------------------------------------------------------------------- #
@@ -559,14 +577,14 @@ def test_retencion_role_is_the_credit_liability_inversion_the_kind_dictates() ->
     """
     for (category, kind), row in COMPONENT_CATALOGUE.items():
         label = f"{category.value}/{kind.value}"
-        if row.retencion is IvaRetencionExpectation.from_registry("unknown"):
-            assert row.retencion_role is IvaRetencionRole.from_registry("unknown"), label
-        elif row.retencion is IvaRetencionExpectation.from_registry("not_expected"):
-            assert row.retencion_role is IvaRetencionRole.from_registry("none"), label
+        if row.retencion == IvaRetencionExpectation.from_registry("unknown"):
+            assert row.retencion_role == IvaRetencionRole.from_registry("unknown"), label
+        elif row.retencion == IvaRetencionExpectation.from_registry("not_expected"):
+            assert row.retencion_role == IvaRetencionRole.from_registry("none"), label
         elif kind is InvoiceKind.ISSUED:
-            assert row.retencion_role is IvaRetencionRole.from_registry("taxpayer_credit"), label
+            assert row.retencion_role == IvaRetencionRole.from_registry("taxpayer_credit"), label
         else:
-            assert row.retencion_role is IvaRetencionRole.from_registry("taxpayer_liability"), label
+            assert row.retencion_role == IvaRetencionRole.from_registry("taxpayer_liability"), label
 
 
 def test_both_retencion_roles_are_actually_used() -> None:
@@ -591,7 +609,7 @@ def test_non_arising_pairs_are_a_strict_nonempty_subset() -> None:
     non_arising = {
         (category.value, kind.value)
         for (category, kind), row in COMPONENT_CATALOGUE.items()
-        if row.applicability is IvaKindApplicability.from_registry("does_not_arise")
+        if row.applicability == IvaKindApplicability.from_registry("does_not_arise")
     }
     assert non_arising, "no pair is declared non-arising, so no category is treated as directional"
     assert len(non_arising) < len(COMPONENT_CATALOGUE), "every pair is non-arising; the table describes nothing"
@@ -603,7 +621,7 @@ def test_a_role_contradicting_its_kind_is_refused() -> None:
     kwargs["kind"] = InvoiceKind.RECEIVED
     kwargs["retencion_role"] = IvaRetencionRole.from_registry("taxpayer_credit")
     with pytest.raises(ValidationError, match="requires role"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 def test_a_non_arising_pair_asserting_components_is_refused() -> None:
@@ -614,7 +632,7 @@ def test_a_non_arising_pair_asserting_components_is_refused() -> None:
     kwargs["retencion_role"] = IvaRetencionRole.from_registry("unknown")
     kwargs["retencion_note"] = "counterpart named here"
     with pytest.raises(ValidationError, match="cannot assert"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)
 
 
 def test_a_non_arising_pair_without_a_counterpart_note_is_refused() -> None:
@@ -633,4 +651,4 @@ def test_a_non_arising_pair_without_a_counterpart_note_is_refused() -> None:
     kwargs["retencion_note"] = "   "
     kwargs["legal_refs"] = ()
     with pytest.raises(ValidationError, match="counterpart"):
-        IvaCategoryComponents(**kwargs)
+        _validated_row(kwargs)

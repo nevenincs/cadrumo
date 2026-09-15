@@ -84,13 +84,13 @@ class TestTheExcludedTerritoriesAreRecognised:
 
             assert records, "the registry must enumerate at least one excluded territory"
             for record in records:
-                expected = IvaTerritorialScope(record["scope"])
+                expected = IvaTerritorialScope.from_registry(record["scope"])
                 for prefix in record["postal_prefixes"]:
                     assert (
                         territorial_scope_for_spanish_postal_code(
                             f"{prefix}001", operation=_authority_operation_for_test
                         )
-                        is expected
+                        == expected
                     ), prefix
                     assert expected in _OUTSIDE_THE_TAI, f"{prefix} claims a scope inside the TAI"
 

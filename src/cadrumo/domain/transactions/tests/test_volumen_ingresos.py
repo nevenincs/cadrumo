@@ -91,7 +91,7 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     fact = compiled_bundled_authority().catalogues.facts.facts[_EXCLUDED_FACT]
     payload = fact.variants[0].payload
     assert isinstance(payload, EntitySetFactPayload)
-    declared = frozenset(ConceptoIngreso(token) for token in payload.entities)
+    declared = frozenset(ConceptoIngreso.from_registry(token) for token in payload.entities)
 
     assert declared == {
         ConceptoIngreso.from_registry("subvencion_capital"),

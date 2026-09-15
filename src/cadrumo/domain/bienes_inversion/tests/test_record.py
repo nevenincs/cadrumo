@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterator
 from datetime import date
 from datetime import date as _date
 from decimal import Decimal
+from functools import partial
 
 import pydantic
 import pytest
@@ -14,6 +16,7 @@ from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ..register import (
     BienesInversionIvaRegister,
@@ -33,6 +36,13 @@ from ..regularizacion_parameters import (
 from ..vocabulary import BienInversionDisposalRegime, BienInversionKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _governed_fact_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
+
 
 #: An explicit bundle, supplied rather than resolved: these are unit tests of the
 #: art-109/110 PROCEDURE, and the procedure is what they prove. Whether the
@@ -409,34 +419,35 @@ def test_investment_asset_reciprocity_accepts_one_real_matching_observation() ->
 
 
 @pytest.mark.parametrize(
-    ("observation", "ledger_profile_id", "asset_profile_id", "filing_year", "message"),
+    ("build_observation", "ledger_profile_id", "asset_profile_id", "filing_year", "message"),
     (
-        (_investment_observation(ledger_id="ledger-wrong"), "profile-a", "profile-a", 2024, "not reciprocal"),
+        (partial(_investment_observation, ledger_id="ledger-wrong"), "profile-a", "profile-a", 2024, "not reciprocal"),
         (
-            _investment_observation(transaction_date=date(2025, 1, 8)),
+            partial(_investment_observation, transaction_date=date(2025, 1, 8)),
             "profile-a",
             "profile-a",
             2024,
             "share the filing year",
         ),
         (
-            _investment_observation(prorrata_sector_id="sector-rentals"),
+            partial(_investment_observation, prorrata_sector_id="sector-rentals"),
             "profile-a",
             "profile-a",
             2024,
             "share the prorrata sector",
         ),
-        (_investment_observation(), "profile-a", "profile-b", 2024, "share a secure profile"),
+        (_investment_observation, "profile-a", "profile-b", 2024, "share a secure profile"),
     ),
 )
 def test_investment_asset_reciprocity_refuses_mismatched_edges(
-    observation: IvaLedgerObservation,
+    build_observation: Callable[[], IvaLedgerObservation],
     ledger_profile_id: str,
     asset_profile_id: str,
     filing_year: int,
     message: str,
 ) -> None:
     """Every stored cross-boundary edge is exact; no identifier is inferred."""
+    observation = build_observation()
     register = BienesInversionIvaRegister(
         records=(
             _record(

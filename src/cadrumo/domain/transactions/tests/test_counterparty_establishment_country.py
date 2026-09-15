@@ -19,6 +19,7 @@ between the catalogues moves here with it.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -26,6 +27,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.schema import require_eu_member_state
@@ -38,6 +40,13 @@ from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Validate every ledger row inside one generation-pinned authority operation."""
+    with _indexed_authority_for_test().operation() as operation:
+        yield operation
 
 
 def _transaction(*, counterparty_country: str | None) -> Transaction:
@@ -135,7 +144,7 @@ def test_the_four_ways_a_row_can_fail_to_name_a_third_country_stay_distinct(
         assert transaction.counterparty_country == country
         assert (
             territorial_scope_for_country(transaction.counterparty_country, operation=_authority_operation_for_test)
-            is scope
+            == scope
         )
         assert (
             stated_country_code_status(transaction.counterparty_country, operation=_authority_operation_for_test)

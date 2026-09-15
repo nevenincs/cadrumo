@@ -49,7 +49,7 @@ def test_domestic_positive_rate_resolves_to_registry_fraction(
         resolution = resolve_category_rate(category, on_date=_ON_DATE, operation=authority_operation)
         assert resolution.derivable is True, category
         assert resolution.reason == "", category
-        assert resolution.rate_kind is expected_kind, category
+        assert resolution.rate_kind == expected_kind, category
         assert resolution.rate is not None, category
         assert resolution.rate == expected_rate, category
 
@@ -65,7 +65,7 @@ def test_zero_and_exempt_derive_zero_rate(authority_operation: PinnedAuthorityOp
         resolution = resolve_category_rate(category, on_date=_ON_DATE, operation=authority_operation)
         assert resolution.derivable is True, category
         assert resolution.rate == Decimal("0"), category
-        assert resolution.rate_kind is expected_kind, category
+        assert resolution.rate_kind == expected_kind, category
         assert resolution.reason == "", category
 
 

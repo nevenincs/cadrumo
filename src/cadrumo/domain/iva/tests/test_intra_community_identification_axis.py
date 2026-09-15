@@ -43,6 +43,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 
 import pytest
@@ -61,14 +62,21 @@ from ..classification import (
     IvaTerritorialScope,
     PartyFact,
     TransactionKind,
-    classify_iva,
 )
 from ..components import category_cuota_is_zero_by_law
 from ..establishment import country_code_for_printed_tax_identifier
 from ..identification import identification_state_for_printed_tax_identifier
 from ..schema import EUMemberState, IvaCategory
+from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _registry_authority_scope() -> Iterator[None]:
+    with _indexed_authority_for_test().operation():
+        yield
+
 
 _DATE = date(2025, 6, 15)
 
@@ -103,7 +111,7 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
         conditioned on.
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 _criteria(
                     customer_residency=IvaTerritorialScope.from_registry("third_country"),
                     customer_identification_state=EUMemberState.from_registry("de"),
@@ -123,7 +131,7 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
         explicit and nobody had checked.
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(_criteria(), operation=_authority_operation_for_test)
+            result = classify_with_registry_rules(_criteria(), operation=_authority_operation_for_test)
 
             assert result.category != IvaCategory("intra_community_supply")
             assert result.matched_rule_id == _R99
@@ -131,7 +139,7 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
     def test_a_spanish_identification_is_not_another_member_state(self) -> None:
         """The statute names Spain as the excluded State: "distinto del Reino de España"."""
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 _criteria(customer_identification_state=EUMemberState.from_registry("es")),
                 operation=_authority_operation_for_test,
             )
@@ -145,7 +153,7 @@ class TestTheAcquisitionFollowsTheSuppliersRegistration:
 
     def test_a_supplier_identified_elsewhere_reverse_charges_though_established_outside_the_union(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 _criteria(
                     issuer_residency=IvaTerritorialScope.from_registry("third_country"),
                     issuer_identification_state=EUMemberState.from_registry("de"),
@@ -160,7 +168,7 @@ class TestTheAcquisitionFollowsTheSuppliersRegistration:
 
     def test_a_supplier_with_no_identification_is_never_an_intra_community_acquisition(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 _criteria(
                     issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
                     customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -187,7 +195,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
 
     def test_an_outbound_service_with_no_counterparty_identification_does_not_place(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 _criteria(kind=TransactionKind("services_general")), operation=_authority_operation_for_test
             )
 
@@ -195,7 +203,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
 
     def test_an_outbound_service_places_once_the_counterparty_is_identified(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 _criteria(
                     kind=TransactionKind("services_general"),
                     customer_identification_state=EUMemberState.from_registry("fr"),
@@ -208,7 +216,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
 
     def test_an_inbound_service_with_no_supplier_identification_does_not_place(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 _criteria(
                     issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
                     customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -222,7 +230,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
 
     def test_an_inbound_service_places_once_the_supplier_is_identified(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 _criteria(
                     issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
                     issuer_identification_state=EUMemberState.from_registry("fr"),
@@ -293,14 +301,19 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
         identification_field: str,
     ) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            with_identification = classify_iva(_criteria(**overrides), operation=_authority_operation_for_test)
+            with_identification = classify_with_registry_rules(
+                _criteria(**overrides), operation=_authority_operation_for_test
+            )
             assert with_identification.matched_rule_id == rule_id
             assert PartyFact.IVA_IDENTIFICATION_STATE in with_identification.consumes_party_facts
 
             without = dict(overrides)
             without[identification_field] = None
             assert (
-                classify_iva(_criteria(**without), operation=_authority_operation_for_test).matched_rule_id != rule_id
+                classify_with_registry_rules(
+                    _criteria(**without), operation=_authority_operation_for_test
+                ).matched_rule_id
+                != rule_id
             )
 
 
@@ -332,7 +345,7 @@ def test_a_spanish_iva_number_now_states_its_identification() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             _SPANISH_IVA, operation=_authority_operation_for_test
-        ) is EUMemberState.from_registry("es")
+        ) == EUMemberState.from_registry("es")
 
 
 @pytest.mark.parametrize(
@@ -345,7 +358,7 @@ def test_the_printed_spelling_does_not_change_the_identification(printed: str) -
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             printed, operation=_authority_operation_for_test
-        ) is EUMemberState.from_registry("es")
+        ) == EUMemberState.from_registry("es")
 
 
 def test_stating_an_identification_states_no_establishment() -> None:
@@ -359,7 +372,7 @@ def test_stating_an_identification_states_no_establishment() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             _SPANISH_IVA, operation=_authority_operation_for_test
-        ) is EUMemberState.from_registry("es")
+        ) == EUMemberState.from_registry("es")
         assert country_code_for_printed_tax_identifier(_SPANISH_IVA, operation=_authority_operation_for_test) is None
 
 
@@ -399,7 +412,7 @@ def test_the_sibling_prefixes_are_unaffected() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             "DE811234567", operation=_authority_operation_for_test
-        ) is EUMemberState.from_registry("de")
+        ) == EUMemberState.from_registry("de")
         assert country_code_for_printed_tax_identifier("DE811234567", operation=_authority_operation_for_test) == "DE"
 
 
@@ -423,7 +436,7 @@ def test_the_checksum_is_what_admits_the_spanish_number() -> None:
         )
         assert identification_state_for_printed_tax_identifier(
             _SPANISH_IVA, operation=_authority_operation_for_test
-        ) is EUMemberState.from_registry("es")
+        ) == EUMemberState.from_registry("es")
 
 
 # -- the outbound non-peninsular branch -------------------------------------
@@ -441,7 +454,7 @@ def test_the_checksum_is_what_admits_the_spanish_number() -> None:
 def _outbound(
     customer: IvaTerritorialScope, kind: TransactionKind, *, operation: PinnedAuthorityOperation
 ) -> IvaCategory:
-    return classify_iva(
+    return classify_with_registry_rules(
         IvaInvoiceClassificationCriteria(
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=customer,
@@ -513,7 +526,7 @@ def test_the_population_used_to_classify_as_nothing_at_all(*, operation: PinnedA
     """
 
     def _third_country_only(customer: IvaTerritorialScope) -> bool:
-        return customer is IvaTerritorialScope.from_registry("third_country")
+        return customer == IvaTerritorialScope.from_registry("third_country")
 
     assert not _third_country_only(IvaTerritorialScope.from_registry("es_canarias"))
     assert _outbound(
@@ -583,4 +596,4 @@ def test_the_charged_rate_never_places_the_customer(*, operation: PinnedAuthorit
 
     assert canarian == IvaCategory("export_third_country_zero_rated")
     assert canarian != IvaCategory("domestic_general")
-    assert peninsular_customer_would_be_domestic is not IvaTerritorialScope.from_registry("es_canarias")
+    assert peninsular_customer_would_be_domestic != IvaTerritorialScope.from_registry("es_canarias")

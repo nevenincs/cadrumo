@@ -42,7 +42,7 @@ def test_classification_result_stamps_exemption_article_when_domestic_exempt() -
         exemption_article=IvaExemptionArticle("art_20_uno_8"),
     )
 
-    assert result.exemption_article is IvaExemptionArticle("art_20_uno_8")
+    assert result.exemption_article == IvaExemptionArticle("art_20_uno_8")
 
 
 def test_classification_result_rejects_exemption_article_on_non_exempt_category() -> None:

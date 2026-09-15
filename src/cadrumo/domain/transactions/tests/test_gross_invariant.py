@@ -17,6 +17,7 @@ equivalencia); RIRPF art. 95 (retención sobre ingresos íntegros).
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -24,6 +25,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...iva.schema import IvaCategory
 from ..enums import BusinessClassification, TransactionDirection
 from ..irpf_categories import ledger_irpf_category, normalize_irpf_category
@@ -31,6 +33,14 @@ from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Validate every ledger row inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 

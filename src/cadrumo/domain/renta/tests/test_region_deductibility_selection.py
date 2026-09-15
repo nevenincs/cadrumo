@@ -22,6 +22,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -31,6 +32,7 @@ from cadrumo.domain.categories.spending_category import SpendingCategory
 
 from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (
     CategoryCitation,
@@ -39,6 +41,7 @@ from ...categories.proportionality import (
     ProportionalityRule,
     parse_http_url,
 )
+from ...categories.proportionality_catalogue import require_proportionality_kind
 from ...contribuyente.ccaa import CCAA
 from ..ledger_expenses import RentaDeductibilityContext, resolve_region_category_profiles, select_deductibility_profile
 
@@ -73,8 +76,26 @@ def _profile(kind: ProportionalityKind, *, fixed_pct: str | None = None) -> Cate
     )
 
 
-_STATE_PROFILE = _profile(ProportionalityKind.from_registry("full_deductible"))
-_OVERRIDE_PROFILE = _profile(ProportionalityKind.from_registry("fixed_percentage"), fixed_pct="0.50")
+_PROFILE_DATE = date(2025, 12, 31)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _governed_fact_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
+
+
+@pytest.fixture(scope="module")
+def state_profile() -> CategoryProfile:
+    return _profile(require_proportionality_kind("full_deductible", effective_date=_PROFILE_DATE))
+
+
+@pytest.fixture(scope="module")
+def override_profile() -> CategoryProfile:
+    return _profile(
+        require_proportionality_kind("fixed_percentage", effective_date=_PROFILE_DATE),
+        fixed_pct="0.50",
+    )
 
 
 def _context(residence_ccaa: CCAA | None) -> RentaDeductibilityContext:
@@ -93,42 +114,51 @@ def test_override_layer_is_provisioned_but_empty() -> None:
     assert dict(resolve_region_category_profiles(2025)) == {}
 
 
-def test_no_override_returns_state_profile_regardless_of_region() -> None:
+def test_no_override_returns_state_profile_regardless_of_region(state_profile: CategoryProfile) -> None:
     """General expense deductibility is state law: no override -> state profile."""
     for residence in (None, CCAA.MADRID, CCAA.CANARIAS):
         selected = select_deductibility_profile(
-            state_profile=_STATE_PROFILE,
+            state_profile=state_profile,
             region_override_profiles={},
             context=_context(residence),
         )
-        assert selected is _STATE_PROFILE
+        assert selected is state_profile
 
 
-def test_override_with_undeclared_region_fails_closed() -> None:
+def test_override_with_undeclared_region_fails_closed(
+    state_profile: CategoryProfile,
+    override_profile: CategoryProfile,
+) -> None:
     """D4: an override exists for the category but ``residence_ccaa`` is None -> None."""
     selected = select_deductibility_profile(
-        state_profile=_STATE_PROFILE,
-        region_override_profiles={CCAA.CANARIAS: _OVERRIDE_PROFILE},
+        state_profile=state_profile,
+        region_override_profiles={CCAA.CANARIAS: override_profile},
         context=_context(None),
     )
     assert selected is None
 
 
-def test_override_selected_when_residence_matches() -> None:
+def test_override_selected_when_residence_matches(
+    state_profile: CategoryProfile,
+    override_profile: CategoryProfile,
+) -> None:
     """A declared residence with an override for that comunidad selects the override."""
     selected = select_deductibility_profile(
-        state_profile=_STATE_PROFILE,
-        region_override_profiles={CCAA.CANARIAS: _OVERRIDE_PROFILE},
+        state_profile=state_profile,
+        region_override_profiles={CCAA.CANARIAS: override_profile},
         context=_context(CCAA.CANARIAS),
     )
-    assert selected is _OVERRIDE_PROFILE
+    assert selected is override_profile
 
 
-def test_override_for_other_region_falls_through_to_state() -> None:
+def test_override_for_other_region_falls_through_to_state(
+    state_profile: CategoryProfile,
+    override_profile: CategoryProfile,
+) -> None:
     """A residence outside the overridden comunidad gets state law, not the override."""
     selected = select_deductibility_profile(
-        state_profile=_STATE_PROFILE,
-        region_override_profiles={CCAA.CANARIAS: _OVERRIDE_PROFILE},
+        state_profile=state_profile,
+        region_override_profiles={CCAA.CANARIAS: override_profile},
         context=_context(CCAA.MADRID),
     )
-    assert selected is _STATE_PROFILE
+    assert selected is state_profile

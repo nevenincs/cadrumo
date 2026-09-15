@@ -39,16 +39,12 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.resources.bundled_data import bundled_path
 from ..classification import (
-    CustomerTaxStatus,
-    InvoiceKind,
     IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
-    TransactionKind,
-    classify_iva,
 )
 from ..place_of_supply import place_of_supply_rule
-from ..schema import EUMemberState, IvaCategory
+from ..schema import IvaCategory
 from ..supply_nature import SupplyNature
+from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,6 +53,22 @@ _ORACLE_PATH = bundled_path() / "corpus/manual_oracles/iva-2025-lugar-realizacio
 
 def _oracle() -> dict[str, Any]:
     return json.loads(_ORACLE_PATH.read_text(encoding="utf-8"))
+
+
+def _oracle_criteria(oracle: dict[str, Any]) -> IvaInvoiceClassificationCriteria:
+    """Project the recorded operation through the criteria model's own registry fields."""
+    operation_case = oracle["operation"]
+    return IvaInvoiceClassificationCriteria.model_validate(
+        {
+            "transaction_date": date(oracle["source"]["year"], 6, 15),
+            "issuer_residency": operation_case["issuer_residency"],
+            "customer_residency": operation_case["customer_residency"],
+            "customer_identification_state": operation_case["customer_member_state"],
+            "customer_tax_status": operation_case["customer_tax_status"],
+            "kind": operation_case["transaction_kind"],
+            "direction": operation_case["direction"],
+        },
+    )
 
 
 def test_the_oracle_quotes_the_bundled_manual_that_it_names() -> None:
@@ -92,21 +104,11 @@ def test_the_classifier_reproduces_the_manual_outcome(*, operation: PinnedAuthor
     describe.
     """
     oracle = _oracle()
-    operation_case = oracle["operation"]
+    criteria = _oracle_criteria(oracle)
 
-    criteria = IvaInvoiceClassificationCriteria(
-        transaction_date=date(oracle["source"]["year"], 6, 15),
-        issuer_residency=IvaTerritorialScope(operation_case["issuer_residency"]),
-        customer_residency=IvaTerritorialScope(operation_case["customer_residency"]),
-        customer_identification_state=EUMemberState(operation_case["customer_member_state"]),
-        customer_tax_status=CustomerTaxStatus(operation_case["customer_tax_status"]),
-        kind=TransactionKind(operation_case["transaction_kind"]),
-        direction=InvoiceKind(operation_case["direction"]),
-    )
+    result = classify_with_registry_rules(criteria, operation=operation)
 
-    result = classify_iva(criteria, operation=operation)
-
-    assert result.category is IvaCategory(oracle["expected"]["iva_category"])
+    assert result.category == IvaCategory(oracle["expected"]["iva_category"])
 
 
 def test_the_grounding_row_reads_the_two_articles_the_manual_reasons_through() -> None:
@@ -121,18 +123,7 @@ def test_the_grounding_row_reads_the_two_articles_the_manual_reasons_through() -
         oracle = _oracle()
         expected = oracle["expected"]
 
-        result = classify_iva(
-            IvaInvoiceClassificationCriteria(
-                transaction_date=date(oracle["source"]["year"], 6, 15),
-                issuer_residency=IvaTerritorialScope(oracle["operation"]["issuer_residency"]),
-                customer_residency=IvaTerritorialScope(oracle["operation"]["customer_residency"]),
-                customer_identification_state=EUMemberState(oracle["operation"]["customer_member_state"]),
-                customer_tax_status=CustomerTaxStatus(oracle["operation"]["customer_tax_status"]),
-                kind=TransactionKind(oracle["operation"]["transaction_kind"]),
-                direction=InvoiceKind(oracle["operation"]["direction"]),
-            ),
-            operation=_authority_operation_for_test,
-        )
+        result = classify_with_registry_rules(_oracle_criteria(oracle), operation=_authority_operation_for_test)
         rule = place_of_supply_rule(
             result.matched_rule_id,
             on=date(oracle["source"]["year"], 6, 15),
@@ -142,4 +133,4 @@ def test_the_grounding_row_reads_the_two_articles_the_manual_reasons_through() -
 
         assert expected["located_by"] in rule.legal_references
         assert rule.establishing_reference == expected["treatment_established_by"]
-        assert rule.supply_nature is SupplyNature(expected["supply_nature"])
+        assert rule.supply_nature == SupplyNature(expected["supply_nature"])

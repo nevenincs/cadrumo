@@ -11,6 +11,7 @@ row may declare -- are refused rather than tolerated.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import TypeAdapter, ValidationError
 
 from .....core.aggregation import (
@@ -29,6 +30,7 @@ from ....iva.schema import (
 from ..binding_provider import BindingProvider
 from ..binding_temporal import FilingYearOffset, SameTargetContext
 from ..bindings_previous_filing import PreviousFilingProvider
+from ..governed_fact_scope import validating_governed_facts
 from ..inventory_bindings import InventoryProvider
 from ..ledger_iva_bindings import LedgerIvaProvider
 from ..manual_input_selector import ManualInputProvider
@@ -40,13 +42,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PROVIDER_ADAPTER: TypeAdapter[object] = TypeAdapter(BindingProvider)
 
-_LEDGER_IVA_PROVIDER = LedgerIvaProvider(
-    categories=(IvaCategory("domestic_general"),),
-    rate_kinds=(IvaRateKind("general"),),
-    flow_direction=IvaFlowDirection.from_registry("repercutido"),
-    observation_roles=(IvaLedgerObservationRole.SETTLEMENT,),
-    cash_accounting_treatments=(IvaCashAccountingTreatment("none"),),
-)
+with validating_governed_facts(compiled_bundled_authority()):
+    _LEDGER_IVA_PROVIDER = LedgerIvaProvider(
+        categories=(IvaCategory("domestic_general"),),
+        rate_kinds=(IvaRateKind("general"),),
+        flow_direction=IvaFlowDirection.from_registry("repercutido"),
+        observation_roles=(IvaLedgerObservationRole.SETTLEMENT,),
+        cash_accounting_treatments=(IvaCashAccountingTreatment("none"),),
+    )
 
 _PREVIOUS_FILING_PROVIDER = PreviousFilingProvider(
     source_modelo="303",

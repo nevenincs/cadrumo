@@ -1,6 +1,6 @@
 """Real-subprocess proof of the marker-deselection reporting hook.
 
-:mod:`cadrumo.tests._deselection_hook` is a ``pytest_terminal_summary`` hook
+:mod:`cadrumo.tests.deselection_hook` is a ``pytest_terminal_summary`` hook
 whose entire product is terminal output, and whose trigger conditions are
 session facts pytest assembles (the aggregated ``deselected`` stat, the
 ``-m`` expression, the ``--collect-only`` flag). Calling ``apply`` directly
@@ -23,7 +23,7 @@ executed count rather than the deselected count, and only that real
 No mocks: each run is a genuine pytest boot of the real hook.
 
 See Also:
-    :mod:`cadrumo.tests._deselection_hook`
+    :mod:`cadrumo.tests.deselection_hook`
         The hook under test.
     :mod:`cadrumo.tests.test_worker_count_hook`
         Sibling conftest hook proven by the same real-subprocess idiom.
@@ -39,7 +39,7 @@ from pathlib import Path
 
 import pytest
 
-from ._deselection_hook import apply
+from .deselection_hook import apply
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -53,11 +53,11 @@ markers =
 """
 
 _PROBE_CONFTEST = """
-from cadrumo.tests._deselection_hook import apply as _report_deselection
+from cadrumo.tests.deselection_hook import apply
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    _report_deselection(terminalreporter, exitstatus, config)
+    apply(terminalreporter, exitstatus, config)
 """
 
 _PROBE_ALL_INTEGRATION = """

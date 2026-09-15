@@ -57,60 +57,62 @@ _MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS = registry_birth_order_amounts(FI
 _MENOR_TRES = registry_menor_tres_supplement(FILING_YEAR)
 _FALLECIMIENTO = registry_fallecimiento_amount(FILING_YEAR)
 
-_ART58_ORACLE_CASES: tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...] = (
-    (
-        "one-descendant-born-2023-jan-15",
-        (DescendantInfo(birth_date=date(2023, 1, 15)),),
-        Decimal("5200"),
-    ),
-    (
-        "two-descendants-both-born-pre-2024",
-        (DescendantInfo(birth_date=date(2018, 5, 1)), DescendantInfo(birth_date=date(2020, 8, 10))),
-        _MINIMO_1 + _MINIMO_2,
-    ),
-    (
-        "ines-shape-adopted-2024-05-12",
+
+def _art58_oracle_cases() -> tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...]:
+    return (
         (
-            DescendantInfo(
-                birth_date=date(2022, 3, 1),
-                relacion=DescendantRelacion.from_registry("adoptado"),
-                inscripcion_registro_civil_date=date(2024, 5, 12),
-            ),
+            "one-descendant-born-2023-jan-15",
+            (DescendantInfo(birth_date=date(2023, 1, 15)),),
+            Decimal("5200"),
         ),
-        Decimal("5200"),
-    ),
-    (
-        "late-year-birth-full-annual-amount",
-        (DescendantInfo(birth_date=date(2024, 7, 1)),),
-        _MINIMO_1 + _MENOR_TRES,
-    ),
-    (
-        "birth-order-ranks-by-birth-date",
-        (DescendantInfo(birth_date=date(2020, 1, 1)), DescendantInfo(birth_date=date(2010, 1, 1))),
-        _MINIMO_1 + _MINIMO_2,
-    ),
-    (
-        "four-descendants-uses-cuarto-y-siguientes",
-        tuple(DescendantInfo(birth_date=date(y, 1, 1)) for y in (2005, 2008, 2011, 2014)),
-        _MINIMO_1 + _MINIMO_2 + _MINIMO_3 + _MINIMO_4PLUS,
-    ),
-    (
-        "fifth-descendant-repeats-cuarto-y-siguientes",
-        tuple(DescendantInfo(birth_date=date(y, 1, 1)) for y in (2005, 2008, 2011, 2014, 2016)),
-        _MINIMO_1 + _MINIMO_2 + _MINIMO_3 + _MINIMO_4PLUS + _MINIMO_4PLUS,
-    ),
-    ("no-eligible-descendant-is-zero", (), Decimal("0")),
-    (
-        "custodia-compartida-halves-descendant-contribution",
-        (DescendantInfo(birth_date=date(2015, 1, 1), custodia_compartida=True),),
-        _MINIMO_1 * Decimal("0.5"),
-    ),
-    (
-        "custodia-compartida-after-menor-tres-stacking",
-        (DescendantInfo(birth_date=date(2023, 1, 15), custodia_compartida=True),),
-        (_MINIMO_1 + _MENOR_TRES) * Decimal("0.5"),
-    ),
-)
+        (
+            "two-descendants-both-born-pre-2024",
+            (DescendantInfo(birth_date=date(2018, 5, 1)), DescendantInfo(birth_date=date(2020, 8, 10))),
+            _MINIMO_1 + _MINIMO_2,
+        ),
+        (
+            "ines-shape-adopted-2024-05-12",
+            (
+                DescendantInfo(
+                    birth_date=date(2022, 3, 1),
+                    relacion=DescendantRelacion.from_registry("adoptado"),
+                    inscripcion_registro_civil_date=date(2024, 5, 12),
+                ),
+            ),
+            Decimal("5200"),
+        ),
+        (
+            "late-year-birth-full-annual-amount",
+            (DescendantInfo(birth_date=date(2024, 7, 1)),),
+            _MINIMO_1 + _MENOR_TRES,
+        ),
+        (
+            "birth-order-ranks-by-birth-date",
+            (DescendantInfo(birth_date=date(2020, 1, 1)), DescendantInfo(birth_date=date(2010, 1, 1))),
+            _MINIMO_1 + _MINIMO_2,
+        ),
+        (
+            "four-descendants-uses-cuarto-y-siguientes",
+            tuple(DescendantInfo(birth_date=date(y, 1, 1)) for y in (2005, 2008, 2011, 2014)),
+            _MINIMO_1 + _MINIMO_2 + _MINIMO_3 + _MINIMO_4PLUS,
+        ),
+        (
+            "fifth-descendant-repeats-cuarto-y-siguientes",
+            tuple(DescendantInfo(birth_date=date(y, 1, 1)) for y in (2005, 2008, 2011, 2014, 2016)),
+            _MINIMO_1 + _MINIMO_2 + _MINIMO_3 + _MINIMO_4PLUS + _MINIMO_4PLUS,
+        ),
+        ("no-eligible-descendant-is-zero", (), Decimal("0")),
+        (
+            "custodia-compartida-halves-descendant-contribution",
+            (DescendantInfo(birth_date=date(2015, 1, 1), custodia_compartida=True),),
+            _MINIMO_1 * Decimal("0.5"),
+        ),
+        (
+            "custodia-compartida-after-menor-tres-stacking",
+            (DescendantInfo(birth_date=date(2023, 1, 15), custodia_compartida=True),),
+            (_MINIMO_1 + _MENOR_TRES) * Decimal("0.5"),
+        ),
+    )
 
 
 _THRESHOLDS = registry_thresholds(FILING_YEAR)
@@ -306,7 +308,7 @@ class TestRentaFamilyProfileDerivedProperties:
 class TestArt58MinimoDescendientesEstatalOracleCases:
     def test_oracle_cases(self) -> None:
         failures: list[str] = []
-        for case_id, descendientes, expected in _ART58_ORACLE_CASES:
+        for case_id, descendientes, expected in _art58_oracle_cases():
             profile = RentaFamilyProfile(descendientes=descendientes)
             total = _minimo_descendientes_estatal(profile)
             if total != expected:

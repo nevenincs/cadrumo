@@ -33,21 +33,21 @@ _CODIGO_ENTRY = re.compile(r'"(\d{2})"\s*=\s*([^,\]]+)')
 # Community -- and deliberately carries no números: the códigos come from the
 # XSD, so this binding cannot launder a wrong one.
 _AEAT_NOMBRE: dict[CCAA, str] = {
-    CCAA.ANDALUCIA: "ANDALUCIA",
-    CCAA.ARAGON: "ARAGÓN",
-    CCAA.ASTURIAS: "ASTURIAS",
-    CCAA.BALEARES: "ILLES BALEARS",
-    CCAA.CANARIAS: "CANARIAS",
-    CCAA.CANTABRIA: "CANTABRIA",
-    CCAA.CASTILLA_LA_MANCHA: "CASTILLA Y LA MANCHA",
-    CCAA.CASTILLA_Y_LEON: "CASTILLA Y LEÓN",
-    CCAA.CATALUNA: "CATALUÑA",
-    CCAA.EXTREMADURA: "EXTREMADURA",
-    CCAA.GALICIA: "GALICIA",
-    CCAA.MADRID: "MADRID",
-    CCAA.MURCIA: "REGIÓN DE MURCIA",
-    CCAA.LA_RIOJA: "LA RIOJA",
-    CCAA.COMUNIDAD_VALENCIANA: "C. VALENCIANA",
+    CCAA.from_registry("andalucia"): "ANDALUCIA",
+    CCAA.from_registry("aragon"): "ARAGÓN",
+    CCAA.from_registry("asturias"): "ASTURIAS",
+    CCAA.from_registry("baleares"): "ILLES BALEARS",
+    CCAA.from_registry("canarias"): "CANARIAS",
+    CCAA.from_registry("cantabria"): "CANTABRIA",
+    CCAA.from_registry("castilla_la_mancha"): "CASTILLA Y LA MANCHA",
+    CCAA.from_registry("castilla_y_leon"): "CASTILLA Y LEÓN",
+    CCAA.from_registry("cataluna"): "CATALUÑA",
+    CCAA.from_registry("extremadura"): "EXTREMADURA",
+    CCAA.from_registry("galicia"): "GALICIA",
+    CCAA.from_registry("madrid"): "MADRID",
+    CCAA.from_registry("murcia"): "REGIÓN DE MURCIA",
+    CCAA.from_registry("la_rioja"): "LA RIOJA",
+    CCAA.from_registry("comunidad_valenciana"): "C. VALENCIANA",
 }
 
 

@@ -19,6 +19,7 @@ from datetime import date
 from typing import Literal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel, create_model
 
 from .....core.aggregation import (
@@ -53,6 +54,7 @@ from ..binding_terminal_origin import TerminalOriginClass, TerminalOriginExpecta
 from ..binding_value_contract import BindingValueChannel
 from ..bindings import validate_binding_selector_shape
 from ..errors import RegistryValidationError
+from ..governed_fact_scope import validating_governed_facts
 from ..ids import RevisionId
 from ..invoice_bindings import PayableInvoiceProvider
 from ..ledger_iva_bindings import LedgerIvaProvider
@@ -77,13 +79,14 @@ _DEFERRED_KINDS = frozenset(
 )
 """The kinds that carry a model and a validator but no executable route owner."""
 
-_LEDGER_IVA_PROVIDER = LedgerIvaProvider(
-    categories=(IvaCategory("domestic_general"),),
-    rate_kinds=(IvaRateKind("general"),),
-    flow_direction=IvaFlowDirection.from_registry("repercutido"),
-    observation_roles=(IvaLedgerObservationRole.SETTLEMENT,),
-    cash_accounting_treatments=(IvaCashAccountingTreatment("none"),),
-)
+with validating_governed_facts(compiled_bundled_authority()):
+    _LEDGER_IVA_PROVIDER = LedgerIvaProvider(
+        categories=(IvaCategory("domestic_general"),),
+        rate_kinds=(IvaRateKind("general"),),
+        flow_direction=IvaFlowDirection.from_registry("repercutido"),
+        observation_roles=(IvaLedgerObservationRole.SETTLEMENT,),
+        cash_accounting_treatments=(IvaCashAccountingTreatment("none"),),
+    )
 
 
 _RELATION_PREFILL_PROVIDER = RelationPrefillProvider(

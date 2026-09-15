@@ -50,7 +50,6 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -59,10 +58,10 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# No hijos means compute_deduccion_maternidad_0611([], ...) is provably 0
+# regardless of the registry's dated operands, so the binding is the literal.
 _M100_2024_MATERNIDAD_BINDINGS = {
-    "renta-profile-deduccion-maternidad": Decimal(
-        compute_deduccion_maternidad_0611([], filing_year=2024),
-    ),
+    "renta-profile-deduccion-maternidad": Decimal(0),
 }
 
 

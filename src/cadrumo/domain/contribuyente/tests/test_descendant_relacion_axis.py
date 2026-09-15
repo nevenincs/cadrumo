@@ -19,8 +19,9 @@ structural coverage.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
-from functools import cache
+from functools import cache, partial
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -294,18 +295,23 @@ def test_an_entitling_relacion_without_its_date_is_valid_and_withholds(
 
 
 @pytest.mark.parametrize(
-    ("child", "reason"),
+    ("build_child", "reason"),
     [
         (
-            DescendantInfo(birth_date=date(2023, 1, 1), relacion=DescendantRelacion.from_registry("adoptado")),
+            partial(DescendantInfo, birth_date=date(2023, 1, 1), relacion=DescendantRelacion.from_registry("adoptado")),
             "already under three, so the ordinary limb grants it anyway",
         ),
         (
-            DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion.from_registry("acogimiento_temporal")),
+            partial(
+                DescendantInfo,
+                birth_date=_OLD_BIRTH,
+                relacion=DescendantRelacion.from_registry("acogimiento_temporal"),
+            ),
             "excluded from the limb, so it has no anchor to be missing",
         ),
         (
-            DescendantInfo(
+            partial(
+                DescendantInfo,
                 birth_date=_OLD_BIRTH,
                 relacion=DescendantRelacion.from_registry("adoptado"),
                 convive_con_contribuyente=False,
@@ -313,16 +319,17 @@ def test_an_entitling_relacion_without_its_date_is_valid_and_withholds(
             "not cohabiting, so no mínimo applies at all",
         ),
         (
-            DescendantInfo(birth_date=date(1990, 1, 1), relacion=DescendantRelacion.from_registry("adoptado")),
+            partial(DescendantInfo, birth_date=date(1990, 1, 1), relacion=DescendantRelacion.from_registry("adoptado")),
             "over 25 with no discapacidad, so no tranche for the increase to attach to",
         ),
     ],
 )
 def test_the_missing_anchor_report_stays_silent_where_nothing_is_lost(
-    child: DescendantInfo,
+    build_child: Callable[[], DescendantInfo],
     reason: str,
 ) -> None:
     """A report that fires on states costing nothing trains the operator to ignore it."""
+    child = build_child()
     assert child.art_58_2_window_anchor_missing(_YEAR, context=_FACT_CONTEXT) is False, reason
 
 

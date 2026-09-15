@@ -214,7 +214,7 @@ def test_the_cited_article_excludes_exactly_the_territories_the_table_enumerates
         "the cited article no longer excludes Canarias from turnover-tax harmonisation"
     )
 
-    scopes = {IvaTerritorialScope(str(record["scope"])) for record in _territory_records()}
+    scopes = {IvaTerritorialScope.from_registry(str(record["scope"])) for record in _territory_records()}
 
     assert scopes == {
         IvaTerritorialScope.from_registry("es_canarias"),

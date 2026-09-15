@@ -525,13 +525,23 @@ def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
     kind = _iva_rate_slot_kind(declarations, on_date)
     if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token:
         return None
-    return resolve_iva_rate(
+    resolved = resolve_iva_rate(
         spanish_eu_member_state(effective_date=on_date, authority=operation),
         kind,
         on_date,
         rate_role=declarations["rate_role"],
         operation=operation,
     )
+    # Temporal projection supplies a missing coordinate; an authored start or
+    # end of validity is a statutory bound, so a rate projected across it was
+    # not in force on the devengo date.
+    if (resolved.authored_valid_from is not None and on_date < resolved.authored_valid_from) or (
+        resolved.authored_valid_to is not None and on_date > resolved.authored_valid_to
+    ):
+        raise RegistryValidationError(
+            f"IVA rate slot {rate.name} is outside its authored validity window on {on_date.isoformat()}"
+        )
+    return resolved
 
 
 def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:

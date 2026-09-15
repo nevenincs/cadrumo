@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 
 import pytest
@@ -14,12 +15,18 @@ from cadrumo.domain.iva.schema import require_eu_member_state
 from ..classification import (
     InvoiceKind,
     IvaInvoiceClassificationCriteria,
-    classify_iva,
 )
 from ..oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
 from ..schema import IvaCategory
+from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _registry_authority_scope() -> Iterator[None]:
+    with _indexed_authority_for_test().operation():
+        yield
 
 
 def test_oss_ioss_regime_catalogue_covers_all_three_esquemas(
@@ -46,7 +53,7 @@ def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:
             kind=TransactionKind("oss_union_goods_distance_sale"),
             direction=InvoiceKind.ISSUED,
         )
-        result = classify_iva(criteria, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         assert result.matched_rule_id == "R17_oss_union_goods_distance_sale"
         assert result.category == IvaCategory("domestic_not_subject")
 
@@ -62,7 +69,7 @@ def test_classifier_routes_oss_union_goods_interface_facilitated_to_r18() -> Non
             kind=TransactionKind("oss_union_goods_interface_facilitated"),
             direction=InvoiceKind.ISSUED,
         )
-        result = classify_iva(criteria, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         assert result.matched_rule_id == "R18_oss_union_goods_interface_facilitated"
         assert result.category == IvaCategory("domestic_not_subject")
 
@@ -78,7 +85,7 @@ def test_classifier_routes_oss_union_services_to_r19() -> None:
             kind=TransactionKind("oss_union_services"),
             direction=InvoiceKind.ISSUED,
         )
-        result = classify_iva(criteria, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         assert result.matched_rule_id == "R19_oss_union_services"
         assert result.category == IvaCategory("domestic_not_subject")
 
@@ -94,7 +101,7 @@ def test_classifier_routes_external_scheme_services_to_r16() -> None:
             kind=TransactionKind("external_scheme_services"),
             direction=InvoiceKind.ISSUED,
         )
-        result = classify_iva(criteria, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         assert result.matched_rule_id == "R16_external_scheme_services"
         assert result.category == IvaCategory("operacion_no_sujeta")
 
@@ -110,7 +117,7 @@ def test_classifier_routes_ioss_low_value_distance_sale_to_r23() -> None:
             kind=TransactionKind("ioss_distance_sale_low_value"),
             direction=InvoiceKind.ISSUED,
         )
-        result = classify_iva(criteria, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         assert result.matched_rule_id == "R23_ioss_distance_sale_low_value"
         assert result.category == IvaCategory("operacion_no_sujeta")
 

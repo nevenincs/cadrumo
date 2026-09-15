@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import re
 import tomllib
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -31,6 +32,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.facts.resolution import ScalarFactQuery
 from ....domain.calculations.registry.schema_base import DateAxis
 from ..errors import TransactionValidationError
@@ -42,6 +44,14 @@ from ..retencion_facts import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Load the retención rates inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
 
 _GENERAL_FACT_ID = "rirpf-art-95:retencion-actividades-profesionales-general"
 _INICIO_FACT_ID = "rirpf-art-95:retencion-actividades-profesionales-inicio"

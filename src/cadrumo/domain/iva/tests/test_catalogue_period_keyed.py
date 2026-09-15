@@ -8,8 +8,8 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
-from ...calculations.registry.errors import RegistrySnapshotError
 from ..catalogue import bundled_iva_catalogue, iva_catalogue_years, resolve_catalogue
+from ..errors import IvaCatalogueError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -94,7 +94,7 @@ def test_resolve_catalogue_requires_a_grounded_year() -> None:
     # the contract and reddening the moment that year is correctly added.
     with (
         _indexed_authority_for_test().operation() as _authority_operation_for_test,
-        pytest.raises(RegistrySnapshotError, match="filing year 1990"),
+        pytest.raises(IvaCatalogueError, match="year=1990"),
     ):
         resolve_catalogue(
             on=date(1990, 6, 15),

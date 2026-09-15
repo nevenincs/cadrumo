@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -9,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..enums import BusinessClassification, TransactionDirection
 from ..errors import TransactionCatalogueError
 from ..models import Transaction, TransactionCatalogue
@@ -16,6 +18,13 @@ from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..service import link_invoice, set_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Build every catalogue inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _sample_raw(*, provider_id: str, amount: Decimal, description: str) -> RawTransaction:

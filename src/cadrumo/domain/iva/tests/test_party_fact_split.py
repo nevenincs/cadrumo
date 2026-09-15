@@ -21,6 +21,7 @@ would prove only that the table equals itself.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 
 import pytest
@@ -37,12 +38,20 @@ from ..classification import (
     IvaTerritorialScope,
     PartyFact,
     TransactionKind,
-    classify_iva,
 )
+from ..errors import IvaValidationError
 from ..identification import identification_state_for_printed_tax_identifier
 from ..schema import EUMemberState, IvaCategory, IvaRateKind
+from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _registry_authority_scope() -> Iterator[None]:
+    with _indexed_authority_for_test().operation():
+        yield
+
 
 _DATE = date(2026, 3, 10)
 
@@ -89,14 +98,14 @@ class TestRegistrationEvidenceSettlesTheIdentificationState:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             assert identification_state_for_printed_tax_identifier(
                 _GERMAN_IVA_NUMBER, operation=_authority_operation_for_test
-            ) is EUMemberState.from_registry("de")
+            ) == EUMemberState.from_registry("de")
 
     def test_a_greek_number_resolves_to_its_iso_code_not_its_iva_prefix(self) -> None:
         """``EL`` leads the number while ``GR`` keys every catalogue downstream."""
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             assert identification_state_for_printed_tax_identifier(
                 "EL123456789", operation=_authority_operation_for_test
-            ) is EUMemberState.from_registry("gr")
+            ) == EUMemberState.from_registry("gr")
 
     def test_a_number_whose_body_contradicts_its_prefix_establishes_nothing(self) -> None:
         """The prefix alone is not evidence; ``FRANCISCO`` must not identify France."""
@@ -138,8 +147,8 @@ class TestNoRegistrationEvidencesEstablishment:
             direction=InvoiceKind.ISSUED,
             rate_tier=IvaRateKind("general"),
         )
-        assert criteria.customer_identification_state is EUMemberState.from_registry("de")
-        assert criteria.customer_residency is IvaTerritorialScope.from_registry("es_mainland")
+        assert criteria.customer_identification_state == EUMemberState.from_registry("de")
+        assert criteria.customer_residency == IvaTerritorialScope.from_registry("es_mainland")
 
     def test_a_foreign_establishment_does_not_require_an_identification_state(self) -> None:
         """The removed coupling, from the other side: EU_MEMBER with no State named.
@@ -171,9 +180,9 @@ class TestNoRegistrationEvidencesEstablishment:
                 direction=InvoiceKind.ISSUED,
                 rate_tier=IvaRateKind("general"),
             )
-            assert classify_iva(criteria, operation=_authority_operation_for_test).category == IvaCategory(
-                "domestic_not_subject"
-            )
+            assert classify_with_registry_rules(
+                criteria, operation=_authority_operation_for_test
+            ).category == IvaCategory("domestic_not_subject")
 
 
 class TestTheSplitRemovesNoRefusal:
@@ -193,8 +202,8 @@ class TestTheSplitRemovesNoRefusal:
     """
 
     def test_a_german_identified_spanish_established_party_still_needs_a_rate_tier(self) -> None:
-        with pytest.raises(ValueError, match="rate_tier is required"):
-            IvaInvoiceClassificationCriteria(
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            criteria = IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
                 issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
                 customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -204,6 +213,8 @@ class TestTheSplitRemovesNoRefusal:
                 kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
             )
+            with pytest.raises(IvaValidationError, match="rate/category mapping"):
+                classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
 
     def test_the_refusal_is_unchanged_for_a_party_carrying_no_identification(self) -> None:
         """The control: the same operation without the identification refuses identically.
@@ -212,8 +223,8 @@ class TestTheSplitRemovesNoRefusal:
         depended on the identification in either direction — firing only with one
         present, or only with one absent — exactly one of these two would fail.
         """
-        with pytest.raises(ValueError, match="rate_tier is required"):
-            IvaInvoiceClassificationCriteria(
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            criteria = IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
                 issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
                 customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -221,6 +232,8 @@ class TestTheSplitRemovesNoRefusal:
                 kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
             )
+            with pytest.raises(IvaValidationError, match="rate/category mapping"):
+                classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
 
 
 class TestEveryBranchDeclaresWhatItConsumes:
@@ -263,7 +276,7 @@ class TestEveryBranchDeclaresWhatItConsumes:
 
     def test_a_domestic_operation_reports_needing_only_the_establishment(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
                     issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -279,7 +292,7 @@ class TestEveryBranchDeclaresWhatItConsumes:
 
     def test_an_intra_community_supply_reports_needing_the_identification(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
                     issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -306,7 +319,7 @@ class TestAnUnplacedOperationDemandsEverything:
 
     def test_the_fallthrough_declares_both_facts(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            result = classify_iva(
+            result = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
                     issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
@@ -338,7 +351,7 @@ class TestTheRateScheduleFollowsTheEstablishmentNotTheIdentification:
 
     def test_a_german_identified_spanish_issuer_is_priced_on_the_spanish_schedule(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            spanish_only = classify_iva(
+            spanish_only = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
                     issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -350,7 +363,7 @@ class TestTheRateScheduleFollowsTheEstablishmentNotTheIdentification:
                 ),
                 operation=_authority_operation_for_test,
             )
-            german_identified = classify_iva(
+            german_identified = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
                     issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),

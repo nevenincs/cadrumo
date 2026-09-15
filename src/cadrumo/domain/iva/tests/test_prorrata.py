@@ -19,6 +19,7 @@ Legal authorities cited:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date as _esp_date
 from decimal import Decimal
 
@@ -26,6 +27,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.schema_base import ThresholdComparison
 from ..errors import ProrrataInputError
 from ..prorrata import (
@@ -43,6 +45,12 @@ from ..prorrata import (
 from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _registry_authority_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
 
 
 #: An explicit resolved margin. These tests exercise the PREDICATE and the
@@ -141,8 +149,8 @@ def test_general_percentage_is_100_when_all_operations_grant_right() -> None:
         kind=ProrrataKind.from_registry("definitiva"),
     )
     assert result.percentage == Decimal("100")
-    assert result.regime is ProrrataRegime("general")
-    assert result.kind is ProrrataKind.from_registry("definitiva")
+    assert result.regime == ProrrataRegime("general")
+    assert result.kind == ProrrataKind.from_registry("definitiva")
     assert result.inputs == inputs
 
 
@@ -283,7 +291,7 @@ def test_especial_mandatory_cases() -> None:
                 year=2025,
                 parameters=_params(comparison),
             )
-            is expected
+            == expected
         ), (comparison, general_deduction, especial_deduction)
 
 
@@ -434,8 +442,8 @@ def test_validate_prorrata_reference_accepts_canonical_values() -> None:
         assert isinstance(reference, ProrrataReference)
         assert reference.reference_id == reference_id
         assert reference.year == 2026
-        assert reference.kind is expected_kind
-        assert reference.regime is expected_regime
+        assert reference.kind == expected_kind
+        assert reference.regime == expected_regime
         assert reference.sector_id == expected_sector_id
 
 

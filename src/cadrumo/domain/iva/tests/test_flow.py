@@ -171,7 +171,7 @@ def test_derive_flow_classifies_non_reverse_charge_categories(
     direction: InvoiceKind,
     expected: IvaFlowDirection,
 ) -> None:
-    assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
+    assert derive_flow_for_classification(category=category, invoice_direction=direction) == expected
 
 
 def test_received_domestic_reverse_charge_self_assesses() -> None:
