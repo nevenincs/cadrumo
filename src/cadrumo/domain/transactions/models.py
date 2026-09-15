@@ -579,6 +579,17 @@ class Transaction(BaseModel):
                 return require_input_classification(value, effective_date=effective_date)
             except RegistryValidationError as exc:
                 raise TransactionValidationError(str(exc)) from exc
+        if info.field_name == "counterparty_identification_state":
+            if value is None or isinstance(value, EUMemberState):
+                return value
+            raw = info.data.get("raw")
+            effective_date = None
+            if isinstance(raw, RawTransaction):
+                effective_date = raw.value_date or raw.booked_date
+            try:
+                return require_eu_member_state(value, effective_date=effective_date)
+            except RegistryValidationError as exc:
+                raise TransactionValidationError(str(exc)) from exc
         if not isinstance(value, str):
             return value
         enum_by_field: dict[str, type] = {
@@ -587,7 +598,6 @@ class Transaction(BaseModel):
             "lifecycle_state": TransactionLifecycleState,
             "iva_category": IvaCategory,
             "exemption_article": IvaExemptionArticle,
-            "counterparty_identification_state": EUMemberState,
             "cash_accounting_treatment": IvaCashAccountingTreatment,
             "art_104_tres_exclusion": Art104TresExclusion,
             "tipo_actividad": TipoActividad,
