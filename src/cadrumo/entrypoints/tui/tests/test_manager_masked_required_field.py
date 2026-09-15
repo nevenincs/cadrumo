@@ -27,7 +27,6 @@ flag on the view is what a schema author has not yet declared.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from textual.widgets import Input
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
@@ -42,6 +41,7 @@ from ....application.user_profile.overview import MASKED_PLACEHOLDER, ProfileFie
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.classification.policies import SensitivityClass
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import FieldEditScreen, ProfileManagerScreen
@@ -155,7 +155,7 @@ def test_the_combination_under_test_does_not_ship() -> None:
     """
     both = [
         f"{section.key}.{field.key}"
-        for section in load_user_profile_schema().sections
+        for section in published_profile_schema().sections
         for field in section.fields
         if field.required and field.sensitivity is SensitivityClass.SECRET
     ]

@@ -247,7 +247,7 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
         assert derived_value.source_artefact_kind == "derived_carry_policy"
 
 
-def test_modelo_303_filed_observation_derives_compensation_availablefrom_registry_formula() -> None:
+def test_modelo_303_filed_observation_derives_compensation_available_from_registry_formula() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         observation = _filed_observation(
             modelo="303",
@@ -442,6 +442,42 @@ class TestParseListbox:
         assert exc_info.value.context["modelo"] == "303"
         assert exc_info.value.context["ejercicio"] == 2025
 
+    def test_malformed_timestamp_cell_is_refused_without_echoing_cell_text(self) -> None:
+        """A shifted grid can put taxpayer text in the timestamp column; the refusal must not carry it."""
+        leaked_cell = "X0000000T SINTETICO APELLIDO"
+        html = f"""
+            <div class="z-listbox">
+              <tr class="z-listhead">
+                <th class="z-listheader"><div>Desistir</div></th>
+                <th class="z-listheader"><div>Tipo de solicitud</div></th>
+                <th class="z-listheader"><div>Observaciones</div></th>
+                <th class="z-listheader"><div>Expediente</div></th>
+                <th class="z-listheader"><div>Periodo</div></th>
+                <th class="z-listheader"><div>Estado</div></th>
+                <th class="z-listheader"><div>Fecha y Hora de presentación</div></th>
+                <th class="z-listheader"><div>Copia de la declaración</div></th>
+                <th class="z-listheader"><div>Obtención de Justificante</div></th>
+                <th class="z-listheader"><div>Descarga fichero presentado</div></th>
+              </tr>
+              <tr class="z-listitem">
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div>202610013599999Z</div></td>
+                <td class="z-listcell"><div>1T</div></td>
+                <td class="z-listcell"><div>ALTA</div></td>
+                <td class="z-listcell"><div>{leaked_cell}</div></td>
+                <td class="z-listcell"><button>Ver</button></td>
+                <td class="z-listcell"><button>Ver</button></td>
+                <td class="z-listcell"><button>Ver</button></td>
+              </tr>
+            </div>
+        """
+        with pytest.raises(SedeParseError) as exc_info:
+            _parse_listbox(html, modelo="130", ejercicio=2026)
+        assert leaked_cell not in str(exc_info.value)
+        assert exc_info.value.__cause__ is None or leaked_cell not in str(exc_info.value.__cause__)
+
 
 class TestParsePresentedAt:
     """Verify the Spanish ``dd/mm/YYYY hh:mm:ss`` timestamp shape parses to UTC."""
@@ -461,12 +497,12 @@ class TestParsePresentedAt:
 
     def test_invalid_shape_raises_registered_validation_error(self) -> None:
         """Assert ISO-style timestamps are rejected with the registered sede error."""
-        with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape: '2024-02-01 19:15:34'"):
+        with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape"):
             _parse_presented_at("2024-02-01 19:15:34")
 
     def test_partial_match_rejected(self) -> None:
         """Assert a date-only string (no time component) is rejected."""
-        with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape: '01/02/2024'"):
+        with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape"):
             _parse_presented_at("01/02/2024")
 
 

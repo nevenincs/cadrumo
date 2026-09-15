@@ -8,9 +8,6 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from pydantic import ValidationError
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
@@ -42,6 +39,10 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
+
+from .....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

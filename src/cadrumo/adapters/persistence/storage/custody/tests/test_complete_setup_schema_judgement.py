@@ -31,7 +31,6 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
@@ -52,6 +51,8 @@ from cadrumo.application.user_profile.validation import (
 )
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+
+from ......domain.calculations.registry.tests.published_authority import published_profile_schema
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -131,7 +132,7 @@ def test_complete_setup_refuses_a_record_whose_conditional_block_is_unanswered(t
     door that re-applied only the unconditional half would go green there and
     red here.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     unconditional_only = tuple(
         fact
         for fact in complete_profile_facts(schema)
@@ -162,7 +163,7 @@ def test_complete_setup_promotes_a_record_that_satisfies_the_contract(tmp_path: 
     everything, which would strand every operator at the end of setup.
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    with _setup_subject(tmp_path, facts=complete_profile_facts(load_user_profile_schema())) as (
+    with _setup_subject(tmp_path, facts=complete_profile_facts(published_profile_schema())) as (
         storage_root,
         profile_id,
     ):
@@ -191,7 +192,7 @@ def test_complete_setup_is_a_no_op_on_an_already_complete_record(tmp_path: Path)
     -- a second call returns the same revision rather than advancing or
     raising.
     """
-    with _setup_subject(tmp_path, facts=complete_profile_facts(load_user_profile_schema())) as (
+    with _setup_subject(tmp_path, facts=complete_profile_facts(published_profile_schema())) as (
         storage_root,
         profile_id,
     ):

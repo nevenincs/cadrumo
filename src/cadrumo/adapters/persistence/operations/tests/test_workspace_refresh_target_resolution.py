@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import NoReturn
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
@@ -47,6 +46,8 @@ from cadrumo.core.period import Period
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 from cadrumo.entrypoints.adapter_composition import build_verification_repository_bundle
 
+from .....domain.calculations.registry.tests.published_authority import published_snapshot
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -64,9 +65,7 @@ def _unreachable_capability_factory(**_kwargs: object) -> NoReturn:
 def _work_unit_id() -> str:
     """Derive a real work-unit identifier from the live registry authority."""
     period = Period.from_year_and_code(2025, "1T")
-    revision_id = (
-        compiled_bundled_authority().snapshot("131", filing_year=2025, period=period.registry_token).revision.id
-    )
+    revision_id = published_snapshot("131", filing_year=2025, period=period.registry_token).revision.id
     return derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="131",

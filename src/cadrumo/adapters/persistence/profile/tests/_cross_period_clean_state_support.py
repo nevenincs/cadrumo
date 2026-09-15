@@ -106,32 +106,33 @@ def _store_ready_profile(
     profile_id: str = _PROFILE_ID,
     tax_id: str = "X1234567L",
 ) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=profile_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=tax_id),
-                UserProfileFact(path="identity.name", value="Ready"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="test activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    with bundled_indexed_authority().operation():
+        seed_test_profile_record(
+            _create_profile_record_for_test(
+                setup_state=ProfileSetupState.COMPLETE,
+                profile_id=profile_id,
+                facts=(
+                    UserProfileFact(path="identity.tax_id", value=tax_id),
+                    UserProfileFact(path="identity.name", value="Ready"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="test activity"),
+                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                    UserProfileFact(path="iva.regime", value="GENERAL"),
+                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                    UserProfileFact(path="iva.redeme_enrolled", value=False),
+                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                ),
+                created_at=_CLOCK,
+                updated_at=_CLOCK,
+                context=_profile_creation_context_for_test(),
             ),
-            created_at=_CLOCK,
-            updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
+        )
 
 
 @cache
@@ -392,23 +393,24 @@ def _persist_justificante_metadata(
 ) -> None:
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
     source_pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
-    JustificanteRepository().save(
-        Justificante(
-            csv=csv,
-            modelo=modelo,
-            period=Period.from_year_and_code(filing_year, period),
-            ejercicio=str(filing_year),
-            presentation_id=presentation_id,
-            presented_at=_CLOCK,
-            tax_id=tax_id,
-            total_a_ingresar=None,
-            total_a_devolver=None,
-            verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-            source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
-            source_pdf_sha256=source_pdf_sha256,
-            parsed_at=_CLOCK,
-        ),
-    )
+    with bundled_indexed_authority().operation():
+        JustificanteRepository().save(
+            Justificante(
+                csv=csv,
+                modelo=modelo,
+                period=Period.from_year_and_code(filing_year, period),
+                ejercicio=str(filing_year),
+                presentation_id=presentation_id,
+                presented_at=_CLOCK,
+                tax_id=tax_id,
+                total_a_ingresar=None,
+                total_a_devolver=None,
+                verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+                source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+                source_pdf_sha256=source_pdf_sha256,
+                parsed_at=_CLOCK,
+            ),
+        )
 
 
 def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecord:

@@ -1,26 +1,22 @@
 """Semantic-plus-exact census over every operand and edit authority the production registry composes.
 
-The denominator here is the repository-visible source tree. Its shared
-enumerator applies the repository's checked-in ignore rules without consulting
-version-control state, so ignored mirrors and generated artifacts stay out while
-new source files enter the census immediately.
+The denominator here is the live package source tree, walked from disk without
+consulting version-control state, so a new source file enters the census
+immediately.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
-from dev.source_tree import repository_files
+
+from ...tests.inventory import package_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]
-
 
 def _source_files() -> tuple[str, ...]:
-    """Return every repository-visible Python file in the census denominator."""
-    return tuple(path for path in repository_files(_REPO_ROOT) if path.endswith(".py"))
+    """Return every package Python file in the census denominator."""
+    return tuple(path.as_posix() for path in package_python_files(include_data=True))
 
 
 def test_the_source_denominator_is_nonempty_and_reproducible() -> None:

@@ -20,9 +20,6 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from uuid import UUID
 
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
 
@@ -40,6 +37,10 @@ from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from ......domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 
 PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")
 DEK = bytes(range(100, 132))

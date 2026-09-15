@@ -27,6 +27,7 @@ from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
@@ -89,16 +90,17 @@ def seed_filer_profile(*, tax_id: str | None = "12345678Z") -> None:
     facts = [UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28001")]
     if tax_id is not None:
         facts.insert(0, UserProfileFact(path="identity.tax_id", value=tax_id))
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=tuple(facts),
-            created_at=clock,
-            updated_at=clock,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
+    with bundled_indexed_authority().operation():
+        seed_test_profile_record(
+            _create_profile_record_for_test(
+                setup_state=ProfileSetupState.COMPLETE,
+                profile_id=_BUCKET_ID,
+                facts=tuple(facts),
+                created_at=clock,
+                updated_at=clock,
+                context=_profile_creation_context_for_test(),
+            ),
+        )
 
 
 @pytest.fixture(autouse=True)

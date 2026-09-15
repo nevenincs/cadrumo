@@ -23,9 +23,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -38,6 +35,10 @@ from cadrumo.application.user_profile.profile_record_repository import require_p
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from ......domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path

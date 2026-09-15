@@ -162,16 +162,17 @@ def _amend_runtime(tmp_path: Path) -> Generator[_AmendRuntime]:
     """Provision the shared ready-profile runtime used by every amend-flow test."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=_PROFILE_ID,
-                facts=_READY_PROFILE_FACTS,
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
+        with bundled_indexed_authority().operation():
+            seed_test_profile_record(
+                _create_profile_record_for_test(
+                    setup_state=ProfileSetupState.COMPLETE,
+                    profile_id=_PROFILE_ID,
+                    facts=_READY_PROFILE_FACTS,
+                    created_at=_T0,
+                    updated_at=_T0,
+                    context=_profile_creation_context_for_test(),
+                ),
+            )
         yield _AmendRuntime(
             engine=objects.engine,
             repos=(

@@ -1,9 +1,8 @@
 """The derived live-tree operation-exposure census.
 
-This is a census, not a sample. Its denominator is the repository-visible
-source tree under ``src/cadrumo``. The shared enumerator applies checked-in
-ignore rules without consulting version-control state, so ignored scratch and
-build output stay out while a peer's new source file enters the census immediately.
+This is a census, not a sample. Its denominator is the live source tree under
+``src/cadrumo``, walked from disk without consulting version-control state, so
+a peer's new source file enters the census immediately.
 
 Every join below is derived from two independent readings that must agree:
 the live production registry, built through the one production composition
@@ -26,9 +25,9 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.source_tree import repository_files
 
 from ...application.operations.registry import OperationDefinition, OperationFrontendProjection, OperationRegistry
+from ...tests.inventory import package_python_files
 from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -82,8 +81,8 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
 
 @cache
 def _source_files() -> tuple[str, ...]:
-    """Every repository-visible Python file under the package, as repo-relative paths."""
-    paths = tuple(path for path in repository_files(_REPO_ROOT, under=("src/cadrumo",)) if path.endswith(".py"))
+    """Every Python file under the package, as repo-relative paths."""
+    paths = tuple(path.relative_to(_REPO_ROOT).as_posix() for path in package_python_files(include_data=True))
     if not paths:
         message = "the repository contains no visible package sources; the census denominator is empty"
         raise AssertionError(message)
