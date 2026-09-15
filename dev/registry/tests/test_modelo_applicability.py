@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules,
 )
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category
 from cadrumo.domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_normal_token,
@@ -46,21 +47,22 @@ class _FactUpdateParams(TypedDict, total=False):
 
 
 _PERIODIC_IVA_MODELOS = ("303", "390")
-_NATURAL_PERSON = require_entity_type("natural_person")
-_LEGAL_ENTITY = require_entity_type("legal_entity")
-_ATTRIBUTION_ENTITY = require_entity_type("attribution_entity")
-_LEGAL_FORM_SL = require_legal_entity_form("sl")
-_ACTIVIDAD_ECONOMICA = require_irpf_income_category("actividad_economica")
-_CAPITAL_INMOBILIARIO = require_irpf_income_category("capital_inmobiliario")
-_TRABAJO = require_irpf_income_category("trabajo")
-_IVA_GENERAL = require_iva_regime("GENERAL")
-_DIRECTA_NORMAL = irpf_estimation_regime_directa_normal_token()
-_DIRECTA_SIMPLIFICADA = irpf_estimation_regime_directa_simplificada_token()
-_OBJETIVA = irpf_estimation_regime_objetiva_token()
-_SPECIAL_GENERAL = irpf_special_regime_general_token()
-_IMPATRIADO = irpf_special_regime_impatriado_token()
-_NON_RESIDENT_IRNR = require_fiscal_residency("non_resident_irnr")
-_NON_PERIODIC_IVA_REGIMES = (require_iva_regime("EXENTO"), require_iva_regime("RECARGO_EQUIVALENCIA"))
+with validating_governed_facts(compiled_bundled_authority()):
+    _NATURAL_PERSON = require_entity_type("natural_person")
+    _LEGAL_ENTITY = require_entity_type("legal_entity")
+    _ATTRIBUTION_ENTITY = require_entity_type("attribution_entity")
+    _LEGAL_FORM_SL = require_legal_entity_form("sl")
+    _ACTIVIDAD_ECONOMICA = require_irpf_income_category("actividad_economica")
+    _CAPITAL_INMOBILIARIO = require_irpf_income_category("capital_inmobiliario")
+    _TRABAJO = require_irpf_income_category("trabajo")
+    _IVA_GENERAL = require_iva_regime("GENERAL")
+    _DIRECTA_NORMAL = irpf_estimation_regime_directa_normal_token()
+    _DIRECTA_SIMPLIFICADA = irpf_estimation_regime_directa_simplificada_token()
+    _OBJETIVA = irpf_estimation_regime_objetiva_token()
+    _SPECIAL_GENERAL = irpf_special_regime_general_token()
+    _IMPATRIADO = irpf_special_regime_impatriado_token()
+    _NON_RESIDENT_IRNR = require_fiscal_residency("non_resident_irnr")
+    _NON_PERIODIC_IVA_REGIMES = (require_iva_regime("EXENTO"), require_iva_regime("RECARGO_EQUIVALENCIA"))
 _FACT_GATED_MODELO_CASES: tuple[tuple[str, _FactUpdateParams], ...] = (
     ("115", {"pays_rent_with_retencion": True}),
     ("180", {"pays_rent_with_retencion": True}),

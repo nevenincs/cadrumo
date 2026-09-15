@@ -37,6 +37,18 @@ def _m303_snapshot():
     return compiled_bundled_authority().inspect_revision("303", filing_year=2025, period="4T")
 
 
+@pytest.fixture
+def _m200_inspection() -> RegistryRevisionInspection:
+    """A revision that declares projection endpoints the map must biject with."""
+    return compiled_bundled_authority().inspect_revision("200", filing_year=2025, period="0A")
+
+
+@pytest.fixture
+def _m130_inspection() -> RegistryRevisionInspection:
+    """A revision that declares no projection endpoint, so a synthetic map can validate."""
+    return compiled_bundled_authority().inspect_revision("130", filing_year=2026, period="1T")
+
+
 def _intermediate_payload(
     *,
     source_sha256: str = "0" * 64,
@@ -356,9 +368,9 @@ def test_casilla_token_refuses_absence_and_never_infers_segment_identity(token: 
         )
 
 
-def test_validation_accepts_complete_exact_map_with_live_revision_authority(m130_inspection_snapshot) -> None:
+def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m130_inspection) -> None:
     """A complete map resolves through the real M200 source and target revision."""
-    source_sha256 = _real_source_sha256(m130_inspection_snapshot, _M130_DESIGN_REF)
+    source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
     intermediate = RecordDesignIntermediate.model_validate(
         _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
     )
@@ -389,7 +401,7 @@ def test_validation_accepts_complete_exact_map_with_live_revision_authority(m130
         ),
     )
 
-    validate_semantic_map(semantic_map, intermediate, m130_inspection_snapshot)
+    validate_semantic_map(semantic_map, intermediate, _m130_inspection)
 
 
 @pytest.mark.parametrize(
@@ -587,12 +599,12 @@ def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
     ],
 )
 def test_validation_refuses_unresolved_canonical_semantic_references(
-    m130_inspection_snapshot,
+    _m130_inspection,
     entry: dict[str, object],
     message: str,
 ) -> None:
     """Casilla, binding, and evidence references resolve only through the snapshot."""
-    source_sha256 = _real_source_sha256(m130_inspection_snapshot, _M130_DESIGN_REF)
+    source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
     intermediate = RecordDesignIntermediate.model_validate(
         _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
     )
@@ -615,7 +627,7 @@ def test_validation_refuses_unresolved_canonical_semantic_references(
     )
 
     with pytest.raises(RegistryValidationError, match=message):
-        validate_semantic_map(semantic_map, intermediate, m130_inspection_snapshot)
+        validate_semantic_map(semantic_map, intermediate, _m130_inspection)
 
 
 def test_validation_refuses_duplicate_export_id_without_consulting_legacy_layout(m200_inspection_snapshot) -> None:
@@ -704,9 +716,9 @@ def test_projection_admission_uses_the_real_revision_declaration_bijection(_m303
         )
 
 
-def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(m130_inspection_snapshot) -> None:
+def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(_m130_inspection) -> None:
     """Anomalies name only a source condition and retain the full bijection gate."""
-    source_sha256 = _real_source_sha256(m130_inspection_snapshot, _M130_DESIGN_REF)
+    source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
     intermediate = RecordDesignIntermediate.model_validate(
         _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
     )
@@ -743,13 +755,13 @@ def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(m130_ins
         reason="Official workbook records a reviewable source anomaly.",
     )
 
-    validate_semantic_map(semantic_map, intermediate, m130_inspection_snapshot, anomaly_exceptions=(exception,))
+    validate_semantic_map(semantic_map, intermediate, _m130_inspection, anomaly_exceptions=(exception,))
 
     with pytest.raises(RegistryValidationError, match="not pinned to the parser intermediate SHA-256"):
         validate_semantic_map(
             semantic_map,
             intermediate,
-            m130_inspection_snapshot,
+            _m130_inspection,
             anomaly_exceptions=(exception.model_copy(update={"source_sha256": "1" * 64}),),
         )
     with pytest.raises(ValidationError, match="extra_forbidden"):
@@ -761,9 +773,9 @@ def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(m130_ins
         )
 
 
-def test_validation_uses_no_legacy_export_layout_membership_or_identifier_inference(m130_inspection_snapshot) -> None:
+def test_validation_uses_no_legacy_export_layout_membership_or_identifier_inference(_m130_inspection) -> None:
     """A novel generated ID validates without consulting the unverified legacy tree."""
-    source_sha256 = _real_source_sha256(m130_inspection_snapshot, _M130_DESIGN_REF)
+    source_sha256 = _real_source_sha256(_m130_inspection, _M130_DESIGN_REF)
     intermediate = RecordDesignIntermediate.model_validate(
         _intermediate_payload(source_sha256=source_sha256, source_ref=_M130_DESIGN_REF, design_epoch=_M130_EPOCH)
     )
@@ -793,7 +805,7 @@ def test_validation_uses_no_legacy_export_layout_membership_or_identifier_infere
             ),
         ),
     )
-    validate_semantic_map(semantic_map, intermediate, m130_inspection_snapshot)
+    validate_semantic_map(semantic_map, intermediate, _m130_inspection)
 
 
 #: Round-21 note: none of the tests above ever populate ``variable_envelopes``

@@ -15,6 +15,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import compiled_bundled_authority
 from ._export_tree import render_complete_export_tree
+from ._generated_tree_test_support import (
+    ISOLATED_TREE,
+    isolated_authorities,
+    write_isolated_generated_authority_tree,
+)
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
@@ -42,11 +47,6 @@ from .render_check import (
     RenderComparison,
     RevisionRenderInputs,
     revision_render_inputs,
-)
-from .test_generated_export_tree_validation import (
-    _ISOLATED_TREE,
-    _real_authorities,
-    _write_isolated_generated_authority_tree,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -376,11 +376,11 @@ def test_non_manifest_member_mutation_after_existing_receipt_is_refused_without_
 
 def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _PreparedInvocation:
     """Build a real isolated candidate for the bootstrap-path detector test."""
-    validation, joined, semantic_map, rendered, candidate_export_root = _write_isolated_generated_authority_tree(
+    validation, joined, semantic_map, rendered, candidate_export_root = write_isolated_generated_authority_tree(
         candidate_base,
     )
     shutil.rmtree(candidate_export_root)
-    _joined, _semantic_map, transport, render_profile, evidence = _real_authorities(_ISOLATED_TREE)
+    _joined, _semantic_map, transport, render_profile, evidence = isolated_authorities(ISOLATED_TREE)
     inputs = RevisionRenderInputs(
         revision_id=validation.target.revision_id,
         layout_id=str(rendered.layout.id),
@@ -392,11 +392,11 @@ def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _Prepare
     )
     return _PreparedInvocation(
         invocation=_Invocation(
-            _ISOLATED_TREE.modelo,
-            _ISOLATED_TREE.revision,
-            _ISOLATED_TREE.source_ref,
-            _ISOLATED_TREE.filing_year,
-            _ISOLATED_TREE.period,
+            ISOLATED_TREE.modelo,
+            ISOLATED_TREE.revision,
+            ISOLATED_TREE.source_ref,
+            ISOLATED_TREE.filing_year,
+            ISOLATED_TREE.period,
         ),
         inputs=inputs,
         validation=validation,
@@ -404,9 +404,9 @@ def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _Prepare
         target_root=target_root,
         target_export_root=target_root
         / "modelos"
-        / _ISOLATED_TREE.modelo
+        / ISOLATED_TREE.modelo
         / "revisions"
-        / _ISOLATED_TREE.revision
+        / ISOLATED_TREE.revision
         / "export",
         published_modelo_root=None,
     )
@@ -421,9 +421,9 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     assert result == "publishable_absence"
     assert first.candidate_root.joinpath(
         "modelos",
-        _ISOLATED_TREE.modelo,
+        ISOLATED_TREE.modelo,
         "revisions",
-        _ISOLATED_TREE.revision,
+        ISOLATED_TREE.revision,
         "export",
     ).is_dir()
     assert not first.target_export_root.exists()

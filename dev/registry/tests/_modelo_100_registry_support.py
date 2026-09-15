@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
 
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
 from ..compiler.validator import RegistryValidator
 
@@ -39,6 +40,7 @@ def _m100_2024_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
             compute_deduccion_maternidad_0611(
                 [],
                 filing_year=2024,
+                authority=compiled_bundled_authority(),
             ),
         ),
     }

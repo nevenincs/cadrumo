@@ -35,7 +35,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
-from ._export_tree import RenderedExportTree, render_complete_export_tree, render_toml_bytes
+from ._export_tree import RenderedExportTree, render_complete_export_tree
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -49,6 +49,7 @@ from .candidate_staging import (
     generated_export_bootstrap_target,
     stage_continuity_metadata,
     stage_generated_export_candidate,
+    write_complete_edition,
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .generated_tree_dispositions import record_drift_dispositions
@@ -256,14 +257,22 @@ def supporting_modelos(modelo: str) -> frozenset[str]:
 
 
 def _stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | None:
-    """Stage a one-revision published modelo only when check needs the witness."""
-    source_modelo_root = bundled_path("registry", "aeat", "modelos", modelo)
+    """Stage a one-revision published modelo only when check needs the witness.
+
+    The witness is staged in registry shape with the published authored facts
+    beside it, because loading a modelo validates its bindings against the
+    governed facts of the registry that holds it and refuses without them.
+    """
+    source_registry_root = bundled_path("registry", "aeat")
+    source_modelo_root = source_registry_root / "modelos" / modelo
     revisions = tuple((source_modelo_root / "revisions").iterdir())
     if len(revisions) == 1:
         return None
+    staged_registry_root = root / "published-registry" / "aeat"
+    shutil.copytree(source_registry_root / "facts", staged_registry_root / "facts")
     staged = stage_isolated_edition(
         source_modelo_root,
-        root / "published-modelo" / modelo,
+        staged_registry_root / "modelos" / modelo,
         revision=revision,
         source_locales_root=bundled_path().parent / "locales",
         staged_locales_root=root / "published-locales",
@@ -316,10 +325,7 @@ def stage_isolated_edition(
             shutil.rmtree(entry)
     if edition.inherits_from is None:
         return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
-    shutil.rmtree(revisions_root / revision)
-    (revisions_root / f"{revision}.toml").write_bytes(
-        render_toml_bytes(f"{revision}.toml", {"revisions": {revision: edition.table}}),
-    )
+    write_complete_edition(revisions_root / revision, edition)
     shutil.copytree(source_locales_root, staged_locales_root)
     manager = LocaleManager(src_dir=staged_locales_root, locales_dir=staged_locales_root)
     for locale in sorted(discover_locale_codes(staged_locales_root)):

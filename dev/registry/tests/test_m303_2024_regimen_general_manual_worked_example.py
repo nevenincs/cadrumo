@@ -155,6 +155,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
@@ -214,19 +215,20 @@ _FILING_YEAR = 2024
 _PERIOD = "1T"
 _DEVENGO_DATE = date(2024, 3, 31)
 
-_GENERAL_RATE_KIND = _rate_kind("general", effective_date=_DEVENGO_DATE)
-_DOMESTIC_GENERAL_CATEGORY = _category("domestic_general", effective_date=_DEVENGO_DATE)
-_INTRA_COMMUNITY_ACQUISITION_CATEGORY = _category(
-    "intra_community_acquisition_reverse_charge",
-    effective_date=_DEVENGO_DATE,
-)
-_IMPORT_THIRD_COUNTRY_CATEGORY = _category("import_third_country", effective_date=_DEVENGO_DATE)
-_SOPORTADO_FLOW = _flow("soportado", effective_date=_DEVENGO_DATE)
-_REPERCUTIDO_FLOW = _flow("repercutido", effective_date=_DEVENGO_DATE)
-_REVERSE_CHARGE_FLOW = _flow("inversion_sujeto_pasivo", effective_date=_DEVENGO_DATE)
-_DOMESTIC_CURRENT_DEDUCTION = _deduction_kind("domestic_current", effective_date=_DEVENGO_DATE)
-_INTRA_EU_CURRENT_DEDUCTION = _deduction_kind("intra_eu_current", effective_date=_DEVENGO_DATE)
-_IMPORT_CURRENT_DEDUCTION = _deduction_kind("import_current", effective_date=_DEVENGO_DATE)
+with validating_governed_facts(compiled_bundled_authority()):
+    _GENERAL_RATE_KIND = _rate_kind("general", effective_date=_DEVENGO_DATE)
+    _DOMESTIC_GENERAL_CATEGORY = _category("domestic_general", effective_date=_DEVENGO_DATE)
+    _INTRA_COMMUNITY_ACQUISITION_CATEGORY = _category(
+        "intra_community_acquisition_reverse_charge",
+        effective_date=_DEVENGO_DATE,
+    )
+    _IMPORT_THIRD_COUNTRY_CATEGORY = _category("import_third_country", effective_date=_DEVENGO_DATE)
+    _SOPORTADO_FLOW = _flow("soportado", effective_date=_DEVENGO_DATE)
+    _REPERCUTIDO_FLOW = _flow("repercutido", effective_date=_DEVENGO_DATE)
+    _REVERSE_CHARGE_FLOW = _flow("inversion_sujeto_pasivo", effective_date=_DEVENGO_DATE)
+    _DOMESTIC_CURRENT_DEDUCTION = _deduction_kind("domestic_current", effective_date=_DEVENGO_DATE)
+    _INTRA_EU_CURRENT_DEDUCTION = _deduction_kind("intra_eu_current", effective_date=_DEVENGO_DATE)
+    _IMPORT_CURRENT_DEDUCTION = _deduction_kind("import_current", effective_date=_DEVENGO_DATE)
 
 
 def _op(
