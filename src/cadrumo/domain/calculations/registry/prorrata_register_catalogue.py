@@ -216,7 +216,7 @@ def _coerce_regime(value: object) -> ProrrataRegisterRegime:
         token = value
     elif isinstance(value, str):
         try:
-            token = ProrrataRegisterRegime._from_registry(value.strip())
+            token = ProrrataRegisterRegime.from_registry(value.strip())
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError("prorrata register regime must be a non-empty registry token") from exc
     else:
@@ -231,7 +231,7 @@ def _coerce_transition(value: object) -> ProrrataEspecialTransitionKind:
         token = value
     elif isinstance(value, str):
         try:
-            token = ProrrataEspecialTransitionKind._from_registry(value.strip())
+            token = ProrrataEspecialTransitionKind.from_registry(value.strip())
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError("prorrata especial transition must be a non-empty registry token") from exc
     else:
@@ -246,7 +246,7 @@ def _coerce_provenance(value: object) -> ProrrataProvisionalProvenance:
         token = value
     elif isinstance(value, str):
         try:
-            token = ProrrataProvisionalProvenance._from_registry(value.strip())
+            token = ProrrataProvisionalProvenance.from_registry(value.strip())
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError("prorrata provisional provenance must be a non-empty registry token") from exc
     else:
@@ -261,7 +261,7 @@ def _coerce_sector_letter(value: object) -> SectorDiferenciadoLetra:
         token = value
     elif isinstance(value, str):
         try:
-            token = SectorDiferenciadoLetra._from_registry(value.strip())
+            token = SectorDiferenciadoLetra.from_registry(value.strip())
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError("differentiated-sector letter must be a non-empty registry token") from exc
     else:
@@ -334,7 +334,7 @@ def resolve_prorrata_register_catalogue(
     regimes: list[ProrrataRegisterRegimeDefinition] = []
     for raw_token in regime_tokens:
         prefix = f"{_REGIME_PREFIX}{raw_token}"
-        token = ProrrataRegisterRegime._from_registry(_required(entries, f"{prefix}.value"))
+        token = ProrrataRegisterRegime.from_registry(_required(entries, f"{prefix}.value"))
         if str(token) != raw_token:
             raise RegistryValidationError(f"register regime {raw_token!r} declares a mismatched value")
         regimes.append(
@@ -349,7 +349,7 @@ def resolve_prorrata_register_catalogue(
     transition_kinds: list[ProrrataTransitionDefinition] = []
     for raw_token in _csv(entries, _TRANSITION_ORDER_KEY):
         prefix = f"{_TRANSITION_PREFIX}{raw_token}"
-        token = ProrrataEspecialTransitionKind._from_registry(_required(entries, f"{prefix}.value"))
+        token = ProrrataEspecialTransitionKind.from_registry(_required(entries, f"{prefix}.value"))
         if str(token) != raw_token:
             raise RegistryValidationError(f"transition {raw_token!r} declares a mismatched value")
         transition_kinds.append(
@@ -363,7 +363,7 @@ def resolve_prorrata_register_catalogue(
     provenances: list[ProrrataProvenanceDefinition] = []
     for raw_token in _csv(entries, _PROVENANCE_ORDER_KEY):
         prefix = f"{_PROVENANCE_PREFIX}{raw_token}"
-        token = ProrrataProvisionalProvenance._from_registry(_required(entries, f"{prefix}.value"))
+        token = ProrrataProvisionalProvenance.from_registry(_required(entries, f"{prefix}.value"))
         if str(token) != raw_token:
             raise RegistryValidationError(f"provenance {raw_token!r} declares a mismatched value")
         provenances.append(
@@ -379,7 +379,7 @@ def resolve_prorrata_register_catalogue(
     sector_letters: list[SectorDiferenciadoLetraDefinition] = []
     for raw_token in _csv(entries, _SECTOR_ORDER_KEY):
         prefix = f"{_SECTOR_PREFIX}{raw_token}"
-        token = SectorDiferenciadoLetra._from_registry(_required(entries, f"{prefix}.value"))
+        token = SectorDiferenciadoLetra.from_registry(_required(entries, f"{prefix}.value"))
         if str(token) != raw_token:
             raise RegistryValidationError(f"sector letter {raw_token!r} declares a mismatched value")
         sector_letters.append(

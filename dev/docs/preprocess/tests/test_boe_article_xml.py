@@ -30,6 +30,8 @@ def test_response_versions_are_separate_and_status_is_not_prose(tmp_path: Path) 
     assert output.source_kind is SourceDocumentKind.NORMATIVES_XML
     assert [unit.text for unit in output.units] == ["Old rule.", "New rule."]
     assert output.units[0].anchor == "#a1-2"
+    assert output.units[0].section is not None
+    assert output.units[1].section is not None
     assert "2000-01-01" in output.units[0].section
     assert "2020-01-01" in output.units[1].section
 

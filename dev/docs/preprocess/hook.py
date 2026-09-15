@@ -169,6 +169,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", type=Path, help="Source file matched by a preprocess rule.")
     args = parser.parse_args(argv)
+    if not isinstance(args.path, Path):
+        parser.error("path must be a filesystem path")
     source: Path = args.path
     repo_root = REPO_ROOT
     try:

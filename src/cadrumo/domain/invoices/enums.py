@@ -58,7 +58,7 @@ class IvaRate(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
         """Materialise one token from the typed facts projection."""
         return cls(value, _registry_validated=True)
 
@@ -70,7 +70,7 @@ class IvaRate(str):
         if isinstance(value, str):
             try:
                 resolved = resolve_iva_rate_token(value, date.today())
-                return cls._from_registry(str(resolved))
+                return cls.from_registry(str(resolved))
             except RegistryValidationError as exc:
                 raise ValueError("IvaRate token is not declared by the scoped facts registry") from exc
         raise TypeError("IvaRate must be a registry-projected token or string")
@@ -131,7 +131,8 @@ class InvoiceClass(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -178,7 +179,8 @@ class InvoiceOperationDateRole(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -304,7 +306,7 @@ class InvoiceLegalMention(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
         """Materialise one token from the typed facts projection."""
         return cls(value, _registry_validated=True)
 
@@ -316,7 +318,7 @@ class InvoiceLegalMention(str):
         if isinstance(value, str):
             try:
                 resolved = resolve_invoice_legal_mention(value, date.today())
-                return cls._from_registry(str(resolved))
+                return cls.from_registry(str(resolved))
             except RegistryValidationError as exc:
                 raise ValueError("InvoiceLegalMention is not declared by the scoped facts registry") from exc
         raise TypeError("InvoiceLegalMention must be a registry-projected token or string")
@@ -408,7 +410,7 @@ def resolve_invoice_legal_mention(
         raise RegistryValidationError("invoice legal-mention token must be a string")
     for declaration in invoice_legal_mention_declarations(on_date, authority=authority):
         if declaration.token == value:
-            return InvoiceLegalMention._from_registry(value)
+            return InvoiceLegalMention.from_registry(value)
     raise RegistryValidationError(f"invoice legal-mention token is not governed: {value}")
 
 
@@ -482,12 +484,12 @@ def resolve_iva_rate_token(
     values = _iva_rate_slot_registry_values(on_date, authority=authority)
     if value not in _iva_rate_slot_registry_order(values):
         raise RegistryValidationError(f"IVA rate slot is not governed: {value}")
-    return IvaRate._from_registry(value)
+    return IvaRate.from_registry(value)
 
 
 def _iva_rate_slot_tokens(on_date: date) -> tuple[IvaRate, ...]:
     values = _iva_rate_slot_registry_values(on_date)
-    return tuple(IvaRate._from_registry(token) for token in _iva_rate_slot_registry_order(values))
+    return tuple(IvaRate.from_registry(token) for token in _iva_rate_slot_registry_order(values))
 
 
 def _iva_rate_slot_kind(declarations: Mapping[str, str], on_date: date) -> IvaRateKind:

@@ -47,7 +47,7 @@ def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> B
     selector: dict[str, object] = {
         "categories": (IvaCategory("domestic_super_reduced"),),
         "rate_kinds": (IvaRateKind("super_reduced"),),
-        "flow_direction": IvaFlowDirection._from_registry("repercutido"),
+        "flow_direction": IvaFlowDirection.from_registry("repercutido"),
         "fact": "base_amount_sum",
         "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
         "cash_accounting_treatments": (
@@ -90,7 +90,7 @@ def _row(ledger_id: str, *, applied_rate: Decimal | None, base: str) -> IvaLedge
         transaction_date=date(2024, 11, 15),
         category=IvaCategory("domestic_super_reduced"),
         rate_kind=IvaRateKind("super_reduced"),
-        flow_direction=IvaFlowDirection._from_registry("repercutido"),
+        flow_direction=IvaFlowDirection.from_registry("repercutido"),
         base_amount=Decimal(base),
         iva_amount=Decimal("0.00"),
         applied_rate=applied_rate,

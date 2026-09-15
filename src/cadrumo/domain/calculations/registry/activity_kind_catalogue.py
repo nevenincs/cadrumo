@@ -46,7 +46,7 @@ class IrpfActivityKindCatalogue:
             if not raw:
                 raise RegistryValidationError("IRPF activity-kind token must be non-empty")
             try:
-                token = IrpfActivityKind._from_registry(raw)
+                token = IrpfActivityKind.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("IRPF activity-kind token must be a non-empty string") from exc
         else:
@@ -122,7 +122,7 @@ def resolve_irpf_activity_kind_catalogue(
         selector_id = key[len(_SELECTOR_PREFIX) : -len(_ACTIVITY_KIND_SUFFIX)]
         if not selector_id or not raw_value:
             raise RegistryValidationError(f"IRPF activity-kind catalogue has an invalid selector key {key!r}")
-        token = IrpfActivityKind._from_registry(raw_value)
+        token = IrpfActivityKind.from_registry(raw_value)
         selectors_by_token.setdefault(token, []).append(selector_id)
     if not selectors_by_token:
         raise RegistryValidationError("IRPF activity-kind catalogue declares no activity-kind selectors")

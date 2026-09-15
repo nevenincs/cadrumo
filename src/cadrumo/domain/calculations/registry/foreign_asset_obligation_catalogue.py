@@ -55,7 +55,7 @@ class ForeignAssetObligationCatalogue:
             if not raw:
                 raise RegistryValidationError("foreign-asset obligation group must be a non-empty string token")
             try:
-                token = ForeignAssetObligationGroup._from_registry(raw)
+                token = ForeignAssetObligationGroup.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError(
                     "foreign-asset obligation group must be a non-empty string token",
@@ -146,7 +146,7 @@ def _selected_mapping_entries(
 def _catalogue(entries: Mapping[str, str]) -> ForeignAssetObligationCatalogue:
     definitions: list[ForeignAssetObligationDefinition] = []
     for raw_token in _csv(entries, _GROUP_ORDER_KEY):
-        token = ForeignAssetObligationGroup._from_registry(raw_token)
+        token = ForeignAssetObligationGroup.from_registry(raw_token)
         prefix = f"{_GROUP_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"foreign-asset obligation group {raw_token!r} declares a mismatched value")

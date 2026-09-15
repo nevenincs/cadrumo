@@ -26,7 +26,7 @@ class SpendingCategory(str):
     """Registry-projected deductible-spending token.
 
     Category membership is governing-body data, not a Python enum catalogue.
-    Direct construction is therefore refused; :meth:`_from_registry` is used
+    Direct construction is therefore refused; :meth:`from_registry` is used
     only by the typed facts projection, while Pydantic input is resolved
     through that same projection.
     """
@@ -42,7 +42,7 @@ class SpendingCategory(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
         """Materialise one token after a registry catalogue has declared it."""
         return cls(value, _registry_validated=True)
 
@@ -55,7 +55,7 @@ class SpendingCategory(str):
             from .spending_category_catalogue import require_spending_category
 
             token = require_spending_category(value)
-            return cls._from_registry(token.value)
+            return cls.from_registry(token.value)
         raise CoreValidationError("SpendingCategory must be a registry-projected token")
 
     @classmethod

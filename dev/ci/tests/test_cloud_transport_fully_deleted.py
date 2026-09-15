@@ -58,6 +58,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.inventory import SRC_CADRUMO, non_test_package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -346,16 +347,18 @@ def _text_classifier_transport() -> str:
     from cadrumo.adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
     from cadrumo.domain.transactions.llm import prompt_spec_with_every_spending_category
 
-    spec = prompt_spec_with_every_spending_category(year=2025)
-    return _transport_of(LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by)
+    with bundled_indexed_authority().operation() as operation:
+        spec = prompt_spec_with_every_spending_category(year=2025, operation=operation)
+        return _transport_of(LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by)
 
 
 def _vision_classifier_transport() -> str:
     from cadrumo.adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
     from cadrumo.domain.transactions.llm import prompt_spec_with_every_spending_category
 
-    spec = prompt_spec_with_every_spending_category(year=2025)
-    return _transport_of(LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by)
+    with bundled_indexed_authority().operation() as operation:
+        spec = prompt_spec_with_every_spending_category(year=2025, operation=operation)
+        return _transport_of(LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by)
 
 
 def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
@@ -379,7 +382,7 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
         period=default_invoice_extraction_period(),
         iva_rate_pcts=(Decimal("21"),),
         retencion_rate_pcts=(Decimal("15"),),
-        no_printed_tax_categories=(IvaCategory.DOMESTIC_ZERO,),
+        no_printed_tax_categories=(IvaCategory("domestic_zero"),),
         regime_legend_phrases=("operación exenta",),
     )
 
@@ -390,12 +393,14 @@ def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
-    reader = TextInvoiceFieldExtractor(
-        model=model,
-        provider=resolved,
-        authority_values=_pinned_authority_values(),
-    )
-    return _transport_of(reader.decided_by)
+    with bundled_indexed_authority().operation() as operation:
+        reader = TextInvoiceFieldExtractor(
+            model=model,
+            provider=resolved,
+            operation=operation,
+            authority_values=_pinned_authority_values(),
+        )
+        return _transport_of(reader.decided_by)
 
 
 def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:

@@ -84,7 +84,8 @@ class CalendarCCAA(str):
         raise TypeError("CalendarCCAA tokens must be projected from the registry")
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod

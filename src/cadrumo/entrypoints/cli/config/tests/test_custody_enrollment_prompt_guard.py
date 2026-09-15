@@ -137,15 +137,23 @@ def _child_env() -> dict[str, str]:
 
 async def _wait_for_console_less_login(command: list[str], *, creationflags: int, env: dict[str, str]) -> None:
     """Run the fixed login probe with a bounded detached-process lifecycle."""
-    options = {} if creationflags == 0 else {"creationflags": creationflags}
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        env=env,
-        stdin=asyncio.subprocess.DEVNULL,
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.DEVNULL,
-        **options,
-    )
+    if creationflags:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            env=env,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+            creationflags=creationflags,
+        )
+    else:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            env=env,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
     try:
         await asyncio.wait_for(process.wait(), timeout=_CHILD_BUDGET_SECONDS)
     except TimeoutError:

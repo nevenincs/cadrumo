@@ -25,6 +25,8 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.identity.bucket import BucketId
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.errors import UsageRatioPersistenceError
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
@@ -35,6 +37,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _BUCKET_A_ID = "73737373-7373-4373-8373-737373737301"
 _BUCKET_B_ID = "73737373-7373-4373-8373-737373737302"
 _SECURE_OBJECT_WRITTEN_AT = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
+
+
+@pytest.fixture(scope="module")
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin the registry generation used by every secure profile decode."""
+    with bundled_indexed_authority().operation() as pinned:
+        yield pinned
+
+
+def _category(value: str) -> SpendingCategory:
+    """Materialise a spending-category token through the registry-shaped type."""
+    return SpendingCategory.from_registry(value)
+
+
+def _profile(
+    operation: PinnedAuthorityOperation,
+    ratios: dict[SpendingCategory, Decimal],
+) -> UsageRatioProfile:
+    """Build a non-empty profile under the operation's eligibility scope."""
+    with validating_governed_facts(operation):
+        return UsageRatioProfile(ratios=ratios)
 
 
 @pytest.fixture(autouse=True)
@@ -49,20 +72,21 @@ def _database_bytes(profile: TestRuntimeProfile) -> bytes:
     return read_db_at_rest_bytes(profile.paths.database_file)
 
 
-def test_load_missing_returns_empty(tmp_path: Path) -> None:
+def test_load_missing_returns_empty(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     """A missing file yields an empty profile (the virgin state)."""
     target = tmp_path / "missing.json"
     assert not target.exists()
-    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == UsageRatioProfile()
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation) == UsageRatioProfile()
 
 
 def test_save_does_not_create_requested_plaintext_file(
     tmp_path: Path,
     _runtime_profile: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """``save_usage_ratios`` stores in the secure database, not at ``path``."""
     target = tmp_path / "a" / "b" / "ratios.json"
-    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+    profile = _profile(operation, {_category("suministros_home_office_luz"): Decimal("0.21")})
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
     assert not target.exists()
     assert _runtime_profile.paths.database_file.exists()
@@ -70,6 +94,7 @@ def test_save_does_not_create_requested_plaintext_file(
 
 def test_save_persists_only_to_the_secure_database_object(
     _runtime_profile: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A saved profile never reaches the plaintext ``financial/usage-ratios.json`` leaf.
 
@@ -89,40 +114,41 @@ def test_save_persists_only_to_the_secure_database_object(
     itself, so a future taxonomy subpath move is tracked automatically
     instead of silently passing vacuously against a stale path.
     """
-    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.30")})
+    profile = _profile(operation, {_category("suministros_home_office_luz"): Decimal("0.30")})
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
 
-    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation) == profile
     assert not storage_path(StorageCategory.USAGE_RATIOS).exists()
 
 
-def test_save_round_trips(tmp_path: Path) -> None:
+def test_save_round_trips(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     """A saved profile reloads identically through the encrypted envelope."""
     tmp_path / "ratios.json"
-    profile = UsageRatioProfile(
-        ratios={
-            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),
-            SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
+    profile = _profile(
+        operation,
+        {
+            _category("suministros_home_office_luz"): Decimal("0.21"),
+            _category("telefonia_movil"): Decimal("0.6"),
         },
     )
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
-    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation) == profile
 
 
-def test_profiles_are_scoped_by_bucket(tmp_path: Path) -> None:
-    first = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
-    second = UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6")})
+def test_profiles_are_scoped_by_bucket(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
+    first = _profile(operation, {_category("suministros_home_office_luz"): Decimal("0.21")})
+    second = _profile(operation, {_category("telefonia_movil"): Decimal("0.6")})
     save_usage_ratios(first, bucket_id=_BUCKET_A_ID)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_B_ID):
         save_usage_ratios(second, bucket_id=_BUCKET_B_ID)
-        assert load_usage_ratios(bucket_id=_BUCKET_B_ID) == second
+        assert load_usage_ratios(bucket_id=_BUCKET_B_ID, operation=operation) == second
 
-    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == first
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation) == first
 
 
-def test_default_repository_refuses_bucket_route_mismatch() -> None:
-    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+def test_default_repository_refuses_bucket_route_mismatch(operation: PinnedAuthorityOperation) -> None:
+    profile = _profile(operation, {_category("suministros_home_office_luz"): Decimal("0.21")})
 
     # Assert the TYPED readiness code, not rendered prose. ``str(exc)`` on this
     # boundary is the translation key by design -- the operator-facing message
@@ -131,7 +157,7 @@ def test_default_repository_refuses_bucket_route_mismatch() -> None:
     # with a different remedy. The code discriminates them; prose cannot.
     for call in (
         lambda: save_usage_ratios(profile, bucket_id=_BUCKET_B_ID),
-        lambda: load_usage_ratios(bucket_id=_BUCKET_B_ID),
+        lambda: load_usage_ratios(bucket_id=_BUCKET_B_ID, operation=operation),
     ):
         with pytest.raises(StorageValidationError) as raised:
             call()
@@ -140,23 +166,24 @@ def test_default_repository_refuses_bucket_route_mismatch() -> None:
         assert context["readiness_code"] == StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value
 
 
-def test_save_replaces_previous_payload(tmp_path: Path) -> None:
+def test_save_replaces_previous_payload(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     """Successive saves replace the payload without leaving ``.tmp`` debris."""
     tmp_path / "ratios.json"
-    first = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
-    second = first.with_ratio(SpendingCategory.TELEFONIA_MOVIL, Decimal("0.6"))
+    first = _profile(operation, {_category("suministros_home_office_luz"): Decimal("0.21")})
+    second = first.with_ratio(_category("telefonia_movil"), Decimal("0.6"))
     save_usage_ratios(first, bucket_id=_BUCKET_A_ID)
     save_usage_ratios(second, bucket_id=_BUCKET_A_ID)
-    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == second
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation) == second
     assert list(scan_directory(tmp_path, pattern="*.tmp")) == []
 
 
-def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProfile) -> None:
+def test_save_writes_encrypted_database_object(
+    _runtime_profile: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The database record is encrypted at FINANCIAL class."""
     plaintext_ratio = Decimal("0.213579")
-    profile = UsageRatioProfile(
-        ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: plaintext_ratio},
-    )
+    profile = _profile(operation, {_category("suministros_home_office_luz"): plaintext_ratio})
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
     on_disk = _database_bytes(_runtime_profile)
     assert b"secure_objects" in on_disk
@@ -187,6 +214,7 @@ def test_load_malformed_secure_object_raises_persistence_error(
     message: str | None,
     cause_type: type[BaseException],
     detail: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Malformed encrypted payload bytes stay on the domain persistence surface."""
     _runtime_profile.repository.save(
@@ -198,7 +226,7 @@ def test_load_malformed_secure_object_raises_persistence_error(
         payload=payload,
     )
     with pytest.raises(UsageRatioPersistenceError, match=message) as exc_info:
-        load_usage_ratios(bucket_id=_BUCKET_A_ID)
+        load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation)
     assert isinstance(exc_info.value.__cause__, cause_type)
     if detail is not None:
         assert detail in str(exc_info.value)
@@ -206,6 +234,7 @@ def test_load_malformed_secure_object_raises_persistence_error(
 
 def test_load_inner_classification_mismatch_raises_persistence_error(
     _runtime_profile: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     envelope = Envelope[UsageRatioProfile](
         schema_version=1,
@@ -222,11 +251,12 @@ def test_load_inner_classification_mismatch_raises_persistence_error(
         payload=envelope.model_dump_json().encode("utf-8"),
     )
     with pytest.raises(UsageRatioPersistenceError, match="classification"):
-        load_usage_ratios(bucket_id=_BUCKET_A_ID)
+        load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation)
 
 
 def test_load_inner_schema_version_mismatch_raises_persistence_error(
     _runtime_profile: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     envelope = Envelope[UsageRatioProfile](
         schema_version=2,
@@ -243,22 +273,25 @@ def test_load_inner_schema_version_mismatch_raises_persistence_error(
         payload=envelope.model_dump_json().encode("utf-8"),
     )
     with pytest.raises(UsageRatioPersistenceError, match="version"):
-        load_usage_ratios(bucket_id=_BUCKET_A_ID)
+        load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation)
 
 
-def test_save_target_directory_is_ignored_by_secure_backend(tmp_path: Path) -> None:
+def test_save_target_directory_is_ignored_by_secure_backend(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The historical path argument no longer controls persistence."""
     target = tmp_path / "ratios-as-dir"
     target.mkdir()
     profile = UsageRatioProfile()
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
-    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation) == profile
     assert list(scan_directory(tmp_path, pattern="*.tmp")) == []
 
 
-def test_blank_bucket_id_rejected() -> None:
+def test_blank_bucket_id_rejected(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(UsageRatioPersistenceError, match="bucket_id"):
-        load_usage_ratios(bucket_id=" ")
+        load_usage_ratios(bucket_id=" ", operation=operation)
 
 
 class TestCanonicalBucketIdentity:
@@ -282,10 +315,14 @@ class TestCanonicalBucketIdentity:
             usage_ratios_object_key(self._OVERLENGTH)
 
     @pytest.mark.parametrize("bad", ["", "   ", "\t\n", "b" * 129, "b" * 500])
-    def test_persistence_refuses_a_non_canonical_bucket(self, bad: str) -> None:
+    def test_persistence_refuses_a_non_canonical_bucket(
+        self,
+        bad: str,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """The refusal reaches both durable paths, not only the key helper."""
         with pytest.raises(UsageRatioPersistenceError, match="bucket_id"):
-            load_usage_ratios(bucket_id=bad)
+            load_usage_ratios(bucket_id=bad, operation=operation)
         with pytest.raises(UsageRatioPersistenceError, match="bucket_id"):
             save_usage_ratios(UsageRatioProfile(), bucket_id=bad)
 
@@ -301,12 +338,12 @@ class TestCanonicalBucketIdentity:
         assert usage_ratios_object_key(f"  {_BUCKET_A_ID}  ") == usage_ratios_object_key(_BUCKET_A_ID)
         assert usage_ratios_object_key(_BUCKET_A_ID) == f"profile:{_BUCKET_A_ID}"
 
-    def test_canonical_bucket_still_round_trips(self) -> None:
+    def test_canonical_bucket_still_round_trips(self, operation: PinnedAuthorityOperation) -> None:
         """The guard must not refuse a legitimate profile."""
         profile = UsageRatioProfile()
         save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
 
-        assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
+        assert load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation) == profile
 
     def test_distinct_buckets_keep_distinct_keys(self) -> None:
         """Canonicalisation must not merge two genuinely different buckets."""

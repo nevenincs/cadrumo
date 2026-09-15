@@ -34,7 +34,7 @@ from typing import Any, Literal, Self, cast
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....tests.inventory import SRC_CADRUMO
-from .subprocess_cli import subprocess_cli_env
+from .subprocess_cli import _as_text_completed_process, subprocess_cli_env
 
 __all__ = [
     "CliPerformanceCalibration",
@@ -516,17 +516,25 @@ def _run_child(
         }
         started = time.perf_counter()
         try:
-            completed = run_audited_process(
-                [sys.executable, "-m", "cadrumo.entrypoints.cli.tests.cli_performance", _CHILD_FLAG, str(request_path)],
-                cwd=SRC_CADRUMO.parent,
-                env=subprocess_cli_env(strip_prefixes=_ENV_PREFIXES, extra=env_extra),
-                input=stdin_payload,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                capture_output=True,
-                check=False,
-                timeout=timeout,
+            completed = _as_text_completed_process(
+                run_audited_process(
+                    [
+                        sys.executable,
+                        "-m",
+                        "cadrumo.entrypoints.cli.tests.cli_performance",
+                        _CHILD_FLAG,
+                        str(request_path),
+                    ],
+                    cwd=SRC_CADRUMO.parent,
+                    env=subprocess_cli_env(strip_prefixes=_ENV_PREFIXES, extra=env_extra),
+                    input=stdin_payload,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    capture_output=True,
+                    check=False,
+                    timeout=timeout,
+                ),
             )
         except subprocess.TimeoutExpired:
             return _failed_observation(

@@ -47,7 +47,7 @@ def _rated_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=_CUOTA,
     )
 
@@ -58,7 +58,7 @@ def _exempt_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate._from_registry("EXEMPT"),
+        iva_rate=IvaRate.from_registry("EXEMPT"),
         iva_amount=Decimal("0"),
     )
 

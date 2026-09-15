@@ -326,7 +326,17 @@ class ShippedTreeSpec:
         """
         pyproject = repo_root / "pyproject.toml"
         data = tomllib.loads(pyproject.read_text(encoding=_UTF_8))
-        scripts: dict[str, str] = data["project"].get("scripts", {})
+        project = data.get("project")
+        if not isinstance(project, dict):
+            raise ValueError(f"{pyproject} has no [project] table")
+        raw_scripts = project.get("scripts", {})
+        if not isinstance(raw_scripts, dict):
+            raise ValueError(f"{pyproject} has an invalid [project.scripts] table")
+        scripts: dict[str, str] = {}
+        for name, spec in raw_scripts.items():
+            if not isinstance(name, str) or not isinstance(spec, str):
+                raise ValueError(f"{pyproject} has a non-text [project.scripts] entry")
+            scripts[name] = spec
         if not scripts:
             msg = f"{pyproject} declares no [project.scripts]; the walk would have no roots"
             raise ValueError(msg)
@@ -764,7 +774,7 @@ def _spawn_edges(module: ShippedModule, known: frozenset[str]) -> frozenset[str]
         node.value for node in ast.walk(module.tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
     }
     if _MODULE_EXEC_FLAG not in literals:
-        return frozenset()
+        return frozenset[str]()
     targets: set[str] = set()
     for name in literals:
         main = f"{name}.__main__"
@@ -866,7 +876,9 @@ def non_reference_nodes(tree: ast.Module) -> set[int]:
 def string_reference_names(value: str) -> Iterator[str]:
     """Identifiers a string literal may address dynamically (``"mod:attr"``, ``"a.b"``)."""
     if _DOTTED_SPEC.match(value):
-        yield from (part for part in re.split(r"[.:]", value) if part)
+        for part in re.split(r"[.:]", value):
+            if isinstance(part, str) and part:
+                yield part
 
 
 def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
@@ -1447,10 +1459,15 @@ def _importers_of_span(
     internal traffic and say nothing about whether anything outside still
     needs the span.
     """
-    span = frozenset(member for member in modules if member == name or member.startswith(name + "."))
-    outside_importers = {
-        source for member in span for source in importers.get(member, frozenset()) if source not in span
-    }
+    span: set[str] = set()
+    for member in modules:
+        if member == name or member.startswith(name + "."):
+            span.add(member)
+    outside_importers: set[str] = set()
+    for member in span:
+        for source in importers.get(member, frozenset()):
+            if source not in span:
+                outside_importers.add(source)
     return tuple(sorted(outside_importers))
 
 

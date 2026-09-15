@@ -29,17 +29,17 @@ from __future__ import annotations
 
 import pytest
 
-from ..manager import _MODELO_SCHEMA_PREFIX, _collect_required_leaves
+from ..manager import _MODELO_SCHEMA_PREFIX, LocaleNode, _collect_required_leaves
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_EXISTING = {"cli": {"known": "a real translation", "namespace": {"child": "another"}}}
+_EXISTING: dict[str, LocaleNode] = {"cli": {"known": "a real translation", "namespace": {"child": "another"}}}
 
 _GENERIC_KEY = "cli.app.ledger.a_key_nobody_has_valued"
 _MODELO_KEY = f"{_MODELO_SCHEMA_PREFIX}390.casilla.continuidad.filing-year.label"
 
 
-def _admit(*keys: str) -> dict[str, object]:
+def _admit(*keys: str) -> dict[str, LocaleNode]:
     return dict(_collect_required_leaves(set(keys), _EXISTING))
 
 

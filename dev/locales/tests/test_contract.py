@@ -189,6 +189,7 @@ def test_operator_surface_application_package_has_no_typer_dependency() -> None:
     """)
     result = run_command(
         [sys.executable, "-c", script],
+        cwd=Path.cwd(),
         timeout_seconds=30,
     )
 

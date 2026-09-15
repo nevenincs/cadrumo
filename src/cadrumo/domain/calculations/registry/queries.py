@@ -263,7 +263,7 @@ class RegistryQueryService:
         normalized_modelo = modelo.strip()
         definition = self._authority.validate_modelo(normalized_modelo)
         if grade is not RegistryAuthorityGrade.APPLICABILITY:
-            return self._resolve_revision_for_scope(
+            return self.resolve_revision_for_scope(
                 normalized_modelo,
                 filing_year=filing_year,
                 period=period,
@@ -506,7 +506,7 @@ class RegistryQueryService:
     ) -> ModeloDescribeReport:
         """Return a :class:`~domain.calculations.registry._query_reports.ModeloDescribeReport` for a scope."""
         return _build_modelo_describe_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def casillas(
@@ -566,7 +566,7 @@ class RegistryQueryService:
     ) -> ModeloCasillasReport:
         """Return a :class:`~domain.calculations.registry._query_reports.ModeloCasillasReport` for a scope."""
         return _build_modelo_casillas_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
             input_kind=input_kind,
             required=required,
             form_number=form_number,
@@ -616,7 +616,7 @@ class RegistryQueryService:
     ) -> ModeloCasillaDetailReport:
         """Return a :class:`~domain.calculations.registry._query_reports.ModeloCasillaDetailReport` for a scope."""
         return _casilla_detail_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
             casilla,
         )
 
@@ -640,7 +640,7 @@ class RegistryQueryService:
             for the requested filing scope.
         """
         return _build_modelo_bindings_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def bindings_for_year(
@@ -665,7 +665,7 @@ class RegistryQueryService:
     ) -> ModeloFormulasReport:
         """Return a :class:`~domain.calculations.registry._query_reports.ModeloFormulasReport` for a scope."""
         return _build_modelo_formulas_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def bindings(
@@ -750,7 +750,7 @@ class RegistryQueryService:
         context = _resolve_declared_period_revision(definition, period=period)
         return context.model_copy(update={"revision_ids": revision_ids})
 
-    def _resolve_revision_for_scope(
+    def resolve_revision_for_scope(
         self,
         modelo: str,
         *,
@@ -759,6 +759,7 @@ class RegistryQueryService:
         as_of: date | None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.APPLICABILITY,
     ) -> ResolvedRegistryQueryContext:
+        """Resolve the unique revision governing one explicit filing scope."""
         normalized_modelo = modelo.strip()
         definition = self._authority.validate_modelo(normalized_modelo)
         revision_ids = self._revision_ids(normalized_modelo)
@@ -920,7 +921,7 @@ class PinnedRegistryQueryService:
     ) -> ModeloDescribeReport:
         """Return one filing-year-scoped modelo description report."""
         return _build_modelo_describe_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def casillas(
@@ -954,7 +955,7 @@ class PinnedRegistryQueryService:
     ) -> ModeloCasillasReport:
         """Return the filtered casilla report for one filing-year scope."""
         return _build_modelo_casillas_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
             input_kind=input_kind,
             required=required,
             form_number=form_number,
@@ -982,7 +983,7 @@ class PinnedRegistryQueryService:
     ) -> ModeloCasillaDetailReport:
         """Return one casilla detail from a filing-year scope."""
         return _casilla_detail_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
             casilla,
         )
 
@@ -1018,7 +1019,7 @@ class PinnedRegistryQueryService:
     ) -> ModeloBindingsReport:
         """Return bindings for one filing-year scope."""
         return _build_modelo_bindings_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def formulas(
@@ -1041,7 +1042,7 @@ class PinnedRegistryQueryService:
     ) -> ModeloFormulasReport:
         """Return formulas for one filing-year scope."""
         return _build_modelo_formulas_report(
-            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            self.resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def _revision_ids(self, directory: ModeloRevisionDirectory) -> tuple[str, ...]:
@@ -1104,7 +1105,7 @@ class PinnedRegistryQueryService:
             registry_period=registry_period,
         )
 
-    def _resolve_revision_for_scope(
+    def resolve_revision_for_scope(
         self,
         modelo: str,
         *,
@@ -1112,6 +1113,7 @@ class PinnedRegistryQueryService:
         period: str,
         as_of: date | None,
     ) -> ResolvedRegistryQueryContext:
+        """Resolve the unique revision governing one explicit filing scope."""
         directory = self._operation.modelo_directory(modelo.strip())
         requested = period.strip()
         declared = tuple(token for item in directory.revisions for token in item.period_selector.declared_periods)

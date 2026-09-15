@@ -112,7 +112,7 @@ def _window_outside_activity_period(
     return activity_end_date is not None and opens_on > activity_end_date
 
 
-def _indexed_deadline_windows(
+def indexed_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
 ) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
@@ -398,9 +398,9 @@ class DeadlineEngine:
 
         try:
             if operation is not None:
-                return _indexed_deadline_windows(operation, year)
+                return indexed_deadline_windows(operation, year)
             with self._operation_context() as selected_operation:
-                return _indexed_deadline_windows(selected_operation, year)
+                return indexed_deadline_windows(selected_operation, year)
         except RegistryError as exc:
             raise ScheduleComputationError(
                 translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,

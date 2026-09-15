@@ -168,7 +168,7 @@ class _ProrrataRegistryToken(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
         """Materialise a token only from a typed registry projection."""
         return cls(value, _registry_validated=True)
 
@@ -221,21 +221,6 @@ def _require_registry_prorrata_kind(
 
     try:
         return require_prorrata_kind(value, effective_date=effective_date)
-    except RegistryValidationError as exc:
-        raise ProrrataInputError(str(exc)) from exc
-
-
-def _require_registry_input_classification(
-    value: object,
-    *,
-    effective_date: date | None = None,
-) -> InputClassification:
-    """Resolve one art. 106 input token through the dated 0116 authority."""
-    from ..calculations.registry.errors import RegistryValidationError
-    from ..calculations.registry.prorrata_vocabulary import require_input_classification
-
-    try:
-        return require_input_classification(value, effective_date=effective_date)
     except RegistryValidationError as exc:
         raise ProrrataInputError(str(exc)) from exc
 

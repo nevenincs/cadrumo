@@ -134,11 +134,11 @@ def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
 
     profile = TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType._from_registry("legal_entity"),
+        entity_type=EntityType.from_registry("legal_entity"),
         iva_regime=IVARegime("GENERAL"),
     )
     result = _resolve_profile_fact(profile, "taxpayer.entity_type")
-    assert result == EntityType._from_registry("legal_entity")
+    assert result == EntityType.from_registry("legal_entity")
 
 
 # ---------------------------------------------------------------------------

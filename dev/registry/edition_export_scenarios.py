@@ -473,8 +473,8 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
             operation=operation,
         )
     profile = ModeloIVAProfile(
-        tax_territory=M303TaxTerritory._from_registry("common_regime"),
-        regime_composition=M303RegimeComposition._from_registry("general"),
+        tax_territory=M303TaxTerritory.from_registry("common_regime"),
+        regime_composition=M303RegimeComposition.from_registry("general"),
         redeme_enrolled=False,
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,

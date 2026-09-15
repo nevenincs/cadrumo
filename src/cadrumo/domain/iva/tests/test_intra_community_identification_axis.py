@@ -79,9 +79,9 @@ def _criteria(**overrides: object) -> IvaInvoiceClassificationCriteria:
     """Build criteria for a cross-border B2B operation, overriding one axis at a time."""
     base: dict[str, object] = {
         "transaction_date": _DATE,
-        "issuer_residency": IvaTerritorialScope._from_registry("es_mainland"),
-        "customer_residency": IvaTerritorialScope._from_registry("eu_member"),
-        "customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        "issuer_residency": IvaTerritorialScope.from_registry("es_mainland"),
+        "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
+        "customer_tax_status": CustomerTaxStatus.from_registry("b2b_iva_registered"),
         "kind": TransactionKind("goods"),
         "direction": InvoiceKind.ISSUED,
     }
@@ -105,8 +105,8 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             result = classify_iva(
                 _criteria(
-                    customer_residency=IvaTerritorialScope._from_registry("third_country"),
-                    customer_identification_state=EUMemberState._from_registry("de"),
+                    customer_residency=IvaTerritorialScope.from_registry("third_country"),
+                    customer_identification_state=EUMemberState.from_registry("de"),
                 ),
                 operation=_authority_operation_for_test,
             )
@@ -132,7 +132,7 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
         """The statute names Spain as the excluded State: "distinto del Reino de España"."""
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             result = classify_iva(
-                _criteria(customer_identification_state=EUMemberState._from_registry("es")),
+                _criteria(customer_identification_state=EUMemberState.from_registry("es")),
                 operation=_authority_operation_for_test,
             )
 
@@ -147,9 +147,9 @@ class TestTheAcquisitionFollowsTheSuppliersRegistration:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             result = classify_iva(
                 _criteria(
-                    issuer_residency=IvaTerritorialScope._from_registry("third_country"),
-                    issuer_identification_state=EUMemberState._from_registry("de"),
-                    customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                    issuer_residency=IvaTerritorialScope.from_registry("third_country"),
+                    issuer_identification_state=EUMemberState.from_registry("de"),
+                    customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
                     direction=InvoiceKind.RECEIVED,
                 ),
                 operation=_authority_operation_for_test,
@@ -162,8 +162,8 @@ class TestTheAcquisitionFollowsTheSuppliersRegistration:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             result = classify_iva(
                 _criteria(
-                    issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
-                    customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                    issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
+                    customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
                     direction=InvoiceKind.RECEIVED,
                 ),
                 operation=_authority_operation_for_test,
@@ -198,7 +198,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
             result = classify_iva(
                 _criteria(
                     kind=TransactionKind("services_general"),
-                    customer_identification_state=EUMemberState._from_registry("fr"),
+                    customer_identification_state=EUMemberState.from_registry("fr"),
                 ),
                 operation=_authority_operation_for_test,
             )
@@ -210,8 +210,8 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             result = classify_iva(
                 _criteria(
-                    issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
-                    customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                    issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
+                    customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
                     kind=TransactionKind("services_general"),
                     direction=InvoiceKind.RECEIVED,
                 ),
@@ -224,9 +224,9 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             result = classify_iva(
                 _criteria(
-                    issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
-                    issuer_identification_state=EUMemberState._from_registry("fr"),
-                    customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                    issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
+                    issuer_identification_state=EUMemberState.from_registry("fr"),
+                    customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
                     kind=TransactionKind("services_general"),
                     direction=InvoiceKind.RECEIVED,
                 ),
@@ -252,15 +252,15 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
         [
             (
                 "R10_intra_community_supply",
-                {"customer_identification_state": EUMemberState._from_registry("de")},
+                {"customer_identification_state": EUMemberState.from_registry("de")},
                 "customer_identification_state",
             ),
             (
                 "R11_intra_community_acquisition",
                 {
-                    "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
-                    "issuer_identification_state": EUMemberState._from_registry("de"),
-                    "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
+                    "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
+                    "issuer_identification_state": EUMemberState.from_registry("de"),
+                    "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
                     "direction": InvoiceKind.RECEIVED,
                 },
                 "issuer_identification_state",
@@ -269,16 +269,16 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
                 "R12_services_b2b_eu_outbound",
                 {
                     "kind": TransactionKind("services_general"),
-                    "customer_identification_state": EUMemberState._from_registry("de"),
+                    "customer_identification_state": EUMemberState.from_registry("de"),
                 },
                 "customer_identification_state",
             ),
             (
                 "R13_services_b2b_eu_inbound",
                 {
-                    "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
-                    "issuer_identification_state": EUMemberState._from_registry("de"),
-                    "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
+                    "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
+                    "issuer_identification_state": EUMemberState.from_registry("de"),
+                    "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
                     "kind": TransactionKind("services_general"),
                     "direction": InvoiceKind.RECEIVED,
                 },
@@ -332,7 +332,7 @@ def test_a_spanish_iva_number_now_states_its_identification() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             _SPANISH_IVA, operation=_authority_operation_for_test
-        ) is EUMemberState._from_registry("es")
+        ) is EUMemberState.from_registry("es")
 
 
 @pytest.mark.parametrize(
@@ -345,7 +345,7 @@ def test_the_printed_spelling_does_not_change_the_identification(printed: str) -
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             printed, operation=_authority_operation_for_test
-        ) is EUMemberState._from_registry("es")
+        ) is EUMemberState.from_registry("es")
 
 
 def test_stating_an_identification_states_no_establishment() -> None:
@@ -359,7 +359,7 @@ def test_stating_an_identification_states_no_establishment() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             _SPANISH_IVA, operation=_authority_operation_for_test
-        ) is EUMemberState._from_registry("es")
+        ) is EUMemberState.from_registry("es")
         assert country_code_for_printed_tax_identifier(_SPANISH_IVA, operation=_authority_operation_for_test) is None
 
 
@@ -399,7 +399,7 @@ def test_the_sibling_prefixes_are_unaffected() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             "DE811234567", operation=_authority_operation_for_test
-        ) is EUMemberState._from_registry("de")
+        ) is EUMemberState.from_registry("de")
         assert country_code_for_printed_tax_identifier("DE811234567", operation=_authority_operation_for_test) == "DE"
 
 
@@ -423,7 +423,7 @@ def test_the_checksum_is_what_admits_the_spanish_number() -> None:
         )
         assert identification_state_for_printed_tax_identifier(
             _SPANISH_IVA, operation=_authority_operation_for_test
-        ) is EUMemberState._from_registry("es")
+        ) is EUMemberState.from_registry("es")
 
 
 # -- the outbound non-peninsular branch -------------------------------------
@@ -443,11 +443,11 @@ def _outbound(
 ) -> IvaCategory:
     return classify_iva(
         IvaInvoiceClassificationCriteria(
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=customer,
             kind=kind,
             direction=InvoiceKind.ISSUED,
-            customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
             transaction_date=date(2026, 3, 11),
         ),
         operation=operation,
@@ -456,7 +456,7 @@ def _outbound(
 
 @pytest.mark.parametrize(
     "customer",
-    [IvaTerritorialScope._from_registry("es_canarias"), IvaTerritorialScope._from_registry("es_ceuta_melilla")],
+    [IvaTerritorialScope.from_registry("es_canarias"), IvaTerritorialScope.from_registry("es_ceuta_melilla")],
     ids=["canarias", "ceuta-y-melilla"],
 )
 def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
@@ -475,7 +475,7 @@ def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
 
 @pytest.mark.parametrize(
     "customer",
-    [IvaTerritorialScope._from_registry("es_canarias"), IvaTerritorialScope._from_registry("es_ceuta_melilla")],
+    [IvaTerritorialScope.from_registry("es_canarias"), IvaTerritorialScope.from_registry("es_ceuta_melilla")],
     ids=["canarias", "ceuta-y-melilla"],
 )
 def test_services_leaving_the_tai_are_not_subject_rather_than_exempt(
@@ -497,10 +497,10 @@ def test_services_leaving_the_tai_are_not_subject_rather_than_exempt(
 def test_a_third_country_customer_is_unaffected(*, operation: PinnedAuthorityOperation) -> None:
     """The rows these territories joined must keep answering as they did."""
     assert _outbound(
-        IvaTerritorialScope._from_registry("third_country"), TransactionKind("goods"), operation=operation
+        IvaTerritorialScope.from_registry("third_country"), TransactionKind("goods"), operation=operation
     ) == IvaCategory("export_third_country_zero_rated")
     assert _outbound(
-        IvaTerritorialScope._from_registry("third_country"), TransactionKind("services_general"), operation=operation
+        IvaTerritorialScope.from_registry("third_country"), TransactionKind("services_general"), operation=operation
     ) == IvaCategory("operacion_no_sujeta")
 
 
@@ -513,11 +513,11 @@ def test_the_population_used_to_classify_as_nothing_at_all(*, operation: PinnedA
     """
 
     def _third_country_only(customer: IvaTerritorialScope) -> bool:
-        return customer is IvaTerritorialScope._from_registry("third_country")
+        return customer is IvaTerritorialScope.from_registry("third_country")
 
-    assert not _third_country_only(IvaTerritorialScope._from_registry("es_canarias"))
+    assert not _third_country_only(IvaTerritorialScope.from_registry("es_canarias"))
     assert _outbound(
-        IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods"), operation=operation
+        IvaTerritorialScope.from_registry("es_canarias"), TransactionKind("goods"), operation=operation
     ) != IvaCategory("unknown")
 
 
@@ -541,10 +541,10 @@ def test_the_population_used_to_classify_as_nothing_at_all(*, operation: PinnedA
 @pytest.mark.parametrize(
     ("customer", "kind"),
     [
-        (IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods")),
-        (IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("services_general")),
-        (IvaTerritorialScope._from_registry("es_ceuta_melilla"), TransactionKind("goods")),
-        (IvaTerritorialScope._from_registry("es_ceuta_melilla"), TransactionKind("services_general")),
+        (IvaTerritorialScope.from_registry("es_canarias"), TransactionKind("goods")),
+        (IvaTerritorialScope.from_registry("es_canarias"), TransactionKind("services_general")),
+        (IvaTerritorialScope.from_registry("es_ceuta_melilla"), TransactionKind("goods")),
+        (IvaTerritorialScope.from_registry("es_ceuta_melilla"), TransactionKind("services_general")),
     ],
     ids=["canarias-goods", "canarias-services", "ceuta-melilla-goods", "ceuta-melilla-services"],
 )
@@ -577,10 +577,10 @@ def test_the_charged_rate_never_places_the_customer(*, operation: PinnedAuthorit
     never be raised, which is the failure this ordering exists to prevent.
     """
     canarian = _outbound(
-        IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods"), operation=operation
+        IvaTerritorialScope.from_registry("es_canarias"), TransactionKind("goods"), operation=operation
     )
-    peninsular_customer_would_be_domestic = IvaTerritorialScope._from_registry("es_mainland")
+    peninsular_customer_would_be_domestic = IvaTerritorialScope.from_registry("es_mainland")
 
     assert canarian == IvaCategory("export_third_country_zero_rated")
     assert canarian != IvaCategory("domestic_general")
-    assert peninsular_customer_would_be_domestic is not IvaTerritorialScope._from_registry("es_canarias")
+    assert peninsular_customer_would_be_domestic is not IvaTerritorialScope.from_registry("es_canarias")

@@ -110,7 +110,9 @@ def test_normatives_source_resolves_to_the_generated_legal_anchor(resolver: Targ
         corpus_ref=entry.corpus_ref,
         permalink=str(entry.permalink),
     )
-    assert out.record.metadata.legal_permalink.startswith("https://www.boe.es/")
+    legal_permalink = out.record.metadata.legal_permalink
+    assert legal_permalink is not None
+    assert legal_permalink.startswith("https://www.boe.es/")
     assert out.record.metadata.legal_refs == ("ley-37-1992:art-104",)
 
 
@@ -341,7 +343,9 @@ def test_emitted_cli_option_resolves_to_its_exact_page_anchor(
     )
     assert emitted is not None, "the live CLI projection must emit an option with a page anchor"
 
-    command_path = tuple(emitted.metadata.command_path.split(" "))
+    command_path_value = emitted.metadata.command_path
+    assert command_path_value is not None
+    command_path = tuple(command_path_value.split(" "))
     page_stem = cli_reference_page_for_command(command_path)
     source_path = _cli_reference_source(f"docs/{page_stem}.rst")
 
@@ -406,7 +410,9 @@ def test_emitted_nested_cli_command_resolves_to_its_exact_page_anchor(
     )
     assert emitted is not None, "the live CLI projection must emit an anchored nested command"
 
-    command_path = tuple(emitted.metadata.command_path.split())
+    command_path_value = emitted.metadata.command_path
+    assert command_path_value is not None
+    command_path = tuple(command_path_value.split())
     page_stem = cli_reference_page_for_command(command_path)
     source_path = _cli_reference_source(f"docs/{page_stem}.rst")
     source_lines = source_path.read_text(encoding="utf-8").splitlines()

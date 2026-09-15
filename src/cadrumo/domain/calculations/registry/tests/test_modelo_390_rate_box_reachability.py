@@ -62,13 +62,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # a Q1 date now refuses at the bridge. That refusal is the CORRECT behaviour and
 # this fixture follows the law rather than pinning the date it used to accept.
 _LINES = (
-    (IvaRate._from_registry("RATE_21"), date(2024, 3, 10), "21", "4000.00", "817.00"),
-    (IvaRate._from_registry("RATE_10"), date(2024, 3, 11), "10", "2500.00", "241.00"),
-    (IvaRate._from_registry("RATE_7.5"), date(2024, 11, 12), "7-5", "1600.00", "127.00"),
-    (IvaRate._from_registry("RATE_5"), date(2024, 8, 13), "5", "1400.00", "73.00"),
-    (IvaRate._from_registry("RATE_4"), date(2024, 3, 14), "4", "1200.00", "51.00"),
-    (IvaRate._from_registry("RATE_2"), date(2024, 11, 15), "2", "900.00", "19.00"),
-    (IvaRate._from_registry("RATE_0"), date(2024, 8, 16), "0", "700.00", "0.00"),
+    (IvaRate.from_registry("RATE_21"), date(2024, 3, 10), "21", "4000.00", "817.00"),
+    (IvaRate.from_registry("RATE_10"), date(2024, 3, 11), "10", "2500.00", "241.00"),
+    (IvaRate.from_registry("RATE_7.5"), date(2024, 11, 12), "7-5", "1600.00", "127.00"),
+    (IvaRate.from_registry("RATE_5"), date(2024, 8, 13), "5", "1400.00", "73.00"),
+    (IvaRate.from_registry("RATE_4"), date(2024, 3, 14), "4", "1200.00", "51.00"),
+    (IvaRate.from_registry("RATE_2"), date(2024, 11, 15), "2", "900.00", "19.00"),
+    (IvaRate.from_registry("RATE_0"), date(2024, 8, 16), "0", "700.00", "0.00"),
 )
 
 # The rate each slot must resolve to, and the tier the classifier must pick. The
@@ -87,9 +87,9 @@ _EXPECTED_CLASSIFICATION = {
 
 # A transitional slot paired with a date OUTSIDE its statutory window.
 _OUT_OF_WINDOW = (
-    (IvaRate._from_registry("RATE_7.5"), date(2024, 3, 10)),
-    (IvaRate._from_registry("RATE_5"), date(2024, 11, 12)),
-    (IvaRate._from_registry("RATE_2"), date(2024, 8, 13)),
+    (IvaRate.from_registry("RATE_7.5"), date(2024, 3, 10)),
+    (IvaRate.from_registry("RATE_5"), date(2024, 11, 12)),
+    (IvaRate.from_registry("RATE_2"), date(2024, 8, 13)),
 )
 
 # RATE_0 is deliberately ABSENT from the set above, and must stay absent. It is

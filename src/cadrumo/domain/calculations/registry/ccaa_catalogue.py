@@ -65,7 +65,7 @@ class CcaaCatalogue:
                 raise RegistryValidationError("CCAA token must be non-empty")
             normalized = _normalize_token(raw)
             if normalized in {str(item) for item in self.tokens}:
-                token = CCAA._from_registry(normalized)
+                token = CCAA.from_registry(normalized)
             else:
                 token = self.iso_aliases.get(raw.upper())
                 if token is None:
@@ -178,7 +178,7 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
             raise RegistryValidationError(f"CCAA token {raw_token!r} declares a mismatched value")
         member_name = _required(entries, f"{prefix}member_name").upper()
         definitions.append(
-            CcaaDefinition(token=CCAA._from_registry(raw_token), member_name=member_name),
+            CcaaDefinition(token=CCAA.from_registry(raw_token), member_name=member_name),
         )
     tokens = [definition.token for definition in definitions]
     if len(tokens) != len(set(tokens)):
@@ -194,10 +194,10 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
         if normalized_alias != alias:
             raise RegistryValidationError(f"CCAA ISO alias {alias!r} must be uppercase")
         prefix = f"{_ISO_PREFIX}{alias}."
-        target = CCAA._from_registry(_required(entries, f"{prefix}value"))
+        target = CCAA.from_registry(_required(entries, f"{prefix}value"))
         if target not in token_set:
             raise RegistryValidationError(f"CCAA ISO alias {alias!r} targets an undeclared token")
-        if target != CCAA._from_registry(_required(entries, f"{prefix}ccaa")):
+        if target != CCAA.from_registry(_required(entries, f"{prefix}ccaa")):
             raise RegistryValidationError(f"CCAA ISO alias {alias!r} has inconsistent target metadata")
         if alias in iso_aliases:
             raise RegistryValidationError(f"duplicate CCAA ISO alias {alias!r}")
@@ -223,7 +223,7 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
         if target not in excluded_territories:
             raise RegistryValidationError(f"foral alias {alias!r} targets an undeclared excluded territory")
         _required(entries, f"{_FORAL_PREFIX}{alias}.classification")
-    default_token = CCAA._from_registry(_required(entries, _CCAA_DEFAULT_KEY))
+    default_token = CCAA.from_registry(_required(entries, _CCAA_DEFAULT_KEY))
     if default_token not in token_set:
         raise RegistryValidationError("CCAA catalogue default token is not in the common-regime order")
     return CcaaCatalogue(

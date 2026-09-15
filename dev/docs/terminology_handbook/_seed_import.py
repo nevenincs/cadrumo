@@ -51,6 +51,7 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Self
+from xml.etree.ElementTree import Element as XmlElement
 
 from defusedxml import ElementTree
 from pydantic import BaseModel, StringConstraints, model_validator
@@ -238,7 +239,7 @@ _TBX_LANGS: dict[str, OutputLanguage] = {
 }
 
 
-def _read_xml(path: Path, source: SeedSource) -> ElementTree.Element[str]:
+def _read_xml(path: Path, source: SeedSource) -> XmlElement[str]:
     """Parse an XML export file into its root element, refusing on failure.
 
     Raises:
@@ -250,7 +251,10 @@ def _read_xml(path: Path, source: SeedSource) -> ElementTree.Element[str]:
         tree = ElementTree.parse(path)
     except ElementTree.ParseError as exc:
         raise SeedImportError(f"{path}: malformed {source.value} XML: {exc}") from exc
-    return tree.getroot()
+    root = tree.getroot()
+    if not isinstance(root, XmlElement):
+        raise SeedImportError(f"{path}: malformed {source.value} XML: parser returned no root element")
+    return root
 
 
 def parse_iate_tbx(
@@ -306,7 +310,7 @@ def parse_iate_tbx(
     return tuple(entries)
 
 
-def _tbx_subject_fields(term_entry: ElementTree.Element[str]) -> frozenset[str]:
+def _tbx_subject_fields(term_entry: XmlElement[str]) -> frozenset[str]:
     fields: set[str] = set()
     for descrip in term_entry.iter("descrip"):
         if descrip.get("type") == "subjectField" and descrip.text:
@@ -315,7 +319,7 @@ def _tbx_subject_fields(term_entry: ElementTree.Element[str]) -> frozenset[str]:
 
 
 def _tbx_terms(
-    term_entry: ElementTree.Element[str],
+    term_entry: XmlElement[str],
     min_reliability: int,
 ) -> tuple[list[SeedTerm], str | None]:
     terms: list[SeedTerm] = []
@@ -327,12 +331,13 @@ def _tbx_terms(
             continue
         for tig in lang_set.iter("tig"):
             term_el = tig.find("term")
-            if term_el is None or not (term_el.text and term_el.text.strip()):
+            term_text = None if term_el is None else term_el.text
+            if not isinstance(term_text, str) or not term_text.strip():
                 continue
             reliability = _tbx_reliability(tig)
             if reliability is not None and reliability < min_reliability:
                 continue
-            label = term_el.text.strip()
+            label = term_text.strip()
             status = _tbx_term_status(tig)
             terms.append(SeedTerm(language=language, label=label, term_status=status))
             if language is OutputLanguage.ES and status is TermStatus.PREFERRED and spanish_key is None:
@@ -340,15 +345,15 @@ def _tbx_terms(
     return terms, spanish_key
 
 
-def _lang_set_code(lang_set: ElementTree.Element[str]) -> str:
+def _lang_set_code(lang_set: XmlElement[str]) -> str:
     # TBX carries the language on xml:lang; ElementTree expands the namespace.
     for key, value in lang_set.attrib.items():
-        if key.endswith("lang"):
+        if key.endswith("lang") and isinstance(value, str):
             return value.strip().lower()
     return ""
 
 
-def _tbx_reliability(tig: ElementTree.Element[str]) -> int | None:
+def _tbx_reliability(tig: XmlElement[str]) -> int | None:
     for descrip in tig.iter("descrip"):
         if descrip.get("type") == "reliabilityCode" and descrip.text:
             try:
@@ -358,7 +363,7 @@ def _tbx_reliability(tig: ElementTree.Element[str]) -> int | None:
     return None
 
 
-def _tbx_term_status(tig: ElementTree.Element[str]) -> TermStatus:
+def _tbx_term_status(tig: XmlElement[str]) -> TermStatus:
     for termnote in tig.iter("termNote"):
         if termnote.get("type") == "termType" and termnote.text:
             value = termnote.text.strip().lower()

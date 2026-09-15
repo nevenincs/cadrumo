@@ -33,7 +33,7 @@ def test_registry_tokens_are_opaque_and_structurally_non_empty(
     value: str,
 ) -> None:
     """Core constructs tokens only through the explicit registry projection."""
-    token = token_type._from_registry(value)
+    token = token_type.from_registry(value)
     assert token.value == value
     with pytest.raises(TypeError):
         token_type(value)

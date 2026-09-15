@@ -47,7 +47,7 @@ def test_fixed_percentage_requires_percentage() -> None:
 
     with pytest.raises(ValidationError, match=r"fixed_percentage rules require fixed_pct"):
         ProportionalityRule(
-            kind=ProportionalityKind._from_registry(
+            kind=ProportionalityKind.from_registry(
                 "fixed_percentage",
                 requires_fixed_pct=True,
                 is_full_deductible=False,
@@ -66,7 +66,7 @@ def test_statutory_cap_requires_cap() -> None:
 
     with pytest.raises(ValidationError, match=r"statutory_cap rules require a cap amount"):
         ProportionalityRule(
-            kind=ProportionalityKind._from_registry(
+            kind=ProportionalityKind.from_registry(
                 "statutory_cap",
                 is_statutory_cap=True,
                 is_full_deductible=False,
@@ -85,7 +85,7 @@ def test_full_deductible_rejects_default_ratio() -> None:
 
     with pytest.raises(ValidationError, match=r"default_ratio is only valid for usage_ratio rules"):
         ProportionalityRule(
-            kind=ProportionalityKind._from_registry(
+            kind=ProportionalityKind.from_registry(
                 "full_deductible",
                 is_full_deductible=True,
                 is_usage_ratio=False,
@@ -105,7 +105,7 @@ def test_usage_ratio_rejects_statutory_cap_fields() -> None:
 
     with pytest.raises(ValidationError, match=r"statutory_cap_eur_per_day is only valid for statutory_cap rules"):
         ProportionalityRule(
-            kind=ProportionalityKind._from_registry(
+            kind=ProportionalityKind.from_registry(
                 "usage_ratio_personal",
                 is_usage_ratio=True,
                 is_full_deductible=False,
@@ -125,7 +125,7 @@ def test_statutory_cap_accepts_generic_annual_caps() -> None:
     """Generic cap fields support non-daily legal limits."""
 
     rule = ProportionalityRule(
-        kind=ProportionalityKind._from_registry(
+        kind=ProportionalityKind.from_registry(
             "statutory_cap",
             is_statutory_cap=True,
             is_full_deductible=False,
@@ -135,20 +135,20 @@ def test_statutory_cap_accepts_generic_annual_caps() -> None:
             requires_exclusive_use=False,
         ),
         statutory_cap_eur=Decimal("500"),
-        statutory_cap_period=StatutoryCapPeriod._from_registry("year_per_person", is_per_person=True),
+        statutory_cap_period=StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True),
         citations=(_citation(),),
         notes=tr("Tope anual."),
     )
 
     assert rule.statutory_cap_eur == Decimal("500")
-    assert rule.statutory_cap_period is StatutoryCapPeriod._from_registry("year_per_person", is_per_person=True)
+    assert rule.statutory_cap_period is StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True)
 
 
 def test_statutory_cap_accepts_daily_cap_variants() -> None:
     """Daily statutory-cap variants preserve condition-specific legal limits."""
 
     rule = ProportionalityRule(
-        kind=ProportionalityKind._from_registry(
+        kind=ProportionalityKind.from_registry(
             "statutory_cap",
             is_statutory_cap=True,
             is_full_deductible=False,
@@ -190,7 +190,7 @@ def test_statutory_cap_rejects_mixed_cap_modes() -> None:
 
     with pytest.raises(ValidationError, match=r"statutory cap rules must use one cap mode"):
         ProportionalityRule(
-            kind=ProportionalityKind._from_registry(
+            kind=ProportionalityKind.from_registry(
                 "statutory_cap",
                 is_statutory_cap=True,
                 is_full_deductible=False,
@@ -200,7 +200,7 @@ def test_statutory_cap_rejects_mixed_cap_modes() -> None:
                 requires_exclusive_use=False,
             ),
             statutory_cap_eur=Decimal("500"),
-            statutory_cap_period=StatutoryCapPeriod._from_registry("year_per_person", is_per_person=True),
+            statutory_cap_period=StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True),
             statutory_cap_variants=(
                 StatutoryCapVariant(
                     id="sin-pernocta",
@@ -223,7 +223,7 @@ def test_statutory_multiplier_rejected_on_non_usage_ratio_kind() -> None:
         match=r"statutory_multiplier is only valid for usage_ratio rules",
     ):
         ProportionalityRule(
-            kind=ProportionalityKind._from_registry(
+            kind=ProportionalityKind.from_registry(
                 "full_deductible",
                 is_full_deductible=True,
                 is_usage_ratio=False,
@@ -241,7 +241,7 @@ def test_statutory_multiplier_rejected_on_non_usage_ratio_kind() -> None:
 def test_proportionality_rule_rejects_blank_notes_at_schema_boundary() -> None:
     with pytest.raises(ValidationError, match="proportionality rule notes"):
         ProportionalityRule(
-            kind=ProportionalityKind._from_registry(
+            kind=ProportionalityKind.from_registry(
                 "full_deductible",
                 is_full_deductible=True,
                 is_usage_ratio=False,
@@ -260,7 +260,7 @@ def test_statutory_multiplier_accepts_home_area_suministros_legal_factor() -> No
     statutory_multiplier on a USAGE_RATIO_HOME_AREA rule."""
 
     rule = ProportionalityRule(
-        kind=ProportionalityKind._from_registry(
+        kind=ProportionalityKind.from_registry(
             "usage_ratio_home_area",
             is_usage_ratio=True,
             is_full_deductible=False,
@@ -286,7 +286,7 @@ def test_effective_usage_ratio_applies_multiplier_to_chosen_ratio() -> None:
     from ..proportionality import effective_usage_ratio
 
     suministros = ProportionalityRule(
-        kind=ProportionalityKind._from_registry(
+        kind=ProportionalityKind.from_registry(
             "usage_ratio_home_area",
             is_usage_ratio=True,
             is_full_deductible=False,
@@ -300,7 +300,7 @@ def test_effective_usage_ratio_applies_multiplier_to_chosen_ratio() -> None:
         notes=tr("Suministros multiplier"),
     )
     ownership = ProportionalityRule(
-        kind=ProportionalityKind._from_registry(
+        kind=ProportionalityKind.from_registry(
             "usage_ratio_home_area",
             is_usage_ratio=True,
             is_full_deductible=False,
@@ -328,7 +328,7 @@ def test_effective_usage_ratio_refuses_non_usage_ratio_rules() -> None:
     from ..proportionality import effective_usage_ratio
 
     rule = ProportionalityRule(
-        kind=ProportionalityKind._from_registry(
+        kind=ProportionalityKind.from_registry(
             "full_deductible",
             is_full_deductible=True,
             is_usage_ratio=False,

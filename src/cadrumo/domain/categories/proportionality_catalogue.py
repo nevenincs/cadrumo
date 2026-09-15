@@ -138,7 +138,7 @@ def resolve_proportionality_catalogue(
                 f"proportionality kind {raw_token!r} declares mismatched value {declared_value!r}",
             )
         roles = {role: _bool(entries, f"{prefix}{role}") for role in _KIND_ROLES}
-        kinds.append(ProportionalityKind._from_registry(raw_token, **roles))
+        kinds.append(ProportionalityKind.from_registry(raw_token, **roles))
 
     periods: list[StatutoryCapPeriod] = []
     for raw_token in _csv(entries, _PERIOD_ORDER_KEY):
@@ -149,7 +149,7 @@ def resolve_proportionality_catalogue(
                 f"statutory-cap period {raw_token!r} declares mismatched value {declared_value!r}",
             )
         periods.append(
-            StatutoryCapPeriod._from_registry(
+            StatutoryCapPeriod.from_registry(
                 raw_token,
                 is_per_person=_bool(entries, f"{prefix}is_per_person"),
             ),

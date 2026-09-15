@@ -349,16 +349,19 @@ def _seed_m303_filing_evidence(fixtures_dir: Path) -> None:
     """
     from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
     from cadrumo.core.period import Period
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
     fixtures_dir.mkdir(parents=True, exist_ok=True)
-    for filing_year, code in _M303_EVIDENCE_PERIODS:
-        period = Period(filing_year=filing_year, code=code)
-        evidence = general_m303_filing_evidence(
-            period,
-            reference=f"docs:sequence-sandbox:m303-general:{filing_year}-{code}",
-        )
-        target = fixtures_dir / m303_filing_evidence_fixture_name(filing_year, code)
-        target.write_text(evidence.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="\n")
+    with bundled_indexed_authority().operation() as operation:
+        for filing_year, code in _M303_EVIDENCE_PERIODS:
+            period = Period(filing_year=filing_year, code=code)
+            evidence = general_m303_filing_evidence(
+                period,
+                reference=f"docs:sequence-sandbox:m303-general:{filing_year}-{code}",
+                operation=operation,
+            )
+            target = fixtures_dir / m303_filing_evidence_fixture_name(filing_year, code)
+            target.write_text(evidence.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def m303_filing_evidence_fixture_name(filing_year: int, code: str) -> str:

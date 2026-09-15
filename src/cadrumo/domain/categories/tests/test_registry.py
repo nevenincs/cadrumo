@@ -66,15 +66,15 @@ def test_proportionality_kinds_carry_kind_specific_fields(
     fixed_percentage_rules = [
         profile.proportionality
         for profile in profiles_2025.values()
-        if profile.proportionality.kind == ProportionalityKind._from_registry("fixed_percentage")
+        if profile.proportionality.kind == ProportionalityKind.from_registry("fixed_percentage")
     ]
     usage_ratio_rules = [
         profile.proportionality
         for profile in profiles_2025.values()
         if profile.proportionality.kind
         in {
-            ProportionalityKind._from_registry("usage_ratio_home_area"),
-            ProportionalityKind._from_registry("usage_ratio_personal"),
+            ProportionalityKind.from_registry("usage_ratio_home_area"),
+            ProportionalityKind.from_registry("usage_ratio_personal"),
         }
     ]
 
@@ -89,8 +89,8 @@ def test_proportionality_kinds_carry_kind_specific_fields(
 def test_diet_profiles_preserve_condition_specific_daily_caps(
     profiles_2025: Mapping[SpendingCategory, CategoryProfile],
 ) -> None:
-    national = profiles_2025[SpendingCategory._from_registry("manutencion_dietas_nacional")].proportionality
-    foreign = profiles_2025[SpendingCategory._from_registry("manutencion_dietas_extranjero")].proportionality
+    national = profiles_2025[SpendingCategory.from_registry("manutencion_dietas_nacional")].proportionality
+    foreign = profiles_2025[SpendingCategory.from_registry("manutencion_dietas_extranjero")].proportionality
 
     assert {variant.id: variant.statutory_cap_eur_per_day for variant in national.statutory_cap_variants} == {
         "sin-pernocta": Decimal("26.67"),
@@ -107,9 +107,9 @@ def test_registry_preserves_conservative_semantics_for_special_categories(
 ) -> None:
     """Known edge categories must keep the intended non-numeric rule encoding."""
 
-    hardware = profiles_2025[SpendingCategory._from_registry("hardware_amortizable")]
-    vehicle = profiles_2025[SpendingCategory._from_registry("vehiculo_combustible")]
-    health = profiles_2025[SpendingCategory._from_registry("seguros_salud_autonomo")]
+    hardware = profiles_2025[SpendingCategory.from_registry("hardware_amortizable")]
+    vehicle = profiles_2025[SpendingCategory.from_registry("vehiculo_combustible")]
+    health = profiles_2025[SpendingCategory.from_registry("seguros_salud_autonomo")]
 
     assert hardware.proportionality.kind.value == "full_deductible"
     assert vehicle.proportionality.default_ratio is None

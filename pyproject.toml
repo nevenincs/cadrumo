@@ -1017,7 +1017,7 @@ ignore_missing_imports = true
 # directions would silently re-admit everything this excludes.
 [tool.pyrefly]
 python_version = "3.13"
-search_path = ["src", "stubs"]
+search_path = ["src", ".", "stubs"]
 project_includes = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/adapters/outbound/llm"]
 # Tests are excluded from this checker, not overlooked. pyright reported zero
 # diagnostics across the test tree, so excluding it loses no signal that was

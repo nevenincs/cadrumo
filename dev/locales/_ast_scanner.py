@@ -507,7 +507,7 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
         elif isinstance(node, ast.AnnAssign):
             named = _declares_locale_key_constant(node.target)
             shaped = isinstance(node.target, ast.Name) and flow_confirmed.get(node.target.id) is node.value
-            if named or shaped:
+            if (named or shaped) and node.value is not None:
                 _collect_declared_locale_keys(node.value, findings)
     return findings
 
@@ -595,7 +595,7 @@ def _shape_candidate_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
         elif isinstance(node, ast.AnnAssign):
             target = node.target
             value = node.value
-        if isinstance(target, ast.Name) and _is_locale_key_dict_literal(value):
+        if isinstance(target, ast.Name) and value is not None and _is_locale_key_dict_literal(value):
             candidates[target.id] = value
     return candidates
 
@@ -775,7 +775,7 @@ def _row_table_key_columns(node: ast.expr | None) -> frozenset[int]:
     """
     rows = _literal_row_grid(node)
     if rows is None:
-        return frozenset()
+        return frozenset[int]()
     return frozenset(
         index
         for index, column in enumerate(zip(*rows, strict=True))
@@ -834,7 +834,7 @@ def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]
         elif isinstance(node, ast.AnnAssign):
             target = node.target
             value = node.value
-        if isinstance(target, ast.Name) and _is_locale_key_row_table_literal(value):
+        if isinstance(target, ast.Name) and value is not None and _is_locale_key_row_table_literal(value):
             candidates[target.id] = value
     return candidates
 
@@ -991,8 +991,8 @@ def _iterated_candidate_tables(
     if isinstance(node, ast.Attribute) and node.attr in candidates:
         return frozenset({node.attr})
     if aliases is not None and isinstance(node, ast.Name):
-        return aliases.get(node.id, frozenset())
-    return frozenset()
+        return aliases.get(node.id, frozenset[str]())
+    return frozenset[str]()
 
 
 def _row_subscript_sources(node: ast.expr, bound_to_table: dict[str, set[str]]) -> list[tuple[str, int]]:
@@ -1438,8 +1438,14 @@ def _walk_nodes(root: ast.AST) -> tuple[ast.AST, ...]:
     affect the traversal or its order.
     """
     cached = getattr(root, _AST_WALK_CACHE_ATTR, None)
-    if cached is not None:
-        return cached
+    if isinstance(cached, tuple):
+        cached_nodes: list[ast.AST] = []
+        for cached_node in cached:
+            if not isinstance(cached_node, ast.AST):
+                break
+            cached_nodes.append(cached_node)
+        else:
+            return tuple(cached_nodes)
     nodes = tuple(ast.walk(root))
     with suppress(AttributeError, TypeError):
         setattr(root, _AST_WALK_CACHE_ATTR, nodes)
@@ -1563,7 +1569,7 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
                     discovered.add(name)
                     break
         if not discovered:
-            return frozenset(known - {"tr", "t"})
+            return frozenset[str](known - {"tr", "t"})
         known |= discovered
 
 
@@ -1884,9 +1890,12 @@ def dict_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int
             value = node.value
         if not isinstance(target, ast.Name) or flow_confirmed.get(target.id) is not value:
             continue
-        if target.id.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
+        name = target.id
+        if not isinstance(name, str) or name.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
             continue
-        yield node.lineno, target.id
+        line = node.lineno
+        if isinstance(line, int):
+            yield line, name
 
 
 def find_dict_constant_naming_violations(root: Path) -> list[str]:

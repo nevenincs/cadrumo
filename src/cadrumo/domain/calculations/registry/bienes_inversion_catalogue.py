@@ -80,7 +80,7 @@ class BienInversionCatalogue:
             if not raw:
                 raise RegistryValidationError("bien-inversion kind must be a non-empty string token")
             try:
-                token = BienInversionKind._from_registry(raw)
+                token = BienInversionKind.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("bien-inversion kind must be a non-empty string token") from exc
         else:
@@ -100,7 +100,7 @@ class BienInversionCatalogue:
             if not raw:
                 raise RegistryValidationError("bien-inversion disposal regime must be a non-empty string token")
             try:
-                token = BienInversionDisposalRegime._from_registry(raw)
+                token = BienInversionDisposalRegime.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError(
                     "bien-inversion disposal regime must be a non-empty string token",
@@ -195,7 +195,7 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
 
     kind_definitions: list[BienInversionKindDefinition] = []
     for raw_token in _csv(entries, _KIND_ORDER_KEY):
-        token = BienInversionKind._from_registry(raw_token)
+        token = BienInversionKind.from_registry(raw_token)
         prefix = f"{_KIND_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"bien-inversion kind {raw_token!r} declares a mismatched value")
@@ -211,7 +211,7 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
 
     disposal_definitions: list[BienInversionDisposalRegimeDefinition] = []
     for raw_token in _csv(entries, _DISPOSAL_REGIME_ORDER_KEY):
-        token = BienInversionDisposalRegime._from_registry(raw_token)
+        token = BienInversionDisposalRegime.from_registry(raw_token)
         prefix = f"{_DISPOSAL_REGIME_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"bien-inversion disposal regime {raw_token!r} declares a mismatched value")
@@ -230,12 +230,12 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
         minimum_acquisition_year=minimum_year,
         kinds=tuple(kind_definitions),
         disposal_regimes=tuple(disposal_definitions),
-        real_estate_kind=BienInversionKind._from_registry(_required(entries, _KIND_REAL_ESTATE_KEY)),
-        non_real_estate_kind=BienInversionKind._from_registry(_required(entries, _KIND_NON_REAL_ESTATE_KEY)),
-        subject_not_exempt_regime=BienInversionDisposalRegime._from_registry(
+        real_estate_kind=BienInversionKind.from_registry(_required(entries, _KIND_REAL_ESTATE_KEY)),
+        non_real_estate_kind=BienInversionKind.from_registry(_required(entries, _KIND_NON_REAL_ESTATE_KEY)),
+        subject_not_exempt_regime=BienInversionDisposalRegime.from_registry(
             _required(entries, _DISPOSAL_REGIME_SUBJECT_NOT_EXEMPT_KEY),
         ),
-        exempt_or_outside_scope_regime=BienInversionDisposalRegime._from_registry(
+        exempt_or_outside_scope_regime=BienInversionDisposalRegime.from_registry(
             _required(entries, _DISPOSAL_REGIME_EXEMPT_OR_OUTSIDE_SCOPE_KEY),
         ),
     )

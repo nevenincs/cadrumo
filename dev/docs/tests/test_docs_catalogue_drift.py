@@ -55,7 +55,11 @@ def _msgid_set(path: Path) -> set[str] | None:
         return None
     with path.open("rb") as handle:
         catalogue = read_po(handle)
-    return {message.id for message in catalogue if message.id}
+    msgids: set[str] = set()
+    for message in catalogue:
+        if isinstance(message.id, str) and message.id:
+            msgids.add(message.id)
+    return msgids
 
 
 @pytest.fixture(scope="module")

@@ -247,7 +247,12 @@ def _parse_total_row(lines: list[str]) -> tuple[int, str] | None:
         except ValueError:
             return None
         pct_match = _TABLE_PCT.search(cells[_CELL_DUPLICATED_LINES])
-        return files_analyzed, (pct_match.group(1) if pct_match else "")
+        duplicated_pct = ""
+        if pct_match is not None:
+            captured = pct_match.group(1)
+            if isinstance(captured, str):
+                duplicated_pct = captured
+        return files_analyzed, duplicated_pct
     return None
 
 

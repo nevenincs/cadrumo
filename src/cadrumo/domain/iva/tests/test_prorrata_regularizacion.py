@@ -59,7 +59,7 @@ def test_definitiva_percentage_comes_from_the_full_year_art104_substrate() -> No
         ),
         year=2025,
     )
-    assert result.kind is ProrrataKind._from_registry("definitiva")
+    assert result.kind is ProrrataKind.from_registry("definitiva")
     assert result.period == "annual"
     assert result.percentage == Decimal("90")
 

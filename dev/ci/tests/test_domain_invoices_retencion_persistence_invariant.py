@@ -44,10 +44,11 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
+from cadrumo.domain.invoices.enums import PaymentStatus, iva_rate_percentage, resolve_iva_rate_token
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,35 +74,43 @@ _RETENCION_RATE = Decimal("0.15")
 
 def _retention_invoice() -> Invoice:
     """A received professional invoice declaring both retencion fields."""
-    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
-    assert rate is not None
-    line = InvoiceLine(
-        description="Servicios profesionales",
-        quantity=Decimal("1"),
-        unit_price=_BASE,
-        subtotal=_BASE,
-        iva_rate=IvaRate.RATE_21,
-        iva_amount=_BASE * rate,
-    )
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.RECEIVED,
-            "invoice_number": "F-PROV-901",
-            "issued_at": date(2026, 3, 15),
-            "counterparty_name": "Asesoria Profesional Martinez SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
-            "lines": (line,),
-            "base_total": _BASE,
-            "iva_total": _BASE * rate,
-            "grand_total": _BASE + _BASE * rate,
-            "retention_rate": _RETENCION_RATE,
-            "retention_amount": _RETENCION,
-            "currency": "EUR",
-            "payment_status": PaymentStatus.PAID,
-        },
-    )
+    rate_date = date(2026, 1, 1)
+    issued_at = date(2026, 3, 15)
+    with bundled_indexed_authority().operation() as operation:
+        rate_token = resolve_iva_rate_token("RATE_21", rate_date, authority=operation)
+        rate = iva_rate_percentage(rate_token, rate_date)
+        assert rate is not None
+        line = InvoiceLine(
+            description="Servicios profesionales",
+            quantity=Decimal("1"),
+            unit_price=_BASE,
+            subtotal=_BASE,
+            iva_rate=rate_token,
+            iva_amount=_BASE * rate,
+        )
+        return Invoice.model_validate(
+            {
+                "kind": InvoiceKind.RECEIVED,
+                "invoice_number": "F-PROV-901",
+                "issued_at": issued_at,
+                "counterparty_name": "Asesoria Profesional Martinez SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "iva_category": require_iva_category(
+                    "domestic_general",
+                    effective_date=issued_at,
+                    authority=operation,
+                ),
+                "lines": (line,),
+                "base_total": _BASE,
+                "iva_total": _BASE * rate,
+                "grand_total": _BASE + _BASE * rate,
+                "retention_rate": _RETENCION_RATE,
+                "retention_amount": _RETENCION,
+                "currency": "EUR",
+                "payment_status": PaymentStatus.PAID,
+            },
+        )
 
 
 def _persist_and_mutate(tmp_path: Path, mutate, *, names: tuple[str, ...]) -> None:

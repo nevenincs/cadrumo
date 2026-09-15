@@ -56,7 +56,7 @@ class ThirdPartyDeclarationRoleCatalogue:
             if not raw:
                 raise RegistryValidationError("third-party declaration role must be non-empty")
             try:
-                token = ThirdPartyDeclarationRole._from_registry(raw)
+                token = ThirdPartyDeclarationRole.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError(
                     "third-party declaration role must be a non-empty string",
@@ -131,7 +131,7 @@ def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> 
 def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue:
     definitions: list[ThirdPartyDeclarationRoleDefinition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
-        token = ThirdPartyDeclarationRole._from_registry(raw_token)
+        token = ThirdPartyDeclarationRole.from_registry(raw_token)
         prefix = f"{_ROLE_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(
@@ -151,7 +151,7 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
     selections: dict[str, tuple[ThirdPartyDeclarationRole, ...]] = {}
     for clave in _SELECTION_CLAVES:
         raw_roles = _csv(entries, f"{_SELECTION_PREFIX}{clave}.roles")
-        selected = tuple(ThirdPartyDeclarationRole._from_registry(raw) for raw in raw_roles)
+        selected = tuple(ThirdPartyDeclarationRole.from_registry(raw) for raw in raw_roles)
         if not set(selected).issubset(role_choices):
             raise RegistryValidationError(
                 f"third-party declaration role selection {clave!r} contains an undeclared role",

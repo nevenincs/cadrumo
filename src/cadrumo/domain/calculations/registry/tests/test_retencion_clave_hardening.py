@@ -63,10 +63,10 @@ def test_retencion_clave_projection_matches_m190_dr_clave_set(operation: PinnedA
     fails here, keeping the catalogue grounded in the bundled Diseño de Registros.
     """
     declared = _m190_dr_claves(operation)
-    projected = {RetencionClave._from_registry(value).value for value in declared}
+    projected = {RetencionClave.from_registry(value).value for value in declared}
     assert projected == declared
     # value byte-identical to the stored token (behaviour-preserving lift).
-    assert all(RetencionClave._from_registry(value).name == value for value in declared)
+    assert all(RetencionClave.from_registry(value).name == value for value in declared)
 
 
 def test_withholding_observation_accepts_every_valid_clave(operation: PinnedAuthorityOperation) -> None:

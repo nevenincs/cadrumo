@@ -54,7 +54,7 @@ from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._paths import SRC_DIR
 from .._registry_scanner import LocaleRegistryEnumerationError, scan_detail_row_fields
 from ..fstring_registry import get_registered_keys
-from ..manager import LocaleManager, locale_catalogue_source
+from ..manager import LocaleManager, LocaleNode, locale_catalogue_source
 from ..wizard_translation_audit import wizard_descriptor_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -66,7 +66,7 @@ _SRC_ROOT = SRC_DIR
 _LOCALES_ROOT = SRC_DIR / "locales"
 
 
-def _catalogue_payload(locale: str) -> dict[str, object]:
+def _catalogue_payload(locale: str) -> dict[str, LocaleNode]:
     """Return one committed catalogue's parsed content, whatever shape it ships in.
 
     Routed through the manager rather than :func:`yaml.safe_load` on a path,
@@ -201,7 +201,8 @@ def test_dynamic_family_registrations_match_their_producer_sources() -> None:
             for question in section.questions
             if question.profile_key is not None
         }
-    scope_codes = {scope.code.lower() for scope in load_default_catalogue().scopes}
+    with bundled_indexed_authority().operation() as operation:
+        scope_codes = {scope.code.lower() for scope in load_default_catalogue(operation=operation).scopes}
     topic_slugs = {topic.slug for topic in load_topic_catalogue().topics}
     expected = {
         "cli.config.auth.apoderado.scope": {f"cli.config.auth.apoderado.scope.{value}" for value in scope_codes},
@@ -432,10 +433,16 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     import ast
 
     def _is_language_override_call(node: ast.AST) -> bool:
-        return (
-            isinstance(node, ast.Call)
-            and getattr(node.func, "id", getattr(node.func, "attr", None)) == "override_settings"
-            and any(kw.arg == "cadrumo_output_language" for kw in node.keywords)
+        if not isinstance(node, ast.Call):
+            return False
+        if isinstance(node.func, ast.Name):
+            function_name = node.func.id
+        elif isinstance(node.func, ast.Attribute):
+            function_name = node.func.attr
+        else:
+            function_name = None
+        return function_name == "override_settings" and any(
+            kw.arg == "cadrumo_output_language" for kw in node.keywords
         )
 
     found: set[tuple[str, str]] = set()

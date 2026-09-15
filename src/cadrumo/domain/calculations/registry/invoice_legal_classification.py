@@ -80,7 +80,7 @@ class InvoiceLegalClassificationCatalogue:
             if not raw:
                 raise RegistryValidationError("invoice class must be a non-empty string token")
             try:
-                token = InvoiceClass._from_registry(raw)
+                token = InvoiceClass.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("invoice class must be a non-empty string token") from exc
         else:
@@ -100,7 +100,7 @@ class InvoiceLegalClassificationCatalogue:
             if not raw:
                 raise RegistryValidationError("invoice operation-date role must be a non-empty string token")
             try:
-                token = InvoiceOperationDateRole._from_registry(raw)
+                token = InvoiceOperationDateRole.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError(
                     "invoice operation-date role must be a non-empty string token",
@@ -217,7 +217,7 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
     invoice_classes: list[InvoiceClassDefinition] = []
     invoice_class_order = _csv(entries, _INVOICE_CLASS_ORDER_KEY)
     for raw_token in invoice_class_order:
-        token = InvoiceClass._from_registry(raw_token)
+        token = InvoiceClass.from_registry(raw_token)
         prefix = f"{_INVOICE_CLASS_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"invoice class {raw_token!r} declares a mismatched value")
@@ -234,7 +234,7 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
     operation_date_roles: list[InvoiceOperationDateRoleDefinition] = []
     operation_date_role_order = _csv(entries, _OPERATION_DATE_ROLE_ORDER_KEY)
     for raw_token in operation_date_role_order:
-        token = InvoiceOperationDateRole._from_registry(raw_token)
+        token = InvoiceOperationDateRole.from_registry(raw_token)
         prefix = f"{_OPERATION_DATE_ROLE_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"invoice operation-date role {raw_token!r} declares a mismatched value")
@@ -291,11 +291,11 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
         declarations=entries,
         invoice_classes=tuple(invoice_classes),
         operation_date_roles=tuple(operation_date_roles),
-        ordinaria_token=InvoiceClass._from_registry(ordinaria),
-        simplificada_token=InvoiceClass._from_registry(simplificada),
-        rectificativa_token=InvoiceClass._from_registry(rectificativa),
-        operation_performed_token=InvoiceOperationDateRole._from_registry(operation_performed),
-        advance_payment_received_token=InvoiceOperationDateRole._from_registry(advance_payment_received),
+        ordinaria_token=InvoiceClass.from_registry(ordinaria),
+        simplificada_token=InvoiceClass.from_registry(simplificada),
+        rectificativa_token=InvoiceClass.from_registry(rectificativa),
+        operation_performed_token=InvoiceOperationDateRole.from_registry(operation_performed),
+        advance_payment_received_token=InvoiceOperationDateRole.from_registry(advance_payment_received),
     )
 
 

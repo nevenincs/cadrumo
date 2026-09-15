@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
@@ -126,8 +127,6 @@ def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
             unavailable, inconsistent with the manifest, or unreadable.
     """
     try:
-        from importlib.metadata import PackageNotFoundError, version
-
         installed_version = version("spylls")
     except (ImportError, PackageNotFoundError):
         raise SpellingToolError(

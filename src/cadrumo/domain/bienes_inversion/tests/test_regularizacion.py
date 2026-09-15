@@ -72,7 +72,7 @@ def test_movable_good_prorrata_drop_yields_ingreso_complementario() -> None:
         cuota_soportada=Decimal("12600.00"),
         prorrata_inicial_pct=Decimal("70"),
         prorrata_anio_pct=Decimal("50"),
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         parameters=_PARAMS,
     )
     assert result.aplica is True
@@ -91,7 +91,7 @@ def test_real_estate_good_uses_the_ten_divisor() -> None:
         cuota_soportada=Decimal("12600.00"),
         prorrata_inicial_pct=Decimal("70"),
         prorrata_anio_pct=Decimal("50"),
-        kind=BienInversionKind._from_registry("inmueble"),
+        kind=BienInversionKind.from_registry("inmueble"),
         parameters=_PARAMS,
     )
     assert result.aplica is True
@@ -110,7 +110,7 @@ def test_prorrata_rise_yields_deduccion_complementaria() -> None:
         cuota_soportada=Decimal("12600.00"),
         prorrata_inicial_pct=Decimal("50"),
         prorrata_anio_pct=Decimal("75"),
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         parameters=_PARAMS,
     )
     assert result.aplica is True
@@ -124,7 +124,7 @@ def test_exactly_ten_points_does_not_regularise() -> None:
         cuota_soportada=Decimal("10000.00"),
         prorrata_inicial_pct=Decimal("60"),
         prorrata_anio_pct=Decimal("50"),
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         parameters=_PARAMS,
     )
     assert result.diferencia_puntos == Decimal("10")
@@ -139,7 +139,7 @@ def test_just_over_ten_points_regularises() -> None:
         cuota_soportada=Decimal("10000.00"),
         prorrata_inicial_pct=Decimal("60"),
         prorrata_anio_pct=Decimal("49.99"),
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         parameters=_PARAMS,
     )
     assert result.diferencia_puntos == Decimal("10.01")
@@ -154,7 +154,7 @@ def test_non_positive_cuota_is_refused() -> None:
             cuota_soportada=Decimal("0"),
             prorrata_inicial_pct=Decimal("70"),
             prorrata_anio_pct=Decimal("50"),
-            kind=BienInversionKind._from_registry("mueble"),
+            kind=BienInversionKind.from_registry("mueble"),
         )
 
 
@@ -166,5 +166,5 @@ def test_out_of_range_percentage_is_refused() -> None:
             cuota_soportada=Decimal("1000"),
             prorrata_inicial_pct=Decimal("70"),
             prorrata_anio_pct=Decimal("120"),
-            kind=BienInversionKind._from_registry("mueble"),
+            kind=BienInversionKind.from_registry("mueble"),
         )

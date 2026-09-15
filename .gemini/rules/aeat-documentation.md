@@ -10,6 +10,7 @@ trigger: always_on
 - Write concise, outcome-oriented documentation in the user's language. State prerequisites, exact commands, observable results, failure behavior, and recovery where those facts matter.
 - Use the product name Cadrumo consistently. Use AEAT names, Spanish domain terms, and command tokens exactly as the product exposes them; do not invent synonyms for canonical concepts.
 - Keep each fact in one authoritative home. Link to that home instead of duplicating command inventories, schemas, legal claims, or status across documents.
+- Registry task briefs and handoffs name the target boundary: source edit, candidate verification, live source installation, authority publication or runtime adoption. State deliverables and measurable acceptance for the requested boundary; do not use ambiguous "live", "validated" or "done" for all of them.
 - Generated API and CLI references are owned by their generators. Change the source or generator, regenerate, and verify the diff; never hand-edit generated reference files.
 - Examples must be safe, runnable, and free of credentials, taxpayer data, machine-specific paths, and stale campaign state.
 

@@ -41,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _rule(*, operation: PinnedAuthorityOperation):
 
     return load_category_profiles(operation=operation)[
-        SpendingCategory._from_registry("seguros_salud_autonomo")
+        SpendingCategory.from_registry("seguros_salud_autonomo")
     ].proportionality
 
 

@@ -181,7 +181,7 @@ def test_registry_and_domain_agree_on_the_no_volume_branch(filing_year: int) -> 
             operaciones_sin_derecho_deduccion=Decimal("0"),
         ),
         year=filing_year,
-        kind=ProrrataKind._from_registry("definitiva"),
+        kind=ProrrataKind.from_registry("definitiva"),
     ).percentage
 
     assert _registry_percentage(filing_year, Decimal("0"), Decimal("0")) == domain_percentage

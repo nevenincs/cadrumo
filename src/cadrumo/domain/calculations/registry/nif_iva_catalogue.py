@@ -48,7 +48,7 @@ class NifIvaCatalogue:
             raw = value.strip().upper()
             if not raw:
                 raise RegistryValidationError("NIF-IVA prefix must be non-empty")
-            token = NifIvaPrefix._from_registry(raw)
+            token = NifIvaPrefix.from_registry(raw)
         else:
             raise RegistryValidationError("NIF-IVA prefix must be a string token")
         if token not in self.prefixes:
@@ -134,7 +134,7 @@ def _definition(entries: Mapping[str, str], raw_prefix: str) -> NifIvaDefinition
     key = f"{_PREFIX}{raw_prefix}."
     if _required(entries, f"{key}value") != raw_prefix:
         raise RegistryValidationError(f"NIF-IVA prefix {raw_prefix!r} declares a mismatched value")
-    prefix = NifIvaPrefix._from_registry(raw_prefix)
+    prefix = NifIvaPrefix.from_registry(raw_prefix)
     iso_country = _required(entries, f"{key}iso_country").upper()
     iso_aliases = tuple(alias.upper() for alias in _csv(entries, f"{key}iso_aliases"))
     if iso_country not in iso_aliases:

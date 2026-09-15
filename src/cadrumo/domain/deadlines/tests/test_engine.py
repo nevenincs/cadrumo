@@ -39,8 +39,8 @@ def _profile(**overrides: object) -> TaxpayerProfile:
         "tax_id": "X1234567L",
         "iva_regime": IVARegime("general"),
         "iva": ModeloIVAProfile(
-            tax_territory=M303TaxTerritory._from_registry("common_regime"),
-            regime_composition=M303RegimeComposition._from_registry("general"),
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
@@ -175,8 +175,8 @@ class TestCompute:
             _profile(
                 does_intracomunitario=True,
                 iva=ModeloIVAProfile(
-                    tax_territory=M303TaxTerritory._from_registry("common_regime"),
-                    regime_composition=M303RegimeComposition._from_registry("general"),
+                    tax_territory=M303TaxTerritory.from_registry("common_regime"),
+                    regime_composition=M303RegimeComposition.from_registry("general"),
                     intracommunity_operations_exceed_50000_eur=True,
                     redeme_enrolled=False,
                     cash_accounting_regime_enrolled=False,
@@ -209,8 +209,8 @@ class TestCompute:
         monthly = _engine().compute(
             _profile(
                 iva=ModeloIVAProfile(
-                    tax_territory=M303TaxTerritory._from_registry("common_regime"),
-                    regime_composition=M303RegimeComposition._from_registry("general"),
+                    tax_territory=M303TaxTerritory.from_registry("common_regime"),
+                    regime_composition=M303RegimeComposition.from_registry("general"),
                     redeme_enrolled=True,
                     cash_accounting_regime_enrolled=False,
                     voluntary_sii_enrolled=False,
@@ -254,8 +254,8 @@ class TestCompute:
     ) -> None:
         profile = _profile(
             iva=ModeloIVAProfile(
-                tax_territory=M303TaxTerritory._from_registry("common_regime"),
-                regime_composition=M303RegimeComposition._from_registry("general"),
+                tax_territory=M303TaxTerritory.from_registry("common_regime"),
+                regime_composition=M303RegimeComposition.from_registry("general"),
                 redeme_enrolled=monthly_iva,
                 cash_accounting_regime_enrolled=False,
                 voluntary_sii_enrolled=False,
@@ -328,7 +328,7 @@ class TestCompute:
 
     def test_registry_condition_can_add_objective_estimation_deadline(self) -> None:
         schedule = _engine().compute(
-            _profile(irpf_estimation_regime=IrpfEstimationRegime._from_registry("objetiva")),
+            _profile(irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva")),
             2026,
             today=date(2026, 1, 1),
         )
@@ -340,7 +340,7 @@ class TestCompute:
             "131",
         ]
 
-    def test_q1_2026_window_comes_from_registry_data(self) -> None:
+    def test_q1_2026_window_comesfrom_registry_data(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
         q1 = next(o for o in schedule.obligations if o.period == _period(2026, "1T"))
 
@@ -485,7 +485,7 @@ class TestRegistryApplicability:
         assert applies_to(_profile(pays_capital_income_with_retencion=True), "123") is True
         assert applies_to(_profile(), "131") is False
         assert (
-            applies_to(_profile(irpf_estimation_regime=IrpfEstimationRegime._from_registry("objetiva")), "131") is True
+            applies_to(_profile(irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva")), "131") is True
         )
 
     def test_explain_uses_registry_condition_text(self) -> None:

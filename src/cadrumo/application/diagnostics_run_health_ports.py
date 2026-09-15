@@ -57,6 +57,7 @@ class DiagnosticAuthProbePort(Protocol):
 
     def probe(self) -> DiagnosticAuthProbeResult:
         """Return the redacted local auth-readiness facts for diagnostics."""
+        ...
 
 
 class DiagnosticRunTelemetryPort(Protocol):
@@ -69,6 +70,7 @@ class DiagnosticRunTelemetryPort(Protocol):
         until: date | None,
     ) -> tuple[DiagnosticRunRecord, ...]:
         """Return validated run facts within the inclusive date window."""
+        ...
 
 
 __all__ = [

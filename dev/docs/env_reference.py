@@ -92,7 +92,7 @@ def _default_cell(field: FieldInfo, language: OutputLanguage) -> str:
 def _type_cell(field: FieldInfo) -> str:
     """Render a short human type name for one settings field."""
     annotation = field.annotation
-    name = getattr(annotation, "__name__", None) or str(annotation)
+    name = str(annotation.__name__) if isinstance(annotation, type) else str(annotation)
     name = name.replace(" | None", "")
     # Keep only the leaf class name; module paths are internal detail.
     return name.split(".")[-1].strip()

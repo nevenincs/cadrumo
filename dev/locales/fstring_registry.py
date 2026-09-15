@@ -25,11 +25,35 @@ scaffold and parity checks.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import TYPE_CHECKING, Protocol, get_args
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
-    from enum import Enum
+
+
+class _ChoiceLike(Protocol):
+    @property
+    def value(self) -> str: ...
+
+    @property
+    def description(self) -> object: ...
+
+
+class _QuestionLike(Protocol):
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def profile_key(self) -> str | None: ...
+
+    @property
+    def choices(self) -> Iterable[_ChoiceLike]: ...
+
+
+class _SectionLike(Protocol):
+    @property
+    def questions(self) -> Iterable[_QuestionLike]: ...
 
 
 class _FlowLike(Protocol):
@@ -39,7 +63,7 @@ class _FlowLike(Protocol):
     def id(self) -> str: ...
 
     @property
-    def sections(self) -> Iterable[object]: ...
+    def sections(self) -> Iterable[_SectionLike]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,48 +190,46 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
-    from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
+    from cadrumo.application.wizard.catalogue import build_setup_flow
     from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
     from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
-    from cadrumo.domain.contribuyente.ccaa import CCAA
-    from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
-    from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
-    from cadrumo.domain.deadlines.models import (
-        IrpfEstimationRegime,
-        IrpfIncomeCategory,
-        IrpfSpecialRegime,
-    )
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.user_profile.values import ProfileSetupState
     from dev.docs.terminology_handbook.topics import load_topic_catalogue
     from dev.locales._registry_scanner import scan_detail_row_fields
 
-    apoderado_scope_values = tuple(scope.code.lower() for scope in load_default_catalogue().scopes)
+    with bundled_indexed_authority().operation() as operation:
+        wizard_flow = build_setup_flow(operation)
+        apoderado_scope_values = tuple(
+            scope.code.lower() for scope in load_default_catalogue(operation=operation).scopes
+        )
     topic_slugs = tuple(topic.slug for topic in load_topic_catalogue().topics)
     row_fields = scan_detail_row_fields()
 
     return (
         *_wizard_choice_label_registrations(
-            entity_type=EntityType,
-            legal_entity_form=LegalEntityForm,
-            irpf_income_category=IrpfIncomeCategory,
-            irpf_estimation_regime=IrpfEstimationRegime,
-            irpf_special_regime=IrpfSpecialRegime,
-            fiscal_residency=FiscalResidency,
-            ccaa=CCAA,
+            entity_type=_flow_choice_values(wizard_flow, "entity-type"),
+            legal_entity_form=_flow_choice_values(wizard_flow, "legal-entity-form"),
+            irpf_income_category=_flow_choice_values(wizard_flow, "irpf-income-categories"),
+            irpf_estimation_regime=_flow_choice_values(wizard_flow, "irpf-estimation-regime"),
+            irpf_special_regime=_flow_choice_values(wizard_flow, "irpf-special-regime"),
+            fiscal_residency=_flow_choice_values(wizard_flow, "fiscal-residency"),
+            ccaa=_flow_choice_values(wizard_flow, "tax-residence-ccaa"),
             output_languages=SUPPORTED_OUTPUT_LANGUAGES,
         ),
         *_wizard_choice_description_registrations(
-            entity_type=EntityType,
-            irpf_income_category=IrpfIncomeCategory,
-            irpf_estimation_regime=IrpfEstimationRegime,
-            fiscal_residency=FiscalResidency,
+            entity_type=_flow_choice_values(wizard_flow, "entity-type", described=True),
+            legal_entity_form=_flow_choice_values(wizard_flow, "legal-entity-form", described=True),
+            irpf_income_category=_flow_choice_values(wizard_flow, "irpf-income-categories", described=True),
+            irpf_estimation_regime=_flow_choice_values(wizard_flow, "irpf-estimation-regime", described=True),
+            fiscal_residency=_flow_choice_values(wizard_flow, "fiscal-residency", described=True),
         ),
-        *_wizard_question_registrations(wizard_flows=WIZARD_FLOWS),
+        *_wizard_question_registrations(wizard_flows=(wizard_flow,)),
         *_dynamic_family_registrations(
-            wizard_flows=WIZARD_FLOWS,
+            wizard_flows=(wizard_flow,),
             apoderado_scope_values=apoderado_scope_values,
             context_label_keys=ERROR_CONTEXT_LABEL_KEYS,
             profile_validation_codes=PROFILE_VALIDATION_ISSUE_CODES,
@@ -732,15 +754,27 @@ def _dynamic_family_registrations(
     )
 
 
+def _flow_choice_values(flow: _FlowLike, question_id: str, *, described: bool = False) -> tuple[str, ...]:
+    """Return the canonical choice values declared by one wizard question."""
+    for section in flow.sections:
+        for question in section.questions:
+            if question.id != question_id:
+                continue
+            return tuple(
+                choice.value for choice in question.choices if not described or choice.description is not None
+            )
+    raise LookupError(f"wizard flow has no question {question_id!r}")
+
+
 def _wizard_choice_label_registrations(
     *,
-    entity_type: type[Enum],
-    legal_entity_form: type[Enum],
-    irpf_income_category: type[Enum],
-    irpf_estimation_regime: type[Enum],
-    irpf_special_regime: type[Enum],
-    fiscal_residency: type[Enum],
-    ccaa: type[Enum],
+    entity_type: Iterable[str],
+    legal_entity_form: Iterable[str],
+    irpf_income_category: Iterable[str],
+    irpf_estimation_regime: Iterable[str],
+    irpf_special_regime: Iterable[str],
+    fiscal_residency: Iterable[str],
+    ccaa: Iterable[str],
     output_languages: Iterable[str],
 ) -> tuple[FStringKeyRegistration, ...]:
     """Registrations for the wizard's closed-choice option labels.
@@ -753,37 +787,37 @@ def _wizard_choice_label_registrations(
         FStringKeyRegistration(
             description="wizard.setup.taxpayer-type.entity-type.choices.*.label",
             key_factory=lambda v: f"wizard.setup.taxpayer-type.entity-type.choices.{_hyphen(v)}.label",
-            values=tuple(m.value for m in entity_type),
+            values=tuple(entity_type),
         ),
         FStringKeyRegistration(
             description="wizard.setup.taxpayer-type.legal-entity-form.choices.*.label",
             key_factory=lambda v: f"wizard.setup.taxpayer-type.legal-entity-form.choices.{_hyphen(v)}.label",
-            values=tuple(m.value for m in legal_entity_form),
+            values=tuple(legal_entity_form),
         ),
         FStringKeyRegistration(
             description="wizard.setup.taxpayer-type.irpf-income-categories.choices.*.label",
             key_factory=lambda v: f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{_hyphen(v)}.label",
-            values=tuple(m.value for m in irpf_income_category),
+            values=tuple(irpf_income_category),
         ),
         FStringKeyRegistration(
             description="wizard.setup.obligations.irpf-estimation-regime.choices.*.label",
             key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.label",
-            values=tuple(m.value for m in irpf_estimation_regime),
+            values=tuple(irpf_estimation_regime),
         ),
         FStringKeyRegistration(
             description="wizard.setup.obligations.irpf-special-regime.choices.*.label",
             key_factory=lambda v: f"wizard.setup.obligations.irpf-special-regime.choices.{_hyphen(v)}.label",
-            values=tuple(m.value for m in irpf_special_regime),
+            values=tuple(irpf_special_regime),
         ),
         FStringKeyRegistration(
             description="wizard.setup.residence.fiscal-residency.choices.*.label",
             key_factory=lambda v: f"wizard.setup.residence.fiscal-residency.choices.{_hyphen(v)}.label",
-            values=tuple(m.value for m in fiscal_residency),
+            values=tuple(fiscal_residency),
         ),
         FStringKeyRegistration(
             description="wizard.setup.residence.ccaa.choices.*.label",
             key_factory=lambda v: f"wizard.setup.residence.ccaa.choices.{v}.label",
-            values=tuple(m.value for m in ccaa),
+            values=tuple(ccaa),
         ),
         FStringKeyRegistration(
             description="wizard.setup.profile.output-language.choices.*.label",
@@ -795,10 +829,11 @@ def _wizard_choice_label_registrations(
 
 def _wizard_choice_description_registrations(
     *,
-    entity_type: type[Enum],
-    irpf_income_category: type[Enum],
-    irpf_estimation_regime: type[Enum],
-    fiscal_residency: type[Enum],
+    entity_type: Iterable[str],
+    legal_entity_form: Iterable[str],
+    irpf_income_category: Iterable[str],
+    irpf_estimation_regime: Iterable[str],
+    fiscal_residency: Iterable[str],
 ) -> tuple[FStringKeyRegistration, ...]:
     """Registrations for the longer explanatory copy under each wizard choice.
 
@@ -810,27 +845,27 @@ def _wizard_choice_description_registrations(
         FStringKeyRegistration(
             description="wizard.setup.taxpayer-type.entity-type.choices.*.description",
             key_factory=lambda v: f"wizard.setup.taxpayer-type.entity-type.choices.{_hyphen(v)}.description",
-            values=tuple(m.value for m in entity_type),
+            values=tuple(entity_type),
         ),
         FStringKeyRegistration(
             description="wizard.setup.taxpayer-type.irpf-income-categories.choices.*.description",
             key_factory=lambda v: f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{_hyphen(v)}.description",
-            values=tuple(m.value for m in irpf_income_category),
+            values=tuple(irpf_income_category),
         ),
         FStringKeyRegistration(
             description="wizard.setup.obligations.irpf-estimation-regime.choices.*.description",
             key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.description",
-            values=tuple(m.value for m in irpf_estimation_regime),
+            values=tuple(irpf_estimation_regime),
         ),
         FStringKeyRegistration(
             description="wizard.setup.residence.fiscal-residency.choices.*.description",
             key_factory=lambda v: f"wizard.setup.residence.fiscal-residency.choices.{_hyphen(v)}.description",
-            values=tuple(m.value for m in fiscal_residency),
+            values=tuple(fiscal_residency),
         ),
         FStringKeyRegistration(
             description="wizard.setup.taxpayer-type.legal-entity-form.choices.*.description (curated subset)",
             key_factory=lambda v: f"wizard.setup.taxpayer-type.legal-entity-form.choices.{_hyphen(v)}.description",
-            values=("sl", "sin_fines_lucrativos"),
+            values=tuple(legal_entity_form),
         ),
     )
 

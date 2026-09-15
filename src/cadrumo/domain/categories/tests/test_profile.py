@@ -102,7 +102,7 @@ def test_category_citation_accepts_a_missing_quote_only_with_a_stated_reason() -
 def test_category_profile_rejects_blank_display_label_at_schema_boundary() -> None:
     with pytest.raises(ValidationError, match="display_label"):
         CategoryProfile(
-            category=SpendingCategory._from_registry("material_oficina"),
+            category=SpendingCategory.from_registry("material_oficina"),
             display_label=tr("   "),
             proportionality=_rule(),
             iva_hint=None,
@@ -111,7 +111,7 @@ def test_category_profile_rejects_blank_display_label_at_schema_boundary() -> No
 
 def _rule() -> ProportionalityRule:
     return ProportionalityRule(
-        kind=ProportionalityKind._from_registry("full_deductible"),
+        kind=ProportionalityKind.from_registry("full_deductible"),
         citations=(_citation(),),
         notes=tr("Regla de prueba."),
     )
@@ -121,17 +121,17 @@ def test_category_profile_accepts_profile_without_casilla_projection() -> None:
     """Profiles carry category semantics, not filing-layout projection."""
 
     profile = CategoryProfile(
-        category=SpendingCategory._from_registry("material_oficina"),
+        category=SpendingCategory.from_registry("material_oficina"),
         display_label=tr("categories.test_profile.display_label_851219"),
         proportionality=ProportionalityRule(
-            kind=ProportionalityKind._from_registry("fixed_percentage"),
+            kind=ProportionalityKind.from_registry("fixed_percentage"),
             fixed_pct=Decimal("1.00"),
             citations=(_citation(),),
             notes=tr("Perfil sin proyección a casillas."),
         ),
         iva_hint=None,
     )
-    assert profile.category == SpendingCategory._from_registry("material_oficina")
+    assert profile.category == SpendingCategory.from_registry("material_oficina")
 
 
 def test_category_profile_rejects_stale_casilla_projection_payload() -> None:
@@ -140,10 +140,10 @@ def test_category_profile_rejects_stale_casilla_projection_payload() -> None:
     with pytest.raises(ValidationError, match=r"Extra inputs are not permitted|projection"):
         CategoryProfile.model_validate(
             {
-                "category": SpendingCategory._from_registry("material_oficina"),
+                "category": SpendingCategory.from_registry("material_oficina"),
                 "display_label": {"es": "Material"},
                 "proportionality": {
-                    "kind": ProportionalityKind._from_registry("full_deductible"),
+                    "kind": ProportionalityKind.from_registry("full_deductible"),
                     "citations": [_citation().model_dump(mode="json")],
                     "notes": "Perfil sin proyección a casillas.",
                 },

@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
+from typing import IO
 
 import pytest
 
@@ -33,7 +34,9 @@ _REFUSAL_PROBE = (
 )
 
 
-async def _run_redirected_child(*, command: list[str], stdout: object, stderr: object) -> tuple[int, str]:
+async def _run_redirected_child(
+    *, command: list[str], stdout: int | IO[str] | None, stderr: int | IO[str] | None
+) -> tuple[int, str]:
     """Run a fixed child while preserving the operator-visible stream routing."""
     process = await asyncio.create_subprocess_exec(
         *command,
@@ -42,18 +45,39 @@ async def _run_redirected_child(*, command: list[str], stdout: object, stderr: o
         stdin=asyncio.subprocess.DEVNULL,
     )
     _, captured_stderr = await process.communicate()
-    return int(process.returncode), (captured_stderr or b"").decode("utf-8", errors="replace")
+    returncode = process.returncode
+    if returncode is None:
+        raise RuntimeError("the child process did not finish after communicate()")
+    return returncode, (captured_stderr or b"").decode("utf-8", errors="replace")
 
 
-async def _run_detached_child(*, command: list[str], stream: object, **process_options: object) -> int:
+async def _run_detached_child(
+    *, command: list[str], stream: int | IO[str], creationflags: int = 0, start_new_session: bool = False
+) -> int:
     """Run a fixed child with the platform's real detached-process option."""
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        stdout=stream,
-        stderr=stream,
-        stdin=asyncio.subprocess.DEVNULL,
-        **process_options,
-    )
+    if creationflags:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=stream,
+            stderr=stream,
+            stdin=asyncio.subprocess.DEVNULL,
+            creationflags=creationflags,
+        )
+    elif start_new_session:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=stream,
+            stderr=stream,
+            stdin=asyncio.subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    else:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=stream,
+            stderr=stream,
+            stdin=asyncio.subprocess.DEVNULL,
+        )
     return int(await process.wait())
 
 

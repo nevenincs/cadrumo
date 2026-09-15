@@ -38,7 +38,8 @@ class EntityType(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -159,7 +160,8 @@ class LegalEntityForm(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod

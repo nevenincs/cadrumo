@@ -58,7 +58,7 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         past the period they turn three
         (:meth:`guarderia_qualifying_meses`).
         """
-        if self.relacion not in self._art_81_1_maternity_relations(context=context):
+        if self.relacion not in self.art_81_1_maternity_relations(context=context):
             return 0
         if not self.is_eligible_ordinary(
             filing_year,

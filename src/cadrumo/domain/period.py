@@ -60,7 +60,7 @@ def period_start_date(filing_year: int, registry_period: str) -> date:
     Raises:
         PeriodValidationError: When ``registry_period`` is not a recognised shape.
     """
-    period = _period_from_registry_token(filing_year, registry_period)
+    period = _periodfrom_registry_token(filing_year, registry_period)
     if period.has_date_span():
         return period.start_date
     if registry_period == "1P":
@@ -90,7 +90,7 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
     Raises:
         PeriodValidationError: When ``registry_period`` is not a recognised shape.
     """
-    period = _period_from_registry_token(filing_year, registry_period)
+    period = _periodfrom_registry_token(filing_year, registry_period)
     if period.has_date_span():
         return period.end_date
     if registry_period == "1P":
@@ -138,7 +138,7 @@ def calculation_filing_date(period: Period) -> date:
     raise PeriodValidationError(f"calculation filing date is undefined for registry period {code!r}")
 
 
-def _period_from_registry_token(filing_year: int, registry_period: str) -> Period:
+def _periodfrom_registry_token(filing_year: int, registry_period: str) -> Period:
     """Construct the canonical typed period or preserve this module's public error contract."""
     try:
         return Period.from_year_and_code(filing_year, registry_period)

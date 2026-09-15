@@ -141,7 +141,9 @@ def _free_port() -> int:
     """Return a port that is closed right now (bound then released)."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
         probe.bind(("127.0.0.1", 0))
-        return probe.getsockname()[1]
+        port = probe.getsockname()[1]
+        assert isinstance(port, int)
+        return port
 
 
 @pytest.fixture
@@ -157,7 +159,7 @@ def sphinx_http_server() -> Iterator[int]:
             self.wfile.write(body)
 
         @override
-        def log_message(self, *_args: object) -> None:
+        def log_message(self, format: str, *_args: object) -> None:
             pass
 
     httpd = socketserver.TCPServer(("127.0.0.1", 0), _Handler)

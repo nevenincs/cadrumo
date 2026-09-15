@@ -43,10 +43,23 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
+from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
+from cadrumo.domain.calculations.registry.travel_agency_mediation import require_travel_agency_mediation
+from cadrumo.domain.invoices.enums import (
+    InvoiceClass,
+    InvoiceOperationDateRole,
+    PaymentStatus,
+    advance_payment_received_role,
+    invoice_class_rectificativa,
+    invoice_class_simplificada,
+    operation_performed_role,
+    resolve_iva_rate_token,
+)
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
-from cadrumo.domain.iva.oss import OssIossRegime
+from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
+from cadrumo.domain.iva.oss import OssIossRegime, require_oss_ioss_regime
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -78,87 +91,116 @@ def _domestic_retention_invoice() -> Invoice:
     the strict-mode Decimal coercion these fields need).
     """
 
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_class": InvoiceClass.RECTIFICATIVA,
-            "series": "R",
-            "rectifies_invoice_number": "F-2025-099",
-            "invoice_number": "F-2025-100",
-            "issued_at": date(2025, 4, 10),
-            "operation_date": date(2025, 4, 8),
-            "operation_date_role": InvoiceOperationDateRole.OPERATION_PERFORMED,
-            "counterparty_name": "Consultora Ibérica SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "bucket_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-            "base_total": Decimal("1000.00"),
-            "iva_total": Decimal("210.00"),
-            "grand_total": Decimal("1287.00"),
-            "currency": "EUR",
-            "lines": (
-                InvoiceLine(
-                    description="Servicios de consultoría",
-                    quantity=Decimal("10"),
-                    unit_price=Decimal("100.00"),
-                    subtotal=Decimal("1000.00"),
-                    iva_rate=IvaRate.RATE_21,
-                    iva_amount=Decimal("210.00"),
-                    spending_category_id="consultoria",
+    issued_at = date(2025, 4, 10)
+    operation_date = date(2025, 4, 8)
+    with bundled_indexed_authority().operation() as operation:
+        return Invoice.model_validate(
+            {
+                "kind": InvoiceKind.ISSUED,
+                "invoice_class": invoice_class_rectificativa(effective_date=issued_at),
+                "series": "R",
+                "rectifies_invoice_number": "F-2025-099",
+                "invoice_number": "F-2025-100",
+                "issued_at": issued_at,
+                "operation_date": operation_date,
+                "operation_date_role": operation_performed_role(effective_date=operation_date),
+                "counterparty_name": "Consultora Ibérica SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "bucket_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                "base_total": Decimal("1000.00"),
+                "iva_total": Decimal("210.00"),
+                "grand_total": Decimal("1287.00"),
+                "currency": "EUR",
+                "lines": (
+                    InvoiceLine(
+                        description="Servicios de consultoría",
+                        quantity=Decimal("10"),
+                        unit_price=Decimal("100.00"),
+                        subtotal=Decimal("1000.00"),
+                        iva_rate=resolve_iva_rate_token("RATE_21", operation_date, authority=operation),
+                        iva_amount=Decimal("210.00"),
+                        spending_category_id="consultoria",
+                    ),
                 ),
-            ),
-            "payment_status": PaymentStatus.PARTIALLY_PAID,
-            "linked_transaction_ids": (_HEX64_A, _HEX64_B),
-            "notes": "Factura con retención IRPF aplicable a profesional.",
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
-            "retention_rate": Decimal("0.15"),
-            "retention_amount": Decimal("150.00"),
-            "recargo_amount": Decimal("52.00"),
-            "suplido_amount": Decimal("25.00"),
-            "payment_id": _HEX64_A,
-            "travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE,
-            "collected_on_behalf_of_tax_id": "A87654321",
-            "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
-            "is_subvencion_ayuda": True,
-        },
-    )
+                "payment_status": PaymentStatus.PARTIALLY_PAID,
+                "linked_transaction_ids": (_HEX64_A, _HEX64_B),
+                "notes": "Factura con retención IRPF aplicable a profesional.",
+                "iva_category": require_iva_category(
+                    "domestic_general",
+                    effective_date=operation_date,
+                    authority=operation,
+                ),
+                "retention_rate": Decimal("0.15"),
+                "retention_amount": Decimal("150.00"),
+                "recargo_amount": Decimal("52.00"),
+                "suplido_amount": Decimal("25.00"),
+                "payment_id": _HEX64_A,
+                "travel_agency_mediation": require_travel_agency_mediation(
+                    "mediated_service",
+                    effective_date=operation_date,
+                    authority=operation,
+                ),
+                "collected_on_behalf_of_tax_id": "A87654321",
+                "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
+                "is_subvencion_ayuda": True,
+            },
+        )
 
 
 def _oss_union_scheme_invoice() -> Invoice:
     """Cross-border ISSUED invoice populating the OSS union-scheme axis."""
 
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "F-2025-200",
-            "issued_at": date(2025, 5, 12),
-            "counterparty_name": "Privatkunde DE",
-            "counterparty_tax_id": "DE123456789",
-            "counterparty_country": "DE",
-            "base_total": Decimal("500.00"),
-            "iva_total": Decimal("95.00"),
-            "grand_total": Decimal("595.00"),
-            "currency": "EUR",
-            "lines": (
-                InvoiceLine(
-                    description="Servicio digital B2C",
-                    quantity=Decimal("1"),
-                    unit_price=Decimal("500.00"),
-                    subtotal=Decimal("500.00"),
-                    iva_rate=IvaRate.RATE_21,
-                    iva_amount=Decimal("95.00"),
-                    spending_category_id="servicio-digital",
-                    oss_rate_kind=IvaRateKind.GENERAL,
+    issued_at = date(2025, 5, 12)
+    with bundled_indexed_authority().operation() as operation:
+        return Invoice.model_validate(
+            {
+                "kind": InvoiceKind.ISSUED,
+                "invoice_number": "F-2025-200",
+                "issued_at": issued_at,
+                "counterparty_name": "Privatkunde DE",
+                "counterparty_tax_id": "DE123456789",
+                "counterparty_country": "DE",
+                "base_total": Decimal("500.00"),
+                "iva_total": Decimal("95.00"),
+                "grand_total": Decimal("595.00"),
+                "currency": "EUR",
+                "lines": (
+                    InvoiceLine(
+                        description="Servicio digital B2C",
+                        quantity=Decimal("1"),
+                        unit_price=Decimal("500.00"),
+                        subtotal=Decimal("500.00"),
+                        iva_rate=resolve_iva_rate_token("RATE_21", issued_at, authority=operation),
+                        iva_amount=Decimal("95.00"),
+                        spending_category_id="servicio-digital",
+                        oss_rate_kind=require_iva_rate_kind(
+                            "general",
+                            effective_date=issued_at,
+                            authority=operation,
+                        ),
+                    ),
                 ),
-            ),
-            "payment_status": PaymentStatus.PAID,
-            "iva_category": IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            "operation_type": IntracomOperationType.S,
-            "oss_ioss_regime": OssIossRegime.UNION_SCHEME,
-            "oss_transaction_kind": TransactionKind.OSS_UNION_SERVICES,
-            "payment_id": _HEX64_C,
-        },
-    )
+                "payment_status": PaymentStatus.PAID,
+                "iva_category": require_iva_category(
+                    "intra_community_supply",
+                    effective_date=issued_at,
+                    authority=operation,
+                ),
+                "operation_type": IntracomOperationType.S,
+                "oss_ioss_regime": require_oss_ioss_regime(
+                    "union_scheme",
+                    effective_date=issued_at,
+                    authority=operation,
+                ),
+                "oss_transaction_kind": require_transaction_kind(
+                    "oss_union_services",
+                    effective_date=issued_at,
+                    operation=operation,
+                ),
+                "payment_id": _HEX64_C,
+            },
+        )
 
 
 def _populated_catalogue() -> InvoiceCatalogue:
@@ -183,36 +225,36 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
 
     domestic = next(v for v in loaded.values() if v.invoice_number == "F-2025-100")
     assert domestic.bucket_id == "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
-    assert domestic.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert domestic.iva_category == IvaCategory("domestic_general")
     assert domestic.retention_rate == Decimal("0.15")
     assert domestic.retention_amount == Decimal("150.00")
     assert domestic.payment_id == _HEX64_A
     assert domestic.linked_transaction_ids == (_HEX64_A, _HEX64_B)
     assert domestic.notes == "Factura con retención IRPF aplicable a profesional."
     assert domestic.operation_type is None
-    assert domestic.travel_agency_mediation is TravelAgencyMediationType.MEDIATED_SERVICE
+    assert domestic.travel_agency_mediation == TravelAgencyMediationType.from_registry("mediated_service")
     assert domestic.collected_on_behalf_of_tax_id == "A87654321"
     assert domestic.collected_on_behalf_of_name == "Colegiado Beneficiario SL"
     assert domestic.is_subvencion_ayuda is True
     assert domestic.oss_ioss_regime is None
     assert domestic.oss_transaction_kind is None
-    assert domestic.invoice_class is InvoiceClass.RECTIFICATIVA
+    assert domestic.invoice_class == InvoiceClass.from_registry("RECTIFICATIVA")
     assert domestic.series == "R"
     assert domestic.rectifies_invoice_number == "F-2025-099"
     assert domestic.operation_date == date(2025, 4, 8)
-    assert domestic.operation_date_role is InvoiceOperationDateRole.OPERATION_PERFORMED
+    assert domestic.operation_date_role == InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
     assert domestic.recargo_amount == Decimal("52.00")
     assert domestic.suplido_amount == Decimal("25.00")
 
     oss = next(v for v in loaded.values() if v.invoice_number == "F-2025-200")
-    assert oss.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert oss.iva_category == IvaCategory("intra_community_supply")
     assert oss.operation_type is IntracomOperationType.S
-    assert oss.oss_ioss_regime is OssIossRegime.UNION_SCHEME
-    assert oss.oss_transaction_kind is TransactionKind.OSS_UNION_SERVICES
+    assert oss.oss_ioss_regime == OssIossRegime("union_scheme")
+    assert oss.oss_transaction_kind == TransactionKind("oss_union_services")
     assert oss.payment_id == _HEX64_C
     assert oss.counterparty_eu_member_state is not None
     assert len(oss.lines) == 1
-    assert oss.lines[0].oss_rate_kind is IvaRateKind.GENERAL
+    assert oss.lines[0].oss_rate_kind == IvaRateKind("general")
 
 
 def test_invoice_catalogue_dropped_oss_transaction_kind_surfaces_at_load(
@@ -277,35 +319,42 @@ def _simplificada_advance_payment_invoice() -> Invoice:
     ADVANCE_PAYMENT_RECEIVED`` (LIVA art. 75.Dos).
     """
 
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_class": InvoiceClass.SIMPLIFICADA,
-            "invoice_number": "T-2025-500",
-            "issued_at": date(2025, 6, 20),
-            "operation_date": date(2025, 6, 15),
-            "operation_date_role": InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED,
-            "counterparty_name": "Cliente de mostrador",
-            "counterparty_tax_id": None,
-            "counterparty_country": "ES",
-            "base_total": Decimal("40.00"),
-            "iva_total": Decimal("8.40"),
-            "grand_total": Decimal("48.40"),
-            "currency": "EUR",
-            "lines": (
-                InvoiceLine(
-                    description="Reparación urgente",
-                    quantity=Decimal("1"),
-                    unit_price=Decimal("40.00"),
-                    subtotal=Decimal("40.00"),
-                    iva_rate=IvaRate.RATE_21,
-                    iva_amount=Decimal("8.40"),
+    issued_at = date(2025, 6, 20)
+    operation_date = date(2025, 6, 15)
+    with bundled_indexed_authority().operation() as operation:
+        return Invoice.model_validate(
+            {
+                "kind": InvoiceKind.ISSUED,
+                "invoice_class": invoice_class_simplificada(effective_date=issued_at),
+                "invoice_number": "T-2025-500",
+                "issued_at": issued_at,
+                "operation_date": operation_date,
+                "operation_date_role": advance_payment_received_role(effective_date=operation_date),
+                "counterparty_name": "Cliente de mostrador",
+                "counterparty_tax_id": None,
+                "counterparty_country": "ES",
+                "base_total": Decimal("40.00"),
+                "iva_total": Decimal("8.40"),
+                "grand_total": Decimal("48.40"),
+                "currency": "EUR",
+                "lines": (
+                    InvoiceLine(
+                        description="Reparación urgente",
+                        quantity=Decimal("1"),
+                        unit_price=Decimal("40.00"),
+                        subtotal=Decimal("40.00"),
+                        iva_rate=resolve_iva_rate_token("RATE_21", operation_date, authority=operation),
+                        iva_amount=Decimal("8.40"),
+                    ),
                 ),
-            ),
-            "payment_status": PaymentStatus.PAID,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
-        },
-    )
+                "payment_status": PaymentStatus.PAID,
+                "iva_category": require_iva_category(
+                    "domestic_general",
+                    effective_date=operation_date,
+                    authority=operation,
+                ),
+            },
+        )
 
 
 def test_simplificada_advance_payment_invoice_survives_encrypted_storage_roundtrip(
@@ -320,45 +369,47 @@ def test_simplificada_advance_payment_invoice_survives_encrypted_storage_roundtr
 
     restored = next(iter(loaded.values()))
     assert restored == original
-    assert restored.invoice_class is InvoiceClass.SIMPLIFICADA
+    assert restored.invoice_class == InvoiceClass.from_registry("SIMPLIFICADA")
     assert restored.counterparty_tax_id is None
     assert restored.operation_date == date(2025, 6, 15)
-    assert restored.operation_date_role is InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED
+    assert restored.operation_date_role == InvoiceOperationDateRole.from_registry("ADVANCE_PAYMENT_RECEIVED")
 
 
 def _foreign_currency_invoice() -> Invoice:
     """GBP invoice carrying the euro-conversion stamp resolved at ingest."""
 
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.RECEIVED,
-            "invoice_number": "GB-2025-300",
-            "issued_at": date(2025, 3, 14),
-            "counterparty_name": "Acme Ltd",
-            "counterparty_tax_id": "GB123456789",
-            "counterparty_country": "GB",
-            "base_total": Decimal("1000.00"),
-            "iva_total": Decimal("0.00"),
-            "grand_total": Decimal("1000.00"),
-            "currency": "GBP",
-            "lines": (
-                InvoiceLine(
-                    description="Cloud services",
-                    quantity=Decimal("1"),
-                    unit_price=Decimal("1000.00"),
-                    subtotal=Decimal("1000.00"),
-                    iva_rate=IvaRate.NOT_SUBJECT,
-                    iva_amount=Decimal("0.00"),
+    issued_at = date(2025, 3, 14)
+    with bundled_indexed_authority().operation() as operation:
+        return Invoice.model_validate(
+            {
+                "kind": InvoiceKind.RECEIVED,
+                "invoice_number": "GB-2025-300",
+                "issued_at": issued_at,
+                "counterparty_name": "Acme Ltd",
+                "counterparty_tax_id": "GB123456789",
+                "counterparty_country": "GB",
+                "base_total": Decimal("1000.00"),
+                "iva_total": Decimal("0.00"),
+                "grand_total": Decimal("1000.00"),
+                "currency": "GBP",
+                "lines": (
+                    InvoiceLine(
+                        description="Cloud services",
+                        quantity=Decimal("1"),
+                        unit_price=Decimal("1000.00"),
+                        subtotal=Decimal("1000.00"),
+                        iva_rate=resolve_iva_rate_token("NOT_SUBJECT", issued_at, authority=operation),
+                        iva_amount=Decimal("0.00"),
+                    ),
                 ),
-            ),
-            "payment_status": PaymentStatus.PAID,
-            # ECB EXR.D.GBP.EUR.SP00.A 2025-03-14 = 0.84183 (1 EUR = 0.84183 GBP);
-            # the stored rate is the inverted GBP->EUR multiplier.
-            "fx_rate": Decimal("1") / Decimal("0.84183"),
-            "fx_rate_date": date(2025, 3, 14),
-            "fx_rate_source": ECB_RATE_SOURCE_ID,
-        },
-    )
+                "payment_status": PaymentStatus.PAID,
+                # ECB EXR.D.GBP.EUR.SP00.A 2025-03-14 = 0.84183 (1 EUR = 0.84183 GBP);
+                # the stored rate is the inverted GBP->EUR multiplier.
+                "fx_rate": Decimal("1") / Decimal("0.84183"),
+                "fx_rate_date": issued_at,
+                "fx_rate_source": ECB_RATE_SOURCE_ID,
+            },
+        )
 
 
 def test_foreign_currency_conversion_stamp_survives_encrypted_storage_roundtrip(
@@ -436,38 +487,40 @@ def test_dropping_either_fx_provenance_field_surfaces_at_load(tmp_path: Path, dr
 def _record_lifecycle_stamped_invoice() -> Invoice:
     """Domestic invoice carrying both record-lifecycle timestamps non-default."""
 
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "ES-2025-900",
-            "issued_at": date(2025, 5, 2),
-            "counterparty_name": "Cliente Historico SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("500.00"),
-            "iva_total": Decimal("105.00"),
-            "grand_total": Decimal("605.00"),
-            "currency": "EUR",
-            "lines": (
-                InvoiceLine(
-                    description="Servicio profesional",
-                    quantity=Decimal("1"),
-                    unit_price=Decimal("500.00"),
-                    subtotal=Decimal("500.00"),
-                    iva_rate=IvaRate.RATE_21,
-                    iva_amount=Decimal("105.00"),
+    issued_at = date(2025, 5, 2)
+    with bundled_indexed_authority().operation() as operation:
+        return Invoice.model_validate(
+            {
+                "kind": InvoiceKind.ISSUED,
+                "invoice_number": "ES-2025-900",
+                "issued_at": issued_at,
+                "counterparty_name": "Cliente Historico SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "base_total": Decimal("500.00"),
+                "iva_total": Decimal("105.00"),
+                "grand_total": Decimal("605.00"),
+                "currency": "EUR",
+                "lines": (
+                    InvoiceLine(
+                        description="Servicio profesional",
+                        quantity=Decimal("1"),
+                        unit_price=Decimal("500.00"),
+                        subtotal=Decimal("500.00"),
+                        iva_rate=resolve_iva_rate_token("RATE_21", issued_at, authority=operation),
+                        iva_amount=Decimal("105.00"),
+                    ),
                 ),
-            ),
-            "payment_status": PaymentStatus.PENDING,
-            # Deliberately distinct from each other AND from issued_at: the
-            # record was entered three days after the document was issued and
-            # amended a month later. A fixture reusing issued_at for either
-            # would pass while the boundary confused the document date with the
-            # record date.
-            "created_at": datetime(2025, 5, 5, 9, 30, 0, tzinfo=UTC),
-            "updated_at": datetime(2025, 6, 11, 16, 45, 30, tzinfo=UTC),
-        },
-    )
+                "payment_status": PaymentStatus.PENDING,
+                # Deliberately distinct from each other AND from issued_at: the
+                # record was entered three days after the document was issued and
+                # amended a month later. A fixture reusing issued_at for either
+                # would pass while the boundary confused the document date with the
+                # record date.
+                "created_at": datetime(2025, 5, 5, 9, 30, 0, tzinfo=UTC),
+                "updated_at": datetime(2025, 6, 11, 16, 45, 30, tzinfo=UTC),
+            },
+        )
 
 
 def test_record_lifecycle_timestamps_survive_encrypted_storage_roundtrip(

@@ -17,6 +17,7 @@ from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_
 from ....core.bucket_pointer import pointer_path
 from ....core.i18n.render import clear_output_language_cache, tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from .subprocess_cli import _as_text_completed_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -47,19 +48,21 @@ def _profile_storage_env(*, storage_root: Path, tmp_path: Path) -> dict[str, str
 
 def _run_cli(*args: str, storage_root: Path, tmp_path: Path) -> subprocess.CompletedProcess[str]:
     """Execute the production entry point in a fresh interpreter."""
-    return run_audited_process(
-        [
-            sys.executable,
-            "-c",
-            "from cadrumo.entrypoints.cli.bootstrap import main; main()",
-            *args,
-        ],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=120,
-        check=False,
-        env=_profile_storage_env(storage_root=storage_root, tmp_path=tmp_path),
+    return _as_text_completed_process(
+        run_audited_process(
+            [
+                sys.executable,
+                "-c",
+                "from cadrumo.entrypoints.cli.bootstrap import main; main()",
+                *args,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=120,
+            check=False,
+            env=_profile_storage_env(storage_root=storage_root, tmp_path=tmp_path),
+        ),
     )
 
 

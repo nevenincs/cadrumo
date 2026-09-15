@@ -22,6 +22,7 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -37,8 +38,10 @@ from cadrumo.application.modelo.work_lifecycle import (
     list_work_units,
     rename_work_unit,
 )
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.errors import ModeloValidationError
@@ -49,7 +52,12 @@ from cadrumo.domain.modelos.work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    create_user_profile_record,
+)
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -91,14 +99,24 @@ def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
 
 
 def _seed_ready_profile(bucket_id: str) -> None:
-    seed_test_profile_record(
-        UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-        ),
+    with bundled_indexed_authority().operation():
+        seed_test_profile_record(
+            create_user_profile_record(
+                context=profile_creation_context_for_test(),
+                setup_state=ProfileSetupState.COMPLETE,
+                profile_id=bucket_id,
+                facts=_READY_PROFILE_FACTS,
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
+
+
+def _lifecycle_ports(repo: WorkUnitCatalogueRepository) -> WorkLifecyclePorts:
+    """Compose the two real repositories required by lifecycle actions."""
+    return WorkLifecyclePorts(
+        work_unit_repository=repo,
+        bucket_event_repository=BucketEventHistoryRepository(),
     )
 
 
@@ -223,17 +241,19 @@ def _create_action_work_unit(
     causante_ccaa: Any | None = None,
     clock: datetime = _T0,
 ) -> WorkUnit:
-    return create_work_unit(
-        bucket_id=_ACTION_BUCKET_ID,
-        modelo=modelo,
-        filing_year=period.filing_year,
-        period=period,
-        revision_id=revision_id,
-        name=name,
-        causante_ccaa=causante_ccaa,
-        repository=repo,
-        clock=clock,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return create_work_unit(
+            bucket_id=_ACTION_BUCKET_ID,
+            modelo=modelo,
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=revision_id,
+            name=name,
+            causante_ccaa=causante_ccaa,
+            ports=_lifecycle_ports(repo),
+            operation=operation,
+            clock=clock,
+        )
 
 
 def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
@@ -367,7 +387,7 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
             ),
         ),
     )
-    units = list_work_units(repository=repo)
+    units = list_work_units(ports=_lifecycle_ports(repo))
     keys = tuple((u.bucket_id, str(u.modelo), u.period.registry_token) for u in units)
     assert keys == (
         (_WORK_UNIT_BUCKET_A_ID, "130", "1T"),
@@ -397,26 +417,26 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
             ),
         ),
     )
-    only_a = list_work_units(bucket_id=_WORK_UNIT_BUCKET_A_ID, repository=repo)
+    only_a = list_work_units(bucket_id=_WORK_UNIT_BUCKET_A_ID, ports=_lifecycle_ports(repo))
     assert len(only_a) == 1
     assert only_a[0].bucket_id == _WORK_UNIT_BUCKET_A_ID
 
 
 def test_missing_work_unit_actions_raise_not_found(repo: WorkUnitCatalogueRepository) -> None:
     with pytest.raises(WorkUnitNotFoundError) as excinfo:
-        get_work_unit("missing", repository=repo)
+        get_work_unit("missing", ports=_lifecycle_ports(repo))
     assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
     assert isinstance(excinfo.value.context, dict)
     assert excinfo.value.context["work_unit_id"] == "missing"
 
     with pytest.raises(WorkUnitNotFoundError) as excinfo:
-        rename_work_unit("missing", "ignored", actor="test-operator", repository=repo)
+        rename_work_unit("missing", "ignored", actor="test-operator", ports=_lifecycle_ports(repo))
     assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
     assert isinstance(excinfo.value.context, dict)
     assert excinfo.value.context["work_unit_id"] == "missing"
 
     with pytest.raises(WorkUnitNotFoundError) as excinfo:
-        discard_work_unit("missing", actor="operator-A", repository=repo)
+        discard_work_unit("missing", actor="operator-A", ports=_lifecycle_ports(repo))
     assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
     assert isinstance(excinfo.value.context, dict)
     assert excinfo.value.context["work_unit_id"] == "missing"
@@ -429,7 +449,7 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: Work
         original.work_unit_id,
         "renta-q1-2026-final",
         actor="test-operator",
-        repository=repo,
+        ports=_lifecycle_ports(repo),
         clock=later,
     )
     assert renamed.work_unit_id == original.work_unit_id
@@ -454,7 +474,7 @@ def test_discard_work_unit_transitions_and_allows_omitted_reason(repo: WorkUnitC
         original.work_unit_id,
         actor="operator-A",
         reason="wrong-profile",
-        repository=repo,
+        ports=_lifecycle_ports(repo),
         clock=discard_time,
     )
     assert discarded.work_unit_id == original.work_unit_id
@@ -468,7 +488,7 @@ def test_discard_work_unit_transitions_and_allows_omitted_reason(repo: WorkUnitC
     omitted_reason_discard = discard_work_unit(
         omitted_reason_unit.work_unit_id,
         actor="operator-A",
-        repository=repo,
+        ports=_lifecycle_ports(repo),
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     assert omitted_reason_discard.discard_reason is None
@@ -483,14 +503,14 @@ def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogue
     discard_work_unit(
         unit.work_unit_id,
         actor="operator-A",
-        repository=repo,
+        ports=_lifecycle_ports(repo),
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     with pytest.raises(WorkUnitAlreadyDiscardedError, match=r"work|unit|already|discarded"):
         discard_work_unit(
             unit.work_unit_id,
             actor="operator-B",
-            repository=repo,
+            ports=_lifecycle_ports(repo),
             clock=datetime(2026, 3, 2, 12, 0, 0, tzinfo=UTC),
         )
 
@@ -504,11 +524,11 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
     discard_work_unit(
         unit.work_unit_id,
         actor="operator-A",
-        repository=repo,
+        ports=_lifecycle_ports(repo),
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|DISCARDED|state|mutation"):
-        rename_work_unit(unit.work_unit_id, "new-name", actor="test-operator", repository=repo)
+        rename_work_unit(unit.work_unit_id, "new-name", actor="test-operator", ports=_lifecycle_ports(repo))
 
 
 def test_list_work_units_respects_discarded_visibility_flag(repo: WorkUnitCatalogueRepository) -> None:
@@ -517,13 +537,13 @@ def test_list_work_units_respects_discarded_visibility_flag(repo: WorkUnitCatalo
     discard_work_unit(
         unit_to_discard.work_unit_id,
         actor="operator-A",
-        repository=repo,
+        ports=_lifecycle_ports(repo),
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
-    visible = list_work_units(repository=repo)
+    visible = list_work_units(ports=_lifecycle_ports(repo))
     assert {u.work_unit_id for u in visible} == {unit_draft.work_unit_id}
 
-    including_discarded = list_work_units(include_discarded=True, repository=repo)
+    including_discarded = list_work_units(include_discarded=True, ports=_lifecycle_ports(repo))
     assert {u.work_unit_id for u in including_discarded} == {
         unit_draft.work_unit_id,
         unit_to_discard.work_unit_id,
@@ -641,28 +661,29 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     new display names so the audit trail captures the full transition.
     """
 
-    from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from cadrumo.domain.buckets.event import BucketEventType
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_WORK_UNIT_EVENT_BUCKET_ID) as profile:
         _seed_ready_profile(profile.bucket_id)
         wu_repo = WorkUnitCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
-        unit = create_work_unit(
-            bucket_id=profile.bucket_id,
-            modelo="303",
-            filing_year=2026,
-            period=_P_2026_1T,
-            revision_id="2026-y-siguientes",
-            repository=wu_repo,
-            clock=_T0,
-        )
+        ports = WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo)
+        with bundled_indexed_authority().operation() as operation:
+            unit = create_work_unit(
+                bucket_id=profile.bucket_id,
+                modelo="303",
+                filing_year=2026,
+                period=_P_2026_1T,
+                revision_id="2026-y-siguientes",
+                ports=ports,
+                operation=operation,
+                clock=_T0,
+            )
         renamed = rename_work_unit(
             unit.work_unit_id,
             "renta-q1-renamed",
             actor="auditor-B",
-            repository=wu_repo,
-            bucket_event_repository=bv_repo,
+            ports=ports,
             clock=datetime(2026, 2, 5, 12, 0, 0, tzinfo=UTC),
         )
         events = bv_repo.load().for_bucket(renamed.bucket_id)

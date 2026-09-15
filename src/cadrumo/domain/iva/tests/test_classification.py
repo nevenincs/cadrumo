@@ -31,9 +31,9 @@ def _criteria(**overrides: object) -> IvaInvoiceClassificationCriteria:
     """Build a baseline ES-to-ES B2B goods ISSUED criteria with ``overrides`` applied."""
     base: dict[str, object] = {
         "transaction_date": date(2025, 6, 15),
-        "issuer_residency": IvaTerritorialScope._from_registry("es_mainland"),
-        "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
-        "customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        "issuer_residency": IvaTerritorialScope.from_registry("es_mainland"),
+        "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
+        "customer_tax_status": CustomerTaxStatus.from_registry("b2b_iva_registered"),
         "kind": TransactionKind("goods"),
         "direction": InvoiceKind.ISSUED,
         "rate_tier": IvaRateKind("general"),
@@ -63,7 +63,7 @@ _CLASSIFICATION_CASES = (
         "r03-electronics-reverse-charge",
         {
             "kind": TransactionKind("electronics_reverse_charge"),
-            "customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            "customer_tax_status": CustomerTaxStatus.from_registry("b2b_iva_registered"),
         },
         IvaCategory("domestic_reverse_charge"),
         "R03_electronics_reverse_charge",
@@ -74,7 +74,7 @@ _CLASSIFICATION_CASES = (
         "r04-immovable-b2c-exempt",
         {
             "kind": TransactionKind("immovable_property"),
-            "customer_tax_status": CustomerTaxStatus._from_registry("b2c_consumer"),
+            "customer_tax_status": CustomerTaxStatus.from_registry("b2c_consumer"),
         },
         IvaCategory("domestic_exempt"),
         "R04_immovable_property_exempt",
@@ -108,7 +108,7 @@ _CLASSIFICATION_CASES = (
     (
         "r10-intra-community-supply-goods",
         {
-            "customer_residency": IvaTerritorialScope._from_registry("eu_member"),
+            "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "customer_identification_state": require_eu_member_state("DE"),
             "kind": TransactionKind("goods"),
             "direction": InvoiceKind.ISSUED,
@@ -121,9 +121,9 @@ _CLASSIFICATION_CASES = (
     (
         "r11-intra-community-acquisition-goods",
         {
-            "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
+            "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "issuer_identification_state": require_eu_member_state("DE"),
-            "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
+            "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
             "kind": TransactionKind("goods"),
             "direction": InvoiceKind.RECEIVED,
         },
@@ -135,7 +135,7 @@ _CLASSIFICATION_CASES = (
     (
         "r12-services-b2b-eu-outbound",
         {
-            "customer_residency": IvaTerritorialScope._from_registry("eu_member"),
+            "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "customer_identification_state": require_eu_member_state("FR"),
             "kind": TransactionKind("services_general"),
             "direction": InvoiceKind.ISSUED,
@@ -148,9 +148,9 @@ _CLASSIFICATION_CASES = (
     (
         "r13-services-b2b-eu-inbound",
         {
-            "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
+            "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "issuer_identification_state": require_eu_member_state("FR"),
-            "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
+            "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
             "kind": TransactionKind("services_general"),
             "direction": InvoiceKind.RECEIVED,
         },
@@ -162,9 +162,9 @@ _CLASSIFICATION_CASES = (
     (
         "r19-oss-union-services",
         {
-            "customer_residency": IvaTerritorialScope._from_registry("eu_member"),
+            "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "customer_identification_state": require_eu_member_state("IT"),
-            "customer_tax_status": CustomerTaxStatus._from_registry("b2c_consumer"),
+            "customer_tax_status": CustomerTaxStatus.from_registry("b2c_consumer"),
             "kind": TransactionKind("oss_union_services"),
             "direction": InvoiceKind.ISSUED,
         },
@@ -176,7 +176,7 @@ _CLASSIFICATION_CASES = (
     (
         "r20-export-goods",
         {
-            "customer_residency": IvaTerritorialScope._from_registry("third_country"),
+            "customer_residency": IvaTerritorialScope.from_registry("third_country"),
             "kind": TransactionKind("goods"),
             "direction": InvoiceKind.ISSUED,
         },
@@ -188,8 +188,8 @@ _CLASSIFICATION_CASES = (
     (
         "r21-import-goods",
         {
-            "issuer_residency": IvaTerritorialScope._from_registry("third_country"),
-            "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
+            "issuer_residency": IvaTerritorialScope.from_registry("third_country"),
+            "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
             "kind": TransactionKind("goods"),
             "direction": InvoiceKind.RECEIVED,
         },
@@ -201,8 +201,8 @@ _CLASSIFICATION_CASES = (
     (
         "r22-services-outbound-b2b",
         {
-            "customer_residency": IvaTerritorialScope._from_registry("third_country"),
-            "customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            "customer_residency": IvaTerritorialScope.from_registry("third_country"),
+            "customer_tax_status": CustomerTaxStatus.from_registry("b2b_iva_registered"),
             "kind": TransactionKind("services_general"),
             "direction": InvoiceKind.ISSUED,
         },
@@ -217,8 +217,8 @@ _CLASSIFICATION_CASES = (
         # the Spanish rate rather than falling outside it.
         "r24-services-outbound-b2c",
         {
-            "customer_residency": IvaTerritorialScope._from_registry("third_country"),
-            "customer_tax_status": CustomerTaxStatus._from_registry("b2c_consumer"),
+            "customer_residency": IvaTerritorialScope.from_registry("third_country"),
+            "customer_tax_status": CustomerTaxStatus.from_registry("b2c_consumer"),
             "kind": TransactionKind("services_general"),
             "direction": InvoiceKind.ISSUED,
             "rate_tier": IvaRateKind("general"),
@@ -230,7 +230,7 @@ _CLASSIFICATION_CASES = (
     ),
     (
         "r30-canarias-issuer",
-        {"issuer_residency": IvaTerritorialScope._from_registry("es_canarias")},
+        {"issuer_residency": IvaTerritorialScope.from_registry("es_canarias")},
         IvaCategory("domestic_not_subject"),
         "R30_canarias_ceuta_melilla",
         None,
@@ -239,9 +239,9 @@ _CLASSIFICATION_CASES = (
     (
         "r99-fallthrough",
         {
-            "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
+            "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "issuer_identification_state": require_eu_member_state("DE"),
-            "customer_residency": IvaTerritorialScope._from_registry("eu_member"),
+            "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
             "customer_identification_state": require_eu_member_state("FR"),
             "kind": TransactionKind("goods"),
             "direction": InvoiceKind.ISSUED,
@@ -281,7 +281,7 @@ def test_r03_electronics_b2c_does_not_trigger_reverse_charge() -> None:
         result = classify_iva(
             _criteria(
                 kind=TransactionKind("electronics_reverse_charge"),
-                customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+                customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             ),
             operation=_authority_operation_for_test,
         )
@@ -310,15 +310,15 @@ def test_eu_member_residency_does_not_require_an_identification_state() -> None:
     """
     criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(2025, 6, 15),
-        issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
-        customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-        customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
+        customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+        customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
         kind=TransactionKind("goods"),
         direction=InvoiceKind.RECEIVED,
         issuer_identification_state=None,
     )
     assert criteria.issuer_identification_state is None
-    assert criteria.issuer_residency == IvaTerritorialScope._from_registry("eu_member")
+    assert criteria.issuer_residency == IvaTerritorialScope.from_registry("eu_member")
 
 
 def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
@@ -326,9 +326,9 @@ def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
     with pytest.raises(ValueError, match="rate_tier is required"):
         IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
             kind=TransactionKind("goods"),
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
@@ -341,9 +341,9 @@ def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
         # Should NOT raise: construction RC routes to DOMESTIC_REVERSE_CHARGE.
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
             kind=TransactionKind("construction_reverse_charge"),
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
@@ -357,9 +357,9 @@ def test_es_to_es_immovable_property_does_not_require_rate_tier() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             kind=TransactionKind("immovable_property"),
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
@@ -374,10 +374,10 @@ def test_cross_border_criteria_do_not_require_rate_tier() -> None:
         # Should NOT raise: ES->DE intra-community supply doesn't need rate_tier.
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-            customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("DE"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
             kind=TransactionKind("goods"),
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
@@ -421,7 +421,7 @@ def test_classification_rate_resolution_returns_none_for_export() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         result = classify_iva(
             _criteria(
-                customer_residency=IvaTerritorialScope._from_registry("third_country"),
+                customer_residency=IvaTerritorialScope.from_registry("third_country"),
                 kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
             ),

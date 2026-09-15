@@ -30,11 +30,11 @@ def test_member_names_preserved(operation: PinnedAuthorityOperation) -> None:
 
 
 def test_string_values_preserved() -> None:
-    assert IvaTerritorialScope._from_registry("es_mainland").value == "es_mainland"
-    assert IvaTerritorialScope._from_registry("es_canarias").value == "es_canarias"
-    assert IvaTerritorialScope._from_registry("es_ceuta_melilla").value == "es_ceuta_melilla"
-    assert IvaTerritorialScope._from_registry("eu_member").value == "eu_member"
-    assert IvaTerritorialScope._from_registry("third_country").value == "third_country"
+    assert IvaTerritorialScope.from_registry("es_mainland").value == "es_mainland"
+    assert IvaTerritorialScope.from_registry("es_canarias").value == "es_canarias"
+    assert IvaTerritorialScope.from_registry("es_ceuta_melilla").value == "es_ceuta_melilla"
+    assert IvaTerritorialScope.from_registry("eu_member").value == "eu_member"
+    assert IvaTerritorialScope.from_registry("third_country").value == "third_country"
 
 
 def test_strenum_value_lookup_round_trips(operation: PinnedAuthorityOperation) -> None:

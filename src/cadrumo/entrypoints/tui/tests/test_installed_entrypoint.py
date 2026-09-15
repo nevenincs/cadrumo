@@ -79,6 +79,7 @@ def test_the_tui_module_refuses_retired_destination_session_arguments(tmp_path: 
     )
 
     assert completed.returncode == 2
+    assert isinstance(completed.stderr, str)
     assert "unrecognised TUI module arguments" in completed.stderr
     assert "Traceback (most recent call last)" not in completed.stderr
     assert not outcome_file.exists()

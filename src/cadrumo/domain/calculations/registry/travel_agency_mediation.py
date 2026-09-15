@@ -49,7 +49,7 @@ class TravelAgencyMediationCatalogue:
             if not raw:
                 raise RegistryValidationError("travel-agency mediation token must be non-empty")
             try:
-                token = TravelAgencyMediationType._from_registry(raw)
+                token = TravelAgencyMediationType.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError(
                     "travel-agency mediation token must be a non-empty string",
@@ -122,7 +122,7 @@ def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> 
 def _catalogue(entries: Mapping[str, str]) -> TravelAgencyMediationCatalogue:
     definitions: list[TravelAgencyMediationDefinition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
-        token = TravelAgencyMediationType._from_registry(raw_token)
+        token = TravelAgencyMediationType.from_registry(raw_token)
         prefix = f"{_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(
@@ -137,7 +137,7 @@ def _catalogue(entries: Mapping[str, str]) -> TravelAgencyMediationCatalogue:
         )
     if len(definitions) != len({item.token for item in definitions}):
         raise RegistryValidationError("travel-agency mediation catalogue contains duplicate tokens")
-    air_token = TravelAgencyMediationType._from_registry(_required(entries, _AIR_PASSENGER_TRANSPORT_KEY))
+    air_token = TravelAgencyMediationType.from_registry(_required(entries, _AIR_PASSENGER_TRANSPORT_KEY))
     if air_token not in {item.token for item in definitions}:
         raise RegistryValidationError("travel-agency mediation air token is not in the declared order")
     return TravelAgencyMediationCatalogue(

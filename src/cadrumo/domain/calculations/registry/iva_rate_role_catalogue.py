@@ -39,7 +39,8 @@ class IvaRateRole(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @property
@@ -136,7 +137,7 @@ def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> 
 def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaRateRoleCatalogue:
     definitions: list[IvaRateRoleDefinition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
-        token = IvaRateRole._from_registry(raw_token)
+        token = IvaRateRole.from_registry(raw_token)
         prefix = f"{_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(

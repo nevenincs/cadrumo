@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -93,25 +93,27 @@ def test_needs_isolation():
 
 def _nested_pytest(package: Path, *args: str) -> subprocess.CompletedProcess[str]:
     """Run a real nested pytest over ``package`` with the shared hook installed."""
-    return run_audited_process(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-p",
-            "no:cacheprovider",
-            "-c",
-            str(package / "pytest.ini"),
-            "-v",
-            *args,
-            str(package / "test_generated.py"),
-        ],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=300,
-        check=False,
+    return ensure_text_completed_process(
+        run_audited_process(
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "-p",
+                "no:cacheprovider",
+                "-c",
+                str(package / "pytest.ini"),
+                "-v",
+                *args,
+                str(package / "test_generated.py"),
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=300,
+            check=False,
+        )
     )
 
 

@@ -395,7 +395,8 @@ class ProportionalityKind:
         return self
 
     @classmethod
-    def _from_registry(cls, token: str, **roles: bool) -> Self:
+    def from_registry(cls, token: str, **roles: bool) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(token, _registry_validated=True, **roles)
 
     @classmethod
@@ -494,7 +495,8 @@ class StatutoryCapPeriod:
         return self
 
     @classmethod
-    def _from_registry(cls, token: str, *, is_per_person: bool) -> Self:
+    def from_registry(cls, token: str, *, is_per_person: bool) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(token, is_per_person=is_per_person, _registry_validated=True)
 
     @classmethod

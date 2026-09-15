@@ -25,7 +25,7 @@ from __future__ import annotations
 import html
 import json
 from functools import cache
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, override
 
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
@@ -165,7 +165,7 @@ def _frame_header(parsed_frame: SequenceFrame, tokens: tuple[CommandToken, ...])
     The authored ``@step`` sentence (``SequenceFrame.step_description``) wins when
     present; otherwise the leaf verb's help summary carries the instruction.
     """
-    authored = getattr(parsed_frame, "step_description", None)
+    authored = parsed_frame.step_description
     if authored and authored.strip():
         return authored.strip()
     return _leaf_help_summary(tokens)
@@ -348,8 +348,8 @@ def _render_output_html(view: dict[str, str] | None, *, css_class: str) -> str:
     data_format = html.escape(view["format"])
     if view["format"] == "json":
         from pygments import highlight
-        from pygments.formatters import HtmlFormatter
-        from pygments.lexers import JsonLexer
+        from pygments.formatters.html import HtmlFormatter
+        from pygments.lexers.data import JsonLexer
 
         # No `highlight` class here: the docs' `.content .highlight` code-block
         # chrome would out-specify this panel's layout. The token spans are
@@ -435,7 +435,7 @@ class CliSequenceDirective(Directive):
     optional_arguments = 0
     final_argument_whitespace = False
     has_content = True
-    option_spec: ClassVar[dict[str, object]] = {
+    option_spec: dict[str, object] = {
         "seed": directives.unchanged,
         "verify": directives.unchanged,
         "shells": directives.unchanged,

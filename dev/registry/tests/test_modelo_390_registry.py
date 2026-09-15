@@ -600,7 +600,7 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(r
             transaction_date=date(2025, idx * 3, 15),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection._from_registry("repercutido"),
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
             base_amount=Decimal("1000") * idx,
             iva_amount=amount,
             observation_role=IvaLedgerObservationRole.SETTLEMENT,

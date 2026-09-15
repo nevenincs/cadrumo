@@ -48,7 +48,7 @@ _EXPECTED_RAISING_FUNCTIONS = frozenset(
         "DeadlineEngine.explain",
         "DeadlineEngine._deadline_windows",
         "DeadlineEngine._evaluate_conditions",
-        "_indexed_deadline_windows",
+        "indexed_deadline_windows",
     },
 )
 
@@ -63,8 +63,8 @@ def _profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
                 "tax_id": "X1234567L",
                 "iva_regime": IVARegime("GENERAL"),
                 "iva": ModeloIVAProfile(
-                    tax_territory=M303TaxTerritory._from_registry("common_regime"),
-                    regime_composition=M303RegimeComposition._from_registry("general"),
+                    tax_territory=M303TaxTerritory.from_registry("common_regime"),
+                    regime_composition=M303RegimeComposition.from_registry("general"),
                     redeme_enrolled=False,
                     cash_accounting_regime_enrolled=False,
                     voluntary_sii_enrolled=False,

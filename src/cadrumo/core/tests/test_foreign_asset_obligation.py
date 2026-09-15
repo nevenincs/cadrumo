@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_registry_projection_creates_an_opaque_group_token() -> None:
-    token = ForeignAssetObligationGroup._from_registry("cuentas")
+    token = ForeignAssetObligationGroup.from_registry("cuentas")
 
     assert isinstance(token, ForeignAssetObligationGroup)
     assert token.value == "cuentas"

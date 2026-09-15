@@ -65,7 +65,7 @@ class CalendarCcaaCatalogue:
             if not raw:
                 raise RegistryValidationError("calendar CCAA code must be non-empty")
             try:
-                token = CalendarCCAA._from_registry(raw)
+                token = CalendarCCAA.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("calendar CCAA code must be a string token") from exc
         else:
@@ -183,7 +183,7 @@ def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
         member_name = _required(entries, f"{prefix}member_name").upper()
         definitions.append(
             CalendarCcaaDefinition(
-                token=CalendarCCAA._from_registry(code),
+                token=CalendarCCAA.from_registry(code),
                 member_name=member_name,
                 description=_required(entries, f"{prefix}description"),
                 territory_kind=_required(entries, f"{prefix}territory_kind"),

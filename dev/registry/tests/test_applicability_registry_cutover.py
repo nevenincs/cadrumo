@@ -186,7 +186,7 @@ def _literal_equivalent_rule() -> ModeloApplicabilityRule:
     """The Python-literal shape the fragment above transcribes, for the equivalence proof."""
     return ModeloApplicabilityRule(
         modelo=Modelo("100"),
-        applicable_entity_types=frozenset({EntityType._from_registry("natural_person")}),
+        applicable_entity_types=frozenset({EntityType.from_registry("natural_person")}),
         applicable_fiscal_residencies=frozenset({FiscalResidency.from_registry("resident_irpf")}),
         applicable_reason="applies",
         not_applicable_reason="does not apply",
@@ -199,12 +199,12 @@ def _representative_profiles() -> tuple[TaxpayerProfile, ...]:
     return (
         TaxpayerProfile(
             tax_id="12345678Z",
-            entity_type=EntityType._from_registry("natural_person"),
+            entity_type=EntityType.from_registry("natural_person"),
             fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
             iva_regime=IVARegime("no_aplica"),
         ),
         TaxpayerProfile(
-            tax_id="B12345674", entity_type=EntityType._from_registry("legal_entity"), iva_regime=IVARegime("no_aplica")
+            tax_id="B12345674", entity_type=EntityType.from_registry("legal_entity"), iva_regime=IVARegime("no_aplica")
         ),
         TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("no_aplica")),
     )

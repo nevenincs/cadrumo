@@ -92,7 +92,7 @@ def test_temporal_acogimiento_takes_the_tranche_and_not_the_increase() -> None:
     statute withholds -- an over-grant produced by the axis meant to correct an
     under-grant.
     """
-    carer = _older_child(DescendantRelacion._from_registry("acogimiento_temporal"))
+    carer = _older_child(DescendantRelacion.from_registry("acogimiento_temporal"))
 
     assert carer.meets_non_income_conditions(_YEAR, context=_FACT_CONTEXT) is True
     assert carer.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
@@ -100,7 +100,7 @@ def test_temporal_acogimiento_takes_the_tranche_and_not_the_increase() -> None:
 
 def test_tutela_takes_the_tranche_and_not_the_increase() -> None:
     """Art. 58.1 names tutela; Art. 58.2 omits it. One word of scope difference."""
-    guardian = _older_child(DescendantRelacion._from_registry("tutela"))
+    guardian = _older_child(DescendantRelacion.from_registry("tutela"))
 
     assert guardian.meets_non_income_conditions(_YEAR, context=_FACT_CONTEXT) is True
     assert guardian.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
@@ -122,7 +122,7 @@ def test_every_entitling_relacion_opens_the_window_with_its_own_anchor(
     anchor = date(_YEAR, 3, 1)
     child = (
         _older_child(relacion, inscripcion_registro_civil_date=anchor)
-        if relacion is DescendantRelacion._from_registry("adoptado")
+        if relacion is DescendantRelacion.from_registry("adoptado")
         else _older_child(relacion, acogimiento_resolucion_date=anchor)
     )
 
@@ -138,7 +138,7 @@ def test_the_increase_is_age_independent_for_an_entitling_relacion() -> None:
     """
     teenager = DescendantInfo(
         birth_date=date(2010, 1, 1),
-        relacion=DescendantRelacion._from_registry("adoptado"),
+        relacion=DescendantRelacion.from_registry("adoptado"),
         inscripcion_registro_civil_date=date(2024, 6, 1),
     )
 
@@ -160,7 +160,7 @@ def test_a_fostered_then_adopted_child_gets_three_periods_in_total_not_six() -> 
     """
     child = DescendantInfo(
         birth_date=_OLD_BIRTH,
-        relacion=DescendantRelacion._from_registry("adoptado"),
+        relacion=DescendantRelacion.from_registry("adoptado"),
         acogimiento_resolucion_date=date(2019, 5, 1),
         inscripcion_registro_civil_date=date(2022, 6, 1),
     )
@@ -185,7 +185,7 @@ def test_the_madrid_window_anchors_on_the_adoption_while_art_58_2_anchors_earlie
     """
     child = DescendantInfo(
         birth_date=_OLD_BIRTH,
-        relacion=DescendantRelacion._from_registry("adoptado"),
+        relacion=DescendantRelacion.from_registry("adoptado"),
         acogimiento_resolucion_date=date(2019, 5, 1),
         inscripcion_registro_civil_date=date(2022, 6, 1),
     )
@@ -200,13 +200,13 @@ def test_the_madrid_window_anchors_on_the_adoption_while_art_58_2_anchors_earlie
 @pytest.mark.parametrize(
     ("relacion", "field"),
     [
-        (DescendantRelacion._from_registry("tutela"), "inscripcion_registro_civil_date"),
-        (DescendantRelacion._from_registry("tutela"), "acogimiento_resolucion_date"),
-        (DescendantRelacion._from_registry("acogimiento_temporal"), "inscripcion_registro_civil_date"),
-        (DescendantRelacion._from_registry("acogimiento_temporal"), "acogimiento_resolucion_date"),
-        (DescendantRelacion._from_registry("descendiente"), "inscripcion_registro_civil_date"),
-        (DescendantRelacion._from_registry("descendiente"), "acogimiento_resolucion_date"),
-        (DescendantRelacion._from_registry("acogimiento_preadoptivo_o_permanente"), "inscripcion_registro_civil_date"),
+        (DescendantRelacion.from_registry("tutela"), "inscripcion_registro_civil_date"),
+        (DescendantRelacion.from_registry("tutela"), "acogimiento_resolucion_date"),
+        (DescendantRelacion.from_registry("acogimiento_temporal"), "inscripcion_registro_civil_date"),
+        (DescendantRelacion.from_registry("acogimiento_temporal"), "acogimiento_resolucion_date"),
+        (DescendantRelacion.from_registry("descendiente"), "inscripcion_registro_civil_date"),
+        (DescendantRelacion.from_registry("descendiente"), "acogimiento_resolucion_date"),
+        (DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"), "inscripcion_registro_civil_date"),
     ],
 )
 def test_an_entry_date_under_an_excluded_relacion_refuses(
@@ -231,9 +231,9 @@ def test_an_entry_date_under_an_excluded_relacion_refuses(
 @pytest.mark.parametrize(
     "relacion",
     [
-        DescendantRelacion._from_registry("tutela"),
-        DescendantRelacion._from_registry("acogimiento_temporal"),
-        DescendantRelacion._from_registry("descendiente"),
+        DescendantRelacion.from_registry("tutela"),
+        DescendantRelacion.from_registry("acogimiento_temporal"),
+        DescendantRelacion.from_registry("descendiente"),
     ],
 )
 def test_the_predicate_withholds_even_if_an_excluded_record_somehow_holds_a_date(
@@ -297,23 +297,23 @@ def test_an_entitling_relacion_without_its_date_is_valid_and_withholds(
     ("child", "reason"),
     [
         (
-            DescendantInfo(birth_date=date(2023, 1, 1), relacion=DescendantRelacion._from_registry("adoptado")),
+            DescendantInfo(birth_date=date(2023, 1, 1), relacion=DescendantRelacion.from_registry("adoptado")),
             "already under three, so the ordinary limb grants it anyway",
         ),
         (
-            DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion._from_registry("acogimiento_temporal")),
+            DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion.from_registry("acogimiento_temporal")),
             "excluded from the limb, so it has no anchor to be missing",
         ),
         (
             DescendantInfo(
                 birth_date=_OLD_BIRTH,
-                relacion=DescendantRelacion._from_registry("adoptado"),
+                relacion=DescendantRelacion.from_registry("adoptado"),
                 convive_con_contribuyente=False,
             ),
             "not cohabiting, so no mínimo applies at all",
         ),
         (
-            DescendantInfo(birth_date=date(1990, 1, 1), relacion=DescendantRelacion._from_registry("adoptado")),
+            DescendantInfo(birth_date=date(1990, 1, 1), relacion=DescendantRelacion.from_registry("adoptado")),
             "over 25 with no discapacidad, so no tranche for the increase to attach to",
         ),
     ],
@@ -337,13 +337,13 @@ def test_an_unstated_relacion_with_an_inscription_reads_as_adoptado() -> None:
     """
     child = DescendantInfo(birth_date=_OLD_BIRTH, inscripcion_registro_civil_date=date(2024, 2, 1))
 
-    assert child.relacion is DescendantRelacion._from_registry("adoptado")
+    assert child.relacion is DescendantRelacion.from_registry("adoptado")
     assert child.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is True
 
 
 def test_an_unstated_relacion_defaults_to_the_ordinary_descendant() -> None:
     """Absence of the fact means an ordinary descendant, the overwhelming case."""
-    assert DescendantInfo(birth_date=_OLD_BIRTH).relacion is DescendantRelacion._from_registry("descendiente")
+    assert DescendantInfo(birth_date=_OLD_BIRTH).relacion is DescendantRelacion.from_registry("descendiente")
 
 
 # ── the entry doors carry the axis ──────────────────────────────────────────
@@ -421,20 +421,20 @@ def _maximal_descendants() -> tuple[DescendantInfo, ...]:
         )
 
     return (
-        _member(birth_date=date(2011, 2, 3), relacion=DescendantRelacion._from_registry("descendiente")),
+        _member(birth_date=date(2011, 2, 3), relacion=DescendantRelacion.from_registry("descendiente")),
         _member(
             birth_date=date(2012, 3, 4),
-            relacion=DescendantRelacion._from_registry("adoptado"),
+            relacion=DescendantRelacion.from_registry("adoptado"),
             acogimiento_resolucion_date=date(2018, 4, 5),
             inscripcion_registro_civil_date=date(2020, 5, 6),
         ),
         _member(
             birth_date=date(2013, 4, 5),
-            relacion=DescendantRelacion._from_registry("acogimiento_preadoptivo_o_permanente"),
+            relacion=DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
             acogimiento_resolucion_date=date(2019, 6, 7),
         ),
-        _member(birth_date=date(2014, 5, 6), relacion=DescendantRelacion._from_registry("acogimiento_temporal")),
-        _member(birth_date=date(2015, 6, 7), relacion=DescendantRelacion._from_registry("tutela")),
+        _member(birth_date=date(2014, 5, 6), relacion=DescendantRelacion.from_registry("acogimiento_temporal")),
+        _member(birth_date=date(2015, 6, 7), relacion=DescendantRelacion.from_registry("tutela")),
     )
 
 
@@ -460,20 +460,20 @@ def test_deleting_the_stored_relacion_changes_the_reloaded_record() -> None:
     record degrades to an ordinary descendant, which withholds nothing it was
     entitled to, rather than silently becoming an entitling one.
     """
-    temporal = DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion._from_registry("acogimiento_temporal"))
+    temporal = DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion.from_registry("acogimiento_temporal"))
     facts = dict(descendant_facts_from_list((temporal,)))
     assert facts.pop("renta_family.descendiente.0.relacion") == "acogimiento_temporal"
 
     (reloaded,) = descendant_list_from_facts(facts)
 
     assert reloaded != temporal
-    assert reloaded.relacion is DescendantRelacion._from_registry("descendiente")
+    assert reloaded.relacion is DescendantRelacion.from_registry("descendiente")
     assert reloaded.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
 
 
 def test_corrupting_the_stored_relacion_refuses_rather_than_coercing() -> None:
     """A present-but-unreadable token is refused, not resolved to the default."""
-    child = DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion._from_registry("tutela"))
+    child = DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion.from_registry("tutela"))
     facts = dict(descendant_facts_from_list((child,)))
     facts["renta_family.descendiente.0.relacion"] = "acogimiento"
 
@@ -487,7 +487,7 @@ def test_a_stored_entry_date_under_an_excluded_relacion_refuses_on_reload() -> N
     The coherence rule is enforced by the canonical record itself, so it holds
     on every read path rather than only at the doors that happen to check.
     """
-    child = DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion._from_registry("acogimiento_temporal"))
+    child = DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion.from_registry("acogimiento_temporal"))
     facts = dict(descendant_facts_from_list((child,)))
     facts["renta_family.descendiente.0.acogimiento_resolucion"] = "2020-01-01"
 
@@ -509,7 +509,7 @@ class TestGuardaYCustodiaJudicial:
     def _child(*, acogimiento_resolucion_date: date | None = None) -> DescendantInfo:
         return DescendantInfo(
             birth_date=_OLD_BIRTH,
-            relacion=DescendantRelacion._from_registry("guarda_y_custodia_judicial"),
+            relacion=DescendantRelacion.from_registry("guarda_y_custodia_judicial"),
             acogimiento_resolucion_date=acogimiento_resolucion_date,
         )
 
@@ -534,7 +534,7 @@ class TestGuardaYCustodiaJudicial:
 
     def test_it_never_opens_the_art_58_2_entry_event_window(self) -> None:
         """Absent from "adopción o acogimiento, tanto preadoptivo como permanente"."""
-        assert DescendantRelacion._from_registry(
+        assert DescendantRelacion.from_registry(
             "guarda_y_custodia_judicial"
         ) not in descendant_relacion_entitling_tokens(
             effective_date=_FACT_CONTEXT.filing_period,
@@ -561,7 +561,7 @@ class TestGuardaYCustodiaJudicial:
         is a non-member, so a later reader does not admit it on the assumption
         that its omission was an oversight.
         """
-        assert DescendantRelacion._from_registry("guarda_y_custodia_judicial") not in art_81_1_maternity_relations(
+        assert DescendantRelacion.from_registry("guarda_y_custodia_judicial") not in art_81_1_maternity_relations(
             context=_FACT_CONTEXT
         )
 
@@ -569,7 +569,7 @@ class TestGuardaYCustodiaJudicial:
         """A member no operator can select is not a modelled case."""
         parsed = parse_descendiente_flag(f"NACIMIENTO={_OLD_BIRTH.isoformat()},RELACION=guarda_y_custodia_judicial")
 
-        assert parsed.relacion is DescendantRelacion._from_registry("guarda_y_custodia_judicial")
+        assert parsed.relacion is DescendantRelacion.from_registry("guarda_y_custodia_judicial")
 
     def test_it_survives_the_fact_roundtrip(self) -> None:
         """The relación is persisted and reloaded rather than defaulting back.
@@ -582,7 +582,7 @@ class TestGuardaYCustodiaJudicial:
         reloaded = descendant_list_from_facts(dict(descendant_facts_from_list(original)))
 
         assert reloaded == original
-        assert reloaded[0].relacion is DescendantRelacion._from_registry("guarda_y_custodia_judicial")
+        assert reloaded[0].relacion is DescendantRelacion.from_registry("guarda_y_custodia_judicial")
 
 
 def test_no_grandchild_member_exists_on_the_relacion_axis() -> None:

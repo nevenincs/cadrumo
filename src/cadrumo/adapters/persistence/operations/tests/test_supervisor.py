@@ -763,7 +763,8 @@ def test_loaded_snapshot_routes_refuse_definition_drift_before_return_or_mutatio
             if route == "replay":
                 await restarted.replay(operation_id, 0, limit=20)
             elif route == "acknowledge_cancellation":
-                await restarted._acknowledge_cancellation(snapshot)
+                context = restarted._build_context(snapshot)
+                await context.cancellation._acknowledge(snapshot)
             elif route == "escalate_cleanup_deadline":
                 await restarted._escalate_cleanup_deadline(operation_id)
             else:

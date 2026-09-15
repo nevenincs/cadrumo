@@ -23,7 +23,6 @@ from ...core.type_guards import is_object_list, is_object_mapping, is_str_keyed_
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import (
     GovernedFactSource,
-    cache_governed_projection,
     governed_facts_in_scope,
 )
 from ..calculations.registry.iva_category_catalogue import (
@@ -57,7 +56,8 @@ class _IvaRegistryToken(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -205,7 +205,7 @@ class IvaComponentVocabulary:
             if not raw:
                 raise IvaValidationError(f"{label} must be a non-empty string")
             try:
-                token = token_type._from_registry(raw)
+                token = token_type.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise IvaValidationError(f"{label} must be a non-empty string") from exc
         else:
@@ -615,21 +615,6 @@ def _cuota_settlement_catalogue_from_entries(
     return catalogue
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_cuota_settlement_catalogue(effective_date: date) -> IvaCuotaSettlementCatalogue:
-    """Cache the immutable 0084 cuota-settlement projection."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise IvaValidationError(
-            "IVA cuota-settlement catalogue requires an explicit authority operation or scope",
-        )
-    entries = _resolve_component_catalogue_entries(
-        effective_date=effective_date,
-        authority=authority,
-    )
-    return _cuota_settlement_catalogue_from_entries(entries)
-
-
 def registry_cuota_settlement_catalogue(
     *,
     effective_date: date | None = None,
@@ -677,7 +662,7 @@ def _component_axis_membership[IvaRegistryTokenT: _IvaRegistryToken](
     if not observed.issubset(set(raw_tokens)):
         missing = sorted(observed - set(raw_tokens))
         raise IvaValidationError(f"{label} rows use undeclared tokens {missing!r}")
-    return frozenset(token_type._from_registry(raw_token) for raw_token in raw_tokens)
+    return frozenset(token_type.from_registry(raw_token) for raw_token in raw_tokens)
 
 
 def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaComponentVocabulary:
@@ -743,21 +728,6 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
             ),
         ),
     )
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_component_vocabulary(effective_date: date) -> IvaComponentVocabulary:
-    """Cache the immutable 0084 component-axis vocabulary."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise IvaValidationError(
-            "IVA component vocabulary requires an explicit authority operation or scope",
-        )
-    entries = _resolve_component_catalogue_entries(
-        effective_date=effective_date,
-        authority=authority,
-    )
-    return _component_vocabulary_from_entries(entries)
 
 
 def registry_component_vocabulary(
@@ -870,31 +840,6 @@ def _category_projection_from_entries(
     return members
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_category_projection(
-    effective_date: date,
-    projection: CategoryProjectionName,
-) -> frozenset[IvaCategory]:
-    """Cache one immutable category projection from the bundled authority."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise IvaValidationError(
-            "IVA category projection requires an explicit authority operation or scope",
-        )
-    entries = _resolve_component_catalogue_entries(
-        effective_date=effective_date,
-        authority=authority,
-    )
-    return _category_projection_from_entries(
-        entries,
-        projection,
-        resolve_iva_category_catalogue(
-            effective_date=effective_date,
-            authority=authority,
-        ),
-    )
-
-
 def registry_category_projection(
     projection: CategoryProjectionName,
     *,
@@ -999,20 +944,6 @@ def _project_component_catalogue(
             )
         projected[(category, kind)] = row
     return MappingProxyType(projected)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_component_catalogue(effective_date: date) -> ComponentCatalogue:
-    """Cache the immutable bundled projection by its legal effective date."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise IvaValidationError(
-            "IVA component catalogue requires an explicit authority operation or scope",
-        )
-    return _project_component_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    )
 
 
 def registry_component_catalogue(

@@ -57,7 +57,7 @@ class SituacionFamiliarCatalogue:
             if not raw:
                 raise RegistryValidationError("family-situation token must be non-empty")
             try:
-                token = SituacionFamiliar._from_registry(raw)
+                token = SituacionFamiliar.from_registry(raw)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("family-situation token must be a non-empty string") from exc
         else:
@@ -158,7 +158,7 @@ def resolve_situacion_familiar_catalogue(
     definitions: list[SituacionFamiliarDefinition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
         try:
-            token = SituacionFamiliar._from_registry(raw_token)
+            token = SituacionFamiliar.from_registry(raw_token)
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError("family-situation vocabulary contains an invalid token") from exc
         prefix = f"{_PREFIX}{raw_token}"

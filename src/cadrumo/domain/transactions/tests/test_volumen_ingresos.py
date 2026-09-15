@@ -33,10 +33,10 @@ def authority() -> ValidatedRegistryAuthority:
     ("concepto", "counts"),
     [
         (None, True),
-        (ConceptoIngreso._from_registry("ordinario"), True),
-        (ConceptoIngreso._from_registry("subvencion_corriente"), True),
-        (ConceptoIngreso._from_registry("subvencion_capital"), False),
-        (ConceptoIngreso._from_registry("indemnizacion"), False),
+        (ConceptoIngreso.from_registry("ordinario"), True),
+        (ConceptoIngreso.from_registry("subvencion_corriente"), True),
+        (ConceptoIngreso.from_registry("subvencion_capital"), False),
+        (ConceptoIngreso.from_registry("indemnizacion"), False),
     ],
 )
 def test_the_predicate_splits_where_the_instrucciones_split(
@@ -65,10 +65,10 @@ def test_the_two_subvencion_members_land_on_opposite_sides(authority: ValidatedR
     volume. Stated as its own test so the failure names the reason.
     """
     assert counts_toward_volumen_de_ingresos(
-        ConceptoIngreso._from_registry("subvencion_corriente"), effective_date=date(2026, 4, 1), authority=authority
+        ConceptoIngreso.from_registry("subvencion_corriente"), effective_date=date(2026, 4, 1), authority=authority
     )
     assert not counts_toward_volumen_de_ingresos(
-        ConceptoIngreso._from_registry("subvencion_capital"), effective_date=date(2026, 4, 1), authority=authority
+        ConceptoIngreso.from_registry("subvencion_capital"), effective_date=date(2026, 4, 1), authority=authority
     )
 
 
@@ -94,8 +94,8 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     declared = frozenset(ConceptoIngreso(token) for token in payload.entities)
 
     assert declared == {
-        ConceptoIngreso._from_registry("subvencion_capital"),
-        ConceptoIngreso._from_registry("indemnizacion"),
+        ConceptoIngreso.from_registry("subvencion_capital"),
+        ConceptoIngreso.from_registry("indemnizacion"),
     }
 
 

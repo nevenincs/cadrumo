@@ -15,13 +15,14 @@ explicit opt-in for a re-run, and it still says what it skipped.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-import yaml
 from typer.testing import CliRunner
 
 from ..cli import app
+from ..manager import LocaleManager, LocaleNode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -30,13 +31,19 @@ _ABSENT = "modelo.schema.200.revision.2024.casilla.zznotthere.help"
 _CATALOGUE = Path("src/cadrumo/locales/es/modelo/schema/200.yml")
 
 
-def _casillas() -> dict[str, object]:
-    document = yaml.safe_load(_CATALOGUE.read_text(encoding="utf-8"))
-    return document["modelo"]["schema"]["200"]["revision"]["2024"]["casilla"]
+def _casillas() -> dict[str, LocaleNode]:
+    cursor: LocaleNode = LocaleManager(Path("src"), Path("src/cadrumo/locales")).load_locale(_CATALOGUE)
+    for part in ("modelo", "schema", "200", "revision", "2024", "casilla"):
+        if not isinstance(cursor, dict):
+            raise AssertionError(f"catalogue path ended before {part!r}")
+        cursor = cursor[part]
+    if not isinstance(cursor, dict):
+        raise AssertionError("catalogue casilla node is not a mapping")
+    return cursor
 
 
 @pytest.fixture
-def probe(tmp_path: Path) -> Path:
+def probe(tmp_path: Path) -> Iterator[Path]:
     """Write one throwaway leaf, and remove it again however the test ends."""
     runner = CliRunner()
     manifest = tmp_path / "set.json"

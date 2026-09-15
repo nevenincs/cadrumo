@@ -64,7 +64,7 @@ def _binding(
     selector: dict[str, object] = {
         "categories": (IvaCategory("domestic_super_reduced"),),
         "rate_kinds": (rate_kind,),
-        "flow_direction": IvaFlowDirection._from_registry("repercutido"),
+        "flow_direction": IvaFlowDirection.from_registry("repercutido"),
         "fact": fact,
         "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
         "cash_accounting_treatments": (

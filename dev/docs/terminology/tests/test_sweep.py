@@ -121,16 +121,17 @@ class _RecordedClient:
 
 def _load_recorded(name: str) -> tuple[str, tuple[ChunkHit, ...]]:
     data = json.loads((_FIXTURES / name).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise AssertionError("recorded sweep fixture must contain a JSON object")
+    query = data.get("query")
+    raw_hits = data.get("hits")
+    if not isinstance(query, str) or not isinstance(raw_hits, list):
+        raise AssertionError("recorded sweep fixture has an invalid query or hit list")
     hits = tuple(
-        ChunkHit(
-            path=row["path"],
-            line_start=row["line_start"],
-            line_end=row["line_end"],
-            score=row["score"],
-        )
-        for row in data["hits"]
+        ChunkHit.model_validate(row)
+        for row in raw_hits
     )
-    return data["query"], hits
+    return query, hits
 
 
 # ---------------------------------------------------------------------------
@@ -499,7 +500,7 @@ def test_relevance_mapping_is_frozen() -> None:
 
     mapping = TermRelevanceMapping(query="x", concept_id="prorrata", language=OutputLanguage.ES)
     with pytest.raises(ValidationError):
-        mapping.query = "mutated"  # type: ignore[misc]
+        mapping.__setattr__("query", "mutated")
 
 
 #: The distinguishing fragment of each completeness refusal reaching the sweep.

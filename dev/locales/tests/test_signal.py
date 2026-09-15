@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -27,6 +28,27 @@ from .._signal import (
 from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _mapping(value: object) -> Mapping[str, object]:
+    """Narrow one report payload mapping for assertions over dynamic fields."""
+    if not isinstance(value, Mapping):
+        raise AssertionError("expected a mapping payload")
+    result: dict[str, object] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            raise AssertionError("expected string mapping keys")
+        result[key] = item
+    return result
+
+
+def _list(value: object) -> list[object]:
+    """Narrow one report payload list for length and member assertions."""
+    if not isinstance(value, list):
+        raise AssertionError("expected a list payload")
+    result: list[object] = []
+    result.extend(value)
+    return result
 
 
 def test_translation_matrix_counts_keys_and_locale_cells_without_overlap() -> None:
@@ -396,7 +418,8 @@ def test_source_inventory_reports_dot_key_uniqueness_and_semantic_duplicate_find
     conflicts = [finding for finding in findings if finding["kind"] == "conflicting_duplicate_translation_key"]
     assert len(conflicts) == inventory["conflicting_duplicate_declarations"] == 1
     assert conflicts[0]["key"] == "cli.save"
-    assert [declaration["placeholders"] for declaration in conflicts[0]["declarations"]] == [[], ["name"], []]
+    declarations = [_mapping(declaration) for declaration in _list(conflicts[0]["declarations"])]
+    assert [declaration["placeholders"] for declaration in declarations] == [[], ["name"], []]
 
 
 def test_source_inventory_ignores_non_translation_tr_alias(tmp_path) -> None:
@@ -460,8 +483,9 @@ def test_finite_dynamic_values_and_concrete_catalogue_keys_remain_required(tmp_p
     assert "wizard.setup.status.ready" in payload["details"]["required_keys"]
     assert "wizard.setup.status.stale" in payload["details"]["required_keys"]
     assert payload["summary"]["catalogue_only"] == {"keys": 0, "cells": 0}
-    assert payload["summary"]["inventory"]["finite_key_families"] == 1
-    assert payload["summary"]["inventory"]["unbounded_key_families"] == 1
+    inventory_summary = _mapping(payload["summary"]["inventory"])
+    assert inventory_summary["finite_key_families"] == 1
+    assert inventory_summary["unbounded_key_families"] == 1
     assert [
         finding["key_prefix"] for finding in payload["details"]["findings"] if finding["kind"] == "unbounded_key_family"
     ] == ["profile.keys.*"]
@@ -682,15 +706,17 @@ def test_documentation_inventory_separates_source_echo_and_near_echo(tmp_path) -
     assert inventory["docs_translation_source_echo_ca"] == 2
     assert inventory["docs_translation_source_echo_es"] == 1
     assert inventory["docs_translation_near_echo_ca"] == 1
-    assert len(inventory["docs_translation_source_echo_samples"]) == 3
-    assert len(inventory["docs_translation_near_echo_samples"]) == 1
+    assert len(_list(inventory["docs_translation_source_echo_samples"])) == 3
+    assert len(_list(inventory["docs_translation_near_echo_samples"])) == 1
     exact = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
     near = [finding for finding in findings if finding["kind"] == "docs_translation_near_echo"]
     assert len(exact) == 3
     assert len(near) == 1
     assert all(finding["classification"] == "blocking" for finding in exact)
     assert near[0]["classification"] == "advisory"
-    assert near[0]["ratio"] >= 0.9
+    ratio = near[0]["ratio"]
+    assert isinstance(ratio, (int, float))
+    assert ratio >= 0.9
 
 
 def test_documentation_inventory_classifies_only_provable_invariant_echoes(tmp_path, monkeypatch) -> None:

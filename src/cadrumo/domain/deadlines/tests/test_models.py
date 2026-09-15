@@ -114,8 +114,8 @@ class TestTaxpayerProfile:
         with pytest.raises(ValidationError, match="redeme_enrolled"):
             ModeloIVAProfile.model_validate(
                 {
-                    "tax_territory": M303TaxTerritory._from_registry("common_regime"),
-                    "regime_composition": M303RegimeComposition._from_registry("general"),
+                    "tax_territory": M303TaxTerritory.from_registry("common_regime"),
+                    "regime_composition": M303RegimeComposition.from_registry("general"),
                     "cash_accounting_regime_enrolled": False,
                     "voluntary_sii_enrolled": False,
                     "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
@@ -156,8 +156,8 @@ class TestTaxpayerProfile:
         assert profile.pays_rent_with_retencion is True
         assert profile.does_intracomunitario is True
         assert profile.iva == ModeloIVAProfile(
-            tax_territory=M303TaxTerritory._from_registry("common_regime"),
-            regime_composition=M303RegimeComposition._from_registry("simplified"),
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("simplified"),
             roi_enrolled=True,
             oss_enrolled=False,
             group_member_enrolled=True,

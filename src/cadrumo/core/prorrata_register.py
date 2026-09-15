@@ -27,7 +27,8 @@ class ProrrataRegisterRegime(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -46,7 +47,7 @@ class ProrrataRegisterRegime(str):
             return value
         if isinstance(value, str):
             try:
-                return cls._from_registry(value.strip())
+                return cls.from_registry(value.strip())
             except (TypeError, ValueError) as exc:
                 raise ValueError("prorrata register regime must be a non-empty structural token") from exc
         raise TypeError("prorrata register regime must be a string token")
@@ -71,7 +72,8 @@ class ProrrataEspecialTransitionKind(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -90,7 +92,7 @@ class ProrrataEspecialTransitionKind(str):
             return value
         if isinstance(value, str):
             try:
-                return cls._from_registry(value.strip())
+                return cls.from_registry(value.strip())
             except (TypeError, ValueError) as exc:
                 raise ValueError("prorrata transition must be a non-empty structural token") from exc
         raise TypeError("prorrata transition must be a string token")
@@ -122,7 +124,8 @@ class ProrrataProvisionalProvenance(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -141,7 +144,7 @@ class ProrrataProvisionalProvenance(str):
             return value
         if isinstance(value, str):
             try:
-                return cls._from_registry(value.strip())
+                return cls.from_registry(value.strip())
             except (TypeError, ValueError) as exc:
                 raise ValueError("prorrata provenance must be a non-empty structural token") from exc
         raise TypeError("prorrata provenance must be a string token")
@@ -166,7 +169,8 @@ class SectorDiferenciadoLetra(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> Self:
+    def from_registry(cls, value: str) -> Self:
+        """Construct the typed value from its canonical registry token."""
         return cls(value, _registry_validated=True)
 
     @classmethod
@@ -185,7 +189,7 @@ class SectorDiferenciadoLetra(str):
             return value
         if isinstance(value, str):
             try:
-                return cls._from_registry(value.strip())
+                return cls.from_registry(value.strip())
             except (TypeError, ValueError) as exc:
                 raise ValueError("sector letter must be a non-empty structural token") from exc
         raise TypeError("sector letter must be a string token")

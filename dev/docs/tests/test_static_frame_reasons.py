@@ -37,7 +37,7 @@ import pytest
 
 from ..sequences.checks import default_docs_root, discover_sequences
 from ..sequences.runner import live_aeat_tokens
-from ..sequences.schema import FrameKind, StaticBlocker
+from ..sequences.schema import FrameKind, SequenceFrame, StaticBlocker
 from ._ratchet_support import ratchet_divergences
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -51,7 +51,7 @@ _MINIMUM_STATIC_FRAMES = 100
 _MINIMUM_STATIC_FRAME_PAGES = 15
 
 
-def _static_frames() -> list[tuple[str, str, object]]:
+def _static_frames() -> list[tuple[str, str, SequenceFrame]]:
     """Return every ``(page, sequence_id, frame)`` triple of static frames."""
     discovered, problems = discover_sequences(docs_root=default_docs_root())
     assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
@@ -77,6 +77,19 @@ def _static_frames() -> list[tuple[str, str, object]]:
         "frame total can stay high while the classification collapses to one page"
     )
     return frames
+
+
+def _read_baseline() -> dict[str, int]:
+    """Read the committed page-count baseline after validating its value types."""
+    raw = json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise AssertionError("unconverted_static_baseline.json must map page -> count")
+    baseline: dict[str, int] = {}
+    for page, allowed in raw.items():
+        if not isinstance(page, str) or not isinstance(allowed, int) or isinstance(allowed, bool):
+            raise AssertionError(f"baseline entry has invalid types: {page!r}: {allowed!r}")
+        baseline[page] = allowed
+    return baseline
 
 
 def test_every_static_frame_states_a_blocked_reason() -> None:
@@ -202,7 +215,7 @@ def test_unconverted_static_frames_equal_their_baseline() -> None:
     27 of 60 allowances went unclaimed, so 27 new unconverted frames could have
     landed silently. Shrink-only by structure, not by convention.
     """
-    baseline: dict[str, int] = json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
+    baseline = _read_baseline()
     current: dict[str, int] = {}
     for page, _sequence_id, frame in _static_frames():
         assert frame.blocked is not None

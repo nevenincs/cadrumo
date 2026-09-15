@@ -58,10 +58,10 @@ def _services_b2b_eu_outbound(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassifi
     """A B2B service supplied from the peninsula to a German-identified acquirer (``R12``)."""
     return IvaInvoiceClassificationCriteria(
         transaction_date=on,
-        issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-        customer_residency=IvaTerritorialScope._from_registry("eu_member"),
-        customer_identification_state=EUMemberState._from_registry("de"),
-        customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+        customer_residency=IvaTerritorialScope.from_registry("eu_member"),
+        customer_identification_state=EUMemberState.from_registry("de"),
+        customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
         kind=TransactionKind("services_general"),
         direction=InvoiceKind.ISSUED,
     )
@@ -71,9 +71,9 @@ def _distance_sale_b2c(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassificationC
     """A B2C goods distance sale from the peninsula into the Union (``R15``)."""
     return IvaInvoiceClassificationCriteria(
         transaction_date=on,
-        issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-        customer_residency=IvaTerritorialScope._from_registry("eu_member"),
-        customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+        issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+        customer_residency=IvaTerritorialScope.from_registry("eu_member"),
+        customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
         kind=TransactionKind("goods"),
         direction=InvoiceKind.ISSUED,
     )
@@ -83,9 +83,9 @@ def _domestic_at_general_rate(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassifi
     """An ES-to-ES supply settled by its rate tier (``R05``)."""
     return IvaInvoiceClassificationCriteria(
         transaction_date=on,
-        issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-        customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
-        customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+        customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+        customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
         kind=TransactionKind("services_general"),
         direction=InvoiceKind.ISSUED,
         rate_tier=IvaRateKind("general"),
@@ -216,9 +216,9 @@ def test_the_fallthrough_carries_the_row_that_says_it_grounds_nothing() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         unclassifiable = IvaInvoiceClassificationCriteria(
             transaction_date=_GROUNDED_DAY,
-            issuer_residency=IvaTerritorialScope._from_registry("third_country"),
-            customer_residency=IvaTerritorialScope._from_registry("third_country"),
-            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            issuer_residency=IvaTerritorialScope.from_registry("third_country"),
+            customer_residency=IvaTerritorialScope.from_registry("third_country"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             kind=TransactionKind("services_general"),
             direction=InvoiceKind.ISSUED,
         )

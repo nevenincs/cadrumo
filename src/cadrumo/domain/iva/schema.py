@@ -261,7 +261,7 @@ class EUMemberState(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str) -> EUMemberState:
+    def from_registry(cls, value: str) -> EUMemberState:
         """Construct a token only at the typed registry projection boundary."""
         return cls(value, _registry_validated=True)
 

@@ -87,7 +87,7 @@ class _SlowPagefindHandler(http.server.SimpleHTTPRequestHandler):
         super().do_GET()
 
     @override
-    def log_message(self, *args: object) -> None:
+    def log_message(self, format: str, *args: object) -> None:
         """Keep the test output clean."""
 
 

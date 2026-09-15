@@ -51,8 +51,21 @@ class Finding:
 
 def _canonical_bounds(repo: Path) -> tuple[int, int, int | None]:
     payload = tomllib.loads((repo / AUTHORITY).read_text(encoding="utf-8"))
-    declaration = payload["supported_filing_years"]
-    return declaration["floor"], declaration["horizon"], declaration.get("hard_ceiling")
+    declaration = payload.get("supported_filing_years")
+    if not isinstance(declaration, dict):
+        raise ValueError("supported_filing_years authority must be a TOML table")
+    floor = declaration.get("floor")
+    horizon = declaration.get("horizon")
+    hard_ceiling = declaration.get("hard_ceiling")
+    if (
+        not isinstance(floor, int)
+        or isinstance(floor, bool)
+        or not isinstance(horizon, int)
+        or isinstance(horizon, bool)
+        or (hard_ceiling is not None and (not isinstance(hard_ceiling, int) or isinstance(hard_ceiling, bool)))
+    ):
+        raise ValueError("supported_filing_years authority has invalid bounds")
+    return floor, horizon, hard_ceiling
 
 
 def _source_line(lines: list[str], line: int) -> str:
@@ -116,7 +129,10 @@ def _python_findings(path: Path, repo: Path, canonical: set[int]) -> list[Findin
         unique = tuple(sorted(set(years)))
         if not unique or not (set(unique) & canonical):
             continue
-        finding = Finding(path.relative_to(repo), node.lineno, kind, unique, _source_line(lines, node.lineno))
+        line = getattr(node, "lineno", None)
+        if not isinstance(line, int):
+            continue
+        finding = Finding(path.relative_to(repo), line, kind, unique, _source_line(lines, line))
         if finding not in findings:
             findings.append(finding)
     return findings

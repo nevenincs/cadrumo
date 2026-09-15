@@ -423,7 +423,7 @@ def test_an_operator_supplied_operation_date_survives_to_a_declared_devengo_rank
         reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(recorded.invoice.invoice_id)
         assert reloaded is not None
         assert reloaded.operation_date == date(2026, 3, 28)
-        assert reloaded.operation_date_role is InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED")
+        assert reloaded.operation_date_role is InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
 
         devengo = resolve_invoice_devengo(reloaded)
         assert devengo.devengo_date == date(2026, 3, 28)
@@ -651,7 +651,7 @@ def _mixed_rate_lines() -> tuple[InvoiceLine, ...]:
             quantity=Decimal("1"),
             unit_price=Decimal("1000.00"),
             subtotal=Decimal("1000.00"),
-            iva_rate=IvaRate._from_registry("RATE_21"),
+            iva_rate=IvaRate.from_registry("RATE_21"),
             iva_amount=Decimal("210.00"),
         ),
         InvoiceLine(
@@ -659,7 +659,7 @@ def _mixed_rate_lines() -> tuple[InvoiceLine, ...]:
             quantity=Decimal("1"),
             unit_price=Decimal("500.00"),
             subtotal=Decimal("500.00"),
-            iva_rate=IvaRate._from_registry("RATE_10"),
+            iva_rate=IvaRate.from_registry("RATE_10"),
             iva_amount=Decimal("50.00"),
         ),
     )
@@ -704,8 +704,8 @@ def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line
     assert restored is not None
     assert len(restored.lines) == 2
     assert [line.iva_rate for line in restored.lines] == [
-        IvaRate._from_registry("RATE_21"),
-        IvaRate._from_registry("RATE_10"),
+        IvaRate.from_registry("RATE_21"),
+        IvaRate.from_registry("RATE_10"),
     ]
     # Per-rate cuota, not one blended figure: 210 belongs to the 21% base and
     # 50 to the 10% base, and a collapse would put all 260 on a single rate.
@@ -760,7 +760,7 @@ def test_omitting_the_line_set_still_synthesises_the_single_line() -> None:
     )
 
     assert len(invoice.lines) == 1
-    assert invoice.lines[0].iva_rate is IvaRate._from_registry("RATE_21")
+    assert invoice.lines[0].iva_rate is IvaRate.from_registry("RATE_21")
     assert invoice.iva_total == Decimal("210.00")
     assert invoice.grand_total == Decimal("1210.00")
 
@@ -793,7 +793,7 @@ def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_pa
                 taxable_base=Decimal("1000.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
-                invoice_class=InvoiceClass._from_registry("RECTIFICATIVA"),
+                invoice_class=InvoiceClass.from_registry("RECTIFICATIVA"),
                 series="R",
                 rectifies_invoice_number="F-2026-0044",
                 recargo_amount=Decimal("52.00"),
@@ -802,7 +802,7 @@ def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_pa
         restored = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
 
     assert restored is not None
-    assert restored.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
+    assert restored.invoice_class is InvoiceClass.from_registry("RECTIFICATIVA")
     assert restored.series == "R"
     assert restored.rectifies_invoice_number == "F-2026-0044"
     assert restored.recargo_amount == Decimal("52.00")
@@ -860,7 +860,7 @@ def test_the_default_invoice_class_is_still_ordinaria() -> None:
         currency="EUR",
     )
 
-    assert invoice.invoice_class is InvoiceClass._from_registry("ORDINARIA")
+    assert invoice.invoice_class is InvoiceClass.from_registry("ORDINARIA")
     assert invoice.series is None
     assert invoice.recargo_amount is None
     assert invoice.grand_total == Decimal("1210.00")

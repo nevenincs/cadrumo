@@ -813,6 +813,7 @@ class TestAmbientEnvNeutralisation:
                 assert operator_marker not in frame.stderr
         finally:
             if had_prior:
-                os.environ[env_var_name] = prior_value  # type: ignore[assignment]
+                assert prior_value is not None
+                os.environ[env_var_name] = prior_value
             else:
                 os.environ.pop(env_var_name, None)

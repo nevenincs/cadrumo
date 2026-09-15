@@ -77,7 +77,7 @@ def run_search(query: str) -> list[dict[str, object]]:
 
 # No adapter owns or is allowlisted for filing-value coercion. Fixed-width
 # numeric and padding semantics live in the registry domain codec.
-_VERIFIED_NON_LEAK_PATHS: frozenset[str] = frozenset()
+_VERIFIED_NON_LEAK_PATHS: frozenset[str] = frozenset[str]()
 
 
 def is_violation(path: str) -> bool:

@@ -19,7 +19,7 @@ class DescendantMaternityMixin(DescendantRecordBase):
     """The maternity deduction facts a descendant carries."""
 
     @staticmethod
-    def _art_81_1_maternity_relations(
+    def art_81_1_maternity_relations(
         *,
         context: FamilyFactResolutionContext,
     ) -> frozenset[DescendantRelacion]:
@@ -211,7 +211,7 @@ class DescendantMaternityMixin(DescendantRecordBase):
         on this axis distinct, which is the property whose loss produced that
         defect.
         """
-        if self.relacion not in self._art_81_1_maternity_relations(context=context):
+        if self.relacion not in self.art_81_1_maternity_relations(context=context):
             return 0
         if not self.is_eligible_ordinary(
             filing_year,
@@ -228,7 +228,7 @@ def art_81_1_maternity_relations(
     context: FamilyFactResolutionContext,
 ) -> frozenset[DescendantRelacion]:
     """Resolve the dated Art. 81.1 relationship population from authority."""
-    return DescendantMaternityMixin._art_81_1_maternity_relations(context=context)
+    return DescendantMaternityMixin.art_81_1_maternity_relations(context=context)
 
 
 def relacion_is_ambiguous_for_maternidad(relacion: DescendantRelacion) -> bool:

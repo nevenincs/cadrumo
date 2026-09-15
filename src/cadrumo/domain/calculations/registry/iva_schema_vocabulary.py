@@ -178,7 +178,7 @@ class M303TaxTerritoryCatalogue:
                 raise RegistryValidationError(
                     f"Modelo 303 tax-territory token {raw!r} is not declared by the facts registry",
                 )
-            token = M303TaxTerritory._from_registry(raw)
+            token = M303TaxTerritory.from_registry(raw)
         else:
             raise RegistryValidationError("Modelo 303 tax-territory token must be a string token")
         if token not in self.all_territories:
@@ -232,7 +232,7 @@ class M303RegimeCompositionCatalogue:
                 raise RegistryValidationError(
                     f"Modelo 303 regime-composition token {raw!r} is not declared by the facts registry",
                 )
-            token = M303RegimeComposition._from_registry(raw)
+            token = M303RegimeComposition.from_registry(raw)
         else:
             raise RegistryValidationError("Modelo 303 regime-composition token must be a string token")
         if token not in self.all_compositions:
@@ -488,7 +488,7 @@ def resolve_m303_tax_territory_catalogue(
     definitions: list[M303TaxTerritoryDefinition] = []
     for raw_token in _csv_tokens(entries, _TERRITORY_ORDER_KEY):
         try:
-            token = M303TaxTerritory._from_registry(raw_token)
+            token = M303TaxTerritory.from_registry(raw_token)
             declared_value = _required(entries, f"{_TERRITORY_PREFIX}{raw_token}.value")
             description = _required(entries, f"{_TERRITORY_PREFIX}{raw_token}.description")
             raw_is_foral = _required(entries, f"{_TERRITORY_PREFIX}{raw_token}.is_foral")
@@ -546,7 +546,7 @@ def resolve_m303_regime_composition_catalogue(
     definitions: list[M303RegimeCompositionDefinition] = []
     for raw_token in _csv_tokens(entries, _COMPOSITION_ORDER_KEY):
         try:
-            token = M303RegimeComposition._from_registry(raw_token)
+            token = M303RegimeComposition.from_registry(raw_token)
             declared_value = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.value")
             description = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.description")
             export_code = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.export_code")
@@ -777,7 +777,7 @@ def m303_regime_composition_simplified_scope(
         .definition(value)
         .simplified_scope
     )
-    return M303RegimenSimplificadoScope._from_registry(scope)
+    return M303RegimenSimplificadoScope.from_registry(scope)
 
 
 def iva_regime_choices(

@@ -157,7 +157,7 @@ def resolve_retencion_clave(
         raise RegistryValidationError(
             f"retencion clave {value!r} is not applicable to Modelo {modelo!r}",
         )
-    return RetencionClave._from_registry(value)
+    return RetencionClave.from_registry(value)
 
 
 class WithholdingObservation(BaseModel):
