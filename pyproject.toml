@@ -408,10 +408,12 @@ registry = [
 ]
 dev = [
   { include-group = "registry" },
+  # Type-check and directly exercise the repository's three Hatch build hooks.
+  "hatchling>=1.27,<2",
   # Alembic CLI for source-controlled schema migrations; development tooling only.
   "alembic>=1.16,<2",
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
-  "deptry>=0.24",
+  "deptry>=0.25.1",
   # torch is the vaultspec-rag embedding backend (dev-only semantic search); no
   # `src/cadrumo/` runtime path imports it. It lives here, not in [project.dependencies],
   # so production installs stay lean — a PEP 735 group is a valid direct-dep location
@@ -421,7 +423,7 @@ dev = [
   # Import-linter for layered-architecture boundary enforcement.
   # Contract definition lives in `.importlinter` at repo root; activated by
   # the architecture boundary checks.
-  "import-linter>=2.0",
+  "import-linter>=2.15",
   # Formatting-preserving syntax engine for the repository-owned, manifest-
   # bounded object-name rename transforms. Development tooling only.
   "libcst>=1.9.0",
@@ -446,7 +448,7 @@ dev = [
   # and the inference test suite refuses instead of running. A pure-Python
   # `py3-none-any` wheel: importable with no NVIDIA driver and no accelerator.
   "nvidia-ml-py>=13,<14",
-  "prek>=0.2.0",
+  "prek>=0.5.3",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
   # Coverage measurement + fail-under gate for unit tests.
@@ -479,8 +481,8 @@ dev = [
   # are dev-only because production never imports lxml, it names the backend
   # as a string.
   "types-lxml>=2025.3.30",
-  "ruff>=0.15.12",
-  "ty>=0.0.1a1",
+  "ruff>=0.16.7",
+  "ty>=0.0.81",
   # Vault tooling — contributor-only; not imported by src/cadrumo/ and never
   # shipped in a published product wheel.
   # 0.1.55 is the first version that understands the `body_hash` frontmatter
@@ -527,9 +529,9 @@ dev = [
   "babel>=2.16",
   # Documentation conformance enforcement: docstring presence/style,
   # signature-vs-docstring accuracy, and RST formatting.
-  "pydoclint>=0.6",
+  "pydoclint>=0.9.1",
   "interrogate>=1.7.0",
-  "doc8>=1.1",
+  "doc8>=2.0.0",
   "types-defusedxml>=0.7.0.20260504",
   "types-openpyxl>=3.1.5.20260408",
   "types-reportlab>=4.4.10.20260408",
@@ -537,16 +539,16 @@ dev = [
   "types-xlrd>=2.0.0.20260408",
   "types-pywin32>=311.0.0.20260508",
   "google-api-python-client-stubs>=1.36",
-  "pyrefly>=1.1.1",
+  "pyrefly>=1.3.1",
   # Semgrep is invoked through `uvx --from semgrep==1.168.0 semgrep` instead of the
   # persistent dev group: the Windows Python package install does not expose a
   # working console command, while uvx resolves the supported standalone tool.
   "radon>=6.0.1",
-  "complexipy>=3.3.0",
+  "complexipy>=8.0.1",
   "vulture>=2.16",
   "sphinxcontrib-mermaid>=1.0",
   "pytest-timeout>=2.3.1",
-  "basedpyright>=1.39.9",
+  "basedpyright>=1.40.1",
   "spylls==0.1.7",
 ]
 
