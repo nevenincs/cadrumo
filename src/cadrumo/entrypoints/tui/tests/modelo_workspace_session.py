@@ -26,8 +26,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -35,6 +33,7 @@ from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....application.modelo.registry_authority_capture import PinnedRegistryAuthorityCapture
 from ....application.modelo.work_addressing import ModeloVisibleFilingTarget
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.workspace import resolve_static_inspection_result
@@ -130,7 +129,6 @@ def real_workspace_inspection_result(
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
         period = Period.from_year_and_code(filing_year, period_code)
-        authority = compiled_bundled_authority()
         # Selected from the authority when the caller does not pin one, so a
         # caller choosing an address does not also have to know which revision
         # governs it -- a hand-written revision id is the shape that goes stale
@@ -164,7 +162,7 @@ def real_workspace_inspection_result(
                     ),
                     bucket_id=profile.bucket_id,
                     catalogue_repository=repository,
-                    authority=authority,
+                    authority=PinnedRegistryAuthorityCapture(operation),
                     output_language=at_language,
                 )
                 assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)

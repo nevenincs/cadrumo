@@ -19,7 +19,7 @@ from datetime import date
 from .....core.authority_grade import RegistryAuthorityGrade
 from ....user_profile.schema import ProfileSchemaDefinition
 from ..authority import bundled_indexed_authority
-from ..authority_artifact import AuthorityEvidenceProjection, ProfileCreateContext
+from ..authority_artifact import ProfileCreateContext
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ..ids import RevisionId
 from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot, SupportedFilingYearsCatalogue
@@ -119,8 +119,7 @@ def published_legal_references(reference_ids: Iterable[str]) -> dict[str, LegalR
 def published_legal_quotation_is_grounded(reference_id: str, quotation: str) -> bool:
     """Judge one quotation against the published evidence through the canonical projection."""
     with bundled_indexed_authority().operation() as operation:
-        evidence = operation.legal_evidence(reference_id)
-    return AuthorityEvidenceProjection(legal=(evidence,)).quotation_is_grounded(reference_id, quotation)
+        return operation.legal_quotation_is_grounded(reference_id, quotation)
 
 
 def published_legal_evidence_text(reference_id: str) -> str:

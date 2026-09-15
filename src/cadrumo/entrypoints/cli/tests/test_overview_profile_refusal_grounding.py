@@ -18,15 +18,15 @@ from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....application.user_profile.preflight import (
     build_profile_preflight_requirement,
     format_profile_preflight_requirement,
     format_profile_selector_requirements,
 )
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.profile_grounding import build_profile_grounding_index
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from .._overview import (
     _ENTITY_TYPE_SELECTOR,
     _IRPF_INCOME_CATEGORIES_SELECTOR,
@@ -53,12 +53,13 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _grounding_index():
-    return build_profile_grounding_index(compiled_bundled_authority())
+    with bundled_indexed_authority().operation() as operation:
+        return build_profile_grounding_index(operation)
 
 
 def test_the_gating_field_label_differs_from_its_selector_token() -> None:
     """Anchor the fixture: every assertion below is vacuous if they are equal."""
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     requirement = build_profile_preflight_requirement(
         _GATING_PATH,
         schema=schema,
@@ -76,7 +77,7 @@ def test_a_profile_selector_token_renders_as_its_operator_label() -> None:
     the label and any legal grounding come from the same authority the modelo
     readiness gate consults when it refuses for this same field.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     rendered = format_profile_selector_requirements(
         (_GATING_SELECTOR,),
@@ -100,7 +101,7 @@ def test_a_non_profile_warning_code_survives_verbatim() -> None:
     """A code naming no profile field must not be relabelled or dropped."""
     rendered = format_profile_selector_requirements(
         (_NON_PROFILE_WARNING_CODE,),
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
         grounding_index=_grounding_index(),
     )
 
@@ -109,7 +110,7 @@ def test_a_non_profile_warning_code_survives_verbatim() -> None:
 
 def test_a_mixed_stream_enriches_only_the_profile_fields_and_preserves_order() -> None:
     """Both kinds arrive interleaved in one stream and each keeps its position."""
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     rendered = format_profile_selector_requirements(
         (_NON_PROFILE_WARNING_CODE, _GATING_SELECTOR, _NON_PROFILE_WARNING_CODE),
@@ -176,7 +177,7 @@ def test_calendar_allow_incomplete_still_renders_rather_than_refusing() -> None:
 
 
 def _label_for(selector: str) -> str:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     path = schema.path_for_model_selector(selector)
     assert path is not None, f"{selector} does not resolve to a schema field"
     return build_profile_preflight_requirement(path, schema=schema, selector=selector).label
@@ -196,7 +197,7 @@ def test_the_taxpayer_model_fields_have_labels_that_differ_from_their_tokens() -
 
 def test_an_undeclared_entity_type_is_named_rather_than_summarised() -> None:
     """The refusal names the entity-type field, not only "model undeclared"."""
-    refusal = _undeclared_taxpayer_model_refusal(_profile(), schema=load_user_profile_schema())
+    refusal = _undeclared_taxpayer_model_refusal(_profile(), schema=published_profile_schema())
 
     context = refusal.context
     assert context is not None
@@ -216,7 +217,7 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
 
     refusal = _undeclared_taxpayer_model_refusal(
         _profile(entity_type=EntityType.from_registry("natural_person")),
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     )
 
     context = refusal.context

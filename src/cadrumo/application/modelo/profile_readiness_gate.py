@@ -40,6 +40,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
+    build_profile_grounding_index,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
@@ -74,37 +75,6 @@ BLOCKING_APPLICABILITY_VERDICTS = frozenset(
         ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
     },
 )
-
-
-def _profile_grounding_index_for_operation(
-    operation: PinnedAuthorityOperation,
-) -> Mapping[str, ProfileKeyGrounding]:
-    """Project profile grounding from one operation's bounded revision inventory."""
-    from ...core.aggregation import BindingSourceKind
-    from ...core.modelo import Modelo
-    from ...domain.calculations.registry.profile_grounding import ProfileKeyGrounding, binding_profile_keys
-
-    modelos: dict[str, set[str]] = {}
-    legal_refs: dict[str, set[str]] = {}
-    source_refs: dict[str, set[str]] = {}
-    for modelo_id, revision_id in operation.revision_ids():
-        revision = operation.revision(modelo_id, revision_id)
-        for binding in revision.bindings:
-            if binding.source is not BindingSourceKind.PROFILE:
-                continue
-            for key in binding_profile_keys(binding):
-                modelos.setdefault(key, set()).add(modelo_id)
-                legal_refs.setdefault(key, set()).update(binding.legal_refs)
-                source_refs.setdefault(key, set()).update(binding.source_refs)
-    return {
-        key: ProfileKeyGrounding(
-            profile_key=key,
-            modelos=tuple(Modelo(code) for code in sorted(modelos[key])),
-            legal_refs=tuple(sorted(legal_refs[key])),
-            source_refs=tuple(sorted(source_refs[key])),
-        )
-        for key in sorted(modelos)
-    }
 
 
 def _requirement_for_profile_path(
@@ -299,7 +269,7 @@ def modelo_work_profile_preflight_report(
             period=period,
             revision=revision,
         )
-    grounding_index = _profile_grounding_index_for_operation(operation)
+    grounding_index = build_profile_grounding_index(operation)
     baseline = tuple(
         _requirement_for_profile_path(
             path,
@@ -660,9 +630,9 @@ def require_profile_ready_for_modelo_work(
         bucket_id=bucket_id,
         modelo=modelo,
         profile_decode_context=resolved_profile_decode_context,
-        grounding_index=_profile_grounding_index_for_operation(operation),
+        grounding_index=build_profile_grounding_index(operation),
     )
-    grounding_index: Mapping[str, ProfileKeyGrounding] = _profile_grounding_index_for_operation(operation)
+    grounding_index: Mapping[str, ProfileKeyGrounding] = build_profile_grounding_index(operation)
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
     if applicability_first:
         _require_modelo_applicable_for_local_work(

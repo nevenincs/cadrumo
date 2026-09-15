@@ -827,6 +827,19 @@ class PinnedAuthorityOperation:
             raise RegistryValidationError("legal evidence component decoded to an unexpected type")
         return value
 
+    def legal_reference_ids(self) -> tuple[str, ...]:
+        """Return every published legal declaration identity without hydrating payloads."""
+        return tuple(
+            query.reference_id
+            for query in self._reader.component_queries()
+            if isinstance(query, ReferenceComponentQuery) and query.kind is AuthorityComponentKind.LEGAL_REFERENCE
+        )
+
+    def legal_quotation_is_grounded(self, legal_ref_id: LegalRefId, quotation: str) -> bool:
+        """Answer one citation query from this generation's published legal evidence."""
+        evidence = self.legal_evidence(str(legal_ref_id))
+        return AuthorityEvidenceProjection(legal=(evidence,)).quotation_is_grounded(str(legal_ref_id), quotation)
+
     def source_evidence(self, source_reference_id: str) -> PublishedSourceEvidence:
         """Load one publisher-captured public source payload."""
         value = self._reader.load(

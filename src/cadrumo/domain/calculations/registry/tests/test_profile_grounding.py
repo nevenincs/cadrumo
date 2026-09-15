@@ -8,10 +8,10 @@ grounding the registry TOML declares, never values invented for the test.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....core.modelo import Modelo
+from ..authority import bundled_indexed_authority
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from ..profile_bindings import ProfileProvider
 from ..profile_grounding import ProfileKeyGrounding, binding_profile_keys, build_profile_grounding_index
@@ -22,7 +22,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def index() -> dict[str, ProfileKeyGrounding]:
-    return dict(build_profile_grounding_index(compiled_bundled_authority()))
+    with bundled_indexed_authority().operation() as operation:
+        return dict(build_profile_grounding_index(operation))
 
 
 def test_index_inverts_the_censo_status_binding(index: dict[str, ProfileKeyGrounding]) -> None:
