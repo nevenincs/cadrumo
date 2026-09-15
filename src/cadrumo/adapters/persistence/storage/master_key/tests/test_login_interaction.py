@@ -6,7 +6,6 @@ import ast
 import inspect
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_interaction import (
@@ -18,6 +17,7 @@ from cadrumo.application.user_profile.login_interaction import (
 )
 from cadrumo.application.user_profile.login_session import logout_active_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -26,9 +26,9 @@ _CREDENTIAL_INPUT = "login-interaction-operator-secret"
 
 
 def _authority_contexts():
-    """Pin create and decode contexts to one compiled fixture generation."""
-    authority = compiled_bundled_authority()
-    return authority.profile_create_context(), authority.profile_decode_context()
+    """Pin create and decode contexts to one published authority generation."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.profile_create_context(), operation.profile_decode_context()
 
 
 def _register(label: str) -> str:

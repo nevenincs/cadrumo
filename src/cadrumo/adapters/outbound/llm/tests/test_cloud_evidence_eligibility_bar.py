@@ -41,9 +41,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.outbound.llm.consent import (
     EvidenceConsentToken,
@@ -57,6 +54,10 @@ from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from .....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

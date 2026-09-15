@@ -424,7 +424,7 @@ def test_result_definitiva_rejects_non_annual_period() -> None:
         operaciones_con_derecho_deduccion=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
     )
-    with pytest.raises(ValidationError, match=r"definitiva prorrata result period must be 'annual' or omitted"):
+    with pytest.raises(ValidationError, match=r"prorrata kind requires an annual or omitted period"):
         ProrrataResult(
             regime=ProrrataRegime("general"),
             kind=ProrrataKind.from_registry("definitiva"),

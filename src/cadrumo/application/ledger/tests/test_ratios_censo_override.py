@@ -9,18 +9,12 @@ value, and stays silent for non-HOME_OFFICE categories.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
-from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.categories.spending_category_catalogue import require_spending_category
 from ..ratios import (
@@ -30,18 +24,6 @@ from ..ratios import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@pytest.fixture(scope="module")
-def operation() -> Iterator[PinnedAuthorityOperation]:
-    """Expose canonical authored facts through one pinned component reader."""
-    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()}
-    )
-    pinned = PinnedAuthorityOperation(reader, reader.pin())
-    with validating_governed_facts(pinned):
-        yield pinned
 
 
 def _category(value: str, operation: PinnedAuthorityOperation) -> SpendingCategory:

@@ -12,7 +12,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
@@ -21,6 +20,7 @@ from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.filing.schema import (
     ModeloDraft,
     ModeloValidationFinding,
@@ -74,15 +74,11 @@ def _summary(text: str = "demo") -> tr:
 def _snapshot_ref(modelo: str, period: Period) -> RegistrySnapshotRef:
     """Return the law-selected coordinate used by the live draft gate."""
 
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            modelo,
-            filing_year=period.filing_year,
-            period=period.registry_token,
-        )
-        .snapshot_ref
-    )
+    return published_snapshot(
+        modelo,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    ).snapshot_ref
 
 
 def _schema_version(modelo: str = "130", period: Period = _PERIOD) -> str:

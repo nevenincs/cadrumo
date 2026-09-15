@@ -30,14 +30,14 @@ See Also:
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.operator_action_enums import NoRecoveryOutcome
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..confirm_establishment import _filer_scope

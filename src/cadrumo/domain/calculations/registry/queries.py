@@ -869,7 +869,7 @@ class PinnedRegistryQueryService:
             directory = self._operation.modelo_directory(modelo_id)
             metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
             definitions.append(
-                directory.modelo.materialize(self._operation.revision(modelo_id, str(metadata.id))),
+                directory.materialize(self._operation.revision(modelo_id, str(metadata.id))),
             )
         return tuple(definitions)
 
@@ -1057,7 +1057,7 @@ class PinnedRegistryQueryService:
         registry_period: RegistrySelectorPeriodCode | None = None,
     ) -> ResolvedRegistryQueryContext:
         return ResolvedRegistryQueryContext(
-            definition=directory.modelo.materialize(revision),
+            definition=directory.materialize(revision),
             revision=revision,
             revision_ids=self._revision_ids(directory),
             filing_year=filing_year,

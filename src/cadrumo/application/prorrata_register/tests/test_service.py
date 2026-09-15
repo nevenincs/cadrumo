@@ -13,7 +13,6 @@ from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
@@ -27,6 +26,7 @@ from cadrumo.domain.prorrata_register.register import (
     SectorDefinition,
 )
 
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..service import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -107,7 +107,7 @@ def _service(operation: PinnedAuthorityOperation) -> ProrrataRegisterService:
 
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
-    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
+    return published_snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
 
 
 def test_record_aeat_autorizada_preserves_sector_and_regime(

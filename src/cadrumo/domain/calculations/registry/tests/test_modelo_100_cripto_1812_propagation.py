@@ -218,6 +218,11 @@ def _binding_values_2025() -> dict[BindingId, Decimal]:
         "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # Art. 75 Ley 19/1994 maritime-worker exemption operands; neutral zero
+        # when the chain under test is unrelated (path itself is false).
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
     }
 
 
@@ -251,6 +256,9 @@ def _run_2025(snapshot: RegistrySnapshot, valor_1804: Decimal):
         relation_values=_relation_values_2025(),
         enum_binding_values=_enum_binding_values_2025(),
         date_binding_values=_date_binding_values_2025(),
+        # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
+        # when the chain under test is unrelated.
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
 
 

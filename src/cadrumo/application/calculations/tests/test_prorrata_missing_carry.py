@@ -20,7 +20,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.core.prorrata_register import ProrrataRegisterRegime
 
@@ -31,6 +30,7 @@ from ....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
     ProrrataRegularizacionProvider,
 )
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.prorrata_register.register import ProrrataProvisionalResolution, ProrrataRegisterEntry
 from ..prorrata_regularizacion import (
     build_prorrata_missing_provisional_advisory,
@@ -58,7 +58,7 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
 
     assert diagnostic is not None
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2026, period="4T")
+    snapshot = published_snapshot(Modelo("303").value, filing_year=2026, period="4T")
     canonical_target = next(
         casilla_id
         for binding in snapshot.revision.bindings

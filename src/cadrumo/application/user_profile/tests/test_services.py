@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.errors.severity import BaseSeverity
@@ -16,6 +14,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority_artifact import ProfileCreateContext
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.profile_grounding import ProfileKeyGrounding
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
 from ....domain.user_profile.labels import profile_field_label
 from ....domain.user_profile.schema import ProfileSchemaDefinition
 from ....domain.user_profile.values import (
@@ -42,7 +41,7 @@ _NON_ISO_DATE_VALUES = (
 
 @pytest.fixture(scope="module")
 def schema() -> ProfileSchemaDefinition:
-    return load_user_profile_schema()
+    return published_profile_schema()
 
 
 @pytest.fixture(autouse=True)
@@ -328,7 +327,7 @@ def test_preflight_accepts_legal_entity_legal_name_for_export_headers(
     operation: PinnedAuthorityOperation,
 ) -> None:
     period = Period.from_year_and_code(2026, "1P")
-    snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period=period.registry_token)
+    snapshot = published_snapshot("202", filing_year=2026, period=period.registry_token)
     record = _record(
         schema,
         operation,
@@ -357,7 +356,7 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
     operation: PinnedAuthorityOperation,
 ) -> None:
     period = Period.from_year_and_code(2026, "1P")
-    snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period=period.registry_token)
+    snapshot = published_snapshot("202", filing_year=2026, period=period.registry_token)
     failures: list[str] = []
     for case_id, identity_fact in (
         ("surnames-only", UserProfileFact(path="identity.surnames", value="Ferrer")),

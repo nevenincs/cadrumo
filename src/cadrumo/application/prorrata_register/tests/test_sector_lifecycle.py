@@ -22,12 +22,12 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ..sector_lifecycle import seed_sector_carried_definitive_from_register, settle_sector_definitive
 
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
-    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
+    return published_snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
 
 
 def _provisional_entry(*, ejercicio: int, sector_id: str, percentage: Decimal) -> ProrrataRegisterEntry:

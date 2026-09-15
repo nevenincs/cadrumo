@@ -5,10 +5,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.hashing import content_hash_hex
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ...calculations.registry.authority_artifact import (
     AuthorityGenerationPin,
     ProfileCreateContext,
@@ -28,7 +28,7 @@ from ..values import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SCHEMA = load_user_profile_schema()
+_SCHEMA = published_profile_schema()
 _PIN = AuthorityGenerationPin(
     content_hash_hex({"generation": "profile-values-fixture"}),
     content_hash_hex({"reader": "profile-values-fixture"}),

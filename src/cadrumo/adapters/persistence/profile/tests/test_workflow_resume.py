@@ -10,7 +10,6 @@ from typing import Any, TypedDict
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -26,6 +25,7 @@ from .....application.modelo.work_addressing import ModeloExactWorkUnitTarget, M
 from .....application.modelo.work_lifecycle import create_work_unit
 from .....application.modelo.workflow_gate import workflow_period_for_work_unit
 from .....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
+from .....application.user_profile.authority_context import profile_create_context
 from .....application.workflow.abort import WorkflowAbortReason
 from .....application.workflow.engine_recording import record_site_unavailable, record_unhandled
 from .....application.workflow.errors import WorkflowAbortSignalError, WorkflowError
@@ -56,7 +56,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from .....domain.modelos.repository import upsert_work_unit
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .....tests.aeat_literal_fixtures import aeat_url
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
@@ -78,7 +78,8 @@ _BUCKET_ID = "a38b7cd5-d38e-4d69-809f-5a244c74e08b"
 def _create_work_unit(**kwargs: Any) -> Any:
     kwargs.pop("repository", None)
     kwargs.pop("bucket_event_repository", None)
-    return create_work_unit(ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID), **kwargs)
+    with bundled_indexed_authority().operation() as operation:
+        return create_work_unit(ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID), operation=operation, **kwargs)
 
 
 def _resolve_modelo_workflow_resume_target(**kwargs: Any) -> Any:
@@ -114,20 +115,20 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 
 def _seed_ready_profile_record(bucket_id: str) -> None:
-    seed_test_profile_record(
-        UserProfileRecord(
-            schema_id="cadrumo.user_profile",
-            schema_version=load_user_profile_schema().version,
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T,
-            updated_at=_T,
-        ),
-        # Derived, never the bare id: a capsule label may not be UUID-shaped,
-        # so an operator label can never be read as a machine id.
-        label=f"profile-{bucket_id}",
-    )
+    with bundled_indexed_authority().operation() as operation:
+        seed_test_profile_record(
+            create_user_profile_record(
+                context=profile_create_context(operation),
+                setup_state=ProfileSetupState.COMPLETE,
+                profile_id=bucket_id,
+                facts=_READY_PROFILE_FACTS,
+                created_at=_T,
+                updated_at=_T,
+            ),
+            # Derived, never the bare id: a capsule label may not be UUID-shaped,
+            # so an operator label can never be read as a machine id.
+            label=f"profile-{bucket_id}",
+        )
 
 
 @pytest.fixture(autouse=True)

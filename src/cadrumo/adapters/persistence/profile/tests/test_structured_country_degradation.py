@@ -64,6 +64,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from pathlib import Path
 from typing import Final
@@ -118,6 +119,13 @@ def _registry_legends(operation):
     """Resolve the registry vocabulary on the test's pinned authority lease."""
     period = default_invoice_extraction_period()
     return resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
+
+@pytest.fixture
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease the published generation, whose runtime catalogues structured extraction reads."""
+    with _indexed_authority_for_test().operation() as leased:
+        yield leased
 
 
 #: The specimen carrying a full address block on each party, both stating ``ESP``.

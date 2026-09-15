@@ -15,7 +15,6 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....adapters.outbound.google.calc_sheets_apply import apply_export_plan
 from .....adapters.outbound.storage.errors import OutboundStorageValidationError
@@ -26,13 +25,14 @@ from .....application.storage.calc_sheets.engine import build_export_plan
 from .....application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from .....core.sync_surface import SyncSurface
 from .....domain.buckets.event import BucketEventType
+from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....tests.google_credentials import unused_google_credentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _m130_plan():
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     return build_export_plan(snapshot)
 
 

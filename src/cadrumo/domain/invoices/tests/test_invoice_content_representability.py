@@ -43,6 +43,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
 
@@ -116,14 +117,14 @@ def test_an_invoice_can_state_its_fixed_legal_mentions() -> None:
     """art. 6.1.m/.p: an invoice under inversión del sujeto pasivo and criterio de caja."""
     invoice = _invoice(
         legal_mentions=[
-            InvoiceLegalMention.from_registry("reverse_charge"),
-            InvoiceLegalMention.from_registry("cash_accounting_regime"),
+            InvoiceLegalMention.from_registry("REVERSE_CHARGE"),
+            InvoiceLegalMention.from_registry("CASH_ACCOUNTING_REGIME"),
         ],
     )
 
     assert invoice.legal_mentions == (
-        InvoiceLegalMention.from_registry("reverse_charge"),
-        InvoiceLegalMention.from_registry("cash_accounting_regime"),
+        InvoiceLegalMention.from_registry("REVERSE_CHARGE"),
+        InvoiceLegalMention.from_registry("CASH_ACCOUNTING_REGIME"),
     )
 
 
@@ -131,7 +132,7 @@ def test_legal_mentions_coerces_plain_string_values() -> None:
     """A JSON-decoded payload carries plain strings, not enum instances."""
     invoice = _invoice(legal_mentions=["REVERSE_CHARGE"])
 
-    assert invoice.legal_mentions == (InvoiceLegalMention.from_registry("reverse_charge"),)
+    assert invoice.legal_mentions == (InvoiceLegalMention.from_registry("REVERSE_CHARGE"),)
 
 
 def test_an_unknown_legal_mention_is_refused() -> None:

@@ -406,7 +406,7 @@ class TestSubmittedFileObservation:
     def test_modelo_111_live_redacted_submitted_file_values_become_observed_casillas(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_snapshot("111", filing_year=2025, period="1T", operation=_authority_operation_for_test)
-            profile = snapshot.extraction_profiles["modelo-111-export-record"]
+            resolved = resolve_export_layout(snapshot)
             body = _submitted_file_payload(_SUBMITTED_FILE_111_2025_1T)
             declaration = Declaracion(
                 modelo="111",
@@ -444,10 +444,15 @@ class TestSubmittedFileObservation:
                 },
                 date_context={},
             )
-            parsed = parse_export_payload(resolve_export_layout(snapshot).layout, body)
+            parsed = parse_export_payload(resolved.layout, body)
             parsed_fields = {field.field_id: field.value for field in parsed.fields}
+            # AEAT record design aeat-dr-111-2019-v18 (dr111e16v18.xls, sheet "dr M11101",
+            # ejercicios 2019 y siguientes) declares thirty numeric page fields, ordinals
+            # 12-41 at positions 109-537; the instructions in aeat-modelo-111-instructions
+            # number those same amounts, in that order, as casillas 01 to 30.
+            official_page_casillas = {validated_casilla_id(f"{number:02d}") for number in range(1, 31)}
 
-            assert set(observed_values) == {t.casilla_id for t in profile.target_casillas}
+            assert set(observed_values) == official_page_casillas
             assert parsed_fields["modelo-111-tax-id"] == "Y0000001S"
             assert parsed_fields["modelo-111-surnames"] == "SANITIZED SURNAME"
             assert observed_values[_M111_RETENCIONES_CASILLA] == calculated.values[_M111_RETENCIONES_CASILLA]

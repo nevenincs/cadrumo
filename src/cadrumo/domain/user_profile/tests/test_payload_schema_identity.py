@@ -21,14 +21,12 @@ the default a freshly constructed record carries to the canonical version.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    load_user_profile_schema,
-)
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..values import (
     ProfileSetupState,
     UserProfileFact,
@@ -85,14 +83,14 @@ def test_record_refuses_an_unknown_schema_id() -> None:
 
 
 def test_record_refuses_a_future_schema_version() -> None:
-    canonical = load_user_profile_schema()
+    canonical = published_profile_schema()
 
     with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         _record(schema_version=canonical.version + 1)
 
 
 def test_record_refuses_a_pre_current_schema_version() -> None:
-    canonical = load_user_profile_schema()
+    canonical = published_profile_schema()
 
     with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         _record(schema_version=_pre_current_version(canonical.version))
@@ -133,14 +131,14 @@ def test_snapshot_refuses_an_unknown_schema_id() -> None:
 
 
 def test_snapshot_refuses_a_future_schema_version() -> None:
-    canonical = load_user_profile_schema()
+    canonical = published_profile_schema()
 
     with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         UserProfileSnapshot.model_validate(_snapshot_payload(schema_version=canonical.version + 1))
 
 
 def test_snapshot_refuses_a_pre_current_schema_version() -> None:
-    canonical = load_user_profile_schema()
+    canonical = published_profile_schema()
 
     with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         UserProfileSnapshot.model_validate(
@@ -149,7 +147,7 @@ def test_snapshot_refuses_a_pre_current_schema_version() -> None:
 
 
 def test_the_canonical_identity_is_accepted() -> None:
-    canonical = load_user_profile_schema()
+    canonical = published_profile_schema()
 
     record = _record(schema_id=canonical.id, schema_version=canonical.version)
 
@@ -159,7 +157,7 @@ def test_the_canonical_identity_is_accepted() -> None:
 
 def test_the_current_schema_hydrates_through_the_snapshot() -> None:
     """A canonical payload survives the record and the snapshot untouched."""
-    canonical = load_user_profile_schema()
+    canonical = published_profile_schema()
 
     snapshot = UserProfileSnapshot.model_validate(_snapshot_payload())
 
@@ -170,7 +168,7 @@ def test_the_current_schema_hydrates_through_the_snapshot() -> None:
 
 def test_a_defaulted_record_carries_the_canonical_version() -> None:
     """The default this codebase writes is the current schema, not a stale one."""
-    canonical = load_user_profile_schema()
+    canonical = published_profile_schema()
 
     defaulted = _record()
 

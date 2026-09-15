@@ -16,7 +16,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
@@ -27,6 +26,7 @@ from .....application.ledger.preconditions import LedgerPreconditionCondition
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....core.config import Settings
 from .....core.image_media_type import ImageMediaType
+from .....domain.calculations.registry.tests.published_authority import published_profile_create_context
 from .....domain.transactions.llm import prompt_spec_with_saturation_fields
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
 from .....domain.user_profile.values import ProfileSetupState, create_user_profile_record
@@ -128,7 +128,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     clock = datetime(2026, 1, 1, tzinfo=UTC)
     seed_test_profile_record(
         create_user_profile_record(
-            context=profile_creation_context_for_test(),
+            context=published_profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(

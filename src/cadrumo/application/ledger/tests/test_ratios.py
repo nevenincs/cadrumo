@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
-from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ....domain.categories.registry import load_category_profiles
 from ....domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 from ..ratios import (
@@ -23,18 +17,6 @@ from ..ratios import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "19191919-1919-4919-8919-191919191919"
-
-
-@pytest.fixture(scope="module")
-def operation() -> Iterator[PinnedAuthorityOperation]:
-    """Expose canonical governed facts through the pinned component seam."""
-    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()}
-    )
-    operation = PinnedAuthorityOperation(reader, reader.pin())
-    with validating_governed_facts(operation):
-        yield operation
 
 
 class TestEligible:

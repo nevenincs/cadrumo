@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl
 
 from ......adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
@@ -18,6 +17,7 @@ from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.period import Period
+from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from ..errors import SedeValidationError
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
@@ -68,7 +68,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_ref=compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("130", filing_year=2026, period="1T").snapshot_ref,
     )
 
     manifest_path = store.persist_observation(observation)
@@ -141,7 +141,7 @@ def test_store_rejects_observation_with_printed_number_casilla_reference(
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_ref=compiled_bundled_authority().snapshot("303", filing_year=2024, period="4T").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("303", filing_year=2024, period="4T").snapshot_ref,
     )
 
     with pytest.raises(SedeValidationError, match=r"canonical casilla\.id"):

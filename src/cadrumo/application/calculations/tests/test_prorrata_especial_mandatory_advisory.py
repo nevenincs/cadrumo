@@ -13,12 +13,12 @@ from datetime import date as _esp_date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.json_contract import NoticeSeverity
 from ....domain.calculations.registry.schema_base import ThresholdComparison
+from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.iva.prorrata_especial_parameters import (
     ProrrataEspecialMandatoryParameterError,
     ProrrataEspecialMandatoryParameters,
@@ -163,8 +163,7 @@ def test_a_pre_2015_ejercicio_is_refused_at_the_resolver() -> None:
     against applying today's margin to a 2014 ejercicio lives one layer up, at
     the resolver that would have to supply the bundle.
     """
-    authority = compiled_bundled_authority()
-    revision = authority.modelo("303").revisions["2025"]
+    revision = published_revision("303", "2025")
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
         resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
     assert "predates the only redaction" in str(excinfo.value)

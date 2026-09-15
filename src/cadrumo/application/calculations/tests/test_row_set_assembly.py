@@ -15,13 +15,13 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....domain.calculations.registry.binding_selector_utils import BindingRowSetSelector
 from ....domain.calculations.registry.binding_value_contract import BindingValueContract
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ....domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
 from ....domain.calculations.registry.withholding296_bindings import Withholding296Observation, Withholding296Provider
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..row_set_assembly import (
@@ -49,11 +49,11 @@ class _TestRowCell:
 
 
 def _modelo(modelo_id: str, revision_id: str):
-    return compiled_bundled_authority().modelo(modelo_id).revisions[revision_id]
+    return published_revision(modelo_id, revision_id)
 
 
 def _snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return compiled_bundled_authority().snapshot(
+    return published_snapshot(
         modelo_id,
         filing_year=filing_year,
         period=period,

@@ -41,7 +41,6 @@ from decimal import Decimal
 from typing import ClassVar
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -50,6 +49,7 @@ from .....application.ledger.invoice_draft_records import FieldProvenance, Invoi
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
+from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....domain.iva.rates import load_iva_rate_table
 from .....domain.iva.schema import EUMemberState
 from ..invoice_extraction_prompt import (
@@ -548,7 +548,7 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         ledger row carries a fraction; scaled here because a printed invoice --
         and the prompt -- states a percentage.
         """
-        snapshot = compiled_bundled_authority().snapshot("390", filing_year=period.filing_year, period=str(period.code))
+        snapshot = published_snapshot("390", filing_year=period.filing_year, period=str(period.code))
         rates: set[Decimal] = set()
         for binding in snapshot.revision.bindings:
             applied = getattr(getattr(binding, "selector", None), "applied_rates", None)

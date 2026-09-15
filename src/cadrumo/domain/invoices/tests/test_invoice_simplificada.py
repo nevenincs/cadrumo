@@ -38,6 +38,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _BASE = Decimal("40.00")
 _CUOTA = Decimal("8.40")
 
@@ -77,13 +78,13 @@ def test_an_ordinary_ticket_needs_no_counterparty_tax_id() -> None:
     """The truthful ticket -- no customer identified -- is representable."""
     invoice = _invoice()
 
-    assert invoice.invoice_class is InvoiceClass.from_registry("SIMPLIFICADA")
+    assert invoice.invoice_class == InvoiceClass.from_registry("SIMPLIFICADA")
     assert invoice.counterparty_tax_id is None
 
 
 def test_a_missing_tax_id_on_a_non_simplificada_invoice_is_refused() -> None:
     """Ordinaria and rectificativa keep the tax id mandatory, unchanged from before."""
-    with pytest.raises(ValidationError, match="counterparty_tax_id is required unless invoice_class is SIMPLIFICADA"):
+    with pytest.raises(ValidationError, match="counterparty_tax_id is required unless the invoice is simplified"):
         _invoice(invoice_class=InvoiceClass.from_registry("ORDINARIA"))
 
 
@@ -172,7 +173,7 @@ def test_a_received_simplificada_with_no_supplier_tax_id_is_refused() -> None:
     """
     with pytest.raises(
         ValidationError,
-        match="counterparty_tax_id is required unless invoice_class is SIMPLIFICADA and kind is ISSUED",
+        match="counterparty_tax_id is required unless the invoice is simplified and kind is ISSUED",
     ):
         _invoice(kind=InvoiceKind.RECEIVED)
 

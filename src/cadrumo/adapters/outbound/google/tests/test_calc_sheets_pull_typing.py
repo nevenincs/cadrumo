@@ -11,9 +11,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Never, cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....domain.calculations.registry.ids import BindingId, RelationId
+from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..calc_sheets_pull import (
     _batch_get_values,
     _decode_binding_edits,
@@ -111,7 +111,7 @@ def test_decode_operator_edits_reads_decimal_from_value_range() -> None:
 
     from .....domain.calculations.registry.schema_input_kind import InputKind
 
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2024, period="2T")
+    snapshot = published_snapshot("130", filing_year=2024, period="2T")
     manual_casillas = [c for c in snapshot.revision.casillas if c.input_kind == InputKind.MANUAL]
     assert manual_casillas, "bundled 130/2T-2024 snapshot must contain at least one MANUAL casilla"
 

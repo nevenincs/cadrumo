@@ -14,12 +14,12 @@ import inspect
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.deadlines.models import IVARegime
 
 from ....application.state_projection import build_pending_obligations
 from ....core.errors.error_codes import ErrorCategory, build_error_envelope
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ....domain.deadlines.errors import ScheduleComputationError
 from ....domain.deadlines.models import TaxpayerProfile
@@ -172,7 +172,7 @@ def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
     )
-    supported_years = compiled_bundled_authority().catalogues.supported_filing_years
+    supported_years = published_supported_filing_years()
     assert supported_years is not None
 
     for filing_year in supported_years.years:

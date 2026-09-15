@@ -75,9 +75,9 @@ from cadrumo.application.calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenanceKind,
 )
-from cadrumo.application.tests.period_override_authority import pinned_operation_for_authority
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
 
@@ -236,11 +236,11 @@ def test_cross_period_requirements_preserve_previous_filing_presence_policy() ->
 def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
     tmp_path: Path,
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        inventory = cross_period_dependency_inventory(
-            pinned_operation_for_authority(compiled_bundled_authority()),
-            filing_year=2026,
-        )
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
+        bundled_indexed_authority().operation() as operation,
+    ):
+        inventory = cross_period_dependency_inventory(operation, filing_year=2026)
 
     assert inventory.target_modelos == (
         "130",
@@ -269,12 +269,11 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
 def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
     tmp_path: Path,
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        inventory = cross_period_dependency_inventory(
-            pinned_operation_for_authority(compiled_bundled_authority()),
-            filing_year=2025,
-            modelos=("100",),
-        )
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
+        bundled_indexed_authority().operation() as operation,
+    ):
+        inventory = cross_period_dependency_inventory(operation, filing_year=2025, modelos=("100",))
 
     assert inventory.target_modelos == ("100",)
     assert len(inventory.items) == 1
@@ -296,13 +295,12 @@ def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
 def test_cross_period_dependency_inventory_documents_patrimonio_and_foreign_asset_scope(
     tmp_path: Path,
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
+        bundled_indexed_authority().operation() as operation,
+    ):
         inventories = tuple(
-            cross_period_dependency_inventory(
-                pinned_operation_for_authority(compiled_bundled_authority()),
-                filing_year=filing_year,
-            )
-            for filing_year in (2025, 2026)
+            cross_period_dependency_inventory(operation, filing_year=filing_year) for filing_year in (2025, 2026)
         )
 
     inventories_by_year = {inventory.filing_year: inventory for inventory in inventories}

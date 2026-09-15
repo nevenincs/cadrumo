@@ -26,6 +26,7 @@ secure-object substrate.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -37,6 +38,7 @@ from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_
 from .....core.classification.policies import SensitivityClass
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import StoredTransactionDriftError
@@ -53,6 +55,18 @@ from ..transactions import TransactionCatalogueRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Lease one published generation per test, as a command boundary does for the ledger.
+
+    Transactions project their IVA defaults and dated vocabulary from the
+    registry, so building, saving, and reloading them all run inside the
+    caller-held operation.
+    """
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _raw(provider_id: str, amount: Decimal, description: str) -> RawTransaction:

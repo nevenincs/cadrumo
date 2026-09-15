@@ -18,19 +18,13 @@ year-versioned registry; nothing is stubbed.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 from pydantic import ValidationError
 
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
-from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ....domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for
 from ....domain.categories.spending_category_catalogue import spending_category_tokens
 from ..ratios import (
@@ -43,18 +37,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _YEAR = 2025
 _A_RATIO = Decimal("0.25")
-
-
-@pytest.fixture(scope="module")
-def operation() -> Iterator[PinnedAuthorityOperation]:
-    """Expose canonical authored facts through one pinned component reader."""
-    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()}
-    )
-    pinned = PinnedAuthorityOperation(reader, reader.pin())
-    with validating_governed_facts(pinned):
-        yield pinned
 
 
 def _home_office_category(operation: PinnedAuthorityOperation) -> SpendingCategory:

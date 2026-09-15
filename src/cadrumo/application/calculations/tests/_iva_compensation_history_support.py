@@ -7,14 +7,13 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
@@ -78,15 +77,11 @@ class _FiledObservation:
 @cache
 def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
     """Return the law-selected canonical coordinate used by a test fixture."""
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            Modelo("303").value,
-            filing_year=filing_year,
-            period=period,
-        )
-        .snapshot_ref
-    )
+    return published_snapshot(
+        Modelo("303").value,
+        filing_year=filing_year,
+        period=period,
+    ).snapshot_ref
 
 
 _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")

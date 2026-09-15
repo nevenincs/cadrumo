@@ -42,6 +42,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _FX_RATE_SOURCE_ID = "test_reference"
 
 _BASE = Decimal("1000.00")
@@ -149,7 +150,7 @@ def test_a_recargo_larger_than_the_cuota_it_rides_on_is_refused() -> None:
 
 def test_a_recargo_on_an_all_exempt_supply_is_refused() -> None:
     """The recargo rides on the cuota of a taxable supply, so a cuota-less one bears none."""
-    with pytest.raises(ValidationError, match="recargo_amount must be zero when every line is EXEMPT"):
+    with pytest.raises(ValidationError, match="recargo_amount must be zero when every line is nonnumeric"):
         _invoice(
             lines=(_exempt_line(),),
             iva_total=Decimal("0"),

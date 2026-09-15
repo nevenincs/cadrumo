@@ -2,21 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 
 from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.period import Period
-from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -35,11 +32,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture
-def authority_operation() -> PinnedAuthorityOperation:
-    facts = compile_registered_fact_providers(bundled_path("registry", "aeat"))
-    fact_id = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
-    reader = FakeAuthorityComponentReader({GovernedFactComponentQuery(fact_id): facts.facts[fact_id]})
-    return PinnedAuthorityOperation(reader, reader.pin())
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _annual_snapshot_and_rows(
@@ -53,7 +48,7 @@ def _annual_snapshot_and_rows(
         scope=m303_regime_composition_simplified_scope("simplified", effective_date=period.end_date),
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=compiled_bundled_authority().snapshot(
+        registry_snapshot=published_snapshot(
             "303",
             filing_year=period.filing_year,
             period=period.registry_token,

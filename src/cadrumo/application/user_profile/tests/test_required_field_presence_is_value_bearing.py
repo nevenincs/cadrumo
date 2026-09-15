@@ -15,8 +15,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import build_profile_overview
 from ..validation import ProfileValidationService
@@ -27,12 +27,12 @@ REQUIRED_FIELD_MISSING = "required_field_missing"
 TAX_ID = "identity.tax_id"
 IVA_REGIME = "iva.regime"
 _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
-_SCHEMA = load_user_profile_schema()
+_SCHEMA = published_profile_schema()
 _STAMP = datetime(2026, 1, 1, tzinfo=UTC)
 
 
 def _service() -> ProfileValidationService:
-    return ProfileValidationService(schema=load_user_profile_schema())
+    return ProfileValidationService(schema=published_profile_schema())
 
 
 def _missing(*facts: UserProfileFact) -> set[str | None]:

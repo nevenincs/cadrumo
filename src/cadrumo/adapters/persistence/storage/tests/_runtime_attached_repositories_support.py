@@ -11,7 +11,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....application.filing.history_models import ModeloHistory, ModeloHistoryEntry
@@ -36,6 +35,7 @@ from .....domain.buckets.event import (
 )
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
 from .....domain.filing.schema import (
@@ -411,7 +411,7 @@ def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides={},
@@ -475,7 +475,7 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=revision_id,
-        registry_snapshot_ref=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
         completeness_status=VerificationCompletenessStatus.COMPLETE,
         findings=(),
         resolved_casilla_ids=(validated_casilla_id("iva.devengado"),),
@@ -511,9 +511,9 @@ def _iva_state(label: str) -> IvaCompensationPeriodState:
         taxpayer_nif="00000000T",
         filing_year=2026,
         period=period_value,
-        registry_snapshot_ref=compiled_bundled_authority()
-        .snapshot("303", filing_year=2026, period=period_value.registry_token)
-        .snapshot_ref,
+        registry_snapshot_ref=published_snapshot(
+            "303", filing_year=2026, period=period_value.registry_token
+        ).snapshot_ref,
         expediente_id="202610013522456T",
         status="presentada",
         presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),
@@ -652,9 +652,9 @@ def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompens
         taxpayer_nif=_WALLET_SUBJECT_ID,
         target_year=2026,
         target_period=period,
-        target_registry_snapshot_ref=compiled_bundled_authority()
-        .snapshot("303", filing_year=2026, period=period.registry_token)
-        .snapshot_ref,
+        target_registry_snapshot_ref=published_snapshot(
+            "303", filing_year=2026, period=period.registry_token
+        ).snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),

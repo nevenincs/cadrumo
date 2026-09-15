@@ -23,7 +23,13 @@ from .ids import RevisionId
 from .modelo_inception import ModeloInceptionField
 from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
 from .period_selector_match import selector_token_for_request
-from .schema import ModeloCadence, ModeloDefinition, ModeloRevision, SupportedFilingYearsCatalogue
+from .schema import (
+    MODELO_REVISION_IDS_CONTEXT,
+    ModeloCadence,
+    ModeloDefinition,
+    ModeloRevision,
+    SupportedFilingYearsCatalogue,
+)
 from .schema_base import (
     CalculationClass,
     CalculationClassField,
@@ -98,13 +104,6 @@ class ModeloDirectoryMetadata(RegistryModel):
             pending_ejercicio_ordenes=modelo.pending_ejercicio_ordenes,
         )
 
-    def materialize(self, revision: ModeloRevision) -> ModeloDefinition:
-        """Reconstruct one immutable modelo view around the selected revision."""
-        return ModeloDefinition(
-            **self.model_dump(),
-            revisions={revision.id: revision},
-        )
-
 
 class RevisionEndpointSourceEnrollment(RegistryModel):
     """Small source-membership projection for one historical endpoint."""
@@ -146,6 +145,17 @@ class ModeloRevisionDirectory(RegistryModel):
             enrollment.source_refs
             for enrollment in self.endpoint_source_enrollments
             if enrollment.revision_id == revision_id
+        )
+
+    def materialize(self, revision: ModeloRevision) -> ModeloDefinition:
+        """Reconstruct one immutable modelo view around a selected revision of this directory.
+
+        The view carries only the selected payload; its revision-identity
+        references still resolve against every revision this directory declares.
+        """
+        return ModeloDefinition.model_validate(
+            {**self.modelo.model_dump(), "revisions": {revision.id: revision}},
+            context={MODELO_REVISION_IDS_CONTEXT: frozenset(str(metadata.id) for metadata in self.revisions)},
         )
 
     @classmethod

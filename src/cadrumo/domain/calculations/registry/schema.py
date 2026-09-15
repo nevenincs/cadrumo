@@ -16,6 +16,7 @@ from typing import Annotated, Final, Literal
 from pydantic import (
     BeforeValidator,
     Field,
+    PrivateAttr,
     ValidationInfo,
     field_validator,
     model_validator,
@@ -31,6 +32,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
+from ....core.type_guards import is_object_mapping
 from .binding_provider import BindingProvider
 from .binding_temporal import (
     AllRevisionContexts,
@@ -1288,6 +1290,53 @@ fragment can otherwise supply a revision's legal grounding while
 """
 
 
+MODELO_REVISION_IDS_CONTEXT: Final = "modelo_revision_ids"
+"""Validation-context key naming every revision of the modelo a selected view was taken from."""
+
+
+def _context_revision_ids(modelo_id: str, info: ValidationInfo) -> frozenset[str] | None:
+    """Return the owning directory's revision identities supplied to a selected-view validation."""
+    context = info.context
+    if not is_object_mapping(context) or MODELO_REVISION_IDS_CONTEXT not in context:
+        return None
+    declared = context[MODELO_REVISION_IDS_CONTEXT]
+    if not isinstance(declared, frozenset) or not all(isinstance(item, str) for item in declared):
+        raise RegistryValidationError(f"modelo {modelo_id!r} revision identity context must be a frozenset of ids")
+    return frozenset(item for item in declared if isinstance(item, str))
+
+
+def _validate_selected_view_references(
+    modelo_id: str,
+    revisions: Mapping[RevisionId, ModeloRevision],
+    revision_ids: frozenset[str],
+) -> None:
+    """Resolve a selected view's cross-revision identity references against its directory.
+
+    Invariants that compare payloads of several revisions (predecessor date
+    agreement and cycles, structural-succession lineage ownership) belong to
+    complete-modelo validation, which the directory's source modelo passed.
+    """
+    foreign = sorted(set(revisions) - revision_ids)
+    if foreign:
+        raise RegistryValidationError(
+            f"modelo {modelo_id!r} view revisions {foreign!r} are not revisions of its directory; "
+            f"declared revisions are {sorted(revision_ids)!r}"
+        )
+    for revision in revisions.values():
+        predecessor = revision.predecessor
+        if isinstance(predecessor, DeclaredPredecessor) and predecessor.revision_id not in revision_ids:
+            raise RegistryValidationError(
+                f"modelo {modelo_id!r} revision {revision.id!r} declares predecessor {predecessor.revision_id!r}, "
+                f"which is not a revision of this modelo; declared revisions are {sorted(revision_ids)!r}"
+            )
+        for relation in revision.casilla_structural_successions:
+            if relation.to_revision != revision.id or relation.from_revision not in revision_ids:
+                raise RegistryValidationError(
+                    f"structural succession {modelo_id}/{revision.id}/{relation.id}: unknown endpoint revision; "
+                    f"declared revisions are {sorted(revision_ids)!r}"
+                )
+
+
 class ModeloDefinition(RegistryModel):
     """Declare a modelo and its complete collection of revision authorities."""
 
@@ -1321,6 +1370,9 @@ class ModeloDefinition(RegistryModel):
         )
 
     revisions: Annotated[Mapping[RevisionId, ModeloRevision], FROZEN_MAPPING]
+    # Set only on a directory-selected view: consumer models re-run this
+    # validator on the same instance without the construction context.
+    _directory_revision_ids: frozenset[str] | None = PrivateAttr(default=None)
 
     @property
     def first_answerable_filing_year(self) -> int | None:
@@ -1363,9 +1415,15 @@ class ModeloDefinition(RegistryModel):
         return name in self.capabilities
 
     @model_validator(mode="after")
-    def _validate_revisions(self) -> ModeloDefinition:
+    def _validate_revisions(self, info: ValidationInfo) -> ModeloDefinition:
         if not self.revisions:
             raise RegistryValidationError(f"modelo {self.id!r} must declare at least one revision")
+        directory_revision_ids = _context_revision_ids(self.id, info)
+        if directory_revision_ids is None:
+            directory_revision_ids = self._directory_revision_ids
+        else:
+            self._directory_revision_ids = directory_revision_ids
+        revision_ids = frozenset(self.revisions) if directory_revision_ids is None else directory_revision_ids
         for key, revision in self.revisions.items():
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
@@ -1373,12 +1431,15 @@ class ModeloDefinition(RegistryModel):
                 raise RegistryValidationError(
                     f"revision {revision.id!r} has invalid review reference: reviewed_against cannot name itself"
                 )
-            if revision.reviewed_against is not None and revision.reviewed_against not in self.revisions:
+            if revision.reviewed_against is not None and revision.reviewed_against not in revision_ids:
                 raise RegistryValidationError(
                     f"revision {revision.id!r} has dangling review reference "
                     f"reviewed_against={revision.reviewed_against!r}; declared revisions are "
-                    f"{sorted(self.revisions)!r}"
+                    f"{sorted(revision_ids)!r}"
                 )
+        if directory_revision_ids is not None:
+            _validate_selected_view_references(self.id, self.revisions, directory_revision_ids)
+            return self
         validate_revision_predecessors(self.id, self.revisions)
         failures = structural_succession_failures(self)
         if failures:

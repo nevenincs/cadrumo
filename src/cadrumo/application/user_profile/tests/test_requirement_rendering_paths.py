@@ -11,10 +11,12 @@ These tests pin the distinction itself rather than either renderer alone.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_schema,
+    published_revision_definitions,
+)
 from ..preflight import format_profile_path_requirements, format_profile_selector_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -26,7 +28,7 @@ _GATING_PATH = "withholding.has_employees"
 
 
 def _schema():
-    return load_user_profile_schema()
+    return published_profile_schema()
 
 
 def test_a_selector_token_resolves_only_through_the_selector_renderer() -> None:
@@ -53,7 +55,7 @@ def _a_binding_key_naming_a_schema_field() -> str:
     """Return one committed binding's profile key that names a real field."""
     schema = _schema()
     schema_paths = frozenset(schema.field_paths)
-    for model in compiled_bundled_authority().modelos:
+    for model in published_revision_definitions():
         for revision in model.revisions.values():
             for binding in revision.bindings:
                 for key in binding_profile_keys(binding):

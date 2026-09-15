@@ -18,8 +18,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-
 from .....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.custody_ports import ProfileCustodyRecoveryEnvelopePort
@@ -38,6 +36,7 @@ from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.authority_artifact import ProfileSchemaComponentQuery
 from .....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
+from .....domain.calculations.registry.tests.published_authority import published_profile_schema
 from .....domain.user_profile.errors import ProfileSchemaValidationError
 from .....domain.user_profile.values import (
     ProfileSetupState,
@@ -63,7 +62,7 @@ def derive_test_bucket_key(identity: str, *, purpose: str) -> bytes:
 
 def profile_authority_contexts() -> tuple[ProfileCreateContext, ProfileDecodeContext]:
     """Return canonical schema contexts through one injected authority pin."""
-    reader = FakeAuthorityComponentReader({ProfileSchemaComponentQuery(): load_user_profile_schema()})
+    reader = FakeAuthorityComponentReader({ProfileSchemaComponentQuery(): published_profile_schema()})
     operation = PinnedAuthorityOperation(reader, reader.pin())
     return operation.profile_create_context(), operation.profile_decode_context()
 

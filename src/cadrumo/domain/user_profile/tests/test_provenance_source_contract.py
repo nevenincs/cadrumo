@@ -15,13 +15,13 @@ breach was found by hand, and a hand is not a gate.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.external_constants import (
     PROVENANCE_SOURCE_CENSO_ARTEFACT,
     PROVENANCE_SOURCE_MANUAL_CLI,
 )
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..values import UserProfileFact, declared_provenance_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -34,15 +34,15 @@ def test_declared_set_is_the_schema_enum() -> None:
     exists to remove, so the accessor is pinned to the schema field.
     """
 
-    declared = declared_provenance_sources(schema=load_user_profile_schema())
-    assert declared == frozenset(load_user_profile_schema().field("provenance.source").enum_values)
+    declared = declared_provenance_sources(schema=published_profile_schema())
+    assert declared == frozenset(published_profile_schema().field("provenance.source").enum_values)
     assert declared
 
 
 def test_fact_accepts_every_declared_source() -> None:
     """No declared token may be refused by the carrier that stores it."""
 
-    for token in sorted(declared_provenance_sources(schema=load_user_profile_schema())):
+    for token in sorted(declared_provenance_sources(schema=published_profile_schema())):
         fact = UserProfileFact(path="identity.tax_id", value="12345678Z", source=token)
         assert fact.source == token
 
@@ -68,7 +68,7 @@ def test_the_default_source_is_declared() -> None:
     """A fact built without a source must not be born undeclared."""
 
     assert UserProfileFact(path="identity.tax_id", value="12345678Z").source in declared_provenance_sources(
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     )
 
 
@@ -84,7 +84,7 @@ def test_every_core_declared_provenance_constant_is_in_the_schema() -> None:
     """
 
     shipped = {PROVENANCE_SOURCE_MANUAL_CLI, PROVENANCE_SOURCE_CENSO_ARTEFACT}
-    undeclared = sorted(shipped - declared_provenance_sources(schema=load_user_profile_schema()))
+    undeclared = sorted(shipped - declared_provenance_sources(schema=published_profile_schema()))
     assert not undeclared, (
         f"core declares provenance token(s) the schema does not: {undeclared}. "
         "Add the token to provenance.source in the profile schema; do not change what the shipped code stamps."
@@ -98,4 +98,4 @@ def test_the_censal_artefact_token_is_declared() -> None:
     and the schema was simply wrong to omit it.
     """
 
-    assert PROVENANCE_SOURCE_CENSO_ARTEFACT in declared_provenance_sources(schema=load_user_profile_schema())
+    assert PROVENANCE_SOURCE_CENSO_ARTEFACT in declared_provenance_sources(schema=published_profile_schema())

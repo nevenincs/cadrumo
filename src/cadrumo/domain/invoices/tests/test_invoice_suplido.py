@@ -38,6 +38,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _FX_RATE_SOURCE_ID = "test_reference"
 
 _BASE = Decimal("1000.00")

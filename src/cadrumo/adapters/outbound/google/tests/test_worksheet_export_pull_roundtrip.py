@@ -21,7 +21,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, registry_sha
 from .....application.storage.calc_sheets.records import OperatorInput, OperatorInputs, RelationValues
@@ -31,6 +30,7 @@ from .....domain.calculations.registry.errors import NoRevisionForPeriodError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema_input_kind import InputKind
+from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....domain.period import calculation_filing_date
 from ..calc_sheets_pull import compute_from_pull
 from ..calc_sheets_pull_records import (
@@ -224,7 +224,7 @@ def test_modelo_369_exterior_export_pull_matches_normal_calculation_reference(
     ordinary-quarter end.
     """
     period = Period.from_year_and_code(2026, period_code)
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         "369",
         filing_year=2026,
         period=period_code,
@@ -281,14 +281,14 @@ def test_modelo_369_exterior_export_reference_uses_the_quarter_anchor() -> None:
     period = Period.from_year_and_code(2021, "EXT-1T")
 
     with pytest.raises(NoRevisionForPeriodError):
-        compiled_bundled_authority().snapshot(
+        published_snapshot(
             "369",
             filing_year=2021,
             period=period.registry_token,
             on=calculation_filing_date(period),
         )
 
-    legacy_snapshot = compiled_bundled_authority().snapshot(
+    legacy_snapshot = published_snapshot(
         "369",
         filing_year=2021,
         period=period.registry_token,

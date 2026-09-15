@@ -8,8 +8,8 @@ They are deliberately not user-profile facts: accepting a persisted
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import ProfileValidationService
 
@@ -28,7 +28,7 @@ _RETIRED_FILING_EXPORT_FACTS = (
 
 def test_retired_filing_export_account_paths_are_absent_and_refused() -> None:
     """The real profile schema and validation boundary reject every old path."""
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     retired_paths = {fact.path for fact in _RETIRED_FILING_EXPORT_FACTS}
 
     assert retired_paths.isdisjoint(schema.field_paths)

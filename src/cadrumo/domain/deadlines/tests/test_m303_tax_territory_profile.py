@@ -1,8 +1,8 @@
 """Strict profile authority for Modelo 303 tax-territory production."""
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ...user_profile.errors import UserProfileNotFoundError
 from ..errors import ProfileError
 from ..models import M303TaxTerritory
@@ -88,7 +88,7 @@ def test_profile_hydration_refuses_missing_or_unreadable_tax_territory(scope: st
 
 
 def test_profile_schema_requires_territory_and_removes_authorable_ratio() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     territory = schema.field("tax_residence.jurisdiction_scope")
 
     assert territory.required is True

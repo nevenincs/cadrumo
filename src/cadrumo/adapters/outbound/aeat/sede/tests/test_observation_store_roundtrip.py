@@ -22,7 +22,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, ValidationError
 
 from ......adapters.persistence.storage.tests.secure_sql import (
@@ -33,6 +32,7 @@ from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from .....persistence.storage.secure_object_namespaces import AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE
 from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
@@ -73,7 +73,7 @@ def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaraci
         ),
         metadata={"capture_session": "sede-2024-06-30-A"},
         extraction_coverage={"declaration_pdf": 0.95},
-        registry_snapshot_ref=compiled_bundled_authority().snapshot("100", filing_year=2023, period="0A").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("100", filing_year=2023, period="0A").snapshot_ref,
     )
 
 

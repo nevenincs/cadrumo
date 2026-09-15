@@ -5,12 +5,12 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.hashing import content_hash_hex
 from ....core.profile_discovery import ProfileSummaryOutcome
 from ....core.profile_publication import ProfilePublicationKind
 from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..login_interaction import ProfileLoginChoice
 from ..login_session import ProfileLoginOutcome
 from ..profile_summary import ProfileSummary, ProfileSummaryInventory
@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _PROFILE = "11111111-1111-4111-8111-111111111111"
 _PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
-    schema=load_user_profile_schema(),
+    schema=published_profile_schema(),
     generation=AuthorityGenerationPin(
         content_hash_hex({"generation": "workbench-bootstrap-fixture"}),
         content_hash_hex({"reader": "workbench-bootstrap-fixture"}),

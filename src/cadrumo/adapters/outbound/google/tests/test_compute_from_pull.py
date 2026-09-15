@@ -19,12 +19,12 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema_input_kind import InputKind
+from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...storage.errors import OutboundStorageConflictError, OutboundStorageValidationError
 from ..calc_sheets_pull import compute_from_pull
 from ..calc_sheets_pull_records import (
@@ -49,7 +49,7 @@ _M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
 def _modelo_303_snapshot():
     from datetime import date
 
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    return published_snapshot("303", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def _matching_metadata(snapshot) -> PullMetadata:

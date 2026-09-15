@@ -18,8 +18,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ....domain.calculations.registry.tests.published_authority import published_legal_reference
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -43,11 +43,10 @@ def test_be_interest_resolves_treaty_ceiling_of_10_percent() -> None:
 
 def test_be_treaty_legal_entries_are_grounded() -> None:
     """The BE treaty rows and their BOE-grounded legal entries are registered."""
-    catalogues = compiled_bundled_authority().catalogues
-    assert "convenio-es-be-1995:art-10" in catalogues.legal
-    assert "convenio-es-be-1995:art-11" in catalogues.legal
-    art10 = catalogues.legal["convenio-es-be-1995:art-10"]
-    art11 = catalogues.legal["convenio-es-be-1995:art-11"]
+    assert published_legal_reference("convenio-es-be-1995:art-10").id == "convenio-es-be-1995:art-10"
+    assert published_legal_reference("convenio-es-be-1995:art-11").id == "convenio-es-be-1995:art-11"
+    art10 = published_legal_reference("convenio-es-be-1995:art-10")
+    art11 = published_legal_reference("convenio-es-be-1995:art-11")
     assert art10.document_id == "BOE-A-2003-13375"
     assert art11.document_id == "BOE-A-2003-13375"
     assert "no podrá exceder del 15 por 100" in art10.required_text

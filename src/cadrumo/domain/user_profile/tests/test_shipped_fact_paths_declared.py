@@ -22,16 +22,16 @@ import ast
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.directory_scan import scan_directory
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..values import section_field_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _declared_field_paths() -> frozenset[str]:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     return frozenset(f"{section.key}.{field.key}" for section in schema.sections for field in section.fields)
 
 

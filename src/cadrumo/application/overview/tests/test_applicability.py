@@ -193,7 +193,7 @@ def test_undeclared_profile_yields_incomplete_for_every_modelo() -> None:
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
         assert result.applicable is False
         assert "tipo de contribuyente" in result.reason
-        assert "config profile edit" in result.reason
+        assert "config profile edit" not in result.reason
 
 
 def test_natural_person_without_income_categories_is_incomplete() -> None:
@@ -276,12 +276,13 @@ def test_unruled_modelo_reason_differs_from_undeclared_reason() -> None:
 def test_undeclared_profile_still_uses_undeclared_reason() -> None:
     """The undeclared-taxpayer path keeps the 'declare your taxpayer
     type first' rationale — that guidance is correct when the profile
-    itself is incomplete."""
+    itself is incomplete. The rationale is prose only: the remedy command
+    travels as a typed recovery precondition, never inside the reason."""
 
     result = derive_modelo_applicability(_undeclared(), "100")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "tipo de contribuyente" in result.reason
-    assert "config profile edit" in result.reason
+    assert "config profile edit" not in result.reason
 
 
 def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:

@@ -27,9 +27,12 @@ from __future__ import annotations
 import re
 
 import pytest
+import typer
+from typer.core import TyperGroup
 
 from ....core.i18n.render import tr
 from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
+from .cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -108,17 +111,26 @@ def _advertised_tokens(locale: str, help_key: str) -> set[str]:
 def _rendered_option_tokens() -> set[str]:
     """Tokens on the option as the CLI actually renders it to an operator.
 
-    Read off the live ``OptionInfo`` rather than the locale catalogue, so this
-    covers the whole path -- key, resolution, and the inline fallback behind it
-    -- as one surface. If ``tr`` ever stopped resolving, this is what the
-    operator would see, and it still has to name every accepted key.
+    Read off the ``--descendiente`` parameter of the live Click command tree
+    rather than the locale catalogue, so this covers the whole path -- command
+    registration, key, resolution, and the inline fallback behind it -- as one
+    surface. The unwrapped parameter help is read instead of ``--help`` output
+    because the terminal renderer breaks the unspaced format string mid-token.
     """
-    import inspect
-
-    from ..config.descendiente import descendiente_add
-
-    option = inspect.signature(descendiente_add).parameters["descendiente"].default
-    return set(_TOKEN_RE.findall(getattr(option, "help", "") or ""))
+    # The live tree is typer's vendored Click hierarchy, so groups narrow to
+    # ``TyperGroup`` and children resolve through ``typer.Context``; lazily
+    # mounted subcommands are only reachable through ``get_command``.
+    group = cadrumo_click_command()
+    for name in ("config", "profile", "descendiente"):
+        assert isinstance(group, TyperGroup), f"{group.name!r} is not a command group"
+        group = group.get_command(typer.Context(group), name)
+        assert group is not None, f"live command tree has no {name!r} group"
+    assert isinstance(group, TyperGroup), f"{group.name!r} is not a command group"
+    add_command = group.get_command(typer.Context(group), "add")
+    assert add_command is not None, "live command tree has no descendiente add command"
+    option = next((param for param in add_command.params if param.name == "descendiente"), None)
+    assert option is not None, "the add command exposes no --descendiente option"
+    return set(_TOKEN_RE.findall(getattr(option, "help", None) or ""))
 
 
 @pytest.mark.parametrize(("locale", "help_key"), _SURFACES)

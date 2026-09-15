@@ -11,7 +11,6 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.custody.capsule import (
     load_committed_profile_custody_label_record,
@@ -58,6 +57,8 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from ......domain.calculations.registry.tests.published_authority import published_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -318,7 +319,7 @@ def test_complete_setup_cas_replaces_only_the_current_authenticated_record(tmp_p
         # the promotion door's reason rather than this test's.
         initial_record=_create_profile_record_for_test(
             profile_id=str(_PROFILE_ID),
-            facts=complete_profile_facts(load_user_profile_schema()),
+            facts=complete_profile_facts(published_profile_schema()),
             setup_state=ProfileSetupState.INCOMPLETE,
             context=_profile_create_context_for_test,
         ),

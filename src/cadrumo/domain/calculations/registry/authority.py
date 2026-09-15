@@ -746,7 +746,7 @@ class PinnedAuthorityOperation:
             revision_id=revision_id,
         )
         revision = self.revision_with_export_layouts(normalized, str(selected.id))
-        modelo = directory.modelo.materialize(revision)
+        modelo = directory.materialize(revision)
         legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
         globals_value = self.load(SnapshotGlobalsComponentQuery(), pin=self.generation)
         if not isinstance(globals_value, SnapshotGlobalCatalogues):

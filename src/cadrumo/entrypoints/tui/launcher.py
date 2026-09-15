@@ -679,7 +679,7 @@ def resolve_modelo_workspace_static_inspection(
             selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=on)
             revision = self._operation.revision(modelo_id, str(selected.id))
             if grade is None:
-                modelo_definition = directory.modelo.materialize(revision)
+                modelo_definition = directory.materialize(revision)
                 legal_ids, source_ids = collect_snapshot_ref_ids(modelo_definition, revision)
                 inspection = RegistryRevisionInspection.from_revision(
                     modelo=modelo_definition,

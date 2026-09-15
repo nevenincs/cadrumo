@@ -33,7 +33,7 @@ from .._prompts import (
 from .session import connected_server_and_client_session as connect
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -42,11 +42,12 @@ _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 _PERIOD_COMPLETIONS = tuple(str(value) for value in accepted_filing_period_codes())
 
 
-def _bundled_registry_authority() -> ValidatedRegistryAuthority:
-    """Load the validated catalogue used as the completion test authority."""
-    from dev.registry.compiler.authority import compiled_bundled_authority
+def _published_supported_filing_years() -> SupportedFilingYearsCatalogue | None:
+    """Read the filing-year envelope the published authority serves to runtime."""
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-    return compiled_bundled_authority()
+    with bundled_indexed_authority().operation() as operation:
+        return operation.modelo_directory(operation.modelo_ids()[0]).supported_filing_years
 
 
 def _shipped_skill_texts() -> dict[str, str]:
@@ -112,8 +113,7 @@ def test_server_lists_and_serves_every_prompt() -> None:
 
     # An empty descriptor set exercises the prompt handlers without building the
     # CLI tool descriptors (the prompt channel is independent of the tool surface).
-    authority = _bundled_registry_authority()
-    support = authority.catalogues.supported_filing_years
+    support = _published_supported_filing_years()
     assert support is not None
     server = cast("Any", build_server((), supported_filing_years=support))
     skill_texts = _shipped_skill_texts()
@@ -234,8 +234,7 @@ def test_prompt_get_substitutes_the_supplied_scope_into_the_brief() -> None:
 
 
 def test_completions_serve_period_and_year_values_by_prefix() -> None:
-    authority = _bundled_registry_authority()
-    support = authority.catalogues.supported_filing_years
+    support = _published_supported_filing_years()
     assert support is not None
     authored_year_values = tuple(str(year) for year in support.years)
 

@@ -17,13 +17,13 @@ value somewhere else in the model still fails.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.classification.policies import SensitivityClass
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -183,8 +183,7 @@ def test_sections_keep_their_schema_declaration_order() -> None:
 
 def _shipped_decisions() -> dict[str, bool]:
     """Masking decision for every field the real shipped schema declares."""
-    from dev.registry.tests.profile_schema_support import load_user_profile_schema
-
+    from ....domain.calculations.registry.tests.published_authority import published_profile_schema
     from ..overview import mask_profile_field
 
     return {
@@ -193,7 +192,7 @@ def _shipped_decisions() -> dict[str, bool]:
             label=field.description,
             sensitivity=field.sensitivity,
         )
-        for section in load_user_profile_schema().sections
+        for section in published_profile_schema().sections
         for field in section.fields
     }
 
@@ -211,11 +210,10 @@ def test_a_shipped_field_masks_exactly_when_the_schema_says_secret() -> None:
     keyword arm reading its own description. It fails again the day that
     arm is widened back over classified fields.
     """
-    from dev.registry.tests.profile_schema_support import load_user_profile_schema
-
+    from ....domain.calculations.registry.tests.published_authority import published_profile_schema
     from ..overview import mask_profile_field
 
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     divergent = {
         f"{section.key}.{field.key}": (decision, field.sensitivity.value)
         for section in schema.sections

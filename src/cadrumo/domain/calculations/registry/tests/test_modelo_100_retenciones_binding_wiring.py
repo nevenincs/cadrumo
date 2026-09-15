@@ -57,9 +57,9 @@ _DATE_CONTEXT_2025 = {"filing_period": date(2025, 12, 31)}
 _DATE_BINDINGS_2025: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
 
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    # m111/m123/m193 are exercised through the binding channel (see
+    # _base_binding_values); duplicating them here would conflict with a
+    # non-zero test value supplied on the binding channel for the same id.
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
@@ -129,6 +129,11 @@ def _base_binding_values_2025(
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # Art. 75 Ley 19/1994 maritime-worker exemption operands; neutral zero
+        # when the chain under test is unrelated (path itself is false).
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
     }
     if m111 is not None:
         values["renta-modelo-111-retenciones-periodicas"] = m111
@@ -162,6 +167,9 @@ def test_m190_annual_retenciones_binding_populates_2025_casilla_0596(
         binding_values=_base_binding_values_2025(m190=annual_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
+        # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
+        # when the chain under test is unrelated.
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == annual_retenciones, (
@@ -233,6 +241,9 @@ def test_salary_certificate_retenciones_binding_populates_2025_casilla_0596(
         binding_values=_base_binding_values_2025(certificado_trabajo=suffered_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
+        # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
+        # when the chain under test is unrelated.
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == suffered_retenciones
@@ -269,6 +280,9 @@ def test_m193_annual_retenciones_binding_populates_2025_casilla_0597(
         binding_values=_base_binding_values_2025(m193=annual_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
+        # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
+        # when the chain under test is unrelated.
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
