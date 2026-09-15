@@ -32,6 +32,7 @@ from .....application.modelo.m145_communication_records import (
 )
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -77,7 +78,10 @@ def _content_length(resolved: ResolvedExportLayout) -> int:
     return max((field.offset or 0) + (field.length or 0) - 1 for field in resolved.ordered_fields)
 
 
-def test_export_m145_communication_record_renders_registry_fixed_width_payload(tmp_path: Path) -> None:
+def test_export_m145_communication_record_renders_registry_fixed_width_payload(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     resolved = _resolved_layout()
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
@@ -85,12 +89,14 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(t
             M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         result = export_m145_communication_record(
             record.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             renderer=RegistryFixedWidthRecordRenderer(),
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     nif = resolved.fields_by_id["modelo-145-dr-03-perceptor-nif"]
@@ -111,7 +117,10 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(t
     assert _payload_slice(result.payload, birth_year) == b"1981"
 
 
-def test_export_m145_communication_record_applies_registry_numeric_and_money_padding(tmp_path: Path) -> None:
+def test_export_m145_communication_record_applies_registry_numeric_and_money_padding(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     resolved = _resolved_layout()
     descendant_year = resolved.fields_by_id["modelo-145-dr-16-descendiente-1-anio-nacimiento"]
     compensation = resolved.fields_by_id["modelo-145-dr-44-pension-compensatoria-importe-anual"]
@@ -130,12 +139,14 @@ def test_export_m145_communication_record_applies_registry_numeric_and_money_pad
             ),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         result = export_m145_communication_record(
             record.communication_record_id,
             bucket_id=runtime.bucket_id,
             renderer=RegistryFixedWidthRecordRenderer(),
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     assert _payload_slice(result.payload, descendant_year) == b"2010"
@@ -143,7 +154,10 @@ def test_export_m145_communication_record_applies_registry_numeric_and_money_pad
     assert _payload_slice(result.payload, absent_ascendant_year) == b"0000"
 
 
-def test_export_m145_communication_record_matches_canonical_encoder_for_money_and_text(tmp_path: Path) -> None:
+def test_export_m145_communication_record_matches_canonical_encoder_for_money_and_text(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The registry layout's text and monetary fields share the generic byte encoder."""
     resolved = _resolved_layout()
     record_definition = resolved.layout.records[0]
@@ -160,12 +174,14 @@ def test_export_m145_communication_record_matches_canonical_encoder_for_money_an
             ),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         result = export_m145_communication_record(
             record.communication_record_id,
             bucket_id=runtime.bucket_id,
             renderer=RegistryFixedWidthRecordRenderer(),
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     # The adapter owns the body; this layer owns only the terminator the
@@ -191,7 +207,10 @@ def test_export_m145_communication_record_matches_canonical_encoder_for_money_an
     assert result.payload == canonical_body
 
 
-def test_export_m145_communication_record_refuses_invalid_record(tmp_path: Path) -> None:
+def test_export_m145_communication_record_refuses_invalid_record(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     values = _field_values()
     values.pop("perceptor.nif")
 
@@ -200,6 +219,7 @@ def test_export_m145_communication_record_refuses_invalid_record(tmp_path: Path)
             M145CommunicationCreateCommand(communication_year=2026, field_values=values),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         with pytest.raises(ValueError, match="validation passes"):
             export_m145_communication_record(
@@ -207,10 +227,14 @@ def test_export_m145_communication_record_refuses_invalid_record(tmp_path: Path)
                 bucket_id=runtime.bucket_id,
                 renderer=RegistryFixedWidthRecordRenderer(),
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+                operation=operation,
             )
 
 
-def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path: Path) -> None:
+def test_export_m145_communication_record_refuses_layout_field_overflow(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     first_surname = _resolved_layout().fields_by_id["modelo-145-dr-04-perceptor-primer-apellido"]
     assert first_surname.length is not None
 
@@ -222,6 +246,7 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path
             ),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         with pytest.raises(ValueError):
             export_m145_communication_record(
@@ -229,21 +254,24 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path
                 bucket_id=runtime.bucket_id,
                 renderer=RegistryFixedWidthRecordRenderer(),
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+                operation=operation,
             )
 
 
-def _seeded_export(runtime) -> M145CommunicationExportResult:
+def _seeded_export(runtime, *, operation: PinnedAuthorityOperation) -> M145CommunicationExportResult:
     """Produce one genuine export receipt through the production path."""
     record = create_m145_communication_record(
         M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
         bucket_id=runtime.bucket_id,
         ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        operation=operation,
     )
     return export_m145_communication_record(
         record.communication_record_id,
         bucket_id=runtime.bucket_id,
         renderer=RegistryFixedWidthRecordRenderer(),
         ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        operation=operation,
     )
 
 
@@ -251,7 +279,10 @@ def _tampered(result: M145CommunicationExportResult, **overrides: object):
     return M145CommunicationExportResult.model_validate({**result.model_dump(), **overrides})
 
 
-def test_export_receipt_refuses_a_byte_length_that_measures_nothing(tmp_path: Path) -> None:
+def test_export_receipt_refuses_a_byte_length_that_measures_nothing(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A receipt whose byte_length does not measure its payload is refused.
 
     The producer computes coherent values, so only a direct construction reaches
@@ -259,22 +290,28 @@ def test_export_receipt_refuses_a_byte_length_that_measures_nothing(tmp_path: Pa
     downstream communication history on metadata describing no payload.
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        result = _seeded_export(runtime)
+        result = _seeded_export(runtime, operation=operation)
 
     with pytest.raises(ValidationError, match="byte_length"):
         _tampered(result, byte_length=999)
 
 
-def test_export_receipt_refuses_a_digest_of_other_bytes(tmp_path: Path) -> None:
+def test_export_receipt_refuses_a_digest_of_other_bytes(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A receipt carrying a digest of something else is refused."""
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        result = _seeded_export(runtime)
+        result = _seeded_export(runtime, operation=operation)
 
     with pytest.raises(ValidationError, match="payload_sha256"):
         _tampered(result, payload_sha256="0" * 64)
 
 
-def test_export_receipt_refuses_a_payload_swapped_under_a_kept_receipt(tmp_path: Path) -> None:
+def test_export_receipt_refuses_a_payload_swapped_under_a_kept_receipt(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Swapping the payload while keeping the receipt is refused too.
 
     The mirror of the two cases above: a check that only ever compared the two
@@ -282,20 +319,23 @@ def test_export_receipt_refuses_a_payload_swapped_under_a_kept_receipt(tmp_path:
     the bytes rather than in the metadata.
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        result = _seeded_export(runtime)
+        result = _seeded_export(runtime, operation=operation)
 
     with pytest.raises(ValidationError):
         _tampered(result, payload=result.payload + b"\x00")
 
 
-def test_export_receipt_round_trips_its_own_producer_output(tmp_path: Path) -> None:
+def test_export_receipt_round_trips_its_own_producer_output(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Positive control: the produced receipt revalidates unchanged.
 
     Without it an all-refused result would look like a working guard while
     actually meaning the producer emits an incoherent receipt.
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        result = _seeded_export(runtime)
+        result = _seeded_export(runtime, operation=operation)
 
     revalidated = M145CommunicationExportResult.model_validate(result.model_dump())
 

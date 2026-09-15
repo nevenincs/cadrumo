@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -98,19 +100,21 @@ def _work_unit(*, filed_revision_id: str | None = None) -> WorkUnit:
     )
 
 
-def test_calculation_revision_text_lines_render_human_state_label_but_payload_keeps_token() -> None:
+def test_calculation_revision_text_lines_render_human_state_label_but_payload_keeps_token(
+    operation: PinnedAuthorityOperation,
+) -> None:
     revision = _verified_revision()
 
     with override_settings(cadrumo_output_language="en"):
-        lines = calculation_revision_lines(revision, include_result_summary=False)
-        observation_lines = calculation_observation_lines(revision)
+        lines = calculation_revision_lines(revision, include_result_summary=False, operation=operation)
+        observation_lines = calculation_observation_lines(revision, operation=operation)
 
     assert f"state\t{CalculationRevisionState.VERIFICADO_COMPLETO.value}" not in lines
     assert "state\tverified complete" in lines
     assert f"state\t{CalculationRevisionState.VERIFICADO_COMPLETO.value}" not in observation_lines
     assert "state\tverified complete" in observation_lines
     assert (
-        calculation_revision_payload(revision, include_result_summary=False).state
+        calculation_revision_payload(revision, include_result_summary=False, operation=operation).state
         == CalculationRevisionState.VERIFICADO_COMPLETO.value
     )
 

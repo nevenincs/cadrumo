@@ -55,7 +55,12 @@ from cadrumo.application.modelo.iva_wallet_gate import (
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationOverride,
@@ -65,7 +70,9 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history(tmp_path: Path) -> None:
+def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
         _store_operator_profile()
         observation_repo = CalculationObservationRepository()
@@ -83,6 +90,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             taxpayer_nif=_TAXPAYER_NIF,
             wallet=_wallet_observation(pending=Decimal("1200.00")),
             repository=observation_repo,
+            decision_repository=IvaWalletDecisionRepository(),
             decided_at=_DECIDED_AT,
             local_recurrence=local_recurrence,
             prefill_report=prefill_report,
@@ -108,9 +116,11 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         assert filed_history_source.source_filing_year == _TARGET_YEAR
         assert filed_history_source.source_periods == (Period.from_year_and_code(_TARGET_YEAR, "1T"),)
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
         with calculation_ports_for_test(
-            bucket_id=work_repo.bucket_id,
+            bucket_id=work_unit.bucket_id,
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
@@ -125,7 +135,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
                 ports=_calculation_ports_121,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit.period, reference="test:iva-wallet-engine-integration"
+                    work_unit.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
 
@@ -142,7 +152,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
 
 
 def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """#50 guardrail 3 + safety: a real prior filed-history balance is NOT auto-carried.
 
@@ -161,11 +171,13 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
         snapshot = _snapshot_303()
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
         with (
             pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info,
             calculation_ports_for_test(
-                bucket_id=work_repo.bucket_id,
+                bucket_id=work_unit.bucket_id,
                 work_unit_repository=work_repo,
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
@@ -181,7 +193,7 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
                 ports=_calculation_ports_173,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit.period, reference="test:iva-wallet-engine-integration"
+                    work_unit.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
 
@@ -195,7 +207,9 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
     assert exc_info.value.context.get("reason")
 
 
-def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp_path: Path) -> None:
+def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
         _store_operator_profile()
         observation_repo = CalculationObservationRepository()
@@ -213,6 +227,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
             taxpayer_nif=_TAXPAYER_NIF,
             wallet=None,
             repository=observation_repo,
+            decision_repository=IvaWalletDecisionRepository(),
             decided_at=_DECIDED_AT,
             local_recurrence=local_recurrence,
             prefill_report=prefill_report,
@@ -227,14 +242,16 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
             "filed_history_observation",
         }
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
         with (
             pytest.raises(
                 ModeloIvaWalletReconciliationBlocked,
                 match="filed_history_requires_override",
             ) as exc_info,
             calculation_ports_for_test(
-                bucket_id=work_repo.bucket_id,
+                bucket_id=work_unit.bucket_id,
                 work_unit_repository=work_repo,
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
@@ -251,7 +268,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
                 ports=_calculation_ports_237,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit.period, reference="test:iva-wallet-engine-integration"
+                    work_unit.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
         assert not hasattr(exc_info.value, "suggestion")
@@ -262,7 +279,9 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
         assert len(calc_repo.load()) == 0
 
 
-def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed_envelope(tmp_path: Path) -> None:
+def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed_envelope(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     taxpayer_nif = "X1234567L"
     decided_1t_at = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
     with _secure_backend(tmp_path):
@@ -273,9 +292,10 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
             snapshot_1t,
             work_unit_repository=work_repo,
             clock=decided_1t_at,
+            operation=operation,
         )
         with calculation_ports_for_test(
-            bucket_id=work_repo.bucket_id,
+            bucket_id=work_unit_1t.bucket_id,
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
@@ -294,17 +314,17 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
                 ports=_calculation_ports_278,
                 clock=decided_1t_at,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit_1t.period, reference="test:iva-wallet-engine-integration"
+                    work_unit_1t.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
         assert revision_1t.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("84.00")
         assert revision_1t.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("0.00")
 
         snapshot_2t = _snapshot_303(period="2T")
-        work_unit_2t = _create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo)
+        work_unit_2t = _create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo, operation=operation)
         with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="no_usable_authority"):
             with calculation_ports_for_test(
-                bucket_id=work_repo.bucket_id,
+                bucket_id=work_unit_2t.bucket_id,
                 work_unit_repository=work_repo,
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
@@ -320,7 +340,7 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
                     ports=_calculation_ports_300,
                     clock=_DECIDED_AT,
                     filing_instance_evidence=general_m303_filing_evidence(
-                        work_unit_2t.period, reference="test:iva-wallet-engine-integration"
+                        work_unit_2t.period, reference="test:iva-wallet-engine-integration", operation=operation
                     ),
                 )
 
@@ -335,7 +355,7 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
             iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
         with calculation_ports_for_test(
-            bucket_id=work_repo.bucket_id,
+            bucket_id=work_unit_2t.bucket_id,
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
@@ -351,7 +371,7 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
                 ports=_calculation_ports_327,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit_2t.period, reference="test:iva-wallet-engine-integration"
+                    work_unit_2t.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
 
@@ -371,7 +391,9 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
         )
 
 
-def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history(tmp_path: Path) -> None:
+def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
         _store_operator_profile()
         observation_repo = CalculationObservationRepository()
@@ -402,6 +424,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
                 generation_period="4T",
             ),
             repository=observation_repo,
+            decision_repository=IvaWalletDecisionRepository(),
             decided_at=_DECIDED_AT,
             local_recurrence=local_recurrence,
             prefill_report=prefill_report,
@@ -413,9 +436,11 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
         assert report.prefill_report.prefilled[0].source_filing_year == 2025
         assert report.prefill_report.prefilled[0].source_periods == ("4T",)
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
         with calculation_ports_for_test(
-            bucket_id=work_repo.bucket_id,
+            bucket_id=work_unit.bucket_id,
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
@@ -431,7 +456,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
                 ports=_calculation_ports_403,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit.period, reference="test:iva-wallet-engine-integration"
+                    work_unit.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
 
@@ -444,12 +469,13 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
 def _calculate_credit_1t(
     *,
     taxpayer_nif: str,
+    operation: PinnedAuthorityOperation,
 ):
     """Produce a real negative 1T calculation whose filing disposition decides carry."""
     _store_operator_profile_with_tax_id(taxpayer_nif)
     work_repo, calc_repo, event_repo = _work_unit_repositories()
     snapshot = _snapshot_303(period="1T")
-    work_unit = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo)
+    work_unit = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo, operation=operation)
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=work_repo,
@@ -467,7 +493,7 @@ def _calculate_credit_1t(
             ports=_calculation_ports_435,
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:iva-wallet-engine-integration"
+                work_unit.period, reference="test:iva-wallet-engine-integration", operation=operation
             ),
         )
     assert revision.casilla_values[_M303_DISPONIBLE_CASILLA] > Decimal("0")
@@ -524,11 +550,15 @@ def _official_303_envelope(
     repository.save(mutated)
 
 
-def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_path: Path) -> None:
+def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A filed D credit reaches later wallet decisions only as zero recurrence."""
     taxpayer_nif = _TAXPAYER_NIF
     with _secure_backend(tmp_path):
-        work_unit_1t, revision_1t, work_repo, calc_repo, event_repo = _calculate_credit_1t(taxpayer_nif=taxpayer_nif)
+        work_unit_1t, revision_1t, work_repo, calc_repo, event_repo = _calculate_credit_1t(
+            taxpayer_nif=taxpayer_nif, operation=operation
+        )
         observations = CalculationObservationRepository()
         persist_filed_revision_observation(
             revision=revision_1t,
@@ -543,6 +573,7 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
         work_unit_2t = _create_modelo_303_work_unit(
             _snapshot_303(period="2T"),
             work_unit_repository=work_repo,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=work_repo.bucket_id,
@@ -561,7 +592,7 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
                 ports=_calculation_ports_525,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit_2t.period, reference="test:iva-wallet-engine-integration"
+                    work_unit_2t.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
         persist_filed_revision_observation(
@@ -577,6 +608,7 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
         work_unit_3t = _create_modelo_303_work_unit(
             _snapshot_303(period="3T"),
             work_unit_repository=work_repo,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=work_repo.bucket_id,
@@ -595,7 +627,7 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
                 ports=_calculation_ports_555,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit_3t.period, reference="test:iva-wallet-engine-integration"
+                    work_unit_3t.period, reference="test:iva-wallet-engine-integration", operation=operation
                 ),
             )
 
@@ -610,26 +642,35 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
     assert decision_3t.selected_amount == decision_3t.local_recurrence_amount == Decimal("0")
 
 
-def test_compensated_filed_envelope_reports_its_validated_credit_to_wallet(tmp_path: Path) -> None:
+def test_compensated_filed_envelope_reports_its_validated_credit_to_wallet(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The same real credit is non-zero only when its filed envelope elects C."""
     taxpayer_nif = _TAXPAYER_NIF
     with _secure_backend(tmp_path):
-        work_unit, revision, work_repo, _, _ = _calculate_credit_1t(taxpayer_nif=taxpayer_nif)
+        work_unit, revision, work_repo, _, _ = _calculate_credit_1t(taxpayer_nif=taxpayer_nif, operation=operation)
         persisted_credit = revision.casilla_values[_M303_DISPONIBLE_CASILLA]
+        observations = CalculationObservationRepository()
         persist_filed_revision_observation(
             revision=revision,
             work_unit=work_unit,
-            repository=CalculationObservationRepository(),
+            repository=observations,
             captured_at=_DECIDED_AT,
             result_disposition=ResultDisposition.COMPENSACION,
             taxpayer_nif=taxpayer_nif,
             iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
-        target = _create_modelo_303_work_unit(_snapshot_303(period="2T"), work_unit_repository=work_repo)
-        decision = lazily_reconcile_local_iva_compensation_for_work_unit(
-            target,
-            snapshot=_snapshot_303(period="2T"),
+        target = _create_modelo_303_work_unit(
+            _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
         )
+        with _indexed_authority_for_test().operation() as operation:
+            decision = lazily_reconcile_local_iva_compensation_for_work_unit(
+                target,
+                snapshot=_snapshot_303(period="2T"),
+                operation=operation,
+                repository=IvaWalletDecisionRepository(),
+                observation_repository=observations,
+            )
 
     assert decision is not None
     assert decision.selected_amount == decision.local_recurrence_amount == persisted_credit
@@ -641,12 +682,14 @@ def test_compensated_filed_envelope_reports_its_validated_credit_to_wallet(tmp_p
     )
 
 
-def test_official_and_local_refund_envelopes_feed_the_same_wallet_recurrence(tmp_path: Path) -> None:
+def test_official_and_local_refund_envelopes_feed_the_same_wallet_recurrence(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Official-pull and local-filing provenance share the exact D wallet result."""
     decisions = []
     for source_kind, taxpayer_nif in (("official", _TAXPAYER_NIF), ("local", _TAXPAYER_NIF)):
         with _secure_backend(tmp_path / source_kind):
-            work_unit, revision, work_repo, _, _ = _calculate_credit_1t(taxpayer_nif=taxpayer_nif)
+            work_unit, revision, work_repo, _, _ = _calculate_credit_1t(taxpayer_nif=taxpayer_nif, operation=operation)
             observations = CalculationObservationRepository()
             if source_kind == "official":
                 _official_303_envelope(
@@ -666,11 +709,17 @@ def test_official_and_local_refund_envelopes_feed_the_same_wallet_recurrence(tmp
                     taxpayer_nif=taxpayer_nif,
                     iva_compensation_history_repository=IvaCompensationHistoryRepository(),
                 )
-            target = _create_modelo_303_work_unit(_snapshot_303(period="2T"), work_unit_repository=work_repo)
-            decision = lazily_reconcile_local_iva_compensation_for_work_unit(
-                target,
-                snapshot=_snapshot_303(period="2T"),
+            target = _create_modelo_303_work_unit(
+                _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
             )
+            with _indexed_authority_for_test().operation() as operation:
+                decision = lazily_reconcile_local_iva_compensation_for_work_unit(
+                    target,
+                    snapshot=_snapshot_303(period="2T"),
+                    operation=operation,
+                    repository=IvaWalletDecisionRepository(),
+                    observation_repository=observations,
+                )
             assert decision is not None
             decisions.append((decision.selected_amount, decision.local_recurrence_amount, decision.blocked))
 
@@ -688,31 +737,43 @@ def test_wallet_refuses_revision_mismatched_or_header_conflicting_official_envel
     tmp_path: Path,
     stamped_revision_id: str | None,
     result_disposition: ResultDisposition | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A stale calculation cannot rescue official D evidence that the envelope rejects."""
     taxpayer_nif = _TAXPAYER_NIF
     with _secure_backend(tmp_path):
-        work_unit, revision, work_repo, _, _ = _calculate_credit_1t(taxpayer_nif=taxpayer_nif)
+        work_unit, revision, work_repo, _, _ = _calculate_credit_1t(taxpayer_nif=taxpayer_nif, operation=operation)
+        observations = CalculationObservationRepository()
         _official_303_envelope(
-            CalculationObservationRepository(),
+            observations,
             revision=revision,
             work_unit=work_unit,
             declaration_type=ResultDisposition.DEVOLUCION,
             stamped_revision_id=stamped_revision_id,
             result_disposition=result_disposition,
         )
-        target = _create_modelo_303_work_unit(_snapshot_303(period="2T"), work_unit_repository=work_repo)
-        if stamped_revision_id is None:
-            with pytest.raises(ValidationError, match="stamped_revision_id"):
-                lazily_reconcile_local_iva_compensation_for_work_unit(
-                    target,
-                    snapshot=_snapshot_303(period="2T"),
-                )
-            return
-        decision = lazily_reconcile_local_iva_compensation_for_work_unit(
-            target,
-            snapshot=_snapshot_303(period="2T"),
+        target = _create_modelo_303_work_unit(
+            _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
         )
+        with _indexed_authority_for_test().operation() as operation:
+            if stamped_revision_id is None:
+                with pytest.raises(ValidationError, match="stamped_revision_id"):
+                    lazily_reconcile_local_iva_compensation_for_work_unit(
+                        target,
+                        snapshot=_snapshot_303(period="2T"),
+                        operation=operation,
+                        repository=IvaWalletDecisionRepository(),
+                        observation_repository=observations,
+                    )
+                return
+            decision = lazily_reconcile_local_iva_compensation_for_work_unit(
+                target,
+                snapshot=_snapshot_303(period="2T"),
+                operation=operation,
+                repository=IvaWalletDecisionRepository(),
+                observation_repository=observations,
+            )
 
     assert decision is not None
     assert decision.selected_amount is None
@@ -727,14 +788,12 @@ def test_wallet_refuses_revision_mismatched_or_header_conflicting_official_envel
 )
 @pytest.mark.parametrize("mutation", ["stale_stamp", "header_conflict"])
 def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
-    tmp_path: Path,
-    prior_disposition: ResultDisposition,
-    mutation: str,
+    tmp_path: Path, prior_disposition: ResultDisposition, mutation: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Neither a zero D decision nor a non-zero C decision outlives bad source evidence."""
     taxpayer_nif = _TAXPAYER_NIF
     with _secure_backend(tmp_path):
-        work_unit, revision, work_repo, _, _ = _calculate_credit_1t(taxpayer_nif=taxpayer_nif)
+        work_unit, revision, work_repo, _, _ = _calculate_credit_1t(taxpayer_nif=taxpayer_nif, operation=operation)
         observations = CalculationObservationRepository()
         persist_filed_revision_observation(
             revision=revision,
@@ -745,11 +804,17 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
             taxpayer_nif=taxpayer_nif,
             iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
-        target = _create_modelo_303_work_unit(_snapshot_303(period="2T"), work_unit_repository=work_repo)
-        initial = lazily_reconcile_local_iva_compensation_for_work_unit(
-            target,
-            snapshot=_snapshot_303(period="2T"),
+        target = _create_modelo_303_work_unit(
+            _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
         )
+        with _indexed_authority_for_test().operation() as operation:
+            initial = lazily_reconcile_local_iva_compensation_for_work_unit(
+                target,
+                snapshot=_snapshot_303(period="2T"),
+                operation=operation,
+                repository=IvaWalletDecisionRepository(),
+                observation_repository=observations,
+            )
         assert initial is not None
         assert any(source.source_locator == "observation-envelope:303:2026:1T" for source in initial.authority_sources)
 
@@ -771,16 +836,19 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
                 result_disposition=ResultDisposition.COMPENSACION,
             )
 
-        replayed = resolve_iva_compensation_decision_for_calculation(
-            target,
-            snapshot=_snapshot_303(period="2T"),
-            supplied_decision=None,
-            repository=IvaWalletDecisionRepository(),
-            binding_values=None,
-            backend_binding_values=None,
-            casilla_inputs=None,
-            backend_casilla_inputs=None,
-        )
+        with _indexed_authority_for_test().operation() as operation:
+            replayed = resolve_iva_compensation_decision_for_calculation(
+                target,
+                snapshot=_snapshot_303(period="2T"),
+                operation=operation,
+                supplied_decision=None,
+                repository=IvaWalletDecisionRepository(),
+                observation_repository=observations,
+                binding_values=None,
+                backend_binding_values=None,
+                casilla_inputs=None,
+                backend_casilla_inputs=None,
+            )
 
     assert replayed is not None
     assert isinstance(replayed, IvaCompensationReconciliationDecision)
@@ -790,7 +858,9 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
     assert replayed.blocked is True
 
 
-def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(tmp_path: Path) -> None:
+def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A taxpayer override never becomes envelope recurrence from its free-form locator."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         taxpayer_nif = _TAXPAYER_NIF
@@ -798,13 +868,15 @@ def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(tmp_
             _store_operator_profile_with_tax_id(taxpayer_nif)
             work_repo, _, _ = _work_unit_repositories()
             snapshot = _snapshot_303(period="2T")
-            target = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo)
+            target = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo, operation=operation)
             local_recurrence, prefill_report = (None, BindingPrefillReport(prefilled=(), binding_values={}))
+            observation_repository = CalculationObservationRepository()
             decision = reconcile_modelo_303_iva_compensation(
                 snapshot,
                 taxpayer_nif=taxpayer_nif,
                 wallet=None,
-                repository=CalculationObservationRepository(),
+                repository=observation_repository,
+                decision_repository=IvaWalletDecisionRepository(),
                 override=IvaCompensationOverride(
                     amount=Decimal("42"),
                     operator_explanation="Taxpayer reviewed the prior IVA compensation evidence.",
@@ -820,8 +892,10 @@ def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(tmp_
             replayed = resolve_iva_compensation_decision_for_calculation(
                 target,
                 snapshot=snapshot,
+                operation=_authority_operation_for_test,
                 supplied_decision=None,
                 repository=IvaWalletDecisionRepository(),
+                observation_repository=observation_repository,
                 binding_values=None,
                 backend_binding_values=None,
                 casilla_inputs=None,

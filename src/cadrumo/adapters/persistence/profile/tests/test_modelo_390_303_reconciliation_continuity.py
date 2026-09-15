@@ -62,6 +62,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -263,23 +264,25 @@ def _calculate_390_annual(
     its produced-value count.
     """
     snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
-    relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
-    relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
-    relation_binding_values = relation_prefill_values_as_binding_values(
-        snapshot.revision, relation_values_map, period="0A"
-    )
-    annual_partition = IvaCompensationAnnualPartitionSourceResolver(
-        repository=repository,
-        registry_snapshot=snapshot,
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id="m390-reconciliation-continuity",
-            modelo=_MODELO,
-            filing_year=filing_year,
-            period=Period.from_year_and_code(filing_year, "0A"),
-            revision=snapshot.revision,
-        ),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        relation_vals = resolve_relations_from_local_store(snapshot, operation=operation, repository=repository)
+        relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
+        relation_binding_values = relation_prefill_values_as_binding_values(
+            snapshot.revision, relation_values_map, period="0A"
+        )
+        annual_partition = IvaCompensationAnnualPartitionSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+            operation=operation,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="m390-reconciliation-continuity",
+                modelo=_MODELO,
+                filing_year=filing_year,
+                period=Period.from_year_and_code(filing_year, "0A"),
+                revision=snapshot.revision,
+            ),
+        )
     binding_values = {
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, annual_ledger),
         **relation_binding_values,

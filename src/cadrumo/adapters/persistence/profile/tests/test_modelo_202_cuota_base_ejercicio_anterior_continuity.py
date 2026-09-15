@@ -49,6 +49,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -238,15 +239,18 @@ def _resolve_202_relations(
     filing_year: int,
     period: str = "2P",
     obs_repo: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
 ) -> dict[RelationId, Decimal]:
     snapshot = compiled_bundled_authority().snapshot(
         _MODELO_202, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.CALCULATION
     )
-    prefill = resolve_relations_from_local_store(snapshot, repository=obs_repo)
+    prefill = resolve_relations_from_local_store(snapshot, repository=obs_repo, operation=operation)
     return {item.relation: item.value for item in prefill.values if item.value is not None}
 
 
-def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(tmp_path: Path) -> None:
+def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """1P casilla 01 auto-resolves from target year minus two, not minus one."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
@@ -264,6 +268,7 @@ def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(tmp_path: Pa
             filing_year=_TARGET_YEAR_1P,
             period="1P",
             obs_repo=obs_repo,
+            operation=operation,
         )
 
     assert resolved["modelo-202-cuota-base-ejercicio-anterior"] == _M200_1P_SOURCE_TWO_BACK
@@ -271,7 +276,9 @@ def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(tmp_path: Pa
     assert "modelo-202-cuota-base-ejercicio-anterior" not in resolved
 
 
-def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(tmp_path: Path) -> None:
+def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """2P casilla 01 auto-resolves to the immediately prior year's M200 cuota líquida.
 
     The cross-year continuity contract: once the prior M200 is recorded, the
@@ -282,12 +289,14 @@ def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(tmp_path: Path) 
         obs_repo = CalculationObservationRepository()
         _seed_m200_cuota_liquida(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
-        resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
+        resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
     assert result.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
 
 
-def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(tmp_path: Path) -> None:
+def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Casilla 03 (a ingresar) recomputes as (registry rate)% of the bound base.
 
     With casilla 01 bound from the prior M200 cuota and casilla 02 = 0, the
@@ -308,7 +317,7 @@ def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(tmp_path: Path) -> 
         obs_repo = CalculationObservationRepository()
         _seed_m200_cuota_liquida(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
-        resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
+        resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
         # Derive the rate from the real registry snapshot: this is the authority,
         # not a hardcoded literal. Any future statutory rate change that updates
@@ -335,7 +344,7 @@ def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(tmp_path: Path) -> 
     )
 
 
-def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """End-to-end enrollment: M202 2P prior-cuota carry across two renta years.
 
     Drives the REAL M202 2P backend for two distinct target renta years
@@ -362,14 +371,14 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
             obs_repo=obs_repo,
         )
 
-        resolved_n = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
+        resolved_n = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo, operation=operation)
         result_n, _produced_n = _calculate_202_2p(
             filing_year=_TARGET_YEAR_N,
             relation_values=resolved_n,
             casilla_02=Decimal("0"),
         )
 
-        resolved_n1 = _resolve_202_relations(filing_year=_TARGET_YEAR_N_PLUS_1, obs_repo=obs_repo)
+        resolved_n1 = _resolve_202_relations(filing_year=_TARGET_YEAR_N_PLUS_1, obs_repo=obs_repo, operation=operation)
         result_n1, _produced_n1 = _calculate_202_2p(
             filing_year=_TARGET_YEAR_N_PLUS_1,
             relation_values=resolved_n1,

@@ -33,6 +33,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.cli._app_live_justificante_composition import build_justificante_registration_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,7 +49,7 @@ def test_stamp_registers_justificante_and_marks_filing_live_captured() -> None:
         period="1T",
     )
 
-    stamped = register_capture_as_filing_evidence(snapshot=snapshot)
+    stamped = register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert stamped.external_evidence is not None
     assert stamped.external_evidence.kind is ExternalEvidenceKind.AEAT_LIVE_CAPTURE
@@ -96,7 +97,7 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
         period="1T",
     )
 
-    stamped = register_capture_as_filing_evidence(snapshot=snapshot)
+    stamped = register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert stamped.external_evidence is not None
     assert stamped.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
@@ -137,7 +138,7 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.evidence_overwrite_refused",
     ):
-        register_capture_as_filing_evidence(snapshot=snapshot)
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
     filing = (
@@ -171,7 +172,7 @@ def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.csv_mismatch",
     ):
-        register_capture_as_filing_evidence(snapshot=snapshot)
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
     assert JustificanteRepository().load("DIFFERENTCSV12345") is None
@@ -218,7 +219,7 @@ def test_stamp_accepts_a_capture_whose_expediente_is_not_the_receipt_presentatio
         "the expediente id was not actually changed, so nothing diverges here"
     )
 
-    stamped = register_capture_as_filing_evidence(snapshot=snapshot)
+    stamped = register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert stamped.aeat_accepted is True
     assert stamped.external_evidence is not None
@@ -241,7 +242,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> Non
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.filing_record_mismatch",
     ):
-        register_capture_as_filing_evidence(snapshot=snapshot)
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
     filing = (
@@ -280,7 +281,10 @@ def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.evidence_snapshot_not_active",
     ):
-        register_capture_as_filing_evidence(snapshot=superseded_snapshot)
+        register_capture_as_filing_evidence(
+            snapshot=superseded_snapshot,
+            ports=build_justificante_registration_ports(),
+        )
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
     filing = (
@@ -313,7 +317,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.filing_record_mismatch",
     ):
-        register_capture_as_filing_evidence(snapshot=snapshot)
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
     filing = (
@@ -346,7 +350,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> Non
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.filing_record_mismatch",
     ):
-        register_capture_as_filing_evidence(snapshot=snapshot)
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
     filing = (
@@ -382,7 +386,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.filing_record_mismatch",
     ):
-        register_capture_as_filing_evidence(snapshot=snapshot)
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
     filing = (
@@ -414,4 +418,4 @@ def test_stamp_refuses_when_no_current_filing_exists() -> None:
         LiveApplicationInputError,
         match=r"application\.live\.justificante\.errors\.filing_record_missing",
     ):
-        register_capture_as_filing_evidence(snapshot=snapshot)
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=build_justificante_registration_ports())

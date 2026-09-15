@@ -38,6 +38,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....application.ledger.document_transcription import DocumentTranscription
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.config import load_settings
@@ -143,11 +145,11 @@ class TestParseVisionExtractionResponse:
 class TestGroundExtractedFields:
     """Unit tests for the re-validation step: every field must pass its grounded validator."""
 
-    def test_valid_fields_all_ground(self) -> None:
+    def test_valid_fields_all_ground(self, *, operation: PinnedAuthorityOperation) -> None:
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json()), anchors=ExtractedFieldAnchors()
         )
-        draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION, operation=operation)
         assert draft.supplier_tax_id == _SUPPLIER_CIF
         assert draft.invoice_number == "2026-0142"
         assert draft.invoice_date == "2026-03-10"
@@ -157,38 +159,38 @@ class TestGroundExtractedFields:
         assert draft.grand_total == 121
         assert draft.raw_text_length == 42
 
-    def test_hallucinated_tax_id_is_dropped_not_trusted(self) -> None:
+    def test_hallucinated_tax_id_is_dropped_not_trusted(self, *, operation: PinnedAuthorityOperation) -> None:
         """A checksum-invalid tax id the model 'read' is rejected, never passed through."""
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(supplier_tax_id="A0000000A")),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
         assert draft.supplier_tax_id is None
 
-    def test_unparsable_date_is_dropped(self) -> None:
+    def test_unparsable_date_is_dropped(self, *, operation: PinnedAuthorityOperation) -> None:
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(invoice_date="not-a-date")),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
         assert draft.invoice_date is None
 
-    def test_iso8601_date_also_grounds(self) -> None:
+    def test_iso8601_date_also_grounds(self, *, operation: PinnedAuthorityOperation) -> None:
         """A model that normalises the printed day-first date to ISO-8601 still grounds."""
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(invoice_date="2026-03-10")),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
         assert draft.invoice_date == "2026-03-10"
 
-    def test_unparsable_amount_is_dropped(self) -> None:
+    def test_unparsable_amount_is_dropped(self, *, operation: PinnedAuthorityOperation) -> None:
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(taxable_base="lots of money")),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
         assert draft.taxable_base is None
 
     @pytest.mark.parametrize(
@@ -199,7 +201,9 @@ class TestGroundExtractedFields:
             pytest.param("1.000", id="one-thousand"),
         ),
     )
-    def test_a_two_way_readable_amount_is_dropped_not_read_as_cents(self, printed: str) -> None:
+    def test_a_two_way_readable_amount_is_dropped_not_read_as_cents(
+        self, printed: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """A supplier's ``1.234`` is dropped rather than stored as one euro twenty-three.
 
         The model transcribes what the invoice printed, so the convention in
@@ -218,7 +222,7 @@ class TestGroundExtractedFields:
             anchors=ExtractedFieldAnchors(),
         )
 
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
 
         assert draft.taxable_base is None
 
@@ -232,7 +236,9 @@ class TestGroundExtractedFields:
             pytest.param("850", Decimal("850"), id="whole-euros-no-separator"),
         ),
     )
-    def test_every_unambiguous_printed_amount_still_grounds(self, printed: str, expected: Decimal) -> None:
+    def test_every_unambiguous_printed_amount_still_grounds(
+        self, printed: str, expected: Decimal, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The drop is narrow: every spelling carrying its own evidence still reads.
 
         These are the forms a Spanish invoice actually prints, and all of them
@@ -245,13 +251,13 @@ class TestGroundExtractedFields:
             anchors=ExtractedFieldAnchors(),
         )
 
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
 
         assert draft.taxable_base == expected
 
-    def test_all_null_fields_ground_to_an_empty_draft(self) -> None:
+    def test_all_null_fields_ground_to_an_empty_draft(self, *, operation: PinnedAuthorityOperation) -> None:
         fields = ExtractedInvoiceResponse(fields=ExtractedInvoiceFields(), anchors=ExtractedFieldAnchors())
-        draft = ground_extracted_fields(fields, raw_text_length=0, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=0, origin=FieldOrigin.VISION, operation=operation)
         assert draft.supplier_tax_id is None
         assert draft.invoice_number is None
         assert draft.invoice_date is None
@@ -261,31 +267,33 @@ class TestGroundExtractedFields:
         assert draft.grand_total is None
         assert draft.currency is None
 
-    def test_printed_currency_code_grounds(self) -> None:
+    def test_printed_currency_code_grounds(self, *, operation: PinnedAuthorityOperation) -> None:
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(currency="usd")),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
         assert draft.currency == "USD"
 
-    def test_currency_symbol_is_dropped_not_guessed(self) -> None:
+    def test_currency_symbol_is_dropped_not_guessed(self, *, operation: PinnedAuthorityOperation) -> None:
         """A bare symbol cannot ground a currency: '$' is USD, CAD, AUD and MXN."""
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(currency="$")),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
         assert draft.currency is None
 
-    def test_absent_currency_stays_none_rather_than_defaulting_to_euro(self) -> None:
+    def test_absent_currency_stays_none_rather_than_defaulting_to_euro(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         # The draft must not assert a currency the document never showed; euro
         # is applied (if at all) at confirm time, where the operator can override.
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(currency=None)),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
         assert draft.currency is None
 
 
@@ -467,23 +475,27 @@ class TestGroundedAmountsShareTheCanonicalDecimalAuthority:
         ],
         ids=["dot-decimal", "dot-decimal-small", "dot-decimal-total", "es-thousands", "comma", "canonical"],
     )
-    def test_dot_and_comma_decimals_keep_their_scale(self, transcribed: str, expected: Decimal) -> None:
+    def test_dot_and_comma_decimals_keep_their_scale(
+        self, transcribed: str, expected: Decimal, *, operation: PinnedAuthorityOperation
+    ) -> None:
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(taxable_base=transcribed)),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION, operation=operation)
 
         assert draft.taxable_base == expected
         assert draft.taxable_base == coerce_finite_european_decimal(transcribed)
 
     @pytest.mark.parametrize("transcribed", ["NaN", "Infinity", "-Infinity", "nan"])
-    def test_non_finite_amounts_are_dropped_not_grounded(self, transcribed: str) -> None:
+    def test_non_finite_amounts_are_dropped_not_grounded(
+        self, transcribed: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(grand_total=transcribed)),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION, operation=operation)
 
         assert draft.grand_total is None
 
@@ -491,7 +503,9 @@ class TestGroundedAmountsShareTheCanonicalDecimalAuthority:
         "transcribed",
         ["1234.56", "1.234,56", "1234,56", "NaN", "Infinity", "not-a-number"],
     )
-    def test_every_amount_field_agrees_with_the_canonical_helper(self, transcribed: str) -> None:
+    def test_every_amount_field_agrees_with_the_canonical_helper(
+        self, transcribed: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """No amount field may read a transcription differently from any other."""
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate_json(
@@ -503,7 +517,7 @@ class TestGroundedAmountsShareTheCanonicalDecimalAuthority:
             ),
             anchors=ExtractedFieldAnchors(),
         )
-        draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION, operation=operation)
 
         expected = coerce_finite_european_decimal(transcribed)
         assert draft.taxable_base == expected

@@ -32,6 +32,7 @@ from .....application.ledger.invoice_extraction_authority import resolve_invoice
 from .....core.config_support import LLMProvider
 from .....core.period import Period
 from .....core.time.clock import now
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.transactions.lineage_models import DecisionProvenance
 from ..cache import LLMCache
 from ..evidence_draft_text import TextInvoiceFieldExtractor
@@ -43,8 +44,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 _Q4_2024 = Period.from_year_and_code(2024, "4T")
-_ANNUAL_2026_VALUES = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
-_Q4_2024_VALUES = resolve_invoice_extraction_authority_values(period=_Q4_2024)
+
+
+def _resolve_authority_values(period: Period):
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_invoice_extraction_authority_values(period=period, operation=operation)
+
+
+_ANNUAL_2026_VALUES = _resolve_authority_values(_ANNUAL_2026)
+_Q4_2024_VALUES = _resolve_authority_values(_Q4_2024)
 
 
 class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
@@ -120,33 +128,44 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
     the text, at which prompt version, over which transport -- asserted below.
     """
 
-    def test_the_text_stamp_carries_the_period_and_the_prompt_fingerprint(self) -> None:
-        extractor = TextInvoiceFieldExtractor(model="some-text-model", authority_values=_ANNUAL_2026_VALUES)
+    def test_the_text_stamp_carries_the_period_and_the_prompt_fingerprint(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        extractor = TextInvoiceFieldExtractor(
+            model="some-text-model",
+            operation=operation,
+            authority_values=_ANNUAL_2026_VALUES,
+        )
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
         assert extractor.decided_by == f"llm:local-text-extract:some-text-model:rates-{compiled.rate_provenance}"
         assert "2026-0A" in extractor.decided_by
 
-    def test_a_different_rate_period_produces_a_different_stamp(self) -> None:
+    def test_a_different_rate_period_produces_a_different_stamp(self, *, operation: PinnedAuthorityOperation) -> None:
         """The discriminating control: the stamp moves when the rates move."""
-        annual = TextInvoiceFieldExtractor(model="m", authority_values=_ANNUAL_2026_VALUES)
-        q4 = TextInvoiceFieldExtractor(model="m", authority_values=_Q4_2024_VALUES)
+        annual = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=_ANNUAL_2026_VALUES)
+        q4 = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=_Q4_2024_VALUES)
 
         assert annual.decided_by != q4.decided_by
 
-    def test_the_transport_half_is_still_derived_from_the_provider(self) -> None:
+    def test_the_transport_half_is_still_derived_from_the_provider(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The pre-existing property survives the extension."""
-        local = TextInvoiceFieldExtractor(model="m", authority_values=_ANNUAL_2026_VALUES)
+        local = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=_ANNUAL_2026_VALUES)
         cloud = TextInvoiceFieldExtractor(
             model="m",
             provider=LLMProvider.ANTHROPIC,
+            operation=operation,
             authority_values=_ANNUAL_2026_VALUES,
         )
 
         assert local.decided_by.startswith("llm:local-text-extract:")
         assert not cloud.decided_by.startswith("llm:local-text-extract:")
 
-    def test_the_extended_stamp_still_persists_as_a_decision_provenance(self) -> None:
+    def test_the_extended_stamp_still_persists_as_a_decision_provenance(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """It must survive the persisted record's own validator and its 128-char bound.
 
         Asserted by constructing the real typed record rather than by re-stating
@@ -156,6 +175,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         extractor = TextInvoiceFieldExtractor(
             model="claude-haiku-4-5-20251001",
             provider=LLMProvider.ANTHROPIC,
+            operation=operation,
             authority_values=_ANNUAL_2026_VALUES,
         )
 

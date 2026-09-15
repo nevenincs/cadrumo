@@ -74,7 +74,12 @@ from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -142,7 +147,9 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
     seed_test_profile_record(record)
 
 
-def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregationCalculationResult:
+def _calculate_m200(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> BucketAggregationCalculationResult:
     """Run the live M200/2025/0A calculate over the seeded bucket - NO M202 seeded."""
     _seed_first_year_modalidad_cuota_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -164,6 +171,7 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -182,7 +190,7 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
 
 
 def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: a first-year cuota M200 with no M202 filed calculates (no crash) and verifies.
 
@@ -195,7 +203,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         # 1) Draft build via the full calculate action.
-        result = _calculate_m200(secure_objects)
+        result = _calculate_m200(secure_objects, operation=operation)
         values = result.revision.casilla_values
 
         # The first-year zero-resolution reaches the FULL calculate: the cuota-diferencial

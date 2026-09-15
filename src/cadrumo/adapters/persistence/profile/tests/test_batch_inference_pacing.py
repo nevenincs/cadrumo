@@ -128,7 +128,7 @@ def _run(
             direction=InvoiceKind.RECEIVED,
             settings=settings,
             evidence_ports=evidence_ports,
-            extraction_ports=_invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+            extraction_ports=_invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation),
             operation=operation,
             legends=legends,
             profile=_headroom(free_vram_bytes=free_vram_bytes),

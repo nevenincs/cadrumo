@@ -26,55 +26,61 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import _prior_303_observation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator, recapture_divergence_notices
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.entrypoints.live_state_composition import compose_filed_observation_persistence_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_dry_run_absorb_leaves_the_bucket_database_byte_identical(tmp_path: Path) -> None:
-    from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-
     observation = _prior_303_observation(pending_compensation=Decimal("0.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0981a5d8-4224-4246-b73c-4fe7b1d3ff51") as profile:
-        store = FiledDeclaracionObservationStore(tmp_path, objects=profile.repository)
-        accumulator = FiledCaptureAccumulator()
+        repository = CalculationObservationRepository(bucket_id=profile.bucket_id, objects=profile.repository)
+        with bundled_indexed_authority().operation() as operation:
+            ports = compose_filed_observation_persistence_ports(
+                bucket_id=profile.bucket_id,
+                output_root=tmp_path,
+                objects=profile.repository,
+            )
+            accumulator = FiledCaptureAccumulator(operation=operation)
 
-        # Warm-up: exercise the exact read path `absorb` runs (the recapture
-        # divergence lookup) BEFORE the baseline snapshot, so any first-touch
-        # schema bootstrap lands ahead of the measurement rather than inside it.
-        recapture_divergence_notices((observation,), repository=CalculationObservationRepository())
+            # Warm-up: exercise the exact read path `absorb` runs (the recapture
+            # divergence lookup) BEFORE the baseline snapshot, so any first-touch
+            # schema bootstrap lands ahead of the measurement rather than inside it.
+            recapture_divergence_notices((observation,), repository=repository, operation=operation)
 
-        baseline = read_db_at_rest_bytes(profile.paths.database_file)
+            baseline = read_db_at_rest_bytes(profile.paths.database_file)
 
-        accumulator.absorb(
-            observation,
-            store=store,
-            bucket_id=profile.bucket_id,
-            output_root=tmp_path,
-            dry_run=True,
-        )
+            accumulator.absorb(
+                observation,
+                ports=ports,
+                bucket_id=profile.bucket_id,
+                output_root=tmp_path,
+                dry_run=True,
+            )
 
-        after_dry_run = read_db_at_rest_bytes(profile.paths.database_file)
+            after_dry_run = read_db_at_rest_bytes(profile.paths.database_file)
 
-        assert after_dry_run == baseline, "a dry-run absorb wrote to the encrypted bucket database"
-        assert accumulator.absorbed_count == 1, "the reached tally must still count a dry-run unit"
-        assert accumulator.observation_paths == [], "dry-run must persist no observation manifest"
-        assert accumulator.filing_record_ids == [], "dry-run must stamp no filing record"
+            assert after_dry_run == baseline, "a dry-run absorb wrote to the encrypted bucket database"
+            assert accumulator.absorbed_count == 1, "the reached tally must still count a dry-run unit"
+            assert accumulator.observation_paths == [], "dry-run must persist no observation manifest"
+            assert accumulator.filing_record_ids == [], "dry-run must stamp no filing record"
 
-        # Positive control: a real absorb against the SAME store DOES move the
-        # bytes. Without this, a broken read_db_at_rest_bytes could report
-        # "identical" no matter what happened, and the assertion above would be
-        # vacuous.
-        accumulator.absorb(
-            observation,
-            store=store,
-            bucket_id=profile.bucket_id,
-            output_root=tmp_path,
-            dry_run=False,
-        )
+            # Positive control: a real absorb against the SAME store DOES move the
+            # bytes. Without this, a broken read_db_at_rest_bytes could report
+            # "identical" no matter what happened, and the assertion above would be
+            # vacuous.
+            accumulator.absorb(
+                observation,
+                ports=ports,
+                bucket_id=profile.bucket_id,
+                output_root=tmp_path,
+                dry_run=False,
+            )
 
-        after_real_write = read_db_at_rest_bytes(profile.paths.database_file)
+            after_real_write = read_db_at_rest_bytes(profile.paths.database_file)
 
-        assert after_real_write != baseline, "a real absorb must change the encrypted bucket database"
-        assert accumulator.absorbed_count == 2
-        assert len(accumulator.observation_paths) == 1, "the real absorb must persist exactly one manifest"
+            assert after_real_write != baseline, "a real absorb must change the encrypted bucket database"
+            assert accumulator.absorbed_count == 2
+            assert len(accumulator.observation_paths) == 1, "the real absorb must persist exactly one manifest"

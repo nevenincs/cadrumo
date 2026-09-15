@@ -34,7 +34,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -247,6 +247,7 @@ def _seed_modelo_303_1t_clean_state(
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # The verb this fixture replaced defaulted its own repositories; the direct
     # writes below need concrete ones, so resolve the same bucket-local defaults.
@@ -288,6 +289,7 @@ def _seed_modelo_303_1t_clean_state(
             work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
         ),
         clock=datetime(2026, 5, 21, 11, 0, tzinfo=UTC),
+        operation=operation,
     )
     # Prior-1T filed history is a PRECONDITION of these wallet-gate tests, not
     # their subject, so the fixture authors the end state directly. Modelo 303
@@ -421,6 +423,7 @@ def _build_verified_modelo_303_revision(
     positive_result: bool = False,
     negative_result: bool = False,
     casilla_111: Decimal | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[
     str,
     str,
@@ -449,6 +452,7 @@ def _build_verified_modelo_303_revision(
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
         clock=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        operation=operation,
     )
     binding_values = _modelo_303_engine_inputs()
     if positive_result:
@@ -481,6 +485,7 @@ def _build_verified_modelo_303_revision(
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period,
                 reference="test:export-modelo-303-support",
+                operation=operation,
             ),
             filing_period_date=date(2026, 6, 30),
             ports=_calculation_ports_481,
@@ -492,6 +497,7 @@ def _build_verified_modelo_303_revision(
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(

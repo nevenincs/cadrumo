@@ -28,6 +28,7 @@ import typer
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.i18n.render import tr
 from ..common import bad, emit_envelope
+from ..state_projection_support import authority_operation
 
 # on the CLI build path, keeping the leaf in the JSON-contract registry.
 from ._complete_setup_payloads import ProfileCompleteSetupResult
@@ -70,7 +71,11 @@ def profile_complete_setup(ctx: typer.Context) -> None:
     if profile_id is None:
         raise no_active_profile_refusal()
 
-    profiles = ProfileRecordRepository.for_current_session(profile_id)
+    profile_decode_context = authority_operation(ctx).profile_decode_context()
+    profiles = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    )
     current = profiles.load(profile_id)
 
     # Idempotent no-op ahead of everything else, matching the repository's own

@@ -51,7 +51,7 @@ from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconcilia
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
@@ -61,7 +61,9 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_preflight(tmp_path: Path) -> None:
+def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_preflight(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     taxpayer_nif = "X1234567L"
     with _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
@@ -81,7 +83,9 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
         assert report.decision.selected_authority == "aeat_wallet"
         assert report.decision.divergence == "wallet_only"
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
         filing_repo = ModeloRecordCatalogueRepository()
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -103,7 +107,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 ports=_calculation_ports_97,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit.period, reference="test:iva-wallet-engine-filing"
+                    work_unit.period, reference="test:iva-wallet-engine-filing", operation=operation
                 ),
             )
         seed_clean_cross_period_sources(
@@ -112,6 +116,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             calculation_repository=calc_repo,
             filing_repository=filing_repo,
             bucket_event_repository=event_repo,
+            operation=operation,
         )
         with bundled_indexed_authority().operation() as operation:
             verification_report = verify_modelo_revision(
@@ -167,12 +172,12 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
 
 
 def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_still_requires_authority(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "X1234567L"
     filed_period = _period(_TARGET_YEAR, "1T")
     decided_1t_at = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
-    workflow_profile = workflow_profile(taxpayer_nif).model_copy(
+    filing_profile = workflow_profile(taxpayer_nif).model_copy(
         update={"activity_start_date": date(2026, 1, 1)},
     )
     with _secure_backend(tmp_path):
@@ -199,6 +204,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             snapshot_1t,
             work_unit_repository=work_repo,
             clock=decided_1t_at,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -217,7 +223,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 ports=_calculation_ports_210,
                 clock=decided_1t_at,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit_1t.period, reference="test:iva-wallet-engine-filing"
+                    work_unit_1t.period, reference="test:iva-wallet-engine-filing", operation=operation
                 ),
             )
         assert revision_1t.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
@@ -230,7 +236,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator",
-                workflow_profile=workflow_profile,
+                workflow_profile=filing_profile,
                 settings=Settings(
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
@@ -245,7 +251,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             filing = file_modelo_revision(
                 revision_1t.calculation_revision_id,
                 actor="operator",
-                workflow_profile=workflow_profile,
+                workflow_profile=filing_profile,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
                 settings=Settings(
@@ -269,7 +275,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert balance.lot_count == 1
 
         snapshot_2t = _snapshot_303()
-        work_unit_2t = _create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo)
+        work_unit_2t = _create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo, operation=operation)
         with (
             pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info,
             calculation_ports_for_test(
@@ -289,7 +295,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 ports=_calculation_ports_279,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit_2t.period, reference="test:iva-wallet-engine-filing"
+                    work_unit_2t.period, reference="test:iva-wallet-engine-filing", operation=operation
                 ),
             )
 

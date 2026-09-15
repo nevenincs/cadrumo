@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -43,22 +43,26 @@ from cadrumo.adapters.persistence.profile.tests.verification_substance_support i
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.auth.operator_scope_ports import OperatorScopePorts
 from cadrumo.application.modelo.action_errors import StoredCalculationDriftError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.data_inventory import data_inventory_checklist
+from cadrumo.application.modelo.data_inventory import DataInventoryChecklist, data_inventory_checklist
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.identity.hex_ids import CalculationRevisionId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     parse_verification_predicate_expression,
 )
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
+from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -68,36 +72,62 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE_ID = "13000000-0000-4000-8000-000000000330"
 
 
-def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
-    """Compose calculation capabilities through the current application contract."""
-    for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
-        kwargs.pop(key, None)
+def _calculate_modelo_revision(
+    work_unit_id: str,
+    *,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    binding_values: Mapping[BindingId, Decimal],
+    clock: datetime,
+) -> CalculationRevision:
+    """Run calculation through the real encrypted application composition."""
     with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-            **kwargs,
+            casilla_inputs=casilla_inputs,
+            binding_values=binding_values,
+            clock=clock,
         )
 
 
-def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
-    """Compose verification capabilities through the current application contract."""
-    for key in ("work_unit_repository", "calculation_repository", "verification_repository", "bucket_event_repository"):
-        kwargs.pop(key, None)
+def _verify_modelo_revision(
+    calculation_revision_id: CalculationRevisionId,
+    *,
+    actor: str,
+    workflow_profile: TaxpayerProfile,
+    clock: datetime,
+    operator_scope_ports: OperatorScopePorts,
+) -> VerificationReport:
+    """Run verification through the real encrypted application composition."""
     with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
+            actor=actor,
+            workflow_profile=workflow_profile,
+            clock=clock,
+            operator_scope_ports=operator_scope_ports,
             operation=operation,
-            **kwargs,
         )
 
 
-def __data_inventory_checklist(*args: Any, **kwargs: Any) -> Any:
+def _data_inventory_checklist(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    bucket_id: str | None,
+) -> DataInventoryChecklist:
     """Pin registry reads for checklist assertions to one authority operation."""
     with bundled_indexed_authority().operation() as operation:
-        return data_inventory_checklist(*args, operation=operation, **kwargs)
+        return data_inventory_checklist(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            bucket_id=bucket_id,
+            operation=operation,
+        )
 
 
 @pytest.fixture
@@ -105,7 +135,8 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(bucket_id=_PROFILE_ID)
+        with bundled_indexed_authority().operation():
+            _seed_ready_profile(bucket_id=_PROFILE_ID)
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         vr = VerificationReportCatalogueRepository(objects=objects)
@@ -124,7 +155,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     missing-required gate — which fires only for MANUAL required casillas — never
     flags it. The required=true flag is retained but is inert for a bound casilla.
     """
-    wu_repo, cr_repo, vr_repo, bv_repo = repos
+    wu_repo, _cr_repo, _vr_repo, bv_repo = repos
 
     snap = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next((c for c in snap.revision.casillas if c.id == _CASILLA_02), None)
@@ -132,15 +163,17 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     assert str(casilla_02.input_kind) == "bound", "M130 casilla 02 must be ledger-bound (H1 fix)"
     assert casilla_02.binding == "modelo-130-actividad-economica-gastos-cumulative"
 
-    work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
+            clock=_T0,
+        )
 
     # Casilla 02 is deliberately NOT supplied (no ledger gastos, no manual value).
     casilla_inputs: dict[CasillaId, Decimal] = {
@@ -159,9 +192,6 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
         clock=_T1,
     )
 
@@ -169,10 +199,6 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
         revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
         clock=_T2,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
@@ -270,17 +296,19 @@ def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> 
 
 
 def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos: _Repos) -> None:
-    wu_repo, cr_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, _vr_repo, bv_repo = repos
 
-    work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "2T"),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
+            clock=_T0,
+        )
 
     # Modest operator inputs so C14 stays small + positive.
     # C01 (ingresos) is bound via ledger_renta_income_aggregation, but the
@@ -308,9 +336,6 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
             "irpf.previous_year_economic_activity_net_income": Decimal("20000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("99999"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
         clock=_T1,
     )
     invalid_c15 = revision.casilla_values[_CASILLA_14] + Decimal("1.00")
@@ -358,10 +383,6 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         invalid_revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
         clock=_T2,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
@@ -390,18 +411,21 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     podrá figurar en la casilla 11 un importe superior a la
     cantidad positiva consignada en la casilla 10".
     """
-    wu_repo, cr_repo, vr_repo, bv_repo = repos
-    _seed_ready_profile(bucket_id=_PROFILE_ID, irpf_estimation_regime="objetiva")
+    wu_repo, _cr_repo, _vr_repo, bv_repo = repos
+    with bundled_indexed_authority().operation():
+        _seed_ready_profile(bucket_id=_PROFILE_ID, irpf_estimation_regime="objetiva")
 
-    work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
-        modelo="131",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
-        revision_id="2026",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_PROFILE_ID,
+            modelo="131",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "2T"),
+            revision_id="2026",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
+            clock=_T0,
+        )
 
     # 04, 06, 07, 13 are computed casillas on the M131 2026 revision;
     # only the operator-input (manual) casillas may appear in inputs.
@@ -421,9 +445,6 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         binding_values={
             "modelo-131-resultados-negativos-anteriores": Decimal("99999"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
         clock=_T1,
     )
 
@@ -431,10 +452,6 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         revision.calculation_revision_id,
         actor="operator-test",
         workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
         clock=_T2,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
@@ -474,15 +491,17 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     """
     wu_repo, cr_repo, _vr_repo, bv_repo = repos
 
-    work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
+            clock=_T0,
+        )
 
     casilla_inputs: dict[CasillaId, Decimal] = {
         _CASILLA_02: Decimal("1000"),
@@ -500,9 +519,6 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
         clock=_T1,
     )
 
@@ -515,37 +531,20 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     # casilla_values and observations at construction time (preventing in-band
     # injection of inconsistent state). The persisted verify action also checks
     # the stored payload before evaluating any later gate. Bypass the validator
-    # here via model_construct to simulate raw storage corruption.
-    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
+    # here via model_copy(update=...) to simulate raw storage corruption.
     target_obs = revision.observations[0]
     assert isinstance(target_obs.value, Decimal)
-    tampered_obs = CasillaObservation.model_construct(
-        casilla_id=target_obs.casilla_id,
-        value=target_obs.value + Decimal("9999"),
-        formula_id=target_obs.formula_id,
-        op=target_obs.op,
-        operand_refs=target_obs.operand_refs,
-        operand_casilla_refs=target_obs.operand_casilla_refs,
-        operand_values=target_obs.operand_values,
-        legal_refs=target_obs.legal_refs,
-        source_refs=target_obs.source_refs,
-        absent_by_design=target_obs.absent_by_design,
-    )
+    tampered_obs = target_obs.model_copy(update={"value": target_obs.value + Decimal("9999")})
     tampered_observations = (tampered_obs, *revision.observations[1:])
 
     # Build a tampered revision bypassing the model validator (simulates raw storage drift).
-    tampered_payload: dict[str, Any] = revision.model_dump()
-    tampered_payload["observations"] = tampered_observations
-    tampered_revision = revision.model_construct(**tampered_payload)
+    tampered_revision = revision.model_copy(update={"observations": tampered_observations})
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), tampered_revision))
 
     # The public verify action must refuse the tampered persisted revision.
     with pytest.raises(StoredCalculationDriftError, match="provenance drift"):
         _verify_modelo_revision(
             tampered_revision.calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
             actor="operator-test",
             workflow_profile=workflow_profile(),
             clock=_T2,

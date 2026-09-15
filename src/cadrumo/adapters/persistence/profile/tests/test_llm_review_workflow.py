@@ -42,6 +42,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionResult
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -259,13 +260,14 @@ def _saturated_suggestion(
     ledger_ports: LedgerActionPorts,
     llm_ports: LLMClassificationPorts,
     settings: Settings,
+    operation: PinnedAuthorityOperation,
 ) -> LLMSaturatedSuggestion:
     """Build a real saturated suggestion through the subprocess classifier boundary."""
     return saturate_llm_classification(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
         operation=ledger_ports.operation,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general"), operation=operation),
         transaction_repository=repository,
         settings=settings,
         ports=llm_ports,
@@ -280,13 +282,14 @@ def _split_suggestion(
     ledger_ports: LedgerActionPorts,
     llm_ports: LLMClassificationPorts,
     settings: Settings,
+    operation: PinnedAuthorityOperation,
 ) -> LLMSplitSuggestion:
     """Build a real split suggestion through the subprocess proposer boundary."""
     return suggest_evidence_split(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
         operation=ledger_ports.operation,
-        proposer=_split_subprocess_proposer(response=proposal),
+        proposer=_split_subprocess_proposer(response=proposal, operation=operation),
         transaction_repository=repository,
         read_evidence=False,
         settings=settings,
@@ -296,6 +299,8 @@ def _split_suggestion(
 
 def test_saturate_apply_composes_saturated_primitive_with_derived_source_command(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events = repositories
     tx_id = _seed_parent(repository)
@@ -308,6 +313,7 @@ def test_saturate_apply_composes_saturated_primitive_with_derived_source_command
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
+                operation=operation,
             ),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY,
             decision=LlmReviewDecision.APPLY,
@@ -332,6 +338,8 @@ def test_saturate_apply_composes_saturated_primitive_with_derived_source_command
 
 def test_multi_child_split_apply_stamps_the_auto_split_origin_label(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events = repositories
     tx_id = _seed_parent(repository)
@@ -345,6 +353,7 @@ def test_multi_child_split_apply_stamps_the_auto_split_origin_label(
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
+                operation=operation,
             ),
             origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
             decision=LlmReviewDecision.SPLIT,
@@ -370,6 +379,8 @@ def test_multi_child_split_apply_stamps_the_auto_split_origin_label(
 
 def test_split_llm_origin_stamps_its_own_distinct_source_command(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events = repositories
     tx_id = _seed_parent(repository)
@@ -383,6 +394,7 @@ def test_split_llm_origin_stamps_its_own_distinct_source_command(
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
+                operation=operation,
             ),
             origin=LlmReviewInvocationOrigin.SPLIT_LLM,
             decision=LlmReviewDecision.SPLIT,
@@ -405,6 +417,8 @@ def test_split_llm_origin_stamps_its_own_distinct_source_command(
 
 def test_no_split_verdict_refuses_a_split_decision(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # A single-child proposal is the model's "no split warranted" verdict; asking
     # the workflow to SPLIT it must refuse and persist nothing.
@@ -421,6 +435,7 @@ def test_no_split_verdict_refuses_a_split_decision(
                     ledger_ports=ports,
                     llm_ports=llm_ports,
                     settings=settings,
+                    operation=operation,
                 ),
                 origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
                 decision=LlmReviewDecision.SPLIT,

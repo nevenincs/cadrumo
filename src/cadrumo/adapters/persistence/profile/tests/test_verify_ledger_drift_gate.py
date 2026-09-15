@@ -140,9 +140,10 @@ def test_attaching_evidence_does_not_move_the_row_fingerprint(tmp_path: Path) ->
     settle. This drives the production attach path end to end.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
-        _revision, _sale, purchase, _wu, _cr, _fr, _vr, event_repo, tx_repo = calculate_irene_revision(
-            profile.repository,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            _revision, _sale, purchase, _wu, _cr, _fr, _vr, event_repo, tx_repo = calculate_irene_revision(
+                profile.repository, operation=operation
+            )
         before = row_fingerprint(_row(tx_repo, purchase.transaction_id))
 
         evidence = PurchaseInvoiceEvidenceService(
@@ -174,9 +175,10 @@ def test_reclassifying_a_row_moves_the_row_fingerprint(tmp_path: Path) -> None:
     the attach.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
-        _revision, _sale, purchase, _wu, _cr, _fr, _vr, event_repo, tx_repo = calculate_irene_revision(
-            profile.repository,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            _revision, _sale, purchase, _wu, _cr, _fr, _vr, event_repo, tx_repo = calculate_irene_revision(
+                profile.repository, operation=operation
+            )
         before = row_fingerprint(_row(tx_repo, purchase.transaction_id))
 
         with _ledger_ports(profile.repository, tx_repo, event_repo) as ports:
@@ -221,9 +223,10 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
     bundle over an over-declaration.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
-        revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
-            calculate_irene_revision(profile.repository)
-        )
+        with bundled_indexed_authority().operation() as operation:
+            revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+                calculate_irene_revision(profile.repository, operation=operation)
+            )
         repos: _Repos = (wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo)
 
         blocked = _verify(revision.calculation_revision_id, repos)
@@ -285,9 +288,10 @@ def test_an_untouched_draft_still_verifies_cleanly(tmp_path: Path) -> None:
     must reach its grant exactly as it did before the gate existed.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
-        revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
-            calculate_irene_revision(profile.repository)
-        )
+        with bundled_indexed_authority().operation() as operation:
+            revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+                calculate_irene_revision(profile.repository, operation=operation)
+            )
         repos: _Repos = (wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo)
 
         evidence = PurchaseInvoiceEvidenceService(
@@ -317,7 +321,10 @@ def test_a_ledger_derived_draft_carries_the_anchor_the_gate_compares(tmp_path: P
     drafts that need guarding.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
-        revision, sale, purchase, _wu, _cr, _fr, _vr, _ev, tx_repo = calculate_irene_revision(profile.repository)
+        with bundled_indexed_authority().operation() as operation:
+            revision, sale, purchase, _wu, _cr, _fr, _vr, _ev, tx_repo = calculate_irene_revision(
+                profile.repository, operation=operation
+            )
 
         anchor = revision.ledger_filing_snapshot
         assert anchor is not None

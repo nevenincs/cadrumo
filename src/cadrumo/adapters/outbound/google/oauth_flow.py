@@ -147,6 +147,7 @@ def resolve_active_tax_id(profile_id: str) -> str:
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....application.user_profile.projections import record_to_path_values
     from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     pointer = read_profile_bucket_by_id(profile_id)
     if pointer is None:
@@ -161,24 +162,28 @@ def resolve_active_tax_id(profile_id: str) -> str:
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
             ),
         )
-    try:
-        record = ProfileRecordRepository.for_current_session(pointer.bucket_id).load(profile_id)
-    except ProfileNotFoundError as exc:
-        raise GoogleAuthProfileUnboundError(
-            "google OAuth refused: active profile record session is unavailable",
-            context={
-                "profile": profile_id,
-                "bucket_id": pointer.bucket_id,
-                "reason": "profile_record_session_unavailable",
-            },
-            translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
-            precondition_verdict=google_auth_no_action_verdict(
-                condition=GoogleAuthPreconditionCondition.PROFILE_RECORD_SESSION_AVAILABLE,
-                facts={"profile_record_session_available": False},
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-            ),
-        ) from exc
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            record = ProfileRecordRepository.for_current_session(
+                pointer.bucket_id,
+                profile_decode_context=operation.profile_decode_context(),
+            ).load(profile_id)
+        except ProfileNotFoundError as exc:
+            raise GoogleAuthProfileUnboundError(
+                "google OAuth refused: active profile record session is unavailable",
+                context={
+                    "profile": profile_id,
+                    "bucket_id": pointer.bucket_id,
+                    "reason": "profile_record_session_unavailable",
+                },
+                translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
+                precondition_verdict=google_auth_no_action_verdict(
+                    condition=GoogleAuthPreconditionCondition.PROFILE_RECORD_SESSION_AVAILABLE,
+                    facts={"profile_record_session_available": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
+            ) from exc
     return record_to_path_values(record).get("identity.tax_id") or ""
 
 

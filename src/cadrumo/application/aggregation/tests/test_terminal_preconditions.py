@@ -40,6 +40,7 @@ from .._preconditions import AggregationPreconditionCondition, aggregation_no_re
 from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..retencion_observations_repository import RetencionObservationPorts
+from ..retenciones import RetencionObservation
 from ..service import _supported_per_modelo_modelos, provider_for_modelo
 from ..source_mesh import CalculationSourceContext
 
@@ -57,7 +58,7 @@ class _CarrierContract:
 class _EmptyRetencionObservationRepository:
     """Application-port fake for the terminal empty-observation precondition."""
 
-    def load_observations(self, modelo: str, period: Period) -> tuple[object, ...]:
+    def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
         return ()
 
 

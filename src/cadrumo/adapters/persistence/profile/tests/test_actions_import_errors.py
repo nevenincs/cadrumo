@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.inbound.financial.ledger_import import build_ledger_import_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_import import import_ledger_source
 from cadrumo.application.ledger.models import LedgerSourceImportCommand
@@ -32,6 +33,7 @@ def test_import_rejects_zero_amount_row_at_parse_boundary(tmp_path: Path) -> Non
     with pytest.raises(TransactionValidationError) as exc_info:
         import_ledger_source(
             LedgerSourceImportCommand(path=statement, provider="csv", dry_run=True),
+            ports=build_ledger_import_ports(),
         )
     assert exc_info.value.translated_message == "errors.transaction.ledger_import_failed"
     assert "zero amount" in str((exc_info.value.context or {}).get("reason", ""))
@@ -45,6 +47,7 @@ def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path
     with pytest.raises(TransactionValidationError) as excinfo:
         import_ledger_source(
             LedgerSourceImportCommand(path=missing, provider="csv", dry_run=True, verify=False, source=missing),
+            ports=build_ledger_import_ports(),
         )
 
     error = excinfo.value
@@ -69,6 +72,7 @@ def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_n
     ):
         import_ledger_source(
             LedgerSourceImportCommand(path=missing, provider="auto", dry_run=True),
+            ports=build_ledger_import_ports(),
         )
 
     error = excinfo.value
@@ -95,6 +99,7 @@ def test_import_ledger_source_auto_unsupported_file_raises_localised_import_erro
     with pytest.raises(TransactionValidationError) as excinfo:
         import_ledger_source(
             LedgerSourceImportCommand(path=unsupported, provider="auto", dry_run=True),
+            ports=build_ledger_import_ports(),
         )
 
     error = excinfo.value
@@ -128,11 +133,13 @@ def test_import_dedup_keeps_opposite_direction_same_amount_narrative_date(
 
     first = import_ledger_source(
         LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=incoming, provider="csv"),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
     second = import_ledger_source(
         LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=outgoing, provider="csv"),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
@@ -168,11 +175,13 @@ def test_import_dedup_keeps_same_numeric_amount_in_different_currencies(
 
     first = import_ledger_source(
         LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=eur, provider="csv"),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
     second = import_ledger_source(
         LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=usd, provider="csv"),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
@@ -205,6 +214,7 @@ def test_import_ledger_source_verify_missing_original_file_raises_localised_erro
                 verify=True,
                 source=missing_original,
             ),
+            ports=build_ledger_import_ports(),
         )
 
     error = excinfo.value

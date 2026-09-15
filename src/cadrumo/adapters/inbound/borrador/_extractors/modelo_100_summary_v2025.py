@@ -30,7 +30,6 @@ from typing import ClassVar
 
 from .....core.aeat_csv import normalise_aeat_csv
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.modelo import Modelo
 from .....core.time.clock import now
 from ...pdf.extracted_casilla import ExtractedCasilla
 from ...pdf.label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
@@ -109,7 +108,7 @@ class Modelo100ObservedV2025Extractor:
 
         source_pdf_sha256 = sha256_file(pdf_path)
         return InboundBorradorObservation(
-            modelo=Modelo("100"),
+            modelo="100",
             ejercicio=ejercicio,
             tax_id=tax_id.upper(),
             artefact_kind=artefact_kind,

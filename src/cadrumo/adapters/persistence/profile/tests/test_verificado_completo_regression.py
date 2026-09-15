@@ -60,7 +60,12 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -219,6 +224,7 @@ def _seed_clean_cross_period_sources_for_m130(
     calculation_repository: CalculationRevisionCatalogueRepository,
     filing_repository: ModeloRecordCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationObservationRepository:
     snapshot = compiled_bundled_authority().snapshot(
         work_unit.modelo,
@@ -243,6 +249,7 @@ def _seed_clean_cross_period_sources_for_m130(
                 work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
             ),
             clock=_T0,
+            operation=operation,
         )
         # The reference id IS the justificante CSV, and a codigo seguro de
         # verificacion is uppercase alphanumeric (``^[A-Z0-9]{8,32}$``), so the
@@ -299,7 +306,9 @@ def _seed_clean_cross_period_sources_for_m130(
     return observation_repository
 
 
-def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(repos: _Repos) -> None:
+def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """With casilla 02 bound to the ledger, M130 has zero required MANUAL casillas.
 
     Casilla 02 (Gastos) used to be the lone ``input_kind = manual`` + ``required``
@@ -329,6 +338,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
             revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T0,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -376,7 +386,9 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
         assert report.missing_required_casilla_ids == ()
 
 
-def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> None:
+def test_verify_grants_when_required_casillas_supplied_m130(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """M130 revision with all required casillas present is granted verificado_completo."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, filing_repo, _vr_repo, bv_repo = repos
@@ -390,6 +402,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
             revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T0,
+            operation=operation,
         )
 
         casilla_inputs: dict[CasillaId, Decimal] = {
@@ -428,6 +441,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
             calculation_repository=cr_repo,
             filing_repository=filing_repo,
             bucket_event_repository=bv_repo,
+            operation=operation,
         )
 
         report = verify_modelo_revision(
@@ -461,7 +475,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
         assert all(entry.legal_refs and entry.source_refs for entry in verified.ledger_filing_evidence.manual_entries)
 
 
-def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
+def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The public verify action raises StoredCalculationDriftError on drift.
 
     contract regression: verify_modelo_revision calls the content-integrity gate
@@ -485,6 +499,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
             revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T0,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,

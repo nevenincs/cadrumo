@@ -19,6 +19,7 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core.config import load_settings
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.filing_repository import upsert_filing_record
@@ -190,12 +191,17 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     with open_test_profile_session(_SECOND_PROFILE_ID):
         register_minimal_profile(profile_id=_SECOND_PROFILE_ID, display_name="Second Operator")
 
-    with open_test_profile_session(_SECOND_PROFILE_ID):
-        second_evidence, _second_notice = local_calendar_filing_evidence(_SECOND_PROFILE_ID, ())
-    with open_test_profile_session(PRIMARY_PROFILE_ID):
+    with open_test_profile_session(_SECOND_PROFILE_ID), bundled_indexed_authority().operation() as operation:
+        second_evidence, _second_notice = local_calendar_filing_evidence(
+            _SECOND_PROFILE_ID,
+            (),
+            operation=operation,
+        )
+    with open_test_profile_session(PRIMARY_PROFILE_ID), bundled_indexed_authority().operation() as operation:
         operator_evidence, _operator_notice = local_calendar_filing_evidence(
             PRIMARY_PROFILE_ID,
             (),
+            operation=operation,
             expected_tax_id="X1234567L",
         )
 
@@ -266,11 +272,13 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
             ),
         )
 
-        evidence, _notice = local_calendar_filing_evidence(
-            PRIMARY_PROFILE_ID,
-            (),
-            expected_tax_id="00000000T",
-        )
+        with bundled_indexed_authority().operation() as operation:
+            evidence, _notice = local_calendar_filing_evidence(
+                PRIMARY_PROFILE_ID,
+                (),
+                operation=operation,
+                expected_tax_id="00000000T",
+            )
 
     matching = [
         row
@@ -297,11 +305,13 @@ def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata
         repo.save(upsert_filing_record(repo.load(), _modelo_record_with_external_justificante(csv=csv)))
         JustificanteRepository().save(_justificante_metadata(csv=csv))
 
-        evidence, _notice = local_calendar_filing_evidence(
-            PRIMARY_PROFILE_ID,
-            (),
-            expected_tax_id="X1234567L",
-        )
+        with bundled_indexed_authority().operation() as operation:
+            evidence, _notice = local_calendar_filing_evidence(
+                PRIMARY_PROFILE_ID,
+                (),
+                operation=operation,
+                expected_tax_id="X1234567L",
+            )
 
     matching = [
         row

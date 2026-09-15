@@ -38,9 +38,11 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import (
     _M303_DECLARATION_TYPE_C,
+    _SESSION_BUCKET_ID,
     _prior_303_observation,
     _secure_backend,
 )
+from cadrumo.adapters.persistence.profile.tests.test_filed_capture_calculation_history import _filed_ports
 from cadrumo.application.live.filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from cadrumo.application.live.filed_data_capture import recapture_divergence_notices
 from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
@@ -102,8 +104,16 @@ def test_a_recapture_divergence_is_producible_without_contacting_aeat(tmp_path: 
     sets and pass while proving nothing.
     """
     with _secure_backend(tmp_path):
-        persist_filed_calculation_observation(_observation(result=_ORIGINAL_RESULT))
-        notices = recapture_divergence_notices((_observation(result=_CORRECTED_RESULT),))
+        repository = CalculationObservationRepository()
+        ports = _filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
+        persist_filed_calculation_observation(
+            _observation(result=_ORIGINAL_RESULT),
+            ports=ports,
+        )
+        notices = recapture_divergence_notices(
+            (_observation(result=_CORRECTED_RESULT),),
+            repository=repository,
+        )
 
     assert len(notices) == 1, "a corrected filing must raise exactly one recapture advisory"
     assert notices[0].code == "live.filed.pull_all.recapture_divergence"
@@ -113,8 +123,9 @@ def test_recapture_advisory_refuses_a_divergent_persisted_coordinate(tmp_path: P
     """Recapture cannot compare new evidence to values interpreted by a stale schema."""
     prior = _observation(result=_ORIGINAL_RESULT)
     with _secure_backend(tmp_path):
-        persist_filed_calculation_observation(prior)
         repository = CalculationObservationRepository()
+        ports = _filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
+        persist_filed_calculation_observation(prior, ports=ports)
         stored = repository.load_observation(prior.modelo, prior.period)
         assert stored is not None
         repository.save(stored.model_copy(update={"stamped_revision_id": "persisted-stale-revision"}))
@@ -139,17 +150,23 @@ def test_enrolment_reaches_fewer_units_than_absorption_raises_divergences(tmp_pa
     can.
     """
     with _secure_backend(tmp_path):
-        persist_filed_calculation_observation(_observation(result=_ORIGINAL_RESULT))
+        repository = CalculationObservationRepository()
+        ports = _filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository)
+        persist_filed_calculation_observation(
+            _observation(result=_ORIGINAL_RESULT),
+            ports=ports,
+        )
         corrected = _observation(result=_CORRECTED_RESULT)
 
         # One absorb per observation, so a two-observation sweep raises two
         # advisories against the same stored prior.
-        divergences = recapture_divergence_notices((corrected, corrected))
+        divergences = recapture_divergence_notices((corrected, corrected), repository=repository)
         reached = 2
 
         enrolled = finalize_filed_capture(
             (corrected, corrected),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+            ports=ports,
         ).calculation_observation_keys
 
     assert len(divergences) == reached, "each absorbed observation must contribute one advisory"

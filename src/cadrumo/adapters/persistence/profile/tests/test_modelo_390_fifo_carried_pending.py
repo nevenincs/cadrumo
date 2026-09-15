@@ -84,6 +84,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
@@ -234,7 +235,7 @@ def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationReposito
         )
 
 
-def _calculate_m390_annual(secure_objects: SecureObjectRepository):
+def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation):
     """Run the live M390/2025/0A calculate over the seeded bucket (carry boxes left UNSET)."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -250,6 +251,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -268,7 +270,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
 
 
 def test_m390_carry_boxes_are_the_fifo_partition_not_the_naive_split(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A carried-pending chain drives box 97/662 to the FIFO partition, diverging from the naive split.
 
@@ -289,7 +291,7 @@ def test_m390_carry_boxes_are_the_fifo_partition_not_the_naive_split(
     obs_repo = CalculationObservationRepository()
     _seed_m303_compensacion_quarters(obs_repo=obs_repo)
 
-    result = _calculate_m390_annual(secure_objects)
+    result = _calculate_m390_annual(secure_objects, operation=operation)
     casilla_values = result.revision.casilla_values
 
     box_97 = Decimal(casilla_values[_M390_BOX_97])

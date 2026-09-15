@@ -50,19 +50,31 @@ from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.application.ledger.evidence_textlayer import transcribe_text_layer
 from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from cadrumo.application.ledger.invoice_draft_extraction_ports import (
+    EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
     StructuredInvoiceReadError,
 )
-from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
+from cadrumo.application.ledger.invoice_extraction_authority import (
+    InvoiceExtractionAuthorityValues,
+    default_invoice_extraction_period,
+)
 from cadrumo.application.ledger.regime_contradiction import (
     draft_prints_a_repercutido_line,
     regime_contradiction_finding,
 )
-from cadrumo.core.config import load_settings, override_settings
+from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceRecord
+from cadrumo.core.config import Settings, load_settings, override_settings
+from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.iva_category_catalogue import (
     registry_category_projection,
     require_iva_category,
@@ -83,7 +95,11 @@ READING_RUNTIME_MODEL = "qwen2.5:7b"
 def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPorts:
     """Bind deterministic page text locally for this outbound reader integration."""
 
-    return EvidenceTextLayerPorts(extract_pages_text=lambda _data: pages)
+    def extract_pages_text(data: bytes) -> tuple[str, ...]:
+        del data
+        return pages
+
+    return EvidenceTextLayerPorts(extract_pages_text=extract_pages_text)
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -95,6 +111,7 @@ def registry_legends() -> tuple[RegimeLegend, ...]:
     period = default_invoice_extraction_period()
     with _indexed_authority_for_test().operation() as operation:
         return resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
 
 _CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
 #: Prints the art. 84.Uno.2 mention and charges no output IVA -- the lawful
@@ -109,31 +126,37 @@ _PRINTED_MENTION = "Inversión del sujeto pasivo (art. 84.Uno.2º LIVA)"
 _TEXT_LAYER_PORTS = _text_layer_ports_for_pages((_PRINTED_MENTION,))
 
 
-def _reader_ports(evidence: EvidenceInput) -> InvoiceDraftExtractionPorts:
+def _reader_ports(evidence: EvidenceInput, *, operation: PinnedAuthorityOperation) -> InvoiceDraftExtractionPorts:
     """Bind the application reader contract to the real outbound text adapter."""
 
-    def parse_structured_invoice(_data: bytes) -> object:
+    def parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
+        del data
         raise StructuredInvoiceReadError()
 
     def read_text(
         transcription: DocumentTranscription,
-        settings: object,
-        _provider: object,
-        _consent_token: object,
+        settings: Settings,
+        _provider: LLMProvider | None,
+        _consent_token: EvidenceConsentProof | None,
         authority_values: object,
-    ):
+        /,
+    ) -> InvoiceDraft:
+        if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
+            raise TypeError("text reader requires resolved invoice extraction authority values")
         return extract_invoice_fields_from_text(
-            transcription,
-            settings=settings,
-            authority_values=authority_values,
+            transcription, settings=settings, authority_values=authority_values, operation=operation
         )
 
     def vision_not_expected(*_args: object, **_kwargs: object) -> DocumentTranscription:
         raise AssertionError("the text-layer reader must not invoke the vision path")
 
+    def document_shape_probe(data: bytes) -> DocumentShape:
+        del data
+        return DocumentShape.PDF_TEXT_LAYER
+
     return InvoiceDraftExtractionPorts(
         resolve_evidence_input=lambda *_args: evidence,
-        evidence_input_ports=EvidenceInputPorts(document_shape_probe=lambda _data: DocumentShape.PDF_TEXT_LAYER),
+        evidence_input_ports=EvidenceInputPorts(document_shape_probe=document_shape_probe),
         text_layer_ports=_TEXT_LAYER_PORTS,
         parse_structured_invoice=parse_structured_invoice,
         read_text=read_text,
@@ -225,13 +248,23 @@ def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
                     evidence,
                     transcribe_text_layer(evidence, text_layer_ports=_TEXT_LAYER_PORTS),
                     settings=load_settings(),
-                    ports=_reader_ports(evidence),
+                    authority_period=default_invoice_extraction_period(),
+                    operation=operation,
+                    legends=legends,
+                    ports=_reader_ports(evidence, operation=operation),
                 )
 
-        yield read
+        with _indexed_authority_for_test().operation() as operation:
+            legends = resolve_regime_legends(
+                operation=operation,
+                effective_date=default_invoice_extraction_period().end_date,
+            )
+            yield read
 
 
-def test_both_documents_print_the_mention_the_legend_table_matches() -> None:
+def test_both_documents_print_the_mention_the_legend_table_matches(
+    registry_legends: tuple[RegimeLegend, ...],
+) -> None:
     """The premise both cases rest on, taken from the pages rather than assumed.
 
     If the printed wording drifted from what the legend table matches, every
@@ -255,6 +288,7 @@ def test_both_documents_print_the_mention_the_legend_table_matches() -> None:
     derivation = derive_category_from_regime_legend(
         printed_legend=_PRINTED_MENTION,
         has_repercutido_line=False,
+        legends=registry_legends,
     )
     assert derivation.outcome is LegendDerivationOutcome.DERIVED, (
         "the legend table no longer matches the phrase these documents print"
@@ -273,6 +307,7 @@ def test_a_mention_with_no_repercutido_line_derives_the_reverse_charge(serve, re
     derivation = derive_category_from_regime_legend(
         printed_legend=draft.regime_legend,
         has_repercutido_line=draft_prints_a_repercutido_line(draft),
+        legends=registry_legends,
     )
     assert derivation.outcome is LegendDerivationOutcome.DERIVED
     assert derivation.category == require_iva_category("domestic_reverse_charge")
@@ -314,6 +349,7 @@ def test_a_mention_beside_a_repercutido_line_raises_a_blocking_finding(serve, re
     derivation = derive_category_from_regime_legend(
         printed_legend=draft.regime_legend,
         has_repercutido_line=draft_prints_a_repercutido_line(draft),
+        legends=registry_legends,
     )
     assert derivation.outcome is LegendDerivationOutcome.CONTRADICTED
     assert derivation.category is None, "the category must be withheld, not guessed, on a contradiction"

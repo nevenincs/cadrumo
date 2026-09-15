@@ -29,13 +29,16 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.live.justificante import (
     JustificanteAuthenticity,
     JustificanteCaptureSnapshot,
-    JustificanteCaptureSnapshotRepository,
     JustificanteCaptureSnapshotService,
     verify_capture_authenticity,
 )
 from cadrumo.core.config import Settings
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
+from cadrumo.entrypoints.cli._app_live_justificante_composition import (
+    build_justificante_authenticity_verifier,
+    build_justificante_capture_service,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -87,7 +90,7 @@ def _capture(
 
 def _reread(snapshot: JustificanteCaptureSnapshot) -> JustificanteCaptureSnapshot:
     """Load ``snapshot`` back through a freshly constructed real repository."""
-    return JustificanteCaptureSnapshotRepository(bucket_id=snapshot.bucket_id).load(snapshot.snapshot_id)
+    return build_justificante_capture_service(snapshot.bucket_id).resolve_snapshot(snapshot.snapshot_id)
 
 
 async def _verify_over_boundary(
@@ -112,6 +115,7 @@ async def _verify_over_boundary(
         return await verify_capture_authenticity(
             snapshot=snapshot,
             service=service,
+            verifier=build_justificante_authenticity_verifier(),
             browser=cast("VerifyBrowserSessionLike", session),
         )
     finally:
@@ -130,7 +134,7 @@ def isolated_bucket(tmp_path: Path) -> Iterator[None]:
 @pytest.mark.usefixtures("isolated_bucket")
 async def test_confirmed_cotejo_verdict_survives_the_encrypted_repository_roundtrip() -> None:
     """A capture AEAT confirms is persisted CONFIRMED and reloads as CONFIRMED."""
-    service = JustificanteCaptureSnapshotService(bucket_id=_BUCKET_ID)
+    service = build_justificante_capture_service(_BUCKET_ID)
     captured = _capture(service, period_code="2T", marker=b"confirmed")
     assert captured.authenticity is JustificanteAuthenticity.NOT_CHECKED
 
@@ -164,7 +168,7 @@ async def test_the_cotejo_outcomes_persist_as_distinct_states() -> None:
     themselves, and neither ``UNAVAILABLE`` nor ``NOT_CHECKED`` collapses
     into ``DENIED``.
     """
-    service = JustificanteCaptureSnapshotService(bucket_id=_BUCKET_ID)
+    service = build_justificante_capture_service(_BUCKET_ID)
     confirmed_capture = _capture(service, period_code="1T", marker=b"yes")
     denied_capture = _capture(service, period_code="2T", marker=b"no")
     unavailable_capture = _capture(service, period_code="3T", marker=b"unknown")
@@ -221,7 +225,7 @@ async def test_the_cotejo_outcomes_persist_as_distinct_states() -> None:
 @pytest.mark.usefixtures("isolated_bucket")
 def test_restamping_a_verdict_replaces_it_without_touching_the_receipt() -> None:
     """A later cotejo answer supersedes the earlier one in place."""
-    service = JustificanteCaptureSnapshotService(bucket_id=_BUCKET_ID)
+    service = build_justificante_capture_service(_BUCKET_ID)
     captured = _capture(service, period_code="2T", marker=b"restamp")
 
     unavailable = service.stamp_authenticity(
@@ -244,7 +248,7 @@ def test_restamping_a_verdict_replaces_it_without_touching_the_receipt() -> None
 @pytest.mark.usefixtures("isolated_bucket")
 def test_persisted_snapshot_without_an_authenticity_key_is_not_checked() -> None:
     """A capture written before the stamp existed makes no authenticity claim."""
-    service = JustificanteCaptureSnapshotService(bucket_id=_BUCKET_ID)
+    service = build_justificante_capture_service(_BUCKET_ID)
     captured = _capture(service, period_code="2T", marker=b"legacy")
 
     legacy_payload = captured.model_dump()

@@ -64,6 +64,7 @@ from ....application.modelo.review_package_recipient_encryption import (
 )
 from ....application.modelo.review_package_recipient_registry import add_recipient_fingerprint
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_review_package_support import build_review_package_via_cli
@@ -115,10 +116,14 @@ _MODELO_111_INPUTS: dict[CasillaId, str] = {
 }
 
 
-def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> Path:
+def _build_package(tmp_path: Path, *, name: str = "review-package.zip", operation: PinnedAuthorityOperation) -> Path:
     _set_export_profile_name()
     package_path, _, _ = build_review_package_via_cli(
-        tmp_path, invoke=_invoke, input_values_by_casilla_id=_MODELO_111_INPUTS, name=name
+        tmp_path,
+        invoke=_invoke,
+        input_values_by_casilla_id=_MODELO_111_INPUTS,
+        name=name,
+        operation=operation,
     )
     return package_path
 
@@ -131,8 +136,10 @@ def _register_recipient(recipient_id: str, *, public_key_hex: str) -> None:
     )
 
 
-def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     package_bytes = package_path.read_bytes()
 
     # The recipient's own encryption keypair is minted lazily by `decrypt`, but
@@ -209,8 +216,10 @@ def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Pa
         assert "draft.fichero-boe" in set(archive.namelist())
 
 
-def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_encrypt_for_recipient_review_only_and_expiry_round_trip(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
 
     from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -264,8 +273,8 @@ def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path)
     assert _payload(decrypt_result.output)["review_only"] is True
 
 
-def test_decrypt_refuses_on_replayed_envelope(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_decrypt_refuses_on_replayed_envelope(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
 
     from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -353,8 +362,10 @@ def test_decrypt_refuses_malformed_envelope_file(tmp_path: Path) -> None:
     assert result.exit_code != 0, result.output
 
 
-def test_encrypt_for_recipient_refuses_unknown_recipient(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_encrypt_for_recipient_refuses_unknown_recipient(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
 
     result = _invoke(
         [

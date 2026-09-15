@@ -112,7 +112,11 @@ def _profile_grounding_index():
         return profile_grounding_index_for_operation(operation)
 
 
-def _profile_schema_for_record(record: object) -> ProfileSchemaDefinition:
+def _profile_schema_for_record(
+    record: object,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ProfileSchemaDefinition:
     """Return the schema pinned to the authenticated record operation."""
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...domain.user_profile.values import UserProfileRecord
@@ -121,6 +125,7 @@ def _profile_schema_for_record(record: object) -> ProfileSchemaDefinition:
         raise TypeError("overview profile schema requires an authenticated UserProfileRecord")
     return ProfileRecordRepository.for_current_session(
         record.profile_id,
+        profile_decode_context=operation.profile_decode_context(),
     ).session.profile_decode_context.schema
 
 
@@ -278,9 +283,10 @@ def _emit_period_overview_status(
     period: str,
     year: int | None,
     verbose: bool,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Emit the typed draft projection for one canonical filing period."""
-    drafts = load_drafts()
+    drafts = load_drafts(operation=operation)
     canonical = _overview_status_period(period, year=year)
     wanted = (canonical.filing_year, canonical.registry_token)
 
@@ -376,13 +382,23 @@ def overview_status(
     )
 
     current = current_workflow_state() if resolve_active_bucket_id() is not None else None
+    operation = authority_operation(ctx)
     if period is not None:
         if current is None:
             raise no_active_profile_refusal()
-        _emit_period_overview_status(ctx, current=current, period=period, year=year, verbose=verbose)
+        _emit_period_overview_status(
+            ctx,
+            current=current,
+            period=period,
+            year=year,
+            verbose=verbose,
+            operation=operation,
+        )
         return
     profile_record = current.active_profile_record() if current is not None else None
-    profile_schema = _profile_schema_for_record(profile_record) if profile_record is not None else None
+    profile_schema = (
+        _profile_schema_for_record(profile_record, operation=operation) if profile_record is not None else None
+    )
     raw_values = (
         record_to_values(profile_record, schema=profile_schema)
         if profile_record is not None and profile_schema is not None
@@ -395,7 +411,7 @@ def overview_status(
         state=current,
         raw_values=raw_values,
         read_ports=state_projection_read_ports(ctx),
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     typed_status = strict_round_trip(OverviewStatusResult, report)
     status_lines, status_notices = overview_status_output(report)
@@ -406,7 +422,7 @@ def overview_status(
     coverage_lines, coverage_notices = _overview_status_coverage(
         current,
         raw_values=raw_values,
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     emit_envelope(
         ctx,
@@ -440,6 +456,7 @@ def overview_calendar(
         from_date=_parse_iso_date(from_date, label="--from"),
         to_date=_parse_iso_date(to_date, label="--to"),
     )
+    operation = authority_operation(ctx)
 
     if all_profiles:
         _overview_calendar_all_profiles(
@@ -447,13 +464,13 @@ def overview_calendar(
             rng=rng,
             allow_incomplete=allow_incomplete,
             show_suppressed=show_suppressed,
-            operation=authority_operation(ctx),
+            operation=operation,
         )
         return
 
     current = current_workflow_state()
     record = current.active_profile_record()
-    profile_schema = _profile_schema_for_record(record) if record is not None else None
+    profile_schema = _profile_schema_for_record(record, operation=operation) if record is not None else None
     raw_values = (
         record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
     )
@@ -490,6 +507,7 @@ def overview_calendar(
     filing_evidence, filing_evidence_notice = local_calendar_filing_evidence(
         bucket_id,
         events,
+        operation=operation,
         expected_tax_id=expected_tax_id,
     )
     work_units, work_units_notice = local_modelo_work_units(bucket_id)
@@ -501,7 +519,7 @@ def overview_calendar(
     cal: OverviewCalendar = build_overview_calendar(
         workflow_profile,
         rng,
-        operation=authority_operation(ctx),
+        operation=operation,
         today=calendar_today,
         raw_values=raw_values,
         show_suppressed=show_suppressed,
@@ -559,6 +577,7 @@ def _profile_calendar_inputs(
     as_of: _date,
     label: str,
     expedientes_ports_factory: ExpedientesPortsFactory,
+    operation: PinnedAuthorityOperation,
 ) -> _ProfileCalendarInputs | None:
     """Read one profile's calendar inputs, or ``None`` when the bucket is unreadable.
 
@@ -588,7 +607,12 @@ def _profile_calendar_inputs(
             expected_tax_id=taxpayer.tax_id,
         )
         events = (*live_events, *modelo_record_events)
-        filing_evidence, _ = local_calendar_filing_evidence(bucket_id, events, expected_tax_id=taxpayer.tax_id)
+        filing_evidence, _ = local_calendar_filing_evidence(
+            bucket_id,
+            events,
+            operation=operation,
+            expected_tax_id=taxpayer.tax_id,
+        )
         work_units, _ = local_modelo_work_units(bucket_id)
         return _ProfileCalendarInputs(
             taxpayer=taxpayer,
@@ -610,6 +634,7 @@ def _calendar_profile_groups(
     buckets: Mapping[str, _ProfileBucketPointer],
     *,
     active_bucket_id: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[dict[str, _ProfileBucketPointer], list[_ProfileBucketPointer], list[_ProfileBucketPointer]]:
     """Classify registered profiles without treating labels as readiness authority."""
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -624,7 +649,10 @@ def _calendar_profile_groups(
             locked.append(pointer)
             continue
         try:
-            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=operation.profile_decode_context(),
+            ).load(bucket_id)
         except ProfileNotFoundError:
             locked.append(pointer)
             continue
@@ -652,12 +680,16 @@ def _profile_calendar_projection(
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 
     inputs = _profile_calendar_inputs(
-        ProfileRecordRepository.for_current_session(bucket_id),
+        ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ),
         bucket_id,
         rng=rng,
         as_of=as_of,
         label=pointer.label,
         expedientes_ports_factory=expedientes_ports_factory,
+        operation=operation,
     )
     if inputs is None:
         return None
@@ -703,6 +735,7 @@ def _overview_calendar_all_profiles(
     active_buckets, setup_incomplete, locked = _calendar_profile_groups(
         buckets,
         active_bucket_id=resolve_active_bucket_id(),
+        operation=operation,
     )
 
     all_lines: list[str] = [
@@ -765,14 +798,15 @@ def overview_agenda(
             ),
         )
     record = current.active_profile_record()
-    profile_schema = _profile_schema_for_record(record) if record is not None else None
+    operation = authority_operation(ctx)
+    profile_schema = _profile_schema_for_record(record, operation=operation) if record is not None else None
     raw_values = (
         record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
     )
     agenda = build_overview_agenda(
         profile_to_taxpayer(current),
         as_of=as_of_date,
-        operation=authority_operation(ctx),
+        operation=operation,
         horizon_days=horizon_days,
         raw_values=raw_values,
     )
@@ -807,7 +841,8 @@ def overview_backlog(
     parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None
     parsed_to = _parse_iso_date(to_date, label="--to") if to_date else None
     record = current.active_profile_record()
-    profile_schema = _profile_schema_for_record(record) if record is not None else None
+    operation = authority_operation(ctx)
+    profile_schema = _profile_schema_for_record(record, operation=operation) if record is not None else None
     raw_values = (
         record_to_values(record, schema=profile_schema) if record is not None and profile_schema is not None else None
     )
@@ -817,7 +852,7 @@ def overview_backlog(
     work_units, work_units_notice = local_modelo_work_units(bucket_id)
     backlog = build_overview_backlog(
         profile_to_taxpayer(current),
-        operation=authority_operation(ctx),
+        operation=operation,
         from_date=parsed_from,
         to_date=parsed_to,
         raw_values=raw_values,

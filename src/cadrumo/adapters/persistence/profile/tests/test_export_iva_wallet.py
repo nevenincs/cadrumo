@@ -41,7 +41,7 @@ from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconcilia
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
@@ -60,8 +60,7 @@ def _wallet_decision_repository_at(sidecar_db: Path) -> tuple[IvaWalletDecisionR
 
 
 def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
-    isolated_backend: None,
-    tmp_path: Path,
+    isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
@@ -71,9 +70,11 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
+        filing_instance_evidence=_general_m303_filing_evidence(
+            Period.from_year_and_code(2026, "2T"), operation=operation
+        ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
     IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
@@ -92,8 +93,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
 
 
 def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_history_only(
-    isolated_backend: None,
-    tmp_path: Path,
+    isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "87654321X"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
@@ -103,9 +103,11 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
+        filing_instance_evidence=_general_m303_filing_evidence(
+            Period.from_year_and_code(2026, "2T"), operation=operation
+        ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
     IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"):
@@ -124,8 +126,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
 
 
 def test_export_modelo_303_uses_injected_wallet_decision_repository(
-    isolated_backend: None,
-    tmp_path: Path,
+    isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
@@ -135,9 +136,11 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
+        filing_instance_evidence=_general_m303_filing_evidence(
+            Period.from_year_and_code(2026, "2T"), operation=operation
+        ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
@@ -165,7 +168,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
 
 
 def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocking_readiness(
-    isolated_backend: None,
+    isolated_backend: None, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "87654321X"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
@@ -175,7 +178,9 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
+        filing_instance_evidence=_general_m303_filing_evidence(
+            Period.from_year_and_code(2026, "2T"), operation=operation
+        ),
     )
     IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
@@ -202,8 +207,7 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
 
 
 def test_verify_modelo_303_uses_injected_wallet_decision_repository(
-    isolated_backend: None,
-    tmp_path: Path,
+    isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
@@ -213,7 +217,9 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
+        filing_instance_evidence=_general_m303_filing_evidence(
+            Period.from_year_and_code(2026, "2T"), operation=operation
+        ),
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
@@ -245,8 +251,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
 
 
 def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutation(
-    isolated_backend: None,
-    tmp_path: Path,
+    isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
@@ -256,7 +261,9 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
+        filing_instance_evidence=_general_m303_filing_evidence(
+            Period.from_year_and_code(2026, "2T"), operation=operation
+        ),
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-file.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))

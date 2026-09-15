@@ -38,6 +38,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import list_verification_reports
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
@@ -73,7 +74,7 @@ def _filing_ports_for_test(repos: Repos):
     )
 
 
-def _seed_nongranting_revision(repos: Repos):
+def _seed_nongranting_revision(repos: Repos, *, operation: PinnedAuthorityOperation):
     """Seed an M180 draft that omits one required casilla, so verify refuses.
 
     Returns ``(revision, repos-tuple)``. A non-granting verify leaves the
@@ -107,15 +108,18 @@ def _seed_nongranting_revision(repos: Repos):
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        operation=operation,
     )
     return revision
 
 
-def test_identical_nongranting_verify_retry_collapses_to_one_report(repos: Repos) -> None:
+def test_identical_nongranting_verify_retry_collapses_to_one_report(
+    repos: Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """Two identical-outcome non-granting verifies at different clocks → one report."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-        revision = _seed_nongranting_revision(repos)
+        revision = _seed_nongranting_revision(repos, operation=operation)
 
         first = verify_modelo_revision(
             revision.calculation_revision_id,
@@ -161,11 +165,13 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(repos: Repos
         assert stored[0].completeness_status is VerificationCompletenessStatus.INCOMPLETE
 
 
-def test_distinct_outcome_verify_produces_a_distinct_report(repos: Repos) -> None:
+def test_distinct_outcome_verify_produces_a_distinct_report(
+    repos: Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """A verify whose outcome differs (different actor) → a distinct report, not a collapse."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-        revision = _seed_nongranting_revision(repos)
+        revision = _seed_nongranting_revision(repos, operation=operation)
 
         by_a = verify_modelo_revision(
             revision.calculation_revision_id,

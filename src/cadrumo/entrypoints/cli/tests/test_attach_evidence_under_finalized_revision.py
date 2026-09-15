@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support import seed_revision_citing_transaction
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -127,24 +128,29 @@ def _deductible_expense_row(profile: TestRuntimeProfile, *, idempotency_key: str
     return created.ref.transaction_id
 
 
-def _finalize_revision_citing(profile: TestRuntimeProfile, transaction_id: str) -> str:
+def _finalize_revision_citing(
+    profile: TestRuntimeProfile, transaction_id: str, *, operation: PinnedAuthorityOperation
+) -> str:
     return seed_revision_citing_transaction(
         profile.repository,
         transaction_id=transaction_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         period_code="1T",
         bucket_id=_BUCKET,
+        operation=operation,
     )
 
 
 def test_attach_evidence_proceeds_under_finalized_revision(
     profile: TestRuntimeProfile,
     pdf_file: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # The dead end itself: verify has finalized the revision, export refused for
     # missing evidence, and the documented remedy must now be reachable.
     transaction_id = _deductible_expense_row(profile, idempotency_key="attach-under-finalized")
-    revision_id = _finalize_revision_citing(profile, transaction_id)
+    revision_id = _finalize_revision_citing(profile, transaction_id, operation=operation)
     evidence_id = _mint_evidence_id(profile, pdf_file)
 
     with _ledger_ports(profile) as ports:
@@ -171,11 +177,13 @@ def test_attach_evidence_proceeds_under_finalized_revision(
 def test_attach_leaves_the_finalized_revision_untouched(
     profile: TestRuntimeProfile,
     pdf_file: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # The guard's subject — the finalized revision — must survive the attach
     # byte-for-byte: casilla values, cited ids, and state are frozen snapshots.
     transaction_id = _deductible_expense_row(profile, idempotency_key="attach-revision-frozen")
-    revision_id = _finalize_revision_citing(profile, transaction_id)
+    revision_id = _finalize_revision_citing(profile, transaction_id, operation=operation)
     before = _revisions(profile).load().revisions[revision_id]
 
     with _ledger_ports(profile) as ports:
@@ -193,11 +201,13 @@ def test_attach_leaves_the_finalized_revision_untouched(
 
 def test_value_affecting_update_still_refuses_under_finalized_revision(
     profile: TestRuntimeProfile,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # The guard is narrowed, not removed: a classification change to a row a
     # finalized revision cites is still refused.
     transaction_id = _deductible_expense_row(profile, idempotency_key="classify-under-finalized")
-    _finalize_revision_citing(profile, transaction_id)
+    _finalize_revision_citing(profile, transaction_id, operation=operation)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"), _ledger_ports(profile) as ports:
         update_manual_transaction_fields(
@@ -217,11 +227,13 @@ def test_value_affecting_update_still_refuses_under_finalized_revision(
 def test_evidence_attachment_bundled_with_a_value_change_still_refuses(
     profile: TestRuntimeProfile,
     pdf_file: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # The exemption must not become a bypass: a patch carrying an evidence field
     # AND a value field is a value-affecting update and meets the guard.
     transaction_id = _deductible_expense_row(profile, idempotency_key="attach-plus-value")
-    _finalize_revision_citing(profile, transaction_id)
+    _finalize_revision_citing(profile, transaction_id, operation=operation)
     evidence_id = _mint_evidence_id(profile, pdf_file)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"), _ledger_ports(profile) as ports:

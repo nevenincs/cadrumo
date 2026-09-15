@@ -28,6 +28,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -83,7 +84,9 @@ def discard_repos(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueReposi
         yield profile.bucket_id, WorkUnitCatalogueRepository(objects=objects)
 
 
-def _create(repository: WorkUnitCatalogueRepository, *, bucket_id: str) -> WorkUnit:
+def _create(
+    repository: WorkUnitCatalogueRepository, *, bucket_id: str, operation: PinnedAuthorityOperation
+) -> WorkUnit:
     return create_work_unit(
         bucket_id=bucket_id,
         modelo=_MODELO,
@@ -95,15 +98,16 @@ def _create(repository: WorkUnitCatalogueRepository, *, bucket_id: str) -> WorkU
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
         clock=_T0,
+        operation=operation,
     )
 
 
 def test_recreating_a_discarded_target_refuses_instead_of_returning_it(
-    discard_repos: tuple[str, WorkUnitCatalogueRepository],
+    discard_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """The defect: the discarded unit was handed back and every verb then denied it."""
     bucket_id, repository = discard_repos
-    created = _create(repository, bucket_id=bucket_id)
+    created = _create(repository, bucket_id=bucket_id, operation=operation)
     discard_work_unit(
         created.work_unit_id,
         actor="operator",
@@ -116,17 +120,17 @@ def test_recreating_a_discarded_target_refuses_instead_of_returning_it(
     )
 
     with pytest.raises(WorkUnitMutationRefusedError) as raised:
-        _create(repository, bucket_id=bucket_id)
+        _create(repository, bucket_id=bucket_id, operation=operation)
 
     assert raised.value.translated_message == "application.modelo.errors.work_unit_create_discarded"
 
 
 def test_the_refusal_names_the_state_and_the_target_coordinates(
-    discard_repos: tuple[str, WorkUnitCatalogueRepository],
+    discard_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """Structure only: an operator must be able to see WHICH target and WHY."""
     bucket_id, repository = discard_repos
-    created = _create(repository, bucket_id=bucket_id)
+    created = _create(repository, bucket_id=bucket_id, operation=operation)
     discard_work_unit(
         created.work_unit_id,
         actor="operator",
@@ -137,7 +141,7 @@ def test_the_refusal_names_the_state_and_the_target_coordinates(
     )
 
     with pytest.raises(WorkUnitMutationRefusedError) as raised:
-        _create(repository, bucket_id=bucket_id)
+        _create(repository, bucket_id=bucket_id, operation=operation)
 
     context = raised.value.context
     assert context is not None
@@ -161,11 +165,11 @@ def test_the_refusal_names_the_state_and_the_target_coordinates(
 
 
 def test_the_refusal_has_its_own_terminal_create_scenario(
-    discard_repos: tuple[str, WorkUnitCatalogueRepository],
+    discard_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """The create refusal identifies the terminal target state without recovery prose."""
     bucket_id, repository = discard_repos
-    created = _create(repository, bucket_id=bucket_id)
+    created = _create(repository, bucket_id=bucket_id, operation=operation)
     discard_work_unit(
         created.work_unit_id,
         actor="operator",
@@ -176,7 +180,7 @@ def test_the_refusal_has_its_own_terminal_create_scenario(
     )
 
     with pytest.raises(WorkUnitMutationRefusedError) as raised:
-        _create(repository, bucket_id=bucket_id)
+        _create(repository, bucket_id=bucket_id, operation=operation)
 
     assert raised.value.translated_message == "application.modelo.errors.work_unit_create_discarded"
     verdict = raised.value.terminal_precondition_verdict
@@ -186,7 +190,7 @@ def test_the_refusal_has_its_own_terminal_create_scenario(
 
 
 def test_an_active_unit_still_returns_idempotently(
-    discard_repos: tuple[str, WorkUnitCatalogueRepository],
+    discard_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """Anti-vacuity: the guard must be narrow, not a blanket refusal on re-create.
 
@@ -194,19 +198,19 @@ def test_an_active_unit_still_returns_idempotently(
     tests above while breaking the documented idempotent-create contract.
     """
     bucket_id, repository = discard_repos
-    first = _create(repository, bucket_id=bucket_id)
-    second = _create(repository, bucket_id=bucket_id)
+    first = _create(repository, bucket_id=bucket_id, operation=operation)
+    second = _create(repository, bucket_id=bucket_id, operation=operation)
 
     assert second.work_unit_id == first.work_unit_id
     assert second.state is WorkUnitState.BORRADOR
 
 
 def test_discovery_and_creation_now_agree_that_a_discarded_unit_is_gone(
-    discard_repos: tuple[str, WorkUnitCatalogueRepository],
+    discard_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """The asymmetry being closed: listing hid it while creation handed it back."""
     bucket_id, repository = discard_repos
-    created = _create(repository, bucket_id=bucket_id)
+    created = _create(repository, bucket_id=bucket_id, operation=operation)
     discard_work_unit(
         created.work_unit_id,
         actor="operator",
@@ -225,7 +229,7 @@ def test_discovery_and_creation_now_agree_that_a_discarded_unit_is_gone(
     assert all(unit.work_unit_id != created.work_unit_id for unit in active)
 
     with pytest.raises(WorkUnitMutationRefusedError):
-        _create(repository, bucket_id=bucket_id)
+        _create(repository, bucket_id=bucket_id, operation=operation)
 
     audit = list_work_units(
         bucket_id=bucket_id,

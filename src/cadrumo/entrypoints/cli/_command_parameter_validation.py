@@ -89,10 +89,15 @@ def _enum_value(value: object) -> object:
 
 def _target_matches(annotation: object, module: str, qualname: str) -> bool:
     """Match a deferred target without importing the command declaration module."""
+    if annotation.__class__.__name__ != "DeferredTarget":
+        return False
+    target_module = getattr(annotation, "module", None)
+    target_qualname = getattr(annotation, "qualname", None)
     return (
-        annotation.__class__.__name__ == "DeferredTarget"
-        and getattr(annotation, "module", None) == module
-        and getattr(annotation, "qualname", None) == qualname
+        isinstance(target_module, str)
+        and isinstance(target_qualname, str)
+        and target_module == module
+        and target_qualname == qualname
     )
 
 
@@ -192,9 +197,17 @@ def validate_unavailable_schema(target: object, reason_key: object, identity: st
 
 def validate_unique_parameter_names(parameters: tuple[Any, ...]) -> tuple[str, ...]:
     """Return parameter names after refusing duplicate command fields."""
-    parameter_names = tuple(parameter.name for parameter in parameters)
+    parameter_names = tuple(_require_parameter_name(parameter) for parameter in parameters)
     _raise_first(((len(parameter_names) != len(set(parameter_names)), "command parameter names must be unique"),))
     return parameter_names
+
+
+def _require_parameter_name(parameter: object) -> str:
+    """Return a declared parameter name after checking the dynamic boundary."""
+    name = getattr(parameter, "name", None)
+    if not isinstance(name, str):
+        raise TypeError("command parameter must expose a string name")
+    return name
 
 
 def validate_profile_target_parameter(profile_target_parameter: str | None, parameter_names: tuple[str, ...]) -> None:

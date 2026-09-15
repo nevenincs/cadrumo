@@ -32,6 +32,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ....application.modelo.m145_communication_records import (
@@ -195,7 +197,7 @@ def test_m145_group_registers_closed_action_verbs() -> None:
 
 
 def test_m145_create_validate_export_and_transitions_delegate_to_real_service(
-    isolated_m145_cli_backend: str,
+    isolated_m145_cli_backend: str, operation: PinnedAuthorityOperation
 ) -> None:
     communication_record_id = _create_record_id()
 
@@ -229,6 +231,7 @@ def test_m145_create_validate_export_and_transitions_delegate_to_real_service(
         communication_record_id[:12],
         bucket_id=isolated_m145_cli_backend,
         ports=build_m145_communication_records_ports(bucket_id=isolated_m145_cli_backend),
+        operation=operation,
     )
     assert persisted.state is M145CommunicationRecordState.LOCALLY_COMPLETED
     assert persisted.delivered_to_payer_at is not None

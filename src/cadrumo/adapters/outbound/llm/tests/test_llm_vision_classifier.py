@@ -81,6 +81,7 @@ def test_vision_classifier_classifies_from_images() -> None:
     images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
 
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+
         def _call() -> LLMClassificationResponse:
             classifier = LocalVisionLLMClassifier(
                 spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
@@ -118,6 +119,7 @@ def test_image_evidence_classifies_with_no_provider() -> None:
     )
 
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+
         def _call() -> tuple[LLMClassificationResponse, str]:
             settings = load_settings()
             return classify_with_evidence(
@@ -176,9 +178,7 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
         evidence = ResolvedEvidence(
             reference="ev-1",
             text=None,
-            images=(
-                EvidenceImage.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),
-            ),
+            images=(EvidenceImage.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
         )
         unreachable_settings = load_settings().model_copy(
             update={
@@ -225,6 +225,7 @@ def test_vision_model_override_selects_the_named_model() -> None:
     )
 
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+
         def _call() -> tuple[LLMClassificationResponse, str]:
             settings = load_settings()
             spec = prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test)

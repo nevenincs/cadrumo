@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.inbound.financial.ledger_import import build_ledger_import_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.export.tabular import ExportSerializationFormat
 from cadrumo.application.ledger.actions_export import export_ledger_transactions
@@ -42,6 +43,7 @@ def test_import_ledger_source_honors_explicit_direction_column_on_positive_amoun
 
     imported = import_ledger_source(
         LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=statement, provider="csv", actor="operator-A"),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )

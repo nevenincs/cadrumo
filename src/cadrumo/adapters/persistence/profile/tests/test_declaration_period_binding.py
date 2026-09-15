@@ -38,6 +38,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -141,7 +142,9 @@ def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaComp
     )
 
 
-def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path: Path):
+def _calculate_303(
+    *, filing_year: int, period: str, period_date: date, tmp_path: Path, operation: PinnedAuthorityOperation
+):
     with _secure_backend(tmp_path):
         snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
         typed_period = Period.from_year_and_code(filing_year, period)
@@ -157,6 +160,7 @@ def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path
                 bucket_event_repository=BucketEventHistoryRepository(),
             ),
             clock=_CLOCK,
+            operation=operation,
         )
         # Persist a zero-amount wallet-reconciliation decision so the new
         # ``modelo-303-compensacion-pendiente-anteriores`` binding clears the
@@ -180,18 +184,21 @@ def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path
                 ports=_calculation_ports_174,
                 clock=_CLOCK,
                 filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit.period, reference="test:m303-declaration-period-binding"
+                    work_unit.period, reference="test:m303-declaration-period-binding", operation=operation
                 ),
             )
 
 
-def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(tmp_path: Path) -> None:
+def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """``decl.ejercicio`` carries the work unit's filing year, not ``0``."""
     revision = _calculate_303(
         filing_year=2025,
         period="1T",
         period_date=date(2025, 3, 31),
         tmp_path=tmp_path,
+        operation=operation,
     )
     assert revision.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2025")
 
@@ -206,10 +213,7 @@ def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(tmp_pat
     ],
 )
 def test_modelo_303_declaration_period_resolves_from_work_unit_period(
-    period: str,
-    period_date: date,
-    expected_token: str,
-    tmp_path: Path,
+    period: str, period_date: date, expected_token: str, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """``decl.periodo`` carries the AEAT period token, on the string channel.
 
@@ -226,6 +230,7 @@ def test_modelo_303_declaration_period_resolves_from_work_unit_period(
         period=period,
         period_date=period_date,
         tmp_path=tmp_path,
+        operation=operation,
     )
     assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == expected_token
     assert _DECL_PERIODO_CASILLA not in revision.casilla_values
@@ -233,7 +238,9 @@ def test_modelo_303_declaration_period_resolves_from_work_unit_period(
     assert observations[_DECL_PERIODO_CASILLA].value == expected_token
 
 
-def test_modelo_303_declaration_casillas_carry_registry_provenance(tmp_path: Path) -> None:
+def test_modelo_303_declaration_casillas_carry_registry_provenance(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The informational casillas land as grounded, value-faithful observations.
 
     A populated value with empty ``legal_refs`` / ``source_refs``
@@ -248,6 +255,7 @@ def test_modelo_303_declaration_casillas_carry_registry_provenance(tmp_path: Pat
         period="2T",
         period_date=date(2025, 6, 30),
         tmp_path=tmp_path,
+        operation=operation,
     )
     observations = {obs.casilla_id: obs for obs in revision.observations}
     for casilla_id in (_DECL_EJERCICIO_CASILLA, _DECL_PERIODO_CASILLA):
@@ -261,7 +269,9 @@ def test_modelo_303_declaration_casillas_carry_registry_provenance(tmp_path: Pat
     assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == "2T"
 
 
-def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Path) -> None:
+def test_modelo_303_declaration_year_distinguishes_two_filing_years(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Two work units differing only by filing year resolve distinct ejercicio values.
 
     Anti-tautology: the value is read off the work unit, so a
@@ -272,12 +282,14 @@ def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Pa
         period="1T",
         period_date=date(2024, 3, 31),
         tmp_path=tmp_path / "y2024",
+        operation=operation,
     )
     revision_2026 = _calculate_303(
         filing_year=2026,
         period="1T",
         period_date=date(2026, 3, 31),
         tmp_path=tmp_path / "y2026",
+        operation=operation,
     )
     assert revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2024")
     assert revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2026")

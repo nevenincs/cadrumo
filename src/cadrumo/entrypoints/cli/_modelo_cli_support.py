@@ -383,12 +383,14 @@ def _annotation_contains_decimal(annotation: object) -> bool:
 
 
 def _row_decimal_field_names() -> frozenset[str]:
-    return frozenset(
-        field_name
-        for row_model in _SUPPORTED_ROW_MODELS
-        for field_name, field in row_model.model_fields.items()
-        if _annotation_contains_decimal(field.annotation)
-    )
+    field_names: set[str] = set()
+    for row_model in _SUPPORTED_ROW_MODELS:
+        for field_name, field in row_model.model_fields.items():
+            if not isinstance(field_name, str):
+                raise TypeError("row model field names must be strings")
+            if _annotation_contains_decimal(field.annotation):
+                field_names.add(field_name)
+    return frozenset(field_names)
 
 
 def _coerce_row_field_values(

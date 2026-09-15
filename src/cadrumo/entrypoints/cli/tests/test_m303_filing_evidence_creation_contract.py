@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 import typer
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.period import Period
 from .._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._m303_filing_evidence_support import default_insolvency_fact, write_m303_filing_evidence
@@ -15,19 +17,24 @@ from ._m303_filing_evidence_support import default_insolvency_fact, write_m303_f
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _write_evidence(path: Path, period: Period, *, joint_return_elected: bool = True) -> None:
+def _write_evidence(
+    path: Path, period: Period, *, joint_return_elected: bool = True, operation: PinnedAuthorityOperation
+) -> None:
     write_m303_filing_evidence(
         path,
         period,
         joint_return_elected=joint_return_elected,
         insolvency=default_insolvency_fact(),
+        operation=operation,
     )
 
 
-def test_cli_loads_complete_m303_evidence_before_revision_creation(tmp_path: Path) -> None:
+def test_cli_loads_complete_m303_evidence_before_revision_creation(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     period = Period.from_year_and_code(2026, "1T")
     evidence_path = tmp_path / "m303-filing-evidence.json"
-    _write_evidence(evidence_path, period)
+    _write_evidence(evidence_path, period, operation=operation)
 
     evidence = m303_filing_instance_evidence_from_cli(
         modelo="303",

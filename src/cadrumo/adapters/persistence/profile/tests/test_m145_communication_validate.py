@@ -27,6 +27,7 @@ from .....application.modelo.m145_communication_records import (
     create_m145_communication_record,
     validate_m145_communication_record,
 )
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .....domain.calculations.registry.temporal import select_revision
@@ -62,7 +63,10 @@ def _casilla_for_data_type(data_type: str) -> CasillaDefinition:
     raise AssertionError(f"Modelo 145 registry declares no casilla with data_type={data_type!r}")
 
 
-def test_validate_m145_communication_record_accepts_registry_backed_required_fields(tmp_path: Path) -> None:
+def test_validate_m145_communication_record_accepts_registry_backed_required_fields(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     revision = _m145_revision()
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
@@ -70,11 +74,13 @@ def test_validate_m145_communication_record_accepts_registry_backed_required_fie
             M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         result = validate_m145_communication_record(
             record.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     assert result.valid is True
@@ -88,6 +94,7 @@ def test_validate_m145_communication_record_accepts_registry_backed_required_fie
 
 def test_validate_m145_communication_record_reports_missing_required_casilla_with_registry_refs(
     tmp_path: Path,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     casillas = _snapshot_casillas()
     missing = next(casilla for casilla in sorted(casillas.values(), key=lambda item: item.id) if casilla.required)
@@ -99,11 +106,13 @@ def test_validate_m145_communication_record_reports_missing_required_casilla_wit
             M145CommunicationCreateCommand(communication_year=2026, field_values=values),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         result = validate_m145_communication_record(
             record.communication_record_id,
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     issue = next(
@@ -133,6 +142,7 @@ def test_validate_m145_communication_record_reports_registry_data_type_failures(
     tmp_path: Path,
     data_type: str,
     invalid_value: str,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     casilla = _casilla_for_data_type(data_type)
     values = _field_values()
@@ -143,11 +153,13 @@ def test_validate_m145_communication_record_reports_registry_data_type_failures(
             M145CommunicationCreateCommand(communication_year=2026, field_values=values),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         result = validate_m145_communication_record(
             record.communication_record_id,
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     issue = next(

@@ -14,6 +14,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -28,7 +29,10 @@ from .ledger_action_persistence_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
+def test_update_manual_transaction_refuses_finalized_modelo_reference(
+    secure_objects: SecureObjectRepository,
+    operation: PinnedAuthorityOperation,
+) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -48,7 +52,11 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
             ports=ports,
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
-    persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
+    persist_verified_revision_citing_transaction(
+        secure_objects,
+        transaction_id=created.ref.transaction_id,
+        operation=operation,
+    )
 
     with (
         pytest.raises(TransactionValidationError, match="finalized modelo"),

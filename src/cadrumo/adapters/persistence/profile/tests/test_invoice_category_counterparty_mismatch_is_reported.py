@@ -38,6 +38,7 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -94,6 +95,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
         # Clave E: an ordinary entrega intracomunitaria. Stated because the
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,
+        rate_provider=default_ecb_rate_provider(),
     )
     catalogue = InvoiceCatalogue.from_invoices((invoice,))
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(catalogue)
@@ -195,6 +197,7 @@ def test_a_supportable_supply_produces_no_advisory(secure_objects: SecureObjectR
         # Clave E: an ordinary entrega intracomunitaria. Stated because the
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,
+        rate_provider=default_ecb_rate_provider(),
     )
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         InvoiceCatalogue.from_invoices((invoice,)),

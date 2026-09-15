@@ -195,16 +195,17 @@ def _calculate_quarter(
     ``casilla_values`` mapping the enrollment records as _produced-value
     evidence.
     """
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=_MODELO,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
-        revision_id=_REVISION,
-        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
-        clock=_CLOCK,
-    )
     with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=_MODELO,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, period),
+            revision_id=_REVISION,
+            ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
+            operation=operation,
+            clock=_CLOCK,
+        )
         return calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),

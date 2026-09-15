@@ -19,6 +19,7 @@ from ....application.modelo.tests.registry_revision import active_registry_revis
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -83,10 +84,11 @@ _MODELO_111_INPUTS: dict[CasillaId, str] = {
 }
 
 
-def test_review_package_build_then_verify_end_to_end(tmp_path: Path) -> None:
+def test_review_package_build_then_verify_end_to_end(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     _set_export_profile_name()
     work_unit_id, calculation_revision_id = seed_exportable_modelo_revision(
         input_values_by_casilla_id=_MODELO_111_INPUTS,
+        operation=operation,
     )
     package_path = tmp_path / "review-package.zip"
 
@@ -151,9 +153,11 @@ def test_review_package_build_then_verify_end_to_end(tmp_path: Path) -> None:
     assert verify_payload["built_by"] == "Ana"
 
 
-def test_review_package_verify_detects_tampered_member(tmp_path: Path) -> None:
+def test_review_package_verify_detects_tampered_member(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     _set_export_profile_name()
-    work_unit_id, _ = seed_exportable_modelo_revision(input_values_by_casilla_id=_MODELO_111_INPUTS)
+    work_unit_id, _ = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=_MODELO_111_INPUTS, operation=operation
+    )
     package_path = tmp_path / "review-package.zip"
 
     build_result = _invoke(
@@ -185,9 +189,11 @@ def test_review_package_verify_refuses_missing_package(tmp_path: Path) -> None:
     assert result.exit_code != 0, result.output
 
 
-def test_review_package_build_requires_output_flag() -> None:
+def test_review_package_build_requires_output_flag(*, operation: PinnedAuthorityOperation) -> None:
     _set_export_profile_name()
-    work_unit_id, _ = seed_exportable_modelo_revision(input_values_by_casilla_id=_MODELO_111_INPUTS)
+    work_unit_id, _ = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=_MODELO_111_INPUTS, operation=operation
+    )
 
     result = _invoke(["app", "modelo", "review-package", "build", work_unit_id])
     assert result.exit_code != 0, result.output
@@ -261,12 +267,12 @@ def test_review_package_help_advertises_local_only() -> None:
     assert "--disposition" not in result.output
 
 
-def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
+def test_review_package_build_refuses_draft_revision(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """A BORRADOR-state (never verified) revision cannot be packaged for review."""
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = active_registry_revision_id(modelo="111", filing_year=2026, period="1T")
+    revision_id = active_registry_revision_id(modelo="111", filing_year=2026, period="1T", operation=operation)
     filing_period = Period.from_year_and_code(2026, "1T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -330,16 +336,22 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
     assert not package_path.exists()
 
 
-def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> Path:
+def _build_package(tmp_path: Path, *, name: str = "review-package.zip", operation: PinnedAuthorityOperation) -> Path:
     _set_export_profile_name()
     package_path, _, _ = build_review_package_via_cli(
-        tmp_path, invoke=_invoke, input_values_by_casilla_id=_MODELO_111_INPUTS, name=name
+        tmp_path,
+        invoke=_invoke,
+        input_values_by_casilla_id=_MODELO_111_INPUTS,
+        name=name,
+        operation=operation,
     )
     return package_path
 
 
-def test_review_package_sign_then_verify_signature_end_to_end(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_sign_then_verify_signature_end_to_end(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     signature_path = tmp_path / "signature.json"
 
     sign_result = _invoke(
@@ -386,8 +398,10 @@ def test_review_package_sign_then_verify_signature_end_to_end(tmp_path: Path) ->
     assert verify_payload["is_valid"] is True
 
 
-def test_review_package_verify_signature_fails_on_tampered_package(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_verify_signature_fails_on_tampered_package(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     signature_path = tmp_path / "signature.json"
 
     sign_result = _invoke(
@@ -431,8 +445,10 @@ def test_review_package_verify_signature_fails_on_tampered_package(tmp_path: Pat
     assert _payload(verify_result.output)["is_valid"] is False
 
 
-def test_review_package_verify_signature_fails_on_wrong_public_key(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_verify_signature_fails_on_wrong_public_key(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     signature_path = tmp_path / "signature.json"
     _invoke(
         ["app", "modelo", "review-package", "sign", str(package_path), "--output", str(signature_path)],
@@ -457,8 +473,10 @@ def test_review_package_verify_signature_fails_on_wrong_public_key(tmp_path: Pat
     assert _payload(verify_result.output)["is_valid"] is False
 
 
-def test_review_package_counter_sign_then_verify_receipt_end_to_end(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_counter_sign_then_verify_receipt_end_to_end(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     signature_path = tmp_path / "signature.json"
 
     sign_result = _invoke(
@@ -528,8 +546,10 @@ def test_review_package_counter_sign_then_verify_receipt_end_to_end(tmp_path: Pa
     assert _payload(verify_receipt_result.output)["is_valid"] is True
 
 
-def test_review_package_verify_receipt_fails_when_note_edited(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_verify_receipt_fails_when_note_edited(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     signature_path = tmp_path / "signature.json"
     sign_result = _invoke(
         [
@@ -605,8 +625,10 @@ def test_review_package_sign_refuses_missing_package(tmp_path: Path) -> None:
     assert result.exit_code != 0, result.output
 
 
-def test_review_package_verify_signature_refuses_missing_signature_file(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_verify_signature_refuses_missing_signature_file(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     result = _invoke(
         [
             "app",
@@ -622,8 +644,10 @@ def test_review_package_verify_signature_refuses_missing_signature_file(tmp_path
     assert result.exit_code != 0, result.output
 
 
-def test_review_package_verify_signature_refuses_malformed_signature_file(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_verify_signature_refuses_malformed_signature_file(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     signature_path = tmp_path / "signature.json"
     signature_path.write_text("not valid json at all", encoding="utf-8")
 
@@ -642,8 +666,10 @@ def test_review_package_verify_signature_refuses_malformed_signature_file(tmp_pa
     assert result.exit_code != 0, result.output
 
 
-def test_review_package_counter_sign_refuses_missing_signature_file(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_counter_sign_refuses_missing_signature_file(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     result = _invoke(
         [
             "app",
@@ -659,8 +685,10 @@ def test_review_package_counter_sign_refuses_missing_signature_file(tmp_path: Pa
     assert result.exit_code != 0, result.output
 
 
-def test_review_package_verify_receipt_refuses_missing_receipt_file(tmp_path: Path) -> None:
-    package_path = _build_package(tmp_path)
+def test_review_package_verify_receipt_refuses_missing_receipt_file(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path = _build_package(tmp_path, operation=operation)
     result = _invoke(
         [
             "app",

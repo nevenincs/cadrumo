@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from base64 import b64encode
+from collections.abc import Callable
 from functools import lru_cache
 from hashlib import sha256
 from multiprocessing import get_context
@@ -55,7 +56,7 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -106,6 +107,54 @@ def _recovery_envelope(profile_id: UUID, dek_epoch: str) -> ProfileCustodyRecove
     )
     with enrollment.recovery_key:
         return enrollment.envelope
+
+
+def _invoke_without_recovery_envelope(
+    callback: Callable[..., object],
+    *,
+    label: str,
+    profile_id: UUID,
+    password_envelope: ProfileCustodyEnvelope,
+    sentinel: ProfileCustodySentinelRecord,
+    data_files: dict[str, bytes],
+    initial_record: UserProfileRecord,
+    record_session: ProfileRecordSession,
+) -> object:
+    """Exercise the runtime boundary when a dynamic caller omits recovery custody."""
+    return callback(
+        label=label,
+        profile_id=profile_id,
+        password_envelope=password_envelope,
+        sentinel=sentinel,
+        data_files=data_files,
+        initial_record=initial_record,
+        record_session=record_session,
+    )
+
+
+def _invoke_with_recovery_envelope(
+    callback: Callable[..., object],
+    *,
+    label: str,
+    profile_id: UUID,
+    password_envelope: ProfileCustodyEnvelope,
+    sentinel: ProfileCustodySentinelRecord,
+    data_files: dict[str, bytes],
+    recovery_envelope: object,
+    initial_record: UserProfileRecord,
+    record_session: ProfileRecordSession,
+) -> object:
+    """Exercise the runtime boundary with an explicitly invalid recovery value."""
+    return callback(
+        label=label,
+        profile_id=profile_id,
+        password_envelope=password_envelope,
+        sentinel=sentinel,
+        data_files=data_files,
+        recovery_envelope=recovery_envelope,
+        initial_record=initial_record,
+        record_session=record_session,
+    )
 
 
 def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -> None:
@@ -186,9 +235,8 @@ def test_enrollment_publication_requires_a_recovery_envelope_argument(tmp_path) 
     )
     try:
         with pytest.raises(TypeError, match="recovery_envelope"):
-            ProfileCapsuleLifecycle(
-                root=tmp_path
-            ).create(  # reason: omitting recovery_envelope IS the refusal under test
+            _invoke_without_recovery_envelope(
+                ProfileCapsuleLifecycle(root=tmp_path).create,
                 label="Recovery invariant operator",
                 profile_id=_PROFILE_ID,
                 password_envelope=envelope,
@@ -216,13 +264,14 @@ def test_enrollment_publication_refuses_explicit_none_without_a_capsule(tmp_path
     )
     try:
         with pytest.raises(ProfileCustodyTransactionRefusalError, match="requires a recovery envelope"):
-            ProfileCapsuleLifecycle(root=tmp_path).create(
+            _invoke_with_recovery_envelope(
+                ProfileCapsuleLifecycle(root=tmp_path).create,
                 label="Explicit None recovery",
                 profile_id=_PROFILE_ID,
                 password_envelope=envelope,
                 sentinel=sentinel,
                 data_files=data_files,
-                recovery_envelope=None,  # type: ignore[arg-type]  # reason: runtime bypass probe
+                recovery_envelope=None,
                 initial_record=_create_profile_record_for_test(
                     profile_id=str(_PROFILE_ID),
                     setup_state=ProfileSetupState.INCOMPLETE,

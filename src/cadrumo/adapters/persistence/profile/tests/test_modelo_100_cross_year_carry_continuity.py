@@ -214,28 +214,28 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
             repository=obs_repo,
             iva_history_repository=IvaCompensationHistoryRepository(),
         ).binding_values
-    # Every non-profile binding defaults to zero through the caller channel;
-    # the previous_filing carry overlays its real resolved value. profile
-    # bindings are deliberately omitted so the profile resolver fills them.
-    binding_values: dict[BindingId, Decimal] = {
-        binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
-    }
-    binding_values.update(carry)
-    relation_values: dict[RelationId, Decimal] = {
-        binding.id: Decimal("0")
-        for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
-    }
+        # Every non-profile binding defaults to zero through the caller channel;
+        # the previous_filing carry overlays its real resolved value. profile
+        # bindings are deliberately omitted so the profile resolver fills them.
+        binding_values: dict[BindingId, Decimal] = {
+            binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
+        }
+        binding_values.update(carry)
+        relation_values: dict[RelationId, Decimal] = {
+            binding.id: Decimal("0")
+            for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+        }
 
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=_MODELO,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, _PERIOD),
-        revision_id=str(filing_year),
-        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
-        clock=_CLOCK,
-    )
-    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=_MODELO,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, _PERIOD),
+            revision_id=str(filing_year),
+            ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
+            operation=operation,
+            clock=_CLOCK,
+        )
         return calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),

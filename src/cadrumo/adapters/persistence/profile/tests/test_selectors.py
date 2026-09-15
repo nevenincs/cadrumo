@@ -49,6 +49,7 @@ from cadrumo.application.modelo.work_selection import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -137,7 +138,11 @@ def _request(**overrides: object) -> ModeloWorkSelectorRequest:
     return ModeloWorkSelectorRequest.model_validate(data)
 
 
-def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
+def _seed_work_unit(
+    wu_repo: WorkUnitCatalogueRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> WorkUnit:
     return create_work_unit(
         bucket_id=wu_repo.bucket_id or _REVISION_SELECTOR_PROFILE_ID,
         modelo="130",
@@ -145,6 +150,7 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         ports=build_work_lifecycle_ports(bucket_id=wu_repo.bucket_id or _REVISION_SELECTOR_PROFILE_ID),
+        operation=operation,
         clock=_T0,
     )
 
@@ -214,10 +220,11 @@ def _seed_revision(
 
 def test_revision_selector_refuses_a_persisted_divergent_registry_coordinate(
     selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Selectors cannot hand a stale persisted value to an interpreting caller."""
     work_repo, calculation_repo = selector_repos
-    work_unit = _seed_work_unit(work_repo)
+    work_unit = _seed_work_unit(work_repo, operation=operation)
     revision = _seed_revision(
         calculation_repo,
         work_unit_id=work_unit.work_unit_id,
@@ -240,6 +247,7 @@ def test_revision_selector_refuses_a_persisted_divergent_registry_coordinate(
             selector=ModeloCalculationRevisionSelector.EXPLICIT,
             calculation_revision_id=revision.calculation_revision_id,
             calculation_repository=calculation_repo,
+            operation=operation,
         )
 
 
@@ -266,6 +274,7 @@ def test_visible_target_resolution_reports_absent_before_exact_creation(work_rep
 
 def test_natural_target_resolution_retains_discarded_work_units_for_terminal_state_handling(
     work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
@@ -274,6 +283,7 @@ def test_natural_target_resolution_retains_discarded_work_units_for_terminal_sta
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
+        operation=operation,
         clock=_T0,
     )
     discarded = unit.model_copy(
@@ -312,10 +322,11 @@ def test_natural_target_resolution_retains_discarded_work_units_for_terminal_sta
 
 def test_pure_selector_stays_on_captured_encrypted_catalogue_after_storage_mutation(
     work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A selection never rereads encrypted storage after its catalogue is captured."""
     bucket_id = work_repo.bucket_id or _SELECTOR_PROFILE_ID
-    first = _seed_work_unit(work_repo)
+    first = _seed_work_unit(work_repo, operation=operation)
     captured_catalogue = work_repo.load()
     later = WorkUnit(
         work_unit_id=derive_work_unit_id(
@@ -346,7 +357,10 @@ def test_pure_selector_stays_on_captured_encrypted_catalogue_after_storage_mutat
     assert len(tuple(work_repo.load().values())) == 2
 
 
-def test_visible_target_resolution_returns_single_active_work_unit(work_repo: WorkUnitCatalogueRepository) -> None:
+def test_visible_target_resolution_returns_single_active_work_unit(
+    work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
+) -> None:
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
@@ -354,6 +368,7 @@ def test_visible_target_resolution_returns_single_active_work_unit(work_repo: Wo
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
+        operation=operation,
         clock=_T0,
     )
 
@@ -365,8 +380,11 @@ def test_visible_target_resolution_returns_single_active_work_unit(work_repo: Wo
     assert resolution.candidates[0].short_work_unit_id == unit.work_unit_id[-12:]
 
 
-def test_operator_work_unit_selector_accepts_displayed_short_id(work_repo: WorkUnitCatalogueRepository) -> None:
-    unit = _seed_work_unit(work_repo)
+def test_operator_work_unit_selector_accepts_displayed_short_id(
+    work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    unit = _seed_work_unit(work_repo, operation=operation)
 
     resolution = select_modelo_work_resolution(
         ModeloWorkSelectorRequest(operator_work_unit_id=unit.work_unit_id[-12:]),
@@ -378,9 +396,12 @@ def test_operator_work_unit_selector_accepts_displayed_short_id(work_repo: WorkU
     assert resolution.work_unit == unit
 
 
-def test_operator_short_id_refuses_ordered_prefix_or_suffix_ambiguity(work_repo: WorkUnitCatalogueRepository) -> None:
+def test_operator_short_id_refuses_ordered_prefix_or_suffix_ambiguity(
+    work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The 12-character operator path is deliberately not a full-id lookup."""
-    unit = _seed_work_unit(work_repo)
+    unit = _seed_work_unit(work_repo, operation=operation)
     operator_id = "a" * 12
     prefix_match = unit.model_copy(update={"work_unit_id": operator_id + "0" * 52})
     suffix_match = unit.model_copy(update={"work_unit_id": "1" * 52 + operator_id})
@@ -417,9 +438,10 @@ def test_strict_work_unit_id_selector_refuses_operator_display_handles() -> None
 
 def test_selector_defends_the_operator_only_twelve_character_boundary(
     work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Even a validation-bypassing request cannot turn a full id into a prefix lookup."""
-    unit = _seed_work_unit(work_repo)
+    unit = _seed_work_unit(work_repo, operation=operation)
 
     with pytest.raises(ModeloWorkSelectorContradictionError):
         select_modelo_work_resolution(
@@ -429,7 +451,10 @@ def test_selector_defends_the_operator_only_twelve_character_boundary(
         )
 
 
-def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: WorkUnitCatalogueRepository) -> None:
+def test_explicit_work_unit_id_validates_supplied_natural_key_flags(
+    work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
+) -> None:
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
@@ -437,6 +462,7 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: W
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
+        operation=operation,
         clock=_T0,
     )
 
@@ -444,7 +470,10 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: W
         _select_captured_work_unit(work_repo, _request(work_unit_id=unit.work_unit_id, filing_year=2025))
 
 
-def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkUnitCatalogueRepository) -> None:
+def test_revision_conflict_refuses_before_exact_target_creation(
+    work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
+) -> None:
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
@@ -452,6 +481,7 @@ def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkU
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
+        operation=operation,
         clock=_T0,
     )
 
@@ -463,7 +493,10 @@ def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkU
     assert raised.value.existing.revision_id == "2019-y-siguientes"
 
 
-def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: WorkUnitCatalogueRepository) -> None:
+def test_visible_target_ambiguity_refuses_with_candidate_guidance(
+    work_repo: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
+) -> None:
     bucket_id = work_repo.bucket_id or _SELECTOR_PROFILE_ID
     first = create_work_unit(
         bucket_id=bucket_id,
@@ -472,6 +505,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
         period=_P_2026_1T,
         revision_id="2019-y-siguientes",
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
+        operation=operation,
         clock=_T0,
     )
     second_id = derive_work_unit_id(
@@ -508,9 +542,10 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
 
 def test_revision_selectors_cover_current_latest_filed_and_explicit(
     selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo = selector_repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, operation=operation)
     first_draft = _seed_revision(
         cr_repo,
         work_unit_id=work_unit.work_unit_id,
@@ -553,6 +588,7 @@ def test_revision_selectors_cover_current_latest_filed_and_explicit(
             work_unit,
             selector=ModeloCalculationRevisionSelector.CURRENT,
             calculation_repository=cr_repo,
+            operation=operation,
         ).revision
         == latest_draft
     )
@@ -561,6 +597,7 @@ def test_revision_selectors_cover_current_latest_filed_and_explicit(
             work_unit,
             selector=ModeloCalculationRevisionSelector.LATEST_DRAFT,
             calculation_repository=cr_repo,
+            operation=operation,
         ).revision
         == latest_draft
     )
@@ -569,6 +606,7 @@ def test_revision_selectors_cover_current_latest_filed_and_explicit(
             work_unit,
             selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED,
             calculation_repository=cr_repo,
+            operation=operation,
         ).revision
         == verified
     )
@@ -577,6 +615,7 @@ def test_revision_selectors_cover_current_latest_filed_and_explicit(
             work_unit,
             selector=ModeloCalculationRevisionSelector.FILED,
             calculation_repository=cr_repo,
+            operation=operation,
         ).revision
         == filed
     )
@@ -586,6 +625,7 @@ def test_revision_selectors_cover_current_latest_filed_and_explicit(
             selector=ModeloCalculationRevisionSelector.EXPLICIT,
             calculation_revision_id=first_draft.calculation_revision_id,
             calculation_repository=cr_repo,
+            operation=operation,
         ).revision
         == first_draft
     )
@@ -593,9 +633,10 @@ def test_revision_selectors_cover_current_latest_filed_and_explicit(
 
 def test_current_command_specific_revision_selectors_enforce_state(
     selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo = selector_repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, operation=operation)
     draft = _seed_revision(
         cr_repo,
         work_unit_id=work_unit.work_unit_id,
@@ -625,6 +666,7 @@ def test_current_command_specific_revision_selectors_enforce_state(
             draft_current,
             default_for="verify",
             calculation_repository=cr_repo,
+            operation=operation,
         ).revision
         == draft
     )
@@ -633,20 +675,25 @@ def test_current_command_specific_revision_selectors_enforce_state(
             verified_current,
             default_for="verify",
             calculation_repository=cr_repo,
+            operation=operation,
         ).revision
         == verified
     )
 
-    assert select_current_verified_revision(verified_current, calculation_repository=cr_repo).revision == verified
+    assert (
+        select_current_verified_revision(verified_current, calculation_repository=cr_repo, operation=operation).revision
+        == verified
+    )
     with pytest.raises(ModeloCalculationRevisionSelectorStateError):
-        select_current_verified_revision(draft_current, calculation_repository=cr_repo)
+        select_current_verified_revision(draft_current, calculation_repository=cr_repo, operation=operation)
 
 
 def test_exportable_revision_prefers_filed_then_current_verified(
     selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo = selector_repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, operation=operation)
     verified = _seed_revision(
         cr_repo,
         work_unit_id=work_unit.work_unit_id,
@@ -668,15 +715,22 @@ def test_exportable_revision_prefers_filed_then_current_verified(
         update={"filed_calculation_revision_id": filed.calculation_revision_id},
     )
 
-    assert select_exportable_revision(current_verified, calculation_repository=cr_repo).revision == verified
-    assert select_exportable_revision(current_and_filed, calculation_repository=cr_repo).revision == filed
+    assert (
+        select_exportable_revision(current_verified, calculation_repository=cr_repo, operation=operation).revision
+        == verified
+    )
+    assert (
+        select_exportable_revision(current_and_filed, calculation_repository=cr_repo, operation=operation).revision
+        == filed
+    )
 
 
 def test_exportable_revision_refuses_draft_current_and_ambiguous_verified(
     selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo = selector_repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, operation=operation)
     draft = _seed_revision(
         cr_repo,
         work_unit_id=work_unit.work_unit_id,
@@ -701,10 +755,10 @@ def test_exportable_revision_refuses_draft_current_and_ambiguous_verified(
     draft_current = work_unit.model_copy(update={"current_calculation_revision_id": draft.calculation_revision_id})
 
     with pytest.raises(ModeloCalculationRevisionSelectorStateError):
-        select_exportable_revision(draft_current, calculation_repository=cr_repo)
+        select_exportable_revision(draft_current, calculation_repository=cr_repo, operation=operation)
 
     with pytest.raises(ModeloCalculationRevisionSelectorAmbiguousError) as raised:
-        select_exportable_revision(work_unit, calculation_repository=cr_repo)
+        select_exportable_revision(work_unit, calculation_repository=cr_repo, operation=operation)
     assert {candidate.calculation_revision_id for candidate in raised.value.candidates} == {
         verified_a.calculation_revision_id,
         verified_b.calculation_revision_id,
@@ -713,9 +767,10 @@ def test_exportable_revision_refuses_draft_current_and_ambiguous_verified(
 
 def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
     selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo = selector_repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, operation=operation)
     draft = _seed_revision(
         cr_repo,
         work_unit_id=work_unit.work_unit_id,

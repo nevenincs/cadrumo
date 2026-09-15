@@ -86,7 +86,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -190,6 +190,7 @@ def _calculate_and_verify_m210_inmobiliaria(
     valor_catastral: Decimal,
     dias_imputacion: Decimal,
     tmp_path: Path,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, VerificationReport]:
     """Run the REAL M210 calculate-then-verify pipeline with ``tipo_renta="inmobiliaria"``.
 
@@ -216,6 +217,7 @@ def _calculate_and_verify_m210_inmobiliaria(
                 bucket_event_repository=BucketEventHistoryRepository(),
             ),
             clock=_CLOCK,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=work_repo.bucket_id,
@@ -267,7 +269,9 @@ def _inmobiliaria_advisory_findings(report: VerificationReport):
     )
 
 
-def test_m210_inmobiliaria_advisory_fires_through_real_calculate_and_verify(tmp_path: Path) -> None:
+def test_m210_inmobiliaria_advisory_fires_through_real_calculate_and_verify(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A real, valid, positive imputation that rounds to zero fires the advisory.
 
     ``valor_catastral=100`` EUR with the valid ``0.011`` coefficient and one
@@ -279,6 +283,7 @@ def test_m210_inmobiliaria_advisory_fires_through_real_calculate_and_verify(tmp_
         valor_catastral=Decimal("100"),
         dias_imputacion=Decimal("1"),
         tmp_path=tmp_path,
+        operation=operation,
     )
 
     # 1) PERSISTENCE: the text-casilla channel reached the persisted revision.
@@ -297,7 +302,9 @@ def test_m210_inmobiliaria_advisory_fires_through_real_calculate_and_verify(tmp_
     assert _INMOBILIARIA_LEGAL_REF in advisories[0].legal_refs
 
 
-def test_m210_inmobiliaria_advisory_silent_when_base_computes_nonzero(tmp_path: Path) -> None:
+def test_m210_inmobiliaria_advisory_silent_when_base_computes_nonzero(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A full-year imputation over a real cadastral value computes a nonzero base.
 
     ``valor_catastral=100000`` EUR with the valid ``0.011`` coefficient over
@@ -310,6 +317,7 @@ def test_m210_inmobiliaria_advisory_silent_when_base_computes_nonzero(tmp_path: 
         valor_catastral=Decimal("100000"),
         dias_imputacion=Decimal("365"),
         tmp_path=tmp_path,
+        operation=operation,
     )
 
     assert revision.casilla_values[_BASE_IMPONIBLE_CASILLA] == Decimal("1100.00")

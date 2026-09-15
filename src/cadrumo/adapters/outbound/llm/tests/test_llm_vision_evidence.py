@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence, resolve_llm_evidence
+from .....application.ledger.llm_classification_ports import EvidenceImage
 from .....application.ledger.preconditions import LedgerPreconditionCondition
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....core.config import Settings
@@ -29,10 +30,9 @@ from .....core.image_media_type import ImageMediaType
 from .....domain.transactions.llm import prompt_spec_with_saturation_fields
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
 from .....domain.user_profile.values import ProfileSetupState, create_user_profile_record
+from .....entrypoints.cli._ledger_llm_composition import compose_ledger_llm
 from .....tests.llm_vision_evidence_support import png_image
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile
-from ..models import MultimodalImageInput
-from ..vision_classifier import LocalVisionLLMClassifier
 from .persistence_vision_evidence_support import (
     add_evidence,
     scan_only_pdf,
@@ -46,6 +46,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
 __all__ = ["profile"]
+
+
+def _llm_ports(profile: TestRuntimeProfile):
+    """Compose the canonical evidence and local-reader ports for the profile."""
+    return compose_ledger_llm(bucket_id=profile.bucket_id, settings=profile.settings).ports
 
 
 def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
@@ -63,6 +68,7 @@ def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
         vision_transaction(evidence_id),
         bucket_id=_BUCKET_ID,
         settings=gestor,
+        ports=_llm_ports(profile),
     )
     assert resolved is not None
     assert resolved.text is None
@@ -89,6 +95,7 @@ def test_image_evidence_resolves_to_images(profile: TestRuntimeProfile, tmp_path
         vision_transaction(evidence_id),
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
+        ports=_llm_ports(profile),
     )
     assert resolved is not None
     assert resolved.text is None
@@ -136,9 +143,10 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     evidence_id = add_evidence(profile, tmp_path, name=name, data=data_factory())
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         resolve_llm_evidence(
-            _transaction(evidence_id),
+            vision_transaction(evidence_id),
             bucket_id=_BUCKET_ID,
             settings=profile.settings,
+            ports=_llm_ports(profile),
         )
     assert "vision" in str(raised.value).lower()
     assert raised.value.terminal_precondition_verdict is not None
@@ -162,16 +170,15 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
             reference="reader-unavailable",
             text=None,
             images=(
-                MultimodalImageInput.from_base64(
+                EvidenceImage.from_base64(
                     base64.b64encode(png_image()).decode("ascii"),
                     ImageMediaType.PNG,
                 ),
             ),
         )
-        reader = LocalVisionLLMClassifier(
-            spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
-            settings=settings,
-        )
+        ports = compose_ledger_llm(bucket_id=profile.bucket_id, settings=settings).ports
+        spec = prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test)
+        reader = ports.make_vision_classifier(spec, None)
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             classify_with_evidence(
@@ -182,6 +189,7 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
                 vision_classifier=reader,
                 vision_model=None,
                 settings=settings,
+                ports=ports,
             )
 
         verdict = raised.value.terminal_precondition_verdict

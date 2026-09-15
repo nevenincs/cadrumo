@@ -73,6 +73,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
@@ -90,7 +91,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.application.modelo.calculation_actions import (
@@ -109,7 +109,7 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -253,6 +253,7 @@ def _calculate_annual(
     secure_objects: SecureObjectRepository,
     *,
     modelo: str,
+    operation: PinnedAuthorityOperation,
 ) -> BucketAggregationCalculationResult:
     """Run the live annual calculate for ``modelo`` / ``_YEAR`` / ``0A``.
 
@@ -277,6 +278,7 @@ def _calculate_annual(
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -298,6 +300,7 @@ def _calculate_periodic(
     *,
     modelo: str,
     period: str,
+    operation: PinnedAuthorityOperation,
 ) -> BucketAggregationCalculationResult:
     """Run the live periodic calculate for ``modelo`` / ``_YEAR`` / ``period``."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -314,6 +317,7 @@ def _calculate_periodic(
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -390,12 +394,13 @@ def _retencion_observation(nif: str, *, scheme: RetencionScheme, source_prefix: 
 
 
 def _seed_retencion_perceptors(
+    secure_objects: SecureObjectRepository,
     *,
     modelo: str,
     scheme: RetencionScheme,
     nifs: tuple[str, ...],
 ) -> Decimal:
-    RetencionObservationRepository().replace_observations(
+    RetencionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
         modelo=modelo,
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
@@ -409,7 +414,9 @@ def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("general"))
 
 
-def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: SecureObjectRepository) -> None:
+def test_m180_folds_in_four_m115_quarters_on_live_calculate(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     """E2E: four filed M115 quarters fold into the M180 annual declarante totals.
 
     The M180 monetary declarante casillas are ``copy`` formulas over
@@ -421,6 +428,7 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: Secu
     expected_base = _assert_distinct_positive(_M115_C02_BASE)
     expected_retenciones = _assert_distinct_positive(_M115_C03_RETENCIONES)
     expected_perceptores = _seed_retencion_perceptors(
+        secure_objects,
         modelo="180",
         scheme=RetencionScheme("arrendamiento_urbano"),
         nifs=_M180_RETENCION_PERCEPTOR_NIFS,
@@ -437,7 +445,7 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: Secu
             },
         )
 
-    result = _calculate_annual(secure_objects, modelo="180")
+    result = _calculate_annual(secure_objects, modelo="180", operation=operation)
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPTORES]) == expected_perceptores, (
@@ -503,6 +511,17 @@ def _seed_m190_withholding_detail(secure_objects: SecureObjectRepository) -> Non
                 subclave="01",
                 percibido_dinerario=Decimal("1000.00"),
                 retencion_practicada=Decimal("150.00"),
+                incapacity_cash_perception=Decimal("0"),
+                incapacity_cash_withholding=Decimal("0"),
+                incapacity_kind_value=Decimal("0"),
+                incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+                incapacity_kind_repercutido=Decimal("0"),
+                foral_retention_estatal=Decimal("0"),
+                foral_retention_navarra=Decimal("0"),
+                foral_retention_araba=Decimal("0"),
+                foral_retention_gipuzkoa=Decimal("0"),
+                foral_retention_bizkaia=Decimal("0"),
+                base_retenciones=Decimal("0"),
             ),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -543,8 +562,10 @@ def _attest_m111_no_retenciones_periods(
     )
 
 
-def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggregationCalculationResult:
-    RetencionObservationRepository().replace_observations(
+def _seed_and_file_m111_1t(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> BucketAggregationCalculationResult:
+    RetencionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
         modelo="111",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "1T"),
@@ -562,7 +583,7 @@ def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggr
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    result = _calculate_periodic(secure_objects, modelo="111", period="1T")
+    result = _calculate_periodic(secure_objects, modelo="111", period="1T", operation=operation)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(
             result.revision.calculation_revision_id,
@@ -612,7 +633,7 @@ def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggr
 
 
 def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: four filed M111 quarters fold into M190 monetary totals; withholding advisory present.
 
@@ -646,7 +667,7 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
     assert expected_retenciones > Decimal("0")
     assert expected_percepciones_amount != expected_retenciones
 
-    result = _calculate_annual(secure_objects, modelo="190")
+    result = _calculate_annual(secure_objects, modelo="190", operation=operation)
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPCIONES_COUNT]) == Decimal("0"), (
@@ -668,13 +689,13 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
 
 
 def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """M190 verify recognizes observed M111 values and names the missing filing-grade quarterly evidence."""
     _seed_m111_quarterly_m190_evidence()
     _seed_m190_withholding_detail(secure_objects)
 
-    result = _calculate_annual(secure_objects, modelo="190")
+    result = _calculate_annual(secure_objects, modelo="190", operation=operation)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(
             result.revision.calculation_revision_id,
@@ -717,14 +738,14 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
 
 
 def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """M190 verify accepts a clean filed M111 1T plus explicit 2T-4T no-obligation evidence."""
-    m111_result = _seed_and_file_m111_1t(secure_objects)
+    m111_result = _seed_and_file_m111_1t(secure_objects, operation=operation)
     _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
     _seed_m190_withholding_detail(secure_objects)
 
-    result = _calculate_annual(secure_objects, modelo="190")
+    result = _calculate_annual(secure_objects, modelo="190", operation=operation)
     expected_percepciones_amount = sum(
         (Decimal(m111_result.revision.casilla_values[output]) for output in _M190_IMPORTE_OUTPUTS),
         Decimal("0"),
@@ -792,7 +813,7 @@ _M193_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("33333333P", "44444444A", "55
 
 
 def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: four filed M123 quarters fold into M193 annual totals; withholding advisory present.
 
@@ -807,6 +828,7 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
     expected_base = _assert_distinct_positive(_M123_C06_BASE)
     expected_retenciones = _assert_distinct_positive(_M123_C09_RETENCIONES)
     expected_perceptores = _seed_retencion_perceptors(
+        secure_objects,
         modelo="193",
         scheme=RetencionScheme("intereses"),
         nifs=_M193_RETENCION_PERCEPTOR_NIFS,
@@ -823,7 +845,7 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
             },
         )
 
-    result = _calculate_annual(secure_objects, modelo="193")
+    result = _calculate_annual(secure_objects, modelo="193", operation=operation)
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPTORES]) == expected_perceptores, (

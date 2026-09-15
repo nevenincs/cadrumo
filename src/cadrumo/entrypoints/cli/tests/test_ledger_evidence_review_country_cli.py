@@ -39,12 +39,16 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.ledger.deterministic_findings import deterministic_findings
 from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....application.ledger.invoice_draft_records import InvoiceDraft
+from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from .ledger_ux_support import _invoke, open_ledger_ux_session
 
@@ -56,7 +60,7 @@ _UNCATALOGUED_CODE: Final = "ledger.evidence.review.country_code_uncatalogued"
 
 
 @pytest.fixture
-def seeded_draft(tmp_path: Path) -> Iterator[None]:
+def seeded_draft(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Iterator[None]:
     """A pending draft whose two parties state one code of each kind.
 
     Both on one document deliberately. Two separate fixtures would each pass a
@@ -74,7 +78,18 @@ def seeded_draft(tmp_path: Path) -> Iterator[None]:
     # no-blocker assertion below true of the fixture rather than of the product:
     # the gate reads what the reader stored, so a fixture that stores nothing
     # cannot raise a blocker whatever the check list does.
-    stored = read.model_copy(update={"discrepancies": deterministic_findings(read)})
+    stored = read.model_copy(
+        update={
+            "discrepancies": deterministic_findings(
+                read,
+                legends=resolve_regime_legends(
+                    operation=operation,
+                    effective_date=default_invoice_extraction_period().end_date,
+                ),
+                operation=operation,
+            )
+        }
+    )
     with open_ledger_ux_session(tmp_path):
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None

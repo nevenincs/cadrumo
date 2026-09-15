@@ -14,6 +14,7 @@ from ....core.i18n.render import tr
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 from ..errors import CliRefusedBoundaryError
+from ..state_projection_support import authority_operation
 from .secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
@@ -79,6 +80,7 @@ def passphrase_change(
         current_passphrase=secrets.current_passphrase.get_secret_value(),
         new_passphrase=secrets.new_passphrase.get_secret_value(),
         new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
     )
     emit_envelope(
         ctx,

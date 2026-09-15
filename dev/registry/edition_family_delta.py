@@ -205,9 +205,7 @@ def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
     source_raw = source_declarations["revisions"]
     if not isinstance(source_raw, Mapping):
         raise RuntimeError(f"modelo {before.id} revisions are not a mapping")
-    resolved = {
-        revision_id: materialise_edition(source, revision_id).table for revision_id in before.revisions
-    }
+    resolved = {revision_id: materialise_edition(source, revision_id).table for revision_id in before.revisions}
     # Baseline declarations come from the candidate because the casilla pass
     # may just have introduced its predecessor. Effective family values and
     # order come from the untouched source captured before that representation

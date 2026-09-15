@@ -19,7 +19,7 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import (
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios
+from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import (
@@ -134,6 +134,7 @@ _M100_GASTOS_FINANCIEROS_CASILLA: CasillaId = validated_casilla_id(
     surface="_M100_GASTOS_FINANCIEROS_CASILLA",
 )
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_DEFAULT_EXPENSE_CATEGORY = SpendingCategory._from_registry("asesoria_fiscal")
 
 
 def _raw_transaction(
@@ -168,7 +169,7 @@ def _transaction(
     provider_id: str,
     *,
     amount: Decimal = Decimal("121.00"),
-    category: SpendingCategory = SpendingCategory._from_registry("asesoria_fiscal"),
+    category: SpendingCategory = _DEFAULT_EXPENSE_CATEGORY,
     purchase_invoice_evidence_id: str | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
@@ -334,13 +335,16 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
 
     revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
+        usage_ratio_profile_loader=load_usage_ratios,
     ).resolve(
         CalculationSourceContext(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -386,13 +390,16 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
 
     revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
+        usage_ratio_profile_loader=load_usage_ratios,
     ).resolve(
         CalculationSourceContext(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -428,13 +435,16 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
 
     revision = _m100_2025_renta_expense_revision()
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
+        usage_ratio_profile_loader=load_usage_ratios,
     ).resolve(
         CalculationSourceContext(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -571,6 +581,9 @@ def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_l
     m130_result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2025,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),

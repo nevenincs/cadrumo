@@ -87,6 +87,7 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -351,7 +352,9 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     }
 
 
-def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggregationCalculationResult:
+def _calculate_m100_annual(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> BucketAggregationCalculationResult:
     """Run the live M100/2025/0A calculate over the seeded bucket.
 
     Seeds the taxpayer profile and zero-defaults non-profile/non-relation
@@ -376,6 +379,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -393,7 +397,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
 
 
 def test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculate(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E/2025: four filed M111 quarters fold into 0596 and four M123 quarters into 0597.
 
@@ -431,7 +435,7 @@ def test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculat
         )
     _seed_pagos_quarters(obs_repo=obs_repo)
 
-    result = _calculate_m100_annual(secure_objects)
+    result = _calculate_m100_annual(secure_objects, operation=operation)
 
     values = result.revision.casilla_values
     casilla_0596 = Decimal(values[_M100_TRABAJO_CASILLA])
@@ -474,6 +478,7 @@ def _calculate_m111_administrador_quarter(
     period_code: str,
     taxable_base: Decimal,
     retencion_amount: Decimal,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal:
     """Aggregate one administrador retención into M111 and return its c28 total.
 
@@ -514,6 +519,7 @@ def _calculate_m111_administrador_quarter(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -539,7 +545,7 @@ def _calculate_m111_administrador_quarter(
 
 
 def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E/2025: a director's suffered administrador retención credits M100 casilla 0596.
 
@@ -577,6 +583,7 @@ def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla
             period_code=period_code,
             taxable_base=base,
             retencion_amount=amount,
+            operation=operation,
         )
         assert c28 == amount, f"M111/{period_code} c28 must equal the administrador withholding {amount}; got {c28}"
         produced_c28[period_code] = c28
@@ -591,7 +598,7 @@ def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla
 
     expected_credit = _assert_distinct_positive(produced_c28)
 
-    result = _calculate_m100_annual(secure_objects)
+    result = _calculate_m100_annual(secure_objects, operation=operation)
 
     casilla_0596 = Decimal(result.revision.casilla_values[_M100_TRABAJO_CASILLA])
     assert casilla_0596 == expected_credit, (

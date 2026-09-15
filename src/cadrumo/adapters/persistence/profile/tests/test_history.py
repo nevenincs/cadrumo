@@ -29,6 +29,7 @@ from cadrumo.application.modelo.work_lifecycle import (
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.errors import ModeloError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -126,7 +127,10 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         )
 
 
-def test_create_rejects_unknown_period_for_modelo_revision(repos: _Repos) -> None:
+def test_create_rejects_unknown_period_for_modelo_revision(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """``create_work_unit`` must refuse a period the revision's
     ``filing_schedules`` do not declare.
 
@@ -145,6 +149,7 @@ def test_create_rejects_unknown_period_for_modelo_revision(repos: _Repos) -> Non
             period=Period.from_year_and_code(2026, "1T"),
             revision_id="2025-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
         )
     message = str(exc.value)
     assert "1T" in message
@@ -153,7 +158,10 @@ def test_create_rejects_unknown_period_for_modelo_revision(repos: _Repos) -> Non
     assert "1P" in message
 
 
-def test_create_rejects_unknown_revision_with_helpful_list(repos: _Repos) -> None:
+def test_create_rejects_unknown_revision_with_helpful_list(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """``create_work_unit`` must refuse a revision id the modelo registry does
     not declare, naming the modelo and listing the available revisions so the
     operator can re-issue the command with a valid id.
@@ -171,6 +179,7 @@ def test_create_rejects_unknown_revision_with_helpful_list(repos: _Repos) -> Non
             period=Period.from_year_and_code(2026, "1T"),
             revision_id="bad-revision",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
         )
     message = str(exc.value)
     assert "bad-revision" in message
@@ -190,7 +199,7 @@ def test_history_for_missing_work_unit_raises(repos: _Repos) -> None:
     assert exc_info.value.context == {"work_unit_id": "no-such-work-unit"}
 
 
-def test_history_records_creation_event(repos: _Repos) -> None:
+def test_history_records_creation_event(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
     """``create_work_unit`` emits a ``modelo.work_unit.created`` event so
     the work-unit history is complete from its first moment. The
     creation event names when and by whom the unit was provisioned."""
@@ -204,6 +213,7 @@ def test_history_records_creation_event(repos: _Repos) -> None:
         revision_id="2019-y-siguientes",
         actor="operator@example.test",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        operation=operation,
         clock=t0,
     )
 
@@ -230,7 +240,10 @@ def test_history_records_creation_event(repos: _Repos) -> None:
     }
 
 
-def test_history_idempotent_create_does_not_duplicate_creation_event(repos: _Repos) -> None:
+def test_history_idempotent_create_does_not_duplicate_creation_event(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Re-running ``create_work_unit`` on the same four-axis key reloads
     the existing unit and emits no second creation event - the original
     creation event already stands."""
@@ -244,6 +257,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(repos: _Rep
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        operation=operation,
         clock=t0,
     )
     reloaded = create_work_unit(
@@ -253,6 +267,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(repos: _Rep
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        operation=operation,
         clock=t1,
     )
     assert reloaded.work_unit_id == first.work_unit_id
@@ -265,7 +280,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(repos: _Rep
     assert history.events[0].event_type is BucketEventType.MODELO_WORK_UNIT_CREATED
 
 
-def test_history_records_discard_event(repos: _Repos) -> None:
+def test_history_records_discard_event(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
@@ -277,6 +292,7 @@ def test_history_records_discard_event(repos: _Repos) -> None:
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        operation=operation,
         clock=t0,
     )
     discard_work_unit(
@@ -304,7 +320,7 @@ def test_history_records_discard_event(repos: _Repos) -> None:
     assert event.actor == "operator@example.test"
 
 
-def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
+def test_history_excludes_events_from_other_work_units(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
@@ -316,6 +332,7 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        operation=operation,
         clock=t0,
     )
     other = create_work_unit(
@@ -325,6 +342,7 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
         period=Period.from_year_and_code(2026, "2T"),
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        operation=operation,
         clock=t0,
     )
     # Discard *only* the unrelated work unit so it emits an extra event.
@@ -348,7 +366,10 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
     assert history.events[0].event_type is BucketEventType.MODELO_WORK_UNIT_CREATED
 
 
-def test_a_real_assembled_row_satisfies_the_tightened_identities(repos: _Repos) -> None:
+def test_a_real_assembled_row_satisfies_the_tightened_identities(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The live path already produces what the tightened types require.
 
     This is the proof that the tightening describes reality rather than
@@ -364,6 +385,7 @@ def test_a_real_assembled_row_satisfies_the_tightened_identities(repos: _Repos) 
         revision_id="2019-y-siguientes",
         actor="operator@example.test",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+        operation=operation,
         clock=datetime(2026, 1, 15, 12, 0, tzinfo=UTC),
     )
 

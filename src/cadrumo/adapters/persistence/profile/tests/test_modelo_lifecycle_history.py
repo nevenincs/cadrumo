@@ -19,6 +19,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.errors import ModeloValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -39,7 +40,7 @@ def _history_ports(repos: _Repos) -> ModeloHistoryPorts:
     )
 
 
-def _create(repos: _Repos, *, period: str = "1T", filing_year: int = 2026):
+def _create(repos: _Repos, *, period: str = "1T", filing_year: int = 2026, operation: PinnedAuthorityOperation):
     """Create one modelo 130 work unit through the real lifecycle service."""
     wu_repo, _, _, _, bv_repo = repos
     return create_work_unit(
@@ -50,6 +51,7 @@ def _create(repos: _Repos, *, period: str = "1T", filing_year: int = 2026):
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
+        operation=operation,
     )
 
 
@@ -104,14 +106,16 @@ class TestAdmission:
 class TestAssembly:
     """Subject selection, narrowing, ordering and refusal over the real emitters."""
 
-    def test_the_creation_event_reaches_the_history(self, repos: _Repos) -> None:
+    def test_the_creation_event_reaches_the_history(
+        self, repos: _Repos, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """A work unit created through the real lifecycle service appears in its modelo's history.
 
         The teeth for the drift this service was extracted to fix: the event is
         emitted by production code, and the literal set it replaced dropped it.
         """
         _, _, _, _, bv_repo = repos
-        created = _create(repos)
+        created = _create(repos, operation=operation)
 
         history = assemble_modelo_lifecycle_history("130", ports=_history_ports(repos))
 
@@ -120,26 +124,28 @@ class TestAssembly:
         assert all(event.payload["modelo"] == "130" for event in history.events)
         assert any(event.object_id == created.work_unit_id for event in history.events)
 
-    def test_a_modelo_with_no_events_returns_an_empty_history(self, repos: _Repos) -> None:
+    def test_a_modelo_with_no_events_returns_an_empty_history(
+        self, repos: _Repos, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Selection is on the event's own subject key, so an unrelated modelo sees nothing."""
         _, _, _, _, bv_repo = repos
-        _create(repos)
+        _create(repos, operation=operation)
 
         assert assemble_modelo_lifecycle_history("303", ports=_history_ports(repos)).events == ()
 
-    def test_filing_year_narrows_the_history(self, repos: _Repos) -> None:
+    def test_filing_year_narrows_the_history(self, repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
         """A filing year the events do not declare yields nothing; the declared one yields rows."""
         _, _, _, _, bv_repo = repos
-        _create(repos)
+        _create(repos, operation=operation)
 
         assert assemble_modelo_lifecycle_history("130", filing_year=2025, ports=_history_ports(repos)).events == ()
         assert assemble_modelo_lifecycle_history("130", filing_year=2026, ports=_history_ports(repos)).events
 
-    def test_period_narrows_the_history(self, repos: _Repos) -> None:
+    def test_period_narrows_the_history(self, repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
         """Two periods of the same modelo stay separable."""
         _, _, _, _, bv_repo = repos
-        first = _create(repos, period="1T")
-        _create(repos, period="2T")
+        first = _create(repos, period="1T", operation=operation)
+        _create(repos, period="2T", operation=operation)
 
         narrowed = assemble_modelo_lifecycle_history(
             "130",
@@ -150,7 +156,9 @@ class TestAssembly:
         assert narrowed.events
         assert {event.payload["period"] for event in narrowed.events} == {first.period.registry_token}
 
-    def test_rows_are_ordered_by_the_shared_total_order(self, repos: _Repos) -> None:
+    def test_rows_are_ordered_by_the_shared_total_order(
+        self, repos: _Repos, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Ordering must be the canonical key, not ``occurred_at`` alone.
 
         Emissions inside one operation share an instant by design, so ordering
@@ -159,7 +167,7 @@ class TestAssembly:
         nothing invalid anywhere.
         """
         wu_repo, _, _, _, bv_repo = repos
-        created = _create(repos)
+        created = _create(repos, operation=operation)
         discard_work_unit(
             created.work_unit_id,
             actor="test-operator",
@@ -185,7 +193,9 @@ class TestAssembly:
         with pytest.raises(ModeloValidationError):
             assemble_modelo_lifecycle_history("abc", ports=_history_ports(repos))
 
-    def test_rows_keep_the_fields_a_restated_read_model_dropped(self, repos: _Repos) -> None:
+    def test_rows_keep_the_fields_a_restated_read_model_dropped(
+        self, repos: _Repos, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The history carries validated domain events, not a lossy copy of them.
 
         ``bucket_id`` and ``payload_version`` were both absent from the read
@@ -195,7 +205,7 @@ class TestAssembly:
         hidden the evidence for the decision it informs.
         """
         _, _, _, _, bv_repo = repos
-        _create(repos)
+        _create(repos, operation=operation)
 
         events = assemble_modelo_lifecycle_history("130", ports=_history_ports(repos)).events
 

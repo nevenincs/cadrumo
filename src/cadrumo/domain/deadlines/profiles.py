@@ -426,9 +426,7 @@ def _resolve_profile_corporate_fields(canonical: Mapping[str, str]) -> _ProfileC
     corporate_bindings = {
         field: path
         for field, path in profile_field_bindings().items()
-        if field == "new_entity_first_two_profit_periods"
-        or field.endswith("_declared")
-        or field.endswith("_date")
+        if field == "new_entity_first_two_profit_periods" or field.endswith("_declared") or field.endswith("_date")
     }
     expected = set(_ProfileCorporateFields.__annotations__)
     if set(corporate_bindings) != expected:

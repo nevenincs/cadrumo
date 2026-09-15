@@ -54,7 +54,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -143,6 +143,7 @@ def _seed_m303_external_baseline(
     result_casilla_value: Decimal,
     filing_year: int,
     period_code: str,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT M303 filing record carrying ``external_evidence``.
 
@@ -162,6 +163,7 @@ def _seed_m303_external_baseline(
         .revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=repos_tuple[3]),
         clock=_T0,
+        operation=operation,
     )
 
     casilla_values = {_M303_RESULT_CASILLA: result_casilla_value}
@@ -234,7 +236,9 @@ def _seed_m303_external_baseline(
     return work_unit, revision, baseline_filing
 
 
-def test_rectificativa_kind_refused_for_pre_boundary_period(repos: _Repos) -> None:
+def test_rectificativa_kind_refused_for_pre_boundary_period(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """M303 2T 2024 predates the rectificativa fichero fields; requesting
     ``rectificativa`` is refused, naming the accepted kind set."""
     _, _, baseline = _seed_m303_external_baseline(
@@ -242,6 +246,7 @@ def test_rectificativa_kind_refused_for_pre_boundary_period(repos: _Repos) -> No
         result_casilla_value=Decimal("100.00"),
         filing_year=2024,
         period_code="2T",
+        operation=operation,
     )
 
     with pytest.raises(AmendmentKindNotPermittedError) as exc_info:
@@ -263,13 +268,16 @@ def test_rectificativa_kind_refused_for_pre_boundary_period(repos: _Repos) -> No
     assert "rectificativa" not in accepted
 
 
-def test_complementaria_permitted_for_pre_boundary_liability_increase(repos: _Repos) -> None:
+def test_complementaria_permitted_for_pre_boundary_liability_increase(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """A pre-boundary complementaria that RAISES liability is the lawful, permitted kind."""
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
         filing_year=2024,
         period_code="2T",
+        operation=operation,
     )
 
     with bundled_indexed_authority().operation() as operation:
@@ -285,7 +293,9 @@ def test_complementaria_permitted_for_pre_boundary_liability_increase(repos: _Re
     assert record.amends_filing_record_id == baseline.filing_record_id
 
 
-def test_complementaria_refused_for_pre_boundary_liability_decrease(repos: _Repos) -> None:
+def test_complementaria_refused_for_pre_boundary_liability_decrease(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """A pre-boundary complementaria that LOWERS liability is refused — that
     correction is a solicitud de rectificación (LGT art. 120.3), not a
     complementaria (LGT art. 122.2)."""
@@ -294,6 +304,7 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(repos: _Repo
         result_casilla_value=Decimal("100.00"),
         filing_year=2024,
         period_code="2T",
+        operation=operation,
     )
 
     with pytest.raises(AmendmentComplementariaLiabilityDecreaseError) as exc_info:
@@ -312,7 +323,9 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(repos: _Repo
     assert exc_info.value.context.get("corrected_result") == "40.00"
 
 
-def test_complementaria_kind_refused_for_post_boundary_period(repos: _Repos) -> None:
+def test_complementaria_kind_refused_for_post_boundary_period(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """M303 3T 2024 is the diseño's stated rectificativa boundary quarter;
     ``complementaria`` is no longer a permitted kind — rectificativa is the
     unified mechanism from this period onward."""
@@ -321,6 +334,7 @@ def test_complementaria_kind_refused_for_post_boundary_period(repos: _Repos) -> 
         result_casilla_value=Decimal("100.00"),
         filing_year=2024,
         period_code="3T",
+        operation=operation,
     )
 
     with pytest.raises(AmendmentKindNotPermittedError) as exc_info:
@@ -340,7 +354,9 @@ def test_complementaria_kind_refused_for_post_boundary_period(repos: _Repos) -> 
     assert "complementaria" not in accepted
 
 
-def test_rectificativa_kind_permits_liability_decrease_post_boundary(repos: _Repos) -> None:
+def test_rectificativa_kind_permits_liability_decrease_post_boundary(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """Post-boundary, rectificativa may lawfully lower the declared result —
     the liability-decrease guard is complementaria-specific and does not fire."""
     _, _, baseline = _seed_m303_external_baseline(
@@ -348,6 +364,7 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(repos: _Rep
         result_casilla_value=Decimal("100.00"),
         filing_year=2024,
         period_code="3T",
+        operation=operation,
     )
 
     with bundled_indexed_authority().operation() as operation:
@@ -363,13 +380,14 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(repos: _Rep
     assert record.amends_filing_record_id == baseline.filing_record_id
 
 
-def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos) -> None:
+def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """sustitutiva is always in the permitted set, pre- and post-boundary."""
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
         filing_year=2024,
         period_code="2T",
+        operation=operation,
     )
 
     with bundled_indexed_authority().operation() as operation:

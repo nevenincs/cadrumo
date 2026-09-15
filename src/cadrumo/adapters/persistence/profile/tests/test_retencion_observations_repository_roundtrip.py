@@ -200,7 +200,9 @@ def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
             _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
         )
         persist_retencion_observations(
-            ports=RetencionObservationPorts(repository=RetencionObservationRepositoryAdapter(objects=profile.repository)),
+            ports=RetencionObservationPorts(
+                repository=RetencionObservationRepositoryAdapter(objects=profile.repository)
+            ),
             modelo="180",
             filing_year=2024,
             period=period,
@@ -492,7 +494,9 @@ def test_repository_accepts_a_utc_capture_instant(tmp_path: Path) -> None:
             captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        assert RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("180", period) == (observation,)
+        assert RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("180", period) == (
+            observation,
+        )
 
 
 def _capture_payload(repo: RetencionObservationRepositoryAdapter, period: Period):

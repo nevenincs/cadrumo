@@ -20,9 +20,13 @@ from typing import TypedDict
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.snapshots import SecureSnapshotRepository
+from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
 )
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -30,12 +34,14 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 from cadrumo.application.live.errors import LiveApplicationInputError
 from cadrumo.application.live.justificante import (
     JustificanteCaptureSnapshot,
+    JustificanteCaptureSnapshotNotFoundError,
     JustificanteCaptureSnapshotRepository,
     JustificanteCaptureSnapshotService,
     derive_justificante_capture_snapshot_id,
     justificante_capture_snapshot_object_key,
 )
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
+from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 
@@ -68,6 +74,80 @@ class _CaptureKwargs(TypedDict):
     pdf_bytes: bytes
     pdf_sha256: str
     captured_at: datetime
+
+
+class _EncryptedJustificantePersistence:
+    """Adapt the real encrypted snapshot repository to the application port."""
+
+    def __init__(self, *, bucket_id: str) -> None:
+        self._bucket_id = bucket_id
+        self._objects: SecureObjectRepository = secure_object_repository_for_bucket(bucket_id)
+        self._delegate = SecureSnapshotRepository(
+            bucket_id=bucket_id,
+            payload_model=JustificanteCaptureSnapshot,
+            namespace_definition=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+            object_key=justificante_capture_snapshot_object_key,
+            not_found_factory=lambda snapshot_id: JustificanteCaptureSnapshotNotFoundError(
+                translated_message="application.live.justificante.errors.snapshot_not_found",
+                context={"snapshot_id": snapshot_id},
+            ),
+            ambiguous_prefix_factory=lambda snapshot_id, full_ids: JustificanteCaptureSnapshotNotFoundError(
+                translated_message="application.live.justificante.errors.snapshot_prefix_ambiguous",
+                context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
+            ),
+            domain_label="justificante capture",
+            input_error_cls=LiveApplicationInputError,
+            objects=self._objects,
+        )
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    def exists(self, snapshot_id: str) -> bool:
+        return self._delegate.exists(snapshot_id)
+
+    def load(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        return self._delegate.load(snapshot_id)
+
+    def list_snapshots(self) -> tuple[JustificanteCaptureSnapshot, ...]:
+        return self._delegate.list_snapshots()
+
+    def resolve(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        return self._delegate.resolve(snapshot_id)
+
+    def save(self, snapshot: object) -> None:
+        if not isinstance(snapshot, JustificanteCaptureSnapshot):
+            raise TypeError("justificante persistence received an unexpected snapshot type")
+        envelope = Envelope[JustificanteCaptureSnapshot](
+            schema_version=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.schema_version,
+            written_at=snapshot.captured_at,
+            classification=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.sensitivity,
+            payload=snapshot,
+        )
+        self._objects.save(
+            namespace=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace,
+            object_key=justificante_capture_snapshot_object_key(self._bucket_id, snapshot.snapshot_id),
+            classification=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.sensitivity,
+            schema_version=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+        )
+
+
+def _repository(*, bucket_id: str) -> JustificanteCaptureSnapshotRepository:
+    """Build the production encrypted persistence adapter for one test bucket."""
+    return JustificanteCaptureSnapshotRepository(
+        persistence=_EncryptedJustificantePersistence(bucket_id=bucket_id),
+    )
+
+
+def _service(*, bucket_id: str) -> JustificanteCaptureSnapshotService:
+    """Build the canonical capture service over the production repository."""
+    return JustificanteCaptureSnapshotService(
+        bucket_id=bucket_id,
+        repository=_repository(bucket_id=bucket_id),
+    )
 
 
 def _active_snapshot(
@@ -107,7 +187,7 @@ def test_active_capture_survives_encrypted_storage_roundtrip(tmp_path: Path) -> 
     """A populated ACTIVE capture round-trips, PDF bytes byte-for-byte intact."""
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
-        repo = JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
+        repo = _repository(bucket_id=bucket_id)
         original = _active_snapshot(bucket_id=bucket_id)
         repo.save(original)
         loaded = repo.load(original.snapshot_id)
@@ -151,7 +231,7 @@ def test_superseded_capture_survives_roundtrip(tmp_path: Path) -> None:
     """A SUPERSEDED capture round-trips with its successor pointer intact."""
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        repo = JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
+        repo = _repository(bucket_id=bucket_id)
         successor = _active_snapshot(bucket_id=bucket_id)
         repo.save(successor)
 
@@ -177,7 +257,7 @@ def test_discarded_capture_survives_roundtrip(tmp_path: Path) -> None:
     """A DISCARDED capture round-trips with all discard audit metadata populated non-default."""
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        repo = JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
+        repo = _repository(bucket_id=bucket_id)
         discarded = _active_snapshot(bucket_id=bucket_id).model_copy(
             update={
                 "state": SnapshotLifecycleState.DISCARDED,
@@ -208,7 +288,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
 
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
-        repo = JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
+        repo = _repository(bucket_id=bucket_id)
         successor = _active_snapshot(bucket_id=bucket_id)
         repo.save(successor)
         predecessor = _active_snapshot(
@@ -252,7 +332,7 @@ def test_service_capture_supersedes_prior_on_refile(tmp_path: Path) -> None:
     """A re-filed period (a different signed PDF) supersedes the prior ACTIVE capture."""
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
+        service = _service(bucket_id=bucket_id)
         first = service.capture(
             modelo=Modelo("130").value,
             filing_year=2026,
@@ -286,7 +366,7 @@ def test_service_capture_is_idempotent_on_same_receipt(tmp_path: Path) -> None:
     """Re-capturing the identical signed PDF returns the existing snapshot."""
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
+        service = _service(bucket_id=bucket_id)
         kwargs = _CaptureKwargs(
             modelo=Modelo("130").value,
             filing_year=2026,

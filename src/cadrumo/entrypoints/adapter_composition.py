@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
     from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
     from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
+    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
     from ..application.aggregation.percepciones_observations_repository import (
         PercepcionObservationPorts,
         PercepcionObservationPortsFactory,
@@ -280,13 +281,18 @@ def build_profile_read_ports(*, bucket_id: str) -> ProfileReadPorts:
     from ..adapters.persistence.profile.profile_path_values import ProfilePathValuesPersistenceAdapter
     from ..application.user_profile.profile_read_ports import ProfileReadPorts
     from ..application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
 
     normalized_bucket_id = bucket_id.strip()
-    return ProfileReadPorts(
-        path_values=ProfilePathValuesPersistenceAdapter(
-            repository=ProfileRecordRepository.for_current_session(normalized_bucket_id),
-        ),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return ProfileReadPorts(
+            path_values=ProfilePathValuesPersistenceAdapter(
+                repository=ProfileRecordRepository.for_current_session(
+                    normalized_bucket_id,
+                    profile_decode_context=operation.profile_decode_context(),
+                ),
+            ),
+        )
 
 
 def build_bienes_inversion_repository(*, bucket_id: str) -> BienesInversionIvaRegisterRepositoryProtocol:
@@ -325,7 +331,7 @@ def build_diagnostics_ports() -> DiagnosticsPorts:
         """Translate storage integrity records into application diagnostic DTOs."""
 
         @staticmethod
-        def _repository():
+        def _repository() -> SecureObjectRepository:
             return secure_object_repository_for_active_bucket_or_default_route()
 
         @staticmethod
@@ -375,17 +381,23 @@ def build_draft_review_ports(*, bucket_id: str) -> DraftReviewPorts:
     from ..application.filing.draft_review_ports import DraftReviewPorts
     from ..application.user_profile.profile_record_repository import ProfileRecordRepository
     from ..application.user_profile.projections import record_to_path_values
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
     from ..domain.user_profile.errors import ProfileNotFoundError
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    with bundled_indexed_authority().operation() as operation:
+        profile_decode_context = operation.profile_decode_context()
 
     class ProfileActivityReader:
         """Translate the session-bound profile record into an application map."""
 
         def load_path_values(self, *, bucket_id: str) -> Mapping[str, str] | None:
             try:
-                record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+                record = ProfileRecordRepository.for_current_session(
+                    bucket_id,
+                    profile_decode_context=profile_decode_context,
+                ).load(bucket_id)
             except ProfileNotFoundError:
                 return None
             return record_to_path_values(record)
@@ -951,6 +963,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         ExpedientesPorts,
         ExpedientesRegisterProtocol,
     )
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
 
     def snapshot_repository_factory(bucket: str) -> SecureSnapshotRepository[PersistedExpedientesSnapshot]:
         """Bind one encrypted snapshot repository to the requested bucket."""
@@ -1025,11 +1038,17 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         @override
         async def open_register(self, session: AeatSession, *, settings: Settings):
             try:
-                async with (
-                    shared_playwright(session) as playwright,
-                    open_declarations_register(session, settings=settings, playwright=playwright) as register,
-                ):
-                    yield SedeExpedientesRegister(register)
+                with bundled_indexed_authority().operation() as operation:
+                    async with (
+                        shared_playwright(session) as playwright,
+                        open_declarations_register(
+                            session,
+                            operation=operation,
+                            settings=settings,
+                            playwright=playwright,
+                        ) as register,
+                    ):
+                        yield SedeExpedientesRegister(register)
             except LiveApplicationError:
                 raise
             except Exception as exc:

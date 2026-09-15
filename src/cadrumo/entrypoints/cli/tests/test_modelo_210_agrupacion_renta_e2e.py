@@ -27,6 +27,7 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.modelo.work_plazo import calculated_m210_plazo_resolution
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
@@ -110,15 +111,17 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
         work_repo = WorkUnitCatalogueRepository()
         calculation_repo = CalculationRevisionCatalogueRepository()
         event_repo = BucketEventHistoryRepository()
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="210",
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "0A"),
-            revision_id=snapshot.revision.id,
-            ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
-            clock=_CLOCK,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            work_unit = create_work_unit(
+                bucket_id=_BUCKET_ID,
+                modelo="210",
+                filing_year=_FILING_YEAR,
+                period=Period.from_year_and_code(_FILING_YEAR, "0A"),
+                revision_id=snapshot.revision.id,
+                ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
+                operation=operation,
+                clock=_CLOCK,
+            )
 
         with (
             pytest.raises(ModeloError),
@@ -232,48 +235,51 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
     with _secure_backend(tmp_path):
         snapshot = compiled_bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="0A")
         work_repo = WorkUnitCatalogueRepository()
-        work_unit = create_work_unit(
+        with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
-            modelo="210",
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "0A"),
-            revision_id=snapshot.revision.id,
-            ports=WorkLifecyclePorts(
-                work_unit_repository=work_repo,
-                bucket_event_repository=BucketEventHistoryRepository(),
-            ),
-            clock=_CLOCK,
-        )
-        calculation_result = calculate_modelo_work_revision(
-            work_unit_id=work_unit.work_unit_id,
-            actor="operator",
-            inputs=WorkCalculateInputBundle.build(
-                casilla_inputs=casilla_inputs,
-                text_casilla_inputs={"tipo_renta": text_tipo_renta},
-                m210_official_tipo_renta_code=tipo_renta_code,
-                binding_values={},
-                enum_binding_values={},
-                relation_values={},
-                detail_rows=(
-                    Modelo210AgrupacionRentaRow(
-                        source_id=f"plazo-{tipo_renta_code}",
-                        tipo_renta_code=tipo_renta_code,
-                        importe=casilla_inputs["rendimientos_integros"],
-                        tipo_gravamen=Decimal("0.24"),
-                        pagador_mode=resolve_m210_payer_mode(
-                            "multiple_payers_code_35" if tipo_renta_code == "35" else "single_payer",
-                            effective_date=_CLOCK.date(),
+            work_unit_repository=work_repo,
+        ) as _calculation_ports_210:
+            work_unit = create_work_unit(
+                bucket_id=_BUCKET_ID,
+                modelo="210",
+                filing_year=_FILING_YEAR,
+                period=Period.from_year_and_code(_FILING_YEAR, "0A"),
+                revision_id=snapshot.revision.id,
+                ports=_calculation_ports_210.work_lifecycle_ports,
+                operation=_calculation_ports_210.operation,
+                clock=_CLOCK,
+            )
+            calculation_result = calculate_modelo_work_revision(
+                work_unit_id=work_unit.work_unit_id,
+                actor="operator",
+                inputs=WorkCalculateInputBundle.build(
+                    casilla_inputs=casilla_inputs,
+                    text_casilla_inputs={"tipo_renta": text_tipo_renta},
+                    m210_official_tipo_renta_code=tipo_renta_code,
+                    binding_values={},
+                    enum_binding_values={},
+                    relation_values={},
+                    detail_rows=(
+                        Modelo210AgrupacionRentaRow(
+                            source_id=f"plazo-{tipo_renta_code}",
+                            tipo_renta_code=tipo_renta_code,
+                            importe=casilla_inputs["rendimientos_integros"],
+                            tipo_gravamen=Decimal("0.24"),
+                            pagador_mode=resolve_m210_payer_mode(
+                                "multiple_payers_code_35" if tipo_renta_code == "35" else "single_payer",
+                                effective_date=_CLOCK.date(),
+                            ),
+                            pagador_id=None if tipo_renta_code == "35" else "ES-PAGADOR-1",
+                            deriva_de_bien_derecho=True,
+                            bien_derecho_id="ES-INMUEBLE-1",
                         ),
-                        pagador_id=None if tipo_renta_code == "35" else "ES-PAGADOR-1",
-                        deriva_de_bien_derecho=True,
-                        bien_derecho_id="ES-INMUEBLE-1",
                     ),
+                    borrador_snapshot_id=None,
                 ),
-                borrador_snapshot_id=None,
-            ),
-        )
-        calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
-        verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
+                ports=_calculation_ports_210,
+            )
+            calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
+            verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
     assert len(calculate_notices) == len(verify_notices) == 1
     context = calculate_notices[0].context
@@ -299,34 +305,37 @@ def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_pat
     with _secure_backend(tmp_path):
         snapshot = compiled_bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
-        work_unit = create_work_unit(
+        with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
-            modelo="210",
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
-            revision_id=snapshot.revision.id,
-            ports=WorkLifecyclePorts(
-                work_unit_repository=work_repo,
-                bucket_event_repository=BucketEventHistoryRepository(),
-            ),
-            clock=_CLOCK,
-        )
-        calculation_result = calculate_modelo_work_revision(
-            work_unit_id=work_unit.work_unit_id,
-            actor="operator",
-            inputs=WorkCalculateInputBundle.build(
-                casilla_inputs={"rendimientos_integros": Decimal("900.00")},
-                text_casilla_inputs={"tipo_renta": "ganancia_patrimonial"},
-                m210_official_tipo_renta_code="28",
-                binding_values={},
-                enum_binding_values={},
-                relation_values={},
-                detail_rows=(),
-                borrador_snapshot_id=None,
-            ),
-        )
-        calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
-        verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
+            work_unit_repository=work_repo,
+        ) as _calculation_ports_28:
+            work_unit = create_work_unit(
+                bucket_id=_BUCKET_ID,
+                modelo="210",
+                filing_year=_FILING_YEAR,
+                period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
+                revision_id=snapshot.revision.id,
+                ports=_calculation_ports_28.work_lifecycle_ports,
+                operation=_calculation_ports_28.operation,
+                clock=_CLOCK,
+            )
+            calculation_result = calculate_modelo_work_revision(
+                work_unit_id=work_unit.work_unit_id,
+                actor="operator",
+                inputs=WorkCalculateInputBundle.build(
+                    casilla_inputs={"rendimientos_integros": Decimal("900.00")},
+                    text_casilla_inputs={"tipo_renta": "ganancia_patrimonial"},
+                    m210_official_tipo_renta_code="28",
+                    binding_values={},
+                    enum_binding_values={},
+                    relation_values={},
+                    detail_rows=(),
+                    borrador_snapshot_id=None,
+                ),
+                ports=_calculation_ports_28,
+            )
+            calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
+            verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
     assert calculate_notices == ()
     assert verify_notices == ()
@@ -339,38 +348,41 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
     with _secure_backend(tmp_path):
         snapshot = compiled_bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
-        work_unit = create_work_unit(
+        with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
-            modelo="210",
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
-            revision_id=snapshot.revision.id,
-            ports=WorkLifecyclePorts(
-                work_unit_repository=work_repo,
-                bucket_event_repository=BucketEventHistoryRepository(),
-            ),
-            clock=_CLOCK,
-        )
-        calculation_result = calculate_modelo_work_revision(
-            work_unit_id=work_unit.work_unit_id,
-            actor="operator",
-            inputs=WorkCalculateInputBundle.build(
-                casilla_inputs={
-                    "valor_catastral": Decimal("100000.00"),
-                    "coeficiente_imputacion_inmobiliaria": Decimal("0.011"),
-                    "dias_imputacion": Decimal("365"),
-                },
-                text_casilla_inputs={"tipo_renta": "inmobiliaria"},
-                m210_official_tipo_renta_code="02",
-                binding_values={},
-                enum_binding_values={},
-                relation_values={},
-                detail_rows=(),
-                borrador_snapshot_id=None,
-            ),
-        )
-        calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
-        verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
+            work_unit_repository=work_repo,
+        ) as _calculation_ports_02:
+            work_unit = create_work_unit(
+                bucket_id=_BUCKET_ID,
+                modelo="210",
+                filing_year=_FILING_YEAR,
+                period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
+                revision_id=snapshot.revision.id,
+                ports=_calculation_ports_02.work_lifecycle_ports,
+                operation=_calculation_ports_02.operation,
+                clock=_CLOCK,
+            )
+            calculation_result = calculate_modelo_work_revision(
+                work_unit_id=work_unit.work_unit_id,
+                actor="operator",
+                inputs=WorkCalculateInputBundle.build(
+                    casilla_inputs={
+                        "valor_catastral": Decimal("100000.00"),
+                        "coeficiente_imputacion_inmobiliaria": Decimal("0.011"),
+                        "dias_imputacion": Decimal("365"),
+                    },
+                    text_casilla_inputs={"tipo_renta": "inmobiliaria"},
+                    m210_official_tipo_renta_code="02",
+                    binding_values={},
+                    enum_binding_values={},
+                    relation_values={},
+                    detail_rows=(),
+                    borrador_snapshot_id=None,
+                ),
+                ports=_calculation_ports_02,
+            )
+            calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
+            verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
     assert len(calculate_notices) == len(verify_notices) == 1
     assert calculate_notices[0].context == {

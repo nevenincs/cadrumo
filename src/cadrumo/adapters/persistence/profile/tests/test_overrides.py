@@ -33,6 +33,7 @@ from cadrumo.application.prorrata_register.service import ProrrataRegisterServic
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry
@@ -144,10 +145,12 @@ def test_override_precedence_outranks_carried_prior_definitiva(
     candidate: ProrrataRegisterEntry,
     expected_percentage: Decimal,
     expected_provenance: ProrrataProvisionalProvenance,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = ProrrataRegisterRepository(objects=profile.repository)
-        service = ProrrataRegisterService(repository=repository)
+        service = ProrrataRegisterService(repository=repository, operation=operation)
         service.declare(_carried_entry(percentage=Decimal("80")))
 
         resolution = service.resolve_provisional(_CURRENT_YEAR, candidate_entries=(candidate,))
@@ -157,7 +160,7 @@ def test_override_precedence_outranks_carried_prior_definitiva(
     assert resolution.provenance is expected_provenance
 
 
-def test_carried_prior_definitiva_contradiction_blocks(tmp_path: Path) -> None:
+def test_carried_prior_definitiva_contradiction_blocks(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         observation_repo = CalculationObservationRepository(objects=profile.repository)
         _save_prior_prorrata_observation(observation_repo, percentage=Decimal("87"))
@@ -165,6 +168,7 @@ def test_carried_prior_definitiva_contradiction_blocks(tmp_path: Path) -> None:
         findings = cross_check_prorrata_entry_against_prior_observation(
             _carried_entry(percentage=Decimal("80")),
             observation_repository=observation_repo,
+            operation=operation,
         )
 
     assert len(findings) == 1
@@ -203,6 +207,8 @@ def test_regulated_override_difference_surfaces_informational_notice(
     tmp_path: Path,
     entry: ProrrataRegisterEntry,
     provenance_text: str,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         observation_repo = CalculationObservationRepository(objects=profile.repository)
@@ -211,6 +217,7 @@ def test_regulated_override_difference_surfaces_informational_notice(
         findings = cross_check_prorrata_entry_against_prior_observation(
             entry,
             observation_repository=observation_repo,
+            operation=operation,
         )
 
     assert len(findings) == 1

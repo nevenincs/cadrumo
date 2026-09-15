@@ -10,6 +10,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -59,8 +60,16 @@ def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
             },
         ),
     )
-    logged_out = logout_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    reset = reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    logged_out = logout_operator_auth(
+        provider="certificate",
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+    reset = reset_operator_auth(
+        provider="certificate",
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
 
     reloaded = workflow_state_repository().load()
     events = [(event.action, event.bucket_id, event.object_id) for event in reloaded.bucket_events]

@@ -23,6 +23,10 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+)
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
@@ -162,21 +166,27 @@ def _receipt_for_m131(*, total_ingresar: Decimal):
     )
 
 
-def _reconcile(work_unit: WorkUnit, justificante: Justificante):
+def _reconcile(
+    work_unit: WorkUnit,
+    justificante: Justificante,
+    *,
+    operation: PinnedAuthorityOperation,
+):
     return reconcile_parsed_justificante(
         work_unit=work_unit,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref="test://m131",
         actor="operator",
         justificante=justificante,
+        operation=operation,
     )
 
 
-def test_filed_total_matching_computed_result_reconciles_clean() -> None:
+def test_filed_total_matching_computed_result_reconciles_clean(operation: PinnedAuthorityOperation) -> None:
     work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
     _persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
 
-    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.00")))
+    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.00")), operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert not report.diffs
@@ -184,14 +194,14 @@ def test_filed_total_matching_computed_result_reconciles_clean() -> None:
     assert all(a.code != "totals_not_reconciled" for a in report.advisories)
 
 
-def test_filed_amount_divergence_is_caught_as_typed_total_diff() -> None:
+def test_filed_amount_divergence_is_caught_as_typed_total_diff(operation: PinnedAuthorityOperation) -> None:
     """A filed amount that differs from the computed result is CAUGHT and
     represented as a typed ``total`` diff with legal grounding — not a silent
     identity ``matches``, and not merely a count."""
     work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
     _persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
 
-    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("999.99")))
+    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("999.99")), operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
     total_diffs = [d for d in report.diffs if d.diff_kind is ModeloReconciliationDiffKind.TOTAL]
@@ -205,21 +215,21 @@ def test_filed_amount_divergence_is_caught_as_typed_total_diff() -> None:
     assert diff.source_refs
 
 
-def test_divergence_within_tolerance_does_not_flag() -> None:
+def test_divergence_within_tolerance_does_not_flag(operation: PinnedAuthorityOperation) -> None:
     """The registry tolerance (0.01) is honoured: a one-cent gap is clean."""
     work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
     _persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
 
-    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.01")))
+    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.01")), operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert not report.diffs
 
 
-def test_no_persisted_revision_surfaces_advisory_not_false_green() -> None:
+def test_no_persisted_revision_surfaces_advisory_not_false_green(operation: PinnedAuthorityOperation) -> None:
     work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
     # No revision persisted.
-    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.00")))
+    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.00")), operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     codes = {a.code for a in report.advisories}
@@ -228,27 +238,32 @@ def test_no_persisted_revision_surfaces_advisory_not_false_green() -> None:
     assert "no_persisted_revision" in reasons
 
 
-def test_undeclared_total_map_modelo_surfaces_advisory() -> None:
+def test_undeclared_total_map_modelo_surfaces_advisory(operation: PinnedAuthorityOperation) -> None:
     """Modelo 130 declares no reconciliation_total_casilla_ids: the filed total
     is disclosed as not reconciled, never silently passed."""
     work_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
     receipt = parse_justificante(MODELO_130_FIXTURE).model_copy(update={"tax_id": _PROFILE_TAX_ID})
-    report = _reconcile(work_unit, receipt)
+    report = _reconcile(work_unit, receipt, operation=operation)
 
     advisory_reasons = {a.context.get("reason") for a in report.advisories if a.code == "totals_not_reconciled"}
     assert advisory_reasons == {"map_not_declared"}
 
 
-def test_history_persists_which_total_diverged_not_just_a_count() -> None:
+def test_history_persists_which_total_diverged_not_just_a_count(operation: PinnedAuthorityOperation) -> None:
     work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
     _persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
-    _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("999.99")))
+    _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("999.99")), operation=operation)
 
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    entries = list_modelo_reconciliations(bucket_id=bucket_id, work_unit_id=work_unit.work_unit_id)
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(
+            bucket_id=bucket_id,
+            operation=operation,
+            work_unit_id=work_unit.work_unit_id,
+        )
     assert len(entries) == 1
     entry = entries[0]
     assert entry.diff_count == 1

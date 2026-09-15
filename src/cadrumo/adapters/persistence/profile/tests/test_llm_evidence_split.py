@@ -18,7 +18,9 @@ Covers the Stage-3b split contract:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
+from typing import NoReturn
 
 import pytest
 
@@ -34,14 +36,45 @@ from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support impo
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from cadrumo.application.ledger.llm_classification import suggest_evidence_split
-from cadrumo.application.ledger.llm_classification_ports import LLMSplitSuggestion
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitSuggestion
+from cadrumo.core.config import load_settings
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 __all__ = ["repositories"]
+
+
+def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
+    """Fail loudly if a no-evidence split test reaches an unused reader port."""
+    raise AssertionError("the no-evidence split path must not use this reader port")
+
+
+def _run_reader(run: Callable[[], object]) -> object:
+    return run()
+
+
+def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
+    return run()
+
+
+_LLM_PORTS = LLMClassificationPorts(
+    resolve_evidence_input=_unused_llm_port,
+    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
+    rasterise_pdf=_unused_llm_port,
+    make_text_classifier=_unused_llm_port,
+    make_vision_classifier=_unused_llm_port,
+    run_reader=_run_reader,
+    record_classifier_run=_record_classifier_run,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -51,6 +84,8 @@ __all__ = ["repositories"]
 
 def test_suggest_derives_child_amounts_summing_to_parent(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         repository, _events, _objects = repositories
@@ -60,9 +95,11 @@ def test_suggest_derives_child_amounts_summing_to_parent(
         suggestion = suggest_evidence_split(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
+            settings=load_settings(),
+            ports=_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -79,6 +116,8 @@ def test_suggest_derives_child_amounts_summing_to_parent(
 
 def test_suggest_derives_each_child_substrate_from_registry(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         repository, _events, _objects = repositories
@@ -87,9 +126,11 @@ def test_suggest_derives_each_child_substrate_from_registry(
         suggestion = suggest_evidence_split(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
+            settings=load_settings(),
+            ports=_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -105,6 +146,8 @@ def test_suggest_derives_each_child_substrate_from_registry(
 
 def test_suggest_no_linked_evidence_does_not_require_cloud_acknowledgement(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         repository, _events, _objects = repositories
@@ -116,9 +159,11 @@ def test_suggest_no_linked_evidence_does_not_require_cloud_acknowledgement(
         suggestion = suggest_evidence_split(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=True,
+            settings=load_settings(),
+            ports=_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 

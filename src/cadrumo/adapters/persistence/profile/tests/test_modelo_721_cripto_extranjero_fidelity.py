@@ -99,10 +99,12 @@ _CONTEXT_LABEL = "721-monedas-virtuales-extranjero-prior-year-baseline-two-annua
 
 #: Initial declaration threshold per RD 1065/2007 art. 42-quater (same structure
 #: as 720: €50,000 aggregate value at 31 December through a third-party custodian).
-_MONEDAS_VIRTUALES_THRESHOLD = foreign_asset_declaration_thresholds(
-    modelo=_MODELO,
-    filing_year=_YEAR_N_PLUS_1,
-)[ForeignAssetObligationGroup._from_registry("monedas_virtuales")]
+with _indexed_authority_for_test().operation() as _module_authority_operation_for_test:
+    _MONEDAS_VIRTUALES_THRESHOLD = foreign_asset_declaration_thresholds(
+        modelo=_MODELO,
+        filing_year=_YEAR_N_PLUS_1,
+        operation=_module_authority_operation_for_test,
+    )[ForeignAssetObligationGroup._from_registry("monedas_virtuales")]
 _INITIAL_THRESHOLD_EUR = _MONEDAS_VIRTUALES_THRESHOLD.initial_declaration_floor_eur
 
 #: Re-declaration increment threshold per art. 42-quater: if 31-December aggregate

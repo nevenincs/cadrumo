@@ -82,7 +82,12 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
@@ -461,7 +466,9 @@ def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_pa
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in first_quarter.blockers
 
 
-def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tmp_path: Path) -> None:
+def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
             _store_ready_profile()
@@ -479,6 +486,7 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tm
                     bucket_event_repository=bucket_event_repository,
                 ),
                 clock=_CLOCK,
+                operation=operation,
             )
             snapshot = _snapshot_390()
             binding_values = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}

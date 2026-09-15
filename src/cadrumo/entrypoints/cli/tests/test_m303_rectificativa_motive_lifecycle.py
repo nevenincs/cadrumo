@@ -11,6 +11,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import IVARegime
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
@@ -97,7 +98,7 @@ def _snapshot() -> RegistrySnapshot:
 
 
 @lru_cache(maxsize=1)
-def _filing_evidence():
+def _filing_evidence(*, operation: PinnedAuthorityOperation):
     snapshot = _snapshot()
     record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
     assert record_design is not None
@@ -119,10 +120,13 @@ def _filing_evidence():
         Period.from_year_and_code(2025, "1T"),
         reference="test:s92:general-scope",
         regimen_snapshot=regimen_snapshot,
+        operation=operation,
     )
 
 
-def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RECTIFICACIONES):
+def _authorities(
+    *, motive: M303RectificativaMotive = M303RectificativaMotive.RECTIFICACIONES, operation: PinnedAuthorityOperation
+):
     period = Period.from_year_and_code(2025, "1T")
     snapshot = _snapshot()
     work_unit_id = derive_work_unit_id(
@@ -143,7 +147,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         created_at=_NOW,
         updated_at=_NOW,
     )
-    evidence = _filing_evidence()
+    evidence = _filing_evidence(operation=operation)
     baseline_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -261,8 +265,10 @@ def _profile() -> TaxpayerProfile:
     )
 
 
-def test_identifier_refuses_invalid_syntax_and_every_identity_axis_diverges() -> None:
-    _, _, target, _, _, revision = _authorities()
+def test_identifier_refuses_invalid_syntax_and_every_identity_axis_diverges(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    _, _, target, _, _, revision = _authorities(operation=operation)
     with pytest.raises(ValidationError):
         CalculationRevisionAmendmentIdentity(
             kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
@@ -302,8 +308,8 @@ def test_identifier_refuses_invalid_syntax_and_every_identity_axis_diverges() ->
     assert len(revision_ids) == 4
 
 
-def test_context_free_missing_and_cross_context_rectificativa_refuse() -> None:
-    _, _, target, _, context, revision = _authorities()
+def test_context_free_missing_and_cross_context_rectificativa_refuse(*, operation: PinnedAuthorityOperation) -> None:
+    _, _, target, _, context, revision = _authorities(operation=operation)
     payload = revision.model_dump(mode="python")
     with pytest.raises(ValidationError, match="context-bound aggregate"):
         CalculationRevision.model_validate(payload)
@@ -342,8 +348,8 @@ def test_context_free_missing_and_cross_context_rectificativa_refuse() -> None:
         )
 
 
-def test_every_persisted_target_and_justificante_join_refusal_is_biting() -> None:
-    work_unit, _, target, receipt, context, revision = _authorities()
+def test_every_persisted_target_and_justificante_join_refusal_is_biting(*, operation: PinnedAuthorityOperation) -> None:
+    work_unit, _, target, receipt, context, revision = _authorities(operation=operation)
     payload = revision.model_dump(mode="python")
     empty_records = ModeloRecordCatalogue(records={})
     with pytest.raises(ValidationError, match="external filing evidence must carry AEAT acceptance"):
@@ -399,8 +405,10 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting() -> Non
             )
 
 
-def test_encrypted_persistence_reloads_and_revalidates_joined_authority(tmp_path: Path) -> None:
-    work_unit, baseline_revision, target, receipt, context, revision = _authorities()
+def test_encrypted_persistence_reloads_and_revalidates_joined_authority(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    work_unit, baseline_revision, target, receipt, context, revision = _authorities(operation=operation)
     assert work_unit.modelo == Modelo("303").value
     assert work_unit.modelo == Modelo("303")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92") as runtime:
@@ -441,9 +449,11 @@ def test_encrypted_persistence_reloads_and_revalidates_joined_authority(tmp_path
             without_taxpayer_authority.load()
 
 
-def test_public_amend_service_refuses_missing_motive_before_identity_with_real_persistence(tmp_path: Path) -> None:
+def test_public_amend_service_refuses_missing_motive_before_identity_with_real_persistence(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Free text and a rectificativa kind cannot default the content-addressed motive."""
-    work_unit, baseline_revision, target, receipt, _, _ = _authorities()
+    work_unit, baseline_revision, target, receipt, _, _ = _authorities(operation=operation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92 service") as runtime:
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)
@@ -514,8 +524,10 @@ def test_motive_capability_is_selected_only_from_exact_registry_evidence(
         ("record_design_epoch", "2027"),
     ),
 )
-def test_motive_capability_refuses_source_digest_and_epoch_inference(field: str, replacement: str) -> None:
-    evidence = _filing_evidence()
+def test_motive_capability_refuses_source_digest_and_epoch_inference(
+    field: str, replacement: str, *, operation: PinnedAuthorityOperation
+) -> None:
+    evidence = _filing_evidence(operation=operation)
     record_design = evidence.m303.regimen_simplificado.regimen_snapshot.record_design
     mutated = record_design.model_copy(update={field: replacement})
     assert not m303_rectificativa_motive_is_applicable(
@@ -553,8 +565,10 @@ def test_two_motive_producer_keys_have_the_complete_truth_table(
     assert tuple(values.values()) == expected
 
 
-def test_export_refuses_command_substitution_and_derives_persisted_receipt(tmp_path: Path) -> None:
-    work_unit, _, target, receipt, _, revision = _authorities()
+def test_export_refuses_command_substitution_and_derives_persisted_receipt(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    work_unit, _, target, receipt, _, revision = _authorities(operation=operation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92") as runtime:
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)
@@ -623,9 +637,11 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(tmp_p
                 )
 
 
-def test_export_amendment_gate_refuses_missing_injected_justificante_authority(tmp_path: Path) -> None:
+def test_export_amendment_gate_refuses_missing_injected_justificante_authority(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Export amendment authority cannot infer a receipt repository at the application boundary."""
-    work_unit, _, target, _, _, revision = _authorities()
+    work_unit, _, target, _, _, revision = _authorities(operation=operation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92 export gate") as runtime:
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)
@@ -653,9 +669,11 @@ def test_export_amendment_gate_refuses_missing_injected_justificante_authority(t
         assert raised.value.context["cause"] == "amendment export requires injected justificante repository authority"
 
 
-def test_public_export_requires_injected_persisted_justificante_authority(tmp_path: Path) -> None:
+def test_public_export_requires_injected_persisted_justificante_authority(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Persisted receipt state does not bypass the application port boundary."""
-    work_unit, baseline_revision, target, receipt, context, revision = _authorities()
+    work_unit, baseline_revision, target, receipt, context, revision = _authorities(operation=operation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92 public export") as runtime:
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)

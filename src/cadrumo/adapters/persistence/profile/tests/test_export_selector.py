@@ -10,6 +10,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.tests._export_test_support import isolated_backend
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = ["isolated_backend"]
 
@@ -33,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_exportable_selector_refuses_verified_fallback_when_current_draft_conflicts(
-    isolated_backend: None,
+    isolated_backend: None, *, operation: PinnedAuthorityOperation
 ) -> None:
     bucket_id = _seed_profile()
     work_repo = WorkUnitCatalogueRepository()
@@ -49,6 +50,7 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
         clock=datetime(2026, 6, 4, 10, 0, tzinfo=UTC),
+        operation=operation,
     )
     verified_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
@@ -120,4 +122,4 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
     work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
 
     with pytest.raises(ModeloCalculationRevisionSelectorStateError):
-        select_exportable_revision(work_unit, calculation_repository=calc_repo)
+        select_exportable_revision(work_unit, calculation_repository=calc_repo, operation=operation)

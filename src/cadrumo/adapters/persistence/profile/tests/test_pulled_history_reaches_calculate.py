@@ -77,6 +77,7 @@ from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.config import Settings
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -299,7 +300,9 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     }
 
 
-def _calculate_m100_annual(secure_objects: SecureObjectRepository, *, bucket_id: str):
+def _calculate_m100_annual(
+    secure_objects: SecureObjectRepository, *, bucket_id: str, operation: PinnedAuthorityOperation
+):
     """Run the live operator calculate for M100 annual over the active bucket.
 
     The revision is resolved from ``(modelo, filing_year, period)`` through the
@@ -327,6 +330,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository, *, bucket_id:
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=bucket_id,
@@ -380,7 +384,7 @@ def test_the_pulled_history_pole_lands_four_register_rows(tmp_path: Path) -> Non
 
 
 def test_no_history_profile_leaves_the_annual_pagos_credit_absent(
-    no_history_profile: SecureObjectRepository,
+    no_history_profile: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """With nothing pulled, casilla 0604 has no value and the gap is reported.
 
@@ -390,7 +394,7 @@ def test_no_history_profile_leaves_the_annual_pagos_credit_absent(
     number here is attributed here rather than surfacing as a confusing
     divergence result.
     """
-    result, _revision_id = _calculate_m100_annual(no_history_profile, bucket_id=_NO_HISTORY_BUCKET)
+    result, _revision_id = _calculate_m100_annual(no_history_profile, bucket_id=_NO_HISTORY_BUCKET, operation=operation)
 
     assert _M100_PAGOS_CASILLA not in result.revision.casilla_values
     assert any(
@@ -401,7 +405,9 @@ def test_no_history_profile_leaves_the_annual_pagos_credit_absent(
     ), result.source_diagnostics
 
 
-def test_pulled_history_and_no_history_profiles_compute_different_annual_credits(tmp_path: Path) -> None:
+def test_pulled_history_and_no_history_profiles_compute_different_annual_credits(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Two real runs over one law-resolved revision, and they do not agree.
 
     Both poles are calculated through the live operator path over the same
@@ -414,7 +420,9 @@ def test_pulled_history_and_no_history_profiles_compute_different_annual_credits
     with the history.
     """
     with isolated_runtime_profile(tmp_path=tmp_path / "no-history", bucket_id=_NO_HISTORY_BUCKET) as bare:
-        bare_result, bare_revision_id = _calculate_m100_annual(bare.repository, bucket_id=_NO_HISTORY_BUCKET)
+        bare_result, bare_revision_id = _calculate_m100_annual(
+            bare.repository, bucket_id=_NO_HISTORY_BUCKET, operation=operation
+        )
         bare_credit = bare_result.revision.casilla_values.get(_M100_PAGOS_CASILLA)
 
     with isolated_runtime_profile(tmp_path=tmp_path / "pulled", bucket_id=_PULLED_HISTORY_BUCKET) as pulled:
@@ -427,6 +435,7 @@ def test_pulled_history_and_no_history_profiles_compute_different_annual_credits
         pulled_result, pulled_revision_id = _calculate_m100_annual(
             pulled.repository,
             bucket_id=_PULLED_HISTORY_BUCKET,
+            operation=operation,
         )
         pulled_credit = pulled_result.revision.casilla_values.get(_M100_PAGOS_CASILLA)
 

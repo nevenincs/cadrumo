@@ -10,11 +10,14 @@ from typing import Any
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo.work_lifecycle import get_work_unit
+from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.operator_surface.command_ports import cli_argv_for
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings, override_settings

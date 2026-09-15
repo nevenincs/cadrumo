@@ -16,12 +16,12 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -34,6 +34,7 @@ from cadrumo.core.aggregation import (
     RetencionScheme,
 )
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
@@ -119,13 +120,15 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     )
 
 
-def test_m111_professional_retencion_observation_calculates_activity_boxes(tmp_path: Path) -> None:
+def test_m111_professional_retencion_observation_calculates_activity_boxes(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A persisted professional retención observation drives 07/08/09 and totals 28/30."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
         period = Period.from_year_and_code(2026, "1T")
-        RetencionObservationRepository().replace_observations(
+        RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
             modelo="111",
             filing_year=2026,
             period=period,
@@ -144,6 +147,7 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(tmp_p
                 work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
             ),
             clock=_T0,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -167,7 +171,9 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(tmp_p
     assert result.source_diagnostics == ()
 
 
-def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_path: Path) -> None:
+def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """An administrador (clave E, art. 101.2) retención drives the trabajo boxes 01/02/03 and totals 28/30.
 
     Modelo 111 carries a single rendimientos-del-trabajo block, so the administrador/consejero
@@ -178,7 +184,7 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_p
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
         period = Period.from_year_and_code(2026, "1T")
-        RetencionObservationRepository().replace_observations(
+        RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
             modelo="111",
             filing_year=2026,
             period=period,
@@ -197,6 +203,7 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_p
                 work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
             ),
             clock=_T0,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -220,7 +227,9 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_p
     assert result.source_diagnostics == ()
 
 
-def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(tmp_path: Path) -> None:
+def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """An administrador retención at a non-art.-101.2 rate surfaces a non-blocking calculate advisory.
 
     The withheld 500.00 on a 2.000,00 base is 25 %, which matches neither the fixed 35 %
@@ -233,7 +242,7 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(tmp_path: Pat
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
         period = Period.from_year_and_code(2026, "1T")
-        RetencionObservationRepository().replace_observations(
+        RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
             modelo="111",
             filing_year=2026,
             period=period,
@@ -252,6 +261,7 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(tmp_path: Pat
                 work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
             ),
             clock=_T0,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,

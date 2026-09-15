@@ -57,7 +57,13 @@ class StateProjectionPersistenceAdapter:
             pointer = read_profile_bucket_by_id(profile_id)
             if pointer is None:
                 return None
-            record = ProfileRecordRepository.for_current_session(pointer.bucket_id).load(pointer.bucket_id)
+            from ....domain.calculations.registry.authority import bundled_indexed_authority
+
+            with bundled_indexed_authority().operation() as operation:
+                record = ProfileRecordRepository.for_current_session(
+                    pointer.bucket_id,
+                    profile_decode_context=operation.profile_decode_context(),
+                ).load(pointer.bucket_id)
             return StateProjectionProfileRead(bucket_id=pointer.bucket_id, record=record)
         except Exception as exc:
             raise StateProjectionReadError("profile") from exc

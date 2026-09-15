@@ -342,16 +342,17 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
-        revision_id=snapshot.revision.id,
-        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
-        clock=_T0,
-    )
     with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
+            revision_id=snapshot.revision.id,
+            ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
+            operation=operation,
+            clock=_T0,
+        )
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),

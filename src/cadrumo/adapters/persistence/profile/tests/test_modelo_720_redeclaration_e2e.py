@@ -80,7 +80,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -175,6 +175,7 @@ def _calculate_and_verify(
     *,
     tmp_path: Path,
     declare_cuentas: bool,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, VerificationReport]:
     """Run the real year-N+1 M720 pipeline over a real persisted year-N baseline."""
     with _secure_backend(tmp_path):
@@ -227,6 +228,7 @@ def _calculate_and_verify(
                 bucket_event_repository=BucketEventHistoryRepository(),
             ),
             clock=_CLOCK_N_PLUS_1,
+            operation=operation,
         )
 
         casilla_inputs: dict[CasillaId, Decimal] = {
@@ -279,7 +281,9 @@ def _redeclaration_findings(report: VerificationReport) -> tuple[ModeloVerificat
     return tuple(finding for finding in report.findings if finding.message_locale_key == _REDECLARATION_LOCALE_KEY)
 
 
-def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coordinate(tmp_path: Path) -> None:
+def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coordinate(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The M720 mesh admits only the prior annual coordinate declared by the work unit."""
     prior_observation = registry_grounded_modelo_observation(
         modelo=Modelo("720").value,
@@ -334,6 +338,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
                 bucket_event_repository=BucketEventHistoryRepository(),
             ),
             clock=_CLOCK_N_PLUS_1,
+            operation=operation,
         )
         work_unit_n2 = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -346,6 +351,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
                 bucket_event_repository=BucketEventHistoryRepository(),
             ),
             clock=_CLOCK_N_PLUS_1,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID, work_unit_repository=work_unit_repository
@@ -412,9 +418,11 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
     )
 
 
-def test_advisory_fires_through_real_verify_for_the_omitted_grown_cuentas_position(tmp_path: Path) -> None:
+def test_advisory_fires_through_real_verify_for_the_omitted_grown_cuentas_position(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A grown cuentas bloque absent from the declaration surfaces a non-blocking advisory."""
-    _revision, report = _calculate_and_verify(tmp_path=tmp_path, declare_cuentas=False)
+    _revision, report = _calculate_and_verify(tmp_path=tmp_path, declare_cuentas=False, operation=operation)
 
     findings = _redeclaration_findings(report)
     assert len(findings) == 1, f"expected exactly one re-declaration advisory, got {findings}"
@@ -440,14 +448,18 @@ def test_advisory_fires_through_real_verify_for_the_omitted_grown_cuentas_positi
     assert all(item.message_facts["group_code"] != "valores" for item in findings)
 
 
-def test_advisory_is_silent_when_the_grown_position_is_declared(tmp_path: Path) -> None:
+def test_advisory_is_silent_when_the_grown_position_is_declared(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Declaring the grown cuentas valuation withdraws the advisory."""
-    _revision, report = _calculate_and_verify(tmp_path=tmp_path, declare_cuentas=True)
+    _revision, report = _calculate_and_verify(tmp_path=tmp_path, declare_cuentas=True, operation=operation)
 
     assert _redeclaration_findings(report) == ()
 
 
-def test_declared_set_is_not_the_engine_zero_filled_casilla_values(tmp_path: Path) -> None:
+def test_declared_set_is_not_the_engine_zero_filled_casilla_values(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The advisory survives the engine's zero-fill of the undeclared valuation casilla.
 
     The engine materialises ``cuentas.valoracion`` as ``0`` even though the
@@ -456,7 +468,7 @@ def test_declared_set_is_not_the_engine_zero_filled_casilla_values(tmp_path: Pat
     guard permanently. This pins both halves: the zero-fill is real, and the
     advisory still fires.
     """
-    revision, report = _calculate_and_verify(tmp_path=tmp_path, declare_cuentas=False)
+    revision, report = _calculate_and_verify(tmp_path=tmp_path, declare_cuentas=False, operation=operation)
 
     assert revision.casilla_values[_CUENTAS_VALORACION] == Decimal("0"), (
         "expected the engine to zero-fill the undeclared valuation casilla; if this "

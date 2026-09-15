@@ -15,6 +15,7 @@ from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -42,6 +43,7 @@ def seed_revision_citing_transaction(
     state: CalculationRevisionState,
     period_code: str,
     bucket_id: str = _BUCKET_ID,
+    operation: PinnedAuthorityOperation,
 ) -> str:
     """Seed one real revision in ``state`` that cites ``transaction_id``."""
     period = Period.from_year_and_code(2026, period_code)
@@ -61,7 +63,9 @@ def seed_revision_citing_transaction(
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
     )
-    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:remove-draft-revision")
+    filing_instance_evidence = general_m303_filing_evidence(
+        period, reference="test:remove-draft-revision", operation=operation
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},

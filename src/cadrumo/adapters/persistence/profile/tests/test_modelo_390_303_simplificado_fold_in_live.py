@@ -62,8 +62,10 @@ from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
@@ -100,7 +102,12 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
+from cadrumo.domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
 from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports, build_verification_repository_bundle
@@ -120,7 +127,12 @@ _TAX_ID = "12345678Z"
 _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
 
 
-def _inward_export_ports(*, work_unit: object, calculation: object, filing: object) -> ModeloExportPorts:
+def _inward_export_ports(
+    *,
+    work_unit: WorkUnitCatalogueRepositoryProtocol,
+    calculation: CalculationRevisionCatalogueRepositoryProtocol,
+    filing: ModeloRecordCatalogueRepositoryProtocol,
+) -> ModeloExportPorts:
     """Provide inward fakes for authorities unused by this handoff gate."""
     authority = Mock()
     return ModeloExportPorts(
@@ -135,6 +147,7 @@ def _inward_export_ports(*, work_unit: object, calculation: object, filing: obje
         prorrata_register=authority,
         bienes_inversion=authority,
         transaction=authority,
+        draft_review_ports=Mock(),
     )
 
 
@@ -176,7 +189,9 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
     )
 
 
-def _non_agricultural_source_evidence(*, declared_quantity: Decimal = Decimal("1")) -> FilingInstanceEvidence:
+def _non_agricultural_source_evidence(
+    *, declared_quantity: Decimal = Decimal("1"), operation: PinnedAuthorityOperation
+) -> FilingInstanceEvidence:
     period = Period.from_year_and_code(_YEAR, "4T")
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
     scope = M303RegimenSimplificadoScopeDecision(
@@ -225,8 +240,9 @@ def _non_agricultural_source_evidence(*, declared_quantity: Decimal = Decimal("1
         rows=rows,
         regimen_snapshot=regimen_snapshot,
         dana_2024_eligibility=None,
+        operation=operation,
     )
-    baseline = general_m303_filing_evidence(period, reference="test:s84:source")
+    baseline = general_m303_filing_evidence(period, reference="test:s84:source", operation=operation)
     return baseline.model_copy(
         update={
             "m303": baseline.m303.model_copy(
@@ -282,7 +298,7 @@ def _verification_repositories_for_test(
 
 
 def _persist_presentado_source(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
@@ -294,18 +310,21 @@ def _persist_presentado_source(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
-    source_work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "4T"),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
-    evidence = _non_agricultural_source_evidence()
+    with _indexed_authority_for_test().operation() as operation:
+        source_work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "4T"),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
+    evidence = _non_agricultural_source_evidence(operation=operation)
     casilla_values = _source_values(evidence)
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=source_work_unit.work_unit_id,
@@ -378,13 +397,14 @@ def _replace_source_with_new_filed_revision(
     calculations: CalculationRevisionCatalogueRepository,
     filings: ModeloRecordCatalogueRepository,
     previous: CalculationRevision,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     """Replace the live 303 source through the real revision and filing catalogues."""
     source_work_unit = work_units.load().get(previous.work_unit_id)
     assert source_work_unit is not None
     previous_filing_id = source_work_unit.current_filing_record_id
     assert previous_filing_id is not None
-    evidence = _non_agricultural_source_evidence(declared_quantity=Decimal("2"))
+    evidence = _non_agricultural_source_evidence(declared_quantity=Decimal("2"), operation=operation)
     casilla_values = _source_values(evidence)
     replacement_id = derive_calculation_revision_id(
         work_unit_id=source_work_unit.work_unit_id,
@@ -479,18 +499,20 @@ def _calculate_m390_annual(
     filings: ModeloRecordCatalogueRepository,
 ):
     snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="390",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "0A"),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=work_units,
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-        clock=_T0,
-    )
+    with _indexed_authority_for_test().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="390",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_units,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         calculation_repository=calculations,
@@ -508,11 +530,11 @@ def _calculate_m390_annual(
 
 
 def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_revision(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A real PRESENTADO M303/4T source arrives as boxes 74--83, once only."""
     _store_ready_profile(secure_objects)
-    work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+    work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
 
     result = _calculate_m390_annual(
         secure_objects,
@@ -569,8 +591,7 @@ def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_re
 
 @pytest.mark.parametrize("corruption", ("alter_value", "delete_digest"))
 def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_handoff(
-    secure_objects: SecureObjectRepository,
-    corruption: str,
+    secure_objects: SecureObjectRepository, corruption: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Deleting or changing persisted non-default handoff data fails on real load.
 
@@ -581,7 +602,7 @@ def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_hand
     silently accept the altered typed handoff.
     """
     _store_ready_profile(secure_objects)
-    work_units, calculations, filings, _source = _persist_presentado_source(secure_objects)
+    work_units, calculations, filings, _source = _persist_presentado_source(secure_objects, operation=operation)
     target = _calculate_m390_annual(
         secure_objects,
         work_units=work_units,
@@ -632,12 +653,12 @@ def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_hand
 
 
 def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_filed(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A filed source is invalid as soon as the live pointer no longer names it."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
-        work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+        work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
             secure_objects,
             work_units=work_units,
@@ -672,12 +693,12 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
 
 
 def test_m390_refuses_a_non_presentado_source_calculation_revision(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """VERIFICADO_COMPLETO is not a substitute for the filed PRESENTADO source."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
-        work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+        work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
             secure_objects,
             work_units=work_units,
@@ -711,12 +732,12 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
 
 
 def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A target draft cannot be verified after its filed source receipt is superseded."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
-        work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+        work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
             secure_objects,
             work_units=work_units,
@@ -778,12 +799,11 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
 
 
 def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_file_and_export(
-    secure_objects: SecureObjectRepository,
-    tmp_path: Path,
+    secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """No later action trusts a stale carrier after source result/evidence replacement."""
     _store_ready_profile(secure_objects)
-    work_units, calculations, filings, source = _persist_presentado_source(secure_objects)
+    work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
     target = _calculate_m390_annual(
         secure_objects,
         work_units=work_units,
@@ -795,6 +815,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         calculations=calculations,
         filings=filings,
         previous=source,
+        operation=operation,
     )
     replacement_evidence = replacement.filing_instance_evidence
     source_evidence = source.filing_instance_evidence
@@ -844,7 +865,10 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         )
-    with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"):
+    with (
+        pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
+        _indexed_authority_for_test().operation() as operation,
+    ):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=verified_target.calculation_revision_id,
@@ -857,6 +881,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
                 calculation=calculations,
                 filing=filings,
             ),
+            operation=operation,
         )
 
 
@@ -883,10 +908,12 @@ def test_m390_registry_requires_all_ten_endpoints_and_rejects_the_retired_scalar
     )
 
 
-def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort_is_zero() -> None:
+def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort_is_zero(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """An unavailable official crosswalk cannot be turned into a zero default."""
     period = Period.from_year_and_code(_YEAR, "4T")
-    empty = general_m303_filing_evidence(period, reference="test:s84:proven-empty")
+    empty = general_m303_filing_evidence(period, reference="test:s84:proven-empty", operation=operation)
     assert empty.m303.regimen_simplificado.calculation_result.activities == ()
 
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
@@ -920,12 +947,13 @@ def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort
             rows=RegimenSimplificadoFilingRows(ejercicio=_YEAR, activities=(agricultural,)),
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
+            operation=operation,
         )
 
 
-def test_handoff_digest_and_post_identity_stamp_refuse_tampering() -> None:
+def test_handoff_digest_and_post_identity_stamp_refuse_tampering(*, operation: PinnedAuthorityOperation) -> None:
     """Carrier bytes survive a round trip but reject altered values or target id."""
-    evidence = _non_agricultural_source_evidence()
+    evidence = _non_agricultural_source_evidence(operation=operation)
     values = _source_values(evidence)
     source_result = evidence.m303.regimen_simplificado.calculation_result
     from cadrumo.domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
@@ -936,6 +964,8 @@ def test_handoff_digest_and_post_identity_stamp_refuse_tampering() -> None:
         source_calculation_revision_id="b" * 64,
         source_registry_revision_id="2010-y-siguientes",
         source_filing_year=_YEAR,
+        source_modelo="303",
+        source_period_code="4T",
         source_result_digest=source_result.digest,
         source_evidence_references=tuple(
             reference for activity in source_result.activities for reference in activity.evidence_references
@@ -944,6 +974,8 @@ def test_handoff_digest_and_post_identity_stamp_refuse_tampering() -> None:
         target_work_unit_id="c" * 64,
         target_registry_revision_id="2010-y-siguientes",
         target_filing_year=_YEAR,
+        target_modelo="390",
+        target_period_code="0A",
         values={
             _summary_casilla_ids()[0]: source_result.activities[0].cuota_resultante,
             _summary_casilla_ids()[1]: Decimal("0"),

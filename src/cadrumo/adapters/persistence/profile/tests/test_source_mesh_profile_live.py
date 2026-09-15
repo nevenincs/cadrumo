@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.source_profile import ProfileSourceResolver
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -57,12 +58,13 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
 
 def test_profile_source_resolver_fingerprints_storage_loaded_profile(
     secure_profile_backend: None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot = _modelo_100_snapshot()
     profile_record = _profile_with_ccaa("madrid")
     seed_test_profile_record(profile_record)
 
-    resolution = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
+    resolution = ProfileSourceResolver(registry_snapshot=snapshot, operation=operation).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="100",
@@ -73,7 +75,7 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
     )
 
     assert resolution.enum_binding_values[_CCAA_BINDING] == "madrid"
-    repeated = ProfileSourceResolver(registry_snapshot=snapshot).resolve(
+    repeated = ProfileSourceResolver(registry_snapshot=snapshot, operation=operation).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="100",

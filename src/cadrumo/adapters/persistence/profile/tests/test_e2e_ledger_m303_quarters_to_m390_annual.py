@@ -90,7 +90,7 @@ from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.models import InvoiceCatalogue
@@ -576,6 +576,7 @@ def _calculate_m303_quarter_revision(
     filing_year: int = _YEAR,
     taxpayer_nif: str = _TAX_ID,
     calculated_at: datetime = _FILE_AT,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision]:
     """Run the live bucket-aggregation M303 calc for one quarter without projecting filed observations."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -595,6 +596,7 @@ def _calculate_m303_quarter_revision(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     decision = _wallet_decision(
         period=period, filing_year=filing_year, taxpayer_nif=taxpayer_nif, decided_at=calculated_at
@@ -619,15 +621,18 @@ def _calculate_m303_quarter_revision(
             filing_instance_evidence=general_m303_filing_evidence(
                 typed_period,
                 reference=f"test:e2e-ledger-m303:{period}",
+                operation=operation,
             ),
             clock=calculated_at,
         ).revision
     return work_unit, revision
 
 
-def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, period: str) -> CalculationRevision:
+def _calculate_and_file_m303_quarter(
+    secure_objects: SecureObjectRepository, *, period: str, operation: PinnedAuthorityOperation
+) -> CalculationRevision:
     """Run the live bucket-aggregation M303 calc for one quarter and project its filed observation."""
-    work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period=period)
+    work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period=period, operation=operation)
     persist_filed_revision_observation(
         revision=revision,
         work_unit=work_unit,
@@ -640,8 +645,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
 
 
 def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
-    secure_objects: SecureObjectRepository,
-    tmp_path: Path,
+    secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Persona-like persisted ledger input verifies under the live revision and refuses its withdrawn export."""
     _store_profile(secure_objects)
@@ -653,7 +657,7 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
     event_repo = BucketEventHistoryRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
 
-    _work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period="1T")
+    _work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period="1T", operation=operation)
     assert Decimal(revision.casilla_values[_DEVENGADA_TOTAL]) == stored["1T"]["devengada"]
     assert Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]) == stored["1T"]["deducible"]
 
@@ -715,7 +719,9 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
     assert not output_path.exists()
 
 
-def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_year: int = _YEAR) -> CalculationRevision:
+def _calculate_m390_annual(
+    secure_objects: SecureObjectRepository, *, filing_year: int = _YEAR, operation: PinnedAuthorityOperation
+) -> CalculationRevision:
     """Run the live M390/annual calc, leaving the 303-reconciliation relations to fold."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -732,6 +738,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -757,8 +764,7 @@ def _non_official_local_chain_advisory_periods(report: VerificationReport) -> se
 
 
 def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export_refusal(
-    secure_objects: SecureObjectRepository,
-    tmp_path: Path,
+    secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Irene SL: 2024 M303 late local FILE chain feeds M390 without claiming AEAT acceptance.
 
@@ -793,6 +799,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
             filing_year=_IRENE_YEAR,
             taxpayer_nif=_IRENE_TAX_ID,
             calculated_at=_IRENE_FILE_AT,
+            operation=operation,
         )
         assert Decimal(revision.casilla_values[_DEVENGADA_TOTAL]) == stored[period]["devengada"]
         assert Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]) == stored[period]["deducible"]
@@ -880,7 +887,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
         assert stored_observation is not None
         assert stored_observation.source_kind == "app_filing"
 
-    annual = _calculate_m390_annual(secure_objects, filing_year=_IRENE_YEAR)
+    annual = _calculate_m390_annual(secure_objects, filing_year=_IRENE_YEAR, operation=operation)
     for m390_casilla, m303_output in (
         (_M390_DEVENGADA, _DEVENGADA_TOTAL),
         (_M390_DEDUCIBLE, _DEDUCIBLE_TOTAL),
@@ -948,7 +955,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
 
 
 def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The full yearly IVA cadence: persisted ledger → 4×M303 → M390 reconciliation."""
     _store_profile(secure_objects)
@@ -956,7 +963,7 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
 
     computed: ComputedM303CasillasByPeriod = {}
     for period in _QUARTER_ORDER:
-        revision = _calculate_and_file_m303_quarter(secure_objects, period=period)
+        revision = _calculate_and_file_m303_quarter(secure_objects, period=period, operation=operation)
 
         # Transport invariant #1: the computed cuota totals equal the IVA amounts
         # STORED on the persisted invoices (the aggregator sums the stored
@@ -991,7 +998,7 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
     result_values = [computed[p][_RESULTADO] for p in _QUARTER_ORDER]
     assert len(set(result_values)) == 4, f"quarterly resultado values must be distinct: {result_values}"
 
-    annual = _calculate_m390_annual(secure_objects)
+    annual = _calculate_m390_annual(secure_objects, operation=operation)
     casillas = annual.casilla_values
 
     # Transport invariant #2: M390 annual reconciliation folds the SUM of the four
@@ -1011,7 +1018,7 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
 
 
 def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_missing(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Laura regression: calculated nonzero 303 quarters must not become zero M390 reconciliation slots."""
     _store_profile(secure_objects)
@@ -1019,7 +1026,7 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
 
     computed: ComputedM303CasillasByPeriod = {}
     for period in _QUARTER_ORDER:
-        _work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period=period)
+        _work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period=period, operation=operation)
         computed[period] = {
             _DEVENGADA_TOTAL: Decimal(revision.casilla_values[_DEVENGADA_TOTAL]),
             _DEDUCIBLE_TOTAL: Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]),
@@ -1033,7 +1040,7 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     before_revision_ids = frozenset(cr_repo.load().revisions)
     with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-        _calculate_m390_annual(secure_objects)
+        _calculate_m390_annual(secure_objects, operation=operation)
     after_revision_ids = frozenset(cr_repo.load().revisions)
 
     assert after_revision_ids == before_revision_ids

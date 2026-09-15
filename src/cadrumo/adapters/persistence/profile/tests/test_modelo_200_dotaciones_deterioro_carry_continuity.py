@@ -44,6 +44,7 @@ from cadrumo.application.calculations.binding_prefill import resolve_bindings_fr
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -159,9 +160,13 @@ def _calculate_200(
     # bound casillas have a fact. Bindings the store cannot satisfy default to
     # zero — the present-or-zero-carry semantics (a first-year filer has no prior
     # stock), leaving the available-value projector a complete carry set.
-    prefilled = resolve_bindings_from_local_store(
-        snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
-    ).binding_values
+    with bundled_indexed_authority().operation() as operation:
+        prefilled = resolve_bindings_from_local_store(
+            snapshot,
+            operation=operation,
+            repository=obs_repo,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+        ).binding_values
     bound_binding_ids = {c.binding for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding}
     carry_defaults = {bid: Decimal("0") for bid in bound_binding_ids}
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
@@ -180,11 +185,12 @@ def _resolve_relations(*, filing_year: int, obs_repo: CalculationObservationRepo
     snapshot = compiled_bundled_authority().snapshot(
         _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
-    resolved = {
-        item.relation: item.value
-        for item in resolve_relations_from_local_store(snapshot, repository=obs_repo).values
-        if item.value is not None
-    }
+    with bundled_indexed_authority().operation() as operation:
+        resolved = {
+            item.relation: item.value
+            for item in resolve_relations_from_local_store(snapshot, operation=operation, repository=obs_repo).values
+            if item.value is not None
+        }
     resolved.setdefault(_M200_PAGOS_RELATION, Decimal("0"))
     resolved.setdefault(_M200_PAGOS_RELATION_40_2, Decimal("0"))
     return resolved

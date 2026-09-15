@@ -61,6 +61,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -269,6 +270,7 @@ def _calculate_m100_annual(
     secure_objects: SecureObjectRepository,
     *,
     binding_values: dict[BindingId, Decimal] | None = None,
+    operation: PinnedAuthorityOperation,
 ):
     """Run the live M100/2024/0A calculate over the seeded bucket.
 
@@ -293,6 +295,7 @@ def _calculate_m100_annual(
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -310,7 +313,9 @@ def _calculate_m100_annual(
         )
 
 
-def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(secure_objects: SecureObjectRepository) -> None:
+def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     """E2E: the four filed M130 quarters fold into the annual M100 0604.
 
     With four M130/2024 quarters recorded as filed observations (each carrying
@@ -326,7 +331,7 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(secure_objects:
     assert seeded_total == _EXPECTED_M130_TOTAL
     assert seeded_total > Decimal("0")
 
-    result = _calculate_m100_annual(secure_objects)
+    result = _calculate_m100_annual(secure_objects, operation=operation)
 
     casilla_0604 = Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA])
     # M131 c15 folds to zero by not-applicable profile evidence; 0604 == sum(M130 c19).
@@ -356,12 +361,13 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(secure_objects:
 
 
 def test_m100_explicit_m130_binding_resolves_relation_formula_without_m131_filing(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The public --binding override reaches M100 0604's relation formula."""
     result = _calculate_m100_annual(
         secure_objects,
         binding_values={_M130_PAGOS_BINDING_ID: _EXPECTED_M130_TOTAL},
+        operation=operation,
     )
 
     assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == _EXPECTED_M130_TOTAL
@@ -375,13 +381,13 @@ def test_m100_explicit_m130_binding_resolves_relation_formula_without_m131_filin
 
 
 def test_m100_partial_prior_m130_filings_leave_0604_unresolved_with_diagnostic(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A partial prior M130 set leaves 0604 blank and names the missing relation."""
     obs_repo = CalculationObservationRepository()
     _seed_m130_quarters(obs_repo=obs_repo, periods=("1T", "2T"))
 
-    result = _calculate_m100_annual(secure_objects)
+    result = _calculate_m100_annual(secure_objects, operation=operation)
 
     assert _M100_PAGOS_CASILLA not in result.revision.casilla_values
     assert any(
@@ -393,10 +399,10 @@ def test_m100_partial_prior_m130_filings_leave_0604_unresolved_with_diagnostic(
 
 
 def test_m100_no_prior_m130_filing_leaves_0604_unresolved_with_diagnostic(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """An absent prior M130 set leaves 0604 blank and names the missing relation."""
-    result = _calculate_m100_annual(secure_objects)
+    result = _calculate_m100_annual(secure_objects, operation=operation)
 
     assert _M100_PAGOS_CASILLA not in result.revision.casilla_values
     assert any(

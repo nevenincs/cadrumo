@@ -14,7 +14,9 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 
 from .....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
@@ -304,7 +306,9 @@ def _contracts(
     """Build a public contract whose operation/action join is explicit."""
     definition = build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=build_censal_fetch_port(),
     ).model_copy(
         update={
             "action_reference": ActionReference(action_id=action_id),

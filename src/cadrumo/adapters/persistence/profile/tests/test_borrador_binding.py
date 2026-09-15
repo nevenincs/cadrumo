@@ -36,6 +36,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -186,6 +187,8 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         Borrador100SnapshotRepository,
         SecureObjectRepository,
     ],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
@@ -200,6 +203,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
         ),
+        operation=operation,
     )
     snapshot_id = _save_snapshot(
         snapshot_repository,
@@ -270,6 +274,8 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
         Borrador100SnapshotRepository,
         SecureObjectRepository,
     ],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
@@ -284,6 +290,7 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
         ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
         ),
+        operation=operation,
     )
     snapshot_id = _save_snapshot(
         snapshot_repository,

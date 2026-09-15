@@ -19,7 +19,12 @@ from cadrumo.application.aggregation.iva_ledger import (
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -94,18 +99,21 @@ def _transaction(
     )
 
 
-def _pure_projection(catalogue: TransactionCatalogue, *, period: Period) -> IvaLedgerAggregation:
+def _pure_projection(
+    catalogue: TransactionCatalogue, *, period: Period, operation: PinnedAuthorityOperation
+) -> IvaLedgerAggregation:
     return aggregate_iva_ledger_observations(
         catalogue,
         period=period,
         ledger_profile_id=_PARITY_BUCKET_ID,
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=_PARITY_BUCKET_ID,
+        operation=operation,
     )
 
 
 def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_quarter_devengo(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The persisted read path must reproduce the in-memory projection exactly.
 
@@ -134,7 +142,7 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
             ),
         )
         catalogue = TransactionCatalogue.from_transactions((cash_purchase,))
-        pure = _pure_projection(catalogue, period=_Q1_2026)
+        pure = _pure_projection(catalogue, period=_Q1_2026, operation=operation)
 
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PARITY_BUCKET_ID) as profile:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(catalogue)

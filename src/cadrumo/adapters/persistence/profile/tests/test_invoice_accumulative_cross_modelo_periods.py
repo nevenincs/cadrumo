@@ -70,6 +70,7 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.invoices.transaction_linking import link_invoice_transaction_catalogues
 from cadrumo.application.modelo.calculation_actions import (
+    BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
@@ -109,7 +110,10 @@ def _build_catalogue_invoice(**kwargs: Any) -> Any:
     return build_catalogue_invoice(**kwargs)
 
 
-def _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(work_unit_id: str, **kwargs: Any) -> Any:
+def _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    work_unit_id: str,
+    **kwargs: Any,
+) -> BucketAggregationCalculationResult:
     repository = kwargs.pop("work_unit_repository", None)
     for key in ("calculation_repository", "transaction_repository", "invoice_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
@@ -392,17 +396,25 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
+        filing_instance_evidence = general_m303_filing_evidence(
+            work_unit.period,
+            reference="test:invoice-accumulative-cross-modelo",
+            operation=operation,
+        )
     decision = _wallet_decision(period=period)
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
     revision = _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -418,9 +430,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         clock=_FILE_AT,
-        filing_instance_evidence=general_m303_filing_evidence(
-            work_unit.period, reference="test:invoice-accumulative-cross-modelo"
-        ),
+        filing_instance_evidence=filing_instance_evidence,
     ).revision
     # A Modelo 303 filing carries a resolved result disposition. Resolve it
     # through the production boundary against the seeded profile rather than
@@ -448,17 +458,20 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="390",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "0A"),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="390",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values={},
@@ -476,17 +489,20 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("130", filing_year=_YEAR, period=period)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="130",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="130",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
     revision = _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=_M130_MANUAL_INPUTS,
@@ -535,17 +551,20 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "0A"),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values=_m100_non_relation_zero_bindings(secure_objects),

@@ -25,6 +25,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....core.period import Period
 from ..invoice_extraction_prompt import (
     render_invoice_extraction_prompt,
@@ -85,7 +87,7 @@ def test_a_subset_emits_exactly_that_many_contracts(size: int) -> None:
     assert len(prompt.text) < len(build_invoice_extraction_prompt(period=_PERIOD).text)
 
 
-def test_both_entry_points_honour_the_same_selection() -> None:
+def test_both_entry_points_honour_the_same_selection(*, operation: PinnedAuthorityOperation) -> None:
     """A selection one entry point accepts and the other ignores is worse than neither.
 
     ``build`` resolves authority values and delegates, so the two must agree by
@@ -96,7 +98,7 @@ def test_both_entry_points_honour_the_same_selection() -> None:
     chosen = _DECLARED[:4]
     built = build_invoice_extraction_prompt(period=_PERIOD, fields=chosen)
     rendered = render_invoice_extraction_prompt(
-        values=resolve_invoice_extraction_authority_values(period=_PERIOD),
+        values=resolve_invoice_extraction_authority_values(period=_PERIOD, operation=operation),
         fields=chosen,
     )
 

@@ -38,7 +38,7 @@ _HEX_DIGEST = "a" * 64
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
-_SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None, tuple[str, ...]], RegistrySchemaAccessor] = {}
+_SCHEMA_PROVIDER_CACHE: dict[tuple[int, str, tuple[str, ...]], RegistrySchemaAccessor] = {}
 
 
 def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerSnapshot:
@@ -251,8 +251,8 @@ def _narrative() -> str:
 
 def _schema_provider(
     *,
-    filing_year: int | None = None,
-    period: str | None = None,
+    filing_year: int,
+    period: str,
     modelos: tuple[str, ...] = ("130",),
 ) -> RegistrySchemaAccessor:
     """Return a real registry schema provider, cached per period selector."""
@@ -260,9 +260,7 @@ def _schema_provider(
     key = (filing_year, period, selected_modelos)
     provider = _SCHEMA_PROVIDER_CACHE.get(key)
     if provider is None:
-        typed_period = (
-            Period.from_year_and_code(filing_year, period) if filing_year is not None and period is not None else None
-        )
+        typed_period = Period.from_year_and_code(filing_year, period)
         provider = build_runtime_schema_provider(
             filing_year=filing_year,
             period=typed_period,
@@ -334,7 +332,7 @@ def _approved_registry_draft():
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
-        schema_provider=_schema_provider(),
+        schema_provider=_schema_provider(filing_year=_PERIOD.filing_year, period="1T"),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -473,7 +471,7 @@ def _approved_modelo_111_registry_draft():
             _M111_IMAGEN_RETENCIONES_CASILLA: Decimal("9.00"),
             _M111_PREVIOUS_RESULT_CASILLA: Decimal("40.00"),
         },
-        schema_provider=_schema_provider(modelos=("111",)),
+        schema_provider=_schema_provider(filing_year=_PERIOD.filing_year, period="1T", modelos=("111",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -492,7 +490,7 @@ def _approved_modelo_115_registry_draft():
             _M115_BASE_CASILLA: Decimal("1250.50"),
             _M115_PREVIOUS_RESULT_CASILLA: Decimal("10.00"),
         },
-        schema_provider=_schema_provider(modelos=("115",)),
+        schema_provider=_schema_provider(filing_year=_PERIOD.filing_year, period="1T", modelos=("115",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -517,7 +515,7 @@ def _approved_modelo_123_registry_draft():
             _M123_INGRESOS_CUENTA_INPUT_CASILLA: Decimal("7.50"),
             _M123_MINORACION_CASILLA: Decimal("12.25"),
         },
-        schema_provider=_schema_provider(modelos=("123",)),
+        schema_provider=_schema_provider(filing_year=_PERIOD.filing_year, period="1T", modelos=("123",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 

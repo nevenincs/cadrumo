@@ -41,6 +41,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -158,6 +159,7 @@ def _run_carry_chain(
     tmp_path: Path,
     devengada_cuota: Decimal,
     deducible_cuota: Decimal,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Decimal, Decimal]:
     """Drive the full 4T/N -> 1T/N+1 carry; return (year-N saldo, year-N+1 casilla 110)."""
 
@@ -191,7 +193,7 @@ def _run_carry_chain(
         )
 
         snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-        relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
+        relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo, operation=operation)
         resolved: dict[RelationId, Decimal] = {
             item.relation: item.value for item in relation_values.values if item.value is not None
         }
@@ -216,9 +218,7 @@ def _run_carry_chain(
     ids=["baseline-42", "credit-90", "pure-credit-42", "credit-150"],
 )
 def test_carry_in_tracks_prior_period_saldo_magnitude(
-    tmp_path: Path,
-    devengada_cuota: Decimal,
-    deducible_cuota: Decimal,
+    tmp_path: Path, devengada_cuota: Decimal, deducible_cuota: Decimal, *, operation: PinnedAuthorityOperation
 ) -> None:
     """1T/N+1 casilla 110 equals the engine-_produced 4T/N saldo at every credit magnitude.
 
@@ -241,6 +241,7 @@ def test_carry_in_tracks_prior_period_saldo_magnitude(
         tmp_path=tmp_path,
         devengada_cuota=devengada_cuota,
         deducible_cuota=deducible_cuota,
+        operation=operation,
     )
 
     assert carried_saldo > Decimal("0")

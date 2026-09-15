@@ -103,6 +103,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
+from cadrumo.entrypoints.live_state_composition import compose_live_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -222,6 +223,7 @@ def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_
                 ("303", 2026, "1T", _SYNTHETIC_EXPEDIENTE_ID): ("CSV30320261T",),
             },
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
         ).calculation_observation_keys
         loaded = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
 
@@ -240,6 +242,7 @@ def test_filed_capture_best_effort_finalizer_reports_incomplete_observation(tmp_
             (observation,),
             justificante_csvs_by_observation={},
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
         )
 
         stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
@@ -270,6 +273,7 @@ def test_filed_capture_fail_fast_finalizer_raises_on_incomplete_observation(tmp_
                 (observation,),
                 justificante_csvs_by_observation={},
                 policy=FiledCaptureFailurePolicy.FAIL_FAST,
+                ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
             )
 
         stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
@@ -328,7 +332,11 @@ def test_capture_finalizer_persists_in_the_shared_selection_and_ordering_authori
 
     # The finalizer persists those same keys in that same order via the shared authority.
     with _secure_backend(tmp_path / "finalizer"):
-        finalization = finalize_filed_capture(observations, policy=FiledCaptureFailurePolicy.BEST_EFFORT)
+        finalization = finalize_filed_capture(
+            observations,
+            policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path / "finalizer"),
+        )
 
     assert finalization.failures == ()
     assert finalization.calculation_observation_keys == ("303:2025:4T", "303:2026:1T")
@@ -353,7 +361,10 @@ def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tm
         presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
     )
     with _secure_backend(tmp_path):
-        strict_keys = persistiva_compensation_history_observations_strict((observation,))
+        strict_keys = persistiva_compensation_history_observations_strict(
+            (observation,),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
+        )
         strict_history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
 
     assert strict_keys == ("303:2026:1T",)
@@ -446,6 +457,7 @@ def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_p
                     presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
         )
 
         history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
@@ -858,6 +870,11 @@ def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(
                 ),
             ),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+            ports=_filed_ports(
+                bucket_id=_SESSION_BUCKET_ID,
+                root=tmp_path,
+                calculation_repository=repository,
+            ),
         ).calculation_observation_keys
 
         stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
@@ -886,6 +903,7 @@ def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observatio
                     presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
         )
 
         history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
@@ -907,6 +925,7 @@ def test_iva_history_strict_persist_ignores_non_alta_only_period(tmp_path: Path)
                     presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
         )
 
         assert keys == ()
@@ -921,7 +940,10 @@ def test_iva_history_strict_persist_refuses_non_303_before_writing(tmp_path: Pat
 
     with _secure_backend(tmp_path):
         with pytest.raises(LiveApplicationInputError) as error:
-            persistiva_compensation_history_observations_strict((non_303,))
+            persistiva_compensation_history_observations_strict(
+                (non_303,),
+                ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
+            )
 
         assert error.value.translated_message == "live.errors.iva_history_modelo_303_only"
         assert error.value.context == {"modelo": "130"}
@@ -945,6 +967,11 @@ def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(
                 ),
             ),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+            ports=_filed_ports(
+                bucket_id=_SESSION_BUCKET_ID,
+                root=tmp_path,
+                calculation_repository=repository,
+            ),
         )
 
         stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
@@ -987,7 +1014,9 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
         assert history.source_artefact_sha256 == hashlib.sha256(b"303-2026-1T-submitted-file").hexdigest()
         assert history.source_observation_key == f"303:2026:1T:{_SYNTHETIC_EXPEDIENTE_ID}"
 
-        listed = list_iva_compensation_history()
+        listed = list_iva_compensation_history(
+            ports=compose_live_state(output_root=tmp_path, bucket_id=_SESSION_BUCKET_ID).iva_remote_state_port,
+        )
         assert listed.row_count == 1
         assert not hasattr(listed.rows[0], "taxpayer_nif")
 
@@ -1076,8 +1105,14 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
             ),
         )
 
-        keys = persistiva_compensation_history_observations_strict(observations)
-        history = list_iva_compensation_history(as_of_year=2026)
+        keys = persistiva_compensation_history_observations_strict(
+            observations,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
+        )
+        history = list_iva_compensation_history(
+            ports=compose_live_state(output_root=tmp_path, bucket_id=_SESSION_BUCKET_ID).iva_remote_state_port,
+            as_of_year=2026,
+        )
 
         rows_by_period = {(row.year, row.period): row for row in history.rows}
         lots_by_period = {(lot.source_filing_year, lot.source_period): lot for lot in history.carry_forward_lots}
@@ -1764,6 +1799,7 @@ def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path:
         single_finalization = finalize_filed_capture(
             (observation,),
             policy=FiledCaptureFailurePolicy.FAIL_FAST,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path / "single"),
         )
         single_row = CalculationObservationRepository().load_observation("130", period)
 
@@ -1775,6 +1811,7 @@ def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path:
         discovered_finalization = finalize_filed_capture(
             (observation,),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path / "discovered"),
         )
         discovered_row = CalculationObservationRepository().load_observation("130", period)
 
@@ -1806,7 +1843,11 @@ def test_no_discovery_signal_token_reaches_the_observation_provenance(tmp_path: 
     from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 
     with _secure_backend(tmp_path):
-        finalize_filed_capture((_filed_130_observation(),), policy=FiledCaptureFailurePolicy.BEST_EFFORT)
+        finalize_filed_capture(
+            (_filed_130_observation(),),
+            policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
+        )
         row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
 
     assert row is not None

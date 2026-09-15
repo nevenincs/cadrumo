@@ -37,7 +37,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
@@ -167,7 +167,7 @@ def test_verify_emits_passed_event_on_success(repos: Repos) -> None:
     assert event.payload["completeness_status"] == "complete"
 
 
-def test_verify_emits_refused_event_on_missing_casilla(repos: Repos) -> None:
+def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
     """verify_modelo_revision emits ``modelo.verification.refused``
     when a required casilla is missing; the calculation revision
     stays DRAFT and the refusal lands in the bucket event log."""
@@ -194,6 +194,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos) -> None:
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(

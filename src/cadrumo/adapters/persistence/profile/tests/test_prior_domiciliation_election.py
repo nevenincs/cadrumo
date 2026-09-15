@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
@@ -49,13 +51,21 @@ _EVIDENCE_REFERENCE = "CSV-303-2025-1T-S21"
 _DECLARATION_TYPE_LOCATOR = "modelo-303-page-01:declaration-type:13:1"
 
 
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 def _submitted_file_declaration_type(
     value: str,
     *,
     locator: str = _DECLARATION_TYPE_LOCATOR,
 ) -> ObservedHeaderFact:
+    with bundled_indexed_authority().operation() as operation:
+        header_key = m303_declaration_type_header_key(filing_year=2025, period="1T", operation=operation)
     return ObservedHeaderFact(
-        header_key=m303_declaration_type_header_key(filing_year=2025, period="1T"),
+        header_key=header_key,
         value=value,
         source_artefact_kind="submitted_file",
         source_locator=locator,
@@ -177,7 +187,10 @@ def _baseline_filing(work_unit: WorkUnit) -> ModeloRecord:
     )
 
 
-def test_keep_is_neutral_and_needs_no_filing_evidence(tmp_path: Path) -> None:
+def test_keep_is_neutral_and_needs_no_filing_evidence(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The default is a safe no-op rather than an inferred change request."""
     work_unit = _work_unit()
     revision = _revision(work_unit, amendment_kind=None)
@@ -189,6 +202,7 @@ def test_keep_is_neutral_and_needs_no_filing_evidence(tmp_path: Path) -> None:
             revision=revision,
             filing_repository=ModeloRecordCatalogueRepository(objects=profile.repository),
             observation_repository=CalculationObservationRepository(objects=profile.repository),
+            operation=authority_operation,
         )
 
     assert projection.election is PriorDomiciliationElection.KEEP
@@ -215,6 +229,7 @@ def test_cancel_or_modify_refuses_raw_unsupported_and_non_rectificativa_requests
     election: object,
     modelo: str,
     amendment_kind: CalculationRevisionAmendmentKind | None,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """No untyped marker or unsupported filing shape can reach evidence lookup."""
     work_unit = _work_unit(modelo=modelo)
@@ -238,6 +253,7 @@ def test_cancel_or_modify_refuses_raw_unsupported_and_non_rectificativa_requests
             revision=revision,
             filing_repository=ModeloRecordCatalogueRepository(objects=profile.repository),
             observation_repository=CalculationObservationRepository(objects=profile.repository),
+            operation=authority_operation,
         )
 
 
@@ -334,6 +350,7 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
     source_headers: tuple[ObservedHeaderFact, ...],
     result_disposition: ResultDispositionProjection,
     metadata_csv: str,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A persisted observation is insufficient unless its whole official U chain joins."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -376,10 +393,14 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
                 revision=revision,
                 filing_repository=filing_repository,
                 observation_repository=observation_repository,
+                operation=authority_operation,
             )
 
 
-def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(tmp_path: Path) -> None:
+def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The accepted route uses real encrypted storage and exposes no account material."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         work_unit = _work_unit()
@@ -420,6 +441,7 @@ def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(tmp_path
             revision=revision,
             filing_repository=filing_repository,
             observation_repository=observation_repository,
+            operation=authority_operation,
         )
 
     assert projection.election is PriorDomiciliationElection.CANCEL_OR_MODIFY

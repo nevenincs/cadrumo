@@ -41,7 +41,12 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -69,8 +74,20 @@ _OPERATOR_PROFILE_ID = "30300000-0000-4000-8000-000000000001"
 _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
 
+def _seed_profile_record(record: UserProfileRecord) -> None:
+    """Persist one fixture record while its governed validation authority is pinned."""
+    with _indexed_authority_for_test().operation():
+        seed_test_profile_record(record)
+
+
+def _replace_profile_record(record: UserProfileRecord) -> UserProfileRecord:
+    """Replace one fixture record under the same pinned validation authority."""
+    with _indexed_authority_for_test().operation():
+        return replace_test_profile_record(record)
+
+
 def _store_incomplete_profile(bucket_id: str) -> None:
-    seed_test_profile_record(
+    _seed_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
@@ -83,7 +100,7 @@ def _store_incomplete_profile(bucket_id: str) -> None:
 
 
 def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
-    seed_test_profile_record(
+    _seed_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
@@ -96,7 +113,7 @@ def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
 
 
 def _store_profile_without_activity(bucket_id: str) -> None:
-    seed_test_profile_record(
+    _seed_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
@@ -129,7 +146,7 @@ def _store_ready_profile(
     activity_start_date: date,
     setup_state: ProfileSetupState = ProfileSetupState.COMPLETE,
 ) -> None:
-    seed_test_profile_record(
+    _seed_profile_record(
         _create_profile_record_for_test(
             setup_state=setup_state,
             profile_id=bucket_id,
@@ -159,7 +176,7 @@ def _store_ready_profile(
 
 
 def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
-    seed_test_profile_record(
+    _seed_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
@@ -194,7 +211,7 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
     must file Modelo 210 (IRNR) rather than Modelo 100 (the resident IRPF
     Renta).
     """
-    seed_test_profile_record(
+    _seed_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
@@ -294,7 +311,10 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _store_incomplete_profile(_OPERATOR_PROFILE_ID)
 
-        with pytest.raises(ModeloProfileReadinessError):
+        with (
+            pytest.raises(ModeloProfileReadinessError),
+            _indexed_authority_for_test().operation() as operation,
+        ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
@@ -302,6 +322,7 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
                 period=Period.from_year_and_code(2025, "1T"),
                 revision_id=_M303_2025_REVISION,
                 clock=_NOW,
+                operation=operation,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=WorkUnitCatalogueRepository(),
                     bucket_event_repository=BucketEventHistoryRepository(),
@@ -314,7 +335,10 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
         _store_profile_without_activity(_OPERATOR_PROFILE_ID)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            _indexed_authority_for_test().operation() as operation,
+        ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("130").value,
@@ -326,6 +350,7 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
                 ),
                 clock=_NOW,
+                operation=operation,
             )
 
         from dev.registry.tests.profile_schema_support import load_user_profile_schema
@@ -359,7 +384,10 @@ def test_create_work_unit_service_refuses_profile_declaring_no_facts_whatsoever(
         _store_profile_with_no_facts_whatsoever(_OPERATOR_PROFILE_ID)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
-        with pytest.raises(ModeloProfileReadinessError):
+        with (
+            pytest.raises(ModeloProfileReadinessError),
+            _indexed_authority_for_test().operation() as operation,
+        ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("130").value,
@@ -371,6 +399,7 @@ def test_create_work_unit_service_refuses_profile_declaring_no_facts_whatsoever(
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
                 ),
                 clock=_NOW,
+                operation=operation,
             )
 
         assert len(repository.load()) == 0
@@ -381,7 +410,10 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
-        with pytest.raises(WorkUnitMutationRefusedError) as excinfo:
+        with (
+            pytest.raises(WorkUnitMutationRefusedError) as excinfo,
+            _indexed_authority_for_test().operation() as operation,
+        ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
@@ -393,6 +425,7 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
                 ),
                 clock=_NOW,
+                operation=operation,
             )
 
         assert excinfo.value.translated_message == "application.modelo.errors.work_unit_filing_year_period_mismatch"
@@ -421,7 +454,10 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
         _store_nonresident_legal_entity_profile(_NONRESIDENT_PROFILE_ID)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            _indexed_authority_for_test().operation() as operation,
+        ):
             create_work_unit(
                 bucket_id=_NONRESIDENT_PROFILE_ID,
                 modelo=Modelo("200").value,
@@ -433,6 +469,7 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
                 ),
                 clock=_NOW,
+                operation=operation,
             )
 
         assert "NON_RESIDENT_IRNR" in str(excinfo.value)
@@ -452,9 +489,12 @@ def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tm
         repository = WorkUnitCatalogueRepository()
         work_unit = _store_work_unit(repository, bucket_id=_OPERATOR_PROFILE_ID)
 
-        with pytest.raises(ModeloProfileReadinessError), calculation_ports_for_test(
-            bucket_id=work_unit.bucket_id, work_unit_repository=repository
-        ) as _calculation_ports_461:
+        with (
+            pytest.raises(ModeloProfileReadinessError),
+            calculation_ports_for_test(
+                bucket_id=work_unit.bucket_id, work_unit_repository=repository
+            ) as _calculation_ports_461,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -489,9 +529,12 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
             revision_id=_M100_REVISION,
         )
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo, calculation_ports_for_test(
-            bucket_id=work_unit.bucket_id, work_unit_repository=repository
-        ) as _calculation_ports_496:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            calculation_ports_for_test(
+                bucket_id=work_unit.bucket_id, work_unit_repository=repository
+            ) as _calculation_ports_496,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -692,7 +735,10 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            _indexed_authority_for_test().operation() as operation,
+        ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
@@ -704,6 +750,7 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
                 ),
                 clock=_NOW,
+                operation=operation,
             )
 
         assert "pre-activity period" in str(excinfo.value)
@@ -723,7 +770,10 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 7, 15))
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            _indexed_authority_for_test().operation() as operation,
+        ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("130").value,
@@ -735,6 +785,7 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
                 ),
                 clock=_NOW,
+                operation=operation,
             )
 
         assert "Modelo 130 2026 2T is before" in str(excinfo.value)
@@ -821,7 +872,9 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
         assert len(calculation_repository.load()) == 1
 
 
-def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) -> None:
+def test_first_active_m303_period_allows_create_and_calculate(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     period = Period.from_year_and_code(2026, "2T")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
@@ -829,18 +882,20 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         wallet_repository = IvaWalletDecisionRepository(objects=profile.repository)
 
-        work_unit = create_work_unit(
-            bucket_id=_OPERATOR_PROFILE_ID,
-            modelo=Modelo("303").value,
-            filing_year=2026,
-            period=period,
-            revision_id=_M303_2026_REVISION,
-            ports=WorkLifecyclePorts(
-                work_unit_repository=work_repository,
-                bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
-            ),
-            clock=_NOW,
-        )
+        with _indexed_authority_for_test().operation() as operation:
+            work_unit = create_work_unit(
+                bucket_id=_OPERATOR_PROFILE_ID,
+                modelo=Modelo("303").value,
+                filing_year=2026,
+                period=period,
+                revision_id=_M303_2026_REVISION,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=work_repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                ),
+                clock=_NOW,
+                operation=operation,
+            )
         with calculation_ports_for_test(
             bucket_id=work_unit.bucket_id,
             calculation_repository=calculation_repository,
@@ -854,6 +909,7 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period,
                     reference="test:profile-readiness:first-active-m303",
+                    operation=operation,
                 ),
                 clock=_NOW,
             )
@@ -887,6 +943,10 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
                 name="renamed stale work",
                 actor="operator",
                 catalogue=work_repository.load(),
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=work_repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                ),
             )
 
         assert "pre-activity period" in str(excinfo.value)
@@ -910,7 +970,10 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
             setup_state=ProfileSetupState.INCOMPLETE,
         )
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            _indexed_authority_for_test().operation() as operation,
+        ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
@@ -918,6 +981,7 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
                 period=Period.from_year_and_code(2025, "1T"),
                 revision_id=_M303_2025_REVISION,
                 clock=_NOW,
+                operation=operation,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=WorkUnitCatalogueRepository(),
                     bucket_event_repository=BucketEventHistoryRepository(),
@@ -946,7 +1010,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     ``require_profile_ready_for_modelo_work`` directly.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
-        seed_test_profile_record(
+        _seed_profile_record(
             _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_OPERATOR_PROFILE_ID,
@@ -969,11 +1033,14 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             revision_id=_M303_2025_REVISION,
         )
         record = load_test_profile_record(_OPERATOR_PROFILE_ID)
-        replace_test_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
+        _replace_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo, calculation_ports_for_test(
-            bucket_id=work_unit.bucket_id, work_unit_repository=repository
-        ) as _calculation_ports_955:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            calculation_ports_for_test(
+                bucket_id=work_unit.bucket_id, work_unit_repository=repository
+            ) as _calculation_ports_955,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",

@@ -104,7 +104,7 @@ def _read_and_stage_leaf(
     stage_machine_secret_payload(read_machine_secret_payload(model, selection=selection))
 
 
-def _resolve_login_target_or_refuse(raw: str):
+def _resolve_login_target_or_refuse(raw: str) -> ProfileBucketPointer:
     """Resolve a profile target, converting label ambiguity to the CLI refusal.
 
     `resolve_login_target` surfaces `ProfileLabelAmbiguousError`, a WorkflowError

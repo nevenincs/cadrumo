@@ -682,6 +682,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         from .....application.user_profile.projections import record_to_path_values, record_to_values
         from .....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
         from .....core.bucket_pointer import resolve_active_bucket_id
+        from .....domain.calculations.registry.authority import bundled_indexed_authority
         from .....domain.user_profile.errors import ProfileNotFoundError
         from ....persistence.storage.master_key.active_session import active_bucket_session_serves
 
@@ -709,16 +710,21 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         if not active_bucket_session_serves(bucket_id):
             context["identity_alignment"] = "profile_record_locked"
             return context
-        try:
-            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-        except ProfileNotFoundError:
-            return context
+        with bundled_indexed_authority().operation() as operation:
+            try:
+                profile_decode_context = operation.profile_decode_context()
+                record = ProfileRecordRepository.for_current_session(
+                    bucket_id,
+                    profile_decode_context=profile_decode_context,
+                ).load(bucket_id)
+            except ProfileNotFoundError:
+                return context
 
-        path_values = record_to_path_values(record)
-        profile_identity = tax_id_identity_token(str(path_values.get("identity.tax_id") or ""))
-        if not profile_identity:
-            selector_values = record_to_values(record)
-            profile_identity = str(selector_values.get("tax.id") or "").strip().upper()
+            path_values = record_to_path_values(record)
+            profile_identity = tax_id_identity_token(str(path_values.get("identity.tax_id") or ""))
+            if not profile_identity:
+                selector_values = record_to_values(record, schema=profile_decode_context.schema)
+                profile_identity = str(selector_values.get("tax.id") or "").strip().upper()
         context["profile_record_present"] = True
         context["profile_tax_id_present"] = bool(profile_identity)
         context["profile_tax_id_fingerprint"] = _diagnostic_fingerprint(profile_identity)

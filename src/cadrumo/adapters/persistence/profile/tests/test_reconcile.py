@@ -31,6 +31,7 @@ from cadrumo.application.modelo.reconciliation_records import (
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -79,7 +80,7 @@ def _stored_work_unit(work_unit_id: str) -> WorkUnit:
     return work_unit
 
 
-def test_modelo_reconcile_matches_when_modelo_and_year_align() -> None:
+def test_modelo_reconcile_matches_when_modelo_and_year_align(operation: PinnedAuthorityOperation) -> None:
     """The modelo_130 fixture is modelo=130, ejercicio=2026, period=1T.
     A work unit with matching modelo+filing_year yields MATCHES."""
 
@@ -91,6 +92,7 @@ def test_modelo_reconcile_matches_when_modelo_and_year_align() -> None:
             source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
         ),
+        operation=operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
@@ -98,7 +100,7 @@ def test_modelo_reconcile_matches_when_modelo_and_year_align() -> None:
     assert report.work_unit_id == work_unit_id
 
 
-def test_modelo_reconcile_mismatches_when_modelo_differs() -> None:
+def test_modelo_reconcile_mismatches_when_modelo_differs(operation: PinnedAuthorityOperation) -> None:
     """A modelo=303 work unit reconciled against the modelo_130
     fixture produces a MISMATCHES verdict with the modelo diff."""
 
@@ -110,6 +112,7 @@ def test_modelo_reconcile_mismatches_when_modelo_differs() -> None:
             source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
         ),
+        operation=operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
@@ -119,7 +122,7 @@ def test_modelo_reconcile_mismatches_when_modelo_differs() -> None:
     assert modelo_diffs[0].evidence_value == "130"
 
 
-def test_modelo_reconcile_mismatches_when_period_differs() -> None:
+def test_modelo_reconcile_mismatches_when_period_differs(operation: PinnedAuthorityOperation) -> None:
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
 
     report = modelo_reconcile(
@@ -128,6 +131,7 @@ def test_modelo_reconcile_mismatches_when_period_differs() -> None:
             source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
         ),
+        operation=operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
@@ -137,7 +141,7 @@ def test_modelo_reconcile_mismatches_when_period_differs() -> None:
     assert period_diffs[0].evidence_value == "1T"
 
 
-def test_modelo_reconcile_mismatches_when_profile_tax_id_differs() -> None:
+def test_modelo_reconcile_mismatches_when_profile_tax_id_differs(operation: PinnedAuthorityOperation) -> None:
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     parsed = parse_justificante(MODELO_130_FIXTURE)
 
@@ -147,6 +151,7 @@ def test_modelo_reconcile_mismatches_when_profile_tax_id_differs() -> None:
         source_ref=str(MODELO_130_FIXTURE),
         actor="operator",
         justificante=parsed.model_copy(update={"tax_id": "12345678Z"}),
+        operation=operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
@@ -156,7 +161,7 @@ def test_modelo_reconcile_mismatches_when_profile_tax_id_differs() -> None:
     assert tax_id_diffs[0].evidence_value == "12345678Z"
 
 
-def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
+def test_modelo_reconcile_emits_modelo_reconciled_event(operation: PinnedAuthorityOperation) -> None:
     """A successful reconcile appends a typed MODELO_RECONCILED event
     to the bucket-event-history catalogue. The payload records the
     verdict so downstream auditors can replay the reconciliation
@@ -170,6 +175,7 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
             source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
         ),
+        operation=operation,
     )
 
     catalogue = BucketEventHistoryRepository().load()
@@ -183,7 +189,9 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
     assert matching[-1].payload["source_kind"] == "justificante"
 
 
-def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payload_cap() -> None:
+def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payload_cap(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """An over-long evidence reference must not prevent recording the reconciliation.
 
     ``source_ref`` reaches the ``MODELO_RECONCILED`` payload from
@@ -213,6 +221,7 @@ def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payloa
         source_ref=over_long_ref,
         actor="operator",
         justificante=parsed,
+        operation=operation,
     )
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
@@ -231,7 +240,9 @@ def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payloa
     assert all(len(value) <= 500 for value in matching[-1].payload.values())
 
 
-def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo() -> None:
+def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Casilla-level declaración reconcile is enrolled one modelo at a time.
 
     A modelo outside :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS` (200 here —
@@ -248,11 +259,14 @@ def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo() -> 
                 source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
                 source_path=MODELO_130_FIXTURE,
             ),
+            operation=operation,
         )
     assert excinfo.value.translated_message == "application.modelo.errors.reconcile_declaration_unsupported"
 
 
-def test_modelo_reconcile_refuses_modelo_202_declaration_before_parsing() -> None:
+def test_modelo_reconcile_refuses_modelo_202_declaration_before_parsing(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """D5 keeps M202 declaration reconciliation unenrolled despite its live profile.
 
     The real M202 synthetic declaration fixture and matching work-unit identity
@@ -270,12 +284,13 @@ def test_modelo_reconcile_refuses_modelo_202_declaration_before_parsing() -> Non
                 source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
                 source_path=MODELO_202_DECLARACION_FIXTURE,
             ),
+            operation=operation,
         )
 
     assert excinfo.value.translated_message == "application.modelo.errors.reconcile_declaration_unsupported"
 
 
-def test_modelo_reconcile_refuses_unknown_work_unit() -> None:
+def test_modelo_reconcile_refuses_unknown_work_unit(operation: PinnedAuthorityOperation) -> None:
     """An addressed work unit that is not in the active bucket's
     catalogue surfaces as ``WorkUnitNotFoundError``."""
 
@@ -286,10 +301,14 @@ def test_modelo_reconcile_refuses_unknown_work_unit() -> None:
                 source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_path=MODELO_130_FIXTURE,
             ),
+            operation=operation,
         )
 
 
-def test_modelo_reconcile_translates_cross_bucket_address_to_absence(tmp_path: Path) -> None:
+def test_modelo_reconcile_translates_cross_bucket_address_to_absence(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The captured active catalogue never reveals a foreign work-unit identity."""
 
     foreign_bucket_id = "other-bucket-7" * 4
@@ -323,10 +342,14 @@ def test_modelo_reconcile_translates_cross_bucket_address_to_absence(tmp_path: P
                 source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_path=MODELO_130_FIXTURE,
             ),
+            operation=operation,
         )
 
 
-def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
+def test_modelo_reconcile_refuses_malformed_evidence(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A path that is not a valid AEAT justificante surfaces as
     ``ReconciliationEvidenceInvalidError``. Locks the contract from
     the complementaria-external-filing-path contract amendment."""
@@ -342,11 +365,13 @@ def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
                 source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_path=not_a_justificante,
             ),
+            operation=operation,
         )
 
 
 def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     tmp_path: Path,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A malformed PDF surfaces a clean, instructive typed refusal.
 
@@ -370,6 +395,7 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
                 source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_path=not_a_justificante,
             ),
+            operation=operation,
         )
 
     error = caught.value

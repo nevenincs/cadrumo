@@ -56,7 +56,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -235,6 +235,7 @@ def _seed_verified_revision(
     modelo: str,
     filing_year: int,
     period: str,
+    operation: PinnedAuthorityOperation,
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
@@ -259,9 +260,10 @@ def _seed_verified_revision(
             work_unit_repository=WorkUnitCatalogueRepository(),
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
+        operation=operation,
     )
     filing_instance_evidence = (
-        general_m303_filing_evidence(work_period, reference="test:cross-period-clean-state:m303")
+        general_m303_filing_evidence(work_period, reference="test:cross-period-clean-state:m303", operation=operation)
         if modelo == "303"
         else None
     )
@@ -332,6 +334,7 @@ def _seed_draft_revision(
     binding_overrides: dict[str, str] | None = None,
     relation_overrides: dict[str, str] | None = None,
     casilla_values: dict[CasillaId, Decimal] | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
@@ -347,9 +350,10 @@ def _seed_draft_revision(
             work_unit_repository=WorkUnitCatalogueRepository(),
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
+        operation=operation,
     )
     filing_instance_evidence = (
-        general_m303_filing_evidence(work_period, reference="test:cross-period-clean-state:m303")
+        general_m303_filing_evidence(work_period, reference="test:cross-period-clean-state:m303", operation=operation)
         if modelo == "303"
         else None
     )
@@ -388,13 +392,16 @@ def _seed_draft_revision(
     return revision_id
 
 
-def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
+def test_export_refuses_verified_cross_period_revision_without_clean_sources(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_EXPORT_PROFILE_ID) as profile:
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
             modelo="180",
             filing_year=2026,
             period="0A",
+            operation=operation,
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
@@ -417,13 +424,16 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
 
-def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
+def test_file_refuses_verified_cross_period_revision_without_clean_sources(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_FILE_PROFILE_ID) as profile:
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
             modelo="390",
             filing_year=2025,
             period="0A",
+            operation=operation,
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
@@ -455,10 +465,7 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_p
     ),
 )
 def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
-    tmp_path: Path,
-    modelo: str,
-    filing_year: int,
-    period: str,
+    tmp_path: Path, modelo: str, filing_year: int, period: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     bucket_id = _DECLARED_CROSS_PERIOD_PROFILE_IDS[(modelo, period)]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
@@ -467,6 +474,7 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
             modelo=modelo,
             filing_year=filing_year,
             period=period,
+            operation=operation,
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
@@ -485,13 +493,16 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
 
-def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_dependency(tmp_path: Path) -> None:
+def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_dependency(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_303_PROFILE_ID) as profile:
         revision_id = _seed_draft_revision(
             bucket_id=profile.bucket_id,
             modelo="303",
             filing_year=2026,
             period="2T",
+            operation=operation,
         )
 
         with bundled_indexed_authority().operation() as operation:
@@ -514,7 +525,9 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
     )
 
 
-def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp_path: Path) -> None:
+def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """C3 end-to-end: a declared employee's Modelo 100 verify reports NO cross-period dependency block.
 
     The empty-profile [100, 2025, 0A] file case above raises ModeloCrossPeriodCleanStateError
@@ -528,6 +541,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
             modelo="100",
             filing_year=2025,
             period="0A",
+            operation=operation,
         )
         salaried = workflow_profile().model_copy(
             update={
@@ -560,7 +574,9 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
     assert not blocked, f"salaried M100 must not be cross-period-blocked on withholding/pagos deps, got {blocked}"
 
 
-def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path: Path) -> None:
+def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A salaried M100 with explicit zero prior BIN is filable without prior M100 evidence."""
     zero_binding = "renta-base-liquidable-negativa-general-anterior"
     retenciones_trabajo_binding = "renta-modelo-111-retenciones-periodicas"
@@ -580,6 +596,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
                 work_unit_repository=WorkUnitCatalogueRepository(),
                 bucket_event_repository=BucketEventHistoryRepository(),
             ),
+            operation=operation,
         )
         with bundled_indexed_authority().operation() as operation:
             revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -644,7 +661,9 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
     )
 
 
-def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tmp_path: Path) -> None:
+def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_390_IMPORTED_PROFILE_ID) as profile:
         _seed_ready_profile(profile.bucket_id, profile.repository, modelo="390")
         target_snapshot = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A")
@@ -673,6 +692,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                     work_unit_repository=WorkUnitCatalogueRepository(),
                     bucket_event_repository=BucketEventHistoryRepository(),
                 ),
+                operation=operation,
             )
             casilla_values = {
                 casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casilla_ids))
@@ -695,6 +715,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                 filing_instance_evidence = general_m303_filing_evidence(
                     Period.from_year_and_code(filing_year, period),
                     reference="test:cross-period-clean-state:imported-m303",
+                    operation=operation,
                 )
                 calculation_revision_id = derive_calculation_revision_id(
                     work_unit_id=source_work_unit.work_unit_id,
@@ -796,6 +817,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
             modelo="390",
             filing_year=2025,
             period="0A",
+            operation=operation,
         )
 
         with bundled_indexed_authority().operation() as operation:
@@ -816,7 +838,9 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
     assert filing.status is ModeloRecordStatus.VIGENTE
 
 
-def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_path: Path) -> None:
+def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_PROFILE_ID) as profile:
         snapshot = compiled_bundled_authority().snapshot("353", filing_year=2026, period="12")
         requirement = next(
@@ -864,6 +888,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
             modelo="353",
             filing_year=2026,
             period="12",
+            operation=operation,
         )
 
         with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
@@ -894,7 +919,9 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
     assert "missing_expected_group_member_roster" not in blocker_codes
 
 
-def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: Path) -> None:
+def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_ROSTER_PROFILE_ID) as profile:
         snapshot = compiled_bundled_authority().snapshot("353", filing_year=2026, period="12")
         requirement = next(
@@ -942,8 +969,9 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
             modelo="353",
             filing_year=2026,
             period="12",
+            operation=operation,
         )
-        workflow_profile = workflow_profile().model_copy(
+        filing_profile = workflow_profile().model_copy(
             update={
                 "cross_period_group_member_rosters": (
                     CrossPeriodGroupMemberRoster(
@@ -964,7 +992,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     ports=build_filing_action_ports(bucket_id=profile.bucket_id),
                     actor="operator-test",
-                    workflow_profile=workflow_profile,
+                    workflow_profile=filing_profile,
                     operation=operation,
                     clock=_CLOCK,
                 )

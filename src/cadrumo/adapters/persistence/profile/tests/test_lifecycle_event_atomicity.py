@@ -55,6 +55,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.work_unit import WorkUnit
@@ -132,7 +133,7 @@ def fixture(tmp_path: Path) -> Iterator[_Fixture]:
         )
 
 
-def _seed_work_unit(fixture: _Fixture) -> WorkUnit:
+def _seed_work_unit(fixture: _Fixture, *, operation: PinnedAuthorityOperation) -> WorkUnit:
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="130",
@@ -144,6 +145,7 @@ def _seed_work_unit(fixture: _Fixture) -> WorkUnit:
             bucket_event_repository=fixture.events,
         ),
         clock=_T0,
+        operation=operation,
     )
     persist_justificante_metadata(
         _EVIDENCE_REFERENCE,
@@ -173,14 +175,16 @@ def _import(fixture: _Fixture, work_unit: WorkUnit):
     )
 
 
-def test_external_import_commits_state_and_event_in_one_transaction(fixture: _Fixture) -> None:
+def test_external_import_commits_state_and_event_in_one_transaction(
+    fixture: _Fixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """The import's revision, filing, pointer, and event share one transaction.
 
     A commit falling between them is the seam the finding names: the imported
     filing and the advanced filed-revision pointer would survive an
     event-storage failure with the history left at its pre-import count.
     """
-    work_unit = _seed_work_unit(fixture)
+    work_unit = _seed_work_unit(fixture, operation=operation)
     recorder = WriteUnitRecorder(fixture.engine)
 
     with recorder.recording():
@@ -189,13 +193,15 @@ def test_external_import_commits_state_and_event_in_one_transaction(fixture: _Fi
     assert recorder.commits_between_writes() == 0
 
 
-def test_split_import_write_shape_commits_between_catalogues(fixture: _Fixture) -> None:
+def test_split_import_write_shape_commits_between_catalogues(
+    fixture: _Fixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """Anti-tautology: the recorder does report a seam when one exists.
 
     Persisting the same four catalogues through independent saves -- the shape
     the import replaced -- must be observed as more than one transaction.
     """
-    work_unit = _seed_work_unit(fixture)
+    work_unit = _seed_work_unit(fixture, operation=operation)
     _import(fixture, work_unit)
     revisions = fixture.calculations.load()
     filings = fixture.filings.load()
@@ -212,13 +218,15 @@ def test_split_import_write_shape_commits_between_catalogues(fixture: _Fixture) 
     assert recorder.commits_between_writes() >= 1
 
 
-def test_external_import_persists_its_filing_imported_event(fixture: _Fixture) -> None:
+def test_external_import_persists_its_filing_imported_event(
+    fixture: _Fixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """A valid import leaves coherent state and exactly one matching event.
 
     The parity case the atomicity assertions rest on: co-committing the event
     must not change what a successful import records.
     """
-    work_unit = _seed_work_unit(fixture)
+    work_unit = _seed_work_unit(fixture, operation=operation)
     filing = _import(fixture, work_unit)
 
     revision = fixture.calculations.load().get(filing.calculation_revision_id)
@@ -246,7 +254,9 @@ def test_external_import_persists_its_filing_imported_event(fixture: _Fixture) -
     assert imported[0].payload["calculation_revision_id"] == filing.calculation_revision_id
 
 
-def test_event_write_failure_rolls_back_every_import_catalogue(fixture: _Fixture) -> None:
+def test_event_write_failure_rolls_back_every_import_catalogue(
+    fixture: _Fixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """A conflict on the event write leaves no revision, filing, or pointer.
 
     The fault is the production compare-and-swap guard: the event-history write
@@ -255,7 +265,7 @@ def test_event_write_failure_rolls_back_every_import_catalogue(fixture: _Fixture
     catalogues. Nothing may survive it -- which is exactly what an
     event-emitted-afterwards shape could not guarantee.
     """
-    work_unit = _seed_work_unit(fixture)
+    work_unit = _seed_work_unit(fixture, operation=operation)
     _import(fixture, work_unit)
     baseline_revisions = fixture.calculations.load()
     baseline_filings = fixture.filings.load()
@@ -283,7 +293,9 @@ def test_event_write_failure_rolls_back_every_import_catalogue(fixture: _Fixture
     assert fixture.events.load() == baseline_events
 
 
-def test_work_unit_creation_commits_state_and_event_in_one_transaction(fixture: _Fixture) -> None:
+def test_work_unit_creation_commits_state_and_event_in_one_transaction(
+    fixture: _Fixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """Creating a work unit commits the unit and its CREATED event together.
 
     The lifecycle transitions saved the work-unit catalogue and emitted the
@@ -306,19 +318,22 @@ def test_work_unit_creation_commits_state_and_event_in_one_transaction(fixture: 
                 bucket_event_repository=fixture.events,
             ),
             clock=_T0,
+            operation=operation,
         )
 
     assert recorder.commits_between_writes() == 0
 
 
-def test_split_work_unit_creation_write_shape_commits_between_catalogues(fixture: _Fixture) -> None:
+def test_split_work_unit_creation_write_shape_commits_between_catalogues(
+    fixture: _Fixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """Anti-tautology: the recorder reports a seam on the shape this replaced.
 
     Persisting the same two catalogues through independent saves — the pre-fix
     shape — must be observed as more than one transaction, or the assertion
     above could not fail.
     """
-    _seed_work_unit(fixture)
+    _seed_work_unit(fixture, operation=operation)
     work_units = fixture.work_units.load()
     events = fixture.events.load()
     recorder = WriteUnitRecorder(fixture.engine)
@@ -330,14 +345,16 @@ def test_split_work_unit_creation_write_shape_commits_between_catalogues(fixture
     assert recorder.commits_between_writes() >= 1
 
 
-def test_work_unit_creation_persists_its_created_event(fixture: _Fixture) -> None:
+def test_work_unit_creation_persists_its_created_event(
+    fixture: _Fixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """The positive control: the event is really written, not merely co-committed.
 
     A single-transaction assertion says nothing about whether the event exists;
     without this, dropping the event write entirely would still report zero
     commits between writes.
     """
-    work_unit = _seed_work_unit(fixture)
+    work_unit = _seed_work_unit(fixture, operation=operation)
 
     events = fixture.events.load()
     created = [
@@ -350,13 +367,15 @@ def test_work_unit_creation_persists_its_created_event(fixture: _Fixture) -> Non
     assert created[0].object_type is BucketEventObjectType.WORK_UNIT
 
 
-def test_work_unit_rename_and_discard_commit_their_events_in_one_transaction(fixture: _Fixture) -> None:
+def test_work_unit_rename_and_discard_commit_their_events_in_one_transaction(
+    fixture: _Fixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """Rename and discard each commit their state and event together.
 
     Both carried the same separate-write shape as creation, so each is pinned
     here rather than assuming the creation fix covers the whole module.
     """
-    work_unit = _seed_work_unit(fixture)
+    work_unit = _seed_work_unit(fixture, operation=operation)
 
     rename_recorder = WriteUnitRecorder(fixture.engine)
     with rename_recorder.recording():

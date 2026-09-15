@@ -8,6 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -99,7 +101,7 @@ def _evidence() -> LedgerFilingEvidence:
     )
 
 
-def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
+def _revision(evidence: LedgerFilingEvidence | None, *, operation: PinnedAuthorityOperation) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
@@ -108,7 +110,7 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
         revision_id="2022",
     )
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "1T"), reference="test:ledger-filing-evidence-roundtrip"
+        Period.from_year_and_code(2026, "1T"), reference="test:ledger-filing-evidence-roundtrip", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -145,9 +147,11 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
     )
 
 
-def test_ledger_filing_evidence_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
+def test_ledger_filing_evidence_roundtrips_through_encrypted_revision(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     evidence = _evidence()
-    original = _revision(evidence)
+    original = _revision(evidence, operation=operation)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
 
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
@@ -165,7 +169,9 @@ def test_ledger_filing_evidence_roundtrips_through_encrypted_revision(secure_obj
     assert stripped != original
 
 
-def test_ledger_evidence_negative_amount_payload_rejected_at_load(secure_objects: SecureObjectRepository) -> None:
+def test_ledger_evidence_negative_amount_payload_rejected_at_load(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     """Anti-tautology proof: a persisted evidence row with a negative amount is refused.
 
     Persist a valid non-negative-magnitude evidence row, then surgically rewrite
@@ -180,7 +186,7 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(secure_objects
 
     from .....core.classification.policies import SensitivityClass
 
-    original = _revision(_evidence())
+    original = _revision(_evidence(), operation=operation)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
@@ -209,13 +215,15 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(secure_objects
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
 
 
-def test_ledger_evidence_malformed_identity_payload_rejected_at_load(secure_objects: SecureObjectRepository) -> None:
+def test_ledger_evidence_malformed_identity_payload_rejected_at_load(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     """Persisted evidence cannot rehydrate a non-canonical contributor identity."""
     import json as _json
 
     from .....core.classification.policies import SensitivityClass
 
-    original = _revision(_evidence())
+    original = _revision(_evidence(), operation=operation)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
     record = secure_objects.load(

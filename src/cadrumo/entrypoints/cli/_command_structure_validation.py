@@ -14,6 +14,7 @@ if TYPE_CHECKING:
         InvocationSpec,
         LazyBinding,
         ParameterSpec,
+        RecoveryHandoffSpec,
     )
 
 
@@ -239,7 +240,7 @@ def validate_command_spec(
     search_terms: tuple[str, ...],
     machine_secret: object,
     profile_secret: object,
-    recovery_handoff: object,
+    recovery_handoff: RecoveryHandoffSpec | None,
     *,
     require_identifier: Callable[..., None],
     require_token: Callable[..., None],
@@ -313,7 +314,7 @@ def validate_recovery_shape(kind: object, recovery_handoff: object) -> None:
     )
 
 
-def recovery_references(parameter_names: tuple[str, ...], recovery_handoff: Any) -> set[str]:
+def recovery_references(parameter_names: tuple[str, ...], recovery_handoff: RecoveryHandoffSpec) -> set[str]:
     referenced = {
         recovery_handoff.handoff_parameter,
         recovery_handoff.verification_parameter,
@@ -360,7 +361,7 @@ def validate_recovery_handoff_contract(
     kind: object,
     parameters: tuple[Any, ...],
     parameter_names: tuple[str, ...],
-    recovery_handoff: object,
+    recovery_handoff: RecoveryHandoffSpec | None,
     *,
     require_identifier: Callable[..., None],
 ) -> None:

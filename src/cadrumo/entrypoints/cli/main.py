@@ -28,6 +28,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 import typer
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from .command_spec import CommandSpec
@@ -285,8 +286,8 @@ def _jsonable_command_surface_value(value: object) -> object:
         return {str(key): _jsonable_command_surface_value(item) for key, item in value.items()}
     if isinstance(value, (tuple, list, set, frozenset)):
         items = (_jsonable_command_surface_value(item) for item in value)
-        return sorted(items) if isinstance(value, (set, frozenset)) else list(items)
-    if hasattr(value, "model_dump"):
+        return sorted(items, key=str) if isinstance(value, (set, frozenset)) else list(items)
+    if isinstance(value, BaseModel):
         return _jsonable_command_surface_value(value.model_dump(mode="json"))
     return value
 

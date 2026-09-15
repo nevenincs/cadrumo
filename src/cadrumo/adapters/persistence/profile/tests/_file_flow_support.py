@@ -430,18 +430,20 @@ def _seed_work_unit(
     9 manual casillas + 10 formulas + 1 prior-filing binding.
     Registry-resolvable so the formula engine runs end-to-end."""
 
-    return create_work_unit(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
-        revision_id=revision_id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo,
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return create_work_unit(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, period),
+            revision_id=revision_id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
 
 
 _DEFAULT_130_BINDING_VALUES = {
@@ -557,14 +559,15 @@ def _file_revision(
     bucket_event_repository: BucketEventHistoryRepository,
     clock: datetime,
 ):
-    seed_clean_cross_period_sources(
-        work_unit,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository,
-        bucket_event_repository=bucket_event_repository,
-    )
     with bundled_indexed_authority().operation() as operation:
+        seed_clean_cross_period_sources(
+            work_unit,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            filing_repository=filing_repository,
+            bucket_event_repository=bucket_event_repository,
+            operation=operation,
+        )
         gate = _workflow_gate(
             revision=revision,
             work_unit=work_unit,
@@ -605,14 +608,15 @@ def _verify_revision(
     filing_repository: ModeloRecordCatalogueRepository | None = None,
     clock: datetime,
 ):
-    seed_clean_cross_period_sources(
-        work_unit,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository or ModeloRecordCatalogueRepository(),
-        bucket_event_repository=bucket_event_repository,
-    )
     with bundled_indexed_authority().operation() as operation:
+        seed_clean_cross_period_sources(
+            work_unit,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            filing_repository=filing_repository or ModeloRecordCatalogueRepository(),
+            bucket_event_repository=bucket_event_repository,
+            operation=operation,
+        )
         gate = _workflow_gate(
             revision=revision,
             work_unit=work_unit,
@@ -641,18 +645,20 @@ def _verify_revision(
 
 
 def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
-    return create_work_unit(
-        bucket_id=_FILE_FLOW_PROFILE_ID,
-        modelo=_VERIFY_MODELO,
-        filing_year=_VERIFY_YEAR,
-        period=Period.from_year_and_code(_VERIFY_YEAR, _VERIFY_PERIOD),
-        revision_id=_VERIFY_REVISION,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo,
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return create_work_unit(
+            bucket_id=_FILE_FLOW_PROFILE_ID,
+            modelo=_VERIFY_MODELO,
+            filing_year=_VERIFY_YEAR,
+            period=Period.from_year_and_code(_VERIFY_YEAR, _VERIFY_PERIOD),
+            revision_id=_VERIFY_REVISION,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
 
 
 DEFAULT_130_BASELINE_INPUTS = _DEFAULT_130_BASELINE_INPUTS

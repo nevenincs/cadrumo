@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.outbound.aeat.sede.censal_datos import parse_censal_datos
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -24,6 +25,7 @@ from cadrumo.application.operations.models import (
     OperationTerminalReceipt,
 )
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
+from cadrumo.application.operations.registry import OperationDefinition
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import (
     CensalFieldIntent,
@@ -38,6 +40,7 @@ from cadrumo.application.user_profile.profile_record_repository import ProfileRe
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 from cadrumo.tests.inventory import FIXTURES_DIR
 
 from .test_censal_operation_executor import (
@@ -66,10 +69,12 @@ _VALUES = {
 }
 
 
-def _test_censal_operation_definition():
+def _test_censal_operation_definition() -> OperationDefinition:
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=build_censal_fetch_port(),
     )
 
 
@@ -212,6 +217,9 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
         history_before = ProfileRecordStore(session=session).history()
         executor = CensalOperationExecutor(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+            browser_session_factory=default_browser_session_factory,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            censal_fetch_port=build_censal_fetch_port(),
             acquire=acquisition,
         )
         owner = _supervisor(
@@ -228,7 +236,13 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
             waiting = await _start(owner, operation_id)
             assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
             assert waiting.effect is OperationEffect.NONE
-            assert ProfileRecordRepository.for_current_session(profile_id).load(profile_id) == before
+            assert (
+                ProfileRecordRepository.for_current_session(
+                    profile_id,
+                    profile_decode_context=_profile_decode_context_for_test,
+                ).load(profile_id)
+                == before
+            )
             assert ProfileRecordStore(session=session).history() == history_before
 
             pending = waiting.pending_interaction
@@ -304,6 +318,9 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                 objects=objects,
                 executor=CensalOperationExecutor(
                     certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    browser_session_factory=default_browser_session_factory,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    censal_fetch_port=build_censal_fetch_port(),
                     acquire=acquisition,
                 ),
                 owner="6" * 64,
@@ -350,8 +367,17 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
         assert ProfileRecordStore(session=session).history() == history_before
 
         def competing_commit(operand) -> None:
-            apply_cotejo(None, adopted=(), divergences=())
-            apply_cotejo(None, reviewed_proposal=operand)
+            apply_cotejo(
+                None,
+                adopted=(),
+                divergences=(),
+                profile_decode_context=_profile_decode_context_for_test,
+            )
+            apply_cotejo(
+                None,
+                reviewed_proposal=operand,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         async def stale_run() -> None:
             supervisor = _supervisor(
@@ -359,6 +385,9 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
                 objects=objects,
                 executor=CensalOperationExecutor(
                     certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    browser_session_factory=default_browser_session_factory,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    censal_fetch_port=build_censal_fetch_port(),
                     acquire=acquisition,
                     apply=competing_commit,
                 ),
@@ -392,6 +421,9 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
         history_before = ProfileRecordStore(session=session).history()
         executor = CensalOperationExecutor(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+            browser_session_factory=default_browser_session_factory,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            censal_fetch_port=build_censal_fetch_port(),
             acquire=acquisition,
         )
         owner = _supervisor(
@@ -483,6 +515,9 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
             objects=objects,
             executor=CensalOperationExecutor(
                 certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                browser_session_factory=default_browser_session_factory,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                censal_fetch_port=build_censal_fetch_port(),
                 acquire=acquisition,
                 before_irreversible_section=boundary,
             ),

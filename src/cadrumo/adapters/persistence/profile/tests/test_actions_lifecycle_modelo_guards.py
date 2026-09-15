@@ -20,6 +20,7 @@ from cadrumo.application.ledger.actions_lifecycle import (
 from cadrumo.application.ledger.actions_manual import update_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
@@ -35,6 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
     secure_objects: SecureObjectRepository,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     transaction_repository, event_repository, restore_row = _create_manual_row(
         secure_objects,
@@ -98,6 +100,7 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
             lifecycle_row.ref.transaction_id,
             prior_source_row.ref.transaction_id,
         ),
+        operation=operation,
     )
     work_unit_repository = WorkUnitCatalogueRepository(objects=secure_objects)
     calculation_repository = CalculationRevisionCatalogueRepository(objects=secure_objects)

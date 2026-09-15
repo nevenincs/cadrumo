@@ -27,8 +27,8 @@ Model-free and network-free throughout: compiled text, a bundled file, and the
 real parser.
 
 See Also:
-    :data:`~domain.iva.REGIME_LEGENDS`
-        The single declaration both the prompt and the classifier derive from.
+    :func:`~domain.iva.resolve_regime_legends`
+        The operation-scoped statutory vocabulary both the prompt and the classifier derive from.
 """
 
 from __future__ import annotations
@@ -37,12 +37,17 @@ import html
 import json
 import pathlib
 import re
+from datetime import date
 from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....core.field_origin import FieldOrigin
-from .....domain.iva.regime_legend import REGIME_LEGENDS, RegimeLegend, regime_legend_phrases
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from .....domain.iva.regime_legend import RegimeLegend, regime_legend_phrases, resolve_regime_legends
 from .....domain.iva.schema import IvaCategory
 from ..invoice_extraction_prompt import (
     default_extraction_period,
@@ -57,6 +62,14 @@ from ..invoice_field_grounding import (
 from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _resolve_legends() -> tuple[RegimeLegend, ...]:
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_regime_legends(operation=operation, effective_date=date(2024, 1, 1))
+
+
+_LEGENDS = _resolve_legends()
 
 
 #: The bundled consolidated text of the invoicing regulation's art. 6.
@@ -84,9 +97,9 @@ class TestTheVocabularyIsQuotedFromTheBundledRegulation:
 
     def test_the_declaration_equals_the_corpus_mentions_in_both_directions(self) -> None:
         """No phrase invented, and none of the regulation's dropped."""
-        assert set(regime_legend_phrases()) == _corpus_mandated_mentions()
+        assert set(regime_legend_phrases(_LEGENDS)) == _corpus_mandated_mentions()
 
-    @pytest.mark.parametrize("legend", REGIME_LEGENDS, ids=lambda legend: legend.provision)
+    @pytest.mark.parametrize("legend", _LEGENDS, ids=lambda legend: legend.provision)
     def test_every_declared_phrase_occurs_verbatim_in_the_bundled_text(self, legend: RegimeLegend) -> None:
         """Per row, so a failure names the provision rather than a set difference."""
         assert legend.phrase in _corpus_mandated_mentions()
@@ -100,13 +113,13 @@ class TestTheVocabularyIsQuotedFromTheBundledRegulation:
         claiming a category must earn it from the regulation, not from
         convenience.
         """
-        declaring = {legend.phrase: legend.declares for legend in REGIME_LEGENDS if legend.declares is not None}
+        declaring = {legend.phrase: legend.declares for legend in _LEGENDS if legend.declares is not None}
 
         assert declaring == {"inversión del sujeto pasivo": IvaCategory("domestic_reverse_charge")}
 
     def test_the_reverse_charge_mention_expects_no_repercutido_line(self) -> None:
         """The signal a contradiction check needs: this invoice charges no Spanish IVA."""
-        reverse_charge = next(legend for legend in REGIME_LEGENDS if legend.declares is not None)
+        reverse_charge = next(legend for legend in _LEGENDS if legend.declares is not None)
 
         assert reverse_charge.expects_repercutido_line is False
 
@@ -117,7 +130,7 @@ class TestThePromptCopiesTheLegendAndNeverChoosesOne:
     def test_every_declared_phrase_reaches_the_compiled_prompt(self) -> None:
         text = build_invoice_extraction_prompt(period=default_extraction_period()).text
 
-        for phrase in regime_legend_phrases():
+        for phrase in regime_legend_phrases(_LEGENDS):
             assert phrase in text
 
     def test_the_instruction_is_to_copy_and_explicitly_not_to_pick(self) -> None:
@@ -128,7 +141,7 @@ class TestThePromptCopiesTheLegendAndNeverChoosesOne:
         assert "Never pick the closest phrase" in text
         assert "never write one the document does not show" in text
 
-    def test_no_iva_category_token_is_offered_for_selection(self) -> None:
+    def test_no_iva_category_token_is_offered_for_selection(self, *, operation: PinnedAuthorityOperation) -> None:
         """Stage 2 emits no category, so its prompt has no business enumerating one.
 
         The no-printed-tax line renders category tokens as spaced words for a
@@ -137,7 +150,11 @@ class TestThePromptCopiesTheLegendAndNeverChoosesOne:
         """
         text = build_invoice_extraction_prompt(period=default_extraction_period()).text
 
-        for category in IvaCategory:
+        categories = resolve_iva_category_catalogue(
+            effective_date=default_extraction_period().end_date,
+            authority=operation,
+        ).all_categories
+        for category in categories:
             assert category.value not in text, f"{category.value} is a stored token, printed on no invoice"
 
 
@@ -153,7 +170,9 @@ class TestTheLegendIsTranscribedLikeEveryOtherCopiedField:
         assert "regime_legend" in ExtractedInvoiceFields.model_fields
         assert "regime_legend" in ExtractedFieldAnchors.model_fields
 
-    def test_a_printed_legend_survives_to_the_draft_with_its_anchor(self) -> None:
+    def test_a_printed_legend_survives_to_the_draft_with_its_anchor(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Populated non-default, through the real parser and the real grounder."""
         response = parse_invoice_extraction_response(
             json.dumps(
@@ -164,22 +183,22 @@ class TestTheLegendIsTranscribedLikeEveryOtherCopiedField:
             ),
         )
 
-        draft = ground_extracted_fields(response, raw_text_length=512, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(response, raw_text_length=512, origin=FieldOrigin.VISION, operation=operation)
 
         assert draft.regime_legend == "inversión del sujeto pasivo"
         anchors = {envelope.field: envelope.anchor for envelope in draft.provenance}
         assert anchors["regime_legend"] == "Operación con inversión del sujeto pasivo (art. 84.Uno.2.º LIVA)"
 
-    def test_an_unprinted_legend_yields_no_value_and_no_envelope(self) -> None:
+    def test_an_unprinted_legend_yields_no_value_and_no_envelope(self, *, operation: PinnedAuthorityOperation) -> None:
         """Absence stays absent: nothing defaults a regime onto a plain invoice."""
         response = parse_invoice_extraction_response(json.dumps({"taxable_base": "100,00"}))
 
-        draft = ground_extracted_fields(response, raw_text_length=512, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(response, raw_text_length=512, origin=FieldOrigin.VISION, operation=operation)
 
         assert draft.regime_legend is None
         assert "regime_legend" not in {envelope.field for envelope in draft.provenance}
 
-    def test_the_draft_carries_no_category_from_the_reading_stage(self) -> None:
+    def test_the_draft_carries_no_category_from_the_reading_stage(self, *, operation: PinnedAuthorityOperation) -> None:
         """The ruling's boundary, pinned where it would be crossed.
 
         The draft has a category slot for the downstream classifier to fill. What
@@ -190,7 +209,7 @@ class TestTheLegendIsTranscribedLikeEveryOtherCopiedField:
             json.dumps({"regime_legend": "inversión del sujeto pasivo", "regime_legend_anchor": "inversión..."}),
         )
 
-        draft = ground_extracted_fields(response, raw_text_length=512, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(response, raw_text_length=512, origin=FieldOrigin.VISION, operation=operation)
 
         assert draft.regime_legend is not None
         assert draft.iva_category is None

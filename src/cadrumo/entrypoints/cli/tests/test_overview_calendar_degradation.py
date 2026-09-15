@@ -20,8 +20,11 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....core.json_contract import NoticeSeverity
+from ....entrypoints.adapter_composition import build_expedientes_ports
 from .._overview_evidence import (
     local_calendar_filing_evidence,
     local_live_calendar_events,
@@ -34,7 +37,12 @@ _RANGE = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12
 
 
 def test_live_events_loader_degrades_to_notice() -> None:
-    events, notice = local_live_calendar_events("bogus-bucket", _RANGE, as_of=date(2025, 6, 1))
+    events, notice = local_live_calendar_events(
+        "bogus-bucket",
+        _RANGE,
+        as_of=date(2025, 6, 1),
+        expedientes_ports=build_expedientes_ports(bucket_id="bogus-bucket"),
+    )
     assert events == ()
     assert notice is not None
     assert notice.severity is NoticeSeverity.WARNING
@@ -50,7 +58,8 @@ def test_modelo_record_events_loader_degrades_to_notice() -> None:
 
 
 def test_filing_evidence_loader_degrades_to_notice() -> None:
-    evidence, notice = local_calendar_filing_evidence("bogus-bucket", ())
+    with bundled_indexed_authority().operation() as operation:
+        evidence, notice = local_calendar_filing_evidence("bogus-bucket", (), operation=operation)
     assert evidence == ()
     assert notice is not None
     assert notice.severity is NoticeSeverity.WARNING

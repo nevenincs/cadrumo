@@ -22,6 +22,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ...adapters.persistence.operations.financial_operand_custody import (
     OperationFinancialOperandCustodyFilesystemRepository,
@@ -173,7 +174,7 @@ def _seed_modelo_ready_profile(profile_id: UUID) -> None:
     seed_modelo_ready_profile_record(str(profile_id), clock=_PROFILE_CLOCK, tax_id=SEEDED_SOURCE_TAX_ID)
 
 
-def _seeded_modelo_work_unit(profile_id: UUID) -> WorkUnit:
+def _seeded_modelo_work_unit(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> WorkUnit:
     """Create one real work unit in the active bucket through the production door.
 
     The modelo lifecycle operations address a work unit by id, so a payload
@@ -193,6 +194,7 @@ def _seeded_modelo_work_unit(profile_id: UUID) -> WorkUnit:
         revision_id=revision.id,
         actor=_ACTOR,
         ports=build_work_lifecycle_ports(bucket_id=str(profile_id)),
+        operation=operation,
     )
 
 
@@ -445,7 +447,7 @@ filings this profile does not have.
 """
 
 
-def _seeded_modelo_calculation_revision(profile_id: UUID) -> str:
+def _seeded_modelo_calculation_revision(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> str:
     """Calculate one real revision for the seeded unit, and return its id.
 
     `casilla_inputs={}` is deliberate and is NOT a stub. The M130 revision
@@ -463,7 +465,7 @@ def _seeded_modelo_calculation_revision(profile_id: UUID) -> str:
     The repositories resolve from the active session, as they do for the work
     unit itself, so nothing here opens a second write path.
     """
-    unit = _seeded_modelo_work_unit(profile_id)
+    unit = _seeded_modelo_work_unit(profile_id, operation=operation)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             unit.work_unit_id,
@@ -475,7 +477,7 @@ def _seeded_modelo_calculation_revision(profile_id: UUID) -> str:
     return str(revision.calculation_revision_id)
 
 
-def _seeded_modelo_verification_report(profile_id: UUID) -> tuple[str, str]:
+def _seeded_modelo_verification_report(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, str]:
     """Calculate a revision and verify it, returning both ids.
 
     Reaches the verification authority through the SAME door the verify
@@ -488,7 +490,7 @@ def _seeded_modelo_verification_report(profile_id: UUID) -> tuple[str, str]:
     report from some other run is exactly the stale-approval case the filing
     authority exists to refuse.
     """
-    unit = _seeded_modelo_work_unit(profile_id)
+    unit = _seeded_modelo_work_unit(profile_id, operation=operation)
     # Verification refuses a revision whose cross-period sources are unproven
     # (`cross_period_dependency_unclean`, blocking), and filing in turn refuses
     # anything not VERIFICADO_COMPLETO -- so the file path needs those sources
@@ -503,6 +505,7 @@ def _seeded_modelo_verification_report(profile_id: UUID) -> tuple[str, str]:
         calculation_repository=CalculationRevisionCatalogueRepository(),
         filing_repository=ModeloRecordCatalogueRepository(),
         bucket_event_repository=BucketEventHistoryRepository(),
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -548,7 +551,7 @@ def _seeded_modelo_verification_report(profile_id: UUID) -> tuple[str, str]:
     return revision_id, str(report.verification_report_id)
 
 
-def _seeded_modelo_filing_record(profile_id: UUID) -> tuple[str, str]:
+def _seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, str]:
     """File one real revision and return its filing-record and casilla ids.
 
     Amendment corrects something already FILED, so its fixture cannot stop at a
@@ -561,7 +564,7 @@ def _seeded_modelo_filing_record(profile_id: UUID) -> tuple[str, str]:
     revision-scoped, and a literal here would be silently wrong the moment the
     governing revision changes.
     """
-    unit = _seeded_modelo_work_unit(profile_id)
+    unit = _seeded_modelo_work_unit(profile_id, operation=operation)
     revision = resolved_revision(modelo=_MODELO, filing_year=_MODELO_FILING_YEAR, period=_MODELO_PERIOD)
     casilla_id = sorted(casilla.id for casilla in revision.casillas)[0]
     evidence_reference_id = f"CSV{_MODELO}{_MODELO_FILING_YEAR}{_MODELO_PERIOD}".upper()
@@ -601,7 +604,7 @@ def _seeded_modelo_filing_record(profile_id: UUID) -> tuple[str, str]:
     return str(record.filing_record_id), str(casilla_id)
 
 
-def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
+def _seeded_modelo_edit_submission(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, object]:
     """Build one canonical edit DTO over the revision this fixture just persisted."""
     from ...adapters.persistence.profile.modelos_calculation import (
         CalculationRevisionCatalogueRepository,
@@ -624,7 +627,7 @@ def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
     from ...core.hashing import content_hash_hex
     from ...domain.calculations.registry.schema_base import CasillaDataType
 
-    unit = _seeded_modelo_work_unit(profile_id)
+    unit = _seeded_modelo_work_unit(profile_id, operation=operation)
     seeded_casilla_id = validated_casilla_id("06")
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -707,7 +710,7 @@ def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
 
 
 def _payload(
-    definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path
+    definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> tuple[str, BaseModel, bytes | None]:
     """Use only the exact request type exported by the registered definition."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
@@ -770,7 +773,7 @@ def _payload(
                 ),
             }
         case "modelo.work.rename":
-            unit = _seeded_modelo_work_unit(profile_id)
+            unit = _seeded_modelo_work_unit(profile_id, operation=operation)
             subject_ref = unit.work_unit_id
             values = {
                 "work_unit_id": unit.work_unit_id,
@@ -783,7 +786,7 @@ def _payload(
             # PRESENTADO_SUPERSEDIDO), because a fichero is a filing-grade
             # artefact and a return still being edited has no business becoming
             # one. So this seeds through verification rather than calculation.
-            revision_id, _report_id = _seeded_modelo_verification_report(profile_id)
+            revision_id, _report_id = _seeded_modelo_verification_report(profile_id, operation=operation)
             subject_ref = revision_id
             values = {
                 "calculation_revision_id": revision_id,
@@ -791,11 +794,11 @@ def _payload(
                 "actor": _ACTOR,
             }
         case "modelo.edit.apply":
-            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id)
+            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id, operation=operation)
             subject_ref = work_unit_id
             values = {"submission": wire_submission}
         case "modelo.work.file":
-            revision_id, report_id = _seeded_modelo_verification_report(profile_id)
+            revision_id, report_id = _seeded_modelo_verification_report(profile_id, operation=operation)
             subject_ref = revision_id
             values = {
                 "approval": {
@@ -805,7 +808,7 @@ def _payload(
                 "actor": _ACTOR,
             }
         case "modelo.work.amend":
-            filing_record_id, casilla_id = _seeded_modelo_filing_record(profile_id)
+            filing_record_id, casilla_id = _seeded_modelo_filing_record(profile_id, operation=operation)
             # The subject is the FILED RECORD, not the work unit: two amendments
             # of one filed return describe competing corrections to the same
             # declaration and must serialise against each other.
@@ -822,7 +825,7 @@ def _payload(
                 "actor": _ACTOR,
             }
         case "modelo.work.verify":
-            revision_id = _seeded_modelo_calculation_revision(profile_id)
+            revision_id = _seeded_modelo_calculation_revision(profile_id, operation=operation)
             subject_ref = revision_id
             values = {"calculation_revision_id": revision_id, "actor": _ACTOR}
         case "modelo.work.discard":
@@ -831,7 +834,7 @@ def _payload(
             # updated_at come off the seeded unit itself. A baseline resolved
             # inside the executor would match by construction and the
             # compare-and-swap this operation declares would never refuse.
-            unit = _seeded_modelo_work_unit(profile_id)
+            unit = _seeded_modelo_work_unit(profile_id, operation=operation)
             subject_ref = unit.work_unit_id
             values = {
                 "baseline": {
@@ -940,7 +943,6 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
             run_censal_review_through_services(
                 actor_ref="operator:frontend-test",
                 decide=decide,
-                services=driver.services,
             )
         )
 
@@ -991,7 +993,6 @@ def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(tmp_p
                 run_censal_review_through_services(
                     actor_ref="operator:frontend-failed-test",
                     decide=lambda _projection: True,
-                    services=failed_services,
                 )
             )
 
@@ -1019,7 +1020,7 @@ def test_every_registered_definition_has_a_conformance_scenario() -> None:
 @pytest.mark.parametrize("definition_id", _registered_definition_ids())
 @pytest.mark.timeout(90)
 def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
-    tmp_path: Path, definition_id: str
+    tmp_path: Path, definition_id: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Actual execution, effects, settlement, review, cleanup, and truthful control refusal."""
     case = _EXPECTATIONS.get(definition_id)
@@ -1033,7 +1034,7 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
         subject_ref, payload, secret = _payload(
-            definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id
+            definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id, operation=operation
         )
         submitted, observed = asyncio.run(
             driver.run(definition_id=definition.definition_id, subject_ref=subject_ref, payload=payload, secret=secret)
@@ -1067,7 +1068,9 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         )
 
 
-def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(tmp_path: Path) -> None:
+def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Drive manual cancellation through the public control service to its exact terminal receipt."""
     reached_boundary = asyncio.Event()
     release_boundary = asyncio.Event()
@@ -1083,7 +1086,9 @@ def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(t
         before_irreversible_section=before_irreversible_section,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("user-profile.censo-review")
-        subject_ref, payload, secret = _payload(definition, profile_id=profile_id, tmp_path=tmp_path)
+        subject_ref, payload, secret = _payload(
+            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
+        )
 
         async def run() -> None:
             submitted = await driver.prepare(
@@ -1113,7 +1118,9 @@ def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(t
         asyncio.run(run())
 
 
-def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(tmp_path: Path) -> None:
+def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Let the supervisor-owned deadline drive the production CENSO continuation to timed out."""
     cleanup = _CloseWitness()
     with _runtime(
@@ -1122,7 +1129,9 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(tmp_p
         execution_timeout=timedelta(milliseconds=50),
     ) as (driver, registry, profile_id):
         definition = registry.lookup("user-profile.censo-review")
-        subject_ref, payload, secret = _payload(definition, profile_id=profile_id, tmp_path=tmp_path)
+        subject_ref, payload, secret = _payload(
+            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
+        )
 
         async def run() -> None:
             submitted, waiting = await driver.run(
@@ -1145,7 +1154,9 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(tmp_p
         asyncio.run(run())
 
 
-def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_on(tmp_path: Path) -> None:
+def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_on(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Localise a `modelo.work.file` failure to the platform or to the domain.
 
     The registered `modelo.work.file` operation settles FAILED on this exact
@@ -1162,7 +1173,7 @@ def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_o
     from ...application.modelo.filing_actions import file_modelo_revision
 
     with _runtime(tmp_path / "authority-control", cleanup=_CloseWitness()) as (_driver, _registry, profile_id):
-        revision_id, _report_id = _seeded_modelo_verification_report(profile_id)
+        revision_id, _report_id = _seeded_modelo_verification_report(profile_id, operation=operation)
 
         with bundled_indexed_authority().operation() as operation:
             record = file_modelo_revision(

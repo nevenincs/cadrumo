@@ -64,9 +64,18 @@ def _recipient_encryption_key_object_key(bucket_id: str) -> str:
 class RecipientEncryptionAdapter:
     """Concrete recipient-encryption capability backed by secure objects."""
 
-    def __init__(self, *, repository: SecureObjectRepository, bucket_id: str | None = None) -> None:
+    def __init__(self, *, repository: SecureObjectRepository | None = None, bucket_id: str | None = None) -> None:
+        """Bind optional keypair persistence while retaining stateless cryptographic operations."""
         self._repository = repository
         self._bucket_id = canonical_bucket_id(bucket_id) if bucket_id is not None else None
+
+    def _keypair_repository(self) -> SecureObjectRepository:
+        if self._repository is None:
+            raise RecipientEncryptionError(
+                "recipient encryption keypair persistence requires a secure-object repository",
+                translated_message="application.modelo.errors.recipient_registry_load_failed",
+            )
+        return self._repository
 
     def _bound_bucket_id(self, bucket_id: str) -> str:
         normalized = canonical_bucket_id(bucket_id)
@@ -78,8 +87,9 @@ class RecipientEncryptionAdapter:
         return normalized
 
     def _load_keypair(self, *, bucket_id: str, object_key: str) -> RecipientEncryptionKeypair | None:
+        repository = self._keypair_repository()
         try:
-            record = self._repository.load(
+            record = repository.load(
                 _NAMESPACE.namespace,
                 object_key,
                 expected_class=_NAMESPACE.sensitivity,
@@ -130,7 +140,7 @@ class RecipientEncryptionAdapter:
             created_at=generated_at or _utc_now(),
         )
         try:
-            self._repository.save(
+            self._keypair_repository().save(
                 namespace=_NAMESPACE.namespace,
                 object_key=object_key,
                 classification=_NAMESPACE.sensitivity,
@@ -140,14 +150,14 @@ class RecipientEncryptionAdapter:
                 write_provenance="adapters.persistence.profile.review_package_recipient_encryption",
                 expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
             )
-        except SecureObjectRevisionConflictError:
+        except SecureObjectRevisionConflictError as exc:
             winner = self._load_keypair(bucket_id=normalized_bucket_id, object_key=object_key)
             if winner is None:
                 raise RecipientEncryptionError(
                     "recipient encryption keypair creation conflicted but no winner was readable",
                     context={"namespace": _NAMESPACE.namespace, "object_key": object_key},
                     translated_message="application.modelo.errors.recipient_registry_load_failed",
-                )
+                ) from exc
             return winner
         except (OSError, StorageError) as exc:
             raise RecipientEncryptionError(

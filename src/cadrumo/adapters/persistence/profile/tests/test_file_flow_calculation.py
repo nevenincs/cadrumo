@@ -80,7 +80,10 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: Repos) 
         )
 
     assert first.calculation_revision_id != second.calculation_revision_id
-    with calculation_ports_for_test(calculation_repository=cr_repo) as _calculation_ports_80:
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        calculation_repository=cr_repo,
+    ) as _calculation_ports_80:
         revisions = list_calculation_revisions(
             work_unit_id=work_unit.work_unit_id,
             ports=_calculation_ports_80,
@@ -136,7 +139,10 @@ def test_calculate_is_idempotent_on_identical_inputs(repos: Repos) -> None:
             clock=T2,
         )
     assert first.calculation_revision_id == second.calculation_revision_id
-    with calculation_ports_for_test(calculation_repository=cr_repo) as _calculation_ports_128:
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        calculation_repository=cr_repo,
+    ) as _calculation_ports_128:
         revisions = list_calculation_revisions(
             work_unit_id=work_unit.work_unit_id,
             ports=_calculation_ports_128,
@@ -170,7 +176,7 @@ def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos: Repos
     )
     wu_repo.save(upsert_work_unit(wu_repo.load(), stale_work_unit))
     with calculation_ports_for_test(
-        bucket_id=wu_repo.bucket_id,
+        bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -510,13 +516,15 @@ def test_local_filing_commits_state_pointer_and_filed_event_together(
     )
     # Seed the cross-period sources OUTSIDE the recorded window: they are test
     # setup, and their writes would otherwise dominate the observed shape.
-    seed_clean_cross_period_sources(
-        work_unit,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-    )
+    with bundled_indexed_authority().operation() as seed_operation:
+        seed_clean_cross_period_sources(
+            work_unit,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            operation=seed_operation,
+        )
     recorder = WriteUnitRecorder(file_flow_runtime.engine)
 
     with recorder.recording(), bundled_indexed_authority().operation() as operation:

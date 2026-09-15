@@ -19,6 +19,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
@@ -414,7 +416,7 @@ def test_work_observations_result_roundtrips_observation_contract() -> None:
     assert restored.observations[0].legal_refs == ("ley-58-2003:art-120",)
 
 
-def test_calculation_revision_projection_preserves_absent_by_design_marker() -> None:
+def test_calculation_revision_projection_preserves_absent_by_design_marker(operation: PinnedAuthorityOperation) -> None:
     """An intentional zero must stay distinguishable from a value-bearing zero at the CLI edge.
 
     :class:`CasillaObservation` persists ``absent_by_design`` so a casilla whose
@@ -456,7 +458,7 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
         source_provenance=(),
     )
 
-    payload = calculation_revision_payload(revision, include_result_summary=False)
+    payload = calculation_revision_payload(revision, include_result_summary=False, operation=operation)
     by_casilla = {row.casilla_id: row for row in payload.observations}
 
     assert by_casilla[_PAYLOAD_CASILLA].absent_by_design is True
@@ -468,7 +470,9 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
     assert restored_by_casilla[_INPUT_EJERCICIO_CASILLA].absent_by_design is False
 
 
-def test_calculation_revision_projection_carries_dependency_treatment_without_disturbing_the_value() -> None:
+def test_calculation_revision_projection_carries_dependency_treatment_without_disturbing_the_value(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A ``factual_evidence`` carry reaches the operator-facing payload with its value intact.
 
     The registry's declared carry classification (``direct_annual_settlement`` /
@@ -527,7 +531,7 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
         filing_instance_evidence=None,
     )
 
-    payload = calculation_revision_payload(revision, include_result_summary=False)
+    payload = calculation_revision_payload(revision, include_result_summary=False, operation=operation)
     by_source_ref = {row.source_ref: row for row in payload.source_provenance}
 
     assert by_source_ref["193:2024:0A:withholding-total"].resolver_id == "previous_filing"

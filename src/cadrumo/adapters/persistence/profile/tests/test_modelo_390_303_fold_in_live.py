@@ -69,7 +69,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
@@ -241,7 +241,7 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
     )
 
 
-def _calculate_m390_annual(secure_objects: SecureObjectRepository):
+def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation):
     """Run the live M390/2025/0A calculate over the seeded bucket.
 
     The three ``relation_prefill`` bindings and the two
@@ -261,6 +261,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
         revision_id=snapshot.revision.id,
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -272,7 +273,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
 
 
 def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: filed M303 quarters feed M390 annual relations and compensation partition.
 
@@ -302,7 +303,7 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
     assert len(set(devengada_values)) == 4, "test requires DISTINCT per-quarter devengada values"
     assert Decimal("620.00") == _EXPECTED_DEVENGADA_TOTAL
 
-    result = _calculate_m390_annual(secure_objects)
+    result = _calculate_m390_annual(secure_objects, operation=operation)
 
     casilla_values = result.revision.casilla_values
 

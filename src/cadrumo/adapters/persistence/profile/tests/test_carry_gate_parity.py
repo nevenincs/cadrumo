@@ -46,7 +46,12 @@ from cadrumo.application.calculations.revision_carry_gate import revision_carry_
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 
@@ -152,8 +157,7 @@ def _cross_period_refused(
 
 
 def _public_carry_outcomes(
-    tmp_path: Path,
-    stamped_revision_id: str,
+    tmp_path: Path, stamped_revision_id: str, *, operation: PinnedAuthorityOperation
 ) -> tuple[bool, bool]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = CalculationObservationRepository()
@@ -188,7 +192,10 @@ def _public_carry_outcomes(
 
         binding_snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
         binding_report = resolve_bindings_from_local_store(
-            binding_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
+            binding_snapshot,
+            repository=repository,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=operation,
         )
         binding_refused = _M303_CARRY_BINDING_ID not in binding_report.binding_values
 
@@ -201,6 +208,7 @@ def _public_carry_outcomes(
             verification_repository=VerificationReportCatalogueRepository(),
             justificante_repository=JustificanteRepository(),
             taxpayer_tax_id=_TAX_ID,
+            operation=operation,
         )
         requirement_keys = {
             (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token)
@@ -210,7 +218,9 @@ def _public_carry_outcomes(
 
 
 @pytest.mark.parametrize("case", ["matching", "divergent"])
-def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Path, case: str) -> None:
+def test_public_carry_reads_match_shared_gate_for_resolvable_source(
+    tmp_path: Path, case: str, *, operation: PinnedAuthorityOperation
+) -> None:
     """Binding-prefill and cross-period readers expose the shared R2 decision."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         if case == "matching":
@@ -228,7 +238,7 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Pa
             ),
             operation=_authority_operation_for_test,
         ).refused
-        binding_refused, cross_period_refused = _public_carry_outcomes(tmp_path / case, stamp)
+        binding_refused, cross_period_refused = _public_carry_outcomes(tmp_path / case, stamp, operation=operation)
 
         assert shared_refused is expected, f"shared gate disagreed with the spec for {case!r}"
         assert binding_refused is expected, f"binding prefill diverged from the shared gate for {case!r}"

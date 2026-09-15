@@ -90,7 +90,12 @@ from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.iva_category_resolution import IvaCategoryOutcome
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from cadrumo.domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
@@ -101,6 +106,7 @@ from cadrumo.tests.country_vocabulary_specimens import an_uncatalogued_alpha2, a
 from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, repository, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile
+from ._invoice_confirmation_test_support import InvoiceAuthorityFixture, invoice_draft_extraction_kwargs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -112,6 +118,7 @@ def _registry_legends(operation):
     """Resolve the registry vocabulary on the test's pinned authority lease."""
     period = default_invoice_extraction_period()
     return resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
 
 #: The specimen carrying a full address block on each party, both stating ``ESP``.
 _WITH_ADDRESSES: Final = "facturae_32_series_and_parties_invoice.xml"
@@ -187,14 +194,17 @@ def _draft(
     objects: SecureObjectRepository,
     tmp_path: Path,
     name: str,
+    operation: PinnedAuthorityOperation,
 ) -> InvoiceDraft:
     staged = tmp_path / name
     staged.write_text(xml, encoding="utf-8")
     evidence_id = _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=staged).record.evidence_id
+    authority = InvoiceAuthorityFixture(operation=operation, legends=_registry_legends(operation))
     return extract_invoice_draft_from_evidence(
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -288,6 +298,8 @@ class TestTheRecordsOwnTokenSurvivesTheLookup:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """``THA`` arrives as ``THA``, beside a resolved field that stays empty.
 
@@ -302,6 +314,7 @@ class TestTheRecordsOwnTokenSurvivesTheLookup:
             objects=secure_objects,
             tmp_path=tmp_path,
             name="facturae_tha.xml",
+            operation=operation,
         )
 
         assert draft.supplier_stated_country_code == _UNCATALOGUED_ALPHA3
@@ -316,6 +329,8 @@ class TestTheRecordsOwnTokenSurvivesTheLookup:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The other spelling, on the other kind of failure."""
         draft = _draft(
@@ -324,6 +339,7 @@ class TestTheRecordsOwnTokenSurvivesTheLookup:
             objects=secure_objects,
             tmp_path=tmp_path,
             name="facturae_xx.xml",
+            operation=operation,
         )
 
         assert draft.supplier_stated_country_code == _UNASSIGNED_ALPHA2
@@ -334,6 +350,8 @@ class TestTheRecordsOwnTokenSurvivesTheLookup:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The control. A document we CAN place must still say what it said.
 
@@ -347,6 +365,7 @@ class TestTheRecordsOwnTokenSurvivesTheLookup:
             objects=secure_objects,
             tmp_path=tmp_path,
             name="facturae_esp.xml",
+            operation=operation,
         )
 
         assert draft.supplier_stated_country_code == _CATALOGUED_ALPHA3
@@ -357,6 +376,8 @@ class TestTheRecordsOwnTokenSurvivesTheLookup:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The opposite direction: absent stays absent on the new field too.
 
@@ -369,6 +390,7 @@ class TestTheRecordsOwnTokenSurvivesTheLookup:
             objects=secure_objects,
             tmp_path=tmp_path,
             name="facturae_silent.xml",
+            operation=operation,
         )
 
         assert draft.supplier_stated_country_code is None
@@ -384,6 +406,8 @@ class TestTheProvenanceRecordsTheUnplaceableToken:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The record stated it, so it is grounded exactly like any copied value.
 
@@ -397,6 +421,7 @@ class TestTheProvenanceRecordsTheUnplaceableToken:
             objects=secure_objects,
             tmp_path=tmp_path,
             name="facturae_tha_envelope.xml",
+            operation=operation,
         )
 
         envelopes = [e for e in draft.provenance if e.field == "supplier_stated_country_code"]
@@ -414,6 +439,8 @@ class TestTheProvenanceRecordsTheUnplaceableToken:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """Provenance about nothing is what the envelope rule forbids.
 
@@ -426,6 +453,7 @@ class TestTheProvenanceRecordsTheUnplaceableToken:
             objects=secure_objects,
             tmp_path=tmp_path,
             name="facturae_silent_envelope.xml",
+            operation=operation,
         )
 
         assert [e for e in draft.provenance if e.field.endswith("_country_code")] == []
@@ -439,6 +467,8 @@ class TestTheOperatorIsTold:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The urgent case, end to end from document bytes.
 
@@ -453,6 +483,7 @@ class TestTheOperatorIsTold:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_tha_advisory.xml",
+                operation=operation,
             )
 
             advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
@@ -470,6 +501,8 @@ class TestTheOperatorIsTold:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The same jurisdiction in the other spelling reaches the same sentence.
 
@@ -484,6 +517,7 @@ class TestTheOperatorIsTold:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_th_advisory.xml",
+                operation=operation,
             )
 
             advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
@@ -497,6 +531,8 @@ class TestTheOperatorIsTold:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The two kinds stay apart on the real path, not only on hand-built drafts."""
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
@@ -506,6 +542,7 @@ class TestTheOperatorIsTold:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_xx_advisory.xml",
+                operation=operation,
             )
 
             advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
@@ -519,6 +556,8 @@ class TestTheOperatorIsTold:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The reserved ranges reach the operator in BOTH spellings, as one kind.
 
@@ -540,6 +579,7 @@ class TestTheOperatorIsTold:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_unassigned_alpha3_advisory.xml",
+                operation=operation,
             )
 
             advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
@@ -554,6 +594,8 @@ class TestTheOperatorIsTold:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """An honest absence must stay an absence, or the fix only moves the confusion.
 
@@ -568,6 +610,7 @@ class TestTheOperatorIsTold:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_silent_advisory.xml",
+                operation=operation,
             )
 
             assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is None
@@ -577,6 +620,8 @@ class TestTheOperatorIsTold:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The negative control on the firing itself.
 
@@ -591,6 +636,7 @@ class TestTheOperatorIsTold:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_esp_advisory.xml",
+                operation=operation,
             )
 
             assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is None
@@ -604,6 +650,8 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """Stated-something and stated-nothing must not project the same country surface.
 
@@ -620,6 +668,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_compare_tha.xml",
+                operation=operation,
             )
             silent = _draft(
                 _corpus(_WITHOUT_ADDRESSES),
@@ -627,6 +676,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_compare_silent.xml",
+                operation=operation,
             )
 
             # The resolved field agrees on both, which is exactly the collapse: the
@@ -648,6 +698,8 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """Visibility is not placement, and must not have become it.
 
@@ -665,6 +717,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="facturae_tha_ladder.xml",
+                operation=operation,
             )
 
             resolved = resolve_draft_counterparty_establishment(
@@ -755,6 +808,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         tmp_path: Path,
         name: str,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        operation: PinnedAuthorityOperation,
     ) -> ConfirmedEstablishment:
         draft = _draft(
             _export_billed_to(code),
@@ -762,6 +816,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             objects=objects,
             tmp_path=tmp_path,
             name=name,
+            operation=operation,
         )
         # The document's own declared relief, asserted rather than assumed: if
         # the specimen stopped declaring `G` every case below would pass by
@@ -772,6 +827,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             draft=draft,
             kind=InvoiceKind.ISSUED,
             repository=repository,
+            legends=_registry_legends(operation),
+            operation=operation,
         )
 
     @staticmethod
@@ -785,6 +842,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The exemption reaches the guard from a document, and forgives ONE slot.
 
@@ -808,6 +867,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             tmp_path=tmp_path,
             name="ubl_export_uncatalogued.xml",
             repository=repository,
+            operation=operation,
         )
 
         assert self._counterparty_unestablished(confirmed)
@@ -821,6 +881,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The alpha-3 form reaches the exemption, which the alpha-2 status axis cannot answer.
 
@@ -837,6 +899,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             tmp_path=tmp_path,
             name="ubl_export_uncatalogued_alpha3.xml",
             repository=repository,
+            operation=operation,
         )
 
         assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
@@ -849,6 +912,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The positive control, and it is the specimen exactly as authored.
 
@@ -874,6 +939,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             tmp_path=tmp_path,
             name="ubl_export_silent.xml",
             repository=repository,
+            operation=operation,
         )
 
         assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
@@ -889,6 +955,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The other control, on the direction that costs money.
 
@@ -906,6 +974,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             tmp_path=tmp_path,
             name="ubl_export_unassigned.xml",
             repository=repository,
+            operation=operation,
         )
 
         assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
@@ -917,6 +986,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The reserved-code refusal in the spelling that had no case, on the path that pays.
 
@@ -939,6 +1010,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             tmp_path=tmp_path,
             name="ubl_export_unassigned_alpha3.xml",
             repository=repository,
+            operation=operation,
         )
 
         assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
@@ -949,6 +1021,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """And with no other residency outstanding, the claim is honoured.
 
@@ -968,6 +1042,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="ubl_export_established_filer.xml",
+                operation=operation,
             )
             declared = DeclaredFacts(
                 stated_category=DeclaredFact(
@@ -1018,6 +1093,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The under-declaration direction this scoping closes, stated on its own.
 
@@ -1035,6 +1112,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
                 objects=secure_objects,
                 tmp_path=tmp_path,
                 name="ubl_export_no_filer.xml",
+                operation=operation,
             )
             declared = DeclaredFacts(
                 stated_category=DeclaredFact(
@@ -1079,6 +1157,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The population the vocabulary does carry, which is most of it.
 
@@ -1094,6 +1174,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             tmp_path=tmp_path,
             name="ubl_export_us.xml",
             repository=repository,
+            operation=operation,
         )
 
         assert not self._counterparty_unestablished(confirmed)

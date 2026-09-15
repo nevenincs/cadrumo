@@ -593,13 +593,28 @@ def test_builders_refuse_a_reversed_window(profile: TestRuntimeProfile) -> None:
     """The refusal reaches the real builders, not only direct construction."""
     recorder = LLMRunTelemetryRecorder()
     _seed(recorder)
-    for build in (build_run_health_report, build_latency_report, build_error_breakdown, build_llm_usage_report):
-        with pytest.raises(ValidationError):
-            kwargs = {
-                "since": date(2026, 2, 1),
-                "until": date(2026, 1, 1),
-                "run_telemetry_port": LLMRunTelemetryDiagnosticsAdapter(recorder),
-            }
-            if build is build_run_health_report:
-                kwargs["auth_probe_port"] = _FakeAuthProbe()
-            build(**kwargs)
+    with pytest.raises(ValidationError):
+        build_run_health_report(
+            since=date(2026, 2, 1),
+            until=date(2026, 1, 1),
+            run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder),
+            auth_probe_port=_FakeAuthProbe(),
+        )
+    with pytest.raises(ValidationError):
+        build_latency_report(
+            since=date(2026, 2, 1),
+            until=date(2026, 1, 1),
+            run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder),
+        )
+    with pytest.raises(ValidationError):
+        build_error_breakdown(
+            since=date(2026, 2, 1),
+            until=date(2026, 1, 1),
+            run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder),
+        )
+    with pytest.raises(ValidationError):
+        build_llm_usage_report(
+            since=date(2026, 2, 1),
+            until=date(2026, 1, 1),
+            run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder),
+        )

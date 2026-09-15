@@ -16,11 +16,12 @@ from datetime import UTC, date, datetime
 from enum import StrEnum
 from typing import Any, Final, cast
 
-from dev.registry.compiler.authority import compiled_bundled_authority
 from textual.app import App
 from textual.screen import Screen
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 
 from ....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
@@ -106,6 +107,7 @@ from ....application.user_profile.censal_operation import (
 from ....core.casilla_id import validated_casilla_id
 from ....core.operations import OperationEffect, OperationLifecycle
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -233,7 +235,9 @@ def _operation_contracts() -> OperationPublicContractSetV1:
     """Build the canonical censo contract with its existing action join."""
     definition = build_censal_operation_definition(
         certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+        browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=build_censal_fetch_port(),
     ).model_copy(update={"action_reference": ActionReference(action_id="operator.profile.edit")})
     contract = build_censal_operation_registration(definition).contract
     return OperationPublicContractSetV1.build((contract,))
@@ -406,6 +410,8 @@ def _declaration_observations(
 
 def _declaration_catalogues(
     scenario: WorkbenchFixtureScenario,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[
     WorkUnitCatalogue,
     CalculationRevisionCatalogue,
@@ -416,7 +422,7 @@ def _declaration_catalogues(
         return WorkUnitCatalogue(), CalculationRevisionCatalogue(), ModeloRecordCatalogue(), ()
     period = Period.from_year_and_code(2026, "1T")
     casilla = validated_casilla_id("01")
-    registry_snapshot_ref = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
+    registry_snapshot_ref = operation.snapshot("130", filing_year=2026, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo=ModeloCode("130"),
@@ -494,15 +500,17 @@ def _declaration_catalogues(
 
 
 def _declarations_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsWorkspaceProjectionV1:
-    work, revisions, filings, lifecycle = _declaration_catalogues(scenario)
-    return project_declarations_workspace(
-        bucket_id=_BUCKET,
-        work_units=work,
-        calculation_revisions=revisions,
-        filing_records=filings,
-        lifecycle_facts=lifecycle,
-        zone_observations=_declaration_observations(scenario),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work, revisions, filings, lifecycle = _declaration_catalogues(scenario, operation=operation)
+        return project_declarations_workspace(
+            operation=operation,
+            bucket_id=_BUCKET,
+            work_units=work,
+            calculation_revisions=revisions,
+            filing_records=filings,
+            lifecycle_facts=lifecycle,
+            zone_observations=_declaration_observations(scenario),
+        )
 
 
 def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCalendarProjectionV1:

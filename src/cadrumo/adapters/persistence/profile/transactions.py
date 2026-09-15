@@ -297,11 +297,17 @@ def _migrated_iva_rate_kind(
 ) -> IvaRateKind:
     """Resolve the one dated legal rate tier for persisted IVA evidence."""
     operation_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
-    if is_iva_deduction_kind(fact.kind, "kind.reagp"):
-        return resolve_iva_rate_kind_catalogue(effective_date=operation_date).exempt_token
-    rate_kinds = rate_kinds_for_declared_rate(
-        spanish_eu_member_state(effective_date=operation_date), fact.iva_rate, operation_date
-    )
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        if is_iva_deduction_kind(fact.kind, "kind.reagp"):
+            return resolve_iva_rate_kind_catalogue(effective_date=operation_date, authority=operation).exempt_token
+        rate_kinds = rate_kinds_for_declared_rate(
+            spanish_eu_member_state(effective_date=operation_date, authority=operation),
+            fact.iva_rate,
+            operation_date,
+            operation=operation,
+        )
     if len(rate_kinds) != 1:
         raise LedgerStorageError(
             f"transaction {transaction.transaction_id}: persisted IVA rate does not resolve to exactly one legal tier"

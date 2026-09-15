@@ -219,6 +219,7 @@ def review_package_build(
                 draft_bytes=draft_bytes,
                 output_path=operator_input.output,
                 built_by=resolved_actor,
+                operation=authority_operation(ctx),
                 notes=operator_input.notes,
             )
         except (ReviewPackageRevisionStateError, ReviewPackageError) as exc:
@@ -239,7 +240,7 @@ def review_package_verify(ctx: typer.Context, package: Path) -> None:
     from ._modelo_cli_support import bad_parameter_from_error
 
     try:
-        verification = verify_review_package(package)
+        verification = verify_review_package(package, operation=authority_operation(ctx))
     except FileNotFoundError as exc:
         raise typer.BadParameter(
             tr(

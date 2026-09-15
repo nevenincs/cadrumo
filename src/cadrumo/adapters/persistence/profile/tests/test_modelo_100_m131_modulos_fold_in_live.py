@@ -53,6 +53,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -236,7 +237,9 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     }
 
 
-def _calculate_m100_annual(objects: SecureObjectRepository, *, estimation_regime: str):
+def _calculate_m100_annual(
+    objects: SecureObjectRepository, *, estimation_regime: str, operation: PinnedAuthorityOperation
+):
     _seed_taxpayer_profile(objects, estimation_regime=estimation_regime)
     _seed_prior_year_m100_zero_carry(objects)
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
@@ -253,6 +256,7 @@ def _calculate_m100_annual(objects: SecureObjectRepository, *, estimation_regime
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -271,11 +275,11 @@ def _calculate_m100_annual(objects: SecureObjectRepository, *, estimation_regime
 
 
 def test_objective_estimation_profile_folds_m131_rendimiento_into_m100_modulos(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _seed_m131_quarters(secure_objects)
 
-    result = _calculate_m100_annual(secure_objects, estimation_regime="objetiva")
+    result = _calculate_m100_annual(secure_objects, estimation_regime="objetiva", operation=operation)
 
     values = result.revision.casilla_values
     assert values[_M100_EO_RENDIMIENTO_CASILLA] == _EXPECTED_M131_RENDIMIENTO_TOTAL
@@ -289,9 +293,9 @@ def test_objective_estimation_profile_folds_m131_rendimiento_into_m100_modulos(
 
 
 def test_direct_estimation_profile_keeps_m131_modulos_binding_at_not_applicable_zero(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    result = _calculate_m100_annual(secure_objects, estimation_regime="directa_normal")
+    result = _calculate_m100_annual(secure_objects, estimation_regime="directa_normal", operation=operation)
 
     assert result.revision.casilla_values[_M100_EO_RENDIMIENTO_CASILLA] == Decimal("0")
     assert result.revision.casilla_values[_M100_EO_SUM_CASILLA] == Decimal("0.00")

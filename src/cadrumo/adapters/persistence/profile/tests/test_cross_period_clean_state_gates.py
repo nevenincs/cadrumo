@@ -46,7 +46,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -232,6 +232,7 @@ def _seed_303_cross_period_sources(
     observation_repository: CalculationObservationRepository,
     bucket_event_repository: BucketEventHistoryRepository,
     csv_periods: set[str],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A")
     source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
@@ -261,6 +262,7 @@ def _seed_303_cross_period_sources(
                 work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
             ),
             clock=_CLOCK,
+            operation=operation,
         )
         values = _source_values(period, tuple(sorted(source_casilla_ids)))
         if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER:
@@ -494,7 +496,7 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
 
 
 def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificante(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _store_ready_profile_record()
@@ -512,6 +514,7 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
             observation_repository=observations,
             bucket_event_repository=events,
             csv_periods={"1T"},
+            operation=operation,
         )
         revision_id = _persist_390_draft(
             work_unit_repository=work_units,

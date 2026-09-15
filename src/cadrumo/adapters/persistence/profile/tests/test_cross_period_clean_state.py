@@ -75,6 +75,7 @@ from cadrumo.application.calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenanceKind,
 )
+from cadrumo.application.tests.period_override_authority import pinned_operation_for_authority
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -237,7 +238,7 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         inventory = cross_period_dependency_inventory(
-            compiled_bundled_authority(),
+            pinned_operation_for_authority(compiled_bundled_authority()),
             filing_year=2026,
         )
 
@@ -270,7 +271,7 @@ def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         inventory = cross_period_dependency_inventory(
-            compiled_bundled_authority(),
+            pinned_operation_for_authority(compiled_bundled_authority()),
             filing_year=2025,
             modelos=("100",),
         )
@@ -298,7 +299,7 @@ def test_cross_period_dependency_inventory_documents_patrimonio_and_foreign_asse
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         inventories = tuple(
             cross_period_dependency_inventory(
-                compiled_bundled_authority(),
+                pinned_operation_for_authority(compiled_bundled_authority()),
                 filing_year=filing_year,
             )
             for filing_year in (2025, 2026)

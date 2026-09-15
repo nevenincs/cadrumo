@@ -20,6 +20,7 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
@@ -56,9 +57,9 @@ _M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
 _SEEDED_REVISION_AT = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 
 
-def _general_m303_filing_evidence(period: Period) -> FilingInstanceEvidence:
+def _general_m303_filing_evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
     """Delegate to the one shared typed-evidence fixture builder."""
-    return general_m303_filing_evidence(period, reference="test:export:exonerado-not-applicable")
+    return general_m303_filing_evidence(period, reference="test:export:exonerado-not-applicable", operation=operation)
 
 
 def _casilla_id_from_payload(value: object) -> CasillaId:

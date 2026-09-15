@@ -107,15 +107,17 @@ class _ConflictingObservationRepository(CalculationObservationRepository):
 
 def test_source_lexicals_refuse_dropped_casillas(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
-    work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T1,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
+            clock=_T1,
+        )
     with pytest.raises(ExternalModeloImportError):
         _import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
@@ -137,15 +139,17 @@ def test_source_lexicals_refuse_dropped_casillas(repos: _Repos) -> None:
 
 def test_source_lexicals_refuse_value_shadowing(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
-    work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T1,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
+            clock=_T1,
+        )
     with pytest.raises(ExternalModeloImportError):
         _import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
@@ -301,15 +305,17 @@ def test_csv_filing_refuses_tampered_observation_evidence_binding(repos: _Repos)
 
 def test_observation_write_failure_rolls_back_entire_external_import_batch(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
-        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
-        clock=_T1,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2019-y-siguientes",
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
+            operation=operation,
+            clock=_T1,
+        )
     _import_external_filing_source(
         ExternalFilingBaselineSource(
             modelo="130",

@@ -23,6 +23,7 @@ from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 from cadrumo.domain.deadlines.models import M303RegimeComposition
 from cadrumo.domain.prorrata_register.register import ProrrataRegister
@@ -72,11 +73,11 @@ def _params_for(year: int) -> BienesInversionRegularizacionParameters:
     )
 
 
-def _general_m303_filing_facts():
+def _general_m303_filing_facts(*, operation: PinnedAuthorityOperation):
     period = Period.from_year_and_code(2026, "1T")
     prorrata_register = ProrrataRegister()
     return resolve_m303_filing_facts(
-        evidence=_general_m303_filing_evidence(period),
+        evidence=_general_m303_filing_evidence(period, operation=operation),
         supplier_regime=resolve_m303_supplier_regime_arrival(
             period=period,
             iva_aggregation=IvaLedgerAggregation(period=period),
@@ -101,9 +102,11 @@ def _general_m303_filing_facts():
     )
 
 
-def test_export_scope_mapper_rejects_general_evidence_for_a_simplified_profile() -> None:
+def test_export_scope_mapper_rejects_general_evidence_for_a_simplified_profile(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """General evidence cannot be exported under a simplified profile composition."""
-    filing_facts = _general_m303_filing_facts()
+    filing_facts = _general_m303_filing_facts(operation=operation)
     workflow_profile = _profile()
     assert workflow_profile.iva is not None
     simplified_profile = workflow_profile.model_copy(

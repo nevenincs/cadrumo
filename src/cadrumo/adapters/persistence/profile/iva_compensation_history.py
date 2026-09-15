@@ -20,6 +20,7 @@ from ....application.calculations.observations_repository import CalculationObse
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState, iva_compensation_period_sort_key
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.secure_object_namespaces import IVA_COMPENSATION_HISTORY_NAMESPACE
@@ -67,7 +68,8 @@ class IvaCompensationHistoryRepository(
     def _load_period(self, period: Period) -> IvaCompensationPeriodState | None:
         state = self.load(iva_compensation_period_key(period))
         if state is not None:
-            require_iva_compensation_period_coordinates_current(state)
+            with bundled_indexed_authority().operation() as operation:
+                require_iva_compensation_period_coordinates_current(state, operation=operation)
         return state
 
     @override
@@ -86,18 +88,27 @@ class IvaCompensationHistoryRepository(
                     key=lambda item: (item.filing_year, iva_compensation_period_sort_key(item.period)),
                 ),
             )
-            for state in states:
-                require_iva_compensation_period_coordinates_current(state)
+            with bundled_indexed_authority().operation() as operation:
+                for state in states:
+                    require_iva_compensation_period_coordinates_current(state, operation=operation)
             return states
 
         return _call_storage("list", _list)
 
     @override
-    def to_secure_object_write(self, state: IvaCompensationPeriodState) -> SecureObjectWrite:
+    def to_secure_object_write(
+        self,
+        payload: IvaCompensationPeriodState,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Prepare one encrypted history write without committing it."""
 
         def _prepare() -> SecureObjectWrite:
-            return super(IvaCompensationHistoryRepository, self).to_secure_object_write(state)
+            return super(IvaCompensationHistoryRepository, self).to_secure_object_write(
+                payload,
+                expected_revision_id=expected_revision_id,
+            )
 
         return _call_storage("prepare", _prepare)
 

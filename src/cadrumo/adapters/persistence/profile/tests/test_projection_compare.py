@@ -25,7 +25,7 @@ from cadrumo.application.modelo.projection import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -64,6 +64,7 @@ def _seed_work_unit(
     bucket_id: str,
     filing_year: int,
     clock: datetime,
+    operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     return create_work_unit(
         bucket_id=bucket_id,
@@ -73,6 +74,7 @@ def _seed_work_unit(
         revision_id=_M130_REVISION_ID,
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         clock=clock,
+        operation=operation,
     )
 
 
@@ -122,7 +124,9 @@ def _seed_revision(
     return revision
 
 
-def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path: Path) -> None:
+def test_compare_uses_revision_observation_rows_from_registry_snapshot(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_test_profile_record(
@@ -159,12 +163,14 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
             bucket_id=profile.bucket_id,
             filing_year=2025,
             clock=_T0,
+            operation=operation,
         )
         work_2026 = _seed_work_unit(
             work_repository,
             bucket_id=profile.bucket_id,
             filing_year=2026,
             clock=_T0 + timedelta(minutes=1),
+            operation=operation,
         )
         revision_2025 = _seed_revision(
             calculation_repository,
@@ -202,7 +208,9 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
     assert row.source_refs, "comparison rows must not emit blank source_refs"
 
 
-def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(tmp_path: Path) -> None:
+def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The revision-vs-revision delta is the application's own arithmetic on both sides.
 
     Modelo 130's 2026 1T revision publishes a real, non-zero tolerance
@@ -257,12 +265,14 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(t
             bucket_id=profile.bucket_id,
             filing_year=2025,
             clock=_T0,
+            operation=operation,
         )
         work_2026 = _seed_work_unit(
             work_repository,
             bucket_id=profile.bucket_id,
             filing_year=2026,
             clock=_T0 + timedelta(minutes=1),
+            operation=operation,
         )
         _seed_revision(
             calculation_repository,

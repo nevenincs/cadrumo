@@ -19,6 +19,7 @@ from ....application.modelo.tests.registry_revision import active_registry_revis
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -46,11 +47,15 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-def _seed_work_unit_only(*, modelo: str = "130", filing_year: int = 2026, period: str = "1T") -> str:
+def _seed_work_unit_only(
+    *, modelo: str = "130", filing_year: int = 2026, period: str = "1T", operation: PinnedAuthorityOperation
+) -> str:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
+    revision_id = active_registry_revision_id(
+        modelo=modelo, filing_year=filing_year, period=period, operation=operation
+    )
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -76,8 +81,8 @@ def _seed_work_unit_only(*, modelo: str = "130", filing_year: int = 2026, period
     return work_unit_id
 
 
-def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
-    work_unit_id = _seed_work_unit_only()
+def _seed_work_unit_with_draft_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
+    work_unit_id = _seed_work_unit_only(operation=operation)
     now = datetime.now(UTC)
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -92,7 +97,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="130",
-            revision_id=active_registry_revision_id(modelo="130", filing_year=2026, period="1T"),
+            revision_id=active_registry_revision_id(modelo="130", filing_year=2026, period="1T", operation=operation),
             modelo_year=2026,
             period="1T",
         ),
@@ -107,11 +112,15 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
     return work_unit_id, calculation_revision_id
 
 
-def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, period: str) -> tuple[str, str]:
+def _seed_verified_revision_without_inputs(
+    *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
+) -> tuple[str, str]:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
+    revision_id = active_registry_revision_id(
+        modelo=modelo, filing_year=filing_year, period=period, operation=operation
+    )
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -247,11 +256,14 @@ def _seed_modelo_111_revisions(
     filed_index: int | None = None,
     filing_year: int = 2026,
     period: str = "1T",
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, tuple[str, ...]]:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    registry_revision_id = active_registry_revision_id(modelo="111", filing_year=filing_year, period=period)
+    registry_revision_id = active_registry_revision_id(
+        modelo="111", filing_year=filing_year, period=period, operation=operation
+    )
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -324,13 +336,13 @@ def _seed_modelo_111_revisions(
     return work_unit_id, tuple(revision_ids)
 
 
-def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
+def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
     """Persist a verified-complete M202 2024 1P revision with the 2023-2024 binding channel."""
 
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = active_registry_revision_id(modelo="202", filing_year=2024, period="1P")
+    revision_id = active_registry_revision_id(modelo="202", filing_year=2024, period="1P", operation=operation)
     filing_period = Period.from_year_and_code(2024, "1P")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -397,6 +409,8 @@ def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
 
 def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Exporting a verified-complete modelo-111 revision end-to-end
     writes a fichero-BOE file without a header-validation error.
@@ -410,7 +424,9 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     """
 
     _set_export_profile_name()
-    work_unit_id, _ = seed_exportable_modelo_revision(input_values_by_casilla_id=_MODELO_111_INPUTS)
+    work_unit_id, _ = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=_MODELO_111_INPUTS, operation=operation
+    )
     out = tmp_path / "modelo-111.txt"
 
     result = _invoke(
@@ -430,6 +446,8 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
 
 def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     _set_emilio_legal_entity_export_profile()
     _, (calculation_revision_id,) = _seed_modelo_111_revisions(
@@ -437,6 +455,7 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
         current_index=0,
         filing_year=2024,
         period="1T",
+        operation=operation,
     )
     out = tmp_path / "modelo-111-2024-1T.boe"
 
@@ -470,9 +489,11 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
 
 def test_export_modelo_202_2024_emilio_uses_verified_revision_snapshot(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     _set_emilio_legal_entity_export_profile()
-    _, calculation_revision_id = _seed_exportable_modelo_202_2024_revision()
+    _, calculation_revision_id = _seed_exportable_modelo_202_2024_revision(operation=operation)
     out = tmp_path / "modelo-202-2024-1P.boe"
 
     result = _invoke(
@@ -545,6 +566,8 @@ def test_export_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) 
 
 def test_export_resolves_visible_target_to_current_verified_revision(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Natural-key export defaults to the current verified-complete revision."""
 
@@ -552,6 +575,7 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     _, (calculation_revision_id,) = _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
+        operation=operation,
     )
     out = tmp_path / "modelo-111-current.txt"
 
@@ -590,6 +614,8 @@ def test_export_resolves_visible_target_to_current_verified_revision(
 
 def test_export_prefers_filed_pointer_over_current_verified_revision(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Natural-key export prefers filed pointer before current verified pointer."""
 
@@ -598,6 +624,7 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO),
         current_index=0,
         filed_index=1,
+        operation=operation,
     )
     out = tmp_path / "modelo-111-filed.txt"
 
@@ -627,11 +654,14 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
 
 def test_export_refuses_ambiguous_verified_revisions_without_pointer(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Natural-key export refuses multiple verified candidates without a pointer."""
 
     _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.VERIFICADO_COMPLETO),
+        operation=operation,
     )
     out = tmp_path / "modelo-111-ambiguous.txt"
 
@@ -658,13 +688,17 @@ def test_export_refuses_ambiguous_verified_revisions_without_pointer(
 
 def test_export_modelo_111_refuses_when_profile_name_missing(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """When the active profile lacks ``identity.surnames`` the export
     must refuse with a clear error naming the missing profile fact
     rather than fabricating a placeholder name."""
 
     _clear_export_profile_surnames()
-    work_unit_id, _ = seed_exportable_modelo_revision(input_values_by_casilla_id=_MODELO_111_INPUTS)
+    work_unit_id, _ = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=_MODELO_111_INPUTS, operation=operation
+    )
     out = tmp_path / "modelo-111.txt"
 
     result = _invoke(
@@ -676,11 +710,15 @@ def test_export_modelo_111_refuses_when_profile_name_missing(
     assert not out.exists()
 
 
-def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(tmp_path: Path) -> None:
+def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Modelo 121 calculations may exist, but export refuses without an authored layout."""
 
     _set_export_profile_name()
-    work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="121", filing_year=2025, period="0A")
+    work_unit_id, _ = _seed_verified_revision_without_inputs(
+        modelo="121", filing_year=2025, period="0A", operation=operation
+    )
     out = tmp_path / "modelo-121.txt"
 
     result = _invoke(
@@ -708,8 +746,12 @@ def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(tmp_path: P
     assert "Traceback" not in result.output
 
 
-def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(tmp_path: Path) -> None:
-    work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="303", filing_year=2026, period="1T")
+def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    work_unit_id, _ = _seed_verified_revision_without_inputs(
+        modelo="303", filing_year=2026, period="1T", operation=operation
+    )
     out = tmp_path / "modelo-303.txt"
 
     result = _invoke(
@@ -738,8 +780,12 @@ def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(tmp_path
     assert "Traceback" not in result.output
 
 
-def test_export_modelo_100_reaches_xml_dictionary_path_before_cross_period_gate(tmp_path: Path) -> None:
-    work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="100", filing_year=2025, period="0A")
+def test_export_modelo_100_reaches_xml_dictionary_path_before_cross_period_gate(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    work_unit_id, _ = _seed_verified_revision_without_inputs(
+        modelo="100", filing_year=2025, period="0A", operation=operation
+    )
     out = tmp_path / "modelo-100.xml"
 
     result = _invoke(
@@ -766,10 +812,10 @@ def test_export_modelo_100_reaches_xml_dictionary_path_before_cross_period_gate(
     assert "Traceback" not in result.output
 
 
-def test_export_requires_output_flag() -> None:
+def test_export_requires_output_flag(*, operation: PinnedAuthorityOperation) -> None:
     """``--output`` is required; missing it surfaces as Typer usage error."""
 
-    work_unit_id = _seed_work_unit_only()
+    work_unit_id = _seed_work_unit_only(operation=operation)
 
     result = _invoke(["app", "modelo", "export", work_unit_id])
     assert result.exit_code != 0, result.output
@@ -789,11 +835,13 @@ def test_export_refuses_unknown_work_unit(tmp_path: Path) -> None:
 
 def test_export_refuses_work_unit_with_no_exportable_revision(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A work unit whose only revision is in DRAFT state must refuse;
     only verified-complete or filed revisions are exportable."""
 
-    work_unit_id, _ = _seed_work_unit_with_draft_revision()
+    work_unit_id, _ = _seed_work_unit_with_draft_revision(operation=operation)
     out = tmp_path / "out.txt"
 
     result = _invoke(
@@ -818,12 +866,14 @@ def test_export_help_advertises_local_only() -> None:
 
 def test_export_refuses_explicit_revision_in_draft_state(
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """When --revision targets a DRAFT revision explicitly, the service
     raises CalculationRevisionStateError; the CLI surfaces it as a
     refusal."""
 
-    work_unit_id, calc_rev_id = _seed_work_unit_with_draft_revision()
+    work_unit_id, calc_rev_id = _seed_work_unit_with_draft_revision(operation=operation)
     out = tmp_path / "out.txt"
 
     result = _invoke(

@@ -107,7 +107,7 @@ _PLACEHOLDER_WORK_UNIT_ID = derive_work_unit_id(
     period=Period.from_year_and_code(2026, "1T"),
     revision_id="feedback-placeholder-revision",
 )
-_CRYPTO_CAPABILITY = RecipientEncryptionAdapter(repository=object())
+_CRYPTO_CAPABILITY = RecipientEncryptionAdapter()
 
 _PLACEHOLDER_REVISION_ID = derive_calculation_revision_id(
     work_unit_id=_PLACEHOLDER_WORK_UNIT_ID,

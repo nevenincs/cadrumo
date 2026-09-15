@@ -115,7 +115,11 @@ def test_reviewed_proposal_applies_exact_effects_and_one_event(tmp_path: Path) -
         before = repository.load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
 
-        apply_cotejo(WorkflowState(), reviewed_proposal=_proposal(before))
+        apply_cotejo(
+            WorkflowState(),
+            reviewed_proposal=_proposal(before),
+            profile_decode_context=_profile_decode_context_for_test,
+        )
 
         after = repository.load(profile_id)
         values = {fact.path: fact.value for fact in after.facts}
@@ -151,7 +155,11 @@ def test_reviewed_proposal_refuses_stale_baseline_without_effect(tmp_path: Path,
         history_before = ProfileRecordStore(session=session).history()
 
         with pytest.raises(ProfileRecordConflictError, match="baseline is stale"):
-            apply_cotejo(WorkflowState(), reviewed_proposal=stale)
+            apply_cotejo(
+                WorkflowState(),
+                reviewed_proposal=stale,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         assert repository.load(profile_id) == before
         assert ProfileRecordStore(session=session).history() == history_before
@@ -176,7 +184,11 @@ def test_reviewed_proposal_refuses_tampered_intent_before_effect(tmp_path: Path)
         history_before = ProfileRecordStore(session=session).history()
 
         with pytest.raises(ValidationError, match="proposed-effect digest"):
-            apply_cotejo(WorkflowState(), reviewed_proposal=tampered)
+            apply_cotejo(
+                WorkflowState(),
+                reviewed_proposal=tampered,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         assert repository.load(profile_id) == before
         assert ProfileRecordStore(session=session).history() == history_before
@@ -199,7 +211,11 @@ def test_reviewed_proposal_refuses_foreign_profile_baseline_without_effect(tmp_p
         history_before = ProfileRecordStore(session=session).history()
 
         with pytest.raises(ProfileRecordConflictError, match="baseline is stale"):
-            apply_cotejo(WorkflowState(), reviewed_proposal=foreign)
+            apply_cotejo(
+                WorkflowState(),
+                reviewed_proposal=foreign,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         assert repository.load(profile_id) == before
         assert ProfileRecordStore(session=session).history() == history_before
@@ -228,11 +244,22 @@ def test_incomplete_direct_mode_refuses_before_publication(
 
         with pytest.raises(ValueError, match=message):
             if missing_effect == "adopted":
-                apply_cotejo(WorkflowState(), adopted=())
+                apply_cotejo(
+                    WorkflowState(),
+                    adopted=(),
+                    profile_decode_context=_profile_decode_context_for_test,
+                )
             elif missing_effect == "divergences":
-                apply_cotejo(WorkflowState(), divergences=())
+                apply_cotejo(
+                    WorkflowState(),
+                    divergences=(),
+                    profile_decode_context=_profile_decode_context_for_test,
+                )
             else:
-                apply_cotejo(WorkflowState())
+                apply_cotejo(
+                    WorkflowState(),
+                    profile_decode_context=_profile_decode_context_for_test,
+                )
 
         assert repository.load(profile_id) == before
         assert ProfileRecordStore(session=session).history() == history_before
@@ -254,9 +281,19 @@ def test_reviewed_and_direct_mixed_mode_refuses_before_publication(
 
         with pytest.raises(ValueError, match="cannot be combined with direct cotejo effects"):
             if direct_effect == "adopted":
-                apply_cotejo(WorkflowState(), reviewed_proposal=proposal, adopted=())
+                apply_cotejo(
+                    WorkflowState(),
+                    reviewed_proposal=proposal,
+                    adopted=(),
+                    profile_decode_context=_profile_decode_context_for_test,
+                )
             else:
-                apply_cotejo(WorkflowState(), reviewed_proposal=proposal, divergences=())
+                apply_cotejo(
+                    WorkflowState(),
+                    reviewed_proposal=proposal,
+                    divergences=(),
+                    profile_decode_context=_profile_decode_context_for_test,
+                )
 
         assert repository.load(profile_id) == before
         assert ProfileRecordStore(session=session).history() == history_before

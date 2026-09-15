@@ -17,7 +17,9 @@ local child process. Covers the llm-ledger-classification contract:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
+from typing import NoReturn
 
 import pytest
 
@@ -31,14 +33,45 @@ from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
     repositories as repositories,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from cadrumo.application.ledger.llm_classification import saturate_llm_classification
-from cadrumo.application.ledger.llm_classification_ports import LLMSaturatedSuggestion
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSaturatedSuggestion
+from cadrumo.core.config import load_settings
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 __all__ = ["repositories"]
+
+
+def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
+    """Fail loudly if a no-evidence saturation test reaches a reader port."""
+    raise AssertionError("the no-evidence saturation path must not use this reader port")
+
+
+def _run_reader(run: Callable[[], object]) -> object:
+    return run()
+
+
+def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
+    return run()
+
+
+_LLM_PORTS = LLMClassificationPorts(
+    resolve_evidence_input=_unused_llm_port,
+    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
+    rasterise_pdf=_unused_llm_port,
+    make_text_classifier=_unused_llm_port,
+    make_vision_classifier=_unused_llm_port,
+    run_reader=_run_reader,
+    record_classifier_run=_record_classifier_run,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -48,6 +81,8 @@ __all__ = ["repositories"]
 
 def test_suggest_derives_substrate_from_selected_category(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         repository, _events = repositories
@@ -60,8 +95,12 @@ def test_suggest_derives_substrate_from_selected_category(
         suggestion = saturate_llm_classification(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
+            classifier=_saturating_subprocess_classifier(
+                iva_category=IvaCategory("domestic_general"), operation=operation
+            ),
             transaction_repository=repository,
+            settings=load_settings(),
+            ports=_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -79,6 +118,8 @@ def test_suggest_derives_substrate_from_selected_category(
 
 def test_suggest_zero_rated_category_derives_zero_iva(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         repository, _events = repositories
@@ -87,8 +128,12 @@ def test_suggest_zero_rated_category_derives_zero_iva(
         suggestion = saturate_llm_classification(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_zero")),
+            classifier=_saturating_subprocess_classifier(
+                iva_category=IvaCategory("domestic_zero"), operation=operation
+            ),
             transaction_repository=repository,
+            settings=load_settings(),
+            ports=_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -100,6 +145,8 @@ def test_suggest_zero_rated_category_derives_zero_iva(
 
 def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         repository, _events = repositories
@@ -108,8 +155,12 @@ def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
         suggestion = saturate_llm_classification(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("intra_community_supply")),
+            classifier=_saturating_subprocess_classifier(
+                iva_category=IvaCategory("intra_community_supply"), operation=operation
+            ),
             transaction_repository=repository,
+            settings=load_settings(),
+            ports=_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 

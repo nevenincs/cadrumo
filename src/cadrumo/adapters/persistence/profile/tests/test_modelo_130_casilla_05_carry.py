@@ -48,6 +48,7 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_clean_state import evaluate_cross_period_clean_state
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -277,7 +278,7 @@ def test_not_captured_minoracion_proceeds_treating_absent_16_as_zero(
 
 
 def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requirement(
-    obs_repo: CalculationObservationRepository,
+    obs_repo: CalculationObservationRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A mid-year alta (2T) first filer returns a clean cross-period verdict.
 
@@ -300,6 +301,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
         verification_repository=VerificationReportCatalogueRepository(),
         justificante_repository=JustificanteRepository(),
         activity_start_date=date(2026, 4, 15),
+        operation=operation,
     )
 
     assert verdict.clean, f"a 2T-alta first filer must be clean; blockers={verdict.blockers}"

@@ -16,6 +16,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.aggregation.counterpart import CounterpartObservation
 from ....application.aggregation.service import (
     PerModeloAggregationCommand,
@@ -33,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _PERIOD = Period.from_year_and_code(2025, "0A")
 
 
-def _real_result() -> PerModeloAggregationResult:
+def _real_result(*, operation: PinnedAuthorityOperation) -> PerModeloAggregationResult:
     """Run the real aggregation service over a real observation."""
     observation = CounterpartObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -53,11 +55,12 @@ def _real_result() -> PerModeloAggregationResult:
             period=_PERIOD,
             counterpart_observations=(observation,),
         ),
+        operation=operation,
     )
 
 
-def _valid_payload_fields() -> dict[str, object]:
-    result = _real_result()
+def _valid_payload_fields(*, operation: PinnedAuthorityOperation) -> dict[str, object]:
+    result = _real_result(operation=operation)
     return {
         "modelo": result.modelo,
         "period": result.period,
@@ -68,9 +71,9 @@ def _valid_payload_fields() -> dict[str, object]:
     }
 
 
-def test_projection_carries_the_canonical_result_verbatim() -> None:
+def test_projection_carries_the_canonical_result_verbatim(*, operation: PinnedAuthorityOperation) -> None:
     """Every projected field equals the service result it was built from."""
-    result = _real_result()
+    result = _real_result(operation=operation)
 
     payload = ModeloAggregateResult.from_aggregation_result(result)
 
@@ -82,14 +85,14 @@ def test_projection_carries_the_canonical_result_verbatim() -> None:
     assert payload.result_row_count == result.log_fields.result_row_count
 
 
-def test_projection_json_round_trips_through_its_own_rendering() -> None:
+def test_projection_json_round_trips_through_its_own_rendering(*, operation: PinnedAuthorityOperation) -> None:
     """The JSON rendering re-validates to an equal payload.
 
     Syntax-only identifiers render as their string tokens on the wire and are
     reconstructed on re-validation, so the transport shape stays JSON-safe
     without loosening the field types.
     """
-    payload = ModeloAggregateResult.from_aggregation_result(_real_result())
+    payload = ModeloAggregateResult.from_aggregation_result(_real_result(operation=operation))
     rendered = payload.model_dump(mode="json")
 
     assert rendered["provider"] == PerModeloAggregationContributor.COUNTERPART.value
@@ -112,23 +115,25 @@ def test_projection_json_round_trips_through_its_own_rendering() -> None:
         ),
     ],
 )
-def test_malformed_transport_fields_are_refused(field: str, value: object) -> None:
+def test_malformed_transport_fields_are_refused(
+    field: str, value: object, *, operation: PinnedAuthorityOperation
+) -> None:
     """A shape the canonical result could never produce is refused at the boundary.
 
     Each of these was accepted by the previous bare-string / unbounded-integer
     shell, so an envelope could report an empty modelo, an unknown provider, a
     source kind outside the closed taxonomy, or a negative count.
     """
-    fields = _valid_payload_fields()
+    fields = _valid_payload_fields(operation=operation)
     fields[field] = value
 
     with pytest.raises(ValidationError):
         ModeloAggregateResult.model_validate(fields)
 
 
-def test_valid_transport_fields_are_accepted() -> None:
+def test_valid_transport_fields_are_accepted(*, operation: PinnedAuthorityOperation) -> None:
     """The positive control for the refusals above."""
-    payload = ModeloAggregateResult.model_validate(_valid_payload_fields())
+    payload = ModeloAggregateResult.model_validate(_valid_payload_fields(operation=operation))
 
     assert payload.provider is PerModeloAggregationContributor.COUNTERPART
     assert payload.observation_count >= 0

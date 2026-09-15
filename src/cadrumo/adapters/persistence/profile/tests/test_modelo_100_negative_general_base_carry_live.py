@@ -190,18 +190,20 @@ def _calculate_m100(
 ) -> BucketAggregationCalculationResult:
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=filing_year, period=_PERIOD)
     work_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, _PERIOD),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=work_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_CLOCK,
-    )
     with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, _PERIOD),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_CLOCK,
+        )
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),

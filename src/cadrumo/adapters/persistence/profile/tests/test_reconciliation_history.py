@@ -36,6 +36,10 @@ from cadrumo.application.modelo.reconciliation_records import (
 )
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+)
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -84,7 +88,7 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str, revision_suff
     return work_unit_id
 
 
-def _reconcile(work_unit_id: str) -> None:
+def _reconcile(work_unit_id: str, *, operation: PinnedAuthorityOperation) -> None:
     modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=work_unit_id,
@@ -92,10 +96,13 @@ def _reconcile(work_unit_id: str) -> None:
             source_path=MODELO_130_FIXTURE,
             actor="tester",
         ),
+        operation=operation,
     )
 
 
-def test_history_lists_recorded_reconciliations_with_typed_fields() -> None:
+def test_history_lists_recorded_reconciliations_with_typed_fields(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Several reconciliations all surface in the history with their typed fields.
 
     A modelo=130 work unit matches the modelo_130 fixture (verdict MATCHES,
@@ -105,10 +112,11 @@ def test_history_lists_recorded_reconciliations_with_typed_fields() -> None:
     """
     matching_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
     mismatching_unit = _seed_work_unit(modelo="303", filing_year=2026, period="1T", revision_suffix="1")
-    _reconcile(matching_unit)
-    _reconcile(mismatching_unit)
+    _reconcile(matching_unit, operation=operation)
+    _reconcile(mismatching_unit, operation=operation)
 
-    entries = list_modelo_reconciliations(bucket_id=_active_bucket_id())
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), operation=operation)
 
     assert all(isinstance(entry, ModeloReconciliationHistoryEntry) for entry in entries)
     by_unit = {entry.work_unit_id: entry for entry in entries}
@@ -126,25 +134,35 @@ def test_history_lists_recorded_reconciliations_with_typed_fields() -> None:
     assert mismatched.diff_count >= 1
 
 
-def test_history_narrows_to_one_work_unit() -> None:
+def test_history_narrows_to_one_work_unit(operation: PinnedAuthorityOperation) -> None:
     """The optional work_unit_id filter narrows the history to one work unit."""
     unit_a = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
     unit_b = _seed_work_unit(modelo="130", filing_year=2026, period="2T", revision_suffix="1")
-    _reconcile(unit_a)
-    _reconcile(unit_b)
+    _reconcile(unit_a, operation=operation)
+    _reconcile(unit_b, operation=operation)
 
-    only_a = list_modelo_reconciliations(bucket_id=_active_bucket_id(), work_unit_id=unit_a)
+    with bundled_indexed_authority().operation() as operation:
+        only_a = list_modelo_reconciliations(
+            bucket_id=_active_bucket_id(),
+            operation=operation,
+            work_unit_id=unit_a,
+        )
 
     assert {entry.work_unit_id for entry in only_a} == {unit_a}
 
 
-def test_history_orders_oldest_first() -> None:
+def test_history_orders_oldest_first(operation: PinnedAuthorityOperation) -> None:
     """Repeated reconciliations of one unit list oldest-first by reconciled_at."""
     unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _reconcile(unit)
-    _reconcile(unit)
+    _reconcile(unit, operation=operation)
+    _reconcile(unit, operation=operation)
 
-    entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), work_unit_id=unit)
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(
+            bucket_id=_active_bucket_id(),
+            operation=operation,
+            work_unit_id=unit,
+        )
 
     timestamps = [entry.reconciled_at for entry in entries]
     assert timestamps == sorted(timestamps)
@@ -152,12 +170,15 @@ def test_history_orders_oldest_first() -> None:
 
 def test_history_on_empty_bucket_returns_clean_empty() -> None:
     """A bucket with no reconciliations lists a clean empty tuple, not an error."""
-    entries = list_modelo_reconciliations(bucket_id=_active_bucket_id())
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), operation=operation)
 
     assert entries == ()
 
 
-def test_anti_tautology_unreconciled_unit_absent_from_history() -> None:
+def test_anti_tautology_unreconciled_unit_absent_from_history(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A work unit that was never reconciled is absent from the history.
 
     Anti-tautology proof: reconcile one unit, create a second unit but never
@@ -166,9 +187,13 @@ def test_anti_tautology_unreconciled_unit_absent_from_history() -> None:
     """
     reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
     never_reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="3T", revision_suffix="2")
-    _reconcile(reconciled_unit)
+    _reconcile(reconciled_unit, operation=operation)
 
-    listed_units = {entry.work_unit_id for entry in list_modelo_reconciliations(bucket_id=_active_bucket_id())}
+    with bundled_indexed_authority().operation() as operation:
+        listed_units = {
+            entry.work_unit_id
+            for entry in list_modelo_reconciliations(bucket_id=_active_bucket_id(), operation=operation)
+        }
 
     assert reconciled_unit in listed_units
     assert never_reconciled_unit not in listed_units

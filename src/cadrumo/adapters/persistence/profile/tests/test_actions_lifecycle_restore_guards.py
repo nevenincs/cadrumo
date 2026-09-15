@@ -37,12 +37,15 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
-    with pytest.raises(TransactionValidationError, match="already active"), ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
-        objects=secure_objects,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-    ) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="already active"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports,
+    ):
         restore_manual_transaction(
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,

@@ -34,6 +34,7 @@ from .....application.calculations.tests.filing_evidence import regimen_simplifi
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from .....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
@@ -114,36 +115,38 @@ def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
 
 def _filing_instance_evidence() -> FilingInstanceEvidence:
     period = Period.from_year_and_code(2026, "1T")
-    scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
-    )
-    snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T"),
-        scope_decision=scope,
-    )
-    return FilingInstanceEvidence(
-        m303=M303FilingInstanceEvidence(
-            period=period,
-            joint_return_elected=True,
-            annual_volume_nonzero=False,
-            insolvency=None,
-            exonerado_390=M303Exonerado390FilingEvidence(
-                applicable=False,
-                applicability_reference=FilingEvidenceReference(reference="test:persistence:exonerado-390"),
-                endpoints=(),
-                activity_rows=(),
-                operaciones_terceros_declarables=None,
-                operaciones_terceros_reference=None,
-            ),
-            regimen_simplificado=regimen_simplificado_filing_evidence(
+    with bundled_indexed_authority().operation() as operation:
+        scope = M303RegimenSimplificadoScopeDecision(
+            scope=m303_regime_composition_simplified_scope("general", authority=operation),
+        )
+        snapshot = resolve_m303_regimen_simplificado_snapshot(
+            registry_snapshot=operation.snapshot("303", filing_year=2026, period="1T"),
+            scope_decision=scope,
+        )
+        return FilingInstanceEvidence(
+            m303=M303FilingInstanceEvidence(
                 period=period,
-                scope_decision=scope,
-                rows=RegimenSimplificadoFilingRows(ejercicio=2026, activities=()),
-                regimen_snapshot=snapshot,
-                dana_2024_eligibility=None,
+                joint_return_elected=True,
+                annual_volume_nonzero=False,
+                insolvency=None,
+                exonerado_390=M303Exonerado390FilingEvidence(
+                    applicable=False,
+                    applicability_reference=FilingEvidenceReference(reference="test:persistence:exonerado-390"),
+                    endpoints=(),
+                    activity_rows=(),
+                    operaciones_terceros_declarables=None,
+                    operaciones_terceros_reference=None,
+                ),
+                regimen_simplificado=regimen_simplificado_filing_evidence(
+                    period=period,
+                    scope_decision=scope,
+                    rows=RegimenSimplificadoFilingRows(ejercicio=2026, activities=()),
+                    regimen_snapshot=snapshot,
+                    dana_2024_eligibility=None,
+                    operation=operation,
+                ),
             ),
-        ),
-    )
+        )
 
 
 def _populated_catalogue() -> CalculationRevisionCatalogue:

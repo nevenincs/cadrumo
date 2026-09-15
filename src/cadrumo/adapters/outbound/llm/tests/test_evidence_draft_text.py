@@ -23,6 +23,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.config import load_settings
 from .....core.config_support import LLMProvider
@@ -67,12 +69,13 @@ def _fields(**overrides: str | None) -> ExtractedInvoiceResponse:
     )
 
 
-def _grounded_tax_id(raw: str) -> str | None:
+def _grounded_tax_id(raw: str, *, operation: PinnedAuthorityOperation) -> str | None:
     """Return what the grounding layer makes of ``raw``, through the real draft path."""
     return ground_extracted_fields(
         _fields(supplier_tax_id=raw),
         raw_text_length=10,
         origin=FieldOrigin.TEXT_LAYER,
+        operation=operation,
     ).supplier_tax_id
 
 
@@ -95,12 +98,16 @@ class TestForeignCounterpartyTaxIdsSurviveGrounding:
             pytest.param("XI123456789", id="northern-ireland"),
         ],
     )
-    def test_a_structurally_valid_eu_iva_number_is_kept(self, iva_number: str) -> None:
-        assert _grounded_tax_id(iva_number) == iva_number
+    def test_a_structurally_valid_eu_iva_number_is_kept(
+        self, iva_number: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        assert _grounded_tax_id(iva_number, operation=operation) == iva_number
 
-    def test_separators_an_operator_or_document_prints_are_normalised_away(self) -> None:
+    def test_separators_an_operator_or_document_prints_are_normalised_away(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """an IVA number printed with spaces or dots still grounds, in canonical form."""
-        assert _grounded_tax_id("DE 811.569.869") == "DE811569869"
+        assert _grounded_tax_id("DE 811.569.869", operation=operation) == "DE811569869"
 
     @pytest.mark.parametrize(
         "tax_id",
@@ -109,16 +116,18 @@ class TestForeignCounterpartyTaxIdsSurviveGrounding:
             pytest.param(_SPANISH_NIF, id="spanish-nif"),
         ],
     )
-    def test_spanish_identifiers_still_ground(self, tax_id: str) -> None:
-        assert _grounded_tax_id(tax_id) == tax_id
+    def test_spanish_identifiers_still_ground(self, tax_id: str, *, operation: PinnedAuthorityOperation) -> None:
+        assert _grounded_tax_id(tax_id, operation=operation) == tax_id
 
 
 class TestGroundingStillRefusesWhatItCannotVerify:
     """The fall-through is closed, not permissive: it did not become "accept anything"."""
 
-    def test_an_invalid_spanish_cif_control_character_is_still_rejected(self) -> None:
+    def test_an_invalid_spanish_cif_control_character_is_still_rejected(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """``B1234567X`` is the deliberate control: right shape, wrong check character."""
-        assert _grounded_tax_id("B1234567X") is None
+        assert _grounded_tax_id("B1234567X", operation=operation) is None
 
     @pytest.mark.parametrize(
         "candidate",
@@ -134,33 +143,37 @@ class TestGroundingStillRefusesWhatItCannotVerify:
             pytest.param("D", id="too-short-to-carry-a-prefix"),
         ],
     )
-    def test_a_number_matching_no_published_pattern_is_dropped(self, candidate: str) -> None:
-        assert _grounded_tax_id(candidate) is None
+    def test_a_number_matching_no_published_pattern_is_dropped(
+        self, candidate: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        assert _grounded_tax_id(candidate, operation=operation) is None
 
-    def test_a_greek_number_under_its_iso_code_rather_than_its_iva_prefix_is_dropped(self) -> None:
+    def test_a_greek_number_under_its_iso_code_rather_than_its_iva_prefix_is_dropped(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Greece's IVA prefix is ``EL``; a ``GR``-prefixed number is not an IVA number."""
-        assert _grounded_tax_id("GR123456789") is None
-        assert _grounded_tax_id("EL123456789") == "EL123456789"
+        assert _grounded_tax_id("GR123456789", operation=operation) is None
+        assert _grounded_tax_id("EL123456789", operation=operation) == "EL123456789"
 
 
 class TestTextExtractionPrompt:
     """The prompt is the first line of defence, and it must not be Spain-shaped."""
 
-    def test_it_instructs_null_rather_than_a_guess(self) -> None:
-        prompt = build_text_field_extraction_prompt("ACME Ltd\nTotal 121,00")
+    def test_it_instructs_null_rather_than_a_guess(self, *, operation: PinnedAuthorityOperation) -> None:
+        prompt = build_text_field_extraction_prompt("ACME Ltd\nTotal 121,00", operation=operation)
         lowered = prompt.lower()
 
         assert "its value is null" in lowered
         assert "never substitute a plausible value for a missing one" in lowered
 
-    def test_it_forbids_deriving_any_value(self) -> None:
-        lowered = build_text_field_extraction_prompt("ACME Ltd").lower()
+    def test_it_forbids_deriving_any_value(self, *, operation: PinnedAuthorityOperation) -> None:
+        lowered = build_text_field_extraction_prompt("ACME Ltd", operation=operation).lower()
 
         for forbidden in ("calculate", "infer", "estimate", "guess"):
             assert forbidden in lowered
         assert "exactly as printed" in lowered
 
-    def test_it_is_not_specific_to_spanish_invoices(self) -> None:
+    def test_it_is_not_specific_to_spanish_invoices(self, *, operation: PinnedAuthorityOperation) -> None:
         """The prompt must not assume the document is Spanish.
 
         The assertion is on that PROPERTY, not on the absence of the word. The
@@ -170,21 +183,23 @@ class TestTextExtractionPrompt:
         is tell the model the DOCUMENT is Spanish, or present the Spanish list
         as the only admissible one, and both of those are asserted directly.
         """
-        lowered = build_text_field_extraction_prompt("Rechnung Nr. 42").lower()
+        lowered = build_text_field_extraction_prompt("Rechnung Nr. 42", operation=operation).lower()
 
         assert "spanish invoice" not in lowered
         assert "may be written in any language" in lowered
         assert "may print a rate on neither list" in lowered
         assert "never move it onto a listed one" in lowered
 
-    def test_it_carries_the_document_text_it_was_given(self) -> None:
-        prompt = build_text_field_extraction_prompt("Facture 42\nTVA 20%")
+    def test_it_carries_the_document_text_it_was_given(self, *, operation: PinnedAuthorityOperation) -> None:
+        prompt = build_text_field_extraction_prompt("Facture 42\nTVA 20%", operation=operation)
 
         assert "Facture 42\nTVA 20%" in prompt
 
-    def test_blank_text_refuses_rather_than_asking_a_model_to_read_nothing(self) -> None:
+    def test_blank_text_refuses_rather_than_asking_a_model_to_read_nothing(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            build_text_field_extraction_prompt("   \n\t ")
+            build_text_field_extraction_prompt("   \n\t ", operation=operation)
         verdict = raised.value.terminal_precondition_verdict
         assert verdict is not None
         assert verdict.failed_condition_id == "llm.evidence.text_present"
@@ -213,7 +228,7 @@ class TestTextExtractionPrompt:
 class TestAuthoredResponseParsesAndGrounds:
     """A real model response string, through the real parser and grounder."""
 
-    def test_a_full_response_grounds_into_the_expected_draft(self) -> None:
+    def test_a_full_response_grounds_into_the_expected_draft(self, *, operation: PinnedAuthorityOperation) -> None:
         response = json.dumps(
             {
                 "supplier_tax_id": "IE9825613K",
@@ -231,6 +246,7 @@ class TestAuthoredResponseParsesAndGrounds:
             parse_invoice_extraction_response(response),
             raw_text_length=512,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert draft.supplier_tax_id == "IE9825613K"
@@ -243,7 +259,7 @@ class TestAuthoredResponseParsesAndGrounds:
         assert draft.currency == "EUR"
         assert draft.raw_text_length == 512
 
-    def test_a_null_field_the_document_never_printed_stays_none(self) -> None:
+    def test_a_null_field_the_document_never_printed_stays_none(self, *, operation: PinnedAuthorityOperation) -> None:
         response = json.dumps(
             {
                 "supplier_tax_id": "DE811569869",
@@ -261,6 +277,7 @@ class TestAuthoredResponseParsesAndGrounds:
             parse_invoice_extraction_response(response),
             raw_text_length=64,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert draft.supplier_tax_id == "DE811569869"
@@ -294,24 +311,30 @@ class TestFabricatedValuesAreDroppedRatherThanTrusted:
             pytest.param("currency", "euros", id="currency-as-a-word"),
         ],
     )
-    def test_a_hallucinated_value_grounds_to_none(self, field: str, fabricated: str) -> None:
+    def test_a_hallucinated_value_grounds_to_none(
+        self, field: str, fabricated: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
         draft = ground_extracted_fields(
-            _fields(**{field: fabricated}), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER
+            _fields(**{field: fabricated}), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation
         )
 
         assert getattr(draft, field) is None
 
-    def test_an_ambiguous_amount_is_dropped_rather_than_read_a_hundredfold_light(self) -> None:
+    def test_an_ambiguous_amount_is_dropped_rather_than_read_a_hundredfold_light(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """``1.234`` could be one thousand two hundred or one point two three."""
         draft = ground_extracted_fields(
-            _fields(taxable_base="1.234"), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER
+            _fields(taxable_base="1.234"), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation
         )
 
         assert draft.taxable_base is None
 
-    def test_dropping_one_fabricated_field_does_not_discard_the_grounded_ones(self) -> None:
+    def test_dropping_one_fabricated_field_does_not_discard_the_grounded_ones(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         draft = ground_extracted_fields(
-            _fields(currency="US Dollars"), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER
+            _fields(currency="US Dollars"), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation
         )
 
         assert draft.currency is None
@@ -322,8 +345,10 @@ class TestFabricatedValuesAreDroppedRatherThanTrusted:
 class TestExtractorRequestShape:
     """The built request, asserted without dispatching it."""
 
-    def test_an_explicit_model_rides_the_request_and_the_provenance_stamp(self) -> None:
-        extractor = TextInvoiceFieldExtractor(model="some-text-model", settings=load_settings())
+    def test_an_explicit_model_rides_the_request_and_the_provenance_stamp(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        extractor = TextInvoiceFieldExtractor(model="some-text-model", settings=load_settings(), operation=operation)
 
         assert extractor._build_request("Invoice 42").model_override == "some-text-model"
         assert extractor.decided_by.startswith("llm:local-text-extract:some-text-model:")
@@ -355,9 +380,9 @@ class TestExtractorPinsTheHostByDefault:
     these are about the host boundary.
     """
 
-    def test_the_request_pins_the_local_provider(self) -> None:
+    def test_the_request_pins_the_local_provider(self, *, operation: PinnedAuthorityOperation) -> None:
         """Was: "pins no provider". Now: pins LOCAL, explicitly."""
-        extractor = TextInvoiceFieldExtractor(settings=load_settings())
+        extractor = TextInvoiceFieldExtractor(settings=load_settings(), operation=operation)
 
         request = extractor._build_request("Invoice 42\nTotal 121,00")
 
@@ -365,19 +390,21 @@ class TestExtractorPinsTheHostByDefault:
         assert request.images == ()
         assert "Invoice 42" in request.prompt
 
-    def test_the_default_read_names_its_local_model_rather_than_deferring(self) -> None:
+    def test_the_default_read_names_its_local_model_rather_than_deferring(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Was: the stamp read ``configured`` because nothing was pinned.
 
         A stamp saying ``configured`` recorded that the reader did not know
         which model had read the document -- which is precisely the state that
         made the off-host default invisible in provenance.
         """
-        extractor = TextInvoiceFieldExtractor(settings=load_settings())
+        extractor = TextInvoiceFieldExtractor(settings=load_settings(), operation=operation)
 
         assert extractor._build_request("Invoice 42").model_override is not None
         assert not extractor.decided_by.startswith("llm:local-text-extract:configured:")
 
-    def test_a_cloud_provider_naming_no_model_is_refused(self) -> None:
+    def test_a_cloud_provider_naming_no_model_is_refused(self, *, operation: PinnedAuthorityOperation) -> None:
         """A refusal, not merely a default, so configuration cannot silently bypass it.
 
         Mirrors the vision reader's guard. A pin can be overridden; a refusal
@@ -385,7 +412,7 @@ class TestExtractorPinsTheHostByDefault:
         what makes this the stronger half of the fix.
         """
         with pytest.raises(LLMConfigError) as raised:
-            TextInvoiceFieldExtractor(provider=LLMProvider.ANTHROPIC, settings=load_settings())
+            TextInvoiceFieldExtractor(provider=LLMProvider.ANTHROPIC, settings=load_settings(), operation=operation)
         verdict = raised.value.terminal_precondition_verdict
         assert verdict is not None
         assert verdict.failed_condition_id == "llm.off_host_model.named"
@@ -394,7 +421,9 @@ class TestExtractorPinsTheHostByDefault:
             "provider": LLMProvider.ANTHROPIC.value,
         }
 
-    def test_an_explicitly_named_cloud_provider_and_model_is_still_honoured(self) -> None:
+    def test_an_explicitly_named_cloud_provider_and_model_is_still_honoured(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Positive control, and it protects a sanctioned route.
 
         The measurement corpus is public, synthetic and explicitly cleared for a
@@ -406,6 +435,7 @@ class TestExtractorPinsTheHostByDefault:
             provider=LLMProvider.ANTHROPIC,
             model="claude-test-model",
             settings=load_settings(),
+            operation=operation,
         )
 
         request = extractor._build_request("Invoice 42")

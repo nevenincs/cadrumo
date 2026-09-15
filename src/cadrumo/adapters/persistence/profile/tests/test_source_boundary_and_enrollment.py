@@ -34,11 +34,13 @@ from dev.registry.tests.profile_schema_support import (
 )
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.catalogue_reads import (
     InvoiceCatalogueReadAdapter,
     TransactionCatalogueReadAdapter,
 )
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -62,8 +64,10 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
 from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.modelos.row_models import Modelo184MemberRow
+from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
@@ -73,22 +77,6 @@ _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
 _BUCKET_ID = "34900000-0000-4000-8000-000000000349"
-
-
-class _EmptyCalculationObservationRepository:
-    """Inward observation capability for the resolver-enrollment unit seam."""
-
-    def load_observation(self, modelo: str, period: Period) -> None:
-        del modelo, period
-        return None
-
-
-class _EmptyIvaCompensationHistoryRepository:
-    """Inward IVA-history capability with no prior compensation rows."""
-
-    def load_period(self, period: Period) -> None:
-        del period
-        return None
 
 
 _READY_PROFILE_FACTS = (
@@ -210,18 +198,30 @@ def _seed(
     period: str,
     revision_id: str,
 ):
-    return create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
-        revision_id=revision_id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo,
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, period),
+            revision_id=revision_id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
+
+
+def _empty_usage_ratio_profile_loader(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+) -> UsageRatioProfile:
+    """Return the empty usage-ratio profile for a resolver enrollment seam."""
+    del bucket_id, operation
+    return UsageRatioProfile()
 
 
 # ---------------------------------------------------------------------------
@@ -460,6 +460,15 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         transaction_reader=TransactionCatalogueReadAdapter(repository=tx_repo),
     )
 
+    with bundled_indexed_authority().operation() as operation:
+        previous_filing_resolution = PreviousFilingSourceResolver(
+            operation=operation,
+            repository=CalculationObservationRepository(objects=secure_objects),
+            iva_history_repository=IvaCompensationHistoryRepository(objects=secure_objects),
+            registry_snapshot=operation.snapshot("130", filing_year=2026, period="1T"),
+            profile_read_ports=empty_profile_read_ports(),
+        ).resolve(context)
+
     source_resolution = merge_source_resolutions(
         [
             LedgerIvaAggregationSourceResolver(
@@ -468,20 +477,16 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
             ).resolve(context),
             LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
-                transaction_repository=tx_repo,
+                ports=catalogue_read_ports,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+                usage_ratio_profile_loader=_empty_usage_ratio_profile_loader,
             ).resolve(context),
             LedgerRentaIncomeAggregationSourceResolver(ports=catalogue_read_ports).resolve(context),
             OssIossLedgerSourceResolver(ports=catalogue_read_ports, candidates=()).resolve(context),
             InvoiceCatalogueSourceResolver(
                 ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repo),
             ).resolve(context),
-            PreviousFilingSourceResolver(
-                repository=_EmptyCalculationObservationRepository(),
-                iva_history_repository=_EmptyIvaCompensationHistoryRepository(),
-                registry_snapshot=revision,
-                profile_read_ports=empty_profile_read_ports(),
-            ).resolve(context),
+            previous_filing_resolution,
         ],
     )
 
@@ -633,18 +638,20 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
             TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             InvoiceCatalogueRepository(objects=objects),
         )
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="720",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
-            revision_id="2013-y-siguientes",
-            ports=WorkLifecyclePorts(
-                work_unit_repository=wu_repo,
-                bucket_event_repository=BucketEventHistoryRepository(),
-            ),
-            clock=_T0,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            work_unit = create_work_unit(
+                bucket_id=_BUCKET_ID,
+                modelo="720",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
+                revision_id="2013-y-siguientes",
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=wu_repo,
+                    bucket_event_repository=BucketEventHistoryRepository(),
+                ),
+                operation=operation,
+                clock=_T0,
+            )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
             calculation_repository=cr_repo,

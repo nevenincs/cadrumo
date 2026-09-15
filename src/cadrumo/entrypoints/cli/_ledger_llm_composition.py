@@ -41,6 +41,7 @@ from ...core.config import Settings
 from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import LLMClassifierError, TransactionValidationError
+from ...domain.transactions.llm import LLMClassificationResponse, LLMClassifier, PromptSpec
 from ...domain.transactions.models import Transaction
 from ..adapter_composition import build_ledger_evidence_ports
 from ._ledger_evidence_extraction_wiring import evidence_text_layer_ports
@@ -81,6 +82,20 @@ class _VisionReader:
                 for image in evidence_images
             ),
         )
+
+
+class _TextReader:
+    """Adapt the local text reader to the application classifier protocol."""
+
+    def __init__(self, reader: LocalTextLLMClassifier) -> None:
+        self._reader = reader
+
+    @property
+    def decided_by(self) -> str:
+        return self._reader.decided_by
+
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
+        return self._reader.classify(transaction, evidence_text=evidence_text)
 
 
 @dataclass(frozen=True)
@@ -168,11 +183,14 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         record(True, "")
         return result
 
+    def make_text_classifier(spec: PromptSpec, /) -> LLMClassifier:
+        return _TextReader(LocalTextLLMClassifier(spec=spec, settings=settings))
+
     ports = LLMClassificationPorts(
         resolve_evidence_input=resolve_evidence_input,
         text_layer_ports=text_layer_ports,
         rasterise_pdf=rasterise_pdf_pages_to_base64_png,
-        make_text_classifier=lambda spec: LocalTextLLMClassifier(spec=spec, settings=settings),
+        make_text_classifier=make_text_classifier,
         make_vision_classifier=lambda spec, model: _VisionReader(
             LocalVisionLLMClassifier(spec=spec, settings=settings, model=model)
         ),

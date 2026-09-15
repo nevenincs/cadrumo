@@ -7,11 +7,20 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.categories.spending_category_catalogue import spending_category_tokens
 from .ledger_ux_support import _imported_transaction_id, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
+
+
+def _category_tokens() -> tuple[SpendingCategory, ...]:
+    """Project the canonical category vocabulary through one pinned authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return spending_category_tokens(authority=operation)
 
 
 def test_categories_command_lists_the_canonical_spending_taxonomy(
@@ -22,7 +31,7 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     listed = set(payload["category_ids"])
-    expected = {category.value for category in SpendingCategory}
+    expected = {category.value for category in _category_tokens()}
     assert listed == expected
     grouped = {category_id for family in payload["families"] for category_id in family["category_ids"]}
     assert grouped == expected
@@ -184,6 +193,6 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
         ],
     )
     assert result.exit_code != 0
-    valid_ids = {category.value for category in SpendingCategory}
+    valid_ids = {category.value for category in _category_tokens()}
     assert any(category_id in result.output for category_id in valid_ids)
     assert "ledger categories" in result.output

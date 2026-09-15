@@ -158,7 +158,12 @@ def reconcile_pull_verb(
                 verifier=build_justificante_authenticity_verifier(),
             )
         )
-        report = reconcile_capture(work_unit_id=unit.work_unit_id, snapshot=snapshot, actor=resolved_actor)
+        report = reconcile_capture(
+            work_unit_id=unit.work_unit_id,
+            snapshot=snapshot,
+            actor=resolved_actor,
+            operation=operation,
+        )
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.pull")
 
 
@@ -191,7 +196,8 @@ def reconcile_file_verb(
         report = modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id=unit.work_unit_id, source_kind=resolved_kind, source_path=file, actor=resolved_actor
-            )
+            ),
+            operation=operation,
         )
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.import")
 
@@ -204,7 +210,12 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
     _require_profile()
     bucket_id = _active_bucket()
     work_unit_token = work_unit_id.strip() if work_unit_id else None
-    entries = list_modelo_reconciliations(bucket_id=bucket_id, work_unit_id=work_unit_token)
+    operation = authority_operation(ctx)
+    entries = list_modelo_reconciliations(
+        bucket_id=bucket_id,
+        operation=operation,
+        work_unit_id=work_unit_token,
+    )
     result = ModeloReconciliationHistoryResult(
         bucket_id=bucket_id,
         work_unit_id=work_unit_token,

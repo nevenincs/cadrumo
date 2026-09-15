@@ -21,6 +21,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import (
     cross_period_source_groups,
@@ -59,6 +60,7 @@ def seed_clean_cross_period_sources(
     calculation_repository: CalculationRevisionCatalogueRepository,
     filing_repository: ModeloRecordCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Materialise every declared cross-period source through real adapters.
 
@@ -104,6 +106,7 @@ def seed_clean_cross_period_sources(
                 revision_id=source_revision.id,
                 ports=lifecycle_ports,
                 clock=SEED_CLOCK,
+                operation=operation,
             )
             import_external_filing_evidence(
                 work_unit_id=source_work_unit.work_unit_id,

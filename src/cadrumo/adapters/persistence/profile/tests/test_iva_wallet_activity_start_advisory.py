@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _BUCKET_ID,
     _TAXPAYER_NIF,
@@ -22,31 +25,45 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     replace_test_profile_record,
 )
 from cadrumo.application.modelo.iva_wallet_gate import lazily_reconcile_local_iva_compensation_for_work_unit
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _first_period_work_unit():
+def _first_period_work_unit(*, operation: PinnedAuthorityOperation):
+
     snapshot = _snapshot_303(period="1T")
+
     work_units, _, _ = _work_unit_repositories()
-    return snapshot, _create_modelo_303_work_unit(snapshot, work_unit_repository=work_units)
+
+    return snapshot, _create_modelo_303_work_unit(snapshot, work_unit_repository=work_units, operation=operation)
 
 
-def test_declared_activity_start_persists_an_uncontrasted_first_period_zero(tmp_path: Path) -> None:
+def test_declared_activity_start_persists_an_uncontrasted_first_period_zero(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The actual grounding path stores the weaker, honest authority identity."""
+
     with _secure_backend(tmp_path):
         _store_operator_profile()
-        snapshot, work_unit = _first_period_work_unit()
+
+        snapshot, work_unit = _first_period_work_unit(operation=operation)
 
         decision = lazily_reconcile_local_iva_compensation_for_work_unit(
             work_unit,
             snapshot=snapshot,
+            operation=operation,
+            repository=IvaWalletDecisionRepository(),
+            observation_repository=CalculationObservationRepository(),
         )
 
         assert decision is not None
+
         assert decision.selected_amount == 0
+
         assert decision.reason_identity is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_ACTIVITY_START_UNCONTRASTED
+
         assert (
             IvaWalletDecisionRepository().load_decision(
                 _TAXPAYER_NIF,
@@ -56,11 +73,16 @@ def test_declared_activity_start_persists_an_uncontrasted_first_period_zero(tmp_
         )
 
 
-def test_missing_activity_start_still_blocks_the_first_period_zero(tmp_path: Path) -> None:
+def test_missing_activity_start_still_blocks_the_first_period_zero(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Absence remains fail-closed; the advisory must not become a grant."""
+
     with _secure_backend(tmp_path):
         _store_operator_profile()
+
         profile = load_test_profile_record(_BUCKET_ID)
+
         replace_test_profile_record(
             profile.model_copy(
                 update={
@@ -68,17 +90,25 @@ def test_missing_activity_start_still_blocks_the_first_period_zero(tmp_path: Pat
                 },
             ),
         )
-        snapshot, work_unit = _first_period_work_unit()
+
+        snapshot, work_unit = _first_period_work_unit(operation=operation)
 
         decision = lazily_reconcile_local_iva_compensation_for_work_unit(
             work_unit,
             snapshot=snapshot,
+            operation=operation,
+            repository=IvaWalletDecisionRepository(),
+            observation_repository=CalculationObservationRepository(),
         )
 
         assert decision is not None
+
         assert decision.blocked is True
+
         assert decision.selected_amount is None
+
         assert decision.reason_identity is IvaCompensationDecisionReason.NO_USABLE_AUTHORITY
+
         assert (
             IvaWalletDecisionRepository().load_decision(
                 _TAXPAYER_NIF,

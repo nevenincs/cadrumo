@@ -43,6 +43,7 @@ from cadrumo.core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -99,6 +100,7 @@ def _seed_verified_m303_revision(
     work_unit_repository: WorkUnitCatalogueRepository,
     period_code: str = "4T",
     casilla_values: dict[CasillaId, Decimal] | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
     period = Period.from_year_and_code(2026, period_code)
@@ -112,7 +114,9 @@ def _seed_verified_m303_revision(
         period=period,
         revision_id=revision_id,
     )
-    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:prorrata-settlement-writeback")
+    filing_instance_evidence = general_m303_filing_evidence(
+        period, reference="test:prorrata-settlement-writeback", operation=operation
+    )
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -168,6 +172,7 @@ def _file_verified_revision(
     prorrata_repository: ProrrataRegisterRepository,
     revision: CalculationRevision,
     work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     calculation_observation_repository, iva_compensation_history_repository = _iva_wallet_repositories()
     persist_filed_revision(
@@ -185,10 +190,13 @@ def _file_verified_revision(
         iva_compensation_history_repository=iva_compensation_history_repository,
         participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
         prorrata_register_repository=prorrata_repository,
+        operation=operation,
     )
 
 
-def test_m303_settlement_creates_prorrata_register_entry_when_none_exists(tmp_path: Path) -> None:
+def test_m303_settlement_creates_prorrata_register_entry_when_none_exists(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Filing a settlement revision writes definitive percentage and volumes."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
@@ -198,6 +206,7 @@ def test_m303_settlement_creates_prorrata_register_entry_when_none_exists(tmp_pa
         revision, work_unit = _seed_verified_m303_revision(
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
+            operation=operation,
         )
 
         _file_verified_revision(
@@ -207,6 +216,7 @@ def test_m303_settlement_creates_prorrata_register_entry_when_none_exists(tmp_pa
             prorrata_repository=prorrata_repository,
             revision=revision,
             work_unit=work_unit,
+            operation=operation,
         )
 
         entry = prorrata_repository.load().entry_for(2026)
@@ -221,7 +231,9 @@ def test_m303_settlement_creates_prorrata_register_entry_when_none_exists(tmp_pa
     assert filed_revision.state is CalculationRevisionState.PRESENTADO
 
 
-def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> None:
+def test_m303_settlement_preserves_existing_register_facts(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Settlement write-back replaces only the whole-entity settlement fields."""
     existing = ProrrataRegisterEntry(
         ejercicio=2026,
@@ -254,6 +266,7 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
         revision, work_unit = _seed_verified_m303_revision(
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
+            operation=operation,
         )
 
         _file_verified_revision(
@@ -263,6 +276,7 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
             prorrata_repository=prorrata_repository,
             revision=revision,
             work_unit=work_unit,
+            operation=operation,
         )
 
         register = prorrata_repository.load()
@@ -280,7 +294,9 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
     assert retained_sector == sector_entry
 
 
-def test_m303_settlement_preserves_existing_activity_rows(tmp_path: Path) -> None:
+def test_m303_settlement_preserves_existing_activity_rows(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Filing 4T cannot erase the canonical DP30305 activity evidence."""
     general_entry = ProrrataRegisterEntry(
         ejercicio=2026,
@@ -308,6 +324,7 @@ def test_m303_settlement_preserves_existing_activity_rows(tmp_path: Path) -> Non
         revision, work_unit = _seed_verified_m303_revision(
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
+            operation=operation,
         )
 
         _file_verified_revision(
@@ -317,6 +334,7 @@ def test_m303_settlement_preserves_existing_activity_rows(tmp_path: Path) -> Non
             prorrata_repository=prorrata_repository,
             revision=revision,
             work_unit=work_unit,
+            operation=operation,
         )
 
         persisted = prorrata_repository.load()
@@ -328,7 +346,9 @@ def test_m303_settlement_preserves_existing_activity_rows(tmp_path: Path) -> Non
 
 
 @pytest.mark.parametrize("period_code", ("1T", "2T", "3T"))
-def test_non_settlement_period_does_not_write_prorrata_register(tmp_path: Path, period_code: str) -> None:
+def test_non_settlement_period_does_not_write_prorrata_register(
+    tmp_path: Path, period_code: str, *, operation: PinnedAuthorityOperation
+) -> None:
     """Only annual close periods seed the definitive prorrata register fields."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
@@ -339,6 +359,7 @@ def test_non_settlement_period_does_not_write_prorrata_register(tmp_path: Path, 
             calculation_repository=calculation_repository,
             work_unit_repository=work_unit_repository,
             period_code=period_code,
+            operation=operation,
         )
 
         _file_verified_revision(
@@ -348,6 +369,7 @@ def test_non_settlement_period_does_not_write_prorrata_register(tmp_path: Path, 
             prorrata_repository=prorrata_repository,
             revision=revision,
             work_unit=work_unit,
+            operation=operation,
         )
 
         register = prorrata_repository.load()

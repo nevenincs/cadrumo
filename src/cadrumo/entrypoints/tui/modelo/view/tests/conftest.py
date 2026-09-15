@@ -21,6 +21,7 @@ from dev.registry.tests.profile_schema_support import (
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -71,19 +72,21 @@ def bucket_and_repository(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalog
             ),
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        create_work_unit(
-            bucket_id=profile.bucket_id,
-            modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id=_REVISION,
-            ports=WorkLifecyclePorts(
-                work_unit_repository=repository,
-                bucket_event_repository=BucketEventHistoryRepository(),
-            ),
-            clock=_T0,
-        )
-        yield profile.bucket_id, repository
+        with bundled_indexed_authority().operation() as operation:
+            create_work_unit(
+                bucket_id=profile.bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision_id=_REVISION,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=repository,
+                    bucket_event_repository=BucketEventHistoryRepository(),
+                ),
+                clock=_T0,
+                operation=operation,
+            )
+            yield profile.bucket_id, repository
 
 
 def resolve_real_result(bucket_id: str, repository: WorkUnitCatalogueRepository, language: OutputLanguage):

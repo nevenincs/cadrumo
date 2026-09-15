@@ -196,7 +196,7 @@ def test_the_taxpayer_model_fields_have_labels_that_differ_from_their_tokens() -
 
 def test_an_undeclared_entity_type_is_named_rather_than_summarised() -> None:
     """The refusal names the entity-type field, not only "model undeclared"."""
-    refusal = _undeclared_taxpayer_model_refusal(_profile())
+    refusal = _undeclared_taxpayer_model_refusal(_profile(), schema=load_user_profile_schema())
 
     context = refusal.context
     assert context is not None
@@ -214,7 +214,10 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
     """
     from ....domain.contribuyente.entity_type import EntityType
 
-    refusal = _undeclared_taxpayer_model_refusal(_profile(entity_type=EntityType._from_registry("natural_person")))
+    refusal = _undeclared_taxpayer_model_refusal(
+        _profile(entity_type=EntityType._from_registry("natural_person")),
+        schema=load_user_profile_schema(),
+    )
 
     context = refusal.context
     assert context is not None

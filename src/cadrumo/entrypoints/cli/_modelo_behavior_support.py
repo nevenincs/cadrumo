@@ -233,7 +233,10 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
     if not modelo or not modelo.strip():
         return ()
     try:
-        return declared_modelo_period_tokens(modelo)
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            return declared_modelo_period_tokens(modelo, operation=operation)
     except CadrumoError:
         return ()
     except Exception:

@@ -41,6 +41,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -57,7 +58,9 @@ _T0 = datetime(2026, 6, 10, 10, 0, 0, tzinfo=UTC)
 class TestS01CreationGate:
     """``law_selected_revision_for_work_target`` must enforce resolver-equality."""
 
-    def test_returns_law_determined_revision_when_no_explicit_revision_given(self) -> None:
+    def test_returns_law_determined_revision_when_no_explicit_revision_given(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Without an explicit revision the resolver picks the law-determined one."""
         # M130 2026 1T -> only one revision: 2019-y-siguientes
         result = law_selected_revision_for_work_target(
@@ -65,20 +68,26 @@ class TestS01CreationGate:
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             requested_revision_id=None,
+            operation=operation,
         )
         assert result == "2019-y-siguientes"
 
-    def test_accepts_explicit_revision_that_matches_law_determined(self) -> None:
+    def test_accepts_explicit_revision_that_matches_law_determined(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """An explicit --revision equal to the law-determined revision is idempotent."""
         result = law_selected_revision_for_work_target(
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             requested_revision_id="2019-y-siguientes",
+            operation=operation,
         )
         assert result == "2019-y-siguientes"
 
-    def test_refuses_explicit_revision_that_diverges_from_law_determined(self) -> None:
+    def test_refuses_explicit_revision_that_diverges_from_law_determined(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """An explicit --revision that is NOT the law-determined revision is refused.
 
         M303 has three revisions:
@@ -96,6 +105,7 @@ class TestS01CreationGate:
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
                 requested_revision_id="2022",
+                operation=operation,
             )
         # The refusal's prose lives in the locale catalogue and reaches the
         # operator through the renderer; str(exc) is only the message KEY, so
@@ -109,7 +119,9 @@ class TestS01CreationGate:
         # Must state the binding is fixed by law
         assert "law" in msg.lower() or "fixed by" in msg.lower()
 
-    def test_refusal_message_is_instructive_and_names_both_revisions(self) -> None:
+    def test_refusal_message_is_instructive_and_names_both_revisions(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The refusal message must name requested, law-determined, and the re-create instruction.
 
         Validates the CLI-boundary instructive-refusal mandate from
@@ -121,6 +133,7 @@ class TestS01CreationGate:
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
                 requested_revision_id="2022",
+                operation=operation,
             )
         # The refusal's prose lives in the locale catalogue and reaches the
         # operator through the renderer; str(exc) is only the message KEY, so
@@ -132,17 +145,20 @@ class TestS01CreationGate:
         # Should direct operator to re-create without --revision
         assert "re-create" in msg.lower() or "--revision" in msg.lower() or "without" in msg.lower()
 
-    def test_returns_correct_law_determined_revision_for_m303_2026(self) -> None:
+    def test_returns_correct_law_determined_revision_for_m303_2026(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Smoke test: M303 2026 1T resolves to the 2026-y-siguientes revision."""
         result = law_selected_revision_for_work_target(
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             requested_revision_id=None,
+            operation=operation,
         )
         assert result == "2026-y-siguientes"
 
-    def test_refuses_revision_that_covers_year_but_not_period(self) -> None:
+    def test_refuses_revision_that_covers_year_but_not_period(self, *, operation: PinnedAuthorityOperation) -> None:
         """The PRECISE D1 hole: a revision that COVERS the filing year but NOT the period.
 
         This is the exact divergence the period-revision-resolution D1 decision describes
@@ -174,6 +190,7 @@ class TestS01CreationGate:
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             requested_revision_id=None,
+            operation=operation,
         )
         assert law_determined == "esquema-union"
 
@@ -184,6 +201,7 @@ class TestS01CreationGate:
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
                 requested_revision_id="esquema-importacion",
+                operation=operation,
             )
         # The refusal's prose lives in the locale catalogue and reaches the
         # operator through the renderer; str(exc) is only the message KEY, so
@@ -256,8 +274,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
     """
 
     def test_create_work_unit_refuses_a_revision_that_diverges_from_law_determined(
-        self,
-        door_reconfirmation_repo: tuple[str, WorkUnitCatalogueRepository],
+        self, door_reconfirmation_repo: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
     ) -> None:
         """A real, period-declared, but year-wrong revision id is refused at creation.
 
@@ -283,6 +300,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
                     bucket_event_repository=BucketEventHistoryRepository(),
                 ),
                 clock=_T0,
+                operation=operation,
             )
         # The refusal's prose lives in the locale catalogue and reaches the
         # operator through the renderer; str(exc) is only the message KEY, so
@@ -303,8 +321,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
         assert repo.load().get(stray_id) is None
 
     def test_create_work_unit_accepts_the_law_determined_revision(
-        self,
-        door_reconfirmation_repo: tuple[str, WorkUnitCatalogueRepository],
+        self, door_reconfirmation_repo: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
     ) -> None:
         """The correctly-resolved revision id still creates a work unit.
 
@@ -326,6 +343,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
                 bucket_event_repository=BucketEventHistoryRepository(),
             ),
             clock=_T0,
+            operation=operation,
         )
         assert unit.revision_id == "2026-y-siguientes"
         assert repo.load().get(unit.work_unit_id) is not None

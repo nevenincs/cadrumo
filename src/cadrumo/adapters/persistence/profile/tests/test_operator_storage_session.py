@@ -41,6 +41,9 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _certificate_indexed_authority_for_test,
 )
 
@@ -52,8 +55,8 @@ _PROFILE_A = "11111111-1111-4111-8111-111111111111"
 _PROFILE_B = "22222222-2222-4222-8222-222222222222"
 
 
-def _create_profile(profile_id: str, *, provider: str | None = None) -> None:
-    assert profile_keys()
+def _create_profile(profile_id: str, *, provider: str | None = None, operation: PinnedAuthorityOperation) -> None:
+    assert profile_keys(operation=operation)
     with open_test_profile_session(profile_id):
         register_minimal_profile(profile_id=profile_id)
         if provider is not None:
@@ -84,9 +87,9 @@ def _reset(*, unlock: str | None = None, **kwargs):
         return reset_operator_auth(**kwargs, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
 
-def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
+def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A)
+        _create_profile(_PROFILE_A, operation=operation)
         settings = load_settings().model_copy(
             update={"cadrumo_file_lock_timeout_s": 0.05},
         )
@@ -107,10 +110,12 @@ def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
             storage.unblock(_PROFILE_A)
 
 
-def test_logout_reopens_pointer_profile_and_is_idempotent(tmp_path: Path) -> None:
+def test_logout_reopens_pointer_profile_and_is_idempotent(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Logout clears readiness, preserves configuration, and does not rewrite a second time."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A, provider="certificate")
+        _create_profile(_PROFILE_A, provider="certificate", operation=operation)
         with open_test_profile_session(_PROFILE_A):
             repository = workflow_state_repository()
             repository.update(
@@ -149,10 +154,10 @@ def test_logout_reopens_pointer_profile_and_is_idempotent(tmp_path: Path) -> Non
         assert after_second == after_first
 
 
-def test_logout_and_reset_require_unambiguous_scope(tmp_path: Path) -> None:
+def test_logout_and_reset_require_unambiguous_scope(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """An omitted provider needs configured state; provider and all are mutually exclusive."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A)
+        _create_profile(_PROFILE_A, operation=operation)
 
         with pytest.raises(AuthProviderNotConfiguredError):
             _logout()
@@ -164,10 +169,10 @@ def test_logout_and_reset_require_unambiguous_scope(tmp_path: Path) -> None:
             _reset(provider="certificate", all_providers=True)
 
 
-def test_logout_deletes_real_clave_permanente_session(tmp_path: Path) -> None:
+def test_logout_deletes_real_clave_permanente_session(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """Cl@ve Permanente uses its production storage stem and is deleted by logout."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A, provider="clave_permanente")
+        _create_profile(_PROFILE_A, provider="clave_permanente", operation=operation)
         with open_test_profile_session(_PROFILE_A):
             path = storage_state_paths(AuthProviderKind.CLAVE_PERMANENTE).storage_state
             session_store.save(path, storage_state={}, metadata={"provider_kind": "clave_permanente"})
@@ -181,14 +186,14 @@ def test_logout_deletes_real_clave_permanente_session(tmp_path: Path) -> None:
 
 
 def test_certificate_logout_removes_session_and_preserves_certificate_configuration(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Certificate logout removes only the persisted session, not its configured custody."""
     with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         with isolated_profile_storage_root(tmp_path=tmp_path):
             certificate_path = tmp_path / "personal.p12"
             certificate_path.write_bytes(b"real-storage-certificate-fixture")
-            _create_profile(_PROFILE_A, provider="certificate")
+            _create_profile(_PROFILE_A, provider="certificate", operation=operation)
 
             with open_test_profile_session(_PROFILE_A):
                 register_operator_certificate_source(
@@ -268,10 +273,12 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
             assert secret_after.get_secret_value() == secret_value_before
 
 
-def test_logout_all_emits_events_only_for_affected_providers(tmp_path: Path) -> None:
+def test_logout_all_emits_events_only_for_affected_providers(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """An all-provider sweep never claims unrelated providers had session artefacts."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A, provider="certificate")
+        _create_profile(_PROFILE_A, provider="certificate", operation=operation)
         with open_test_profile_session(_PROFILE_A):
             repository = workflow_state_repository()
             before = repository.load()
@@ -289,13 +296,15 @@ def test_logout_all_emits_events_only_for_affected_providers(tmp_path: Path) -> 
         ]
 
 
-def test_reset_removes_certificate_registry_and_secure_secret(tmp_path: Path) -> None:
+def test_reset_removes_certificate_registry_and_secure_secret(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Certificate reset removes registrations and canonical secure-storage secrets."""
     with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         with isolated_profile_storage_root(tmp_path=tmp_path):
             cert_path = tmp_path / "operator.p12"
             cert_path.write_bytes(b"placeholder")
-            _create_profile(_PROFILE_A, provider="certificate")
+            _create_profile(_PROFILE_A, provider="certificate", operation=operation)
             with open_test_profile_session(_PROFILE_A):
                 register_operator_certificate_source(
                     name="personal",
@@ -340,10 +349,12 @@ def test_reset_removes_certificate_registry_and_secure_secret(tmp_path: Path) ->
             assert secret is None
 
 
-def test_certificate_reset_clears_path_without_removing_other_provider(tmp_path: Path) -> None:
+def test_certificate_reset_clears_path_without_removing_other_provider(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Certificate configuration is removed even when another provider is active."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A, provider="clave_movil")
+        _create_profile(_PROFILE_A, provider="clave_movil", operation=operation)
         with open_test_profile_session(_PROFILE_A):
             repository = workflow_state_repository()
             repository.update(
@@ -368,10 +379,12 @@ def test_certificate_reset_clears_path_without_removing_other_provider(tmp_path:
         ]
 
 
-def test_reset_uses_token_directory_from_supplied_settings(tmp_path: Path) -> None:
+def test_reset_uses_token_directory_from_supplied_settings(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A supplied Settings object routes acquisition-lock cleanup to its token root."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A, provider="certificate")
+        _create_profile(_PROFILE_A, provider="certificate", operation=operation)
         token_dir = tmp_path / "target-tokens"
         with override_settings(cadrumo_token_dir=token_dir) as settings, open_test_profile_session(_PROFILE_A):
             lock_path = auth_acquisition_lock_path(
@@ -392,11 +405,13 @@ def test_reset_uses_token_directory_from_supplied_settings(tmp_path: Path) -> No
         assert result.cleared_locks == 1
 
 
-def test_explicit_target_bucket_restores_unrelated_ambient_session(tmp_path: Path) -> None:
+def test_explicit_target_bucket_restores_unrelated_ambient_session(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Reset bucket B through a nested span and restore ambient bucket A unchanged."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A, provider="certificate")
-        _create_profile(_PROFILE_B, provider="clave_movil")
+        _create_profile(_PROFILE_A, provider="certificate", operation=operation)
+        _create_profile(_PROFILE_B, provider="clave_movil", operation=operation)
 
         with open_test_profile_session(_PROFILE_A):
             ambient_before = _OPERATOR_SCOPE_PORTS.session.current()
@@ -421,7 +436,9 @@ def test_explicit_target_bucket_restores_unrelated_ambient_session(tmp_path: Pat
         assert state_b.auth.provider is None
 
 
-def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(tmp_path: Path) -> None:
+def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The contract that replaced the cold-pointer premise, pinned rather than implied.
 
     An AEAT session is an encrypted row inside the profile's own store, so
@@ -433,7 +450,7 @@ def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(tm
     usable -- rather than that the profile is locked, which they already know.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A, provider="certificate")
+        _create_profile(_PROFILE_A, provider="certificate", operation=operation)
 
         with override_settings(cadrumo_active_profile=_PROFILE_A):
             assert build_inward_operator_scope_ports(session=None).session.current() is None

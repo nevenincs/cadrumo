@@ -47,6 +47,7 @@ from ...core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
     especial_prorrata_register_regime,
@@ -465,6 +466,7 @@ def _seed_findings_with_existing_entry(
     sector: str | None,
     findings: tuple[ProrrataSeedFinding, ...],
     observation_repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ProrrataSeedFinding, ...]:
     """Cross-check an existing entry before allowing a carried seed to replace it."""
     existing = service.get(ejercicio, sector_id=sector)
@@ -474,6 +476,7 @@ def _seed_findings_with_existing_entry(
     cross_findings = cross_check_prorrata_entry_against_prior_observation(
         existing,
         observation_repository=observation_repository,
+        operation=operation,
     )
     _refuse_blocking_findings(cross_findings)
     standing_provenance = existing.provisional_provenance
@@ -503,13 +506,15 @@ def prorrata_seed(
     absent prior observation refuses as absent rather than seeding a zero.
     """
     bucket_id = _register_bucket_id()
+    operation = authority_operation(ctx)
     calculation_ports = calculation_action_ports_factory(ctx)(
         bucket_id=bucket_id,
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     evaluation = evaluate_carried_prior_definitiva_seed(
         ejercicio=ejercicio,
         observation_repository=calculation_ports.observation_repository,
+        operation=operation,
         sector_id=sector,
     )
     _refuse_blocking_findings(evaluation.findings)
@@ -519,7 +524,7 @@ def prorrata_seed(
 
     service = ProrrataRegisterService(
         repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     findings = _seed_findings_with_existing_entry(
         service,
@@ -527,6 +532,7 @@ def prorrata_seed(
         sector=sector,
         findings=evaluation.findings,
         observation_repository=calculation_ports.observation_repository,
+        operation=operation,
     )
 
     try:

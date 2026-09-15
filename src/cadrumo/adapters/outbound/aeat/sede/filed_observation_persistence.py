@@ -46,6 +46,7 @@ from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.buckets.event import BucketEventHistoryCatalogue
 from .....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .....domain.justificante.protocols import JustificanteRepositoryProtocol
@@ -64,6 +65,7 @@ from .declarations_observations import (
 )
 from .declarations_remote import extract_csv_from_url
 from .observation_store import FiledDeclaracionObservationStore
+from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 if TYPE_CHECKING:
     from .....core.secure_object_write import SecureObjectWrite
@@ -93,6 +95,20 @@ def _call_adapter(
         ) from exc
 
 
+def _concrete_observation(observation: FiledObservationProtocol) -> FiledDeclaracionObservation:
+    """Keep the concrete Sede observation at the adapter boundary."""
+    if not isinstance(observation, FiledDeclaracionObservation):
+        raise TypeError("filed observation port returned a non-Sede observation")
+    return observation
+
+
+def _concrete_artefact(artefact: FiledObservationArtefactProtocol) -> FiledDeclaracionArtefact:
+    """Keep the concrete Sede artefact at the adapter boundary."""
+    if not isinstance(artefact, FiledDeclaracionArtefact):
+        raise TypeError("filed observation port returned a non-Sede artefact")
+    return artefact
+
+
 class FiledObservationParserAdapter(FiledObservationParserPort):
     """Adapt receipt parsing and Sede CSV extraction to application types."""
 
@@ -119,7 +135,10 @@ class FiledDeclarationTransformationAdapter(FiledDeclarationTransformationPort):
         """Build the registry-grounded numeric projection."""
         return _call_adapter(
             "registry_observation",
-            lambda: registry_observation_from_filed_declaration(observation, operation=self._operation),
+            lambda: registry_observation_from_filed_declaration(
+                _concrete_observation(observation),
+                operation=self._operation,
+            ),
         )
 
     @override
@@ -130,7 +149,10 @@ class FiledDeclarationTransformationAdapter(FiledDeclarationTransformationPort):
         """Return non-numeric observed casillas for the operator projection."""
         return _call_adapter(
             "non_numeric_casillas",
-            lambda: non_numeric_observed_casillas(observation, operation=self._operation),
+            lambda: non_numeric_observed_casillas(
+                _concrete_observation(observation),
+                operation=self._operation,
+            ),
         )
 
 
@@ -144,7 +166,10 @@ class FiledObservationStoreAdapter(FiledObservationPersistencePort):
     @override
     def persist_observation(self, observation: FiledObservationProtocol) -> Path:
         """Persist one encrypted observation manifest."""
-        return _call_adapter("persist_observation", lambda: self._store.persist_observation(observation))
+        return _call_adapter(
+            "persist_observation",
+            lambda: self._store.persist_observation(_concrete_observation(observation)),
+        )
 
     @override
     def persist_artefact(
@@ -156,7 +181,7 @@ class FiledObservationStoreAdapter(FiledObservationPersistencePort):
         """Persist one encrypted artefact and return its storage reference."""
         return _call_adapter(
             "persist_artefact",
-            lambda: self._store.persist_artefact(observation_key, artefact, body),
+            lambda: self._store.persist_artefact(observation_key, _concrete_artefact(artefact), body),
         )
 
     @override
@@ -257,21 +282,23 @@ class IvaObservationPersistenceAdapter(FiledIvaObservationPersistencePort):
         source_artefact_sha256: str | None,
     ) -> IvaCompensationPeriodState:
         """Atomically persist the calculation envelope and IVA history state."""
-        return _call_adapter(
-            "persist_iva_history",
-            lambda: persist_observation_envelope_and_iva_history(
-                observation_repository=_calculation_repository(observation_repository),
-                history_repository=_history_repository(history_repository),
-                envelope=envelope,
-                taxpayer_nif=taxpayer_nif,
-                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
-                expediente_id=expediente_id,
-                status=status,
-                source_observation_key=source_observation_key,
-                source_artefact_sha256=source_artefact_sha256,
-            ),
-            fallback_key="application.live.filed_observations.errors.iva_history_promotion_failed",
-        )
+        with bundled_indexed_authority().operation() as operation:
+            return _call_adapter(
+                "persist_iva_history",
+                lambda: persist_observation_envelope_and_iva_history(
+                    observation_repository=_calculation_repository(observation_repository),
+                    history_repository=_history_repository(history_repository),
+                    envelope=envelope,
+                    taxpayer_nif=taxpayer_nif,
+                    provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
+                    expediente_id=expediente_id,
+                    status=status,
+                    source_observation_key=source_observation_key,
+                    operation=operation,
+                    source_artefact_sha256=source_artefact_sha256,
+                ),
+                fallback_key="application.live.filed_observations.errors.iva_history_promotion_failed",
+            )
 
 
 class JustificanteRepositoryAdapter(JustificanteRepositoryProtocol):

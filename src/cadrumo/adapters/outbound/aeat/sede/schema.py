@@ -76,7 +76,6 @@ from .....core.filing_year import FilingYear
 from .....core.identity.aeat_csv import AeatCsv
 from .....core.identity.aeat_expediente import AeatExpedienteId
 from .....core.identity.digest import ContentDigest
-from .....core.modelo import Modelo
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
@@ -342,7 +341,7 @@ class IvaCompensationWalletObservation(BaseModel):
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     authenticated_identity: str = Field(min_length=1, max_length=32)
-    target_modelo: Literal[Modelo("303")] = Modelo("303")
+    target_modelo: Literal["303"] = "303"
     target_year: FilingYear
     target_period: Period
     rows: tuple[IvaCompensationWalletRow, ...] = ()

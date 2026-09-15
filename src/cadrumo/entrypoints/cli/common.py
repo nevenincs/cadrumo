@@ -998,8 +998,15 @@ def profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
     record = state.active_profile_record()
     if record is None:
         return projection_for_taxpayer({})
-    schema = ProfileRecordRepository.for_current_session(record.profile_id).session.profile_decode_context.schema
-    return projection_for_taxpayer(record, schema=schema)
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        profile_decode_context = operation.profile_decode_context()
+        ProfileRecordRepository.for_current_session(
+            record.profile_id,
+            profile_decode_context=profile_decode_context,
+        )
+        return projection_for_taxpayer(record, schema=profile_decode_context.schema)
 
 
 def declared_tax_id(record: UserProfileRecord | None) -> str:
@@ -1050,16 +1057,17 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
         profile_name=record.profile_id if record is not None else None,
     )
     if verdict is not None:
-        profile_schema = (
-            ProfileRecordRepository.for_current_session(record.profile_id).session.profile_decode_context.schema
-            if record is not None
-            else None
-        )
-        if profile_schema is None:
-            raise InternalInvariantError("filing refusal requires a schema pinned to the authenticated operation")
         from ...domain.calculations.registry.authority import bundled_indexed_authority
 
         with bundled_indexed_authority().operation() as operation:
+            profile_schema = operation.profile_decode_context().schema if record is not None else None
+            if profile_schema is None:
+                raise InternalInvariantError("filing refusal requires a schema pinned to the authenticated operation")
+            if record is not None:
+                ProfileRecordRepository.for_current_session(
+                    record.profile_id,
+                    profile_decode_context=operation.profile_decode_context(),
+                )
             grounding_index = profile_grounding_index_for_operation(operation)
         raise attach_cli_policy_verdict(
             CliRefusedBoundaryError(
@@ -1134,11 +1142,11 @@ def load_invoices() -> InvoiceCatalogue:
     return _invoice_repo().load()
 
 
-def load_drafts() -> tuple[ModeloDraft, ...]:
+def load_drafts(*, operation: PinnedAuthorityOperation) -> tuple[ModeloDraft, ...]:
     from ...application.filing.draft_revision_gate import require_modelo_draft_coordinates_current
 
     repo = _draft_repo()
-    return tuple(require_modelo_draft_coordinates_current(draft) for draft in repo.iter_drafts())
+    return tuple(require_modelo_draft_coordinates_current(draft, operation=operation) for draft in repo.iter_drafts())
 
 
 # ---------------------------------------------------------------------

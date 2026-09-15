@@ -65,7 +65,6 @@ def test_applied_censal_review_lands_adopted_values_with_censo_provenance(tmp_pa
             run_censal_review_through_services(
                 actor_ref=_ACTOR,
                 decide=decide,
-                services=driver.services,
             )
         )
 
@@ -123,7 +122,6 @@ def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(t
             run_censal_review_through_services(
                 actor_ref=_ACTOR,
                 decide=decide,
-                services=driver.services,
             )
         )
 
@@ -153,7 +151,6 @@ def test_each_censal_acquisition_publishes_exactly_one_answerable_review(tmp_pat
             run_censal_review_through_services(
                 actor_ref=_ACTOR,
                 decide=decide_first,
-                services=driver.services,
             )
         )
         after_first = repository.load(profile_id)
@@ -164,7 +161,6 @@ def test_each_censal_acquisition_publishes_exactly_one_answerable_review(tmp_pat
             run_censal_review_through_services(
                 actor_ref=_ACTOR,
                 decide=decide_second,
-                services=driver.services,
             )
         )
 

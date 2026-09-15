@@ -1039,8 +1039,7 @@ def _ledger_split_llm(
             decision=LlmReviewDecision.SPLIT,
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=composition.bucket_event_repository,
+            ports=compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx)),
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None

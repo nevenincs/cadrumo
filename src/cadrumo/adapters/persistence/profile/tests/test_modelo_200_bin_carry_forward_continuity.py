@@ -48,6 +48,7 @@ from cadrumo.application.calculations.binding_prefill import resolve_bindings_fr
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -147,6 +148,7 @@ def _calculate_200(
     *,
     filing_year: int,
     relation_values: dict[RelationId, Decimal],
+    operation: PinnedAuthorityOperation,
     manual_inputs: dict[CasillaId, Decimal] | None = None,
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M200 annual calculation from resolved relations + the SL profile.
@@ -165,6 +167,7 @@ def _calculate_200(
     # available-value projector below receives every carry this scenario seeds.
     prefilled = resolve_bindings_from_local_store(
         snapshot,
+        operation=operation,
         repository=CalculationObservationRepository(),
         iva_history_repository=IvaCompensationHistoryRepository(),
     ).binding_values
@@ -191,13 +194,14 @@ def _resolve_and_supply_relations(
     *,
     filing_year: int,
     obs_repo: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
 ) -> dict[RelationId, Decimal]:
     snapshot = compiled_bundled_authority().snapshot(
         _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     resolved = {
         item.relation: item.value
-        for item in resolve_relations_from_local_store(snapshot, repository=obs_repo).values
+        for item in resolve_relations_from_local_store(snapshot, operation=operation, repository=obs_repo).values
         if item.value is not None
     }
     # No instalments this scenario: supply the same-year M202 pagos relation as zero
@@ -207,7 +211,10 @@ def _resolve_and_supply_relations(
     return resolved
 
 
-def test_modelo_200_opening_bin_stock_resolves_from_prior_year(tmp_path: Path) -> None:
+def test_modelo_200_opening_bin_stock_resolves_from_prior_year(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Casilla 00670 (opening BIN stock) auto-resolves to the prior year's 00671.
 
     The cross-year continuity contract: once the prior M200 is recorded, the
@@ -217,12 +224,15 @@ def test_modelo_200_opening_bin_stock_resolves_from_prior_year(tmp_path: Path) -
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
         _seed_m200_bin_stock(source_year=2024, stock=_BIN_STOCK_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
-        resolved = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
-        result, _ = _calculate_200(filing_year=_YEAR_N, relation_values=resolved)
+        resolved = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
+        result, _ = _calculate_200(filing_year=_YEAR_N, relation_values=resolved, operation=operation)
     assert Decimal(result.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2024]
 
 
-def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_200_bin_stock_enrolls_two_renta_years(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """End-to-end enrollment: M200 BIN stock carry across two renta years.
 
     Drives the real M200 engine for two distinct renta years (2025, 2026),
@@ -238,11 +248,19 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
         _seed_m200_bin_stock(source_year=2024, stock=_BIN_STOCK_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
         _seed_m200_bin_stock(source_year=2025, stock=_BIN_STOCK_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
 
-        resolved_n = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
-        result_n, _produced_n = _calculate_200(filing_year=_YEAR_N, relation_values=resolved_n)
+        resolved_n = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
+        result_n, _produced_n = _calculate_200(
+            filing_year=_YEAR_N,
+            relation_values=resolved_n,
+            operation=operation,
+        )
 
-        resolved_n1 = _resolve_and_supply_relations(filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
-        result_n1, _produced_n1 = _calculate_200(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
+        resolved_n1 = _resolve_and_supply_relations(filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo, operation=operation)
+        result_n1, _produced_n1 = _calculate_200(
+            filing_year=_YEAR_N_PLUS_1,
+            relation_values=resolved_n1,
+            operation=operation,
+        )
 
     # Wiring invariant: each year's opening BIN stock equals the prior year's
     # end-of-year stock, year-isolated.
@@ -265,7 +283,10 @@ _M200_RESULTADO_CONTABLE: CasillaId = validated_casilla_id("00501", surface="_M2
 _M200_BASE_PREVIA: CasillaId = validated_casilla_id("DP200014:00550", surface="_M200_BASE_PREVIA")
 
 
-def test_modelo_200_bin_aplicada_maxima_selects_70_percent_branch(tmp_path: Path) -> None:
+def test_modelo_200_bin_aplicada_maxima_selects_70_percent_branch(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The art.26.1 ceiling computes 70%·base previa when it exceeds the EUR 1M floor.
 
     Worked scenario: a sociedad with resultado contable 5.000.000 € and no
@@ -288,10 +309,11 @@ def test_modelo_200_bin_aplicada_maxima_selects_70_percent_branch(tmp_path: Path
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
         _seed_m200_bin_stock(source_year=2024, stock=prior_year_bin_stock, obs_repo=obs_repo)
-        resolved = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
+        resolved = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_200(
             filing_year=_YEAR_N,
             relation_values=resolved,
+            operation=operation,
             manual_inputs={_M200_RESULTADO_CONTABLE: resultado_contable},
         )
 

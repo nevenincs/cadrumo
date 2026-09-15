@@ -47,6 +47,7 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....entrypoints.adapter_composition import build_work_lifecycle_ports
@@ -225,14 +226,16 @@ def _builder_refused_run(run_id: str) -> WorkflowResult:
 def _seed_work_unit():
     bucket_id = resolve_active_bucket_id()
     assert isinstance(bucket_id, str)
-    return create_work_unit(
-        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
-        bucket_id=bucket_id,
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return create_work_unit(
+            ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+            bucket_id=bucket_id,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2019-y-siguientes",
+            operation=operation,
+        )
 
 
 def test_resume_help_advertises_the_command() -> None:

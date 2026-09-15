@@ -69,7 +69,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -368,7 +368,7 @@ def _repositories(
 
 
 def _calculate_irene_revision(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> tuple[
     CalculationRevision,
     Transaction,
@@ -402,6 +402,7 @@ def _calculate_irene_revision(
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
+        operation=operation,
     )
     decision = _wallet_decision()
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
@@ -417,7 +418,7 @@ def _calculate_irene_revision(
             iva_compensation_decision=decision,
             clock=_CALCULATED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-deductible-evidence-gate"
+                work_unit.period, reference="test:m303-deductible-evidence-gate", operation=operation
             ),
         ).revision
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
@@ -458,7 +459,7 @@ def _persist_legacy_verified_revision(
 
 
 def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output_gap(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A deductible gap refuses the grant; an output gap stays advisory.
 
@@ -475,6 +476,7 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     """
     revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _calculate_irene_revision(
         secure_objects,
+        operation=operation,
     )
 
     assert revision.casilla_values[_DEVENGADA_TOTAL] == sale.iva_amount
@@ -561,11 +563,11 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
 
 
 def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
-            _calculate_irene_revision(profile.repository)
+            _calculate_irene_revision(profile.repository, operation=operation)
         )
         invoice = tmp_path / "supplier-invoice.pdf"
         invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
@@ -625,7 +627,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
 
 
 def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A row bound to a real, validated ``Invoice`` passes verify AND survives filing.
 
@@ -662,7 +664,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
-            _calculate_irene_revision(profile.repository)
+            _calculate_irene_revision(profile.repository, operation=operation)
         )
 
         invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
@@ -774,7 +776,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
 
 
 def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The recovery the whole promotion rests on: block, attach, re-verify, grant.
 
@@ -791,7 +793,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
-            _calculate_irene_revision(profile.repository)
+            _calculate_irene_revision(profile.repository, operation=operation)
         )
 
         def _verify() -> VerificationReport:
@@ -882,7 +884,7 @@ def _work_unit() -> WorkUnit:
 
 
 def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     sale = iva_transaction(
@@ -892,7 +894,9 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
     )
     tx_repo.save(TransactionCatalogue.from_transactions((sale,)))
     work_unit = _work_unit()
-    filing_instance_evidence = general_m303_filing_evidence(work_unit.period, reference="test:m303-deductible-evidence")
+    filing_instance_evidence = general_m303_filing_evidence(
+        work_unit.period, reference="test:m303-deductible-evidence", operation=operation
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
@@ -934,11 +938,10 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
 
 
 def test_modelo_303_export_refuses_legacy_verified_deductible_iva_missing_evidence(
-    secure_objects: SecureObjectRepository,
-    tmp_path: Path,
+    secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     revision, _sale, _purchase, _wu_repo, cr_repo, _filing_repo, _vr_repo, _event_repo, tx_repo = (
-        _calculate_irene_revision(secure_objects)
+        _calculate_irene_revision(secure_objects, operation=operation)
     )
     legacy = _persist_legacy_verified_revision(revision, cr_repo=cr_repo, tx_repo=tx_repo)
     output_path = tmp_path / "modelo-303.txt"
@@ -971,10 +974,11 @@ def test_modelo_303_export_refuses_legacy_verified_deductible_iva_missing_eviden
 
 
 def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing_evidence(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     revision, _sale, _purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _calculate_irene_revision(
         secure_objects,
+        operation=operation,
     )
     legacy = _persist_legacy_verified_revision(revision, cr_repo=cr_repo, tx_repo=tx_repo)
 

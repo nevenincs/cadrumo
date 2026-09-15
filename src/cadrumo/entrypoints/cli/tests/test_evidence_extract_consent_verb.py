@@ -47,6 +47,7 @@ from ....core.config import override_settings
 from ....core.config_support import LLMProvider
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.fixtures.settings import EnvFileFreeSettings
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -158,6 +159,8 @@ def _client(settings: EnvFileFreeSettings) -> LLMClient:
 def test_a_minted_token_carries_an_evidence_read_all_the_way_to_the_endpoint(
     tmp_path: Path,
     runtime_profile: TestRuntimeProfile,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """THE control. A real token, a real request, a real body at a real endpoint.
 
@@ -187,6 +190,7 @@ def test_a_minted_token_carries_an_evidence_read_all_the_way_to_the_endpoint(
             settings=settings,
             client=_client(settings),
             consent_token=token,
+            operation=operation,
         )
         draft = extractor.extract(transcription=_transcription())
 
@@ -200,6 +204,8 @@ def test_a_minted_token_carries_an_evidence_read_all_the_way_to_the_endpoint(
 def test_the_same_read_without_the_token_reaches_nothing(
     tmp_path: Path,
     runtime_profile: TestRuntimeProfile,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The discriminating negative, differing from the control in ONE variable.
 
@@ -216,6 +222,7 @@ def test_the_same_read_without_the_token_reaches_nothing(
             model="gpt-4.1",
             settings=settings,
             client=_client(settings),
+            operation=operation,
         )
         with pytest.raises(LLMConsentError):
             extractor.extract(transcription=_transcription())

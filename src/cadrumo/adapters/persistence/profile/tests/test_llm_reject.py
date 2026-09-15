@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -191,7 +192,7 @@ def test_reject_via_workflow_matches_the_direct_primitive_default(
     # pre-cutover direct reject_llm_suggestion default produced — proving the
     # cutover did not drift the audit label. Two independent code paths, one
     # bucket, compared against each other (not a hardcoded copy).
-    repository, events, _objects = repositories
+    repository, events, objects = repositories
     tx_id = _seed_parent(repository)
 
     reject_llm_suggestion(
@@ -203,16 +204,21 @@ def test_reject_via_workflow_matches_the_direct_primitive_default(
         bucket_event_repository=events,
         occurred_at=_NOW,
     )
-    execute_reviewed_decision(
-        _classification_suggestion(tx_id),
-        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
-        decision=LlmReviewDecision.REJECT,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        reason="workflow-routed path",
+        objects=objects,
         transaction_repository=repository,
         bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
+    ) as ports:
+        execute_reviewed_decision(
+            _classification_suggestion(tx_id),
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
+            decision=LlmReviewDecision.REJECT,
+            bucket_id=_BUCKET,
+            reason="workflow-routed path",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     recorded = _rejection_events(events)
     assert len(recorded) == 2

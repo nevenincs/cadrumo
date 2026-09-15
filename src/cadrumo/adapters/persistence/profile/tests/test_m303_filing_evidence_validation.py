@@ -19,6 +19,7 @@ from cadrumo.application.modelo.action_errors import M303FilingEvidenceError
 from cadrumo.application.modelo.m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
@@ -82,7 +83,7 @@ def _work_unit(period: Period) -> WorkUnit:
     )
 
 
-def _evidence(period: Period) -> FilingInstanceEvidence:
+def _evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
     scope = _general_scope()
     registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
@@ -112,6 +113,7 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
                     scope_decision=scope,
                 ),
                 dana_2024_eligibility=None,
+                operation=operation,
             ),
         ),
     )
@@ -130,7 +132,7 @@ def _exonerado_activity_rows(
     )
 
 
-def _simplified_evidence(period: Period) -> FilingInstanceEvidence:
+def _simplified_evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
     scope = M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
@@ -196,6 +198,7 @@ def _simplified_evidence(period: Period) -> FilingInstanceEvidence:
                 rows=rows,
                 regimen_snapshot=regimen_snapshot,
                 dana_2024_eligibility=None,
+                operation=operation,
             ),
         ),
     )
@@ -256,10 +259,12 @@ def _store_profile(
     )
 
 
-def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path: Path) -> None:
+def test_complete_evidence_matches_work_unit_registry_and_active_censo(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     period = Period.from_year_and_code(2026, "1T")
     work_unit = _work_unit(period)
-    evidence = _evidence(period)
+    evidence = _evidence(period, operation=operation)
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -270,6 +275,7 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path:
             evidence=evidence,
             casilla_values={},
             observations=(),
+            operation=operation,
         )
 
     assert validated == evidence
@@ -280,8 +286,7 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path:
     (M303RegimeComposition._from_registry("simplified"), M303RegimeComposition._from_registry("mixed")),
 )
 def test_evidence_scope_disagreeing_with_active_censo_refuses(
-    tmp_path: Path,
-    composition: M303RegimeComposition,
+    tmp_path: Path, composition: M303RegimeComposition, *, operation: PinnedAuthorityOperation
 ) -> None:
     period = Period.from_year_and_code(2026, "1T")
 
@@ -291,9 +296,10 @@ def test_evidence_scope_disagreeing_with_active_censo_refuses(
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),
                 registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T"),
-                evidence=_evidence(period),
+                evidence=_evidence(period, operation=operation),
                 casilla_values={},
                 observations=(),
+                operation=operation,
             )
 
         failure = raised_regimen_scope_profile_divergence.value.precondition_failure
@@ -302,10 +308,12 @@ def test_evidence_scope_disagreeing_with_active_censo_refuses(
         assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.regimen_scope_profile_divergence"
 
 
-def test_structurally_valid_noncanonical_simplified_result_refuses_before_persistence(tmp_path: Path) -> None:
+def test_structurally_valid_noncanonical_simplified_result_refuses_before_persistence(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The persisted result must be the calculator replay, not merely well-formed evidence."""
     period = Period.from_year_and_code(2026, "1T")
-    canonical_evidence = _simplified_evidence(period)
+    canonical_evidence = _simplified_evidence(period, operation=operation)
     regimen = canonical_evidence.m303.regimen_simplificado
     canonical_result = regimen.calculation_result
     canonical_activity = canonical_result.activities[0]
@@ -342,6 +350,7 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
                 evidence=evidence,
                 casilla_values={},
                 observations=(),
+                operation=operation,
             )
 
     failure = raised_divergent_result.value.precondition_failure
@@ -350,7 +359,9 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
     assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.simplified_calculation_result_divergence"
 
 
-def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observation(tmp_path: Path) -> None:
+def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observation(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     period = Period.from_year_and_code(2026, "4T")
     work_unit = _work_unit(period)
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T")
@@ -361,7 +372,7 @@ def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observati
     )
     values = {casilla_id: Decimal("0") for casilla_id in endpoint_ids}
     reference = FilingEvidenceReference(reference="test:validation:all-a28-endpoints")
-    base = _evidence(period)
+    base = _evidence(period, operation=operation)
     evidence = FilingInstanceEvidence(
         m303=base.m303.model_copy(
             update={
@@ -398,12 +409,15 @@ def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observati
             evidence=evidence,
             casilla_values=values,
             observations=observations,
+            operation=operation,
         )
 
     assert validated == evidence
 
 
-def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path: Path) -> None:
+def test_incomplete_a28_endpoint_population_refuses_before_persistence(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     period = Period.from_year_and_code(2026, "4T")
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T")
     endpoint = next(
@@ -412,7 +426,7 @@ def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path:
         if tuple(casilla.section)[:2] == ("iva", "exonerado_390")
     )
     reference = FilingEvidenceReference(reference="test:validation:incomplete-a28")
-    base = _evidence(period)
+    base = _evidence(period, operation=operation)
     evidence = FilingInstanceEvidence(
         m303=base.m303.model_copy(
             update={
@@ -448,6 +462,7 @@ def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path:
                     period="4T",
                     casilla_values={endpoint.id: Decimal("0")},
                 ),
+                operation=operation,
             )
 
         failure = raised_exonerado_390_endpoint_coverage_incomplete.value.precondition_failure

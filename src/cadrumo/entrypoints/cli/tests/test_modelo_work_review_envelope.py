@@ -15,6 +15,8 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from typer.testing import CliRunner
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -81,7 +83,7 @@ def _orphan_row_source_identity(document: dict[str, Any]) -> None:
 
 @contextmanager
 def _persist_blocked_review(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> Generator[tuple[ModeloWorkReview, VerificationReport, SecureObjectRepository]]:
     """Build the application record from genuine encrypted repositories."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
@@ -190,15 +192,15 @@ def _persist_blocked_review(
             work_unit_repository=work_repository,
             calculation_repository=calculation_repository,
             verification_repository=verification_repository,
+            operation=operation,
         )
         yield review, report, objects
 
 
 def test_review_record_round_trips_through_registered_schema_envelope(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with _persist_blocked_review(tmp_path) as (review, report, objects):
+    with _persist_blocked_review(tmp_path, operation=operation) as (review, report, objects):
         result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
         notices = verification_report_notices(report)
         envelope_cls = cast(Any, SchemaEnvelope)[WorkReviewResult]
@@ -266,8 +268,10 @@ def test_review_record_round_trips_through_registered_schema_envelope(
         assert _ROW_FINGERPRINT not in failure_surface
 
 
-def test_review_payload_refuses_raw_identity_fields_without_echoing_value(tmp_path: Path) -> None:
-    with _persist_blocked_review(tmp_path) as (review, _, _):
+def test_review_payload_refuses_raw_identity_fields_without_echoing_value(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    with _persist_blocked_review(tmp_path, operation=operation) as (review, _, _):
         payload = WorkReviewPayload.from_review(review).model_dump(mode="python")
         payload["row_source_identity"] = _RAW_ROW_IDENTITY
 

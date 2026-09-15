@@ -38,6 +38,7 @@ from ...core.hashing import sha256_hex
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.work_unit import WorkUnit
 from .common import resolve_notice_action
 
@@ -274,6 +275,7 @@ def local_calendar_filing_evidence(
     bucket_id: str,
     events: tuple[OverviewCalendarEvent, ...],
     *,
+    operation: PinnedAuthorityOperation,
     expected_tax_id: str | None = None,
 ) -> tuple[tuple[OverviewCalendarFilingEvidence, ...], Notice | None]:
     """Return ``(local/AEAT filing evidence rows, degradation-notice-or-None)``.
@@ -304,6 +306,7 @@ def local_calendar_filing_evidence(
         filed_declaration_observations, verified_filed_artefact_csvs = (
             _calendar_verified_filed_declaration_observations(
                 filed_observation_store,
+                operation=operation,
                 expected_tax_id=expected_tax_id,
             )
         )
@@ -345,13 +348,14 @@ def local_calendar_filing_evidence(
 def _calendar_verified_filed_declaration_observations(
     store: FiledDeclaracionObservationStore,
     *,
+    operation: PinnedAuthorityOperation,
     expected_tax_id: str | None = None,
 ) -> tuple[tuple[FiledDeclaracionObservation, ...], dict[str, str]]:
     """Return filed observations with justificante PDF refs proven parseable and matching."""
     verified_observations: list[FiledDeclaracionObservation] = []
     verified_artefact_csvs: dict[str, str] = {}
     for observation in store.list_observations():
-        outcome = revision_carry_outcome(observation.registry_snapshot_ref)
+        outcome = revision_carry_outcome(observation.registry_snapshot_ref, operation=operation)
         if outcome.refused:
             raise ValueError(
                 "filed declaration registry coordinate cannot be re-confirmed: "

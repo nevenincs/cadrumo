@@ -32,7 +32,7 @@ from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
@@ -87,8 +87,8 @@ def _repositories(objects: SecureObjectRepository):
     )
 
 
-def _m303_filing_evidence(period: Period) -> FilingInstanceEvidence:
-    return general_m303_filing_evidence(period, reference="test:bucket-flow:exonerado-390")
+def _m303_filing_evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
+    return general_m303_filing_evidence(period, reference="test:bucket-flow:exonerado-390", operation=operation)
 
 
 @contextmanager
@@ -172,6 +172,7 @@ def _seed_303_work_unit(
     *,
     bucket_event_repository: BucketEventHistoryRepository,
     period: str = "1T",
+    operation: PinnedAuthorityOperation,
 ):
     typed_period = Period.from_year_and_code(2026, period)
     return create_work_unit(
@@ -189,6 +190,7 @@ def _seed_303_work_unit(
             bucket_event_repository=bucket_event_repository,
         ),
         clock=_T0,
+        operation=operation,
     )
 
 
@@ -308,11 +310,11 @@ def _assert_modelo_303_trace(revision: CalculationRevision) -> None:
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transaction_catalogue(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
-    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo)
+    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     incoming = _transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,
@@ -337,7 +339,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             binding_values={
                 "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
                 "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
@@ -391,11 +393,11 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_preflight_blocks(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
-    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo)
+    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     incomplete = _transaction(
         "purchase-missing-category",
         direction=TransactionDirection.OUTGOING,
@@ -410,7 +412,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             clock=_T1,
         ).revision
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
@@ -422,12 +424,12 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
 
 
 def test_m303_still_blocks_base_only_rows_missing_iva_facts(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """IVA-owned modelos still require IVA amount/rate facts for equivalent base-only rows."""
     _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
-    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo)
+    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     base_only = _transaction(
         "purchase-base-only",
         direction=TransactionDirection.OUTGOING,
@@ -442,7 +444,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             clock=_T1,
         ).revision
 
@@ -453,7 +455,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
 
 
 def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compensation_periods(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
@@ -541,10 +543,12 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     wallet_decision_repo.save_decision(q1_decision)
     with _calculation_ports() as ports:
         q1_positive = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, period="1T").work_unit_id,
+            _seed_303_work_unit(
+                wu_repo, bucket_event_repository=event_repo, period="1T", operation=operation
+            ).work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "1T")),
+            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "1T"), operation=operation),
             binding_values=_baseline_303_bindings,
             iva_compensation_decision=q1_decision,
             clock=_T1,
@@ -553,10 +557,12 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     wallet_decision_repo.save_decision(q2_decision)
     with _calculation_ports() as ports:
         q2_negative = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, period="2T").work_unit_id,
+            _seed_303_work_unit(
+                wu_repo, bucket_event_repository=event_repo, period="2T", operation=operation
+            ).work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
+            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "2T"), operation=operation),
             binding_values=_baseline_303_bindings,
             iva_compensation_decision=q2_decision,
             clock=_T1,
@@ -565,10 +571,12 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     wallet_decision_repo.save_decision(q3_decision)
     with _calculation_ports() as ports:
         q3_zero = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, period="3T").work_unit_id,
+            _seed_303_work_unit(
+                wu_repo, bucket_event_repository=event_repo, period="3T", operation=operation
+            ).work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "3T")),
+            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "3T"), operation=operation),
             binding_values=_baseline_303_bindings,
             iva_compensation_decision=q3_decision,
             clock=_T1,
@@ -577,10 +585,12 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     wallet_decision_repo.save_decision(wallet_decision)
     with _calculation_ports() as ports:
         q4_compensated = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, period="4T").work_unit_id,
+            _seed_303_work_unit(
+                wu_repo, bucket_event_repository=event_repo, period="4T", operation=operation
+            ).work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "4T")),
+            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "4T"), operation=operation),
             binding_values={
                 **_baseline_303_bindings,
                 "modelo-303-compensacion-pendiente-anteriores": Decimal("7.00"),
@@ -612,11 +622,11 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_binding_input(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
-    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo)
+    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
     tx_repo.save(
         TransactionCatalogue.from_transactions(
             (
@@ -636,7 +646,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             clock=_T1,
         ).revision
@@ -649,18 +659,18 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_ledger_binding_injection(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
-    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo)
+    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
     with pytest.raises(ModeloAggregationBindingError) as excinfo, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             clock=_T1,
         ).revision
@@ -673,18 +683,18 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_casilla_injection(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
-    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo)
+    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info, _calculation_ports() as ports:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             casilla_inputs={_M303_REPERCUTIDO_GENERAL_CASILLA: Decimal("99.00")},
             clock=_T1,
         ).revision
@@ -697,7 +707,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
 
 
 def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A first-period filer with an empty ledger files a valid zero (sin actividad) Modelo 303.
 
@@ -711,7 +721,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
     """
     _store_first_period_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
-    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo)
+    work_unit = _seed_303_work_unit(wu_repo, bucket_event_repository=event_repo, operation=operation)
 
     # Empty ledger: no transactions saved at all, no overrides, no seed.
     with _calculation_ports() as ports:
@@ -719,7 +729,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             clock=_T1,
         ).revision
 

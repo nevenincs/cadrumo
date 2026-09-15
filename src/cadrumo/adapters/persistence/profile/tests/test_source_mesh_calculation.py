@@ -26,7 +26,7 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -102,6 +102,7 @@ def _seed_work_unit(
     filing_year: int,
     period: str,
     revision_id: str,
+    operation: PinnedAuthorityOperation,
 ):
     return create_work_unit(
         bucket_id=_BUCKET,
@@ -111,6 +112,7 @@ def _seed_work_unit(
         revision_id=revision_id,
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET),
         clock=_T0,
+        operation=operation,
     )
 
 
@@ -175,6 +177,8 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
     period: str,
     revision_id: str,
     binding_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
@@ -183,6 +187,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
         filing_year=filing_year,
         period=period,
         revision_id=revision_id,
+        operation=operation,
     )
 
     with pytest.raises(ModeloAggregationBindingError) as excinfo:
@@ -200,7 +205,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
 
 
 def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
@@ -209,6 +214,7 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
         filing_year=2026,
         period="1T",
         revision_id="2020-y-siguientes",
+        operation=operation,
     )
     intracom_sale = _intracom_ledger_transaction("intracom-sale-de")
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
@@ -238,7 +244,7 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
 
 
 def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operator_rows(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A March 20 raw intracom row remains inside the March monthly period and fails closed."""
     wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
@@ -248,6 +254,7 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
         filing_year=2026,
         period="03",
         revision_id="2020-y-siguientes",
+        operation=operation,
     )
     intracom_sale = _intracom_ledger_transaction("intracom-sale-march-20", booked_date=date(2026, 3, 20))
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
@@ -286,6 +293,8 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
     period: str,
     revision_id: str,
     casilla_id: CasillaId,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
@@ -294,6 +303,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
         filing_year=filing_year,
         period=period,
         revision_id=revision_id,
+        operation=operation,
     )
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:

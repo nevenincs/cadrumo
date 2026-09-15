@@ -68,6 +68,13 @@ class _ProfilePathValuesFake:
         return self._values
 
 
+def _render_profile_value(value: object) -> str:
+    """Render a typed profile fact into the port's canonical string shape."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+
 def _profile_reader(extra_facts: tuple[UserProfileFact, ...]) -> ProfilePathValuesReadPort:
     """Build the path projection used by a pure relation-prefill test."""
     return _ProfilePathValuesFake(
@@ -76,7 +83,11 @@ def _profile_reader(extra_facts: tuple[UserProfileFact, ...]) -> ProfilePathValu
             "identity.legal_name": "Relation Prefill Grounding",
             "tax_residence.ccaa": "madrid",
             "tax_residence.jurisdiction_scope": "common_regime",
-            **{fact.path: fact.value for fact in extra_facts},
+            **{
+                fact.path: _render_profile_value(fact.value)
+                for fact in extra_facts
+                if fact.value is not None
+            },
         },
     )
 

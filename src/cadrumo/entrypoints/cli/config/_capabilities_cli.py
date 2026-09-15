@@ -16,6 +16,7 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.capabilities import ServiceCapability
 from ....core.i18n.render import tr
 from ..common import bad, emit_envelope
+from ..state_projection_support import authority_operation
 
 # on the CLI build path, keeping every capability leaf in the JSON-contract registry.
 from .capabilities_payloads import CapabilitiesViewResult, CapabilitySetResult
@@ -65,6 +66,7 @@ def capabilities_set(ctx: typer.Context, capability: ServiceCapability, state: s
         profile_id=profile_id,
         changes=(UserProfileFact(path=capability.schema_path, value=enabled),),
         door=ProfileFactWriteDoor.CLI_CAPACIDAD,
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
     )
     result = CapabilitySetResult.model_validate(
         {"profile_id": profile_id, "capability": capability, "enabled": enabled},

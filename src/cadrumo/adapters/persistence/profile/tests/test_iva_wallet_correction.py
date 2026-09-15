@@ -53,6 +53,7 @@ from cadrumo.application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeed
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -137,7 +138,9 @@ def _seed(amount: Decimal) -> None:
     )
 
 
-def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevisionState) -> None:
+def _persist_sealed_303(
+    *, filing_year: int, period: str, state: CalculationRevisionState, operation: PinnedAuthorityOperation
+) -> None:
     from datetime import UTC, datetime
 
     when = datetime(2026, 1, 2, tzinfo=UTC)
@@ -154,6 +157,7 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
     filing_instance_evidence = general_m303_filing_evidence(
         typed_period,
         reference="test:iva-wallet-correction",
+        operation=operation,
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -272,7 +276,7 @@ def test_correction_refuses_when_no_record_exists() -> None:
     ],
 )
 def test_correction_refused_when_sealed_303_consumed_the_seed(
-    sealed_state: CalculationRevisionState,
+    sealed_state: CalculationRevisionState, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A sealed Modelo 303 at or after the seeded period blocks the correction.
 
@@ -282,7 +286,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
     return — refused, with the offending revision named.
     """
     _seed(Decimal("500.00"))
-    _persist_sealed_303(filing_year=2025, period="1T", state=sealed_state)
+    _persist_sealed_303(filing_year=2025, period="1T", state=sealed_state, operation=operation)
 
     with pytest.raises(ModeloIvaWalletCorrectionSealedError) as excinfo:
         correct_iva_compensation_period_for_bucket(
@@ -308,13 +312,16 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
     assert corrected == []
 
 
-def test_correction_refused_when_same_period_sealed_303_consumed_the_seed() -> None:
+def test_correction_refused_when_same_period_sealed_303_consumed_the_seed(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """A sealed filing for the seeded 4T itself freezes the opening balance."""
     _seed(Decimal("500.00"))
     _persist_sealed_303(
         filing_year=_SEED_YEAR,
         period=_SEED_PERIOD,
         state=CalculationRevisionState.PRESENTADO,
+        operation=operation,
     )
 
     with pytest.raises(ModeloIvaWalletCorrectionSealedError) as excinfo:
@@ -332,7 +339,7 @@ def test_correction_refused_when_same_period_sealed_303_consumed_the_seed() -> N
     assert persisted.available_end_amount == Decimal("500.00")
 
 
-def test_correction_allowed_when_only_a_draft_303_exists() -> None:
+def test_correction_allowed_when_only_a_draft_303_exists(*, operation: PinnedAuthorityOperation) -> None:
     """A non-sealed (BORRADOR) Modelo 303 does not block the correction.
 
     Anti-tautology counterpart to the sealed-guard test: a draft revision has
@@ -341,7 +348,7 @@ def test_correction_allowed_when_only_a_draft_303_exists() -> None:
     corrections.
     """
     _seed(Decimal("500.00"))
-    _persist_sealed_303(filing_year=2025, period="1T", state=CalculationRevisionState.BORRADOR)
+    _persist_sealed_303(filing_year=2025, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation)
 
     state = correct_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,

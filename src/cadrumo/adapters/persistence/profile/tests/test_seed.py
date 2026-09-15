@@ -29,6 +29,7 @@ from cadrumo.application.prorrata_register.seed import evaluate_carried_prior_de
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -70,7 +71,9 @@ def _save_prior_prorrata_observation(
     repo.save(envelope.model_copy(update={"stamped_revision_id": stamped_revision_id}))
 
 
-def test_seed_happy_path_uses_prior_settlement_observation(tmp_path: Path) -> None:
+def test_seed_happy_path_uses_prior_settlement_observation(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = CalculationObservationRepository(objects=profile.repository)
         _save_prior_prorrata_observation(repo, percentage=Decimal("87"), stamped_revision_id=_prior_revision_id())
@@ -78,6 +81,7 @@ def test_seed_happy_path_uses_prior_settlement_observation(tmp_path: Path) -> No
         evaluation = evaluate_carried_prior_definitiva_seed(
             ejercicio=_CURRENT_YEAR,
             observation_repository=repo,
+            operation=operation,
         )
 
     assert not evaluation.blocked
@@ -95,7 +99,7 @@ def test_seed_happy_path_uses_prior_settlement_observation(tmp_path: Path) -> No
     assert seed.entry.source_observation_ref == "303:2025:4T"
 
 
-def test_seed_divergent_revision_stamp_blocks(tmp_path: Path) -> None:
+def test_seed_divergent_revision_stamp_blocks(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = CalculationObservationRepository(objects=profile.repository)
         _save_prior_prorrata_observation(
@@ -107,6 +111,7 @@ def test_seed_divergent_revision_stamp_blocks(tmp_path: Path) -> None:
         evaluation = evaluate_carried_prior_definitiva_seed(
             ejercicio=_CURRENT_YEAR,
             observation_repository=repo,
+            operation=operation,
         )
 
     assert evaluation.seed is None

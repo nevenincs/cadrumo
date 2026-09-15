@@ -35,7 +35,7 @@ from cadrumo.application.modelo.filing_actions import get_filing_record
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
@@ -51,14 +51,16 @@ __all__ = ["repos"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_import_filing_is_current_and_accepted(repos: _Repos) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_filing_is_current_and_accepted(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     assert outcome.filing.status is ModeloRecordStatus.VIGENTE
     assert outcome.filing.aeat_accepted is True
 
 
-def test_import_filing_carries_external_evidence_metadata(repos: _Repos) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_filing_carries_external_evidence_metadata(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     evidence = outcome.filing.external_evidence
     assert evidence is not None
     assert evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
@@ -66,8 +68,8 @@ def test_import_filing_carries_external_evidence_metadata(repos: _Repos) -> None
     assert evidence.imported_at == _T1
 
 
-def test_import_filing_records_no_amendment_link(repos: _Repos) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_filing_records_no_amendment_link(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     assert outcome.filing.amends_filing_record_id is None
     assert outcome.filing.filed_at == _T1
 
@@ -78,8 +80,8 @@ _IMPORTED_REVISION_CASILLAS = (
 )
 
 
-def test_import_persists_filed_calculation_revision(repos: _Repos) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_persists_filed_calculation_revision(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     _, cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
@@ -90,8 +92,10 @@ def test_import_persists_filed_calculation_revision(repos: _Repos) -> None:
     assert revision.amendment_identity is None  # import is not an amendment
 
 
-def test_import_persists_registry_grounded_casilla_observations(repos: _Repos) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_persists_registry_grounded_casilla_observations(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     _, cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
@@ -112,8 +116,10 @@ def test_import_persists_registry_grounded_casilla_observations(repos: _Repos) -
 
 
 @pytest.mark.parametrize(("casilla_id", "expected"), _IMPORTED_REVISION_CASILLAS)
-def test_import_persists_casilla_value(repos: _Repos, casilla_id: CasillaId, expected: Decimal) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_persists_casilla_value(
+    repos: _Repos, casilla_id: CasillaId, expected: Decimal, *, operation: PinnedAuthorityOperation
+) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     _, cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         revision = get_calculation_revision(
@@ -123,8 +129,8 @@ def test_import_persists_casilla_value(repos: _Repos, casilla_id: CasillaId, exp
     assert revision.casilla_values[casilla_id] == expected
 
 
-def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     wu_repo, _, _, _, _ = repos
     refreshed_wu = get_work_unit(
         outcome.work_unit.work_unit_id,
@@ -134,8 +140,10 @@ def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
     assert refreshed_wu.current_filing_record_id == outcome.filing.filing_record_id
 
 
-def test_import_emits_single_modelo_filing_imported_event(repos: _Repos) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_emits_single_modelo_filing_imported_event(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     _, _, _, _, bv_repo = repos
     events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
@@ -155,8 +163,10 @@ _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("payload_key", "expected"), _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS)
-def test_import_event_payload_records_field(repos: _Repos, payload_key: str, expected: str) -> None:
-    outcome = _drive_import_persists_filing(repos)
+def test_import_event_payload_records_field(
+    repos: _Repos, payload_key: str, expected: str, *, operation: PinnedAuthorityOperation
+) -> None:
+    outcome = _drive_import_persists_filing(repos, operation=operation)
     _, _, _, _, bv_repo = repos
     events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
@@ -165,14 +175,14 @@ def test_import_event_payload_records_field(repos: _Repos, payload_key: str, exp
     assert events[0].payload[payload_key] == expected
 
 
-def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
+def test_import_supersedes_prior_current_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """A second import for the same (bucket, modelo, year, period)
     supersedes the prior current filing. The supersession metadata
     is captured; the new filing's bucket-event references the prior
     via ``supersedes_filing_record_id``."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, bv_repo)
+    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
     _persist_matching_justificante(
         "JUSTFIRST01",
         work_unit,
@@ -230,14 +240,14 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
     assert imports[1].payload["supersedes_filing_record_id"] == first.filing_record_id
 
 
-def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
+def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The import path produces a baseline the amend path accepts.
     This is the canonical production flow for correcting an
     externally-filed return: import official evidence, then amend
     locally with the corrected casilla values."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, bv_repo)
+    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
     _persist_matching_justificante(
         "JUSTBASELINE1",
         work_unit,

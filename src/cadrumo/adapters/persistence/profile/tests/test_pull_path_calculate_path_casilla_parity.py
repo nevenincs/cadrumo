@@ -91,7 +91,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
 from cadrumo.application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
+from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
@@ -118,6 +118,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -133,6 +134,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -292,8 +294,8 @@ def _retencion_observation(nif: str) -> RetencionObservation:
     )
 
 
-def _seed_180_retencion_observations() -> Decimal:
-    RetencionObservationRepository().replace_observations(
+def _seed_180_retencion_observations(ports: RetencionObservationPorts) -> Decimal:
+    ports.repository.replace_observations(
         modelo="180",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
@@ -384,7 +386,9 @@ def _m303_wallet_decision() -> IvaCompensationReconciliationDecision:
     )
 
 
-def _seed_m303_prorrata_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
+def _seed_m303_prorrata_work_unit(
+    work_unit_repository: WorkUnitCatalogueRepository, *, operation: PinnedAuthorityOperation
+):
     return create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
@@ -402,11 +406,12 @@ def _seed_m303_prorrata_work_unit(work_unit_repository: WorkUnitCatalogueReposit
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
         clock=_PRORRATA_T0,
+        operation=operation,
     )
 
 
 def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_values(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Live calculate and standalone relay paths produce identical casilla values.
 
@@ -434,7 +439,8 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     """
     obs_repo = CalculationObservationRepository()
     expected_totals = _seed_115_observations(obs_repo)
-    expected_perceptors = _seed_180_retencion_observations()
+    retencion_ports = build_retencion_observation_ports(bucket_id=_BUCKET_ID)
+    expected_perceptors = _seed_180_retencion_observations(retencion_ports)
 
     # Non-vacuous gate: the summed base must be strictly positive so a silent
     # blank masquerading as "equal" fails here.
@@ -459,6 +465,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
@@ -490,9 +497,10 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     relay_resolution = RelationPrefillSourceResolver(
         repository=obs_repo,
         profile_read_ports=empty_profile_read_ports(),
+        operation=operation,
         registry_snapshot=snap_180,
     ).resolve(context)
-    retenciones_resolution = RetencionesAggregationSourceResolver().resolve(context)
+    retenciones_resolution = RetencionesAggregationSourceResolver(ports=retencion_ports).resolve(context)
 
     relay_binding_values = {**relay_resolution.binding_values, **retenciones_resolution.binding_values}
     relay_inputs = {
@@ -541,7 +549,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     # Structural-share proof: the relay path's relation_values must equal the
     # values that resolve_relations_from_local_store produces independently —
     # confirming both paths are grounded in the same resolver function.
-    standalone_prefill = resolve_relations_from_local_store(snap_180, repository=obs_repo)
+    standalone_prefill = resolve_relations_from_local_store(snap_180, operation=operation, repository=obs_repo)
     standalone_relation_values = {
         item.relation: item.value for item in standalone_prefill.values if item.value is not None
     }
@@ -552,7 +560,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
 
 
 def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The apportioned M303 deducible cuota casilla is identical on both transports."""
     auth = compiled_bundled_authority()
@@ -596,7 +604,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
         ),
     )
 
-    work_unit = _seed_m303_prorrata_work_unit(work_unit_repository)
+    work_unit = _seed_m303_prorrata_work_unit(work_unit_repository, operation=operation)
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         bucket_event_repository=bucket_event_repository,
@@ -617,6 +625,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
             filing_instance_evidence=general_m303_filing_evidence(
                 _PRORRATA_PERIOD,
                 reference="test:pull-calculate-parity:exonerado-not-applicable",
+                operation=operation,
             ),
             clock=_PRORRATA_T1,
         )

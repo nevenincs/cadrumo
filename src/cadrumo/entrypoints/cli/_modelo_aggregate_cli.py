@@ -42,7 +42,11 @@ from ...domain.calculations.registry.withholding_bindings import (
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_payloads import ModeloAggregateResult
 from .common import active_bucket_id_or_refuse, emit_envelope, load_invoices
-from .state_projection_support import percepcion_observation_ports_factory, retencion_observation_ports_factory
+from .state_projection_support import (
+    authority_operation,
+    percepcion_observation_ports_factory,
+    retencion_observation_ports_factory,
+)
 
 
 def _route_invoice_retenciones_into_command(
@@ -224,7 +228,7 @@ def aggregate_modelo(
             command,
             ports=retencion_observation_ports_factory(ctx)(bucket_id=bucket_id),
         )
-    result = aggregate_per_modelo(command)
+    result = aggregate_per_modelo(command, operation=authority_operation(ctx))
     clave_breakdown = _clave_breakdown(command)
     aggregate_result = ModeloAggregateResult.from_aggregation_result(result, clave_breakdown=clave_breakdown)
     notices = [_invoice_retencion_excluded_notice(projection) for projection in excluded_invoice_retencions]

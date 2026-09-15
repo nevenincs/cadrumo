@@ -57,6 +57,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -218,6 +219,7 @@ def _resolve_353_aggregate(
     filing_year: int,
     period: str,
     repository: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
 ) -> RegistryCalculationResult:
     """Run the REAL 353 monthly aggregate, summing members' 322 via per_grupo_member.
 
@@ -228,7 +230,7 @@ def _resolve_353_aggregate(
     """
     snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
     prefill = resolve_bindings_from_local_store(
-        snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
+        snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository(), operation=operation
     )
     binding_values = {
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),
@@ -248,6 +250,7 @@ def _file_members_and_aggregate(
     filing_year: int,
     period: str,
     repository: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[RegistryCalculationResult, dict[str, dict[CasillaId, Decimal]]]:
     """File both members' 322 for one month, then compute the 353 aggregate.
 
@@ -263,11 +266,13 @@ def _file_members_and_aggregate(
             member_nif=member_nif,
             observation=_member_322_observation(filing_year=filing_year, period=period, result=member_result),
         )
-    aggregate = _resolve_353_aggregate(filing_year=filing_year, period=period, repository=repository)
+    aggregate = _resolve_353_aggregate(
+        filing_year=filing_year, period=period, repository=repository, operation=operation
+    )
     return aggregate, member_results
 
 
-def test_353_aggregate_equals_cross_member_sum_of_322(tmp_path: Path) -> None:
+def test_353_aggregate_equals_cross_member_sum_of_322(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """Inv1 (cross-member): 353[12/N] aggregate == Σ members' 322[12/N] result casillas.
 
     The load-bearing sum identity for one month: each of the three 353 result
@@ -282,6 +287,7 @@ def test_353_aggregate_equals_cross_member_sum_of_322(tmp_path: Path) -> None:
             filing_year=_RENTA_YEARS[0],
             period="12",
             repository=repository,
+            operation=operation,
         )
 
     assert len(member_results) == len(_MEMBER_NIFS)
@@ -292,7 +298,7 @@ def test_353_aggregate_equals_cross_member_sum_of_322(tmp_path: Path) -> None:
         )
 
 
-def test_353_reconciliation_isolates_renta_periods(tmp_path: Path) -> None:
+def test_353_reconciliation_isolates_renta_periods(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """Inv2 (cross-renta isolation): each month's 353 sums only that month's members.
 
     Files the two members' 322 for 12/2025 and (distinct figures) for 12/2026 into
@@ -307,11 +313,13 @@ def test_353_reconciliation_isolates_renta_periods(tmp_path: Path) -> None:
             filing_year=_RENTA_YEARS[0],
             period="12",
             repository=repository,
+            operation=operation,
         )
         agg_2026, members_2026 = _file_members_and_aggregate(
             filing_year=_RENTA_YEARS[1],
             period="12",
             repository=repository,
+            operation=operation,
         )
 
     for source_casilla, reconciliation_casilla in _RECONCILIATION_BY_322_CASILLA.items():
@@ -321,7 +329,9 @@ def test_353_reconciliation_isolates_renta_periods(tmp_path: Path) -> None:
         assert agg_2026.values[reconciliation_casilla] == exp_2026
 
 
-def test_modelo_353_grupo_aggregation_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_353_grupo_aggregation_enrolls_two_renta_years(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """End-to-end enrollment: 353 grupo aggregation across two renta years.
 
     Drives the REAL 353 aggregate for mes 12 of both renta years (each summing
@@ -338,6 +348,7 @@ def test_modelo_353_grupo_aggregation_enrolls_two_renta_years(tmp_path: Path) ->
                 filing_year=filing_year,
                 period="12",
                 repository=repository,
+                operation=operation,
             )
             for source_casilla, reconciliation_casilla in _RECONCILIATION_BY_322_CASILLA.items():
                 expected = sum((member_results[nif][source_casilla] for nif in _MEMBER_NIFS), Decimal("0"))
