@@ -215,12 +215,13 @@ check-style:
 check-format:
     @uv run --no-sync python -m dev.quality.quiet ruff format --check .
 
-# Verify type correctness with ty (full src) and pyrefly (strict domain + application).
+# Verify type correctness with ty (full src) and pyrefly / basedpyright (strict production subset).
 # Wrapper emits a signal-only summary grouped by rule and file; silent on success.
-[doc('Verify type correctness with ty, pyrefly, and basedpyright. Silent on success.')]
+# Pass --count to emit only the aggregate number of findings.
+[doc('Verify type correctness with ty, pyrefly, and basedpyright; pass --count for one integer.')]
 [group('check')]
-check-types:
-    @uv run --no-sync python -m dev.quality.types
+check-types *ARGS:
+    @uv run --no-sync python -m dev.quality.types {{ARGS}}
 
 # Refuse tracked identity canaries while retaining the value-free advisory report.
 [doc('Verify that tracked content contains no configured identity canary.')]

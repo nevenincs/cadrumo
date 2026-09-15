@@ -41,8 +41,9 @@ that: the operations above destroy state that exists nowhere else.
 - To compare against a baseline, create a separate worktree
   (`git worktree add --detach <dir> HEAD`) and read from it. Never mutate the
   working tree to get a clean state.
-- To test whether a local edit causes a failure, copy the file aside and restore
-  it by copy, or evaluate the question from `git diff` output.
+- To test whether a local edit causes a failure, reproduce it in an isolated
+  fixture or snapshot, or evaluate the question from `git diff` output. Do not
+  temporarily overwrite shared files and later restore a potentially stale copy.
 - If work genuinely must be set aside, stop and ask the operator. Removing
   someone's uncommitted changes is their decision, never the agent's.
 

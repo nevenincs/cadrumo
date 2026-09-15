@@ -3,9 +3,9 @@
 ## Filing-grade authority
 
 - A filing-affecting formula, rate, threshold, classification, or relationship must be grounded in the official AEAT/BOE authority that governs the exact modelo, revision, period, territory, and taxpayer conditions.
-- Cite the specific provision, official instruction, record design, schema, or worked example used. A generic landing page, search result, third-party summary, or another year is not sufficient authority.
+- Cite the specific provision, official instruction, record design, schema, or worked example used. A generic landing page, search result or third-party summary is not sufficient grounding. Preserve source-year and applicability scope; projection does not turn an earlier source into newly reviewed target-year evidence.
 - Preserve provenance from source capture through the compiled registry, calculation result, explanation, and filing handoff. A value without traceable authority cannot be promoted to filing grade.
-- Load behavior through the validated registry authority. Raw TOML inspection is useful for diagnosis but does not establish compiled behavior.
+- Runtime calculations consume validated published authority. Authoring and repair use the candidate-inspection and validation boundaries defined in `aeat-registry-authority-flow`; a missing published generation must not prevent evidence-backed source repair.
 
 ## Implementation
 
