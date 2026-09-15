@@ -134,12 +134,13 @@ def publish_validated_generated_export_tree(
     while the transaction is live, and is deleted after the candidate passes its
     post-cutover manifest, digest, and production-loader checks.
     """
-    candidate_export_root, target_export_root = _prepare_publication_paths(context)
-    revision_root = target_export_root.parent
+    candidate_export_root = _prepare_candidate_publication_path(context)
     journal_path = _journal_path(context)
     lock_identity = _lock_identity(context)
 
     with exclusive_file_lock(lock_identity):
+        target_export_root = _admit_target_publication_path(context)
+        revision_root = target_export_root.parent
         _require_expected_target_state(context, target_export_root)
         recovery_completed = _recover_interrupted_publication(
             context=context,
@@ -246,7 +247,8 @@ def publish_validated_generated_export_tree(
     )
 
 
-def _prepare_publication_paths(context: GeneratedExportTreePublicationContext) -> tuple[Path, Path]:
+def _prepare_candidate_publication_path(context: GeneratedExportTreePublicationContext) -> Path:
+    """Admit only caller-owned candidate state before destination lock acquisition."""
     temporary_root = _require_narrow_root(context.temporary_root, subject="generated temporary root")
     target_root = _require_narrow_root(context.target_root, subject="generated publication target root")
     _require_disjoint_roots(temporary_root, target_root)
@@ -264,7 +266,14 @@ def _prepare_publication_paths(context: GeneratedExportTreePublicationContext) -
     )
     _require_no_stale_sibling_manifest(candidate_export_root.parent, subject="generated candidate revision")
     _require_complete_regular_tree(candidate_export_root, subject="generated candidate export root")
+    return candidate_export_root
 
+
+def _admit_target_publication_path(context: GeneratedExportTreePublicationContext) -> Path:
+    """Admit destination-owned state while holding its publication lock."""
+    target_root = _require_narrow_root(context.target_root, subject="generated publication target root")
+    modelo_id = str(context.validation.target.modelo)
+    revision_id = str(context.validation.target.revision_id)
     target_export_root = _require_target_export_root(
         context.target_export_root,
         target_root=target_root,
@@ -274,7 +283,7 @@ def _prepare_publication_paths(context: GeneratedExportTreePublicationContext) -
     _require_no_stale_sibling_manifest(target_export_root.parent, subject="generated target revision")
     if target_export_root.exists():
         _require_complete_regular_tree(target_export_root, subject="generated target export root")
-    return candidate_export_root, target_export_root
+    return target_export_root
 
 
 def _require_expected_target_state(context: GeneratedExportTreePublicationContext, target_export_root: Path) -> None:

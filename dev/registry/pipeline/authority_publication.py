@@ -394,20 +394,21 @@ def publish_sqlite_authority_candidate(
     destination: Path,
     eager_baseline_path: Path | None = None,
 ) -> AuthorityDescriptor:
-    """Validate once and publish SQLite plus an optional same-artifact benchmark baseline."""
+    """Prepare outside the destination lock, then publish only while the receipt is current."""
     resolved_destination = destination.resolve()
     resolved_destination.mkdir(parents=True, exist_ok=True)
     descriptor_path = resolved_destination / "authority.current.json"
+    candidate = validate_authority_candidate(
+        registry_root=registry_root,
+        source_root=source_root,
+        profile_schema_path=profile_schema_path,
+    )
     with exclusive_file_lock(
         descriptor_path,
         timeout=_PUBLICATION_LOCK_TIMEOUT,
         retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
     ):
-        candidate = validate_authority_candidate(
-            registry_root=registry_root,
-            source_root=source_root,
-            profile_schema_path=profile_schema_path,
-        )
+        _require_candidate_receipt(candidate)
         if eager_baseline_path is not None:
             from ..eager_authority_baseline import write_eager_authority_baseline
 
@@ -427,7 +428,7 @@ def _require_candidate_receipt(candidate: ValidatedAuthorityCandidate) -> None:
     )
     if current != candidate.receipt:
         raise RegistryValidationError(
-            "registry candidate changed after SQLite validation; descriptor publication is refused"
+            "registry candidate input receipt changed after validation; descriptor publication is refused"
         )
 
 

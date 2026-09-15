@@ -8,11 +8,14 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from datetime import date
 from pathlib import Path
+from threading import Event
+from types import SimpleNamespace
 
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import (
@@ -295,3 +298,42 @@ def test_public_installers_serialize_different_generations(tmp_path: Path) -> No
     selected = AuthorityDescriptor.read(tmp_path / "authority.current.json")
     assert selected in descriptors
     assert (tmp_path / selected.database).is_file()
+
+
+def test_candidate_preparation_does_not_hold_the_destination_lock(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A barrier-held validation leaves the publication lock available to another publisher."""
+    preparation_started = Event()
+    finish_preparation = Event()
+    prepared_candidate = SimpleNamespace(artifact=object())
+    published_descriptor = object()
+
+    def prepare_candidate(**_kwargs: object) -> object:
+        preparation_started.set()
+        assert finish_preparation.wait(timeout=5)
+        return prepared_candidate
+
+    monkeypatch.setattr(authority_publication, "validate_authority_candidate", prepare_candidate)
+    monkeypatch.setattr(authority_publication, "_require_candidate_receipt", lambda candidate: None)
+    monkeypatch.setattr(
+        authority_publication,
+        "_install_validated_authority_database",
+        lambda artifact, *, destination, require_current: published_descriptor,
+    )
+    destination = tmp_path / "published"
+    descriptor_path = destination / "authority.current.json"
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        publication = executor.submit(
+            authority_publication.publish_sqlite_authority_candidate,
+            registry_root=tmp_path / "registry",
+            source_root=tmp_path / "source",
+            profile_schema_path=tmp_path / "schema.toml",
+            destination=destination,
+        )
+        assert preparation_started.wait(timeout=5)
+        with exclusive_file_lock(descriptor_path, timeout=0, retry_backoff=0.01):
+            finish_preparation.set()
+        assert publication.result(timeout=5) is published_descriptor

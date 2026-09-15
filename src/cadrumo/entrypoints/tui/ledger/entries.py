@@ -166,8 +166,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         columns = self._visible_columns(width)
         _add_entry_columns(table, columns)
         _add_entry_rows(table, columns, self.controller.entry_rows())
-        if isinstance(table, ContentDataTable):
-            table.absorb_surplus_width()
+        table.absorb_surplus_width()
         _restore_entry_selection(table, selected)
 
     def on_resize(self) -> None:

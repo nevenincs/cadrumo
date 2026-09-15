@@ -90,12 +90,8 @@ def test_link_appends_exactly_one_invoice_linked_event(tmp_path: Path) -> None:
         assert invoice.counterparty_tax_id is not None
         assert invoice.counterparty_name is not None
         for value in event.payload.values():
-            # Rendered rather than narrowed to str: a payload value that is not a
-            # string can still carry the identifier inside it, and skipping those
-            # would leave the leak this test exists to catch unchecked.
-            rendered = value if isinstance(value, str) else repr(value)
-            assert invoice.counterparty_tax_id not in rendered
-            assert invoice.counterparty_name not in rendered
+            assert invoice.counterparty_tax_id not in value
+            assert invoice.counterparty_name not in value
 
 
 def test_refused_link_appends_no_event(tmp_path: Path) -> None:

@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 from pathlib import Path
-from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
 import pytest
@@ -28,7 +27,7 @@ from ....application.search.workbench import (
 )
 from ....core.i18n.render import tr
 from ..__main__ import run
-from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from ..account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp
 from ..launcher import (
     InstalledWorkbenchRootInputsV1,
@@ -40,8 +39,6 @@ from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
-
-    from ..account import AccountFactoriesV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -105,11 +102,13 @@ def _root_inputs(
         InstalledWorkbenchSearchInputsV1,
         _StaticSearchInputs(service or WorkbenchSearchService(()), admissions),
     )
+    account_factories = object.__new__(AccountFactoriesV1)
+    object.__setattr__(account_factories, "profile", _screen_factory)
     return InstalledWorkbenchRootInputsV1(
         home_projection=build_home_projection_fixture(HomeFixtureScenario.READY),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         admissions=admissions,
-        account_factories=cast("AccountFactoriesV1", SimpleNamespace(profile=_screen_factory)),
+        account_factories=account_factories,
         ledger_factory=_screen_factory,
         declarations_factory=_screen_factory,
         aeat_sync_factory=_screen_factory,

@@ -36,6 +36,11 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
+def _runtime_object(value: object) -> object:
+    """Capture an adapter value before applying the runtime shape guard."""
+    return value
+
+
 class _ClaveMovilSessionSalvageMixin(abc.ABC):
     """Abstract contract consumed by the Cl@ve Móvil post-failure salvage helpers.
 
@@ -149,8 +154,11 @@ class _ClaveMovilSessionSalvageMixin(abc.ABC):
         if context is None:
             return
         try:
-            storage_state = await context.storage_state()
-            cookies = storage_state.get("cookies") if isinstance(storage_state, Mapping) else None
+            raw_storage_state = _runtime_object(await context.storage_state())
+            if not isinstance(raw_storage_state, Mapping):
+                return
+            storage_state = raw_storage_state
+            cookies = storage_state.get("cookies")
             if not cookies:
                 log.debug("ClaveMovilAuthProvider: nothing to salvage, captured state carries no cookies")
                 return

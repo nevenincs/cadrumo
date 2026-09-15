@@ -83,8 +83,10 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
         pytest.fail("live IVA wallet capture did not append immutable decision history")
     if observation.taxpayer_nif != taxpayer_nif:
         pytest.fail("live IVA wallet observation taxpayer did not match active profile")
-    if observation.target_year != target_year or observation.target_period != target_period:
-        pytest.fail("live IVA wallet observation target period did not match requested period")
+    assert observation.target_year == target_year, "live IVA wallet observation year did not match requested year"
+    assert observation.target_period == target_period, (
+        "live IVA wallet observation period did not match requested period"
+    )
     if decision.wallet_amount != observation.total_pending:
         pytest.fail("live IVA wallet decision did not bind the observed wallet amount")
     if Decimal(report.total_pending) != observation.total_pending:

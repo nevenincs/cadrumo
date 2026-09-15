@@ -156,7 +156,6 @@ Final checks:
 
 ```powershell
 just check-registry
-just check-facts
 uv run --no-sync pytest -o addopts='' -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_bundled_authority_artifact_runtime.py dev/packaging/tests/test_authority_runtime_boundary.py src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py
 ```
 

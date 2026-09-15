@@ -271,11 +271,7 @@ def test_no_screen_or_widget_rebinds_a_private_textual_attribute() -> None:
     )
 
     collisions = {
-        (
-            f"{cls.module}.{cls.qualname}"
-            if isinstance(cls, _SourceTuiClass)
-            else f"{cls.__module__}.{cls.__qualname__}"
-        ): sorted(reserved)
+        f"{cls.module}.{cls.qualname}": sorted(reserved)
         for cls in classes
         if (reserved := _private(_self_assigned_attributes(cls)) & _textual_private_surface(cls))
     }

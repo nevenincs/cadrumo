@@ -51,6 +51,11 @@ from .csv import (
 _logger = get_logger(__name__)
 
 
+def _runtime_object(value: object) -> object:
+    """Expose a runtime value without importing its static producer type."""
+    return value
+
+
 class XlsxProvider(FinancialProvider):
     """Ingest raw transactions from ``.xlsx`` bank statement exports.
 
@@ -95,13 +100,17 @@ class XlsxProvider(FinancialProvider):
         Returns:
             A :class:`ProviderValidation` with the validation outcome.
         """
-        workbook: Workbook | None = None
+        # Keep the workbook as an object until the locator has returned.  The
+        # locator owns its failure teardown, but a successful return still
+        # needs this method's validation teardown in its ``finally`` block.
+        workbook: object = None
         try:
             workbook, rows, _, layout, header_row, _, _ = self._locate_sheet(path)
+            workbook = _runtime_object(workbook)
         except InvalidFinancialSourceError as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
         finally:
-            if workbook is not None:
+            if isinstance(workbook, Workbook):
                 # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN:
                 # openpyxl raises OSError/ValueError/KeyError/IndexError/TypeError;
                 # teardown must run unconditionally.

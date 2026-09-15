@@ -139,11 +139,12 @@ class BlockingFileResource:
         self._handle = marker_path.open("xb")
         self._release = asyncio.Event()
         self.close_started = asyncio.Event()
+        self.closed = asyncio.Event()
         self.close_calls = 0
 
     @property
     def is_closed(self) -> bool:
-        return self._handle.closed
+        return bool(self._handle.closed)
 
     def release(self) -> None:
         self._release.set()
@@ -153,6 +154,7 @@ class BlockingFileResource:
         self.close_started.set()
         await self._release.wait()
         self._handle.close()
+        self.closed.set()
 
 
 class HeldExecutor:
@@ -408,10 +410,7 @@ def test_elapsed_cleanup_deadline_retains_uncertainty_while_an_owned_resource_cl
             # Releasing the held close lets the retained cleanup finish, which
             # proves the resource was genuinely blocked rather than abandoned.
             resource.release()
-            for _ in range(_WINDOW_OBSERVATIONS):
-                if resource.is_closed:
-                    break
-                await asyncio.sleep(0.01)
+            await asyncio.wait_for(resource.closed.wait(), timeout=_EVENT_CEILING)
             assert resource.is_closed
             assert resource.close_calls == 1
 

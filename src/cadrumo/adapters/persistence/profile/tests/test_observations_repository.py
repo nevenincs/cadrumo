@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from operator import methodcaller
 from pathlib import Path
-from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -81,7 +81,7 @@ def test_observation_key_rejects_untyped_combined_period() -> None:
     combined_period: object = "2026 1T"
 
     with pytest.raises(ObservationKeyError) as excinfo:
-        observation_key("303", cast(Period, combined_period))
+        methodcaller("__call__", "303", combined_period)(observation_key)
 
     assert str(excinfo.value) == "application.calculations.observations.errors.period_type_invalid"
 

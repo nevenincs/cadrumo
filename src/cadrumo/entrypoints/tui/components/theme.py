@@ -31,6 +31,7 @@ class AppearanceHost(Protocol):
 
     theme: str
 
+
 CADRUMO_LIGHT: Final[Theme] = Theme(
     name=CADRUMO_LIGHT_THEME_NAME,
     # Warm paper and near-black ink, verbatim from the frontend :root.

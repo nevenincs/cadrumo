@@ -350,17 +350,14 @@ def _account_factories(
     password: Screen[ProfilePassphraseRotationOutcome | None] | None = None,
 ) -> AccountFactoriesV1:
     """Supply observable account doors without reproducing an account surface."""
-    return cast(
-        AccountFactoriesV1,
-        SimpleNamespace(
-            profile=lambda context: MarkerScreen(context),
-            change_user=lambda: change_user,
-            password=lambda: password or Screen(),
-            appearance=lambda _app: "appearance.changed",
-            language=lambda _screen: None,
-            sign_out=lambda: None,
-        ),
-    )
+    factories = object.__new__(AccountFactoriesV1)
+    object.__setattr__(factories, "profile", lambda context: MarkerScreen(context))
+    object.__setattr__(factories, "change_user", lambda: change_user)
+    object.__setattr__(factories, "password", lambda: password or Screen())
+    object.__setattr__(factories, "appearance", lambda _app: "appearance.changed")
+    object.__setattr__(factories, "language", lambda _screen: None)
+    object.__setattr__(factories, "sign_out", lambda: None)
+    return factories
 
 
 @pytest.mark.asyncio

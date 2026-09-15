@@ -274,7 +274,7 @@ finally:
     if dek is not None:
         dek.clear()
 """
-        child: asyncio.subprocess.Process | None = None
+        children: list[asyncio.subprocess.Process] = []
         minted = False
         try:
             with profile_custody_root_lock(tmp_path):
@@ -290,6 +290,7 @@ finally:
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
+                children.append(child)
                 deadline = time.monotonic() + 30.0
                 while not started.exists() and time.monotonic() < deadline:
                     assert child.returncode is None, "independent production resume exited before its call"
@@ -315,7 +316,7 @@ finally:
                     minted = True
                 assert not finished.exists(), "independent resume crossed the custody-root lock before mint completed"
         finally:
-            if child is not None:
+            for child in children:
                 try:
                     stdout, stderr = await asyncio.wait_for(child.communicate(), timeout=60)
                 except TimeoutError:

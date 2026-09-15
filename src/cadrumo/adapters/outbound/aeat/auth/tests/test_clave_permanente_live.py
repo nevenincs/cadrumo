@@ -29,6 +29,7 @@ from __future__ import annotations
 from urllib.parse import quote
 
 import pytest
+from playwright.async_api import BrowserContext
 
 from ......application.auth.session_types import AeatLoginAssertion, AeatSession, ClavePermanenteSessionDetail
 from ......core.config import Settings
@@ -54,9 +55,10 @@ async def test_clave_permanente_playwright_entrypoint_reaches_live_selector() ->
     """Central Playwright backend reaches AEAT's live Cl@ve Permanente selector."""
     settings = _settings_or_skip()
     browser_session = await default_browser_session_factory(settings)
-    context = None
+    contexts: list[BrowserContext] = []
     try:
         context = await browser_session.create_context(storage_state={})
+        contexts.append(context)
         page = await context.new_page()
         target_path = settings.aeat_sede_expedientes_path
         selector_url = settings.aeat_clave_permanente_sede_access_url_template.format(
@@ -66,7 +68,7 @@ async def test_clave_permanente_playwright_entrypoint_reaches_live_selector() ->
         response = await browser_session.navigate(page, selector_url)
         assert response is None or 200 <= response.status < 500
     finally:
-        if context is not None:
+        for context in contexts:
             await context.close()
         await browser_session.close()
 

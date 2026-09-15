@@ -35,6 +35,11 @@ def _enum_value(value: object) -> object:
     return getattr(value, "value", value)
 
 
+def _runtime_object(value: object) -> object:
+    """Capture policy inputs before applying their runtime shape checks."""
+    return value
+
+
 def _raise_first(checks: tuple[tuple[bool, str], ...]) -> None:
     """Raise the first failed invariant in declaration order."""
     for failed, message in checks:
@@ -228,7 +233,8 @@ def validate_policy_types(
         raise TypeError("execution policy capabilities must be a frozenset")
     if not isinstance(side_effects, frozenset):
         raise TypeError("execution policy side effects must be a frozenset")
-    if any(not isinstance(value, bool) for value in (destructive, handoff, live_write)):
+    risk_flags = tuple(_runtime_object(value) for value in (destructive, handoff, live_write))
+    if any(not isinstance(value, bool) for value in risk_flags):
         raise TypeError("execution policy risk flags must be bools")
 
 

@@ -131,12 +131,11 @@ def test_check_surfaces_all_period_anomalies_without_mutating() -> None:
         issues = []
     assert issues, "an unclassified corpus must surface readiness issues"
     reasons: set[str] = set()
-    if isinstance(issues, list):
-        for issue in issues:
-            if isinstance(issue, dict):
-                typed_issue: dict[str, object] = {str(key): value for key, value in issue.items()}
-                reason_val = typed_issue.get("reason")
-                reasons.add(str(reason_val))
+    for issue in issues:
+        if isinstance(issue, dict):
+            typed_issue: dict[str, object] = {str(key): value for key, value in issue.items()}
+            reason_val = typed_issue.get("reason")
+            reasons.add(str(reason_val))
     assert "missing_business_classification" in reasons, reasons
 
 
