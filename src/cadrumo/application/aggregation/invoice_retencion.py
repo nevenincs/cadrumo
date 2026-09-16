@@ -170,11 +170,6 @@ class InvoiceRetencionProjection(BaseModel):
             )
         return self
 
-    @property
-    def is_routed(self) -> bool:
-        """Whether this invoice produced a store observation."""
-        return self.observation is not None
-
 
 class InvoiceRetencionRouting(BaseModel):
     """Both outcome classes for a set of invoices, in one object.
