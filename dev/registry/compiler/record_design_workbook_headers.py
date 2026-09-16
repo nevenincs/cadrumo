@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from cadrumo.core.logging import get_logger
 from cadrumo.core.tabular import coerce_cell_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.record_design_schema import (
     RecordDesignFieldTypeCorrection,
     RecordDesignHeaderCellCorrection,
 )

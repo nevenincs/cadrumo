@@ -20,7 +20,6 @@ from pydantic import NonNegativeInt, model_validator
 from ...adapters.persistence.storage.custody.records import PostChangePasswordGeneration
 from ...application.auth.apoderado_service import RepresentedNif
 from ...application.auth.apoderado_text import ApoderadoNotes
-from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
 from ...application.auth.probes import ProviderProbeResult
@@ -666,23 +665,6 @@ class ConfigResetResumeResult(OutputSchema):
 
 
 # P07 — auth and bucket verb result schemas
-
-
-class AuthProvidersResult(OutputSchema):
-    """JSON envelope for ``aeat config auth providers``.
-
-    Wraps :class:`AuthProvidersReport`; each row IS the canonical
-    :class:`AuthProviderListing`, preserving the executable provider catalogue.
-
-    The rows were redeclared as ``list[dict[str, object]]``, so the envelope
-    accepted a shape the report it wraps rejects outright: an empty row, an
-    empty label or an unknown provider id passed
-    the shell while the canonical model refused each. Nesting the canonical
-    listing makes the envelope's contract the report's contract by
-    construction rather than by the projection remembering to agree.
-    """
-
-    providers: list[AuthProviderListing]
 
 
 class AuthConfigurePayload(OutputSchema):

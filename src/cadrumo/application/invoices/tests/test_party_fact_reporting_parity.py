@@ -10,8 +10,8 @@ identification for an operation that files one.
 Crosses a layer boundary on purpose -- the clave map is an application-level
 projection and the rule table is domain substrate -- which is what makes the
 check worth having rather than a restatement of either side. The domain side is
-asked through :func:`~cadrumo.domain.iva.classifiable_categories`, which answers
-what the table can mint without publishing the rows.
+asked through the projected classification rows, which answer what the
+table can mint.
 """
 
 from __future__ import annotations
@@ -26,12 +26,25 @@ from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_
 from ....domain.iva.classification import (
     IvaClassificationRule,
     PartyFact,
-    classifiable_categories,
     resolve_iva_classification_inputs,
 )
+from ....domain.iva.schema import IvaCategory
 from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+
+def _classifiable_categories(
+    rules: tuple[IvaClassificationRule, ...],
+    *,
+    consuming: PartyFact | None = None,
+) -> frozenset[IvaCategory]:
+    """Return the categories the rows mint, optionally only those consuming ``consuming``."""
+    return frozenset(
+        rule.category
+        for rule in rules
+        if rule.category is not None and (consuming is None or consuming in rule.consumes)
+    )
 
 
 def _classification_rules() -> tuple[IvaClassificationRule, ...]:
@@ -55,8 +68,8 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
 
     def test_every_clave_reported_category_has_a_declaring_rule(self) -> None:
         rules = _classification_rules()
-        declaring = classifiable_categories(rules, consuming=PartyFact.IVA_IDENTIFICATION_STATE)
-        mintable = classifiable_categories(rules)
+        declaring = _classifiable_categories(rules, consuming=PartyFact.IVA_IDENTIFICATION_STATE)
+        mintable = _classifiable_categories(rules)
         catalogue = resolve_iva_category_catalogue()
         reported = {
             category
@@ -85,7 +98,7 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
         identifying State, and they are the rows the clave map reports.
         """
         rules = _classification_rules()
-        declaring = classifiable_categories(rules, consuming=PartyFact.IVA_IDENTIFICATION_STATE)
-        mintable = classifiable_categories(rules)
+        declaring = _classifiable_categories(rules, consuming=PartyFact.IVA_IDENTIFICATION_STATE)
+        mintable = _classifiable_categories(rules)
         assert declaring
         assert declaring < mintable

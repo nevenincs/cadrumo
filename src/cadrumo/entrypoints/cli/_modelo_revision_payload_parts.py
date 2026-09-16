@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from pydantic import Field, model_validator
 
-from ...application.modelo.result_summary import ResultSummaryRole
+from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
@@ -114,22 +114,6 @@ class SourceProvenancePayload(OutputSchema):
     dependency_treatment: str = ""
 
 
-class ResultSummaryRowPayload(OutputSchema):
-    """One headline-result summary row selected from a calculation revision.
-
-    Mirrors :class:`ResultSummaryRow`, whose rows come
-    from :func:`calculation_result_summary`.  ``role``
-    names the registry-declared total or key-figure purpose, while
-    ``casilla_id`` keeps the summary row joinable to the underlying
-    :class:`ObservationPayload` provenance.
-    """
-
-    role: ResultSummaryRole
-    casilla_id: CasillaId
-    value: str  # serialised Decimal
-    label: str
-
-
 class CalculationRevisionProjectionFields(OutputSchema):
     """Shared JSON projection of a persisted :class:`CalculationRevision`.
 
@@ -168,6 +152,5 @@ __all__ = [
     "CalculationRevisionProjectionFields",
     "DetailRowPayload",
     "ObservationPayload",
-    "ResultSummaryRowPayload",
     "SourceProvenancePayload",
 ]

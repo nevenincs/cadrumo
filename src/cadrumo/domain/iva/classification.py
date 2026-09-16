@@ -1046,19 +1046,6 @@ def _registry_iva_classification_catalogue(
     return resolved
 
 
-def classifiable_categories(
-    rules: Iterable[IvaClassificationRule],
-    *,
-    consuming: PartyFact | None = None,
-) -> frozenset[IvaCategory]:
-    """Return categories projected by the supplied registry rows."""
-    return frozenset(
-        rule.category
-        for rule in rules
-        if rule.category is not None and (consuming is None or consuming in rule.consumes)
-    )
-
-
 def classify_iva(
     criteria: IvaInvoiceClassificationCriteria,
     *,
@@ -1195,7 +1182,6 @@ __all__ = [
     "TransactionKind",
     "TransactionKindCatalogue",
     "TransactionKindDefinition",
-    "classifiable_categories",
     "classify_iva",
     "customer_tax_status_alias",
     "domestic_categories_by_rate_kind",

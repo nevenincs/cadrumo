@@ -229,7 +229,7 @@ class ModeloValidationFinding(BaseModel):
             ``"casilla-required-missing"``).
         message: A strictly-typed :class:`Translatable` key.
         references_rules: Tuple of Manual práctico Rule IDs that
-            justify the finding (see :class:`domain.manuals.Rule`).
+            justify the finding.
     """
 
     model_config = STRICT_FROZEN_CONFIG

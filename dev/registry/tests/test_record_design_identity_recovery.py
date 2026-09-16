@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField, RecordDesignSheet
+from dev.registry.compiler.record_design_schema import RecordDesignField, RecordDesignSheet
 
 from ..compiler.record_design import extract_record_design
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs

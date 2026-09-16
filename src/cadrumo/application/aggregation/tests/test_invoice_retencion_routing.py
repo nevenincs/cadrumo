@@ -36,7 +36,6 @@ from ....domain.iva.components import IvaRetencionRole, category_components
 from ....domain.iva.schema import IvaCategory
 from ..errors import AggregationValidationError
 from ..invoice_retencion import (
-    INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjectionDefect,
     merge_manual_and_routed_retencion_observations,
     project_received_invoice_retencion,
@@ -252,11 +251,6 @@ def test_routed_observations_aggregate_through_the_existing_modelo_111_path() ->
     assert aggregation.total_perceptors == 1
 
 
-def test_every_defect_carries_operator_guidance() -> None:
-    """A new defect cannot ship without the sentence that tells an operator what to do."""
-    assert set(INVOICE_RETENCION_DEFECT_GUIDANCE) == set(InvoiceRetencionProjectionDefect)
-
-
 def test_merge_unions_manual_and_routed_observations() -> None:
     """The merge is a plain union when the two sides name disjoint invoices."""
     manual = (
@@ -306,7 +300,6 @@ def test_merge_refuses_when_a_manual_row_collides_with_a_routed_invoice() -> Non
         merge_manual_and_routed_retencion_observations(duplicate_manual, routing.observations)
     assert exc_info.value.context is not None
     assert exc_info.value.context["source_object_ids"] == invoice.invoice_id
-    assert all(text.strip() for text in INVOICE_RETENCION_DEFECT_GUIDANCE.values())
 
 
 def test_the_scheme_is_supplied_never_inferred_from_the_invoice() -> None:

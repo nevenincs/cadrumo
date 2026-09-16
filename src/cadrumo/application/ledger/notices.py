@@ -8,11 +8,21 @@ from .models import ManualLedgerTransactionResult
 
 
 def stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> list[Notice]:
-    """Describe finalized revisions that cannot absorb newly attached evidence.
+    """Warn that each finalized revision citing this row will not pick the evidence up.
 
-    The application owns the factual stale-revision outcome and its structured
-    reason.  An entrypoint decides how to render the returned notice; it does
-    not own or reconstruct this workflow contract.
+    A revision bundles its ledger evidence when it is verified, and that bundle
+    is frozen. An attachment landing afterwards is stored on the ledger row but
+    never reaches the already-verified filing, so an export or filing gate
+    reading the bundle keeps refusing.
+
+    The advisory deliberately names no recovery verb, because neither candidate
+    works: ``work calculate`` re-derives the same content-addressed revision id
+    (evidence is not part of that hash) and returns the existing finalized
+    revision untouched, and ``work discard`` marks the work unit ``descartado``
+    while the follow-up ``work create`` re-derives the same work-unit id and
+    hands the discarded unit back, permanently stranding that target. The
+    guidance is the ordering rule that does work: link invoices before
+    calculating.
     """
     return [
         Notice(
@@ -32,6 +42,8 @@ def stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> l
                 "filing_year": str(blocker.filing_year),
                 "period": blocker.period,
                 "reason": "finalized_revision_predates_evidence",
+                # Saying so explicitly keeps a deliberate absence of action
+                # distinguishable from one nobody got round to attaching.
                 "actionability": "finalized_revision_has_no_safe_recovery_action",
             },
         )

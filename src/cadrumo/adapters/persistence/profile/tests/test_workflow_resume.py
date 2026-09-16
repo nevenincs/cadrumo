@@ -25,7 +25,6 @@ from .....application.modelo.work_addressing import ModeloExactWorkUnitTarget, M
 from .....application.modelo.work_lifecycle import create_work_unit
 from .....application.modelo.workflow_gate import workflow_period_for_work_unit
 from .....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
-from .....application.user_profile.authority_context import profile_create_context
 from .....application.workflow.abort import WorkflowAbortReason
 from .....application.workflow.engine_recording import record_site_unavailable, record_unhandled
 from .....application.workflow.errors import WorkflowAbortSignalError, WorkflowError
@@ -118,7 +117,7 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
     with bundled_indexed_authority().operation() as operation:
         seed_test_profile_record(
             create_user_profile_record(
-                context=profile_create_context(operation),
+                context=operation.profile_create_context(),
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=bucket_id,
                 facts=_READY_PROFILE_FACTS,

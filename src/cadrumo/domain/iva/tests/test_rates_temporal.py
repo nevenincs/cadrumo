@@ -21,7 +21,7 @@ from ...calculations.registry.facts.schema import GovernedFact
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ..errors import IvaRateNotFoundError, IvaRateOverlapError
-from ..lookup import lookup_rate, rate_kinds_for_declared_rate, resolve_iva_rate, resolve_iva_rate_from_component
+from ..lookup import lookup_rate, rate_kinds_for_declared_rate, resolve_iva_rate
 from ..rates import load_iva_rate_table
 from ..schema import EUMemberState, IvaRateKind
 
@@ -315,32 +315,6 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
     pinned = PinnedAuthorityOperation(reader, reader.pin())
     with validating_governed_facts(pinned):
         yield pinned
-
-
-def test_component_reader_resolves_dated_iva_rate_with_one_pin() -> None:
-    """Load the rate declaration by exact fact id and retain its generation."""
-    reader = FakeAuthorityComponentReader(_pinned_iva_facts())
-    generation = reader.pin()
-
-    resolved = resolve_iva_rate_from_component(
-        reader,
-        pin=generation,
-        member_state="es",
-        kind=IvaRateKind("general"),
-        on_date=date(2024, 6, 15),
-    )
-
-    assert resolved.fact_id == "iva-rate-schedule"
-    assert resolved.variant_id == "iva-rate.es.general.2024.ordinary"
-    assert resolved.effective_date == date(2024, 6, 15)
-    assert resolved.valid_from == date(2024, 1, 1)
-    assert resolved.valid_to == date(2024, 12, 31)
-    assert resolved.authority_digest == generation.logical_generation
-    assert reader.loads == [
-        GovernedFactComponentQuery("eu-member-state-catalogue"),
-        GovernedFactComponentQuery("iva-rate-slot-catalogue"),
-        GovernedFactComponentQuery("iva-rate-schedule"),
-    ]
 
 
 def test_es_general_2024_rate(operation: PinnedAuthorityOperation) -> None:

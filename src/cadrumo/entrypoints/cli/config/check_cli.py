@@ -95,18 +95,29 @@ def _probe_dependency_statuses() -> tuple[
     DependencyStatus,
     tuple[DependencyStatus, ...],
 ]:
+    from ....application.local_reader import EXTRACTION_READER_ROLES, probe_local_reader
     from ....application.provisioning import (
         probe_hardware_profile,
         probe_local_inference_hardware,
         probe_local_model_provisioning,
         probe_model_runtime_hardware_floor,
-        probe_ollama_vision,
         probe_optional_extras,
         probe_playwright_browser,
     )
+    from ....application.provisioning_runtime import read_installed_models
+    from ....core.model_catalogue import ModelRole
     from ._check_hardware_rows import contention_row
 
-    ollama = probe_ollama_vision()
+    # The same per-role reader probe `config provision status` and the ingestion
+    # lanes consult, over ONE inventory read, so the doctor cannot report a
+    # reader ready that the status surface reports missing.
+    inventory = read_installed_models()
+    readers = tuple(probe_local_reader(role, installed=inventory) for role in EXTRACTION_READER_ROLES)
+    vision_reader = next(
+        status
+        for role, status in zip(EXTRACTION_READER_ROLES, readers, strict=True)
+        if role is ModelRole.VISION_TRANSCRIPTION
+    )
     hardware_floor = probe_model_runtime_hardware_floor()
     # Probed ONCE and threaded into both rows. Two probes would read the
     # machine at two moments and could disagree, so the profile the
@@ -118,8 +129,8 @@ def _probe_dependency_statuses() -> tuple[
     playwright = probe_playwright_browser()
     provisioning = probe_local_model_provisioning()
     extras = probe_optional_extras()
-    statuses = (ollama, hardware_floor, hardware, contention, provisioning, playwright, *extras)
-    return statuses, ollama, extras
+    statuses = (*readers, hardware_floor, hardware, contention, provisioning, playwright, *extras)
+    return statuses, vision_reader, extras
 
 
 def _preflight_payloads(*, operator_probe_ports: OperatorProbePorts) -> list[CheckPreflightPayload]:
@@ -148,15 +159,15 @@ def _preflight_payloads(*, operator_probe_ports: OperatorProbePorts) -> list[Che
 def _check_issues(
     *,
     capabilities: dict[str, object],
-    ollama: DependencyStatus,
+    vision_reader: DependencyStatus,
     extras: tuple[DependencyStatus, ...],
 ) -> list[str]:
     from ....core.config import load_settings
 
     extra_available = {status.service: status.available for status in extras}
     issues: list[str] = []
-    if capabilities[ServiceCapability.LLM_VISION.value] and not ollama.available:
-        issues.append(ollama.service)
+    if capabilities[ServiceCapability.LLM_VISION.value] and not vision_reader.available:
+        issues.append(vision_reader.service)
     if capabilities[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
         issues.append("extra:google")
     # The eligibility bar's own row. Reported in the SAME shape as the two
@@ -205,7 +216,7 @@ def config_check(ctx: typer.Context) -> None:
     """Report external-dependency availability + the active profile's capability posture."""
     profile_id = resolve_active_bucket_id()
     capabilities, cap_enabled = _capability_posture()
-    dependency_statuses, ollama, extras = _probe_dependency_statuses()
+    dependency_statuses, vision_reader, extras = _probe_dependency_statuses()
     dependency_payloads = tuple(_dependency_payload(status) for status in dependency_statuses)
     # Keep the nested strict DTO instances intact until the one final
     # envelope serialization. A JSON dump here turns tuple/enum action
@@ -221,7 +232,7 @@ def config_check(ctx: typer.Context) -> None:
     from ..state_projection_support import operator_probe_ports
 
     preflight = _preflight_payloads(operator_probe_ports=operator_probe_ports(ctx))
-    issues = _check_issues(capabilities=cap_enabled, ollama=ollama, extras=extras)
+    issues = _check_issues(capabilities=cap_enabled, vision_reader=vision_reader, extras=extras)
     ok = not issues
     result = ConfigCheckResult.model_validate(
         {

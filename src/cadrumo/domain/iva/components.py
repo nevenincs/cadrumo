@@ -1006,20 +1006,6 @@ def category_components(
         ) from exc
 
 
-def cuota_less_m303_categories_from_table(
-    component_catalogue: ComponentCatalogue | None = None,
-) -> frozenset[IvaCategory]:
-    """Return the explicit cuota-less projection declared by fact 0084.
-
-    ``component_catalogue`` remains an accepted argument for callers that
-    already hold a projected catalogue, but the membership itself is never
-    inferred from row semantics: the canonical ``category_projection`` entry
-    is resolved from the published authority and missing data fails closed.
-    """
-    del component_catalogue
-    return registry_category_projection("cuota_less_m303")
-
-
 def category_bears_taxable_base(
     category: IvaCategory,
     kind: InvoiceKind,
@@ -1102,7 +1088,6 @@ __all__ = [
     "category_bears_taxable_base",
     "category_components",
     "category_cuota_is_zero_by_law",
-    "cuota_less_m303_categories_from_table",
     "registry_category_projection",
     "registry_component_catalogue",
     "registry_component_presence_token",

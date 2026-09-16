@@ -21,6 +21,7 @@ from pydantic import Field, NonNegativeInt
 
 from ...application.evidence.bundle_text import EvidenceBundleNotes
 from ...application.evidence.models import BundleVerificationState
+from ...application.evidence.payloads import EvidenceRecordRefPayload
 from ...application.workflow.run_models import (
     SiteHealthAlert,
     WorkflowObligationFacts,
@@ -32,7 +33,6 @@ from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
-from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.period import Period
@@ -69,21 +69,6 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
     percepcion_count: NonNegativeInt
     percibido_total: NonNegativeDecimalWireText
     retencion_total: NonNegativeDecimalWireText
-
-
-class EvidenceRecordRefPayload(OutputSchema):
-    """One record reference entry inside an evidence bundle manifest.
-
-    JSON projection of :class:`EvidenceRecordRef`. ``content_sha256`` keeps
-    the canonical :data:`~core.identity.ContentDigest` constraint the record
-    carries, so the machine-facing boundary cannot emit a digest the
-    application model would refuse.
-    """
-
-    object_type: BucketEventObjectType
-    object_id: BucketObjectId
-    content_sha256: ContentDigest
-    payload_size_bytes: NonNegativeInt
 
 
 class EvidenceBundleCheckFindingPayload(OutputSchema):

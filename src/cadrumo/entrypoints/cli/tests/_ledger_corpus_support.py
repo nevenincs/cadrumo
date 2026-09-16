@@ -5,12 +5,15 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from click.testing import Result
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from .cli_runner import invoke_cached_cli
+
+if TYPE_CHECKING:
+    from ....domain.transactions.models import TransactionCatalogue
 
 _CORPUS = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial" / "ledger-corpus"
 _FILES = (
@@ -82,13 +85,21 @@ def _set_group(tx_id: str, label: str) -> None:
     assert result.exit_code == 0, result.output
 
 
-def _active_repo() -> Any:
+def load_active_catalogue() -> TransactionCatalogue:
+    """Read the active bucket's stored transactions, as a command would.
+
+    Stored rows validate against registry vocabulary, so a test reading them
+    back after a CLI call leases the published authority for the read exactly
+    as the command boundary does for its own.
+    """
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ....core.bucket_pointer import resolve_active_bucket_id
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    return TransactionCatalogueRepository(bucket_id=bucket_id)
+    with bundled_indexed_authority().operation():
+        return TransactionCatalogueRepository(bucket_id=bucket_id).load()
 
 
 def _xlsx_mirror_of_csv(csv_path: Path, out: Path) -> None:

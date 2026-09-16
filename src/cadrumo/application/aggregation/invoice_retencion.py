@@ -48,7 +48,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self
 
 from pydantic import BaseModel, model_validator
@@ -64,7 +63,7 @@ from .errors import AggregationValidationError
 from .retenciones import RetencionObservation
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping, Sequence
+    from collections.abc import Iterable, Sequence
 
     from ...domain.invoices.models import Invoice
 
@@ -127,33 +126,6 @@ class InvoiceRetencionProjectionDefect(StrEnum):
     withholding tax is one of the cases that article makes the tax id
     mandatory for regardless, so this exclusion should be rare in practice.
     """
-
-
-INVOICE_RETENCION_DEFECT_GUIDANCE: Final[Mapping[InvoiceRetencionProjectionDefect, str]] = MappingProxyType(
-    {
-        InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY: (
-            "an issued invoice's retención is a credit against the pago fraccionado, "
-            "already carried by the renta income ledger; it does not belong to the retenedor store"
-        ),
-        InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED: (
-            "declare the invoice's IVA treatment (iva_category) so the retención role can be read"
-        ),
-        InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED: (
-            "record the withheld amount on the invoice if the supplier's factura shows a retención"
-        ),
-        InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER: (
-            "a withholding on a non-resident supplier is settled through the IRNR surface, not Modelo 111"
-        ),
-        InvoiceRetencionProjectionDefect.FX_UNRESOLVED: (
-            "resolve the invoice's conversion rate; the retenciones store holds euro figures"
-        ),
-        InvoiceRetencionProjectionDefect.MISSING_COUNTERPARTY_TAX_ID: (
-            "record the supplier's counterparty_tax_id; Modelo 111 cannot file a retención "
-            "without identifying the perceptor"
-        ),
-    },
-)
-"""Operator remediation per defect, so the surfacing layer renders guidance it did not invent."""
 
 
 class InvoiceRetencionProjection(BaseModel):
@@ -389,7 +361,6 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]
 
 
 __all__ = [
-    "INVOICE_RETENCION_DEFECT_GUIDANCE",
     "InvoiceRetencionProjection",
     "InvoiceRetencionProjectionDefect",
     "InvoiceRetencionRouteRequest",

@@ -13,7 +13,7 @@ from .record_design_layout_markers import RECORD_TERMINATOR_PHRASE
 from .record_design_sources import SinglePositionCorrectionIndex
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField
+    from dev.registry.compiler.record_design_schema import RecordDesignField
 
     from .record_design_pdf_state import PdfFieldDraft
 

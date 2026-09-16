@@ -17,7 +17,10 @@ from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
 from cadrumo.core.text_fold import ascii_slug
 from cadrumo.core.type_guards import is_object_dict
-from cadrumo.domain.calculations.registry.artifact_catalogue import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
+from dev.corpus.artifact_catalogue import (
     ArtifactCatalogue,
     ArtifactIdentity,
     ArtifactRole,
@@ -27,9 +30,6 @@ from cadrumo.domain.calculations.registry.artifact_catalogue import (
     record_design_manifest_identities,
     registry_source_identity,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 from dev.registry.compiler.corpus_annotation import (
     CORPUS_PAGE_ANNOTATION_SUFFIX,
     CorpusPageAnnotation,

@@ -7,7 +7,7 @@ rebuilding the classifier. The contract is deliberately thin:
 * :func:`suggest_llm_classification` loads one transaction, runs the
   caller-composed classifier port with the category-enabled prompt
   spec, and returns a typed
-  :class:`~llm.suggestions.LLMClassificationSuggestion`
+  :class:`~application.ledger.llm_classification_ports.LLMClassificationSuggestion`
   **without persisting anything**. Rejecting a suggestion is simply not
   applying it.
 * :func:`apply_llm_classification` persists an accepted suggestion through the
@@ -48,6 +48,7 @@ from ...core.config import Settings
 from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
+from ...core.model_catalogue import ModelRole
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.time.clock import now
 from ...core.time.utc import coerce_utc_aware
@@ -293,6 +294,7 @@ def classify_with_evidence(
         response = cast(
             LLMClassificationResponse,
             ports.run_reader(
+                ModelRole.VISION_TRANSCRIPTION,
                 lambda: vision.classify(transaction, evidence_images=images),
             ),
         )
@@ -310,6 +312,7 @@ def classify_with_evidence(
         return cast(
             LLMClassificationResponse,
             ports.run_reader(
+                ModelRole.TEXT_EXTRACTION,
                 lambda: local_text.classify(transaction, evidence_text=text),
             ),
         ), local_text.decided_by
@@ -349,6 +352,7 @@ def _split_with_evidence(
         response = cast(
             LLMSplitResponse,
             ports.run_reader(
+                ModelRole.VISION_TRANSCRIPTION,
                 lambda: vision.propose_split(transaction, evidence_images=images),
             ),
         )
@@ -452,7 +456,7 @@ def suggest_llm_classification(
         ports: Injected evidence-reading and classifier execution ports.
 
     Returns:
-        A :class:`~llm.suggestions.LLMClassificationSuggestion`.
+        A :class:`~application.ledger.llm_classification_ports.LLMClassificationSuggestion`.
 
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
@@ -579,7 +583,7 @@ def apply_llm_classification(
 
     Args:
         suggestion: The accepted
-            :class:`~llm.suggestions.LLMClassificationSuggestion`.
+            :class:`~application.ledger.llm_classification_ports.LLMClassificationSuggestion`.
         bucket_id: Active profile bucket id.
         business_pct: Required when ``suggestion.classification`` is ``MIXED``.
         actor: Operator identity for the audit event.
@@ -746,7 +750,7 @@ def saturate_llm_classification(
         ports: Injected evidence-reading and classifier execution ports.
 
     Returns:
-        A :class:`~llm.suggestions.LLMSaturatedSuggestion`
+        A :class:`~application.ledger.llm_classification_ports.LLMSaturatedSuggestion`
         carrying the model's selections and the system-derived euro substrate.
 
     Raises:
@@ -846,7 +850,7 @@ def apply_saturated_llm_classification(
 
     Args:
         suggestion: The accepted
-            :class:`~llm.suggestions.LLMSaturatedSuggestion`.
+            :class:`~application.ledger.llm_classification_ports.LLMSaturatedSuggestion`.
         bucket_id: Active profile bucket id.
         business_pct: Operator override for the MIXED business percentage;
             falls back to the model's proposed ``business_pct``.
@@ -943,7 +947,7 @@ def derive_operator_iva_substrate(
 
     Returns:
         The
-        :class:`~llm.suggestions.OperatorIvaDerivationResult`
+        :class:`~application.ledger.llm_classification_ports.OperatorIvaDerivationResult`
         recording the persisted IVA substrate, or an explanatory note when the
         category is non-derivable.
 
@@ -1143,7 +1147,7 @@ def suggest_evidence_split(
         ports: Injected evidence-reading and classifier execution ports.
 
     Returns:
-        A :class:`~llm.suggestions.LLMSplitSuggestion`
+        A :class:`~application.ledger.llm_classification_ports.LLMSplitSuggestion`
         whose child amounts sum exactly to the parent.
 
     Raises:
@@ -1255,7 +1259,7 @@ def apply_evidence_split(
 
     Args:
         suggestion: The accepted
-            :class:`~llm.suggestions.LLMSplitSuggestion`.
+            :class:`~application.ledger.llm_classification_ports.LLMSplitSuggestion`.
         bucket_id: Active profile bucket id.
         actor: Operator identity for the audit events.
         source_command: Source-command label recording the operator's verb.
@@ -1264,7 +1268,7 @@ def apply_evidence_split(
         occurred_at: Override clock for deterministic tests.
 
     Returns:
-        An :class:`~llm.suggestions.LLMSplitApplyResult`
+        An :class:`~application.ledger.llm_classification_ports.LLMSplitApplyResult`
         naming the split group and its children.
 
     Raises:
@@ -1363,7 +1367,7 @@ def apply_evidence_classification(
 
     Args:
         suggestion: A no-split
-            :class:`~llm.suggestions.LLMSplitSuggestion`
+            :class:`~application.ledger.llm_classification_ports.LLMSplitSuggestion`
             (exactly one child).
         bucket_id: Active profile bucket id.
         actor: Operator identity for the audit event.
@@ -1465,7 +1469,7 @@ def reject_llm_suggestion(
 
     Returns:
         An
-        :class:`~llm.suggestions.LLMSuggestionRejectionResult`
+        :class:`~application.ledger.llm_classification_ports.LLMSuggestionRejectionResult`
         naming the recorded event.
 
     Raises:

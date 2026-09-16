@@ -56,18 +56,9 @@ class EvidenceBundlePorts:
     work_units: EvidenceBundleWorkUnitPort
 
 
-class EvidenceBundlePortsFactory(Protocol):
-    """Construct the complete evidence capability bundle for one bucket."""
-
-    def __call__(self, *, bucket_id: str) -> EvidenceBundlePorts:
-        """Return all evidence authorities bound to ``bucket_id``."""
-        ...
-
-
 __all__ = [
     "EvidenceBundlePersistenceError",
     "EvidenceBundlePorts",
-    "EvidenceBundlePortsFactory",
     "EvidenceBundleRepositoryPort",
     "EvidenceBundleWorkUnitPort",
 ]

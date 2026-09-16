@@ -27,7 +27,7 @@ if not __package__:
 _DIRECTORY_SCAN = importlib.import_module("cadrumo.core.directory_scan")
 iter_directory = _DIRECTORY_SCAN.iter_directory
 scan_directory = _DIRECTORY_SCAN.scan_directory
-_ARTIFACT_CATALOGUE = importlib.import_module("cadrumo.domain.calculations.registry.artifact_catalogue")
+_ARTIFACT_CATALOGUE = importlib.import_module("dev.corpus.artifact_catalogue")
 ArtifactCatalogue = _ARTIFACT_CATALOGUE.ArtifactCatalogue
 ArtifactDiagnostic = _ARTIFACT_CATALOGUE.ArtifactDiagnostic
 ArtifactDiagnosticKind = _ARTIFACT_CATALOGUE.ArtifactDiagnosticKind

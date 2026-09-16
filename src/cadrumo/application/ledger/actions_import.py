@@ -344,6 +344,7 @@ def _persist_source_import(
     validation: ProviderValidationProtocol,
     source_verification: LedgerSourceVerificationReport,
     diagnostics: tuple[LedgerImportDiagnosticReport, ...],
+    catalogue: TransactionCatalogue,
 ) -> LedgerSourceImportResult:
     """Persist imported rows, then append verification diagnostics as events."""
     result = import_ledger_transactions(
@@ -355,6 +356,7 @@ def _persist_source_import(
         actor=command.actor,
         source_command=command.source_command,
         currency_normalizer=currency_normalizer,
+        catalogue=catalogue,
     )
     summary = result.summary
     diagnostic_events = _diagnostic_events(
@@ -398,6 +400,7 @@ def import_ledger_transactions(
     source_command: str = "aeat app ledger import",
     occurred_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
+    catalogue: TransactionCatalogue | None = None,
 ) -> LedgerImportOperationResult:
     """Import provider rows into one bucket catalogue and emit events.
 
@@ -406,13 +409,17 @@ def import_ledger_transactions(
     plus the authoritative ``direction`` the provider derived at the parse
     boundary, so the import path never re-derives flow from a sign.
 
+    ``catalogue`` is the bucket's already-loaded catalogue when the caller read
+    one to diagnose the source against; otherwise it is loaded here.
+
     Returns a :class:`~cadrumo.application.ledger.models.LedgerImportOperationResult`
     summarising the imported, skipped, and likely-duplicate transactions.
     """
     now = normalise_timestamp(occurred_at)
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    catalogue = repository.load()
+    if catalogue is None:
+        catalogue = repository.load()
     rows = tuple(parsed_rows)
     plan = evaluate_import_rows(
         bucket_id=bucket_id,
@@ -526,6 +533,10 @@ def import_ledger_source(
         validation=prepared.validation,
         source_verification=prepared.source_verification,
         diagnostics=diagnostics,
+        # The catalogue this source was diagnosed against is the one it is
+        # imported into; loading it again decrypted and validated every stored
+        # row a second time per imported file.
+        catalogue=loaded.catalogue,
     )
 
 

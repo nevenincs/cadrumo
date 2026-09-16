@@ -974,6 +974,8 @@ class InstalledModel(BaseModel):
 
     name: str = Field(min_length=1)
     size_bytes: int | None = Field(default=None, ge=0)
+    digest: str | None = Field(default=None, min_length=1)
+    """The runtime's content digest for the pulled weights; changes when a pull replaces them."""
 
 
 def _installed_from_payload(payload: object) -> tuple[InstalledModel, ...] | None:
@@ -991,10 +993,12 @@ def _installed_from_payload(payload: object) -> tuple[InstalledModel, ...] | Non
         if not isinstance(name, str) or not name:
             return None
         size = row.get("size")
+        digest = row.get("digest")
         installed.append(
             InstalledModel(
                 name=name,
                 size_bytes=int(size) if isinstance(size, int) and size >= 0 else None,
+                digest=digest if isinstance(digest, str) and digest else None,
             ),
         )
     return tuple(installed)

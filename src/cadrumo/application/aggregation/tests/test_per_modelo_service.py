@@ -10,8 +10,6 @@ source-mesh parity, and the retenciones collapse onto
 See Also:
     :mod:`~application.aggregation.service`
         Service contracts and dispatch implementation under test.
-    :func:`~application.aggregation.get_per_modelo_aggregation_contract`
-        Backend-owned provider/source-kind contract asserted by this module.
     :class:`~application.aggregation.PerModeloAggregationCommand`
         Strict command envelope that selects the provider family.
     :class:`~application.aggregation.PerModeloAggregationResult`
@@ -32,11 +30,9 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.aggregation import (
-    COUNTERPART_SOURCE_KIND_ORDER,
     BindingSourceKind,
     CounterpartSourceKind,
     ForeignAssetClass,
-    OperationKind347,
     RetencionScheme,
 )
 from ....core.errors.error_codes import get_registered_error_code
@@ -74,13 +70,11 @@ from ..retenciones import (
     aggregate_retenciones_193,
 )
 from ..service import (
-    AggregationErrorCodes,
     PerModeloAggregationCommand,
     PerModeloAggregationContributor,
     PerModeloAggregationLogFields,
     PerModeloAggregationResult,
     aggregate_per_modelo,
-    get_per_modelo_aggregation_contract,
 )
 from ..source_mesh import CalculationSourceContext
 
@@ -109,7 +103,7 @@ def _counterpart_obs(
     name: str = "Cliente Counterpart",
     source_kind: CounterpartSourceKind = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str | None = None,
-    operation_kind: str = OperationKind347.DELIVERY.value,
+    operation_kind: str = "entregas_y_prestaciones",
     country: str = "ES",
     invoice_total: str = "2000.00",
 ) -> CounterpartObservation:
@@ -164,27 +158,6 @@ def _asset_obs(
         valuation_eur=Decimal(valuation),
         acquisition_date=acquisition_date,
     )
-
-
-def test_contract_maps_supported_modelos_to_application_aggregation_owner() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        contract = get_per_modelo_aggregation_contract(operation=_authority_operation_for_test)
-
-        assert contract.service_owner == "cadrumo.application.aggregation"
-        assert contract.accepted_source_kinds == COUNTERPART_SOURCE_KIND_ORDER
-        assert contract.error_codes == AggregationErrorCodes
-        by_provider = {provider.provider: provider for provider in contract.providers}
-        assert by_provider[PerModeloAggregationContributor.RETENCIONES].modelos == (
-            "111",
-            "115",
-            "123",
-            "180",
-            "190",
-            "193",
-        )
-        assert by_provider[PerModeloAggregationContributor.COUNTERPART].modelos == ("347", "349")
-        assert by_provider[PerModeloAggregationContributor.FOREIGN_ASSETS].modelos == ("720",)
-        assert all(provider.service_owner == "cadrumo.application.aggregation" for provider in contract.providers)
 
 
 def test_command_contract_is_strict_and_immutable() -> None:

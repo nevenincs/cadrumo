@@ -12,11 +12,13 @@ operator to dump the whole ledger and grep; these tests lock the filter axes
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....application.user_profile import profile_summary
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.inventory import FIXTURES_DIR
 from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend_per_module
@@ -286,3 +288,22 @@ def test_a_filtered_list_reads_the_ledger_once(monkeypatch: pytest.MonkeyPatch) 
 
     assert filtered, "the corpus must reach the filter, or a single read proves nothing"
     assert len(loads) == 1
+
+
+def test_a_listing_observes_the_profile_inventory_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The session gate, the active-bucket resolver, the profile label and the
+    sandbox notice all ask which profiles exist; a read-only command answers
+    them from one observation of the store.
+    """
+    observed: list[object] = []
+    observe = profile_summary._observe_summary_inventory
+
+    def counting(root: Path) -> profile_summary.ProfileSummaryInventory:
+        observed.append(root)
+        return observe(root)
+
+    monkeypatch.setattr(profile_summary, "_observe_summary_inventory", counting)
+    rows = _list_rows()
+
+    assert rows, "the listing must reach its profile-bound rendering, or one observation proves nothing"
+    assert len(observed) == 1

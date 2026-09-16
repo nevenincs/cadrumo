@@ -48,7 +48,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.record_design_schema import (
     RecordDesignField,
     RecordDesignSheet,
 )

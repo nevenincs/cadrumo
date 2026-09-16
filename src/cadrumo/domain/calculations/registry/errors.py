@@ -21,7 +21,7 @@ from typing import Self
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from ....core.modelo import Modelo
-from .ids import BindingId, RelationId, RevisionId
+from .ids import RevisionId
 
 
 class RegistryFailureCondition(StrEnum):
@@ -105,149 +105,6 @@ class RegistryValidationError(RegistryError, CoreValidationError):
     """
 
     @classmethod
-    def for_unsupported_op(cls, op: str) -> Self:
-        """Formula expression uses an op the runtime does not implement.
-
-        Canonical key: ``op``. Twelve raise sites today.
-        """
-        return cls(
-            f"formula expression uses unsupported op {op!r}",
-            translated_message="errors.calc.unsupported_op",
-            context={"op": op},
-        )
-
-    @classmethod
-    def for_unsupported_comparison_op(cls, op: str) -> Self:
-        """``compare(...)`` received an op name outside the closed comparison set."""
-        return cls(
-            f"formula expression uses unsupported comparison op {op!r}",
-            translated_message="errors.calc.unsupported_comparison_op",
-            context={"op": op},
-        )
-
-    @classmethod
-    def for_unknown_parameter(cls, *, parameter_id: str) -> Self:
-        """A formula referenced a parameter id absent from the revision.
-
-        Canonical key: ``parameter_id``. Seven raise sites today.
-        """
-        return cls(
-            f"parameter {parameter_id!r} not registered",
-            translated_message="errors.calc.parameter_unknown",
-            context={"parameter_id": parameter_id},
-        )
-
-    @classmethod
-    def for_dispatch_key_unknown(
-        cls,
-        *,
-        op: str,
-        binding_id: BindingId,
-        dispatch_key: str,
-        available_keys: Sequence[str],
-    ) -> Self:
-        """A formula's dispatch_table is missing the resolved enum key.
-
-        Canonical keys: ``op``, ``binding_id``, ``dispatch_key``,
-        ``available_keys``. Three raise sites today (lookup_bracket_by_ccaa
-        / lookup_parameter_by_entity_type / lookup_bracket_by_entity_type).
-        """
-        return cls(
-            f"{op} dispatch_table is missing key {dispatch_key!r} (declared keys: {sorted(available_keys)})",
-            translated_message="errors.calc.dispatch_key_unknown",
-            context={
-                "op": op,
-                "binding_id": binding_id,
-                "dispatch_key": dispatch_key,
-                "available_keys": _csv(sorted(available_keys)),
-            },
-        )
-
-    @classmethod
-    def for_lookup_dispatch_arg_kind(
-        cls,
-        *,
-        op: str,
-        position: str,
-        expected_kind: str,
-    ) -> Self:
-        """A lookup-dispatch op's positional arg has the wrong leaf kind.
-
-        Canonical keys: ``op``, ``position``, ``expected_kind``. Four
-        raise sites today.
-        """
-        return cls(
-            f"formula op {op!r} requires {position} to be a {expected_kind} leaf",
-            translated_message="errors.calc.lookup_dispatch_arg_kind",
-            context={"op": op, "position": position, "expected_kind": expected_kind},
-        )
-
-    @classmethod
-    def for_lookup_dispatch_arg_count(cls, *, op: str, expected: str) -> Self:
-        """A lookup-dispatch op was passed the wrong number of args.
-
-        Canonical keys: ``op``, ``expected``.
-        """
-        return cls(
-            f"formula op {op!r} expects {expected} args",
-            translated_message="errors.calc.lookup_dispatch_arg_count",
-            context={"op": op, "expected": expected},
-        )
-
-    @classmethod
-    def for_dispatch_parameter_kind(
-        cls,
-        *,
-        parameter_id: str,
-        op: str,
-    ) -> Self:
-        """A dispatched parameter has the wrong ``data_type`` for its op."""
-        return cls(
-            f"parameter {parameter_id!r} has wrong data_type for {op!r}",
-            translated_message="errors.calc.dispatch_parameter_kind",
-            context={"parameter_id": parameter_id, "op": op},
-        )
-
-    @classmethod
-    def for_enum_binding_value_missing(cls, *, binding_id: BindingId, op: str) -> Self:
-        """A required enum binding has no supplied value at evaluation time.
-
-        Canonical keys: ``binding_id``, ``op``.
-        """
-        return cls(
-            f"enum binding {binding_id!r} has no supplied value; required by {op}",
-            translated_message="errors.calc.enum_binding_value_missing",
-            context={"binding_id": binding_id, "op": op},
-        )
-
-    @classmethod
-    def for_binding_value_missing(cls, *, binding_id: BindingId) -> Self:
-        """A required binding has no supplied value at evaluation time."""
-        return cls(
-            f"binding {binding_id!r} has no supplied value",
-            translated_message="errors.calc.binding_value_missing",
-            context={"binding_id": binding_id},
-        )
-
-    @classmethod
-    def for_relation_value_missing(cls, *, relation_id: RelationId) -> Self:
-        """A required relation has no supplied value at evaluation time."""
-        return cls(
-            f"relation {relation_id!r} has no supplied value",
-            translated_message="errors.calc.relation_value_missing",
-            context={"relation_id": relation_id},
-        )
-
-    @classmethod
-    def for_casilla_referenced_before_evaluation(cls, *, casilla_id: CasillaId) -> Self:
-        """A formula referenced a casilla that hasn't been evaluated yet."""
-        return cls(
-            f"casilla {casilla_id!r} referenced before evaluation",
-            translated_message="errors.calc.casilla_referenced_before_evaluation",
-            context={"casilla_id": casilla_id},
-        )
-
-    @classmethod
     def for_unknown_input_casilla_ids(cls, *, casilla_ids: Sequence[CasillaId]) -> Self:
         """Inputs to the runtime referenced casilla ids absent from the revision."""
         ids = sorted(casilla_ids)
@@ -255,59 +112,6 @@ class RegistryValidationError(RegistryError, CoreValidationError):
             f"unknown registry input casilla ids: {ids!r}",
             translated_message="errors.calc.unknown_input_casillas",
             context={"casilla_ids": _csv(ids)},
-        )
-
-    @classmethod
-    def for_computed_supplied_as_input(cls, *, casilla_ids: Sequence[CasillaId]) -> Self:
-        """Inputs to the runtime supplied values for computed casillas."""
-        ids = sorted(casilla_ids)
-        return cls(
-            f"computed registry casillas cannot be supplied as inputs: {ids!r}",
-            translated_message="errors.calc.computed_supplied_as_input",
-            context={"casilla_ids": _csv(ids)},
-        )
-
-    @classmethod
-    def for_bracket_no_window(cls, *, parameter_id: str, as_of: str) -> Self:
-        """A bracket-table parameter has no bracket valid for the requested date."""
-        return cls(
-            f"parameter {parameter_id!r} has no bracket valid for {as_of}",
-            translated_message="errors.calc.bracket_no_window",
-            context={"parameter_id": parameter_id, "as_of": as_of},
-        )
-
-    @classmethod
-    def for_bracket_no_coverage(cls, *, parameter_id: str, base: str) -> Self:
-        """A bracket-table parameter has no bracket covering the requested base."""
-        return cls(
-            f"parameter {parameter_id!r} has no bracket covering base {base}",
-            translated_message="errors.calc.bracket_no_coverage",
-            context={"parameter_id": parameter_id, "base": base},
-        )
-
-    @classmethod
-    def for_bracket_negative_base(cls, *, parameter_id: str, base: str) -> Self:
-        """A bracket-table lookup received a negative base value."""
-        return cls(
-            f"parameter {parameter_id!r} lookup_bracket received negative base {base}",
-            translated_message="errors.calc.bracket_negative_base",
-            context={"parameter_id": parameter_id, "base": base},
-        )
-
-    @classmethod
-    def for_divide_by_zero(cls) -> Self:
-        """A formula expression divides by zero at runtime."""
-        return cls(
-            "formula expression divides by zero",
-            translated_message="errors.calc.divide_by_zero",
-        )
-
-    @classmethod
-    def for_empty_expression(cls) -> Self:
-        """A formula expression contains no leaf or op (empty)."""
-        return cls(
-            "empty formula expression",
-            translated_message="errors.calc.empty_expression",
         )
 
     @classmethod

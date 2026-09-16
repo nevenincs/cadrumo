@@ -8,16 +8,6 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.core.orden_anual_html.OrdenAnualHtmlParseError",
-        ErrorCode(
-            code="INTEGRITY_ORDEN_ANUAL_HTML_PARSE",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.canonical_orden_anual_html_parse",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.corpus_manifest.manifest._ManifestPayloadValidationError",
         ErrorCode(
             code="INTEGRITY_MANIFEST_PAYLOAD_VALIDATION",

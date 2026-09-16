@@ -196,11 +196,6 @@ def iso_country_for_nif_iva_prefix(prefix: NifIvaPrefix) -> str:
     return resolve_nif_iva_catalogue().iso_country_for_prefix(prefix)
 
 
-def nif_iva_prefix_for_country(iso_country: str) -> NifIvaPrefix | None:
-    """Resolve a country or IVA prefix through the dated catalogue."""
-    return resolve_nif_iva_catalogue().prefix_for_country(iso_country)
-
-
 def nif_iva_format_for_country(iso_country: str) -> NifIvaFormatSpec | None:
     """Return the published structural format for a country, when declared."""
     return resolve_nif_iva_catalogue().format_for_country(iso_country)
@@ -211,6 +206,5 @@ __all__ = [
     "NifIvaDefinition",
     "iso_country_for_nif_iva_prefix",
     "nif_iva_format_for_country",
-    "nif_iva_prefix_for_country",
     "resolve_nif_iva_catalogue",
 ]

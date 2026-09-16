@@ -13,7 +13,7 @@ from pydantic import TypeAdapter, ValidationError
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import resolve_data_root_copies
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.record_design_schema import (
     RecordDesignCorrection,
     RecordDesignFieldTypeCorrection,
     RecordDesignHeaderCellCorrection,

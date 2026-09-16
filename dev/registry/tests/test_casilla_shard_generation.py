@@ -18,10 +18,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design_schema import (
-    RecordDesignField,
-    RecordDesignSheet,
-)
 from dev.registry.authoring.casilla_shard_generation import (
     GenerationRefusedError,
     WaveSpec,
@@ -33,6 +29,10 @@ from dev.registry.authoring.casilla_shard_generation import (
     is_structural,
     normalise_for_drift,
     reattach_attestations,
+)
+from dev.registry.compiler.record_design_schema import (
+    RecordDesignField,
+    RecordDesignSheet,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

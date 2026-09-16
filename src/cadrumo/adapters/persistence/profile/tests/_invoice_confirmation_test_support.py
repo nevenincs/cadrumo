@@ -19,85 +19,82 @@ from typing import ClassVar, NamedTuple, TypedDict, override
 
 import httpx
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
-from cadrumo.adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
-from cadrumo.adapters.inbound.einvoice.parsers import parse_einvoice_document
-from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
-from cadrumo.adapters.inbound.einvoice.xml import EInvoiceXmlParseError
-from cadrumo.adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
-from cadrumo.adapters.outbound.llm.consent import EvidenceConsentToken
-from cadrumo.adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
-from cadrumo.adapters.outbound.llm.evidence_draft_text import (
+from .....adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
+from .....adapters.inbound.einvoice.parsers import parse_einvoice_document
+from .....adapters.inbound.einvoice.shape import probe_document_shape
+from .....adapters.inbound.einvoice.xml import EInvoiceXmlParseError
+from .....adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+from .....adapters.outbound.llm.consent import EvidenceConsentToken
+from .....adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
+from .....adapters.outbound.llm.evidence_draft_text import (
     TextInvoiceFieldExtractor,
     extract_invoice_fields_from_text,
 )
-from cadrumo.adapters.outbound.llm.evidence_draft_vision import (
+from .....adapters.outbound.llm.evidence_draft_vision import (
     LocalVisionDocumentTranscriber,
     transcribe_document_images,
 )
-from cadrumo.adapters.outbound.llm.models import MultimodalImageInput
-from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from cadrumo.adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from cadrumo.adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
-from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
-from cadrumo.adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
+from .....adapters.outbound.llm.models import MultimodalImageInput
+from .....adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from .....adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+from .....adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
+from .....adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
+from .....adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
+from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from .....adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
     LedgerEvidenceRepositoryAdapter,
 )
-from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
-from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPorts
-from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
-from cadrumo.application.ledger.document_transcription import DocumentTranscription
-from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
-from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
-from cadrumo.application.ledger.evidence_input import (
+from .....adapters.persistence.storage.attachment import AttachmentStore
+from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from .....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from .....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from .....application.invoices.catalogue_creation_ports import CatalogueCreationPorts
+from .....application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
+from .....application.ledger.document_transcription import DocumentTranscription
+from .....application.ledger.evidence import PurchaseInvoiceEvidenceService
+from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from .....application.ledger.evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
-from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
-from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
-from cadrumo.application.ledger.evidence_reference import (
+from .....application.ledger.evidence_input_ports import EvidenceInputPorts
+from .....application.ledger.evidence_ports import LedgerEvidencePorts
+from .....application.ledger.evidence_reference import (
     EvidenceReferenceOutcome,
     classify_evidence_reference,
     refuse_reference_without_document_bytes,
     refuse_unresolved_evidence_reference,
 )
-from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
-from cadrumo.application.ledger.invoice_confirmation_ports import InvoiceConfirmationPorts
-from cadrumo.application.ledger.invoice_draft_extraction_ports import (
+from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
+from .....application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
+from .....application.ledger.invoice_confirmation_ports import InvoiceConfirmationPorts
+from .....application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
     VisionImage,
 )
-from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
-from cadrumo.application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
-from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from cadrumo.core.config import Settings, override_settings
-from cadrumo.core.config_support import LLMProvider
-from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
-from cadrumo.core.optional_extras import MissingOptionalExtraError
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.iva.regime_legend import RegimeLegend
-from cadrumo.domain.iva.supply_nature import SupplyNature
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.tests.loopback_llm import (
+from .....application.ledger.invoice_draft_records import InvoiceDraft
+from .....application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
+from .....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .....core.config import Settings, override_settings
+from .....core.config_support import LLMProvider
+from .....core.operator_action_enums import ActionEvidenceProvenance
+from .....core.optional_extras import MissingOptionalExtraError
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.iva.regime_legend import RegimeLegend
+from .....domain.iva.supply_nature import SupplyNature
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
     read_json_body,
@@ -301,16 +298,18 @@ def seed_filer_profile(*, tax_id: str | None = "12345678Z") -> None:
     facts = [UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28001")]
     if tax_id is not None:
         facts.insert(0, UserProfileFact(path="identity.tax_id", value=tax_id))
-    seed_test_profile_record(
-        _create_profile_record_for_test(
+    # The record validates its facts against the published profile schema, so it
+    # is built under a real authority lease.
+    with bundled_indexed_authority().operation() as operation:
+        record = _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=tuple(facts),
             created_at=clock,
             updated_at=clock,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
+            context=operation.profile_create_context(),
+        )
+    seed_test_profile_record(record)
 
 
 @pytest.fixture(autouse=True)

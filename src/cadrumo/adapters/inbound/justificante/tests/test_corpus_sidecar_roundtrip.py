@@ -51,7 +51,7 @@ from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
 from .parse_cache import parse_committed_justificante_fixture
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _JUSTIFICANTES_DIR = _FIXTURES_ROOT / "justificantes"
 _SEDE_HOST = aeat_host("sede")

@@ -1,21 +1,13 @@
-"""Shared path normalization and containment helpers.
+"""Shared path normalization helpers.
 
 Centralises the small set of :class:`~pathlib.Path` primitives that every other
 Cadrumo module needs: resolving relative operator paths against the
 application-data anchor via :func:`resolve_project_path`, normalising settings
-with :func:`normalize_project_relative_path`, and safely resolving
-caller-provided sub-paths under a fixed root without allowing path-traversal
-escapes.
-
-The containment helper :func:`resolve_relative_subpath` refuses backslashes,
-parent references, absolute components, and any resolved path that escapes the
-owning root. It raises :class:`~cadrumo.core.errors.CoreValidationError` and is
-the load-bearing defence against caller-controlled identifier injection on the
-on-disk store paths.
+with :func:`normalize_project_relative_path`.
 
 These helpers validate and compose paths only. They do not read, write,
 create, or secure files; persistence adapters that need registered storage
-errors wrap this module in their own typed containment layer.
+errors own their typed containment layer.
 
 :func:`is_windows_long_path_error`, :func:`windows_long_paths_enabled`, and
 :func:`windows_storage_root_long_path_margin` are the Windows ``MAX_PATH``
@@ -34,7 +26,7 @@ import os
 import sys
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import lru_cache
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from stat import S_ISREG
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
@@ -231,9 +223,7 @@ def resolve_project_path(value: str | Path, *, state_root_inputs: StateRootInput
     process cwd, which keeps config defaults stable regardless of where the
     CLI process starts, and never a bare checkout-root walk, which keeps an
     installed run's relative override out of a virtualenv or ephemeral
-    package cache. This helper is not a containment guard: callers that
-    accept subpaths under an owning root should use
-    :func:`resolve_relative_subpath`.
+    package cache. This helper is not a containment guard.
 
     Args:
         value: An absolute or relative path; user-style ``~`` references
@@ -365,45 +355,6 @@ def effective_storage_root(
 
     resolved_settings = settings if settings is not None else load_settings()
     return resolved_settings.cadrumo_local_storage_root
-
-
-def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) -> Path:
-    """Resolve ``relative_path`` under ``root`` and enforce containment.
-
-    The returned path is resolved and proven to stay under ``root`` after
-    normalization. The helper performs no filesystem mutation and does not
-    assert that the target exists; callers decide whether a missing file is
-    valid for their operation.
-
-    Args:
-        root: The fixed parent directory that the result must live
-            under.
-        relative_path: A POSIX-style sub-path supplied by an
-            untrusted-ish caller. Backslashes, absolute components,
-            empty parts, ``.`` and ``..`` parts are all rejected.
-        context: Short human-readable label used in raised error
-            messages so the caller can attribute the failure.
-
-    Returns:
-        The resolved absolute path inside ``root``.
-
-    Raises:
-        CoreValidationError: When ``relative_path`` is malformed or
-            when the resolved path escapes ``root``.
-    """
-    if "\\" in relative_path:
-        raise CoreValidationError(f"{context} must use forward slashes only")
-    pure = PurePosixPath(relative_path)
-    if pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
-        raise CoreValidationError(f"{context} must stay within the owning root")
-
-    resolved_root = root.resolve()
-    resolved = (resolved_root / Path(*pure.parts)).resolve()
-    try:
-        resolved.relative_to(resolved_root)
-    except ValueError as exc:
-        raise CoreValidationError(f"{context} escapes the owning root") from exc
-    return resolved
 
 
 def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:

@@ -27,8 +27,12 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
+
+if TYPE_CHECKING:
+    from ...domain.user_profile.values import UserProfileRecord
 
 #: Ceded autonomic-tax modelos that are administered by the Comunidades
 #: Autónomas rather than the AEAT, and are therefore absent from the
@@ -98,12 +102,13 @@ def modelo_work_create_applicability_refusal(
     modelo: str,
     *,
     allow_not_applicable: bool,
+    record: UserProfileRecord | None,
 ) -> ModeloWorkCreateApplicabilityRefusal | None:
     """Return an applicability refusal for the active profile, if one applies.
 
     When ``allow_not_applicable`` is true, the guard deliberately returns
     ``None`` so the CLI can provision the work unit and record that the operator
-    bypassed the applicability guard. Otherwise the active profile record is
+    bypassed the applicability guard. Otherwise the caller's loaded profile record is
     projected into :class:`cadrumo.domain.deadlines.TaxpayerProfile` facts and
     checked against the registry-owned applicability rules. Only
     ``NOT_APPLICABLE`` and ``ATTRIBUTION_PASS_THROUGH`` verdicts block creation.
@@ -125,11 +130,8 @@ def modelo_work_create_applicability_refusal(
     from ...application.user_profile.projections import projection_for_taxpayer
     from ...domain.calculations.registry.applicability import derive_modelo_applicability
     from ...domain.calculations.registry.authority import bundled_indexed_authority
-    from ..workflow.persistence import workflow_state_repository
     from .profile_readiness_gate import BLOCKING_APPLICABILITY_VERDICTS
 
-    state = workflow_state_repository().load()
-    record = state.active_profile_record()
     with bundled_indexed_authority().operation() as operation:
         try:
             profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
@@ -141,20 +143,18 @@ def modelo_work_create_applicability_refusal(
     return ModeloWorkCreateApplicabilityRefusal(modelo=modelo.strip(), reason=applicability.reason)
 
 
-def guard_active_profile_foral_ccaa() -> None:
+def guard_active_profile_foral_ccaa(record: UserProfileRecord | None) -> None:
     """Raise the canonical foral-regime refusal for the active profile, if present.
 
-    The guard reads ``tax_residence.ccaa`` from the active profile and delegates
+    The guard reads ``tax_residence.ccaa`` from the active profile record the
+    caller already loaded and delegates
     to :func:`cadrumo.domain.contribuyente.parse_tax_region`. Common-regime CCAA
     values pass through; foral values raise the domain refusal before work-unit
     creation reaches the generic unsupported-modelo checks.
     """
     from ...application.user_profile.projections import fact_value
     from ...domain.contribuyente.tax_residence import parse_tax_region
-    from ..workflow.persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
-    record = state.active_profile_record()
     raw_ccaa = fact_value(record, "tax_residence.ccaa")
     if raw_ccaa:
         parse_tax_region(raw_ccaa)

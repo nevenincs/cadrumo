@@ -6,14 +6,6 @@ The failure carries the registered ``PathContainmentError`` code
 envelope, callers can write a narrow ``except PathContainmentError`` rather
 than a broad ``except ValueError``; the registered error is exposed directly
 at this adapter boundary.
-
-This module once also wrapped :func:`core.paths.resolve_relative_subpath` as
-``safe_subpath``, the containment half of a two-layer contract. Nothing called
-it, and the one field it was written for -- a rotation entry's
-``target_filename`` -- is no longer in the tree, so the wrapper was removed
-rather than left standing as the second layer of a contract with one layer.
-The core primitive it wrapped is unaffected and still has a live consumer; a
-filesystem-backed store that needs containment again wraps it in one line.
 """
 
 from __future__ import annotations

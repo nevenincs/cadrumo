@@ -8,7 +8,7 @@ from shutil import copyfile
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.record_design_schema import (
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
 )

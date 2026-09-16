@@ -20,7 +20,6 @@ from ...wizard.commands import SETUP_OPTION_INFOS
 from ..filing_baseline import (
     _profile_path_flag,
     missing_filing_baseline_flag_groups,
-    missing_filing_baseline_flags,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -63,7 +62,10 @@ def test_public_module_import_needs_no_registry_authority() -> None:
 def test_the_refusal_names_only_flags_the_cli_accepts(operation: PinnedAuthorityOperation) -> None:
     """Every flag this refusal emits parses as a real wizard option."""
     with validating_governed_facts(operation):
-        emitted = missing_filing_baseline_flags(_IVA_BLOCK_OWED, profile_path_flags=_PROFILE_PATH_FLAGS)
+        identity, conditional = missing_filing_baseline_flag_groups(
+            _IVA_BLOCK_OWED, profile_path_flags=_PROFILE_PATH_FLAGS
+        )
+    emitted = (*identity, *conditional)
     assert emitted, "fixture no longer reproduces an incomplete IVA block"
     unknown = sorted(flag for flag in emitted if flag not in SETUP_OPTION_INFOS)
     assert not unknown, f"refusal would name flags the CLI does not accept: {unknown}"
@@ -72,7 +74,10 @@ def test_the_refusal_names_only_flags_the_cli_accepts(operation: PinnedAuthority
 def test_no_emitted_flag_carries_path_punctuation(operation: PinnedAuthorityOperation) -> None:
     """A dot or underscore means a raw profile path leaked into operator text."""
     with validating_governed_facts(operation):
-        emitted = missing_filing_baseline_flags(_IVA_BLOCK_OWED, profile_path_flags=_PROFILE_PATH_FLAGS)
+        identity, conditional = missing_filing_baseline_flag_groups(
+            _IVA_BLOCK_OWED, profile_path_flags=_PROFILE_PATH_FLAGS
+        )
+    emitted = (*identity, *conditional)
     malformed = sorted(flag for flag in emitted if "." in flag or "_" in flag)
     assert not malformed, f"profile paths leaked into flag spellings: {malformed}"
 
@@ -131,12 +136,10 @@ def test_identity_and_conditional_groups_partition_the_refusal(
     identity_expected: tuple[str, ...],
     conditional_expected: bool,
 ) -> None:
-    """The two groups never overlap, cover the union, and identity wins overlaps."""
+    """The two groups never overlap, and identity wins overlaps."""
     with validating_governed_facts(operation):
         identity, conditional = missing_filing_baseline_flag_groups(values, profile_path_flags=_PROFILE_PATH_FLAGS)
-        union = missing_filing_baseline_flags(values, profile_path_flags=_PROFILE_PATH_FLAGS)
 
     assert not set(identity) & set(conditional)
-    assert sorted((*identity, *conditional)) == sorted(union)
     assert identity == identity_expected
     assert bool(conditional) is conditional_expected

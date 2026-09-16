@@ -9,7 +9,7 @@ first and collide with.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 
 import pytest
@@ -18,11 +18,34 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from .....core.config import override_settings
+from ..master_key.active_session import current_active_bucket_session
 from ..sql.engine import dispose_engine
 from .secure_sql import isolated_profile_storage_root
 
 #: The bucket id most callers of this fixture share.
 DEFAULT_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+
+
+@contextmanager
+def sealing_test_profile_session(bucket_id: str) -> Iterator[str]:
+    """Open the test profile session and seal the session this entry bound.
+
+    ``open_test_profile_session`` unbinds its session on exit but does not
+    close it, so the unwrapped key material stays alive until the garbage
+    collector reaches the object. A fixture that hands a test a session owns
+    its end, so this seals it. A session that was already bound when this was
+    entered is reused rather than opened here, and belongs to its outer owner:
+    it is left open.
+    """
+    outer = current_active_bucket_session()
+    bound = None
+    try:
+        with open_test_profile_session(bucket_id) as identity:
+            bound = current_active_bucket_session()
+            yield identity
+    finally:
+        if bound is not None and bound is not outer and not bound.sealed:
+            bound.close()
 
 
 def _seeded_world(
@@ -56,7 +79,7 @@ def _seeded_world(
         with (
             settings_cm,
             isolated_profile_storage_root(tmp_path=root),
-            open_test_profile_session(bucket_id),
+            sealing_test_profile_session(bucket_id),
         ):
             if dispose_engine_around:
                 try:
@@ -196,4 +219,5 @@ __all__ = [
     "DEFAULT_BUCKET_ID",
     "active_profile_isolated_backend_fixture",
     "module_scoped_profile_isolated_backend_fixture",
+    "sealing_test_profile_session",
 ]

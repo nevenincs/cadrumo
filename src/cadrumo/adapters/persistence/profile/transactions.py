@@ -63,6 +63,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_valid
 from sqlalchemy import delete, select, update
 
 from ....core.config import load_settings
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.iva_deduction_fact import IvaDeductionFactKind
@@ -75,6 +76,7 @@ from ....domain.bienes_inversion.register import (
     InvestmentAssetAcquisitionLink,
     validate_investment_asset_reciprocity,
 )
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
 from ....domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ....domain.iva.classification import InvoiceKind
@@ -446,6 +448,14 @@ class TransactionCatalogueRepository:
                     _validate_persisted_transaction_timestamps(decoded_row)
                 envelope = Envelope[Transaction].model_validate_json(record.payload)
             except ValidationError as exc:
+                if governed_facts_in_scope() is None:
+                    # A row validates against registry vocabulary, so a decode
+                    # attempted outside an authority operation cannot tell drift
+                    # from its own missing scope. Reporting drift here sent the
+                    # operator to repair data that may be perfectly current.
+                    raise InternalInvariantError(
+                        "stored transaction decode requires an explicit authority operation or scope"
+                    ) from exc
                 _log.error(
                     "transaction row schema drift bucket_id=%s",
                     self._bucket_id,

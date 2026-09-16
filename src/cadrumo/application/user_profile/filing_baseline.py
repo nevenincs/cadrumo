@@ -11,19 +11,6 @@ from ...domain.contribuyente.entity_type import (
 from .completeness import conditional_profile_missing_required
 
 
-def missing_filing_baseline_flags(
-    values: Mapping[str, object],
-    *,
-    profile_path_flags: Mapping[str, str],
-) -> tuple[str, ...]:
-    """Return profile-create/edit/import flags needed for filing identity."""
-    return _dedupe_with_conditional_profile_flags(
-        values,
-        list(_identity_baseline_flags(values)),
-        profile_path_flags=profile_path_flags,
-    )
-
-
 def _identity_baseline_flags(values: Mapping[str, object]) -> tuple[str, ...]:
     """Return the identity flags this entity type owes, ignoring conditionals."""
     missing: list[str] = []
@@ -45,17 +32,6 @@ def _identity_baseline_flags(values: Mapping[str, object]) -> tuple[str, ...]:
     if not _profile_token(values, "identity.surnames"):
         missing.append("surnames")
     return tuple(missing)
-
-
-def _dedupe_with_conditional_profile_flags(
-    values: Mapping[str, object],
-    missing: list[str],
-    *,
-    profile_path_flags: Mapping[str, str],
-) -> tuple[str, ...]:
-    for path in conditional_profile_missing_required(values):
-        missing.append(_profile_path_flag(path, profile_path_flags=profile_path_flags))
-    return tuple(dict.fromkeys(missing))
 
 
 def missing_filing_baseline_flag_groups(
@@ -107,4 +83,4 @@ def _profile_token(values: Mapping[str, object], path: str) -> str:
     return str(values.get(path) or "").strip()
 
 
-__all__ = ["missing_filing_baseline_flag_groups", "missing_filing_baseline_flags"]
+__all__ = ["missing_filing_baseline_flag_groups"]

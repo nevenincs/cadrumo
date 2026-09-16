@@ -24,9 +24,9 @@ import pytest
 
 from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
 from ._ledger_corpus_support import (
-    _active_repo,
     _import_bbva,
     _invoke,
+    load_active_catalogue,
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
@@ -88,7 +88,7 @@ def test_the_operator_can_record_the_identification_and_it_persists() -> None:
     result = _classify(transaction_id, "--counterparty-identification-state", "de")
 
     assert result.exit_code == 0, result.output
-    transaction = _active_repo().load().get(transaction_id)
+    transaction = load_active_catalogue().get(transaction_id)
     assert transaction is not None
     assert transaction.counterparty_identification_state is EUMemberState.from_registry("de")
 
@@ -106,14 +106,14 @@ def test_recording_the_identification_leaves_the_establishment_axis_alone() -> N
     from ....domain.iva.schema import EUMemberState
 
     transaction_id = _intracom_transaction_id()
-    before = _active_repo().load().get(transaction_id)
+    before = load_active_catalogue().get(transaction_id)
     assert before is not None
     establishment_before = before.counterparty_eu_member_state
 
     result = _classify(transaction_id, "--counterparty-identification-state", "de")
 
     assert result.exit_code == 0, result.output
-    transaction = _active_repo().load().get(transaction_id)
+    transaction = load_active_catalogue().get(transaction_id)
     assert transaction is not None
     assert transaction.counterparty_identification_state is EUMemberState.from_registry("de")
     assert transaction.counterparty_eu_member_state == establishment_before, (

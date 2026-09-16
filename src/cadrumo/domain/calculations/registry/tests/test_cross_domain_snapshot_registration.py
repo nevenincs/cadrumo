@@ -67,7 +67,6 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
         """
         import sys
 
-        from cadrumo.domain.resources.registry import resources
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
         def _published_snapshot(modelo, **coordinate):
@@ -118,7 +117,6 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
         """
         import cadrumo.domain.renta.first_slice_routing_integrity  # registration side effect
 
-        from cadrumo.domain.resources.registry import resources
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
         def _published_snapshot(modelo, **coordinate):
@@ -154,7 +152,6 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         """
         import sys
 
-        from cadrumo.domain.resources.registry import resources
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
         def _published_snapshot(modelo, **coordinate):

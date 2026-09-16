@@ -34,7 +34,8 @@ def audit_view(
     """Render an evidence bundle's manifest and referenced record list."""
     bucket_id = active_bucket_id_or_refuse()
     bundle = _evidence_bundle_service(bucket_id=bucket_id).show(bucket_id=bucket_id, bundle_id=bundle_id)
-    from .modelo_aux_payloads import EvidenceRecordRefPayload, ModeloAuditViewResult
+    from ...application.evidence.payloads import EvidenceRecordRefPayload
+    from .modelo_aux_payloads import ModeloAuditViewResult
 
     result = ModeloAuditViewResult(
         bundle_id=bundle.bundle_id,

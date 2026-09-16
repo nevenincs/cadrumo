@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Final
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.record_design_schema import (
     RecordDesignExtraction,
     RecordDesignField,
     RecordDesignRangeStartCorrection,

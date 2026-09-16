@@ -121,14 +121,6 @@ def command_execution_policy_for_cli_path(
     return _declared_execution_policy_for_cli_path(cli_path)
 
 
-def command_search_terms(command_key: str) -> tuple[str, ...]:
-    """Return spec-authored semantic search terms for one command key."""
-    spec = _COMMAND_GRAPH.by_schema_identity().get(command_key) or _COMMAND_GRAPH.by_key().get(command_key)
-    if spec is None:
-        raise LookupError(f"unknown command key: {command_key!r}")
-    return spec.search_terms
-
-
 #: The per-verb input-schema projection re-exported from this facade. The module
 #: walks the live command tree and pulls in the operator-action catalogue, so it
 #: stays off the eager import path with the other lazy re-exports below.

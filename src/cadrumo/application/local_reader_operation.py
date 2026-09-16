@@ -30,7 +30,13 @@ from ..core.operations import (
     OperationInteractionKind,
 )
 from ..core.time.clock import now
-from .local_reader import RoleModelTarget, role_model_targets
+from .local_reader import (
+    RoleModelTarget,
+    TextExtractionFitnessProbe,
+    forget_role_fitness,
+    role_model_targets,
+    verify_role_target,
+)
 from .operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -50,7 +56,7 @@ from .operations.registry import (
     OperationSchemaBindingV1,
 )
 from .provisioning_host import RuntimeSpawner, start_runtime
-from .provisioning_runtime import PullProgress, pull_runtime_model, verify_model_ready
+from .provisioning_runtime import PullProgress, pull_runtime_model
 
 __all__ = [
     "LOCAL_READER_OPERATION_DEFINITION_ID",
@@ -228,9 +234,10 @@ class _ProgressRelay:
 class LocalReaderProvisionExecutor:
     """Run one start, pull or verify through the same application doors as the CLI."""
 
-    def __init__(self, *, spawn: RuntimeSpawner) -> None:
-        """Bind the injected runtime spawner."""
+    def __init__(self, *, spawn: RuntimeSpawner, text_probe: TextExtractionFitnessProbe) -> None:
+        """Bind the injected runtime spawner and text-reader fitness probe."""
         self._spawn = spawn
+        self._text_probe = text_probe
 
     async def execute(
         self,
@@ -293,6 +300,10 @@ class LocalReaderProvisionExecutor:
                     failed_condition_id=verdict.failed_condition_id if verdict is not None else None,
                 )
             )
+        if fetched_any:
+            # A re-pulled model may answer differently; its remembered fitness
+            # must be earned again.
+            forget_role_fitness()
         await context.events.effect(OperationEffect.UPDATED if fetched_any else OperationEffect.NONE)
         return _settled(LocalReaderProvisionAction.PULL, items)
 
@@ -302,7 +313,7 @@ class LocalReaderProvisionExecutor:
             if target.model is None:
                 items.append(_refused_target(target))
                 continue
-            ready = await asyncio.to_thread(verify_model_ready, target.model)
+            ready = await asyncio.to_thread(verify_role_target, target, text_probe=self._text_probe)
             verdict = ready.precondition_verdict
             items.append(
                 LocalReaderModelOutcome(
@@ -325,11 +336,15 @@ def _settled(action: LocalReaderProvisionAction, items: list[LocalReaderModelOut
     )
 
 
-def build_local_reader_operation_definition(*, spawn: RuntimeSpawner) -> OperationDefinition:
-    """Bind the injected runtime spawner to the canonical provisioning operation."""
+def build_local_reader_operation_definition(
+    *,
+    spawn: RuntimeSpawner,
+    text_probe: TextExtractionFitnessProbe,
+) -> OperationDefinition:
+    """Bind the injected process and fitness ports to the canonical provisioning operation."""
 
     def build() -> LocalReaderProvisionExecutor:
-        return LocalReaderProvisionExecutor(spawn=spawn)
+        return LocalReaderProvisionExecutor(spawn=spawn, text_probe=text_probe)
 
     return OperationDefinition(
         definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,

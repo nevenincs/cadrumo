@@ -23,7 +23,6 @@ Submodules
    cadrumo.application.calculations.errors
    cadrumo.application.calculations.foreign_asset_redeclaration
    cadrumo.application.calculations.iva_compensation_annual_partition
-   cadrumo.application.calculations.iva_compensation_casillas
    cadrumo.application.calculations.iva_compensation_history
    cadrumo.application.calculations.iva_wallet_balance
    cadrumo.application.calculations.iva_wallet_reconciliation

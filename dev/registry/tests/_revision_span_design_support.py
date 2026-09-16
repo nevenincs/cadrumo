@@ -13,10 +13,10 @@ from cadrumo.core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler.record_design_schema import RecordDesignSheet
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.record_design import (

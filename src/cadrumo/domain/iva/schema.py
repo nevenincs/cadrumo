@@ -31,7 +31,6 @@ from pydantic import (
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.errors.severity import BaseSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.validity_window import ValidityWindow
@@ -633,9 +632,8 @@ class IvaCitation(_IvaStrictFrozen):
                     "so that it reads as examined and refused rather than merely unchecked",
                 )
             if self.quoted_text.strip():
-                # verify_catalogue_against_legal deliberately skips the empty-quotation check
-                # for this state, so text parked here would never be read
-                # against the corpus while the record says it could not be.
+                # Text parked here would never be read against the corpus
+                # while the record says it could not be.
                 raise IvaValidationError(
                     f"{where}: an unresolved citation must not carry a quotation; "
                     "text that survived the corpus read belongs under verified grounding",
@@ -646,11 +644,8 @@ class IvaCitation(_IvaStrictFrozen):
 class IvaRegulation(_IvaStrictFrozen):
     """A single codified IVA rule for a :class:`IvaCategory`.
 
-    Every regulation carries at least one :class:`IvaCitation`. The
-    substrate-level invariant enforced by
-    :func:`cadrumo.domain.iva.verify.verify_catalogue_against_legal` additionally requires every
-    shipped regulation to cite real legal articles so downstream tools
-    can surface the legal backing of any classification.
+    Every regulation carries at least one :class:`IvaCitation` so
+    downstream tools can surface the legal backing of any classification.
 
     Attributes:
         category: The IVA situation codified by this rule.
@@ -755,57 +750,3 @@ class IvaCatalogue(_IvaStrictMutable):
     def get(self, category: IvaCategory) -> IvaRegulation | None:
         """Return the :class:`IvaRegulation` for ``category`` or ``None`` if absent."""
         return self.regulations.get(category)
-
-
-class IvaVerificationIssue(_IvaStrictFrozen):
-    """A single finding produced by :func:`cadrumo.domain.iva.verify.verify_catalogue_against_legal`.
-
-    Attributes:
-        level: Severity, shared with every other diagnostic and validation
-            issue in the project via :class:`~cadrumo.core.errors.BaseSeverity`.
-        code: Short stable issue code.
-        message: Human-readable detail.
-        category_id: Affected IVA category value, if any.
-    """
-
-    level: BaseSeverity
-    code: str = Field(description="Short, stable issue code.")
-    message: str = Field(description="Human-readable detail.")
-    category_id: str | None = Field(
-        default=None,
-        description="Affected IVA category value, if any.",
-    )
-
-
-class IvaVerificationReport(_IvaStrictFrozen):
-    """Aggregate verification report for a :class:`IvaCatalogue`.
-
-    Attributes:
-        issues: All findings produced by
-            :func:`cadrumo.domain.iva.verify.verify_catalogue_against_legal`.
-    """
-
-    issues: tuple[IvaVerificationIssue, ...] = Field(default_factory=tuple)
-
-    @property
-    def errors(self) -> tuple[IvaVerificationIssue, ...]:
-        """Return the subset of issues at :attr:`~cadrumo.core.errors.BaseSeverity.ERROR`.
-
-        Returns:
-            Tuple of :class:`IvaVerificationIssue` objects with error-level severity.
-        """
-        return tuple(issue for issue in self.issues if issue.level is BaseSeverity.ERROR)
-
-    @property
-    def warnings(self) -> tuple[IvaVerificationIssue, ...]:
-        """Return the subset of issues at :attr:`~cadrumo.core.errors.BaseSeverity.WARNING`.
-
-        Returns:
-            Tuple of :class:`IvaVerificationIssue` objects with warning-level severity.
-        """
-        return tuple(issue for issue in self.issues if issue.level is BaseSeverity.WARNING)
-
-    @property
-    def ok(self) -> bool:
-        """Return ``True`` when no error-level issues were found."""
-        return not self.errors

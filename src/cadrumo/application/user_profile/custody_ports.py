@@ -1316,11 +1316,6 @@ def inventory_committed_profile_custody(profile_id: UUID, *, root: Path | None =
     return profile_custody_port().inventory_committed(profile_id, root=root)
 
 
-def default_profile_bucket_storage() -> ProfileBucketStoragePort:
-    """Return canonical bucket layout and locking through the application port."""
-    return profile_custody_port().bucket_storage()
-
-
 def read_profile_output_language_hint(*, storage_root: Path, bucket_id: str) -> str | None:
     """Read one bucket's non-secret output-language hint through custody."""
     return profile_custody_port().read_output_language_hint(
@@ -1626,7 +1621,6 @@ __all__ = [
     "create_profile_custody_registration_material",
     "create_profile_recovery_enrollment_material",
     "default_profile_bucket_event_history_repository",
-    "default_profile_bucket_storage",
     "default_profile_custody_local_record_store",
     "default_profile_record_crypto_port",
     "ensure_profile_custody_owner_root",

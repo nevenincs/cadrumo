@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-import re
+from datetime import date
+from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Literal, Never, Protocol, SupportsIndex, get_args, override
-from weakref import WeakKeyDictionary
+from pathlib import Path
+from typing import Final, Literal, Protocol, get_args
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.models import (
-    LedgerSourceImportCommand,
-    LedgerSourceImportResult,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
@@ -28,6 +28,7 @@ from ....application.operator_actions.models import ActionReference
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.iva.classification import InvoiceKind
 
 type LedgerDestinationIdV1 = Literal[
     "ledger.overview",
@@ -176,89 +177,187 @@ class LedgerClassificationSubmitterV1(Protocol):
         ...
 
 
-_SAFE_CHOICE_ID = re.compile(r"[a-z0-9][a-z0-9._-]{0,63}\Z")
-_SAFE_PROVIDER_KEYS = frozenset({"tui.ledger.import.provider.bank"})
-_SAFE_SOURCE_KEYS = frozenset({"tui.ledger.import.source.prepared"})
-_IMPORT_COMMAND_VAULT: WeakKeyDictionary[LedgerPreparedImportV1, LedgerSourceImportCommand] = WeakKeyDictionary()
+class LedgerImportSourceKind(StrEnum):
+    """What an operator-chosen file holds, which decides the door that reads it."""
+
+    BANK_STATEMENT = "bank_statement"
+    INVOICES_RECEIVED = "invoices_received"
+    INVOICES_ISSUED = "invoices_issued"
 
 
-class LedgerPreparedImportV1:
-    """Opaque pre-resolved import command plus safe catalogue display keys.
+class LedgerImportRequestV1(BaseModel):
+    """One operator-chosen file or folder and how to read it.
 
-    The command deliberately has no public attribute, representation, or model
-    serialization surface: paths and provider transport values remain inside
-    the injected command boundary.
+    ``provider`` applies to a bank statement and ``country`` to an invoice
+    book; each is ignored by the other kind rather than guessed for it.
     """
 
-    __slots__ = ("__weakref__", "_choice_id", "_provider_label_key", "_sealed", "_source_label_key")
-    _choice_id: str
-    _provider_label_key: str
-    _sealed: bool
-    _source_label_key: str
+    model_config = STRICT_FROZEN_CONFIG
 
-    def __init__(
-        self,
-        *,
-        choice_id: str,
-        provider_label_key: str,
-        source_label_key: str,
-        command: LedgerSourceImportCommand,
-    ) -> None:
-        """Seal one pre-resolved command behind safe authored display identities."""
-        if (
-            _SAFE_CHOICE_ID.fullmatch(choice_id) is None
-            or provider_label_key not in _SAFE_PROVIDER_KEYS
-            or source_label_key not in _SAFE_SOURCE_KEYS
-        ):
-            raise ValueError("prepared imports require safe Ledger catalogue identities")
-        object.__setattr__(self, "_choice_id", choice_id)
-        object.__setattr__(self, "_provider_label_key", provider_label_key)
-        object.__setattr__(self, "_source_label_key", source_label_key)
-        object.__setattr__(self, "_sealed", True)
-        _IMPORT_COMMAND_VAULT[self] = command
-
-    @property
-    def choice_id(self) -> str:
-        """Return the safe semantic choice identity."""
-        return self._choice_id
-
-    @property
-    def provider_label_key(self) -> str:
-        """Return an admitted authored provider label key."""
-        return self._provider_label_key
-
-    @property
-    def source_label_key(self) -> str:
-        """Return an admitted authored source label key."""
-        return self._source_label_key
-
-    @override
-    def __setattr__(self, name: str, value: object) -> None:
-        """Prevent command or safe metadata replacement after admission."""
-        del name, value
-        raise AttributeError("prepared import capabilities are immutable")
-
-    @override
-    def __repr__(self) -> str:
-        """Return a path- and provider-free diagnostic representation."""
-        return f"LedgerPreparedImportV1(choice_id={self.choice_id!r})"
-
-    @override
-    def __reduce_ex__(self, protocol: SupportsIndex, /) -> Never:
-        """Refuse serialization so the vaulted command cannot be recovered."""
-        del protocol
-        raise TypeError("prepared import capabilities cannot be serialized")
-
-    async def submit_with(self, submitter: LedgerImportSubmitterV1) -> LedgerSourceImportResult:
-        """Submit the sealed command without exposing it to presentation code."""
-        return await submitter(_IMPORT_COMMAND_VAULT[self])
+    path: Path
+    source_kind: LedgerImportSourceKind
+    provider: LedgerProviderID = LedgerProviderID.AUTO
+    country: str | None = Field(default=None, min_length=2, max_length=2)
 
 
-class LedgerImportSubmitterV1(Protocol):
-    """Injected application door for an already-resolved import command."""
+class LedgerImportFileRefusalV1(BaseModel):
+    """One file of a folder that could not be read, with the reason it gave."""
 
-    async def __call__(self, command: LedgerSourceImportCommand) -> LedgerSourceImportResult:
-        """Submit one already-resolved canonical import command."""
+    model_config = STRICT_FROZEN_CONFIG
+
+    file_name: str
+    reason: str
+
+
+class LedgerImportRowRefusalV1(BaseModel):
+    """One invoice-book row the importer refused, by its spreadsheet row number."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    row_number: int
+    field: str
+    reason: str
+
+
+class LedgerImportOutcomeV1(BaseModel):
+    """What a preview or an applied import reports, in the operator's terms.
+
+    ``imported`` and ``skipped`` are ``None`` when the preview cannot measure
+    them: an invoice book is only resolved against the catalogue as it is
+    written, so its preview counts rows and columns and says nothing more.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_kind: LedgerImportSourceKind
+    dry_run: bool
+    files: int
+    rows: int
+    imported: int | None
+    skipped: int | None
+    likely_duplicates: int = 0
+    diagnostics: tuple[str, ...] = ()
+    refused_files: tuple[LedgerImportFileRefusalV1, ...] = ()
+    refused_rows: tuple[LedgerImportRowRefusalV1, ...] = ()
+    unmapped_columns: tuple[str, ...] = ()
+
+
+class LedgerImportDoorV1(Protocol):
+    """Injected application door that previews and then applies one import."""
+
+    async def preview(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
+        """Read the source and report what applying it would do, writing nothing."""
+        ...
+
+    async def apply(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
+        """Write the source into the operator's ledger or invoice catalogue."""
+        ...
+
+
+class LedgerInvoiceClassChoice(StrEnum):
+    """The invoice classes an operator may state; the registry resolves each token."""
+
+    ORDINARIA = "ordinaria"
+    SIMPLIFICADA = "simplificada"
+    RECTIFICATIVA = "rectificativa"
+
+
+class LedgerInvoiceEntryV1(BaseModel):
+    """One invoice as the operator typed it, already parsed into typed values.
+
+    Legal checks -- the NIF format, the IVA slot for the date, the retention
+    consistency -- are the application writer's, so nothing here pre-judges
+    them; this only carries what was entered.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: InvoiceKind
+    counterparty_name: str
+    counterparty_nif: str | None
+    country_code: str
+    invoice_number: str
+    invoice_date: date
+    taxable_base: Decimal
+    iva_rate: Decimal | None
+    currency: str
+    retention_rate: Decimal | None = None
+    retention_amount: Decimal | None = None
+    invoice_class: LedgerInvoiceClassChoice = LedgerInvoiceClassChoice.ORDINARIA
+    series: str | None = None
+    notes: str = ""
+
+
+class LedgerInvoiceAddResultV1(BaseModel):
+    """Identity and totals of the invoice the writer recorded."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    invoice_id: InvoiceId
+    invoice_number: str
+    base_total: Decimal
+    iva_total: Decimal
+    grand_total: Decimal
+    currency: str
+
+
+class LedgerInvoiceAddDoorV1(Protocol):
+    """Injected application door that records one catalogue invoice."""
+
+    async def __call__(self, entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
+        """Build and persist one invoice through the sole catalogue writer."""
+        ...
+
+
+class LedgerEvidenceRecordStatus(StrEnum):
+    """Where one registered document stands; unmeasured is not the same as awaiting."""
+
+    AWAITING = "awaiting"
+    CONFIRMED = "confirmed"
+    DECLINED = "declined"
+    UNMEASURED = "unmeasured"
+
+
+class LedgerEvidenceRecordRowV1(BaseModel):
+    """One locally registered purchase-invoice document and where it stands."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    evidence_id: str
+    media_kind: str
+    file_name: str
+    supplier: str | None
+    invoice_number: str | None
+    created_at: str
+    status: LedgerEvidenceRecordStatus
+
+
+class LedgerReaderReadinessV1(BaseModel):
+    """Whether documents can be read on this machine, as the reader reports it."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    extraction_ready: bool
+    failed_condition_id: str | None = None
+
+
+class LedgerEvidenceDoorV1(Protocol):
+    """Injected application door over the operator's local invoice evidence."""
+
+    def list_records(self) -> tuple[LedgerEvidenceRecordRowV1, ...]:
+        """Read every registered document with its confirmation state."""
+        ...
+
+    async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
+        """Register one PDF or image file as evidence, storing its bytes securely.
+
+        The path travels as typed: the service resolves it for byte access and
+        records the operator's own spelling as provenance.
+        """
+        ...
+
+    def reader_readiness(self) -> LedgerReaderReadinessV1:
+        """Measure the local document reader without starting or loading anything."""
         ...
 
 
@@ -326,13 +425,25 @@ __all__ = [
     "LedgerClassificationSubmitterV1",
     "LedgerDestinationIdV1",
     "LedgerEntryRowV1",
+    "LedgerEvidenceDoorV1",
+    "LedgerEvidenceRecordRowV1",
+    "LedgerEvidenceRecordStatus",
     "LedgerEvidenceRowV1",
     "LedgerFlowState",
-    "LedgerImportSubmitterV1",
+    "LedgerImportDoorV1",
+    "LedgerImportFileRefusalV1",
+    "LedgerImportOutcomeV1",
+    "LedgerImportRequestV1",
+    "LedgerImportRowRefusalV1",
+    "LedgerImportSourceKind",
+    "LedgerInvoiceAddDoorV1",
+    "LedgerInvoiceAddResultV1",
+    "LedgerInvoiceClassChoice",
+    "LedgerInvoiceEntryV1",
     "LedgerLinkResultV1",
     "LedgerLinkSubmissionV1",
     "LedgerLinkSubmitterV1",
-    "LedgerPreparedImportV1",
+    "LedgerReaderReadinessV1",
     "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",

@@ -94,7 +94,10 @@ def test_its_siblings_do_require_confidence_so_the_absence_is_a_choice() -> None
     no suggestion has ever had a confidence, and the ruling it encodes would be
     invisible.
     """
-    from cadrumo.adapters.outbound.llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion
+    from cadrumo.application.ledger.llm_classification_ports import (
+        LLMClassificationSuggestion,
+        LLMSaturatedSuggestion,
+    )
 
     assert "confidence" in LLMClassificationSuggestion.model_fields
     assert "confidence" in LLMSaturatedSuggestion.model_fields

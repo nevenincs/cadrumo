@@ -7,13 +7,13 @@ import pytest
 
 from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
 from ._ledger_corpus_support import (
-    _active_repo,
     _find,
     _import_bbva,
     _import_corpus,
     _invoke,
     _match,
     _oracle_rules,
+    load_active_catalogue,
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
@@ -81,7 +81,7 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    txn = _active_repo().load().get(tx)
+    txn = load_active_catalogue().get(tx)
     assert txn is not None
     assert txn.business_classification is BusinessClassification.BUSINESS
     assert txn.iva_category == IvaCategory("intra_community_supply")
@@ -110,7 +110,7 @@ def test_allocate_records_business_proportion() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    txn = _active_repo().load().get(tx)
+    txn = load_active_catalogue().get(tx)
     assert txn is not None
     assert txn.business_classification is BusinessClassification.MIXED
     assert txn.business_pct == Decimal("0.30")

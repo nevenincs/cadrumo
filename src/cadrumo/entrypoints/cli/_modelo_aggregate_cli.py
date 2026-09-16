@@ -142,9 +142,8 @@ def _invoice_retencion_excluded_notice(projection: InvoiceRetencionProjection) -
 
     The excluded half of an :class:`~application.aggregation.InvoiceRetencionRouting`
     must be surfaced, never dropped -- an excluded retención is a liability the
-    taxpayer may still owe. The guidance text is read from
-    :data:`~application.aggregation.INVOICE_RETENCION_DEFECT_GUIDANCE` rather than
-    invented here, so the CLI renders remediation the routing module already declared.
+    taxpayer may still owe. The notice names the typed defect tokens so the
+    operator sees exactly why the invoice did not route.
     """
     reasons = ", ".join(defect.value for defect in projection.defects)
     return Notice(

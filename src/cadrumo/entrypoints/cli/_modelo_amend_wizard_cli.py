@@ -503,7 +503,8 @@ def _values_kind_reason_definition(
 ) -> FlowDefinition:
     """Project the corrected-value, amendment-kind, and reason questions into one flow.
 
-    The amendment-kind SELECT reads :func:`~core.permitted_amendment_kind_values`
+    The amendment-kind SELECT reads
+    :func:`~domain.calculations.registry.amendment_regime_policy.permitted_amendment_kind_values_for_period`
     for ``modelo`` and ``period`` so the wizard only offers (and only accepts)
     the kinds legally available for this filing — it never offers
     ``rectificativa`` for a pre-adoption period, nor ``complementaria`` once

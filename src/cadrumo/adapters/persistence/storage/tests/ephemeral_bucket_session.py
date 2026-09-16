@@ -11,7 +11,6 @@ from ..crypto.aes_gcm import KEY_SIZE
 from ..errors import SecretStoreError
 from ..master_key.active_session import activate_session
 from ..master_key.bucket_session import BucketSession
-from ..master_key.errors import MasterKeyReentrantError
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
@@ -42,7 +41,7 @@ class EphemeralBucketSession:
 
     def __enter__(self) -> BucketSession:
         if self.session is not None:
-            raise MasterKeyReentrantError(type(self).__name__)
+            raise RuntimeError(f"{type(self).__name__} is single-entry")
 
         opened_at = now()
         window = timedelta(minutes=_IDLE_MINUTES)

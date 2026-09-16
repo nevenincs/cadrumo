@@ -16,7 +16,7 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import buil
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
+from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.domain.calculations.registry.authority import (
@@ -207,7 +207,7 @@ def _fingerprint(bucket_id: str) -> str:
     from cadrumo.application.bucket_maintenance.contracts import AssessBucketDeletionCommand
     from cadrumo.application.bucket_maintenance.service import BucketMaintenanceService
 
-    assessment = BucketMaintenanceService(bucket_storage=default_profile_bucket_storage()).assess_deletion(
+    assessment = BucketMaintenanceService(bucket_storage=profile_custody_port().bucket_storage()).assess_deletion(
         AssessBucketDeletionCommand(bucket_id=bucket_id),
     )
     assert assessment.fingerprint is not None
@@ -226,7 +226,7 @@ def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
             start_config_reset(
                 confirmed=False,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                bucket_storage=default_profile_bucket_storage(),
+                bucket_storage=profile_custody_port().bucket_storage(),
                 certificate_secret_backend_factory=build_certificate_secret_backend,
             )
         with pytest.raises(ConfigResetConfirmationRequiredError):
@@ -234,7 +234,7 @@ def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
                 "a" * 64,
                 confirmed=False,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                bucket_storage=default_profile_bucket_storage(),
+                bucket_storage=profile_custody_port().bucket_storage(),
                 certificate_secret_backend_factory=build_certificate_secret_backend,
             )
 
@@ -329,7 +329,7 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
                 operation = start_config_reset(
                     confirmed=True,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    bucket_storage=default_profile_bucket_storage(),
+                    bucket_storage=profile_custody_port().bucket_storage(),
                     certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
                 assert lock_path.exists() is False
@@ -430,7 +430,7 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
             operation = start_config_reset(
                 confirmed=True,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                bucket_storage=default_profile_bucket_storage(),
+                bucket_storage=profile_custody_port().bucket_storage(),
                 certificate_secret_backend_factory=build_certificate_secret_backend,
             )
 
@@ -471,7 +471,7 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
         with open_test_profile_session(_PROFILE_A_ID):
             register_minimal_profile(profile_id=_PROFILE_A_ID, display_name="Alpha operator")
 
-        service = BucketMaintenanceService(bucket_storage=default_profile_bucket_storage())
+        service = BucketMaintenanceService(bucket_storage=profile_custody_port().bucket_storage())
         assessment = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=_PROFILE_A_ID))
         assert assessment.exists is True
         assert assessment.retention is not None
@@ -512,7 +512,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
@@ -535,7 +535,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
             start_config_reset(
                 confirmed=True,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                bucket_storage=default_profile_bucket_storage(),
+                bucket_storage=profile_custody_port().bucket_storage(),
                 certificate_secret_backend_factory=build_certificate_secret_backend,
             )
         assert raised.value.context == {"operation_id": operation.operation_id}
@@ -546,7 +546,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
@@ -573,7 +573,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         paused = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert paused.status is ConfigResetOperationStatus.PAUSED
@@ -585,7 +585,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
             paused.operation_id,
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert changed.status is ConfigResetOperationStatus.PAUSED
@@ -599,7 +599,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
             changed.operation_id,
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
@@ -623,7 +623,7 @@ def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         repository = ConfigResetJournalRepository()
@@ -647,7 +647,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         original_fingerprint = operation.targets[0].fingerprint
@@ -664,7 +664,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
@@ -680,7 +680,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
@@ -699,7 +699,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
@@ -710,7 +710,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
@@ -730,7 +730,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
@@ -752,7 +752,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         before = operation.pointer_snapshot.record
@@ -772,7 +772,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert resumed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED

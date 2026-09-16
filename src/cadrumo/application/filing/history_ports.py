@@ -66,20 +66,11 @@ class FilingHistoryPorts:
     bucket_id: str
 
 
-class FilingHistoryPortsFactory(Protocol):
-    """Construct the complete filing-history capability for one bucket."""
-
-    def __call__(self, *, bucket_id: str) -> FilingHistoryPorts:
-        """Return the required filing-history authorities for ``bucket_id``."""
-        ...
-
-
 __all__ = [
     "FILING_HISTORY_NAMESPACE",
     "FILING_HISTORY_SCHEMA_VERSION",
     "FILING_HISTORY_SENSITIVITY",
     "FilingHistoryPersistenceError",
     "FilingHistoryPorts",
-    "FilingHistoryPortsFactory",
     "FilingHistoryRepositoryPort",
 ]

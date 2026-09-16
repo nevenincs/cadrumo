@@ -9,8 +9,10 @@ import shutil
 import subprocess
 import sys
 import textwrap
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from time import sleep
 from typing import cast
 
@@ -19,6 +21,7 @@ import typer
 from typer.main import get_command
 
 from ....adapters.persistence.profile.verify_observations import VerifyObservationRepository
+from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
 from ....application.auth.operator_results import LiveAuthPreflightReport
 from ....application.live.borrador_100 import Borrador100SnapshotService
 from ....application.live.errors import (
@@ -56,10 +59,31 @@ from .._app_live_command_specs import LIVE_COMMAND_SPECS
 from .._command_runtime import build_command_subtree
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_spec import CommandSpecGraph
-from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID, _isolated_backend
+from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID
 from .cli_runner import invoke_cached_cli
 
-__all__ = ["_isolated_backend"]
+#: The world every case here starts from, seeded once and copied per test.
+#:
+#: Publishing a capsule per test rebuilt the same empty bucket 34 times. The
+#: copy keeps each test's storage root private, so the cases that persist an
+#: observation or a snapshot still cannot reach the ones that assert a fresh
+#: bucket.
+_live_read_origin, _isolated_backend = seeded_isolated_backend_fixture(
+    seed=lambda: None,
+    bucket_id=_ACTIVE_TEST_BUCKET_ID,
+    name="_isolated_backend",
+    origin_name="_live_read_origin",
+)
+
+
+@pytest.fixture(autouse=True)
+def _isolated_live_state(_isolated_backend: None, tmp_path: Path) -> Iterator[None]:
+    """Keep the live-state directory private to each test, beside its own root."""
+    with override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"):
+        yield
+
+
+__all__ = ["_isolated_backend", "_live_read_origin"]
 
 # INTENTIONAL: integration because it exercises the live-read CLI subgroup wiring and
 # error surfaces locally without contacting AEAT.

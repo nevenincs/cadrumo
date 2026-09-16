@@ -73,7 +73,13 @@ __all__ = [
 ]
 
 GROUNDABLE_ORIGINS = frozenset(
-    {FieldOrigin.TEXT_LAYER, FieldOrigin.VISION, FieldOrigin.EXACT_STRUCTURED, FieldOrigin.TABULAR_MAPPED},
+    {
+        FieldOrigin.TEXT_LAYER,
+        FieldOrigin.TEXT_RULES,
+        FieldOrigin.VISION,
+        FieldOrigin.EXACT_STRUCTURED,
+        FieldOrigin.TABULAR_MAPPED,
+    },
 )
 """Origins whose anchors can be checked against an independent transcription.
 
@@ -160,7 +166,14 @@ def _verified_envelope(
         # the draft. Passed through rather than guessed at.
         return envelope
 
-    evaluation = evaluate_anchor(value=value, anchor=envelope.anchor, transcription=transcription)
+    evaluation = evaluate_anchor(
+        value=value,
+        anchor=envelope.anchor,
+        transcription=transcription,
+        # The document's own currency, so an amount cited beside its printed
+        # unit parses on the anchor side exactly as it did on the value side.
+        currency_unit=draft.currency,
+    )
     return envelope.model_copy(
         update={
             "grounding": evaluation.outcome,
@@ -345,9 +358,14 @@ def _identity_candidates(
 
 
 def _reading_origin(envelopes: tuple[FieldProvenance, ...]) -> FieldOrigin:
-    """Return the origin the reading path stamped, defaulting conservatively."""
+    """Return the origin the reading path stamped, defaulting conservatively.
+
+    Only a reading origin qualifies: a derived sum is not a reading, and an
+    identity resolved under ``DERIVED`` would owe inputs it never had.
+    """
     for envelope in envelopes:
-        return envelope.origin
+        if envelope.origin in GROUNDABLE_ORIGINS:
+            return envelope.origin
     return FieldOrigin.TEXT_LAYER
 
 

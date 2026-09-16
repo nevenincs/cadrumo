@@ -28,14 +28,6 @@ def _rows() -> dict[str, CommandRegistrationMetadata]:
     return {row.command: row for row in command_registration_metadata()}
 
 
-def cli_path_for_command_key(command_key: str) -> tuple[str, ...]:
-    """Return the CLI path registered for a command schema identity."""
-    row = _rows().get(command_key)
-    if row is None or row.cli_path is None:
-        raise LookupError(f"unknown command schema identity: {command_key}")
-    return row.cli_path
-
-
 def is_exposable_command(command_key: str) -> bool:
     """Return whether a command schema identity is exposed as an operator verb."""
     from .command_spec import BindingState
@@ -138,7 +130,6 @@ __all__ = [
     "assert_schema_coverage",
     "build_verb_input_schemas",
     "cli_argv_for",
-    "cli_path_for_command_key",
     "is_exposable_command",
     "project_recovery_handoff_contract",
 ]

@@ -22,6 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _EXPECTED_TOKENS = {
     "EXACT_STRUCTURED": "exact_structured",
     "TEXT_LAYER": "text_layer",
+    "TEXT_RULES": "text_rules",
     "VISION": "vision",
     "TABULAR_MAPPED": "tabular_mapped",
     "OPERATOR": "operator",

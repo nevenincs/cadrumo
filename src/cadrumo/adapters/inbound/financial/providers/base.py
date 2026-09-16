@@ -43,11 +43,13 @@ cannot silently ship without the declaration.
 from __future__ import annotations
 
 import csv
+import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 from pathlib import Path
 from typing import ClassVar, Final, Literal
 
@@ -189,6 +191,27 @@ class ProviderValidation(BaseModel):
     detected_encoding: str | None = None
     detected_dialect: str | None = None
     unavailable_optional_extra: Mapping[str, str | bool] | None = None
+
+
+#: One import stamps every row of a file with the same resolved source path, and
+#: resolving is a filesystem call per row -- 3.3 ms each on Windows, the largest
+#: single cost of ingesting a row. The answer is a property of the path, so it is
+#: taken once per path and reused for that file's remaining rows. Bounded because
+#: a long-lived host imports from many paths. Keyed on the absolute spelling,
+#: taken without touching the filesystem, because a relative path names a
+#: different file once the process changes directory.
+def _resolved_source_path(path: Path) -> Path:
+    return _resolved_absolute_source_path(os.path.abspath(path))
+
+
+@lru_cache(maxsize=256)
+def _resolved_absolute_source_path(absolute_path: str) -> Path:
+    return Path(absolute_path).resolve()
+
+
+def _clear_resolved_source_paths() -> None:
+    """Forget every resolved source path (for tests that move files under one)."""
+    _resolved_absolute_source_path.cache_clear()
 
 
 class FinancialProvider(ABC):
@@ -386,7 +409,7 @@ class FinancialProvider(ABC):
             :attr:`name` / :attr:`source_format`.
         """
         return RawProvenance(
-            source_path=path.resolve(),
+            source_path=_resolved_source_path(path),
             source_sha256=source_sha256,
             source_row_index=source_row_index,
             source_format=self.source_format,

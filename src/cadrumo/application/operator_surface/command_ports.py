@@ -493,21 +493,6 @@ class CommandPolicyPort(Protocol):
     def command_execution_policy_for_cli_path(self, cli_path: tuple[str, ...]) -> CommandExecutionPolicy: ...
 
 
-class CommandDispatchPort(Protocol):
-    """Application boundary for process/in-process command dispatch."""
-
-    def dispatch_verb(
-        self,
-        schema: VerbInputSchema,
-        arguments: Mapping[str, object],
-        *,
-        acquire_timeout_s: float,
-        profile_secret_stdin_payload: str | None = None,
-    ) -> CommandDispatchResult | None:
-        """Dispatch one validated verb through an outer transport."""
-        ...
-
-
 class CommandSurfacePort(CommandSchemaPort, CommandMetadataPort, CommandPolicyPort, Protocol):
     """Complete read-only command surface consumed by the retained harness."""
 
@@ -521,7 +506,6 @@ def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, .
 __all__ = [
     "Capability",
     "CommandCapabilityClass",
-    "CommandDispatchPort",
     "CommandDispatchResult",
     "CommandExecutionPolicy",
     "CommandMetadataPort",

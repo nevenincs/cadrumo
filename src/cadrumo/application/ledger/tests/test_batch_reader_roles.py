@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "_evidence_corpus"
 _TEXT_LAYER_PDF = "com_2026_0005_layout_minimal.pdf"
-_SCAN = "scanned_invoice_from_commons_1.pdf"
+_IMAGE = "commons_invoice_1.jpg"
 _STRUCTURED = "en16931_ubl_export_third_country_invoice.xml"
 _GIB = 1024**3
 
@@ -94,7 +94,7 @@ def _document_shape_probe() -> EvidenceDocumentShapeProbe:
     ("document", "expected"),
     [
         (_TEXT_LAYER_PDF, ModelRole.TEXT_EXTRACTION),
-        (_SCAN, ModelRole.VISION_TRANSCRIPTION),
+        (_IMAGE, ModelRole.VISION_TRANSCRIPTION),
         (_STRUCTURED, None),
     ],
 )

@@ -19,12 +19,13 @@ import pytest
 
 from ...core.config import override_settings
 from ...core.errors.hierarchy import CadrumoError, CoreError
+from ...core.model_catalogue import ModelRole
 from ...core.optional_extras import OPTIONAL_EXTRAS, MissingOptionalExtraError, OptionalExtra, require_optional_extra
 from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
+from ..local_reader import probe_local_reader
 from ..provisioning import (
     DependencyStatus,
     _playwright_browsers_root,
-    probe_ollama_vision,
     probe_optional_extra,
     probe_optional_extras,
     probe_playwright_browser,
@@ -60,13 +61,13 @@ def _serve_ollama_tags(payload: object) -> Generator[str]:
         yield endpoint
 
 
-def test_probe_ollama_vision_unreachable_returns_unavailable_with_remediation() -> None:
-    """An unreachable Ollama endpoint yields unavailable + a `serve` remediation, never an exception."""
+def test_local_reader_probe_unreachable_returns_unavailable_with_remediation() -> None:
+    """An unreachable runtime yields a typed unavailable result, never an exception."""
     # Port 1 is reserved/closed — the connection is refused fast.
     with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        status = probe_ollama_vision()
+        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION)
     assert isinstance(status, DependencyStatus)
-    assert status.service == "ollama-vision"
+    assert status.service == "local-reader:vision_transcription"
     assert status.available is False
     assert status.facts["runtime_reachable"] is False
     assert status.precondition_verdict is not None
@@ -74,12 +75,12 @@ def test_probe_ollama_vision_unreachable_returns_unavailable_with_remediation() 
 
 
 @pytest.mark.parametrize("payload", ([], {"models": None}, {"models": [{"name": 7}]}))
-def test_probe_ollama_vision_malformed_successful_tags_response_is_unavailable(payload: object) -> None:
+def test_local_reader_probe_malformed_successful_tags_response_is_unavailable(payload: object) -> None:
     """A real successful tags response with the wrong JSON shape stays a typed unavailable result."""
     with _serve_ollama_tags(payload) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=f"{endpoint}/api/chat"):
-        status = probe_ollama_vision()
+        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION)
 
-    assert status.service == "ollama-vision"
+    assert status.service == "local-reader:vision_transcription"
     assert status.available is False
     assert status.facts["runtime_reachable"] is False
     assert status.precondition_verdict is not None
@@ -184,7 +185,9 @@ def test_require_optional_extra_absent_raises_instructive_import_error() -> None
     assert raised.value.path is None
     assert isinstance(raised.value, CadrumoError)
     assert isinstance(raised.value, CoreError)
-    assert isinstance(raised.value, ImportError)
+    # A registered refusal, not an import failure: an adapter's bare
+    # ``except ImportError`` must not swallow it into a silent fallback.
+    assert not isinstance(raised.value, ImportError)
 
 
 def test_require_optional_extra_absent_is_caught_by_cadrumo_error_boundary() -> None:
@@ -198,4 +201,14 @@ def test_require_optional_extra_absent_is_caught_by_cadrumo_error_boundary() -> 
         caught = exc
 
     assert isinstance(caught, MissingOptionalExtraError)
-    assert isinstance(caught, ImportError)
+
+
+def test_missing_optional_extra_is_not_absorbed_by_an_import_error_handler() -> None:
+    """A bare ``except ImportError`` around a guarded feature lets the refusal through."""
+    extra = OptionalExtra(extra="ghost", import_name="aeat_definitely_not_installed_xyz", feature="a ghost feature")
+
+    with pytest.raises(MissingOptionalExtraError):
+        try:
+            require_optional_extra(extra)
+        except ImportError:
+            pytest.fail("the typed refusal was absorbed as an ImportError")

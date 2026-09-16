@@ -402,7 +402,7 @@ class Settings(CadrumoLlmSettings):
         ),
     )
 
-    # ── Manuals corpus (cadrumo.domain.manuals) ───────────────────────────────────────
+    # ── Manuals corpus ───────────────────────────────────────────────────────────────
     aeat_manuals_root: Path = Field(
         default_factory=lambda: bundled_path("corpus", "manuals"),
         description="Root directory for the structured AEAT Manual práctico corpus",

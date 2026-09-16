@@ -6,9 +6,10 @@ returns a typed :class:`DependencyStatus` with measured facts and a closed
 precondition outcome when it is not. Probes do not provision, unlock, write profile state, or raise on
 absence; a missing dependency is report data, not an exception path.
 
-The vision read consults :func:`probe_ollama_vision` before expensive inference,
-so a down server or an unpulled model becomes an instructive refusal instead of
-a raw stack trace. The ``aeat config check`` command renders this module's
+The on-host readers are probed per role by
+:func:`~cadrumo.application.local_reader.probe_local_reader`, so a down server or
+an unpulled model becomes an instructive refusal instead of a raw stack trace.
+The ``aeat config check`` command renders this module's
 statuses as
 :class:`~cadrumo.entrypoints.cli.config._check_payloads.CheckDependencyPayload`
 rows beside the active profile's capability posture from
@@ -25,10 +26,8 @@ import os
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from time import monotonic
-from typing import TypedDict, cast
+from typing import TypedDict
 
-import httpx
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.config import Settings, load_settings
@@ -77,7 +76,6 @@ __all__ = [
     "probe_local_inference_hardware",
     "probe_local_model_provisioning",
     "probe_model_runtime_hardware_floor",
-    "probe_ollama_vision",
     "probe_optional_extra",
     "probe_optional_extras",
     "probe_playwright_browser",
@@ -93,8 +91,6 @@ __all__ = [
 ]
 
 from .provisioning_contracts import (
-    OLLAMA_PROBE_CACHE_TTL_S,
-    OLLAMA_PROBE_TIMEOUT_S,
     ProvisioningFactValue,
     ProvisioningOutcome,
     ProvisioningPreconditionCondition,
@@ -113,7 +109,6 @@ from .provisioning_runtime import (
     assess_model_load_contention,
     cadrumo_selected_models,
     matches_selected_model,
-    ollama_endpoint,
     pull_runtime_model,
     read_installed_models,
     read_runtime_residents,
@@ -142,110 +137,6 @@ class DependencyStatus(ProvisioningOutcome):
     def _require_availability_outcome(self) -> DependencyStatus:
         require_provisioning_verdict(failed=not self.available, verdict=self.precondition_verdict)
         return self
-
-
-def _ollama_tag_names(payload: object) -> set[str]:
-    """Read the pulled model names out of an Ollama ``/api/tags`` payload.
-
-    Raises:
-        ValueError: When the payload is not an object carrying model entries
-            with string names. The probe treats that as an unreachable server,
-            because a response this shape cannot answer what is pulled.
-    """
-    if not isinstance(payload, dict):
-        raise ValueError("Ollama tags response must be a JSON object")
-    # CAST-RATIONALE-OLLAMA-TAGS-PAYLOAD: httpx.Response.json() returns
-    # Any; isinstance narrows to dict but not its type parameters.
-    # nosemgrep: no-cast-in-domain-application
-    payload_object = cast(dict[str, object], payload)
-    models = payload_object.get("models")
-    if not isinstance(models, list):
-        raise ValueError("Ollama tags response must contain model objects with string names")
-    # CAST-RATIONALE-OLLAMA-TAGS-MODELS: isinstance narrows to list but
-    # not its element type; entries are validated individually below.
-    # nosemgrep: no-cast-in-domain-application
-    models = cast(list[object], models)
-    names: set[str] = set()
-    for entry in models:
-        if not isinstance(entry, dict):
-            raise ValueError("Ollama tags response must contain model objects with string names")
-        # CAST-RATIONALE-OLLAMA-TAGS-MODEL-ENTRY: isinstance narrows to
-        # dict but not its type parameters.
-        # nosemgrep: no-cast-in-domain-application
-        name = cast(dict[str, object], entry).get("name")
-        if not isinstance(name, str):
-            raise ValueError("Ollama tags response must contain model objects with string names")
-        names.add(name)
-    return names
-
-
-def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
-    """Probe Ollama and the configured vision model, returning a :class:`DependencyStatus`.
-
-    Reads ``cadrumo_llm_ollama_chat_url`` and ``cadrumo_llm_ollama_vision_model`` from
-    :class:`~cadrumo.core.config.Settings`, then performs a short-timeout
-    ``GET /api/tags``. The probe never runs inference and returns unavailable
-    when the server is unreachable or the configured model is not installed.
-    Ledger evidence reading uses this result before local-vision inference.
-
-    The answer is cached per ``(endpoint, model)`` for
-    :data:`OLLAMA_PROBE_CACHE_TTL_S`, so a caller that asks once per document
-    asks the endpoint once instead. Keying on the endpoint keeps a suite that
-    stands up its own reader on an ephemeral port unaffected: a different URL is
-    a different question, and an entry ages out after the TTL above.
-    """
-    resolved = settings if settings is not None else load_settings()
-    model = resolved.cadrumo_llm_ollama_vision_model
-    url = ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "tags")
-    cache_key = (url, model)
-    cached = _OLLAMA_VISION_PROBE_CACHE.get(cache_key)
-    if cached is not None and (monotonic() - cached[0]) < OLLAMA_PROBE_CACHE_TTL_S:
-        return cached[1]
-    status = _probe_ollama_vision_uncached(url=url, model=model)
-    _OLLAMA_VISION_PROBE_CACHE[cache_key] = (monotonic(), status)
-    return status
-
-
-#: Probe answers by ``(endpoint, model)``, each stamped with its monotonic
-#: reading time. Monotonic, not wall clock, so a clock adjustment cannot make an
-#: entry look arbitrarily fresh or stale.
-_OLLAMA_VISION_PROBE_CACHE: dict[tuple[str, str], tuple[float, DependencyStatus]] = {}
-
-
-def _probe_ollama_vision_uncached(*, url: str, model: str) -> DependencyStatus:
-    try:
-        with httpx.Client(timeout=OLLAMA_PROBE_TIMEOUT_S) as client:
-            response = client.get(url)
-            response.raise_for_status()
-            names = _ollama_tag_names(response.json())
-    except (httpx.HTTPError, ValueError):
-        return DependencyStatus(
-            service="ollama-vision",
-            available=False,
-            facts={"runtime_reachable": False, "runtime_url": url},
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
-                facts={"runtime_reachable": False, "runtime_url": url},
-            ),
-        )
-    # Ollama lists names with the tag (e.g. "qwen2.5vl:3b"); match the configured
-    # model exactly or by its untagged stem.
-    present = model in names or any(name.split(":", 1)[0] == model.split(":", 1)[0] for name in names)
-    if not present:
-        return DependencyStatus(
-            service="ollama-vision",
-            available=False,
-            facts={"runtime_reachable": True, "vision_model": model, "vision_model_installed": False},
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.VISION_MODEL_INSTALLED,
-                facts={"runtime_reachable": True, "vision_model": model, "vision_model_installed": False},
-            ),
-        )
-    return DependencyStatus(
-        service="ollama-vision",
-        available=True,
-        facts={"runtime_reachable": True, "vision_model": model, "vision_model_installed": True},
-    )
 
 
 def _playwright_browsers_root(cache_root: Path | None = None, *, env: Mapping[str, str] | None = None) -> Path:

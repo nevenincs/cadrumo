@@ -2,60 +2,54 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....core.config import override_settings
+from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(
-            cadrumo_auth_provider=None,
-            cadrumo_certificate_path=None,
-            cadrumo_certificate_password_secret=None,
-            cadrumo_clave_movil_dni_nie=None,
-            cadrumo_clave_movil_dni_fecha=None,
-            cadrumo_clave_movil_nie_soporte=None,
-        ),
-    ):
-        yield
+def _profile_only() -> None:
+    """Nothing beyond the registered profile: each case adds its own rows."""
+    return None
+
+
+#: Every case starts from the same registered profile and writes ledger rows
+#: into it, so the profile is published once and each test gets its own
+#: filesystem copy of that world.
+_seeded_origin, _isolated_backend = seeded_isolated_backend_fixture(
+    seed=_profile_only,
+    display_name="lucia",
+    profile_overrides={
+        "identity.tax_id": "12345678Z",
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.name": "Lucia",
+        "identity.surnames": "Example",
+        "activities.description": "Test",
+    },
+    settings_overrides={
+        "cadrumo_auth_provider": None,
+        "cadrumo_certificate_path": None,
+        "cadrumo_certificate_password_secret": None,
+        "cadrumo_clave_movil_dni_nie": None,
+        "cadrumo_clave_movil_dni_fecha": None,
+        "cadrumo_clave_movil_nie_soporte": None,
+    },
+    name="_isolated_backend",
+    origin_name="_seeded_origin",
+)
+__all__ = ["_isolated_backend", "_seeded_origin"]
 
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _create_active_profile() -> None:
-    """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
-        label="lucia",
-        facts={
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Lucia",
-            "identity.surnames": "Example",
-            "activities.description": "Test",
-        },
-        log_in=False,
-    )
-
-
 def test_ledger_add_accepts_and_persists_iva_category() -> None:
-    _create_active_profile()
-
     added = _invoke(
         [
             "--format",
@@ -98,8 +92,6 @@ def test_ledger_add_accepts_and_persists_iva_category() -> None:
 
 
 def test_ledger_add_accepts_and_persists_counterparty_country() -> None:
-    _create_active_profile()
-
     added = _invoke(
         [
             "--format",
@@ -140,8 +132,6 @@ def test_ledger_add_accepts_and_persists_counterparty_country() -> None:
 
 
 def test_ledger_view_text_shows_usage_ratio_id_when_present() -> None:
-    _create_active_profile()
-
     ratios_set = _invoke(["app", "ledger", "ratios", "set", "telefonia_movil", "0.60"])
     assert ratios_set.exit_code == 0, ratios_set.output
 

@@ -429,16 +429,6 @@ def declarable_counterparty_nifs_347(
     )
 
 
-def declarable_for_347(
-    aggregation: CounterpartAggregation,
-    *,
-    counterparty_nif: str,
-    operation: PinnedAuthorityOperation | None = None,
-) -> bool:
-    """Return True iff a counterparty exceeds the 347 declaration floor across all cohorts."""
-    return counterparty_nif in declarable_counterparty_nifs_347(aggregation, operation=operation)
-
-
 __all__ = [
     "CounterpartAggregation",
     "CounterpartObservation",
@@ -446,5 +436,4 @@ __all__ = [
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
     "declarable_counterparty_nifs_347",
-    "declarable_for_347",
 ]

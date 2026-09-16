@@ -104,3 +104,40 @@ def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
     assert completion.text == "vision read"
     assert completion.input_tokens == 11
     assert completion.output_tokens == 4
+
+
+def test_local_adapter_switches_thinking_off_and_reserves_room_for_it() -> None:
+    """A reasoning model's thinking must not consume the answer budget the request asked for.
+
+    Ollama counts thinking against ``num_predict``; with only the answer budget
+    as the ceiling, the shipped text model spent it all reasoning and returned
+    an empty reply. The request therefore asks for no thinking, and still
+    reserves room above the answer budget for a model that reasons anyway.
+    """
+    events: Queue[dict[str, object]] = Queue()
+    _ObservedOllamaRequest.events = events
+    request = ProviderRequest(
+        request_id="req",
+        model="qwen3:1.7b",
+        prompt="Read the invoice.",
+        system=None,
+        max_tokens=64,
+        temperature=0.0,
+        timeout_s=3,
+    )
+    with (
+        serving_loopback(_ObservedOllamaRequest, path="/api/chat") as endpoint,
+        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
+    ):
+        asyncio.run(LocalAdapter(timeout_s=3).complete(request))
+
+    body = events.get_nowait()["body"]
+    assert isinstance(body, Mapping)
+    assert body.get("think") is False
+    options = body.get("options")
+    assert isinstance(options, Mapping)
+    num_predict = options.get("num_predict")
+    assert isinstance(num_predict, int)
+    # Strictly above the answer budget, so an answer of the requested length
+    # always fits after any reasoning the model does despite the switch.
+    assert num_predict > request.max_tokens

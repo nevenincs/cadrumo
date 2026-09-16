@@ -21,7 +21,6 @@ from ..paths import (
     effective_storage_root,
     is_windows_long_path_error,
     resolve_project_path,
-    resolve_relative_subpath,
     windows_long_paths_enabled,
     windows_storage_root_long_path_margin,
 )
@@ -33,37 +32,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: that owns the on-disk grammar derives it and passes it in -- so these tests
 #: pin the arithmetic, not any particular storage layout.
 _SUFFIX = 155
-
-
-@pytest.fixture
-def root(tmp_path: Path) -> Path:
-    """Return a freshly-created records root."""
-    root_dir = tmp_path / "records"
-    root_dir.mkdir()
-    return root_dir
-
-
-# ----------------------------------------------------------------- #
-# resolve_relative_subpath                                           #
-# ----------------------------------------------------------------- #
-
-
-def test_resolve_relative_subpath_rejects_unsafe_paths(root: Path) -> None:
-    """Unsafe relative-path shapes fail closed before callers can escape the root."""
-    for subpath, error_match in (
-        (r"sub\dir\file.txt", r"forward slashes only"),
-        ("../escape", r"stay within the owning root"),
-        ("/abs/path", r"stay within the owning root"),
-    ):
-        with pytest.raises(ValueError, match=error_match):
-            resolve_relative_subpath(root, subpath, context="path")
-
-
-def test_resolve_relative_subpath_accepts_nested_path(root: Path) -> None:
-    """A normal nested forward-slash path resolves under root."""
-    resolved = resolve_relative_subpath(root, "sub/dir/file.txt", context="path")
-    assert resolved.is_relative_to(root.resolve())
-    assert resolved.name == "file.txt"
 
 
 # ----------------------------------------------------------------- #

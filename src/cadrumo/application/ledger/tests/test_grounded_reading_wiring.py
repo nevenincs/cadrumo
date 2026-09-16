@@ -15,6 +15,7 @@ no wiring at all.
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import inspect
 from decimal import Decimal
@@ -22,24 +23,24 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.errors.error_codes import build_error_envelope
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ....domain.iva.regime_legend import resolve_regime_legends
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
 from .. import invoice_draft_extraction as invoice_draft_extraction_module
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
-from ..evidence_errors import PurchaseInvoiceEvidenceInputError
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
 from ..evidence_input import EvidenceInput
 from ..evidence_input_ports import EvidenceInputPorts
 from ..evidence_textlayer import transcribe_text_layer
@@ -87,8 +88,12 @@ _CONTROL = _CORPUS / "com_2026_0005_layout_minimal.pdf"
 #: one checksum-valid token on the page.
 _FILER_CIF = "B17283946"
 _SUPPLIER_CIF_BAD_CHECKSUM = "B1234567X"
+#: The page prints the real figures only. The reader's fabricated anchor must
+#: be genuinely absent from it, or the anti-fabrication cases below would find
+#: their "fabricated" figure on the page and prove nothing.
+_FABRICATED_IVA_ANCHOR = "9.999,99"
 _CONTROL_TEXT_LAYER_PORTS = text_layer_ports_for_pages(
-    (_SUPPLIER_CIF_BAD_CHECKSUM, _FILER_CIF, "766,30 21% 890,00 9.999,99")
+    (_SUPPLIER_CIF_BAD_CHECKSUM, _FILER_CIF, "766,30 21% 890,00 160,92")
 )
 
 
@@ -196,7 +201,7 @@ def _reader_output() -> InvoiceDraft:
             claim("taxable_base", "766,30"),
             claim("iva_rate", "21%"),
             claim("grand_total", "890,00"),
-            claim("iva_amount", "9.999,99"),
+            claim("iva_amount", _FABRICATED_IVA_ANCHOR),
         ),
     )
 
@@ -249,6 +254,7 @@ def test_a_fabricated_anchor_is_not_upgraded() -> None:
     A figure nobody can point at on the page stays unverified and loses its
     anchor, no matter how confidently the reader claimed it.
     """
+    assert _FABRICATED_IVA_ANCHOR not in _control_transcription().text, "the fixture must not print the fabrication"
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
@@ -293,8 +299,8 @@ def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None
 
         refused = by_field["iva_amount"]
         assert refused.anchor is None, "a form the document does not carry must not read as evidence"
-        assert refused.refused_anchor == "9.999,99", "the offered form is the only trace a claim was made"
-        assert "9.999,99" in refused.note
+        assert refused.refused_anchor == _FABRICATED_IVA_ANCHOR, "the offered form is the only trace a claim was made"
+        assert _FABRICATED_IVA_ANCHOR in refused.note
 
         absent = by_field["currency"]
         assert absent.anchor is None
@@ -400,25 +406,45 @@ def test_a_self_reported_anchor_is_never_upgraded_by_any_transcription() -> None
 
 
 def test_the_router_text_path_runs_the_whole_chain() -> None:
-    """The connection itself: the router must reach transcribe, extract and ground.
+    """The connection itself: the router transcribes, reads, then grounds.
 
-    Asserted structurally against the router's own source rather than by running
-    a model, because the semantic read needs inference this gate must not
-    perform. What is proven here is that the chain is WIRED -- the behavioural
-    halves are proven above and in the stage suites.
+    Exercised through the real router with the reader port answering, so no
+    model runs. What the returned draft proves is the wiring: it carries the
+    transcription's content address (only the grounding stage stamps it) and an
+    anchor upgraded against the page (only grounding upgrades one), and the
+    reader was handed the text layer's transcription rather than anything else.
     """
-    router = Path(__file__).parents[1] / "invoice_draft_extraction.py"
-    source = router.read_text(encoding="utf-8")
+    handed: list[DocumentTranscription] = []
 
-    assert "transcribe_text_layer(" in source
-    assert "text_layer_ports=ports.text_layer_ports" in source
-    assert "extract_invoice_fields_from_text" in source
-    assert "ground_draft_against_transcription" in source
-    # And the vision lane runs the SAME chain: transcribe with the vision model,
-    # then hand the transcription to the one semantic-read-and-ground path. A
-    # second, vision-specific field reader is the collapse this refit removed.
-    assert "transcribe_document_images" in source
-    assert "extract_invoice_fields_from_images" not in source
+    def reader(
+        transcription: DocumentTranscription,
+        _settings: Settings,
+        _off_host_provider: LLMProvider | None,
+        _consent_token: EvidenceConsentProof | None,
+        _authority_values: object,
+        /,
+    ) -> InvoiceDraft:
+        handed.append(transcription)
+        return _reader_output()
+
+    ports = dataclasses.replace(_reader_unavailable_ports(), read_text=reader)
+    with _indexed_authority_for_test().operation() as operation:
+        draft = invoice_draft_extraction_module.extract_invoice_draft_from_evidence(
+            bucket_id="c" * 64,
+            evidence_id="d" * 16,
+            settings=load_settings(),
+            ports=ports,
+            operation=operation,
+            legends=_registry_legends(operation),
+        )
+
+    assert [item.transcriber.origin for item in handed] == [FieldOrigin.TEXT_LAYER]
+    assert draft.transcription_sha256 == _control_evidence().content_sha256
+    by_field = {envelope.field: envelope for envelope in draft.provenance}
+    assert by_field["taxable_base"].grounding is FieldGroundingOutcome.ANCHORED
+    # The vision lane shares this one read-and-ground path; a second,
+    # vision-specific field reader is the collapse that was removed.
+    assert not hasattr(invoice_draft_extraction_module, "extract_invoice_fields_from_images")
 
 
 # The companion property -- that the label-regex family is not merely unreached
@@ -437,14 +463,17 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     """A missing reader is a typed refusal, not an inferred recovery command."""
     from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+    with pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised:
         _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("no provider reachable"))
 
+    envelope = build_error_envelope(raised.value)
+    assert envelope.code == "REFUSED_LEDGER_EVIDENCE_READER"
+    assert envelope.retryable is True, "the document was fine; the same command against a reader is the remedy"
     assert raised.value.terminal_precondition_verdict is not None
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
         LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
     )
-    assert raised.value.args == ()
+    assert "no provider reachable" not in str(raised.value), "the dependency's own prose must not cross the boundary"
     assert raised.value.context == {
         "semantic_reader_available": False,
         "reader_error_type": "_ReaderUnavailableForTestError",
@@ -457,7 +486,7 @@ def test_a_missing_optional_extra_preserves_registry_facts_without_install_prose
     from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     dependency_error = MissingOptionalExtraError(LLM_EXTRA)
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+    with pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised:
         _refuse_a_text_read_with_no_reader(dependency_error)
 
     expected_facts = {
@@ -465,7 +494,10 @@ def test_a_missing_optional_extra_preserves_registry_facts_without_install_prose
         "import_name": LLM_EXTRA.import_name,
         "importable": False,
     }
-    assert raised.value.args == ()
+    envelope = build_error_envelope(raised.value)
+    assert envelope.code == "REFUSED_LEDGER_EVIDENCE_READER"
+    assert envelope.retryable is True
+    assert str(dependency_error) not in str(raised.value), "install prose must not cross the boundary"
     assert raised.value.context == expected_facts
     assert raised.value.__cause__ is dependency_error
     verdict = raised.value.terminal_precondition_verdict
@@ -582,7 +614,6 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     no draft at all, so there is no provenance for a notice to describe; the
     non-blocking notice channel is for a draft that exists but degraded.
     """
-    from ....core.errors.error_codes import build_error_envelope
     from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
@@ -596,7 +627,7 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     # Delivery ground truth, so this cannot be read as proving the operator is told it.
     # The resolver that preferred a raised suggestion over the registered default was
     # retired with default suggestions as the authority, and
-    # ``REFUSED_LEDGER_EVIDENCE_INPUT`` is not yet converted to a catalogue action
+    # ``REFUSED_LEDGER_EVIDENCE_READER`` is not yet converted to a catalogue action
     # identity, so the envelope carries no next step today. Its conversion is the domain
     # part-one step, behind the registry migration contract.
     assert build_error_envelope(raised.value).action is None

@@ -17,35 +17,38 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
     LedgerEvidenceRepositoryAdapter,
 )
-from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from cadrumo.application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
-from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
-from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from cadrumo.application.provisioning import (
+from .....adapters.persistence.storage.attachment import AttachmentStore
+from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from .....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from .....application.ledger import tests as ledger_application_tests
+from .....application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
+from .....application.ledger.evidence_ports import LedgerEvidencePorts
+from .....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+from .....application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
     HardwareProfile,
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from cadrumo.core.hardware import AcceleratorKind
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.regime_legend import resolve_regime_legends
-
+from .....core.config import load_settings
+from .....core.hardware import AcceleratorKind
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.regime_legend import resolve_regime_legends
 from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "2c2c2c2c-2c2c-4c2c-8c2c-2c2c2c2c2c2c"
-_CORPUS = Path(__file__).parent / "_evidence_corpus"
+#: The evidence corpus belongs to the ledger application tests; resolved through
+#: that package so the location follows its owner rather than this file's depth.
+_CORPUS = Path(ledger_application_tests.__file__).parent / "_evidence_corpus"
 
 #: Read by a parser: this row never needs the inference lane.
 _STRUCTURED = "facturae_32_series_and_parties_invoice.xml"
@@ -111,7 +114,12 @@ def _run(
     enough for selection to find no candidate, which is NOT a pause. Widening
     the margin separates the two thresholds without touching either decision.
     """
-    settings = profile.settings
+    # The profile's settings are a snapshot taken before any reader was served.
+    # The batch probes each reading role against the settings it is handed, so
+    # they must name the runtime this case is actually serving.
+    settings = profile.settings.model_copy(
+        update={"cadrumo_llm_ollama_chat_url": load_settings().cadrumo_llm_ollama_chat_url},
+    )
     if safety_margin_bytes is not None:
         settings = settings.model_copy(update={"cadrumo_llm_contention_safety_margin_bytes": safety_margin_bytes})
     evidence_ports = LedgerEvidencePorts(

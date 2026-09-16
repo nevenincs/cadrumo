@@ -327,60 +327,6 @@ def _supported_per_modelo_modelos(
     return tuple(sorted(modelo for modelos in grouped.values() for modelo in modelos))
 
 
-def build_per_modelo_aggregation_contract(
-    *,
-    operation: PinnedAuthorityOperation,
-) -> PerModeloAggregationContract:
-    """Build the immutable backend-owned aggregation contract.
-
-    Returns a :class:`PerModeloAggregationContract` enumerating every
-    registered provider, accepted source kinds, and known error codes.
-    """
-    registered = _registered_per_modelo_provider_modelos(operation=operation)
-    providers = (
-        PerModeloAggregationContributorContract(
-            provider=PerModeloAggregationContributor.RETENCIONES,
-            modelos=registered[PerModeloAggregationContributor.RETENCIONES],
-            service_owner="cadrumo.application.aggregation",
-            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-        ),
-        PerModeloAggregationContributorContract(
-            provider=PerModeloAggregationContributor.COUNTERPART,
-            modelos=registered[PerModeloAggregationContributor.COUNTERPART],
-            service_owner="cadrumo.application.aggregation",
-            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-        ),
-        PerModeloAggregationContributorContract(
-            provider=PerModeloAggregationContributor.FOREIGN_ASSETS,
-            modelos=registered[PerModeloAggregationContributor.FOREIGN_ASSETS],
-            service_owner="cadrumo.application.aggregation",
-            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-        ),
-    )
-    contract = PerModeloAggregationContract(
-        providers=providers,
-        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-        error_codes=AggregationErrorCodes,
-    )
-    LOGGER.debug(
-        "built per-modelo aggregation contract",
-        extra={
-            "service_name": "per_modelo_aggregation",
-            "provider_count": len(contract.providers),
-            "source_kind_count": len(contract.accepted_source_kinds),
-        },
-    )
-    return contract
-
-
-def get_per_modelo_aggregation_contract(
-    *,
-    operation: PinnedAuthorityOperation,
-) -> PerModeloAggregationContract:
-    """Build the backend-owned contract for one pinned authority generation."""
-    return build_per_modelo_aggregation_contract(operation=operation)
-
-
 def provider_for_modelo(
     modelo: str,
     *,
@@ -530,7 +476,5 @@ __all__ = [
     "PerModeloAggregationPayload",
     "PerModeloAggregationResult",
     "aggregate_per_modelo",
-    "build_per_modelo_aggregation_contract",
-    "get_per_modelo_aggregation_contract",
     "provider_for_modelo",
 ]

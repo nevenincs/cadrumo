@@ -16,7 +16,7 @@ The :class:`ServiceCapability` members are consumed by
 :func:`~application.user_profile.resolve_active_capability`, and by the
 setup wizard's capability questions. The product doctor renders those same
 members beside :class:`~application.provisioning.DependencyStatus` rows
-from :func:`~application.provisioning.probe_ollama_vision`,
+from :func:`~application.local_reader.probe_local_reader`,
 :func:`~application.provisioning.probe_model_runtime_hardware_floor`, and
 :func:`~application.provisioning.probe_optional_extras`, keeping operator
 intent separate from dependency availability.

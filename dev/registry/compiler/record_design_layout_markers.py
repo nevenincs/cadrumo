@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignRelativeSuffixMarker
+from dev.registry.compiler.record_design_schema import RecordDesignRelativeSuffixMarker
 
 RECORD_TERMINATOR_PHRASE = r"fin de registro|salto de l[íi]nea|\bCRLF\b"
 #: Matched on the declared MEANING rather than on width: a two-byte relative

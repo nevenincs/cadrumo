@@ -35,11 +35,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from .....core.config import override_settings
 from ..sql.engine import dispose_engine
-from .active_profile_isolated_backend_fixture import DEFAULT_BUCKET_ID
+from .active_profile_isolated_backend_fixture import DEFAULT_BUCKET_ID, sealing_test_profile_session
 from .secure_sql import isolated_profile_storage_root
 
 __all__ = ["seeded_isolated_backend_fixture"]
@@ -88,7 +87,7 @@ def seeded_isolated_backend_fixture(
         with (
             overrides,
             isolated_profile_storage_root(tmp_path=root),
-            open_test_profile_session(bucket_id),
+            sealing_test_profile_session(bucket_id),
         ):
             try:
                 yield

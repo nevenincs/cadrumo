@@ -25,7 +25,7 @@ from ....application.aggregation.service import (
     PerModeloAggregationResult,
     aggregate_per_modelo,
 )
-from ....core.aggregation import BindingSourceKind, OperationKind347
+from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.period import Period
 from .._modelo_payloads import ModeloAggregateResult
@@ -43,7 +43,7 @@ def _real_result(*, operation: PinnedAuthorityOperation) -> PerModeloAggregation
         counterparty_nif="12345678Z",
         counterparty_name="Proveedor Ejemplo SL",
         counterparty_country="ES",
-        operation_kind=OperationKind347.DELIVERY.value,
+        operation_kind="entregas_y_prestaciones",
         operation_period="0A",
         taxable_base=Decimal("4000.00"),
         invoice_total=Decimal("4840.00"),

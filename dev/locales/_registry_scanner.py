@@ -24,7 +24,7 @@ from functools import cache
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from cadrumo.domain.user_profile.labels import profile_field_label_key, profile_section_title_key
+from cadrumo.domain.user_profile.labels import profile_schema_locale_keys
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 from dev.registry.compiler.profile_schema import capture_profile_schema
 
@@ -178,12 +178,7 @@ def scan_profile_schema_keys() -> set[str]:
     _payload, schema = capture_profile_schema(
         bundled_path("registry", "cadrumo", "user_profile", "schema.toml").resolve(),
     )
-    keys: set[str] = set()
-    for section in schema.sections:
-        keys.add(profile_section_title_key(section.key))
-        for field in section.fields:
-            keys.add(profile_field_label_key(section.key, field.key))
-    return keys
+    return profile_schema_locale_keys(schema)
 
 
 @cache

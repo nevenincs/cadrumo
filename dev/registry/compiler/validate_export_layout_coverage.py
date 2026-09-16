@@ -128,7 +128,6 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField, RecordDesignSheet
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_exports import (
@@ -139,6 +138,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopeDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from dev.registry.compiler.record_design_schema import RecordDesignField, RecordDesignSheet
 
 from .record_design import extract_record_design
 from .record_design_pdf_rows import naturaleza_or_none

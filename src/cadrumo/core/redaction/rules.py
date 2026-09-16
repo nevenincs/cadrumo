@@ -370,14 +370,49 @@ _CLI_OBJECT_KEY_KEYS = frozenset(
 )
 
 
+#: The hashing strategies' placeholder shape, spelled once. The producers below
+#: and :func:`carries_redaction_placeholder` read the same three constants, so a
+#: consumer detecting a redacted value cannot drift from what redaction writes.
+_HASH_PLACEHOLDER_PREFIX = "sha256:"
+_FINGERPRINT_LABEL = "token:"
+_HASH_PLACEHOLDER_HEX_LENGTH = 8
+_HASH_PLACEHOLDER_RE = re.compile(
+    rf"\b{re.escape(_HASH_PLACEHOLDER_PREFIX)}[0-9a-f]{{{_HASH_PLACEHOLDER_HEX_LENGTH}}}\b",
+)
+
+
 def _sha256_prefix(value: str) -> str:
     digest = _sha256_hex(value.encode("utf-8"))
-    return f"sha256:{digest[:8]}"
+    return f"{_HASH_PLACEHOLDER_PREFIX}{digest[:_HASH_PLACEHOLDER_HEX_LENGTH]}"
 
 
 def _fingerprint(value: str) -> str:
-    digest = _sha256_hex(value.encode("utf-8"))
-    return f"token:sha256:{digest[:8]}"
+    return f"{_FINGERPRINT_LABEL}{_sha256_prefix(value)}"
+
+
+def carries_redaction_placeholder(value: object) -> bool:
+    """Return whether *value* contains a hashing strategy's placeholder anywhere.
+
+    Walks the same JSON shapes :func:`redact_structured` walks -- strings,
+    dict keys and values, list and tuple elements -- and answers whether any
+    string holds the ``sha256:<hex>`` form the ``SHA256_PREFIX`` family and
+    ``FINGERPRINT`` write (the latter is ``token:`` in front of the former).
+
+    It exists for payloads that must never have been redacted because they
+    stand in for a live value: a replayed placeholder is not the value it
+    replaced, and a consumer that treats it as one reads a hash as a tax
+    identifier. Re-applying the rules cannot answer this question, because a
+    placeholder is not itself shaped like anything a rule matches.
+    """
+    if isinstance(value, str):
+        return _HASH_PLACEHOLDER_RE.search(value) is not None
+    if is_object_dict(value):
+        return any(
+            carries_redaction_placeholder(key) or carries_redaction_placeholder(item) for key, item in value.items()
+        )
+    if is_object_list(value) or is_object_tuple(value):
+        return any(carries_redaction_placeholder(item) for item in value)
+    return False
 
 
 def _host_only(value: str) -> str:

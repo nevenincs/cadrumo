@@ -79,37 +79,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from .authority import PinnedAuthorityOperation
-    from .authority_artifact import AuthorityComponentReader, AuthorityGenerationPin
     from .schema_references import PeriodSelector
-
-
-def load_modelo_revision_component(
-    reader: AuthorityComponentReader,
-    *,
-    pin: AuthorityGenerationPin,
-    modelo_id: str | Modelo,
-    revision_id: str,
-) -> ModeloRevision:
-    """Load one typed modelo revision from an operation's pinned generation.
-
-    The component reader owns generation and storage validation.  This helper
-    only normalizes the public modelo identifier, sends the exact point query,
-    and rejects a reader that returns a component of another family.  Callers
-    must create and retain one pin for their enclosing operation.
-    """
-    from .authority_artifact import ModeloRevisionComponentQuery
-
-    normalized_modelo_id = Modelo(modelo_id).value
-    component = reader.load(
-        ModeloRevisionComponentQuery(modelo_id=normalized_modelo_id, revision_id=str(revision_id)),
-        pin=pin,
-    )
-    if not isinstance(component, ModeloRevision):
-        raise RegistryValidationError(
-            f"authority component reader returned an invalid modelo revision for "
-            f"{normalized_modelo_id!r}/{revision_id!r}",
-        )
-    return component
 
 
 _PUBLIC_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(
@@ -1522,5 +1492,4 @@ __all__ = [
     "PinnedRegistryQueryService",
     "RegistryQueryService",
     "ResolvedRegistryQueryContext",
-    "load_modelo_revision_component",
 ]

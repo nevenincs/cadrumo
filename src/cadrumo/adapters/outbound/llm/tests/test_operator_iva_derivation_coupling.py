@@ -25,9 +25,9 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from .....application.ledger.llm_classification_ports import OperatorIvaDerivationResult
 from .....core.identity.transaction_ids import TransactionId
 from .....domain.iva.schema import IvaCategory
-from ..suggestions import OperatorIvaDerivationResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

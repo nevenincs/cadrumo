@@ -31,7 +31,6 @@ from ..amendment_kind_regime import (
     AmendmentLiabilityDirection,
     AmendmentRegimePolicy,
     classify_amendment_liability_direction,
-    permitted_amendment_kind_values,
     resolve_amendment_kind_regime,
 )
 from ..modelo import Modelo
@@ -98,14 +97,14 @@ def test_rectificativa_effective_boundary() -> None:
 
 def test_pre_rectificativa_permits_only_complementaria_and_sustitutiva() -> None:
     period = Period.from_year_and_code(2024, "2T")
-    permitted = permitted_amendment_kind_values(Modelo("303"), period, policy=_policy(period))
+    permitted = resolve_amendment_kind_regime(Modelo("303"), period, policy=_policy(period)).permitted_kinds
     assert permitted == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
     assert _RECTIFICATIVA not in permitted
 
 
 def test_post_rectificativa_permits_only_rectificativa_and_sustitutiva() -> None:
     period = Period.from_year_and_code(2024, "3T")
-    permitted = permitted_amendment_kind_values(Modelo("303"), period, policy=_policy(period))
+    permitted = resolve_amendment_kind_regime(Modelo("303"), period, policy=_policy(period)).permitted_kinds
     assert permitted == frozenset({_RECTIFICATIVA, _SUSTITUTIVA})
     assert _COMPLEMENTARIA not in permitted
 
@@ -114,7 +113,7 @@ def test_modelo_with_no_codified_regime_never_permits_rectificativa() -> None:
     """M130 has zero bundled rectificativa grounding at any period tested."""
     for year, code in ((2024, "1T"), (2026, "4T"), (2030, "0A")):
         period = Period.from_year_and_code(year, code)
-        permitted = permitted_amendment_kind_values(Modelo("130"), period, policy=_policy(period))
+        permitted = resolve_amendment_kind_regime(Modelo("130"), period, policy=_policy(period)).permitted_kinds
         assert _RECTIFICATIVA not in permitted, f"{year} {code}"
         assert permitted == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
 

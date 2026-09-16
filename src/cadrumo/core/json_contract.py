@@ -4,7 +4,7 @@ Defines the strict pydantic v2 bases (:class:`OutputSchema`,
 :class:`OutputRootSchema`), the canonical success envelope
 (:class:`SchemaEnvelope`), the typed diagnostic channel
 (:class:`Notice`), and
-the emit helpers (:func:`emit_json_document`, :func:`emit_json_success`)
+the emit helper (:func:`emit_json_success`)
 used by every authored machine-output path. CLI payload modules import
 these primitives directly from this module and route JSON mode through
 :func:`entrypoints.cli.common.emit_envelope`.
@@ -445,7 +445,7 @@ type RegisteredSchema = type[OutputSchema] | type[OutputRootSchema[Any]]
 class _ReconfigurableStream(Protocol):
     """Structural type for text streams that support runtime reconfiguration.
 
-    Matches :class:`io.TextIOWrapper` so :func:`emit_json_document` can
+    Matches :class:`io.TextIOWrapper` so :func:`_write_json_document` can
     pin stdout to UTF-8 without a hard isinstance check on the concrete
     class — useful for tests that pass in a :class:`io.StringIO`.
     """
@@ -461,43 +461,6 @@ class _ReconfigurableStream(Protocol):
     def flush(self) -> None:
         """Flush the write buffers."""
         ...
-
-
-def emit_json_document(
-    payload: object,
-    *,
-    indent: int | None = 2,
-    sort_keys: bool = False,
-    stream: IO[str] | None = None,
-) -> None:
-    r"""Serialise ``payload`` and write a single UTF-8 JSON document followed by ``\\n``.
-
-    When ``stream`` exposes ``_ReconfigurableStream.reconfigure``,
-    the helper pins it to ``encoding="utf-8", errors="strict"`` first so
-    downstream cp1252 consoles can not silently corrupt non-ASCII
-    characters in the rendered output. This is the low-level writer used
-    by :func:`emit_json_success`; it does not itself apply the envelope or
-    redaction policy.
-
-    Use this for already-shaped JSON documents. Registered CLI success
-    payloads should normally enter through :func:`emit_json_success` so
-    the envelope, status derivation, and redaction pass remain uniform.
-
-    Args:
-        payload: Any object reachable by :func:`jsonable_output_payload`
-            (typically a :class:`pydantic.BaseModel`, a mapping, or a
-            collection thereof).
-        indent: Indent width passed to :func:`json.dumps`; ``None``
-            produces a single-line document.
-        sort_keys: Whether to render mapping keys in lexicographic order.
-        stream: Target text stream; defaults to :data:`sys.stdout`.
-    """
-    _write_json_document(
-        jsonable_output_payload(payload),
-        indent=indent,
-        sort_keys=sort_keys,
-        stream=stream,
-    )
 
 
 def _write_json_document(
@@ -538,7 +501,7 @@ def emit_json_success(
     sort_keys: bool = False,
     stream: IO[str] | None = None,
 ) -> None:
-    """Wrap ``result`` in the success spine and emit it via :func:`emit_json_document`.
+    """Wrap ``result`` in the success spine and emit it via :func:`_write_json_document`.
 
     The envelope's ``schema_version`` is pinned to
     :data:`ENVELOPE_SCHEMA_VERSION`; bumping it is a contract-breaking
@@ -547,7 +510,7 @@ def emit_json_success(
     (:func:`derive_status`) so the JSON outcome and the shell exit code
     never disagree. The assembled envelope is redacted through
     :func:`core.redaction.redact_structured_for_cli_output` before
-    :func:`emit_json_document` writes it.
+    :func:`_write_json_document` writes it.
 
     This helper is stdout-only. Any raised :class:`~core.errors.CadrumoError`
     is handled by the CLI error boundary, which renders the sibling stderr
@@ -567,8 +530,8 @@ def emit_json_success(
             non-profile-bound emitters. It rides through the same
             redaction pass as the rest of the envelope, but it is the
             non-secret display name, not the redacted profile/bucket UUID.
-        indent: Indent width forwarded to :func:`emit_json_document`.
-        sort_keys: Sort-keys flag forwarded to :func:`emit_json_document`.
+        indent: Indent width forwarded to :func:`_write_json_document`.
+        sort_keys: Sort-keys flag forwarded to :func:`_write_json_document`.
         stream: Target text stream; defaults to :data:`sys.stdout`.
     """
     from .output_rendering import reveal_cli_identifiers_opt_in
@@ -735,7 +698,6 @@ __all__ = [
     "ResolvedPreconditionAction",
     "SchemaEnvelope",
     "derive_status",
-    "emit_json_document",
     "emit_json_success",
     "strict_round_trip",
     "validate_registered_envelope_document",

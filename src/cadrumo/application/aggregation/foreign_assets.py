@@ -273,17 +273,6 @@ def declarable_asset_classes_720(
     )
 
 
-def declarable_class(
-    aggregation: ForeignAssetsAggregation,
-    *,
-    asset_class: ForeignAssetClass,
-    thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold] | None = None,
-    operation: PinnedAuthorityOperation | None = None,
-) -> bool:
-    """Return True iff an asset class's obligation block crosses the 720 declaration floor."""
-    return asset_class in declarable_asset_classes_720(aggregation, thresholds=thresholds, operation=operation)
-
-
 def aggregate_foreign_assets_720(
     observations: tuple[ForeignAssetIngestObservation, ...],
     *,
@@ -297,7 +286,7 @@ def aggregate_foreign_assets_720(
     two equal aggregations serialise to identical bytes.
 
     No threshold gate is applied here; callers use
-    :func:`declarable_class` to filter rollups by obligation block before binding to
+    :func:`declarable_asset_classes_720` to filter rollups by obligation block before binding to
     Modelo 720 casillas.
     """
     grouped = group_observations(observations, group_key_fn=lambda obs: (obs.source_kind, obs.asset_class))
@@ -519,5 +508,4 @@ __all__ = [
     "ForeignAssetsAggregationSourceResolver",
     "aggregate_foreign_assets_720",
     "declarable_asset_classes_720",
-    "declarable_class",
 ]

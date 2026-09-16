@@ -14,12 +14,11 @@ from __future__ import annotations
 import typer
 
 from ...application.calculations.cross_period_clean_state import (
-    cross_period_dependency_requirements,
+    cross_period_dependency_inventory,
     evaluate_cross_period_clean_state,
 )
 from ...application.calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
-    CrossPeriodDependencyInventory,
     CrossPeriodDependencyInventoryItem,
     CrossPeriodExpectedMemberSet,
 )
@@ -33,16 +32,14 @@ from ...application.modelo.verify_selector import ModeloVerifySelector
 from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.modelo.work_plazo import calculated_m210_plazo_resolution
 from ...application.workflow.persistence import workflow_state_repository
-from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.payment_election import PaymentElection
-from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
@@ -113,57 +110,6 @@ def _dependency_inventory_item_payload(
                 requires_member_fan_in=requirement.requires_member_fan_in,
             )
             for requirement in item.dependencies
-        ),
-    )
-
-
-def _cross_period_dependency_inventory(
-    operation: PinnedAuthorityOperation,
-    *,
-    filing_year: int,
-    modelos: tuple[str, ...] | None,
-) -> CrossPeriodDependencyInventory:
-    """Build dependency inventory from typed directory and revision components."""
-    selected_modelos = operation.modelo_ids() if modelos is None else modelos
-    items: list[CrossPeriodDependencyInventoryItem] = []
-    for modelo_id in selected_modelos:
-        directory = operation.modelo_directory(modelo_id)
-        for metadata in directory.revisions:
-            if not metadata.period_selector.includes_year(filing_year):
-                continue
-            revision = operation.revision(modelo_id, str(metadata.id))
-            if revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
-                continue
-            for period_code in metadata.period_selector.periods_for_year(filing_year):
-                snapshot = operation.snapshot(
-                    modelo_id,
-                    filing_year=filing_year,
-                    period=str(period_code),
-                    revision_id=str(metadata.id),
-                )
-                dependencies = cross_period_dependency_requirements(snapshot)
-                if not dependencies:
-                    continue
-                items.append(
-                    CrossPeriodDependencyInventoryItem(
-                        target_modelo=str(snapshot.modelo.id),
-                        target_revision_id=str(snapshot.revision.id),
-                        target_filing_year=snapshot.filing_year,
-                        target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-                        dependencies=dependencies,
-                    ),
-                )
-    return CrossPeriodDependencyInventory(
-        filing_year=filing_year,
-        items=tuple(
-            sorted(
-                items,
-                key=lambda item: (
-                    item.target_modelo,
-                    item.target_revision_id,
-                    item.target_period.registry_token,
-                ),
-            ),
         ),
     )
 
@@ -372,7 +318,7 @@ def work_dependencies(
         state = workflow_state_repository().load()
         workflow_profile = filing_taxpayer_or_refuse(state)
         with bundled_indexed_authority().operation() as operation:
-            inventory = _cross_period_dependency_inventory(
+            inventory = cross_period_dependency_inventory(
                 operation,
                 filing_year=year,
                 modelos=(modelo,) if modelo is not None else None,

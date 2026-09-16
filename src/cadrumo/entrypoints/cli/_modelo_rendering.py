@@ -25,6 +25,7 @@ from ...application.modelo.calculation import (
     visible_calculation_observations,
 )
 from ...application.modelo.result_summary import calculation_result_summary
+from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.verification_preconditions import VerificationFindingPreconditionProjection
 from ...application.modelo.work_plazo import (
     M210PlazoResolution,
@@ -55,7 +56,6 @@ from ._modelo_payloads import (
 from ._modelo_revision_payload_parts import (
     DetailRowPayload,
     ObservationPayload,
-    ResultSummaryRowPayload,
     SourceProvenancePayload,
 )
 from .common import resolve_cli_precondition_action
@@ -553,7 +553,7 @@ def calculation_revision_payload(
     carries visible casilla values, nested
     :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ObservationPayload`
     rows,
-    :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`
+    :class:`~cadrumo.application.modelo.result_summary_payload.ResultSummaryRowPayload`
     headline rows, and
     :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.SourceProvenancePayload`
     resolver-trace rows for envelope-aware commands.
@@ -652,7 +652,7 @@ def result_summary_payload(
     """Return headline-result summary rows for the JSON payload.
 
     Each row is a
-    :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`.
+    :class:`~cadrumo.application.modelo.result_summary_payload.ResultSummaryRowPayload`.
     """
     summary = calculation_result_summary(rev, operation=operation, work_unit=work_unit)
     if summary is None:

@@ -488,6 +488,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.evidence_errors.PurchaseInvoiceEvidenceReaderError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_READER",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_reader_unavailable",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.evidence_errors.PurchaseInvoiceEvidenceNotFoundError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
@@ -753,66 +763,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTEGRITY_JUSTIFICANTE_VERIFICATION",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_justificante_verification",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.manuals.errors.ManifestError",
-        ErrorCode(
-            code="INTEGRITY_MANUALS_MANIFEST",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_manuals_manifest",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.manuals.errors.ManualError",
-        ErrorCode(
-            code="ERROR_MANUALS_MANUAL",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_manuals_manual",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.manuals.errors.ManualNotFoundError",
-        ErrorCode(
-            code="ERROR_MANUALS_MANUAL_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_manuals_manual_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.manuals.errors.ManualParseError",
-        ErrorCode(
-            code="FAIL_MANUALS_MANUAL_PARSE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_manuals_manual_parse",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.manuals.errors.ManualReviewRequiredError",
-        ErrorCode(
-            code="ERROR_MANUALS_MANUAL_REVIEW_REQUIRED",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_manuals_manual_review_required",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.manuals.errors.RuleExtractionError",
-        ErrorCode(
-            code="ERROR_MANUALS_RULE_EXTRACTION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_manuals_rule_extraction",
             retryable=False,
             runbook_id=None,
         ),

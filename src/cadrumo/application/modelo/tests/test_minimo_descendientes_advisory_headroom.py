@@ -7,7 +7,7 @@ operator was meant to read, and these advisories are the ones that explain why a
 taxpayer's allowance came out at zero.
 
 These are the authoring-time half of the pair, and they are the reason the copy
-below is split across ``message`` and ``remedy``. Two of these ten messages were
+below is split across ``message`` and ``remedy``. Two of the ten messages were
 measured over the cap in production and eight of the ten sat within forty
 characters of it at four descendants -- not an extreme tail, an ordinary
 household. The fixed remedy prose was competing for room against the interpolated
@@ -19,7 +19,7 @@ The type-level half -- that truncation is total, visible, and word-clean for any
 input -- belongs with the type and stays in the aggregation suite.
 
 Lives beside the advisories rather than beside the cap. The subject under test is
-``minimo_descendientes_advisory``'s private message builders, so the narrowest
+the private ``_minimo_descendientes_advisory`` message builders, so the narrowest
 owning package is this one; the cap comes from the aggregation facade, which is
 where the constraint is declared.
 
@@ -32,7 +32,6 @@ what it appends cannot go stale.
 from __future__ import annotations
 
 from collections.abc import Callable
-from decimal import Decimal
 
 import pytest
 
@@ -45,15 +44,6 @@ from .._minimo_descendientes_advisory import (
     _guarderia_madre_meses_advisory,
     _guarderia_shape_advisory,
     _RegistryScope,
-)
-from ..minimo_descendientes_advisory import (
-    _count_desync_advisory,
-    _dependencia_assimilated_advisory,
-    _dependencia_suppressed_advisory,
-    _entry_date_missing_advisory,
-    _prorrata_inferred_advisory,
-    _rentas_undeclared_advisory,
-    _undeclared_advisory,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -83,11 +73,6 @@ _REQUIRED_HEADROOM = 40
 _WORST_FIRST_INDEX = 100_000
 _WORST_QUALIFYING = 900_000
 
-#: The largest count-vs-rows disagreement worth rendering. ``count_desync``
-#: interpolates two integers rather than descendant paths, so its length scales
-#: with their digits and not with the name list.
-_WORST_COUNT = 1_000_000
-
 
 def _worst_case_indices() -> list[int]:
     return list(range(_WORST_FIRST_INDEX, _WORST_FIRST_INDEX + _WORST_QUALIFYING))
@@ -111,9 +96,9 @@ def _elision_marker() -> str:
 
 
 def _headroom_revision() -> ModeloRevision:
-    """A real M100 revision, fetched once, for the casilla-derived advisory builders.
+    """A real M100 revision, fetched once, for the registry-scoped advisory builders.
 
-    Only the presence of casilla ``0513`` in the revision matters here -- these
+    Only the revision's bindings matter here -- these
     tests measure message length, not grounding -- so any committed M100
     revision serves; the resident registry authority is real rather than a
     hand-built stub.
@@ -136,7 +121,6 @@ def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagno
     adding it here is a visible omission in this list rather than a silent gap in
     the gate.
     """
-    casilla = validated_casilla_id("0513")
     guarderia = validated_casilla_id("0613")
     indices = _worst_case_indices()
     revision = _headroom_revision()
@@ -147,15 +131,8 @@ def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagno
         **{"period_token": "0A"},
     )
     return [
-        ("undeclared", lambda: _undeclared_advisory(revision, casilla)),
-        ("prorrata_inferred", lambda: _prorrata_inferred_advisory(revision, indices, casilla)),
-        ("rentas_undeclared", lambda: _rentas_undeclared_advisory(revision, indices, casilla)),
-        ("entry_date_missing", lambda: _entry_date_missing_advisory(indices, casilla)),
         ("guarderia_shape", lambda: _guarderia_shape_advisory(indices, guarderia, scope)),
         ("guarderia_madre_meses", lambda: _guarderia_madre_meses_advisory(indices, guarderia, scope)),
-        ("dependencia_assimilated", lambda: _dependencia_assimilated_advisory(indices, casilla)),
-        ("dependencia_suppressed", lambda: _dependencia_suppressed_advisory(indices, casilla)),
-        ("count_desync", lambda: _count_desync_advisory(Decimal(_WORST_COUNT), _WORST_COUNT)),
     ]
 
 
@@ -208,11 +185,9 @@ class TestEveryRemedyIsCarriedApartFromTheProblem:
         name: str,
         build: Callable[[], CalculationSourceDiagnostic],
     ) -> None:
-        """Every one of these ten advisories has something for the operator to do.
+        """Every one of these advisories has something for the operator to do.
 
-        None of them is a bare disclosure: even the two that report a modelling
-        limitation rather than a missing fact ask the filer to check a figure
-        before filing. A ``None`` remedy here means a next step was dropped, or
+        None of them is a bare disclosure. A ``None`` remedy here means a next step was dropped, or
         was folded back into the message where it competes for room again.
         """
         advisory = build()

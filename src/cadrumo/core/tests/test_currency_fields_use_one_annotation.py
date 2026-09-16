@@ -74,10 +74,6 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "the model boundary would discard the evidence the grounding check "
         "exists to evaluate"
     ),
-    "llm/suggestions.py::currency": (
-        "a suggestion the operator has not accepted yet, so it carries the "
-        "model's output verbatim; it is validated when accepted, not when read"
-    ),
     "domain/renta/ledger_expenses.py::currency": (
         "Literal['EUR'] is STRICTER than the canonical annotation, not looser: "
         "this expense projection is euro-only by construction and the literal "

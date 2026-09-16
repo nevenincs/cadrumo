@@ -21,6 +21,11 @@ from ..session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SESSION_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.session"
+_INSERT_INDEX_ROW = text(
+    "insert into transaction_date_index "
+    "(bucket_id, transaction_id, filing_date, filing_year, eligible_from, eligible_to) "
+    "values ('b', :transaction_id, '2026-01-01', 2026, '2026-01-01', '2026-01-01')",
+)
 
 
 @contextmanager
@@ -36,12 +41,9 @@ def test_session_scope_commits_on_success(tmp_path: Path) -> None:
     """A normal exit from :func:`session_scope` persists the unit of work."""
     with _engine(tmp_path) as engine:
         with session_scope(engine) as session:
-            session.execute(
-                text("insert into modelos (identifier, name) values (:identifier, :name)"),
-                {"identifier": "MODELO_130", "name": "Pagos fraccionados"},
-            )
+            session.execute(_INSERT_INDEX_ROW, {"transaction_id": "t" * 64})
         with engine.connect() as conn:
-            count = conn.execute(text("select count(*) from modelos")).scalar_one()
+            count = conn.execute(text("select count(*) from transaction_date_index")).scalar_one()
         assert count == 1
 
 
@@ -53,15 +55,12 @@ def test_session_scope_rolls_back_and_logs_on_exception(
     with _engine(tmp_path) as engine:
         caplog.set_level(logging.DEBUG, logger=_SESSION_LOGGER_NAME)
         with pytest.raises(StorageValidationError), session_scope(engine) as session:
-            session.execute(
-                text("insert into modelos (identifier, name) values (:identifier, :name)"),
-                {"identifier": "MODELO_303", "name": "IVA"},
-            )
+            session.execute(_INSERT_INDEX_ROW, {"transaction_id": "u" * 64})
             raise StorageValidationError(
                 translated_message="errors.integrity.integrity_storage_validation",
             )
         with engine.connect() as conn:
-            count = conn.execute(text("select count(*) from modelos")).scalar_one()
+            count = conn.execute(text("select count(*) from transaction_date_index")).scalar_one()
         assert count == 0
         messages = tuple(record.getMessage() for record in caplog.records if record.name == _SESSION_LOGGER_NAME)
         assert "session_scope rolling back due to exception" in messages

@@ -14,6 +14,8 @@ consume that route classification rather than re-parsing database URLs.
 
 from __future__ import annotations
 
+import os
+import weakref
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
@@ -28,8 +30,35 @@ if TYPE_CHECKING:
     from .config_support import StorageRouteClassification
 
 
+#: The last classification per live Settings instance, with the inputs it was
+#: derived from. Repository construction classifies the same instance several
+#: times per command, and each classification resolves up to four paths; a
+#: resolve of a missing file costs several milliseconds on Windows.
+_ROUTE_BY_SETTINGS: dict[int, tuple[tuple[object, ...], StorageRouteClassification]] = {}
+
+
+def _route_inputs(settings: Settings) -> tuple[object, ...]:
+    """Return everything the classification reads, with paths made absolute.
+
+    ``Path.resolve`` of a relative or ``~`` path depends on the working
+    directory and home at call time, so the key carries the absolute form.
+    """
+    database_url = settings.cadrumo_database_url
+    database_path = _sqlite_database_path(database_url)
+    return (
+        database_url,
+        None if database_path is None else os.path.abspath(database_path.expanduser()),
+        "cadrumo_database_url" in settings.model_fields_set,
+        os.path.abspath(settings.cadrumo_local_storage_root.expanduser()),
+    )
+
+
 def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClassification:
     """Classify the effective primary SQL route.
+
+    The result is reused for the same Settings instance while every input it
+    was derived from is unchanged; a changed field, working directory or
+    another instance classifies afresh.
 
     Args:
         settings: The :class:`~core.config.Settings` instance whose
@@ -41,6 +70,19 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
         effective :class:`~core.config_support.StorageRouteKind`, database URL,
         filesystem path when SQLite-backed, and active bucket id when present.
     """
+    key = id(settings)
+    inputs = _route_inputs(settings)
+    remembered = _ROUTE_BY_SETTINGS.get(key)
+    if remembered is not None and remembered[0] == inputs:
+        return remembered[1]
+    route = _classify_storage_route(settings)
+    if remembered is None:
+        weakref.finalize(settings, _ROUTE_BY_SETTINGS.pop, key, None)
+    _ROUTE_BY_SETTINGS[key] = (inputs, route)
+    return route
+
+
+def _classify_storage_route(settings: Settings) -> StorageRouteClassification:
     from .config_support import StorageRouteClassification, StorageRouteKind
 
     database_url = settings.cadrumo_database_url
