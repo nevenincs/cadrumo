@@ -29,7 +29,7 @@ import pytest
 from ..models import IVARegime, TaxpayerProfile
 from ..profiles import taxpayer_profile_from_mapping
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _minimal_profile_mapping() -> dict[str, str]:

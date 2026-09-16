@@ -62,8 +62,8 @@ def test_an_undeclared_activity_kind_is_neither_arm() -> None:
     profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
 
     assert profile.irpf_activity_kind is None
-    assert profile.irpf_activity_kind is not IrpfActivityKind.from_registry("profesional")
-    assert profile.irpf_activity_kind is not IrpfActivityKind.from_registry("sectorial")
+    assert profile.irpf_activity_kind != IrpfActivityKind.from_registry("profesional")
+    assert profile.irpf_activity_kind != IrpfActivityKind.from_registry("sectorial")
 
 
 def test_a_declared_activity_kind_survives_the_projection(operation: PinnedAuthorityOperation) -> None:
@@ -99,5 +99,5 @@ def test_the_activity_axis_is_independent_of_the_estimation_regime() -> None:
         irpf_activity_kind=IrpfActivityKind.from_registry("sectorial"),
     )
 
-    assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("directa_simplificada")
-    assert profile.irpf_activity_kind is IrpfActivityKind.from_registry("sectorial")
+    assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("directa_simplificada")
+    assert profile.irpf_activity_kind == IrpfActivityKind.from_registry("sectorial")

@@ -16,7 +16,7 @@ from ...calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from ..errors import DeadlineValidationError
 from ..plazo import _resolve_projected_filing_window, resolve_filing_window
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _YEAR = 2025
 _PERIOD = Period.from_year_and_code(_YEAR, "0A")

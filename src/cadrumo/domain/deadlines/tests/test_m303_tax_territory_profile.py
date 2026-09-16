@@ -8,7 +8,7 @@ from ..errors import ProfileError
 from ..models import M303TaxTerritory
 from ..profiles import taxpayer_profile_from_mapping
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _profile(scope: str):
@@ -32,7 +32,7 @@ def _profile(scope: str):
     ("scope", "expected"),
     (
         ("common_regime", M303TaxTerritory.from_registry("common_regime")),
-        ("foral_unsupported", M303TaxTerritory.from_registry("foral")),
+        ("foral_unsupported", M303TaxTerritory.from_registry("foral_unsupported")),
     ),
 )
 def test_profile_hydration_preserves_explicit_tax_territory(
