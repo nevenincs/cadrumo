@@ -43,7 +43,9 @@ from .._ledger_rule_payloads import (
 )
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+# Seeded rows and stored records decode against registry facts, so the test
+# body holds the same authority lease a CLI invocation holds.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000000"
 

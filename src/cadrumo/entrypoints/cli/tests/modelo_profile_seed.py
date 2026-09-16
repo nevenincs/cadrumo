@@ -16,8 +16,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from ....adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 __all__ = ["ProfileSeeder", "seed_profile"]
 
