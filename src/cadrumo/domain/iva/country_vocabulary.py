@@ -14,9 +14,6 @@ from .errors import IvaCatalogueError
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
-_ALPHA2_LENGTH = 2
-_ALPHA3_LENGTH = 3
-
 
 def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
     """Narrow one runtime component to an object-keyed mapping before validation."""

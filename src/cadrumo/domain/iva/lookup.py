@@ -9,7 +9,7 @@ answers whether the table reaches a date at all; :func:`cite` renders
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -18,9 +18,8 @@ from ..calculations.registry.eu_member_state_catalogue import require_eu_member_
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
-    resolve_governed_fact,
 )
-from ..calculations.registry.facts.schema import FactSelector, GovernedFact, GovernedFactCatalogue
+from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
@@ -36,85 +35,9 @@ from .schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
-    from ..calculations.registry.authority_artifact import AuthorityComponentReader, AuthorityGenerationPin
-    from ..calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 
 
 @dataclass(slots=True)
-class _PinnedFactSource:
-    """Resolve vocabulary dependencies from one caller-pinned component reader."""
-
-    reader: AuthorityComponentReader
-    generation: AuthorityGenerationPin
-    _facts: dict[str, GovernedFact] = field(default_factory=dict)
-
-    def _load_fact(self, fact_id: str) -> GovernedFact:
-        cached = self._facts.get(fact_id)
-        if cached is not None:
-            return cached
-        from ..calculations.registry.authority_artifact import GovernedFactComponentQuery
-
-        component = self.reader.load(
-            GovernedFactComponentQuery(fact_id=fact_id),
-            pin=self.generation,
-        )
-        if not isinstance(component, GovernedFact) or component.fact_id != fact_id:
-            raise ValueError(f"authority component reader returned an invalid governed fact for {fact_id!r}")
-        self._facts[fact_id] = component
-        return component
-
-    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
-        """Run the canonical dated resolver over the exact loaded declaration."""
-        fact = self._load_fact(query.fact_id)
-        return resolve_governed_fact(
-            GovernedFactCatalogue(facts={fact.fact_id: fact}),
-            query,
-            authority_digest=self.generation.logical_generation,
-        )
-
-
-def resolve_iva_rate_from_component(
-    reader: AuthorityComponentReader,
-    *,
-    pin: AuthorityGenerationPin,
-    member_state: EUMemberState | str,
-    kind: IvaRateKind,
-    on_date: date,
-    rate_role: IvaRateRole | str | None = None,
-) -> ResolvedMappingFact:
-    """Resolve one IVA rate through exact governed-fact components.
-
-    The caller owns ``pin`` for the enclosing operation.  This function never
-    repins, opens an eager catalogue, or substitutes bundled data when a
-    component is unavailable.  Vocabulary facts and the requested
-    ``iva-rate-schedule`` declaration are loaded through the same pinned
-    reader, then the canonical dated resolver retains the reader generation in
-    the returned provenance.
-    """
-    source = _PinnedFactSource(reader=reader, generation=pin)
-    resolved_member_state = require_eu_member_state(member_state, effective_date=on_date, authority=source)
-    resolved_kind = require_iva_rate_kind(kind, effective_date=on_date, authority=source)
-    resolved_role = resolve_iva_rate_role_catalogue(
-        effective_date=on_date,
-        authority=source,
-    ).require(rate_role)
-    resolved = source.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=IVA_RATE_FACT_ID,
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=on_date,
-            selectors=(
-                FactSelector(name="member_state", value=resolved_member_state.value),
-                FactSelector(name="kind", value=resolved_kind.value),
-                FactSelector(name="rate_role", value=resolved_role.value),
-            ),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise ValueError("IVA rate fact must resolve as a mapping fact")
-    return resolved
-
-
 def resolve_iva_rate(
     member_state: EUMemberState,
     kind: IvaRateKind,
@@ -500,5 +423,4 @@ __all__ = [
     "lookup_rate",
     "rate_kinds_for_declared_rate",
     "resolve_iva_rate",
-    "resolve_iva_rate_from_component",
 ]

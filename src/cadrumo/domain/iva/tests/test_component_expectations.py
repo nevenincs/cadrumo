@@ -53,7 +53,6 @@ from ..components import (
     category_bears_taxable_base,
     category_components,
     category_cuota_is_zero_by_law,
-    cuota_less_m303_categories_from_table,
     registry_category_projection,
     registry_component_catalogue,
     registry_component_vocabulary,
@@ -158,17 +157,6 @@ def test_lookup_returns_the_keyed_row_for_every_member() -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_derived_cuota_less_set_equals_the_canonical_frozenset() -> None:
-    """The table is a second view of the cuota-less fact, never a second declaration."""
-    derived = cuota_less_m303_categories_from_table()
-    canonical = registry_category_projection("cuota_less_m303")
-    assert derived == canonical, (
-        "Axis-A table and the registry cuota-less projection disagree — "
-        f"table-only: {sorted(c.value for c in derived - canonical)}; "
-        f"projection-only: {sorted(c.value for c in canonical - derived)}"
-    )
-
-
 @pytest.mark.parametrize("category", CATEGORY_CATALOGUE.all_categories, ids=_category_id)
 def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCategory) -> None:
     """Editing one row's cuota columns alone flips exactly this category's gate.
@@ -207,7 +195,7 @@ def test_the_cuota_less_partition_is_non_trivial() -> None:
     derivation to "everything" or "nothing" while the set comparison still
     passes against an equally-collapsed frozenset.
     """
-    derived = cuota_less_m303_categories_from_table()
+    derived = registry_category_projection("cuota_less_m303")
     assert 0 < len(derived) < len(COMPONENT_CATALOGUE)
 
 
