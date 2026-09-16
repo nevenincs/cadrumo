@@ -32,9 +32,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel
-
-from ...core.models import STRICT_FROZEN_CONFIG
 from ..config_live_tests import LIVE_READ_TEST_OPT_IN_ENV_VAR as _LIVE_READ_TEST_OPT_IN_ENV_VAR
 from .errors import (
     AeatLiveReadNotEnabledError,
@@ -43,24 +40,6 @@ from .errors import (
 
 if TYPE_CHECKING:
     from ..config import Settings
-
-
-class AeatGateEnvSnapshot(BaseModel):
-    """Frozen snapshot of explicit inputs that matter for guarded live access.
-
-    The record is safe to log and safe to serialise into historical
-    audit payloads. Values are raw strings as read from ``os.environ``;
-    absent vars materialise as the empty string.
-
-    Attributes:
-        cadrumo_live_tests_enabled: Value of ``CADRUMO_LIVE_TESTS_ENABLED``.
-        guarded_read_context: Explicit caller-supplied guarded-read context.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    cadrumo_live_tests_enabled: str
-    guarded_read_context: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,28 +105,3 @@ class AeatAccessGate:
                 permanently forbidden.
         """
         raise LiveSubmitForbiddenError()
-
-    def snapshot_env(
-        self,
-        *,
-        guarded_read_context: str | None = None,
-    ) -> AeatGateEnvSnapshot:
-        """Return a frozen snapshot of the gate-relevant variables.
-
-        The AEAT-prefixed variable is read from the validated Settings
-        surface (single config-read invariant). The context is ordinary,
-        explicit call data; shipped code does not inspect its host process to
-        discover whether a test harness is present.
-
-        Args:
-            guarded_read_context: Explicit context to record. ``None`` and
-                ``""`` both record the absent path.
-
-        Returns:
-            A :class:`AeatGateEnvSnapshot` capturing the current
-            gate-relevant variables.
-        """
-        return AeatGateEnvSnapshot(
-            cadrumo_live_tests_enabled=self.settings.cadrumo_live_tests_enabled,
-            guarded_read_context=guarded_read_context or "",
-        )
