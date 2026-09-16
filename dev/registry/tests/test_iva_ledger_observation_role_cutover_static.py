@@ -70,7 +70,7 @@ def test_direct_iva_ledger_constructors_declare_the_required_role() -> None:
     constructor to appear in the scan, rather than by pinning a call tally: a
     tally encodes one moment, and the only way past it is to bump the constant.
     """
-    production_anchors = {"IvaLedgerObservation": "application/aggregation/iva_ledger.py"}
+    production_anchors = {"IvaLedgerObservation": "application/aggregation/_iva_transaction.py"}
 
     for name in ("IvaLedgerObservation",):
         calls = tuple(_constructor_calls(name))
