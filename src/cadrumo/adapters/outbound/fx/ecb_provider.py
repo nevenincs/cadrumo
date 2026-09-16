@@ -39,8 +39,6 @@ from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from urllib.parse import urlparse
 
-import httpx
-
 from ....core.config import load_settings
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
@@ -217,6 +215,10 @@ def _https_fetch(url: str) -> str:
     if parsed.scheme != "https" or parsed.netloc != ECB_DATA_API_HOST:
         msg = f"refusing non-https or non-ECB exchange-rate URL: {url!r}"
         raise ExchangeRateProviderError(msg)
+    # The HTTP client loads only when a rate is actually fetched, so a host can
+    # compose this provider without paying for the transport.
+    import httpx
+
     settings = load_settings()
     timeout = settings.cadrumo_fx_rate_lookup_timeout_s
     try:
@@ -235,6 +237,8 @@ def default_ecb_rate_provider() -> EcbReferenceRateProvider:
 
     Caching the instance keeps its per-(currency, date) memo shared across every
     lookup in the process, so a multi-row ledger import re-uses resolved rates.
+    Process hosts bind this as their exchange-rate provider factory; conversion
+    code resolves the bound provider rather than calling this directly.
     """
     return EcbReferenceRateProvider()
 
