@@ -53,18 +53,19 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.classifier_input_source import ClassifierInputSource
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
-from ...domain.iva.classification import IvaTerritorialScope
+from ...core.type_guards import is_object_mapping
+from ...domain.iva.classification import IvaTerritorialScope, require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState
 from .classification_assembly import DeclaredFact
 from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
@@ -102,6 +103,26 @@ def _canonical_identity_token(value: str, *, country_code: str | None) -> str | 
 
     with bundled_indexed_authority().operation() as operation:
         return canonical_identity_token(value, country_code=country_code, operation=operation)
+
+
+def _project_territorial_scope(value: str, *, effective_date: date | None) -> IvaTerritorialScope:
+    """Project one territorial-scope token through the governed 0083 resolver."""
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        return require_iva_territorial_scope(value, effective_date=effective_date, operation=operation)
+
+
+def _assertion_date(value: object) -> date | None:
+    """Return the calendar date of a raw ``asserted_at`` value, when it has one."""
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value).date()
+        except ValueError:
+            return None
+    return None
 
 
 class ConfirmedCounterpartyFactsInputError(LedgerPreconditionErrorMixin, CadrumoError):
@@ -200,6 +221,30 @@ class ConfirmedCounterpartyFacts(BaseModel):
     asserted_by: str = Field(min_length=1)
     asserted_at: datetime
     note: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _project_stored_territorial_scope(cls, data: object) -> object:
+        """Re-enter a persisted territorial scope through the 0083 vocabulary.
+
+        The encrypted store serialises the token as its text, so a reload
+        carries a bare string. It is projected through the registry as of the
+        assertion date rather than trusted, so a token the vocabulary no longer
+        declares is refused at load instead of answering as a confirmation.
+        """
+        if not is_object_mapping(data):
+            return data
+        scope = data.get("territorial_scope")
+        if not isinstance(scope, str) or isinstance(scope, IvaTerritorialScope):
+            return data
+        return {
+            **data,
+            "territorial_scope": _project_territorial_scope(
+                scope,
+                effective_date=_assertion_date(data.get("asserted_at")),
+            ),
+        }
 
     @model_validator(mode="after")
     def _only_an_operator_may_confirm(self) -> Self:

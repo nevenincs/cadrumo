@@ -28,6 +28,7 @@ from ....domain.iva.classification import (
     TransactionKind,
     domestic_rate_tier_is_required,
     resolve_iva_classification_catalogue,
+    resolve_iva_classification_inputs,
 )
 from ....domain.iva.schema import IvaCategory, IvaRateKind
 from ....domain.iva.supply_nature import SupplyNature
@@ -953,6 +954,7 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules(*, operation: 
     reachable_kinds = (TransactionKind("goods"), TransactionKind("services_general"))
     ridden_without_reading_the_status: set[str] = set()
     classification_catalogue = resolve_iva_classification_catalogue(_DATE, operation=operation)
+    projected = resolve_iva_classification_inputs(effective_date=_DATE, operation=operation)
 
     def _rule(
         status: CustomerTaxStatus, issuer, customer, kind, direction, *, operation: PinnedAuthorityOperation
@@ -974,6 +976,9 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules(*, operation: 
                 rate_tier=IvaRateKind("general"),
             ),
             operation=operation,
+            rules=projected.rules,
+            rate_categories=projected.rate_categories,
+            rate_territories=projected.rate_territories,
         ).matched_rule_id
 
     for issuer in classification_catalogue.territorial_scopes:

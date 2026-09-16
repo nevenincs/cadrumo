@@ -265,7 +265,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
             operation=operation,
         )
 
-        assert (resolved.registration_conflict is not None)
+        assert resolved.registration_conflict is not None
         assert resolved.scope is None
         assert resolved.rung is None
 
