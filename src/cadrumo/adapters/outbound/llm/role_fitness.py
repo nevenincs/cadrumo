@@ -63,8 +63,10 @@ _PROBE_TRANSCRIPTION = (
 def probe_text_extraction_fitness(model: str, settings: Settings) -> RoleFitnessOutcome:
     """Send the text reader's real request to ``model`` and judge whether its answer is usable.
 
-    Never raises: a transport failure is reported with ``transport_failed`` so
-    the caller does not remember it as the model's fitness.
+    Never raises. A model still answering when the probe's timeout expires is
+    reported ``timed_out`` under its own condition; any other transport failure
+    is reported with ``transport_failed`` so the caller does not record it as the
+    model's fitness.
     """
     budget = settings.cadrumo_llm_default_max_tokens
     with bundled_indexed_authority().operation() as operation:
@@ -84,6 +86,20 @@ def probe_text_extraction_fitness(model: str, settings: Settings) -> RoleFitness
                 LocalAdapter(timeout_s=settings.cadrumo_llm_default_timeout_s).complete(request),
             )
         except (LLMError, httpx.HTTPError) as exc:
+            if _timed_out(exc):
+                return _unfit(
+                    model,
+                    budget=budget,
+                    started=started,
+                    condition=ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_WITHIN_TIMEOUT,
+                    facts={
+                        "model": model,
+                        "role": ModelRole.TEXT_EXTRACTION.value,
+                        "answer_budget_tokens": budget,
+                        "probe_timeout_s": settings.cadrumo_llm_default_timeout_s,
+                    },
+                    timed_out=True,
+                )
             return _unfit(
                 model,
                 budget=budget,
@@ -140,6 +156,21 @@ def probe_text_extraction_fitness(model: str, settings: Settings) -> RoleFitness
     )
 
 
+def _timed_out(exc: BaseException) -> bool:
+    """Return whether the request reached the model and ran past the probe's bound.
+
+    A read timeout means the runtime accepted the request and the model was still
+    answering, which is a fact about the model on this host. A refused or failed
+    connection is not, so only the read and write phases count.
+    """
+    cause: BaseException | None = exc
+    while cause is not None:
+        if isinstance(cause, (httpx.ReadTimeout, httpx.WriteTimeout)):
+            return True
+        cause = cause.__cause__
+    return False
+
+
 def _unfit(
     model: str,
     *,
@@ -149,6 +180,7 @@ def _unfit(
     facts: dict[str, ProvisioningFactValue],
     output_tokens: int | None = None,
     answer_parseable: bool = False,
+    timed_out: bool = False,
     transport_failed: bool = False,
 ) -> RoleFitnessOutcome:
     return RoleFitnessOutcome(
@@ -156,6 +188,7 @@ def _unfit(
         model=model,
         fit=False,
         answer_parseable=answer_parseable,
+        timed_out=timed_out,
         transport_failed=transport_failed,
         output_tokens=output_tokens,
         answer_budget_tokens=budget,
