@@ -1004,8 +1004,8 @@ def compare_modelo_years(
     # revisions differing by a cent differ by a cent, and absorbing that
     # would hide a real change. Absence is zero for the same reason -- a
     # casilla one revision never resolved contributes nothing to it.
-    # ``detect_casilla_divergences`` and ``compare_calculation_to_filed_observation``
-    # both compare against AEAT, where rounding IS an artefact, and
+    # ``detect_casilla_divergences`` compares against AEAT, where rounding IS
+    # an artefact, and
     # ``casillas_a_recapture_would_change`` skips absence entirely.
     delta_rows = _comparison_delta_rows(
         rev_a,
