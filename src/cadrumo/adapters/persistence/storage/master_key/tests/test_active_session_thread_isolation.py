@@ -1,26 +1,33 @@
-"""One thread's unlocked bucket session is invisible to another thread.
+"""The two binding scopes, and which threads each one reaches.
 
-This is the property the whole multiuser story rests on. The active session
-holds the bucket's unwrapped DEK, and it is resolved implicitly -- the
-column-level encrypt path cannot be handed a session reference, so it reads
-one from a ``ContextVar``. If that lookup were process-wide rather than
-per-context, any thread in a long-lived process would decrypt with whichever
-profile's key happened to be bound last. Both long-lived hosts here run worker
-threads: an embedding transport and the TUI screens.
+The active session holds the bucket's unwrapped DEK and is resolved
+implicitly -- the column-level encrypt path cannot be handed a session
+reference, so it reads one from the module's binding. This file pins which
+threads that read reaches, because the two binding doors deliberately answer
+differently and conflating them has produced a defect in each direction.
 
-PEP 567 gives the isolation, so this file does not test ``contextvars``. It
-tests that this substrate has not opted out of it -- with a plain ``.set()``
-in :func:`bind_active_bucket_session` that outlives no block, an ``atexit``
-sweep, and a live-session registry deliberately built to reach ACROSS threads,
-there is more than one way for a binding to escape its context.
+:func:`activate_session` is SCOPED. It shadows the binding for one span of
+work and unwinds on exit, so a span that bridges into a staged bucket cannot
+be observed by a sibling thread and cannot leak past its own ``with``. That
+isolation is what lets two spans hold different profiles at the same instant,
+and it is PEP 567's, so the tests below do not test ``contextvars`` -- they
+test that this substrate has not opted out of it, which an ``atexit`` sweep
+and a live-session registry built to reach ACROSS threads both give it ways
+to do.
 
-The interesting direction is the one that would pass vacuously. "Thread B sees
-no session" is also true when the mechanism is broken and nobody sees one, so
-the deliberate-propagation case is asserted alongside: a context copied with
-:func:`contextvars.copy_context` and run in another thread DOES carry the
-session, which is how the TUI's worker threads legitimately write. A test
-suite that only proved absence would report isolation while the substrate was
-simply inert.
+:func:`bind_active_bucket_session` is UNSCOPED and process-wide, because what
+it publishes is a fact about the process rather than about a span: exactly one
+profile is logged in, and the login door closes any other live session before
+publishing. A credential surface that authenticates on a Textual thread
+worker, or inside its own :func:`asyncio.run` frame, must be observable from
+the frame that reads storage afterwards -- and under a plain ``ContextVar``
+it was not, which reached the operator as a correct login followed by a
+workbench that could not find the profile it had just unlocked.
+
+The absence assertions are paired with propagation assertions on purpose.
+"The other thread sees nothing" is equally true of a substrate where nothing
+is ever bound at all, so a file that only proved absence would report
+isolation while the substrate was simply inert.
 """
 
 from __future__ import annotations
@@ -91,13 +98,21 @@ def test_a_session_activated_here_is_invisible_to_a_fresh_thread() -> None:
         session.close()
 
 
-def test_a_bare_binding_is_also_confined_to_its_thread() -> None:
-    """``bind_active_bucket_session`` sets with no token, so it outlives no block.
+def test_a_bare_binding_is_the_whole_process_s_answer() -> None:
+    """``bind_active_bucket_session`` publishes the process's login, not a span's.
 
-    The contextmanager restores the previous value on exit; this one does not,
-    which makes it the likelier of the two to escape. It is the call the login
-    path uses, so its confinement is asserted separately rather than assumed
-    from the contextmanager's.
+    The contextmanager restores the previous value on exit; this door has no
+    block to unwind and is not meant to have one. It is the call the login
+    path uses, and who is logged in is a property of the process: a fresh
+    thread that asks must be told the same thing the binding thread would be
+    told, or the CLI and the TUI answer the operator differently about the
+    same login.
+
+    This is the assertion that flipped. It previously demanded confinement,
+    which made a login performed on a Textual thread worker invisible to the
+    workbench that ran next. Confinement remains available and remains tested
+    -- it is what :func:`activate_session` provides -- but it is not what this
+    door means.
     """
     session = _open_session("1b6da8e1-3c2f-4d5a-8e7b-9f0a1c2d3e4f")
     try:
@@ -106,8 +121,76 @@ def test_a_bare_binding_is_also_confined_to_its_thread() -> None:
 
         has_session, bucket_id = _observe_in_a_fresh_thread()
 
-        assert has_session is False
-        assert bucket_id is None
+        assert has_session is True
+        assert bucket_id == "1b6da8e1-3c2f-4d5a-8e7b-9f0a1c2d3e4f"
+    finally:
+        close_active_bucket_session()
+
+
+def test_a_binding_made_on_a_worker_thread_reaches_the_thread_that_reads_next() -> None:
+    """DISCRIMINATING: the TUI's actual shape, in the direction that was broken.
+
+    Textual runs a credential door on a thread worker, under a context copied
+    from the screen's own, and every context write made there is discarded
+    when that context ends. The login must survive it, because the surface
+    that composes the workbench reads the binding from a different frame
+    entirely.
+    """
+    session = _open_session("5a1c3e7d-8b2f-4c6a-9d0e-1f2a3b4c5d6e")
+    bound = threading.Barrier(2, timeout=10)
+
+    def authenticate_on_worker() -> None:
+        copy_context().run(bind_active_bucket_session, session)
+        bound.wait()
+
+    worker = threading.Thread(target=authenticate_on_worker, name="credential-worker")
+    try:
+        worker.start()
+        bound.wait()
+        worker.join(timeout=10)
+
+        active = current_active_bucket_session()
+        assert active is session
+        assert _observe_in_a_fresh_thread() == (True, "5a1c3e7d-8b2f-4c6a-9d0e-1f2a3b4c5d6e")
+    finally:
+        close_active_bucket_session()
+
+
+def test_closing_a_process_binding_from_inside_a_span_evicts_it_everywhere() -> None:
+    """A retired session must not be resurrected by the span's own unwind.
+
+    Closing zeroises in place, so a sealed session that survives as the value
+    the next caller reads is worse than no binding at all: it is advertised as
+    live and fails deep inside a decrypt. A token reset restoring the retired
+    object is exactly how that happened, so the eviction is asserted to reach
+    both the span's shadow and the process value.
+    """
+    session = _open_session("6b2d4f8e-9c3a-4d7b-8e1f-2a3b4c5d6e7f")
+    bind_active_bucket_session(session)
+
+    with activate_session(session):
+        close_active_bucket_session()
+        assert current_active_bucket_session() is None
+
+    assert current_active_bucket_session() is None
+    assert session.sealed is True
+    assert _observe_in_a_fresh_thread() == (False, None)
+
+
+def test_closing_a_scoped_session_leaves_the_process_login_intact() -> None:
+    """Eviction is identity-scoped: a span's close must not log the operator out."""
+    logged_in = _open_session("7c3e5a9f-0d4b-4e8c-9f2a-3b4c5d6e7f80")
+    bridged = _open_session("8d4f6b0a-1e5c-4f9d-a03b-4c5d6e7f8091")
+    bind_active_bucket_session(logged_in)
+
+    try:
+        with activate_session(bridged):
+            close_active_bucket_session()
+            assert current_active_bucket_session() is None
+
+        assert current_active_bucket_session() is logged_in
+        assert bridged.sealed is True
+        assert logged_in.sealed is False
     finally:
         close_active_bucket_session()
 
@@ -140,8 +223,8 @@ def test_a_deliberately_copied_context_does_carry_the_session() -> None:
     assert carried == ["2c7eb9f2-4d3a-4e6b-9f8c-0a1b2c3d4e5f"]
 
 
-def test_two_threads_hold_different_sessions_at_the_same_time() -> None:
-    """Concurrent profiles must not overwrite one another's binding.
+def test_two_spans_hold_different_sessions_at_the_same_time() -> None:
+    """Concurrent scoped spans must not overwrite one another's binding.
 
     TWO barriers, and the second one is the test. With only the first, both
     threads are merely bound at the same moment -- but the faster one can read,
