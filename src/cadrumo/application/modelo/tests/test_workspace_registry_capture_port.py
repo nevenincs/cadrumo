@@ -46,5 +46,3 @@ def test_captures_from_two_leases_of_one_generation_compare_current() -> None:
 
     assert capture.generation >= 1
     assert capture.require_current(current) is capture
-
-
