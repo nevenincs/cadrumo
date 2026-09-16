@@ -762,19 +762,6 @@ def registry_component_presence_token(
     ).require_component_presence(value)
 
 
-def registry_retencion_expectation_token(
-    value: str,
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> IvaRetencionExpectation:
-    """Resolve one retencion-expectation token through the governed registry."""
-    return registry_component_vocabulary(
-        effective_date=effective_date,
-        authority=authority,
-    ).require_retencion_expectation(value)
-
-
 def registry_retencion_role_token(
     value: str,
     *,
@@ -1094,6 +1081,5 @@ __all__ = [
     "registry_component_vocabulary",
     "registry_cuota_settlement_catalogue",
     "registry_kind_applicability_token",
-    "registry_retencion_expectation_token",
     "registry_retencion_role_token",
 ]
