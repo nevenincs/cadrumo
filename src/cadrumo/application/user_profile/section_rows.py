@@ -146,6 +146,21 @@ def add_profile_repeatable_section_row(
     section = schema.section(section_key)
     if not section.repeatable:
         raise ProfileSchemaValidationError("profile row mutation requires a schema-declared repeatable section")
+    # Two different mistakes, refused apart. section_row_facts deliberately
+    # ignores keys it does not declare, so a mistyped field used to arrive here
+    # as "no populated field" -- which told an operator who had populated one
+    # that they had not, and never mentioned the key that was wrong.
+    declared = {field.key for field in section.fields}
+    unknown = tuple(sorted(key for key in values if key not in declared))
+    if unknown:
+        raise ProfileSchemaValidationError(
+            translated_message="application.user_profile.errors.row_unknown_field",
+            context={
+                "section": section.key,
+                "unknown": ", ".join(unknown),
+                "fields": ", ".join(sorted(declared)),
+            },
+        )
     current = ProfileRecordRepository.for_current_session(
         profile_id,
         profile_decode_context=profile_decode_context,
@@ -153,7 +168,10 @@ def add_profile_repeatable_section_row(
     row_index = next_section_row_index(section.key, record_to_path_values(current))
     facts = section_row_facts(section, row_index=row_index, values=values)
     if not facts:
-        raise ProfileSchemaValidationError("profile row mutation requires at least one populated field")
+        raise ProfileSchemaValidationError(
+            translated_message="application.user_profile.errors.row_all_values_blank",
+            context={"section": section.key, "fields": ", ".join(sorted(declared))},
+        )
     record = apply_profile_fact_changes(
         profile_id=profile_id,
         changes=facts,

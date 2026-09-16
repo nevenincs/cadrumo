@@ -11,13 +11,14 @@ from __future__ import annotations
 
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
-from contextvars import ContextVar, Token
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ...core.paths import effective_storage_root
+from ...core.process_binding import ProcessScopedBinding
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -42,38 +43,56 @@ from .login_session_port import profile_current_bucket_session, profile_session_
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
-_ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar(
-    "active_profile_record_session", default=None
+
+@dataclass(frozen=True, slots=True)
+class _ProfileRecordAuthority:
+    """The current record authority together with how it became current.
+
+    The two ways an authority becomes current are not the same kind of fact.
+    One is DERIVED: a login opens a custody session and the authority is
+    minted from it, so the session is what makes the authority true and the
+    authority cannot outlive it. The other is BOUND: a caller holding a record
+    session it opened itself installs it explicitly, and owns its lifetime end
+    to end.
+
+    Only the derived kind is retired by the disappearance of a custody
+    session, which is why the distinction is recorded rather than inferred --
+    inferring it from "is a custody session live?" alone would revoke every
+    explicitly bound authority the moment no profile happened to be logged in.
+
+    Session and provenance travel as one value so they cannot drift: an
+    authority whose flag said "explicitly bound" while its session was minted
+    by a login would survive that login's logout, which is the exact state
+    this pairing makes unrepresentable.
+    """
+
+    session: ProfileRecordSession
+    session_derived: bool
+
+
+_ACTIVE_RECORD_AUTHORITY: ProcessScopedBinding[_ProfileRecordAuthority] = ProcessScopedBinding(
+    "active_profile_record_authority"
 )
+"""The authenticated record authority this PROCESS currently holds.
 
-_ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED: ContextVar[bool] = ContextVar(
-    "active_profile_record_session_is_session_derived", default=False
-)
-"""Whether the latched authority was derived from a live custody session.
-
-The two ways an authority becomes current are not the same kind of fact. One
-is DERIVED: a login opens a custody session and the authority is minted from
-it, so the session is what makes the authority true and the authority cannot
-outlive it. The other is BOUND: a caller holding a record session it opened
-itself installs it explicitly, and owns its lifetime end to end.
-
-Only the derived kind is retired by the disappearance of a custody session,
-which is why the distinction is recorded rather than inferred -- inferring it
-from "is a custody session live?" alone would revoke every explicitly bound
-authority the moment no profile happened to be logged in.
+Process-wide for the same reason the custody session it is minted beside is:
+one profile is unlocked per process, and a credential surface that
+authenticates inside its own event loop or on a thread worker must be
+observable from the surface that reads facts afterwards.
 """
+
+
+def _active_record_session() -> ProfileRecordSession | None:
+    """Return the currently installed record session, whatever installed it."""
+    authority = _ACTIVE_RECORD_AUTHORITY.get()
+    return None if authority is None else authority.session
 
 
 @contextmanager
 def bound_profile_record_session(session: ProfileRecordSession) -> Generator[None]:
     """Bind one authenticated record session for the duration of a command."""
-    token: Token[ProfileRecordSession | None] = _ACTIVE_RECORD_SESSION.set(session)
-    derived_token: Token[bool] = _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(False)
-    try:
+    with _ACTIVE_RECORD_AUTHORITY.override(_ProfileRecordAuthority(session=session, session_derived=False)):
         yield
-    finally:
-        _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.reset(derived_token)
-        _ACTIVE_RECORD_SESSION.reset(token)
 
 
 def activate_profile_record_session(session: ProfileRecordSession) -> None:
@@ -84,11 +103,10 @@ def activate_profile_record_session(session: ProfileRecordSession) -> None:
     one, so a profile switch cannot leave facts decryptable through a prior
     session.
     """
-    previous = _ACTIVE_RECORD_SESSION.get()
+    previous = _active_record_session()
     if previous is not None and previous is not session:
         previous.close()
-    _ACTIVE_RECORD_SESSION.set(session)
-    _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(True)
+    _ACTIVE_RECORD_AUTHORITY.bind(_ProfileRecordAuthority(session=session, session_derived=True))
 
 
 def bind_active_profile_record_session(session: ProfileRecordSession) -> ProfileRecordSession | None:
@@ -100,13 +118,12 @@ def bind_active_profile_record_session(session: ProfileRecordSession) -> Profile
     fails, without a transient plaintext re-authentication or a duplicate
     record-session constructor.
     """
-    previous = _ACTIVE_RECORD_SESSION.get()
-    _ACTIVE_RECORD_SESSION.set(session)
+    previous = _active_record_session()
     # Session-derived like the activating door: handover binds the candidate's
     # authority beside the candidate's bucket session, and restores the prior
     # authority beside the prior bucket session on rollback. Both halves are
     # backed by a custody session, so both must retire when it goes.
-    _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(True)
+    _ACTIVE_RECORD_AUTHORITY.bind(_ProfileRecordAuthority(session=session, session_derived=True))
     return previous
 
 
@@ -117,18 +134,17 @@ def clear_active_profile_record_session_binding(expected: ProfileRecordSession) 
     candidate.  The identity check prevents a late cleanup from unbinding a
     replacement session installed by a nested operation.
     """
-    if _ACTIVE_RECORD_SESSION.get() is expected:
-        _ACTIVE_RECORD_SESSION.set(None)
-        _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(False)
+    authority = _ACTIVE_RECORD_AUTHORITY.get()
+    if authority is not None and authority.session is expected:
+        _ACTIVE_RECORD_AUTHORITY.clear_bound(authority)
 
 
 def close_active_profile_record_session() -> None:
     """Zeroise and clear the process-local record authority."""
-    session = _ACTIVE_RECORD_SESSION.get()
+    session = _active_record_session()
     if session is not None:
         session.close()
-    _ACTIVE_RECORD_SESSION.set(None)
-    _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(False)
+    _ACTIVE_RECORD_AUTHORITY.bind(None)
 
 
 def profile_record_session_if_authenticated(
@@ -204,13 +220,14 @@ def profile_record_session_if_authenticated(
         identity = UUID(str(profile_id))
     except ValueError as exc:
         raise ProfileNotFoundError("profile identity is not a canonical UUID") from exc
-    session = _ACTIVE_RECORD_SESSION.get()
-    if session is not None and session.profile_id == identity and not session.closed:
+    authority = _ACTIVE_RECORD_AUTHORITY.get()
+    if authority is not None and authority.session.profile_id == identity and not authority.session.closed:
+        session = authority.session
         if profile_decode_context != session.profile_decode_context:
             raise ProfileRecordIntegrityError(
                 "profile record access crossed the pinned authority generation boundary",
             )
-        if not _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.get():
+        if not authority.session_derived:
             return session
         if _live_custody_session_backs(identity):
             return session
