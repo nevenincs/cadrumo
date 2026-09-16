@@ -25,12 +25,11 @@ from ....application.modelo.m036_lifecycle_ports import (
 from ....core.errors.hierarchy import CadrumoError
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.errors import BucketEventValidationError
-from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
-from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..storage.secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 from .buckets import BucketEventHistoryRepository
 from .snapshots import SecureSnapshotRepository
+from .translated_bucket_event_history import TranslatedBucketEventHistoryRepository
 
 
 class _M036AdapterInputError(CadrumoError):
@@ -127,61 +126,6 @@ class M036DeclarationRepositoryAdapter(M036DeclarationRepositoryPort):
         )
 
 
-class M036BucketEventRepositoryAdapter(BucketEventHistoryRepositoryProtocol):
-    """Translate bucket-event persistence to the M036 application contract."""
-
-    def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
-        """Bind the encrypted bucket-event history repository."""
-        self._repository = repository
-
-    @override
-    def exists(self) -> bool:
-        """Report event-history presence without exposing storage failures."""
-        return _translate_adapter_failure("bucket_event_history_exists", self._repository.exists)
-
-    @override
-    def load(self) -> BucketEventHistoryCatalogue:
-        """Load event history through the application-facing port."""
-        return _translate_adapter_failure("bucket_event_history_load", self._repository.load)
-
-    def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
-        """Load event history together with its optimistic-concurrency revision."""
-        return _translate_adapter_failure("bucket_event_history_load_revisioned", self._repository.load_revisioned)
-
-    @override
-    def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
-        """Persist event history while translating storage failures."""
-        _translate_adapter_failure("bucket_event_history_save", lambda: self._repository.save(catalogue))
-
-    @override
-    def to_secure_object_write(
-        self,
-        catalogue: BucketEventHistoryCatalogue,
-        *,
-        expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
-        """Prepare an event-history secure write for an atomic declaration commit."""
-        return _translate_adapter_failure(
-            "bucket_event_history_prepare_write",
-            lambda: self._repository.to_secure_object_write(
-                catalogue,
-                expected_revision_id=expected_revision_id,
-            ),
-        )
-
-    def append_guarded(
-        self,
-        appender: Callable[[BucketEventHistoryCatalogue], BucketEventHistoryCatalogue],
-        *,
-        attempts: int = 4,
-    ) -> BucketEventHistoryCatalogue:
-        """Append through the existing revision guard."""
-        return _translate_adapter_failure(
-            "bucket_event_history_append",
-            lambda: self._repository.append_guarded(appender, attempts=attempts),
-        )
-
-
 def build_m036_lifecycle_ports(*, bucket_id: str) -> M036LifecyclePorts:
     """Bind secure declaration and event repositories for one profile bucket."""
     from ..storage.runtime_repository import secure_object_repository_for_bucket
@@ -202,14 +146,14 @@ def build_m036_lifecycle_ports(*, bucket_id: str) -> M036LifecyclePorts:
                 objects=objects,
             ),
         ),
-        bucket_event_repository=M036BucketEventRepositoryAdapter(
+        bucket_event_repository=TranslatedBucketEventHistoryRepository(
             repository=BucketEventHistoryRepository(objects=objects),
+            translate=_translate_adapter_failure,
         ),
     )
 
 
 __all__ = [
-    "M036BucketEventRepositoryAdapter",
     "M036DeclarationRepositoryAdapter",
     "build_m036_lifecycle_ports",
 ]

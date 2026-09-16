@@ -45,7 +45,7 @@ from cadrumo.application.provisioning import (
     probe_hardware_profile,
 )
 from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
-from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.config import Settings, load_settings, override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
@@ -121,11 +121,66 @@ def _run_batch(
     *,
     sources: list[Path],
     direction: InvoiceKind = InvoiceKind.RECEIVED,
-    settings=None,
+    settings: Settings | None = None,
     hardware_profile: HardwareProfile | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
 ) -> BatchRunResult:
-    """Run the application batch through ports composed by this outer test."""
+    """Run the application batch through ports composed by this outer test.
+
+    Without explicit settings the run reads through the loopback reader, never
+    the host's runtime: the profile's settings snapshot is aligned to the served
+    endpoint and to the models that endpoint reports installed, so the outcome
+    cannot depend on which models this machine happens to have pulled.
+    """
+    if settings is not None:
+        return _run_batch_with(
+            runtime,
+            sources=sources,
+            direction=direction,
+            settings=settings,
+            hardware_profile=hardware_profile,
+            on_item=on_item,
+        )
+    with serving_a_loopback_reader(replies=()):
+        served = load_settings()
+        # Admission inputs are pinned to their declared defaults, so a host's
+        # local configuration cannot open or close the lane under test.
+        declared = {
+            name: Settings.model_fields[name].default
+            for name in (
+                "cadrumo_llm_contention_safety_margin_bytes",
+                "cadrumo_llm_contention_check_override",
+                "cadrumo_llm_model_runtime_memory_floor_bytes",
+                "cadrumo_llm_local_inference_concurrency",
+            )
+        }
+        aligned = runtime.settings.model_copy(
+            update={
+                **declared,
+                "cadrumo_llm_ollama_chat_url": served.cadrumo_llm_ollama_chat_url,
+                "cadrumo_llm_ollama_text_model": served.cadrumo_llm_ollama_text_model,
+                "cadrumo_llm_ollama_vision_model": served.cadrumo_llm_ollama_vision_model,
+            },
+        )
+        return _run_batch_with(
+            runtime,
+            sources=sources,
+            direction=direction,
+            settings=aligned,
+            hardware_profile=hardware_profile,
+            on_item=on_item,
+        )
+
+
+def _run_batch_with(
+    runtime: TestRuntimeProfile,
+    *,
+    sources: list[Path],
+    direction: InvoiceKind,
+    settings: Settings,
+    hardware_profile: HardwareProfile | None,
+    on_item: Callable[[BatchItemResult], None] | None,
+) -> BatchRunResult:
     period = default_invoice_extraction_period()
     with bundled_indexed_authority().operation() as operation:
         evidence_ports, extraction_ports = _batch_ports(runtime, operation=operation)
@@ -134,7 +189,7 @@ def _run_batch(
             bucket_id=_BUCKET_ID,
             sources=sources,
             direction=direction,
-            settings=runtime.settings if settings is None else settings,
+            settings=settings,
             evidence_ports=evidence_ports,
             extraction_ports=extraction_ports,
             operation=operation,
@@ -596,7 +651,7 @@ class TestInferencePacing:
         assert paused.items[0].status == "paused"
         assert later.items[0].status != "paused", "once the contention clears, the deferred item must be attempted"
 
-    def test_a_machine_with_no_reader_gives_one_typed_refusal_not_one_per_document(
+    def test_a_machine_with_no_reader_pauses_every_document_on_one_typed_reason(
         self,
         runtime_profile: TestRuntimeProfile,
         tmp_path: Path,
@@ -605,10 +660,15 @@ class TestInferencePacing:
 
         The reader is made genuinely unreachable by pointing the runtime at a
         closed port — a real failure of the real client, not a substituted one.
-        Admission has nothing to refuse here (the machine has headroom), so this
-        exercises the after-the-first-attempt closure specifically: one document
-        pays for the discovery and the rest are deferred on the exact typed
-        provisioning refusal.
+        Admission has nothing to refuse here (the machine has headroom). The
+        per-role reader probe already proves the runtime unreachable before any
+        document is spent, so no document pays for the discovery: every one is
+        deferred, and the run carries the typed reason once. An unavailable
+        machine is not an unreadable document, which a refusal would conflate.
+
+        Documents that need no model still complete on a closed lane; that half
+        is pinned by
+        ``test_batch_inference_pacing.py::test_a_fully_labelled_text_layer_invoice_completes_while_the_lane_is_closed``.
         """
         folder = tmp_path / "no_reader"
         folder.mkdir()
@@ -626,13 +686,19 @@ class TestInferencePacing:
             )
 
         statuses = [item.status for item in result.items]
-        assert statuses.count("refused") == 1, f"exactly one document should pay for the discovery: {statuses}"
-        assert statuses.count("paused") == 2, f"every later document must be deferred, not re-refused: {statuses}"
+        assert statuses == ["paused", "paused", "paused"], (
+            f"no document may be spent on a known-absent reader: {statuses}"
+        )
+        # The item model forbids a reason under a non-refused status, so each row
+        # is tied to the run's one stated cause by needing the closed lane.
+        assert all(item.refusal_verdict is None for item in result.items), "a paused item carries no per-item refusal"
+        assert all(item.needed_inference for item in result.items)
         assert result.inference_pause is not None
         assert result.inference_pause.precondition_verdict.failed_condition_id == (
             ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
         )
         assert result.inference_pause.facts["runtime_reachable"] is False
+        assert result.inference_pause.facts["runtime_url"] == "http://127.0.0.1:1/api/chat"
 
     def test_a_document_needing_a_reader_is_read_when_one_is_there(
         self,

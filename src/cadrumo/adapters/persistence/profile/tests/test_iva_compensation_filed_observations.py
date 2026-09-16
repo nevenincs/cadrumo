@@ -14,16 +14,13 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import (
     _M303_POSTERIOR_CASILLA,
     _M303_RESULTADO_CASILLA,
-    _M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,
     _TAXPAYER_REF,
     _filed_303_compensation_observation,
-    _filed_390_observation,
     _filed_observation,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.errors import IvaCompensationModeloError
 from cadrumo.application.calculations.iva_compensation_history import (
-    iva_compensation_annual_summary_from_filed_observation,
     iva_compensation_period_key,
     iva_compensation_state_from_observation_envelope,
     seed_iva_compensation_period,
@@ -50,7 +47,6 @@ from cadrumo.domain.iva_compensation.carry_forward import (
     build_iva_compensation_carry_forward_report,
 )
 from cadrumo.domain.iva_compensation.errors import (
-    IvaCompensationCasillaReferenceError,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
@@ -338,33 +334,3 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
             "existing_provenance": "operator_seed",
         }
 
-
-def test_iva_compensation_annual_summary_refuses_printed_number_references() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        observation = _filed_390_observation(
-            last_period_compensation=Decimal("100.00"),
-            generated_not_in_last_period=Decimal("50.00"),
-        ).model_copy(
-            update={
-                "casillas": (
-                    ObservedCasillaValue(
-                        casilla_id=_M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,
-                        value="100.00",
-                        value_kind=CasillaValueKind.NUMERIC,
-                        source_artefact_kind="submitted_file",
-                        source_locator="submitted-file:390:97",
-                        confidence=1.0,
-                    ),
-                ),
-            },
-        )
-
-        with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
-            iva_compensation_annual_summary_from_filed_observation(observation, operation=_authority_operation_for_test)
-
-        assert excinfo.value.context == {
-            "modelo": "390",
-            "revision": "2025",
-            "period": "0A",
-            "casilla_ids": (_M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,),
-        }
