@@ -110,21 +110,8 @@ def require_concepto_ingreso(
     ).require(value)
 
 
-def concepto_ingreso_tokens(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> tuple[ConceptoIngreso, ...]:
-    """Return the selected income-concept tokens in stable order."""
-    return resolve_concepto_ingreso_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).tokens
-
-
 __all__ = [
     "ConceptoIngresoCatalogue",
-    "concepto_ingreso_tokens",
     "require_concepto_ingreso",
     "resolve_concepto_ingreso_catalogue",
 ]

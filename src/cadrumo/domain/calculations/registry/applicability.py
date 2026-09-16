@@ -88,7 +88,7 @@ seed rule is reported INCOMPLETE with a rationale that says so.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterator, Mapping
 from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, override
@@ -1122,45 +1122,12 @@ def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | 
     return irpf_income_category_actividad_economica_token() in profile.irpf_income_categories
 
 
-def derive_not_applicable_source_modelos(profile: TaxpayerProfile, modelos: Iterable[str]) -> frozenset[str] | None:
-    """Return source modelos positively known not applicable for ``profile``.
-
-    Fail-closed: if applicability derivation raises or returns an
-    incomplete/undetermined verdict for ANY queried modelo, callers receive
-    ``None`` and suppress nothing. A positive
-    :attr:`ApplicabilityVerdict.NOT_APPLICABLE` result is grounded in the same
-    rules :func:`derive_modelo_applicability` applies to decide whether the
-    :class:`TaxpayerProfile` files M130 or M131.
-
-    Consumed by the cross-period clean-state gate (which sources need no
-    upstream filing evidence) and by the relation-prefill resolver (which
-    unresolved relation legs fold in as an explicit zero). Both must read one
-    applicability verdict, so it lives here beside
-    :func:`derive_modelo_applicability` rather than in either consumer.
-    """
-    not_applicable: set[str] = set()
-    for modelo in sorted({str(modelo) for modelo in modelos}):
-        try:
-            applicability = derive_modelo_applicability(profile, modelo)
-        except (TypeError, ValueError):
-            return None
-        if applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
-            not_applicable.add(modelo)
-        elif applicability.verdict not in {
-            ApplicabilityVerdict.APPLICABLE,
-            ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
-        }:
-            return None
-    return frozenset(not_applicable)
-
-
 __all__ = [
     "MODELO_APPLICABILITY_RULES",
     "ApplicabilityVerdict",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
     "derive_modelo_applicability",
-    "derive_not_applicable_source_modelos",
     "derive_tax_route",
     "derive_taxpayer_files_economic_activity",
     "iter_modelo_applicability_rules",

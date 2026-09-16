@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
 from enum import StrEnum, auto
-from typing import override
 
 from ...contribuyente.entity_type import (
     EntityType,
     entity_type_attribution_entity_token,
     entity_type_legal_entity_token,
     entity_type_natural_person_token,
-    entity_type_tokens,
 )
 
-__all__ = ["TAX_ROUTE_FOR_ENTITY_TYPE", "TaxRoute", "tax_route_for_entity_type"]
+__all__ = ["TaxRoute", "tax_route_for_entity_type"]
 
 
 class TaxRoute(StrEnum):
@@ -35,22 +32,3 @@ def tax_route_for_entity_type(entity_type: EntityType) -> TaxRoute:
     if entity_type == entity_type_attribution_entity_token():
         return TaxRoute.ATTRIBUTION_PASS_THROUGH
     raise ValueError(f"entity type {entity_type!r} has no declared tax route")
-
-
-class _TaxRouteByEntityType(Mapping[EntityType, TaxRoute]):
-    """Lazy compatibility mapping backed by the typed registry projection."""
-
-    @override
-    def __getitem__(self, entity_type: EntityType) -> TaxRoute:
-        return tax_route_for_entity_type(entity_type)
-
-    @override
-    def __iter__(self) -> Iterator[EntityType]:
-        return iter(entity_type_tokens())
-
-    @override
-    def __len__(self) -> int:
-        return len(entity_type_tokens())
-
-
-TAX_ROUTE_FOR_ENTITY_TYPE: Mapping[EntityType, TaxRoute] = _TaxRouteByEntityType()

@@ -1021,19 +1021,6 @@ def require_iva_exemption_article(
     ).require(value)
 
 
-def require_iva_art69_dos_service(
-    value: object,
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> IvaArt69DosService:
-    """Validate one value against the dated Art. 69.Dos service vocabulary."""
-    return resolve_iva_art69_dos_service_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).require(value)
-
-
 __all__ = [
     "IvaArt69DosServiceCatalogue",
     "IvaArt69DosServiceDefinition",
@@ -1062,7 +1049,6 @@ __all__ = [
     "m303_tax_territory_exclusively_foral_mark",
     "m303_tax_territory_is_foral",
     "m303_tax_territory_state_attribution_ratio",
-    "require_iva_art69_dos_service",
     "require_iva_cash_accounting_treatment",
     "require_iva_exemption_article",
     "require_iva_regime",

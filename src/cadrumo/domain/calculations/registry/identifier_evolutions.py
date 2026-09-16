@@ -10,7 +10,6 @@ Omission is never a withdrawal.
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
@@ -21,20 +20,12 @@ from .schema_base import LegalRefs, RegistryModel, SourceRefs
 
 __all__ = [
     "IdentifierEvolution",
-    "IdentifierEvolutionKind",
     "ReplacedIdentifierEvolution",
     "RetiredIdentifierEvolution",
 ]
 
 DeclarationIdentifier = Annotated[str, Field(min_length=1, max_length=128)]
 FamilyName = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")]
-
-
-class IdentifierEvolutionKind(StrEnum):
-    """How an identifier-keyed declaration leaves the inheritance chain."""
-
-    RETIRED = "retired"
-    REPLACED = "replaced"
 
 
 class RetiredIdentifierEvolution(RegistryModel):

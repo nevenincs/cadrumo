@@ -189,20 +189,10 @@ def require_iva_rate_role(
     ).require(value)
 
 
-def default_iva_rate_role(
-    *,
-    effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
-) -> IvaRateRole:
-    """Return the registry-declared default IVA rate role."""
-    return require_iva_rate_role(effective_date=effective_date, authority=authority)
-
-
 __all__ = [
     "IvaRateRole",
     "IvaRateRoleCatalogue",
     "IvaRateRoleDefinition",
-    "default_iva_rate_role",
     "require_iva_rate_role",
     "resolve_iva_rate_role_catalogue",
 ]

@@ -18,7 +18,6 @@ _KIND_ORDER_KEY = "kind.order"
 _AUTHORITY_ORDER_KEY = "evidence_authority.order"
 _KIND_OWNER_ONLY_KEY = "kind.owner_only"
 _KIND_INVESTMENT_KEY = "kind.investment_acquisition"
-_INVOICE_AUTHORITY_KEY = "evidence_authority.invoice"
 
 
 @dataclass(frozen=True, slots=True)

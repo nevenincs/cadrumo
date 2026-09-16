@@ -287,18 +287,6 @@ def require_bien_inversion_kind(
     return resolve_bienes_inversion_catalogue(effective_date=effective_date, authority=authority).require_kind(value)
 
 
-def bien_inversion_kind_choices(
-    *,
-    effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
-) -> tuple[BienInversionKind, ...]:
-    """Return capital-goods kind choices in registry order."""
-    return resolve_bienes_inversion_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).kind_choices
-
-
 def require_bien_inversion_disposal_regime(
     value: object,
     *,
@@ -375,7 +363,6 @@ __all__ = [
     "BienInversionDisposalRegimeDefinition",
     "BienInversionKindDefinition",
     "bien_inversion_disposal_regime_choices",
-    "bien_inversion_kind_choices",
     "is_bien_inversion_disposal_regime",
     "is_bien_inversion_kind",
     "minimum_bien_inversion_acquisition_year",
