@@ -139,6 +139,7 @@ def _ledger() -> LedgerWorkspaceProjectionV1:
         revisions={},
         work_units=WorkUnitCatalogue(),
         evidence_pending_review=0,
+        last_import_count=0,
     )
 
 

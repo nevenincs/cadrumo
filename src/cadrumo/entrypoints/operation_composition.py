@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
+from ..adapters.outbound.model_runtime.process_control import spawn_runtime_server
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.operations.financial_operand_custody import (
@@ -48,6 +49,10 @@ from ..application.live.filed_history_operation import (
 from ..application.live.filed_observation_ports import FiledObservationPersistencePorts
 from ..application.live.iva_remote_state_ports import IvaRemoteStatePort
 from ..application.live.notification_ports import NotificationsPorts
+from ..application.local_reader_operation import (
+    build_local_reader_operation_definition,
+    build_local_reader_operation_registration,
+)
 from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
 from ..application.modelo.calculation_action_ports import CalculationActionPortsFactory
 from ..application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
@@ -266,6 +271,7 @@ def build_production_operation_registry(
         composition_factory=compose_live_state,
         pull=_typed_pull_filed_history_with_shared_composition,
     )
+    local_reader_definition = build_local_reader_operation_definition(spawn=spawn_runtime_server)
     resolved_censal_definition = (
         censal_definition
         if censal_definition is not None
@@ -285,6 +291,7 @@ def build_production_operation_registry(
                 resolved_censal_definition,
                 filed_history_definition,
                 resolved_google_export_definition,
+                local_reader_definition,
             ),
             key=lambda item: item.definition_id,
         )
@@ -298,6 +305,7 @@ def build_production_operation_registry(
                 build_censal_operation_registration(resolved_censal_definition),
                 build_filed_history_operation_registration(filed_history_definition),
                 build_google_sheets_export_operation_registration(resolved_google_export_definition),
+                build_local_reader_operation_registration(local_reader_definition),
             ),
             key=lambda item: item.contract.definition_id,
         )
