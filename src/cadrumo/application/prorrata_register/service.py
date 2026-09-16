@@ -38,9 +38,6 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime as _general_regime,
 )
-from ...domain.calculations.registry.prorrata_register_catalogue import (
-    inicio_actividad_prorrata_provenance as _inicio_actividad_provenance,
-)
 from ...domain.prorrata_register.register import (
     ProrrataProvisionalResolution,
     ProrrataRegister,
@@ -148,41 +145,6 @@ class ProrrataRegisterService:
             provisional_percentage=provisional_percentage,
             provisional_provenance=_aeat_autorizada_provenance(),
             authorisation_reference=authorisation_reference,
-            source_registry_snapshot_refs=(),
-        )
-        return self.declare(entry)
-
-    def record_inicio_actividad(
-        self,
-        *,
-        ejercicio: int,
-        provisional_percentage: Decimal,
-        proposal_reference: str,
-        sector_id: str | None = None,
-        regime: _ProrrataRegisterRegime | None = None,
-    ) -> ProrrataRegister:
-        """Record an art. 105.Tres inicio-de-actividades proposed prorrata override.
-
-        Args:
-            ejercicio: Filing year whose provisional prorrata is proposed for inicio.
-            provisional_percentage: Proposed provisional deduction percentage.
-            proposal_reference: Operator-held reference for the inicio proposal.
-            sector_id: Optional sector identifier for sectores diferenciados.
-            regime: Prorrata regime in force for the entry. Defaults to general.
-
-        Returns:
-            The updated :class:`ProrrataRegister`.
-        """
-        if regime is None:
-            regime = _general_regime()
-        entry = ProrrataRegisterEntry(
-            ejercicio=ejercicio,
-            regime=regime,
-            especial_transition=None,
-            sector_id=sector_id,
-            provisional_percentage=provisional_percentage,
-            provisional_provenance=_inicio_actividad_provenance(),
-            authorisation_reference=proposal_reference,
             source_registry_snapshot_refs=(),
         )
         return self.declare(entry)

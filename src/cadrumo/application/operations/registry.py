@@ -656,22 +656,6 @@ class OperationRegistry(BaseModel):
                 return definition
         raise KeyError(f"operator action is not mapped to an operation definition: {action.action_id!r}")
 
-    def resolve_request_json(self, raw: str | bytes) -> OperationRequest[BaseModel]:
-        """Hydrate one request through the concrete model registered for its definition."""
-        # The header selects the concrete model; that model below still validates
-        # the complete object, including every field ignored by this first pass.
-        header = _OperationRequestResolutionHeader.model_validate_json(raw, extra="ignore")
-        request_type = self.lookup(header.definition_id).request_type
-        return _specialize_request_model(request_type).model_validate_json(raw)
-
-    def resolve_snapshot_json(self, raw: str | bytes) -> OperationSnapshot[BaseModel]:
-        """Hydrate one snapshot through the concrete model registered for its definition."""
-        # The header selects the concrete model; that model below still validates
-        # the complete object, including every field ignored by this first pass.
-        header = _OperationSnapshotResolutionHeader.model_validate_json(raw, extra="ignore")
-        request_type = self.lookup(header.identity.definition_id).request_type
-        return _specialize_snapshot_model(request_type).model_validate_json(raw)
-
     def resolve_credential_free_payload(self, definition_id: str, raw: str | bytes) -> BaseModel:
         """Hydrate a journal-safe payload only for its exact registered definition."""
         definition = self.lookup(definition_id)
