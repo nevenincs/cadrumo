@@ -24,13 +24,14 @@ import re
 from collections.abc import Mapping
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Literal, Self
+from typing import Final, Literal
 
 from pydantic import BaseModel, GetCoreSchemaHandler, field_validator
 from pydantic_core import CoreSchema, core_schema
 
 from .errors.hierarchy import CoreValidationError
 from .models import STRICT_FROZEN_CONFIG
+from .registry_token import StrictRegistryToken
 
 
 class BindingAggregationOp(StrEnum):
@@ -755,7 +756,7 @@ class WorkIncomeRetencionTreatment(BaseModel):
     is_fixed_rate: bool
 
 
-class RetencionClave(str):
+class RetencionClave(StrictRegistryToken):
     """Opaque Modelo 190/193 clave token projected from registry membership.
 
     The selected withholding catalogue owns the letter vocabulary and its
@@ -765,48 +766,7 @@ class RetencionClave(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated withholding-key token."""
-        if not _registry_validated:
-            raise TypeError("RetencionClave tokens must be projected from the registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("RetencionClave token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("RetencionClave must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: type[object],
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Accept only an already projected token and serialize it as text."""
-        del source_type, handler
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical wire token."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical token for diagnostics."""
-        return str(self)
+    _projection_source = "registry"
 
 
 class IntracomOperationType(StrEnum):
@@ -824,7 +784,7 @@ class IntracomOperationType(StrEnum):
     C = "C"
 
 
-class TravelAgencyMediationType(str):
+class TravelAgencyMediationType(StrictRegistryToken):
     """Opaque travel-agency mediation token projected from fact 0133.
 
     RD 1619/2012 disposición adicional cuarta owns the vocabulary and its
@@ -834,51 +794,10 @@ class TravelAgencyMediationType(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated travel-agency mediation token."""
-        if not _registry_validated:
-            raise TypeError("TravelAgencyMediationType tokens must be projected from the registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("TravelAgencyMediationType token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("TravelAgencyMediationType must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: type[object],
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Accept only an already projected token and serialize it as text."""
-        del source_type, handler
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical wire token."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical token for diagnostics."""
-        return str(self)
+    _projection_source = "registry"
 
 
-class ThirdPartyDeclarationRole(str):
+class ThirdPartyDeclarationRole(StrictRegistryToken):
     """Opaque third-party declaration-role token projected from fact 0134.
 
     The role vocabulary, legal grounding, and C/D/E role projections belong to
@@ -887,49 +806,6 @@ class ThirdPartyDeclarationRole(str):
     """
 
     __slots__ = ()
-
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated third-party declaration-role token."""
-        if not _registry_validated:
-            raise TypeError("ThirdPartyDeclarationRole tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("ThirdPartyDeclarationRole token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("ThirdPartyDeclarationRole must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: type[object],
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Accept only an already projected token and serialize it as text."""
-        del source_type, handler
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical wire token."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical token for diagnostics."""
-        return str(self)
 
 
 class ForeignAssetClass(StrEnum):
