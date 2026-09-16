@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
@@ -140,7 +141,7 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
         ),
     )
     return (
-        WorkUnitCatalogue.from_work_units((unit,)),
+        build_work_unit_catalogue((unit,)),
         CalculationRevisionCatalogue(revisions={calculation_revision_id: revision}),
         ModeloRecordCatalogue(records={filing_record_id: record}),
     )

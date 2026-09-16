@@ -96,7 +96,7 @@ def seeded_bucket(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     monkeypatch.setattr(
         advisory_module,
         "_load_fact_index",
-        lambda bucket_id, *, operation: _FACT_INDEXES.get(bucket_id),
+        lambda bucket_id, *, operation, profile: _FACT_INDEXES.get(bucket_id),
     )
     yield _BUCKET_ID
     _FACT_INDEXES.clear()

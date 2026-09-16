@@ -442,11 +442,6 @@ class ModeloWorkspaceRegistryPortV1:
             generation=capture.generation,
         )
 
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current REGISTRY stamp and epoch for same-domain validation."""
-        coordinate = self._authority.read_current_coordinate()
-        return _current_stamp_and_epoch(self.producer_contract, coordinate)
-
 
 class ModeloWorkspaceWorkPortV1:
     """Application-owned port realization delegating to the sole WORK capture."""
@@ -484,16 +479,6 @@ class ModeloWorkspaceWorkPortV1:
             generation=capture.generation,
         )
 
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current WORK stamp and epoch for same-domain validation."""
-        from .work_addressing import read_modelo_work_current_coordinate
-
-        coordinate = read_modelo_work_current_coordinate(
-            self._request,
-            catalogue_repository=self._catalogue_repository,
-        )
-        return _current_stamp_and_epoch(self.producer_contract, coordinate)
-
 
 class ModeloWorkspaceLocaleCataloguePortV1:
     """Application-owned port realization delegating to the sole LOCALE_CATALOGUE capture."""
@@ -527,13 +512,6 @@ class ModeloWorkspaceLocaleCataloguePortV1:
             comparison_domain=capture.comparison_domain,
             generation=capture.generation,
         )
-
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current LOCALE_CATALOGUE stamp and epoch for same-domain validation."""
-        from ...core.i18n.locale_catalogue import read_locale_catalogue_current_coordinate
-
-        coordinate = read_locale_catalogue_current_coordinate(locale=self._locale)
-        return _current_stamp_and_epoch(self.producer_contract, coordinate)
 
 
 class ModeloWorkspaceFieldManifestPortV1:
@@ -573,18 +551,6 @@ class ModeloWorkspaceFieldManifestPortV1:
             generation=capture.generation,
         )
 
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current FIELD_MANIFEST stamp and epoch for same-domain validation."""
-        if isinstance(self._authority, RegistrySnapshot):
-            from .workspace_manifest import read_modelo_workspace_manifest_current_coordinate
-
-            coordinate = read_modelo_workspace_manifest_current_coordinate(self._authority)
-        else:
-            from .workspace_manifest import read_modelo_workspace_manifest_current_coordinate_for_inspection
-
-            coordinate = read_modelo_workspace_manifest_current_coordinate_for_inspection(self._authority)
-        return _current_stamp_and_epoch(self.producer_contract, coordinate)
-
 
 def _contributing_projection[ProjectionT: BaseModel](
     contract: ModeloWorkspaceProducerContractV1,
@@ -613,20 +579,6 @@ class _NativeCurrentCoordinate(Protocol):
 
     @property
     def generation(self) -> int: ...
-
-
-def _current_stamp_and_epoch(
-    contract: ModeloWorkspaceProducerContractV1,
-    coordinate: _NativeCurrentCoordinate,
-) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-    return (
-        ModeloWorkspaceProducerStampV1.from_contract(contract),
-        ModeloWorkspaceEpochV1(
-            owner=contract.contributor.owner,
-            comparison_domain=coordinate.comparison_domain,
-            generation=coordinate.generation,
-        ),
-    )
 
 
 __all__ = [

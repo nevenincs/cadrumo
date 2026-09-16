@@ -227,10 +227,6 @@ def test_registry_port_captures_the_admission_specific_projection() -> None:
         assert (captured.projection.inspection is None) != (captured.projection.snapshot is None)
         captured.require_contract(port.producer_contract)
 
-        stamp, epoch = port.read_current_stamp_and_epoch()
-        assert stamp == captured.stamp
-        assert epoch.generation == captured.epoch.generation
-
 
 def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() -> None:
     from ....core.authority_grade import RegistryAuthorityGrade
