@@ -93,6 +93,7 @@ def test_modelo_303_declares_iva_repercutido_soportado_autorepercutido_bindings(
     assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in iva_bindings
 
 
+@pytest.mark.usefixtures("operation")
 def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations() -> None:
     """End-to-end: a small ledger of substrate-classified observations
     aggregates to the expected per-binding totals via the

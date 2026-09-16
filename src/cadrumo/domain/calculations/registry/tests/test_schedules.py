@@ -120,6 +120,7 @@ def test_resolve_profile_fact_missing_object_attribute_raises() -> None:
         _resolve_profile_fact(profile, "name")
 
 
+@pytest.mark.usefixtures("operation")
 def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
     """contract regression: the M202 filing schedule uses ``field = "taxpayer.entity_type"``
     but TaxpayerProfile exposes ``entity_type`` directly (no ``.taxpayer`` sub-attribute).
