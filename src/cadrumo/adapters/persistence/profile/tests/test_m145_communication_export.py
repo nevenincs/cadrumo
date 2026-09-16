@@ -27,6 +27,8 @@ from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationExportResult,
+    M145CommunicationRecordExportError,
+    M145CommunicationRecordValidationError,
     create_m145_communication_record,
     export_m145_communication_record,
 )
@@ -221,7 +223,7 @@ def test_export_m145_communication_record_refuses_invalid_record(
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
         )
-        with pytest.raises(ValueError, match="validation passes"):
+        with pytest.raises(M145CommunicationRecordValidationError, match="validation passes"):
             export_m145_communication_record(
                 record.communication_record_id,
                 bucket_id=runtime.bucket_id,
@@ -248,7 +250,7 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
         )
-        with pytest.raises(ValueError):
+        with pytest.raises(M145CommunicationRecordExportError, match="could not be rendered"):
             export_m145_communication_record(
                 record.communication_record_id,
                 bucket_id=runtime.bucket_id,

@@ -26,6 +26,7 @@ from .....adapters.persistence.profile.m145_communication_records import build_m
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
+    M145CommunicationRecordValidationError,
     create_m145_communication_record,
     export_m145_communication_record,
     mark_m145_communication_record_delivered_to_payer,
@@ -228,7 +229,7 @@ def test_m145_communication_invalid_delivery_does_not_emit_delivery_event(
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
         )
-        with pytest.raises(ValueError, match="validation passes"):
+        with pytest.raises(M145CommunicationRecordValidationError, match="validation passes"):
             mark_m145_communication_record_delivered_to_payer(
                 created.communication_record_id,
                 bucket_id=runtime.bucket_id,

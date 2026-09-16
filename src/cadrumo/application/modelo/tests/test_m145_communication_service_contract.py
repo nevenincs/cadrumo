@@ -26,17 +26,21 @@ from ..m145_communication import (
     M145CommunicationAction,
     build_m145_communication_service_contract,
 )
+from ..m145_communication_period import M145CommunicationPeriod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_m145_communication_service_contract_is_backend_owned_and_registry_backed() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        contract = build_m145_communication_service_contract(operation=_authority_operation_for_test)
+        contract = build_m145_communication_service_contract(
+            period_token=M145CommunicationPeriod.COMMUNICATION,
+            operation=_authority_operation_for_test,
+        )
 
         assert contract.service_owner == M145_COMMUNICATION_SERVICE_OWNER
         assert contract.modelo == Modelo("145").value
-        assert getattr(contract, "period_" + "token") == "ANNUAL"
+        assert contract.period_token == M145CommunicationPeriod.COMMUNICATION.value
         assert contract.revision_id == "2012-01-31-y-siguientes"
         assert contract.surfaces == ("communication", "payer_delivery", "export")
         assert contract.actions == (
@@ -54,7 +58,10 @@ def test_m145_communication_service_contract_is_backend_owned_and_registry_backe
 
 def test_m145_communication_service_contract_excludes_filing_surfaces_and_terms() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        contract = build_m145_communication_service_contract(operation=_authority_operation_for_test)
+        contract = build_m145_communication_service_contract(
+            period_token=M145CommunicationPeriod.COMMUNICATION,
+            operation=_authority_operation_for_test,
+        )
         vocabulary = {
             *contract.surfaces,
             *(action.value for action in contract.actions),
