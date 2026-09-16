@@ -47,6 +47,7 @@ from cadrumo.application.operations.financial_operand import (
 from cadrumo.application.operations.financial_operand_custody import OperationFinancialOperandCustodyState
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -67,6 +68,8 @@ from cadrumo.core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
+
+from .supervision_support import run_to_settlement
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -108,6 +111,9 @@ class FinancialOperandExecutor:
         self.accepted: OperationTransientFinancialOperandDelivery | None = None
         self.observed_amount: Decimal | None = None
         self.requirement: OperationTransientFinancialOperandRequirement | None = None
+        # When set, the executor keeps the granted operand until released.
+        self.hold: asyncio.Event | None = None
+        self.holding = asyncio.Event()
 
     async def execute(
         self,
@@ -124,6 +130,9 @@ class FinancialOperandExecutor:
         self.accepted = await self.submission_port(requirement, _IN_BOUNDS)
         access = context.financial_operand.grant_access(requirement)
         self.observed_amount = access.declared_operand(requirement)
+        if self.hold is not None:
+            self.holding.set()
+            await self.hold.wait()
 
 
 def _capabilities() -> OperationCapabilities:
@@ -222,7 +231,7 @@ def test_registered_executor_reaches_the_transient_financial_operand_broker(tmp_
         executor.submission_port = supervisor.submit_transient_financial_operand
 
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id=_OPERATION_ID))
-        asyncio.run(supervisor.start(operation_id))
+        asyncio.run(run_to_settlement(supervisor, operation_id))
 
         requirement = executor.requirement
         assert requirement is not None
@@ -244,3 +253,37 @@ def test_registered_executor_reaches_the_transient_financial_operand_broker(tmp_
         assert settled is not None
         assert settled.state is OperationFinancialOperandCustodyState.RELEASED
         assert "amount" not in settled.model_dump_json()
+
+
+def test_closing_the_host_mid_operation_still_releases_the_granted_operand(tmp_path: Path) -> None:
+    """A task cancelled by host close settles its operand custody; no decrypted amount outlives it."""
+    executor = FinancialOperandExecutor()
+    executor.hold = asyncio.Event()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_root = tmp_path / "durable-state"
+        custody = OperationFinancialOperandCustodyFilesystemRepository(root=tmp_path / "custody")
+        supervisor = _supervisor(
+            executor=executor,
+            journal=OperationJournalRepository(storage_root=storage_root),
+            leases=OperationLeaseFilesystemRepository(storage_root=storage_root),
+            operands=operation_secure_reference_repository(objects=profile.repository),
+            custody=custody,
+        )
+        executor.submission_port = supervisor.submit_transient_financial_operand
+
+        async def hold_then_close() -> OperationPersistedSnapshot:
+            operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
+            await supervisor.start(operation_id)
+            await executor.holding.wait()
+            await supervisor.shutdown()
+            return await supervisor.inspect(operation_id)
+
+        left = asyncio.run(hold_then_close())
+
+        requirement = executor.requirement
+        assert requirement is not None
+        released = asyncio.run(custody.read(requirement.interaction_id))
+
+    assert left.terminal_receipt is None
+    assert released is not None
+    assert released.state is OperationFinancialOperandCustodyState.RELEASED

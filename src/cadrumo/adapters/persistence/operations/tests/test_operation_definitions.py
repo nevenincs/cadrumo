@@ -66,6 +66,8 @@ from cadrumo.core.operations import (
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
+from .supervision_support import run_to_settlement
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PROFILE_CREDENTIAL_INPUT = "s40-profile-operation-passphrase"
@@ -147,7 +149,7 @@ def _start_operation(
             authority_operation=authority_operation,
         )
         created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
-        return asyncio.run(supervisor.start(created)), operands
+        return asyncio.run(run_to_settlement(supervisor, created)), operands
 
 
 def _start_secret_operation(
@@ -175,7 +177,7 @@ def _start_secret_operation(
         submission = bytearray(secret)
         asyncio.run(supervisor.submit_ephemeral_secret(requirement, submission))
         assert submission == bytearray(len(secret))
-        return asyncio.run(supervisor.start(created)), operands
+        return asyncio.run(run_to_settlement(supervisor, created)), operands
 
 
 def _assert_not_durable(root: Path, secret: bytes) -> None:
@@ -346,7 +348,7 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
                         build_profile_logout_operation_request(profile_id),
                         operation_id="d" * 64,
                     )
-                    terminal = await supervisor.start(created)
+                    terminal = await run_to_settlement(supervisor, created)
                     return terminal
 
             terminal = asyncio.run(_run_strong_close())

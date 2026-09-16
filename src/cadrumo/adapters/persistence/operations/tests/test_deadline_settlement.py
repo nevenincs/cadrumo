@@ -67,6 +67,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .supervision_support import run_to_settlement
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _DEFINITION_ID = "operation.supervisor.deadline"
@@ -320,7 +322,7 @@ def test_elapsed_aggregate_deadline_publishes_nothing_while_the_executor_continu
         async def outrun_the_executor() -> None:
             operation_id = "a" * 64
             await supervisor.submit(_request(subject_ref="subject:aggregate"), operation_id=operation_id)
-            start_task = asyncio.create_task(supervisor.start(operation_id))
+            start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await _reach(executor.started, described_as="executor entry")
 
             # The supervisor asks for a stop once its own aggregate window
@@ -377,7 +379,7 @@ def test_elapsed_cleanup_deadline_retains_uncertainty_while_an_owned_resource_cl
         async def outrun_the_cleanup() -> None:
             operation_id = "b" * 64
             await supervisor.submit(_request(subject_ref="subject:cleanup"), operation_id=operation_id)
-            start_task = asyncio.create_task(supervisor.start(operation_id))
+            start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await _reach(executor.started, described_as="executor entry")
             await _reach(executor.cancellation_observed, described_as="cancellation observed by the executor")
 

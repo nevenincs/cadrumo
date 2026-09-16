@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from ...storage.errors import RepositoryError
 from ...storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...storage.namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
 from ...storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
+from ...storage.sql.secure_objects import SecureObjectRepository
 from ..secure_references import OperationSecureReferenceRepository, operation_secure_reference_repository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -99,3 +101,30 @@ def test_canonical_namespace_is_registered_once_in_its_defining_module() -> None
     assert namespace.object_key_grammar == "{content_digest}"
     assert namespace.scope is StorageNamespaceScope.BUCKET_LOCAL
     assert namespace.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
+
+
+def test_secure_reference_storage_runs_off_the_awaiting_event_loop(tmp_path: Path) -> None:
+    """Encrypted operand reads and writes happen on a worker, never on the caller's loop."""
+    operand = _Operand(subject="off-loop-subject", amount=5)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        storage_threads: list[int] = []
+
+        def objects() -> SecureObjectRepository:
+            # The store resolves its repository exactly where it is about to use it.
+            storage_threads.append(threading.get_ident())
+            return profile.repository
+
+        store = OperationSecureReferenceRepository(
+            objects_factory=objects,
+            namespace=OPERATION_SECURE_REFERENCE_NAMESPACE,
+        )
+
+        async def round_trip() -> tuple[int, _Operand]:
+            reference = await store.put(operand, written_at=_WRITTEN_AT)
+            return threading.get_ident(), await store.resolve(reference, _Operand)
+
+        loop_thread, resolved = asyncio.run(round_trip())
+
+    assert resolved == operand
+    assert len(storage_threads) == 2
+    assert loop_thread not in storage_threads

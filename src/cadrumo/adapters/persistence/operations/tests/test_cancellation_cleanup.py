@@ -67,6 +67,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .supervision_support import run_to_settlement
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 28, 9, tzinfo=UTC)
@@ -312,7 +314,7 @@ def test_cancellation_at_each_declared_phase_reaps_the_child_and_frees_the_scope
         async def cancel_at_phase() -> None:
             operation_id = f"{_PHASES.index(cancel_at) + 1:064x}"
             await supervisor.submit(_request(subject_ref=f"subject:{cancel_at}"), operation_id=operation_id)
-            start_task = asyncio.create_task(supervisor.start(operation_id))
+            start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.reached_cancel_phase.wait()
 
             process_resource = executor.process_resource

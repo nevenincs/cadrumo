@@ -58,6 +58,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .supervision_support import run_to_settlement
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 14, 18, tzinfo=UTC)
@@ -350,7 +352,7 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
             await supervisor.submit(_request(subject_ref=f"subject:{case.condition.value}"), operation_id=operation_id)
             terminal_task: asyncio.Task[OperationPersistedSnapshot]
             if case.await_cancellation:
-                start_task = asyncio.create_task(supervisor.start(operation_id))
+                start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
                 await executor.started.wait()
                 await supervisor.request_cancel(operation_id)
                 resource = executor.resource
@@ -360,7 +362,7 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
                 ready_for_settlement = await supervisor.inspect(operation_id)
                 terminal_task = start_task
             else:
-                ready_for_settlement = await supervisor.start(operation_id)
+                ready_for_settlement = await run_to_settlement(supervisor, operation_id)
                 resource = executor.resource
                 assert resource is not None
                 terminal_waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
@@ -417,7 +419,7 @@ def test_executor_result_reference_settles_successfully_after_owned_cleanup(tmp_
         async def run() -> None:
             operation_id = "2" * 64
             await supervisor.submit(_request(subject_ref="subject:returned-result"), operation_id=operation_id)
-            terminal = await supervisor.start(operation_id)
+            terminal = await run_to_settlement(supervisor, operation_id)
             resource = executor.resource
             assert resource is not None
 
@@ -455,7 +457,7 @@ def test_cleanup_failure_refuses_terminal_journal_persistence(tmp_path: Path) ->
         async def refuse_terminal_after_cleanup_failure() -> None:
             operation_id = "3" * 64
             await supervisor.submit(_request(subject_ref="subject:cleanup-failure"), operation_id=operation_id)
-            running = await supervisor.start(operation_id)
+            running = await run_to_settlement(supervisor, operation_id)
             resource = executor.resource
             assert resource is not None
 
@@ -520,7 +522,7 @@ def test_cleanup_timeout_refuses_terminal_journal_persistence(tmp_path: Path) ->
         async def retain_nonterminal_state_after_cleanup_timeout() -> None:
             operation_id = "4" * 64
             await supervisor.submit(_request(subject_ref="subject:cleanup-timeout"), operation_id=operation_id)
-            start_task = asyncio.create_task(supervisor.start(operation_id))
+            start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             await supervisor.request_cancel(operation_id)
             resource = executor.resource
