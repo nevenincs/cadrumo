@@ -84,8 +84,20 @@ class OperationSubmissionService:
         await self.supervisor.submit_ephemeral_secret(requirement, secret)
 
     async def start(self, operation_id: OperationId) -> OperationId:
-        """Start one submitted operation without exposing its raw snapshot."""
+        """Admit one submitted operation; it keeps running after this returns.
+
+        Progress and the outcome are read through the observation service, or
+        awaited with :meth:`settled`.
+        """
         snapshot = await self.supervisor.start(operation_id)
+        return snapshot.identity.operation_id
+
+    async def settled(self, operation_id: OperationId) -> OperationId:
+        """Wait until one started operation has concluded, without exposing its raw snapshot.
+
+        Cancelling this wait leaves the operation running.
+        """
+        snapshot = await self.supervisor.settled(operation_id)
         return snapshot.identity.operation_id
 
 

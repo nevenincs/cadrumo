@@ -80,6 +80,7 @@ class SupervisorHost:
         _contexts: dict[OperationId, DefinitionBoundContext]
         _executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]]
         _continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
+        _settlement_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
         _durable_change_events: dict[OperationId, asyncio.Event]
         _durable_revisions: dict[OperationId, int]
         _ephemeral_secrets: EphemeralSecretBroker
@@ -166,6 +167,18 @@ class SupervisorHost:
         ) -> OperationPersistedSnapshot: ...
 
         def _continuation_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None: ...
+
+        def _settlement_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None: ...
+
+        async def _execute_and_settle(
+            self,
+            *,
+            operation_id: OperationId,
+            context: DefinitionBoundContext,
+            executor: Coroutine[None, None, OperationReference | None],
+        ) -> OperationPersistedSnapshot: ...
+
+        async def settled(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
 
         async def submit[RequestPayloadT: BaseModel](
             self,

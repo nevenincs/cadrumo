@@ -11,8 +11,10 @@ from pydantic import BaseModel
 
 from ...core.async_cleanup import AsyncCloseable
 from ...core.hex import Hex64Str
+from ...core.logging import get_logger
 from ...core.operations import (
     OperationCancellation,
+    OperationClosePolicy,
     OperationLifecycle,
     OperationTerminalCondition,
 )
@@ -66,6 +68,8 @@ from .secret_submission import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+_log = get_logger(__name__)
 
 
 def _financial_operand_broker(
@@ -150,6 +154,7 @@ class OperationSupervisor(
         self._executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]] = {}
         self._cleanup_tasks: dict[OperationId, asyncio.Task[None]] = {}
         self._continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
+        self._settlement_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
         self._durable_revisions: dict[OperationId, int] = {}
         self._ephemeral_secrets = EphemeralSecretBroker()
@@ -207,8 +212,20 @@ class OperationSupervisor(
         await self._financial_operands.settle_operation(operation_id, now=self._clock())
 
     async def shutdown(self) -> None:
-        """Wipe every runtime-only secret retained by this supervisor instance."""
+        """Wipe runtime-only secrets and stop supervising unsettled work.
+
+        Ephemeral secrets are wiped first, so no executor still holding one can
+        read it. Each running task is then closed under its definition's policy:
+        a detachable operation is cancelled and left for owner recovery, any
+        other is asked to cancel and given its cleanup window first. Each task
+        settles its operand custody as it stops, before the operand broker is
+        closed.
+        """
         self._ephemeral_secrets.close()
+        for operation_id, settlement in tuple(self._settlement_tasks.items()):
+            if not settlement.done():
+                await self._close_unsettled(operation_id, settlement)
+        self._settlement_tasks.clear()
         if self._financial_operands is not None:
             self._financial_operands.close()
 
@@ -262,6 +279,41 @@ class OperationSupervisor(
     async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Release a frontend without mutating the durable operation."""
         return await self.inspect(operation_id)
+
+    async def _close_unsettled(
+        self,
+        operation_id: OperationId,
+        settlement: asyncio.Task[OperationPersistedSnapshot],
+    ) -> None:
+        definition = self._require_pinned_definition(await self.inspect(operation_id))
+        capabilities = definition.capabilities
+        if (
+            capabilities.close_policy is not OperationClosePolicy.DETACH_ALLOWED
+            and capabilities.cancellation is not OperationCancellation.UNSUPPORTED
+        ):
+            try:
+                await self.request_cancel(operation_id)
+            except ValueError:
+                _log.debug("operation %s could not accept a cancellation at host close", operation_id)
+            else:
+                window = self._cleanup_timeout.total_seconds() if self._cleanup_timeout is not None else 0.0
+                await asyncio.wait((settlement,), timeout=window)
+        if not settlement.done():
+            settlement.cancel()
+        await asyncio.gather(settlement, return_exceptions=True)
+
+    @override
+    def _settlement_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None:
+        """Retrieve a finished task's failure so it is logged once rather than orphaned.
+
+        A failure leaves the journal as it was and the lease to expire, so owner
+        recovery settles the operation; :meth:`settled` reports the same state.
+        """
+        if task.cancelled():
+            return
+        error = task.exception()
+        if error is not None:
+            _log.error("supervised operation task stopped without settlement: %s", task.get_name(), exc_info=error)
 
     @override
     def _continuation_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None:
