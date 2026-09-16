@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
-from cadrumo.domain.calculations.registry.artifact_catalogue import (
+from dev.corpus.artifact_catalogue import (
     ArtifactDiagnosticKind,
     ArtifactRole,
     DerivedArtifact,

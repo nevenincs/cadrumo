@@ -18,7 +18,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-from ....core.type_guards import is_object_list, is_object_mapping
+from cadrumo.core.type_guards import is_object_list, is_object_mapping
 
 __all__ = [
     "ArtifactCatalogue",
@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    from .schema_references import SourceReference
+    from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 
 _SHA256 = re.compile(r"[0-9a-f]{64}")
