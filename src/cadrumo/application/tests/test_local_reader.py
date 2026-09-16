@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
+from pathlib import Path
 from typing import ClassVar, override
 
 import pytest
@@ -19,8 +20,8 @@ from ...tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving
 from ..local_reader import (
     EXTRACTION_READER_ROLES,
     RoleFitnessOutcome,
+    RoleFitnessState,
     configured_role_model,
-    forget_role_fitness,
     probe_local_reader,
     read_local_reader_status,
     role_model_targets,
@@ -173,21 +174,24 @@ def test_status_of_an_unreachable_runtime_reports_unknowns_not_absences() -> Non
     assert all(row.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE for row in status.roles)
 
 
-def test_status_is_extraction_ready_only_when_both_reader_models_are_installed() -> None:
+def test_installed_reader_models_are_not_extraction_ready_until_the_text_model_is_verified() -> None:
     with _runtime(installed=[_TEXT]):
         partial = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False)
     with _runtime(installed=[_TEXT, _VISION], residents=[_TEXT]):
-        complete = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False)
+        unverified = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False)
 
     assert partial.host.reachable is True
     assert partial.extraction_ready is False
-    assert {row.role: row.ready for row in partial.roles} == {
-        ModelRole.TEXT_EXTRACTION: True,
-        ModelRole.VISION_TRANSCRIPTION: False,
-    }
-    assert complete.extraction_ready is True
-    rows = {row.role: row for row in complete.roles}
+    partial_rows = {row.role: row for row in partial.roles}
+    assert partial_rows[ModelRole.VISION_TRANSCRIPTION].failed_condition_id == (
+        ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED
+    )
+    assert unverified.extraction_ready is False
+    rows = {row.role: row for row in unverified.roles}
+    assert rows[ModelRole.TEXT_EXTRACTION].fitness is RoleFitnessState.NOT_VERIFIED
     assert rows[ModelRole.TEXT_EXTRACTION].resident is True
+    assert rows[ModelRole.VISION_TRANSCRIPTION].ready is True
+    assert rows[ModelRole.VISION_TRANSCRIPTION].fitness is None, "only the text role is probed"
     assert rows[ModelRole.VISION_TRANSCRIPTION].resident is False
     assert rows[ModelRole.VISION_TRANSCRIPTION].installed is True
 
@@ -232,54 +236,9 @@ class _Probe:
 
 
 @pytest.fixture(autouse=True)
-def _fresh_fitness_memory() -> None:
-    forget_role_fitness()
-
-
-def test_an_unfit_text_model_is_not_extraction_ready() -> None:
-    probe = _Probe(fit=False)
-    with _runtime(installed=[_TEXT, _VISION]):
-        status = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
-
-    rows = {row.role: row for row in status.roles}
-    assert status.extraction_ready is False
-    assert rows[ModelRole.TEXT_EXTRACTION].fit_for_role is False
-    assert rows[ModelRole.TEXT_EXTRACTION].ready is False
-    assert (
-        rows[ModelRole.TEXT_EXTRACTION].failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE
-    )
-    # Only the text role is probed; presence alone still decides the vision row.
-    assert rows[ModelRole.VISION_TRANSCRIPTION].fit_for_role is None
-    assert rows[ModelRole.VISION_TRANSCRIPTION].ready is True
-
-
-def test_a_fit_text_model_is_extraction_ready_and_probed_once() -> None:
-    probe = _Probe(fit=True)
-    with _runtime(installed=[_TEXT, _VISION]):
-        first = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
-        second = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
-
-    assert first.extraction_ready is True
-    assert second.extraction_ready is True
-    assert probe.calls == [_TEXT], "a settled verdict is remembered, not re-probed per read"
-
-
-def test_a_probe_that_got_no_answer_is_not_remembered() -> None:
-    probe = _Probe(fit=False, transport_failed=True)
-    with _runtime(installed=[_TEXT, _VISION]):
-        read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
-        read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
-
-    assert probe.calls == [_TEXT, _TEXT]
-
-
-def test_a_missing_model_is_never_probed() -> None:
-    probe = _Probe(fit=True)
-    with _runtime(installed=[_VISION]):
-        status = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
-
-    assert probe.calls == []
-    assert status.extraction_ready is False
+def _isolated_verdict_record(tmp_path: Path) -> Generator[None]:
+    with override_settings(cadrumo_local_storage_root=tmp_path):
+        yield
 
 
 def test_verify_refuses_a_loaded_model_that_is_unfit_for_its_role() -> None:

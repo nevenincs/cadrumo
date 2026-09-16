@@ -13,6 +13,7 @@ from .operator_actions.models import PreconditionVerdict
 
 __all__ = [
     "OLLAMA_INSTALL_TIMEOUT_S",
+    "OLLAMA_LOAD_KEEP_ALIVE",
     "OLLAMA_PROBE_CACHE_TTL_S",
     "OLLAMA_PROBE_TIMEOUT_S",
     "OLLAMA_PULL_TIMEOUT_S",
@@ -59,6 +60,12 @@ OLLAMA_READINESS_TIMEOUT_S = 120.0
 # generous for a cold disk while still ending a start that will never answer.
 OLLAMA_START_TIMEOUT_S = 30.0
 
+# How long the runtime keeps a model resident after an explicit load. The
+# runtime's own default is five minutes, which expires before an operator who
+# loaded ahead of a batch has started it; half an hour covers that gap while
+# still releasing memory on an idle machine.
+OLLAMA_LOAD_KEEP_ALIVE = "30m"
+
 # A package-manager install downloads and unpacks an application bundle.
 OLLAMA_INSTALL_TIMEOUT_S = 1800.0
 
@@ -77,6 +84,8 @@ class ProvisioningPreconditionCondition(StrEnum):
     RUNTIME_INSTALL_SUCCEEDED = "provisioning.runtime.install_succeeded"
     ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
     ROLE_MODEL_FIT_FOR_ROLE = "provisioning.role_model.fit_for_role"
+    ROLE_MODEL_FITNESS_VERIFIED = "provisioning.role_model.fitness_verified"
+    ROLE_MODEL_FITNESS_WITHIN_TIMEOUT = "provisioning.role_model.fitness_within_timeout"
     HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met"
     SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available"
     SELECTED_MODEL_FITS = "provisioning.selected_model.fits"
@@ -86,6 +95,7 @@ class ProvisioningPreconditionCondition(StrEnum):
     RESIDENT_SET_READABLE = "provisioning.resident_set.readable"
     MODEL_SELECTED_BY_CADRUMO = "provisioning.model.selected_by_cadrumo"
     MODEL_RESIDENT = "provisioning.model.resident"
+    MODEL_LOADED = "provisioning.model.loaded"
     MODEL_PULL_SUCCEEDED = "provisioning.model.pull_succeeded"
     MODEL_READY = "provisioning.model.ready"
     MODEL_INSTALLED = "provisioning.model.installed"

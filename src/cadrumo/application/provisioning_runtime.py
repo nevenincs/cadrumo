@@ -17,6 +17,7 @@ from ..core.hardware import AcceleratorKind, ContentionCause
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.clock import now
 from .provisioning_contracts import (
+    OLLAMA_LOAD_KEEP_ALIVE,
     OLLAMA_PROBE_CACHE_TTL_S,
     OLLAMA_PROBE_TIMEOUT_S,
     OLLAMA_PULL_TIMEOUT_S,
@@ -27,6 +28,7 @@ from .provisioning_contracts import (
     provisioning_no_recovery_verdict,
     require_provisioning_verdict,
 )
+from .provisioning_fitness import invalidate_role_fitness
 
 if TYPE_CHECKING:
     from .provisioning import HardwareProfile
@@ -590,6 +592,143 @@ def unload_runtime_model(
     )
 
 
+class LoadOutcome(ProvisioningOutcome):
+    """The result of an explicit load of one pulled model into the runtime's memory.
+
+    ``already_loaded`` marks a model that was resident before the request, so
+    nothing was sent. ``contention`` is populated when the admission check
+    refused, and is the reason nothing was loaded.
+    """
+
+    model: str = Field(min_length=1)
+    loaded: bool
+    already_loaded: bool = False
+    contention: ContentionSnapshot | None = None
+    elapsed_ms: int | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def _require_load_outcome(self) -> LoadOutcome:
+        require_provisioning_verdict(failed=not self.loaded, verdict=self.precondition_verdict)
+        return self
+
+
+def _load_refusal(
+    model: str,
+    condition: ProvisioningPreconditionCondition,
+    facts: Mapping[str, ProvisioningFactValue],
+    *,
+    elapsed_ms: int | None = None,
+) -> LoadOutcome:
+    return LoadOutcome(
+        model=model,
+        loaded=False,
+        elapsed_ms=elapsed_ms,
+        facts=facts,
+        precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
+    )
+
+
+def _is_resident(model: str, residents: tuple[RuntimeResident, ...]) -> bool:
+    return any(matches_selected_model(entry.name, frozenset({model})) for entry in residents)
+
+
+def load_runtime_model(
+    model: str,
+    requirement_bytes: int,
+    *,
+    profile: HardwareProfile | None = None,
+    settings: Settings | None = None,
+) -> LoadOutcome:
+    """Load a pulled ``model`` into the runtime's memory so the first read does not pay the cold start.
+
+    Idempotent: a model that is already resident is reported loaded and
+    nothing is sent. A model that is not on disk is refused rather than
+    fetched, because a load must never become an implicit download. The
+    admission check runs before the load, exactly as it does before a pull,
+    and the result is confirmed against a re-read of the resident set.
+
+    The request carries no prompt, so the runtime loads the model without
+    running inference, and a keep-alive long enough to outlast the gap between
+    an operator's load and their first read. Loading leaves the weights
+    unchanged, so a remembered fitness verdict stays valid.
+
+    Returns:
+        A :class:`LoadOutcome`. Never raises.
+    """
+    resolved = settings if settings is not None else load_settings()
+    residents = read_runtime_residents(resolved)
+    if residents is None:
+        return _load_refusal(
+            model, ProvisioningPreconditionCondition.RUNTIME_REACHABLE, {"model": model, "runtime_reachable": False}
+        )
+    if _is_resident(model, residents):
+        return LoadOutcome(
+            model=model,
+            loaded=True,
+            already_loaded=True,
+            facts={"model": model, "model_resident": True, "already_loaded": True},
+        )
+    inventory = read_installed_models(resolved)
+    if inventory is None:
+        return _load_refusal(
+            model,
+            ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
+            {"model": model, "installed_model_inventory_readable": False},
+        )
+    if not any(matches_selected_model(entry.name, frozenset({model})) for entry in inventory):
+        return _load_refusal(
+            model, ProvisioningPreconditionCondition.MODEL_INSTALLED, {"model": model, "model_installed": False}
+        )
+    snapshot = assess_model_load_contention(
+        model, requirement_bytes, profile=profile, residents=residents, settings=resolved
+    )
+    if not snapshot.admitted:
+        verdict = snapshot.precondition_verdict
+        if verdict is None:
+            raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
+        return LoadOutcome(
+            model=model,
+            loaded=False,
+            contention=snapshot,
+            facts={"model": model, "admitted": False, "contention_condition": verdict.failed_condition_id},
+            precondition_verdict=verdict,
+        )
+    url = ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "generate")
+    started = time.monotonic()
+    try:
+        with httpx.Client(timeout=OLLAMA_READINESS_TIMEOUT_S) as client:
+            response = client.post(url, json={"model": model, "keep_alive": OLLAMA_LOAD_KEEP_ALIVE, "stream": False})
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        elapsed = int((time.monotonic() - started) * 1000)
+        return _load_refusal(
+            model,
+            ProvisioningPreconditionCondition.MODEL_LOADED,
+            {
+                "model": model,
+                "model_loaded": False,
+                "elapsed_ms": elapsed,
+                "runtime_error_type": exc.__class__.__name__,
+            },
+            elapsed_ms=elapsed,
+        )
+    elapsed = int((time.monotonic() - started) * 1000)
+    after = read_runtime_residents(resolved)
+    if after is None or not _is_resident(model, after):
+        return _load_refusal(
+            model,
+            ProvisioningPreconditionCondition.MODEL_LOADED,
+            {"model": model, "model_loaded": False, "elapsed_ms": elapsed, "resident_set_readable": after is not None},
+            elapsed_ms=elapsed,
+        )
+    return LoadOutcome(
+        model=model,
+        loaded=True,
+        elapsed_ms=elapsed,
+        facts={"model": model, "model_resident": True, "elapsed_ms": elapsed},
+    )
+
+
 class PullProgress(BaseModel):
     """One progress report from an in-flight model fetch.
 
@@ -707,9 +846,11 @@ def pull_runtime_model(
         means the fetch was refused before it began.
     """
     resolved = settings if settings is not None else load_settings()
-    return _record_pull(
-        _pull_runtime_model(model, requirement_bytes, profile=profile, settings=resolved, on_progress=on_progress)
-    )
+    outcome = _pull_runtime_model(model, requirement_bytes, profile=profile, settings=resolved, on_progress=on_progress)
+    if outcome.pulled:
+        # Re-fetched weights may answer differently; their fitness must be earned again.
+        invalidate_role_fitness(resolved)
+    return _record_pull(outcome)
 
 
 def _pull_runtime_model(
@@ -1193,4 +1334,7 @@ def remove_runtime_model(
     # unreachable between the two calls, must not yield a freed-bytes number the
     # operator cannot reconcile against the store.
     after = read_installed_models(resolved)
-    return _confirm_removal(model, entry, after)
+    outcome = _confirm_removal(model, entry, after)
+    if outcome.removed:
+        invalidate_role_fitness(resolved)
+    return outcome
