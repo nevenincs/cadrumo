@@ -342,65 +342,6 @@ class RentaFamilyProfile(BaseModel):
             > 0
         )
 
-    def guarderia_needs_monthly_detail_indices(
-        self, filing_year: int, *, context: FamilyFactResolutionContext
-    ) -> tuple[int, ...]:
-        """Indices whose declared spend contributes nothing only because of its shape."""
-        return tuple(
-            index
-            for index, descendant in enumerate(self.descendientes)
-            if descendant.guarderia_needs_monthly_detail(filing_year, context=context)
-        )
-
-    def guarderia_needs_segundo_ciclo_month_indices(
-        self, filing_year: int, *, context: FamilyFactResolutionContext
-    ) -> tuple[int, ...]:
-        """Indices whose turning-three window is withheld for want of a declared month."""
-        return tuple(
-            index
-            for index, descendant in enumerate(self.descendientes)
-            if descendant.guarderia_needs_segundo_ciclo_month(filing_year, context=context)
-        )
-
-    def guarderia_cotizaciones_ceiling_is_unbounded(
-        self, filing_year: int, *, context: FamilyFactResolutionContext
-    ) -> bool:
-        """True when the cotizaciones ceiling is NOT limited to the second-cycle window.
-
-        The SECOND consumer of the second-cycle month, and the one this application
-        does not compute. Art. 81 bounds it in the same período: "las cotizaciones a
-        la Seguridad Social a computar serán las devengadas hasta el mes anterior a
-        aquel en el que el hijo pueda iniciar el segundo ciclo".
-
-        DELIBERATELY DISCLOSED RATHER THAN COMPUTED, for two reasons that survive
-        each other. First, :attr:`cotizaciones_ss_madre_2024` is an ANNUAL scalar
-        with no month axis, so limiting it would mean apportioning a yearly figure
-        the operator supplied whole — inventing a number in the population this rule
-        governs. Second and decisively, that figure is a HOUSEHOLD term while the
-        ceiling is PER CHILD: a household with one child turning three and one
-        younger has no single bounding month, and AEAT states no apportionment rule
-        for that case. The second reason survives giving the field a month axis,
-        which is why the axis is not the fix.
-
-        So the operator is told the figure they supply must already be the bounded
-        one. Do not wire this to the declared month without first settling the
-        household-versus-per-child question; the registry formula's own comment
-        records the same boundary being met and left alone on purpose.
-
-        Fires only where it can change an outcome: a child turning three, spend on
-        record, and a cotizaciones figure actually declared — with none declared the
-        ceiling binds at zero and the increment is already nil for a reason the
-        operator can see.
-        """
-        if self.cotizaciones_ss_madre_2024 <= 0:
-            return False
-        return any(
-            descendant.convive_con_contribuyente
-            and descendant.age_at_year_end(filing_year) == context.integer("lirpf-art-58-under-three-maximum-age")
-            and bool(descendant.gastos_guarderia_mensuales)
-            for descendant in self.descendientes
-        )
-
     def descendientes_eligible_minimum(
         self,
         filing_year: int,
@@ -628,30 +569,6 @@ class RentaFamilyProfile(BaseModel):
             )
         return total
 
-    def custodia_compartida_advisory(
-        self,
-        filing_year: int,
-        *,
-        thresholds: MinimoDescendientesThresholds,
-        context: FamilyFactResolutionContext,
-    ) -> str | None:
-        """Return the translated Art. 61 prorrata advisory string, or ``None``.
-
-        Scoped to the judicially-shared-custody trigger only. A mínimo prorated
-        because a second entitled filer was DERIVED from profile signals is
-        surfaced separately on the calculate path, because that inference is
-        the one the operator most needs to confirm.
-        """
-        from ...core.i18n.render import tr
-
-        count = self.custodia_compartida_count(filing_year, thresholds=thresholds, context=context)
-        if count > 0:
-            return tr(
-                "profile.descendiente.custodia_compartida_prorrata_applied",
-                count=count,
-            )
-        return None
-
     # ------------------------------------------------------------------
     # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción
     # autonómica (DL 1/2010 arts. 4 y 18.1) — casilla 1039 framework primitives
@@ -666,23 +583,6 @@ class RentaFamilyProfile(BaseModel):
         applies the per-descendant prorrateo the registry cuantía is multiplied by.
         """
         return sum(1 for d in self.descendientes if d.is_nacimiento_adopcion_eligible(filing_year, context=context))
-
-    def madrid_nacimiento_adopcion_weighted_count(
-        self, filing_year: int, *, context: FamilyFactResolutionContext
-    ) -> Decimal:
-        """Prorrateo-weighted eligible-descendant count for the Madrid deducción.
-
-        Each eligible descendant contributes its prorrateo share (``1``, or
-        ``0.5`` under custodia compartida). The registry formula multiplies this
-        weighted count by the per-child cuantía (721,70 € for 2023+ entries), so
-        the per-descendant prorrateo the registry schema cannot express is
-        computed here in Python and passed to the registry as a resolved value.
-        """
-        total = Decimal("0")
-        for descendant in self.descendientes:
-            if descendant.is_nacimiento_adopcion_eligible(filing_year, context=context):
-                total += descendant.nacimiento_adopcion_prorrateo_share(context=context)
-        return total
 
     def unidad_familiar_otros_miembros_base(self) -> Decimal:
         """Base imponible of unidad-familiar members OTHER than the filer.

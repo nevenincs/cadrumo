@@ -199,11 +199,6 @@ class InventoryAttributableCostComponent(BaseModel):
         """Return IVA excluded from inventory acquisition cost."""
         return _quantize(self.iva_amount * self.deductible_iva_ratio)
 
-    @property
-    def nonrecoverable_iva(self) -> Decimal:
-        """Return IVA capitalized without independent rounding drift."""
-        return self.iva_amount - self.recoverable_iva
-
 
 class InventoryAcquisitionCompleteness(BaseModel):
     """Evidence-backed attestations that all three cost reviews occurred."""

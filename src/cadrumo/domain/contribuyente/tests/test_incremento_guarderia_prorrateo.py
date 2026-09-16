@@ -394,22 +394,4 @@ class TestCotizacionesCeilingIsDisclosedNotComputed:
     Computing one would invent the number this whole rule exists to stop us inventing.
     """
 
-    def test_it_reports_where_the_unbounded_ceiling_can_change_an_outcome(self) -> None:
-        child = _child(date(2022, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
-        profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=5000)
 
-        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR + 1, context=_context(_YEAR + 1)) is True
-
-    def test_it_stays_silent_when_no_cotizaciones_figure_is_declared(self) -> None:
-        """With none declared the ceiling binds at zero, which the operator can already see."""
-        child = _child(date(2022, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
-        profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=0)
-
-        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR + 1, context=_context(_YEAR + 1)) is False
-
-    def test_it_stays_silent_without_a_turning_three_child(self) -> None:
-        """No ceiling applies, so the cotizaciones figure needs no bounding."""
-        child = _child(date(2022, 3, 1), mensual="1-12:500")
-        profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=5000)
-
-        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR, context=_context(_YEAR)) is False

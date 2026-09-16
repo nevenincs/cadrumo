@@ -45,11 +45,6 @@ class ProportionalityCatalogue:
         """Return every kind declared by the selected authority."""
         return frozenset(self.kinds)
 
-    @property
-    def all_periods(self) -> frozenset[StatutoryCapPeriod]:
-        """Return every cap period declared by the selected authority."""
-        return frozenset(self.periods)
-
     def require_kind(self, value: object) -> ProportionalityKind:
         """Return one canonical projected kind or refuse it."""
         raw = value.value if isinstance(value, ProportionalityKind) else value
