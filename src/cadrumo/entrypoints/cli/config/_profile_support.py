@@ -6,6 +6,32 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer
+    from ....domain.user_profile.errors import ProfileNotFoundError
+
+
+def unknown_profile_refusal(name: str) -> ProfileNotFoundError:
+    """Build the one refusal every verb raises for a label no profile carries.
+
+    The code and the action are the machine-readable half of the answer, and
+    they were neither uniform nor always present: the same unknown label
+    arrived as REFUSED_PROFILE_NOT_FOUND with a list action from one verb, the
+    same code with no action from another, and a generic boundary refusal from
+    a third. One builder keeps the three in step.
+    """
+    from ....application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
+    from ....domain.user_profile.errors import ProfileNotFoundError
+    from ..common import attach_cli_policy_verdict
+
+    return attach_cli_policy_verdict(
+        ProfileNotFoundError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        ),
+        verdict=profile_selection_failure_verdict(
+            ProfileSelectionFailure.UNKNOWN,
+            requested_profile=name,
+        ),
+    )
 
 
 def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
@@ -20,15 +46,9 @@ def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
             translated_message="errors.refused.refused_profile_label_ambiguous",
         ) from error
     except ValueError as error:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": name},
-        ) from error
+        raise unknown_profile_refusal(name) from error
     if pointer is None:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": name},
-        )
+        raise unknown_profile_refusal(name)
     return pointer
 
 

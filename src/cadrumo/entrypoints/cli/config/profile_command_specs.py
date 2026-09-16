@@ -10,6 +10,7 @@ from cadrumo.application.operator_surface.command_ports import (
     ProfileAuthenticationPosture,
 )
 
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
     FLAG_VALUE,
@@ -354,7 +355,15 @@ def _wizard_option(field_key: str) -> OptionSpec:
     name = field_key.replace("-", "_")
     help_key = f"wizard.setup.flags.{field_key}.help"
     if field_key == "output-language":
-        return _option(name, ("--output-language",), _LANG, help_key)
+        # The profile's stored preference, not only this invocation's language,
+        # so it is optional and an empty value clears it -- the contract every
+        # optional text flag has. An enum type refuses the empty value at parse
+        # time, before that contract can apply. The handler validates any
+        # non-empty token against the same language set.
+        return replace(
+            _option(name, ("--output-language",), TEXT_VALUE, help_key),
+            metavar=f"<{'|'.join(SUPPORTED_OUTPUT_LANGUAGES)}>",
+        )
     if field_key in _WIZARD_CONFIRM_FIELDS:
         return _option(
             name,

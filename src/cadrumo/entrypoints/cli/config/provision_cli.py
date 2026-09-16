@@ -1,15 +1,19 @@
 """``aeat config provision`` — explicit local-inference lifecycle verbs.
 
-Three actions, and the boundaries between them are the design:
+The boundaries between the actions are the design:
 
+* **status** — runtime installation, reachability and each reader role's model. Reads only.
 * **report** — measured machine and model-selection state. Reads only.
-* **pull** — an explicit model-acquisition operation.
-* **verify** — a resident-model readiness observation.
+* **install** — installs the runtime through the platform package manager, only with ``--confirm``.
+* **start** — starts an installed local runtime that is not answering.
+* **pull** — an explicit model-acquisition operation, every role's model by default.
+* **verify** — a model readiness observation, every role's model by default.
+* **remove** — deletes a Cadrumo-selected model from the runtime's store.
 
 **Nothing here is implicit.** No inference path reaches these verbs; an operator
-runs them. A model acquisition is explicit, never a side effect of first use.
-An unavailable runtime is represented by its typed failed condition and closed
-outcome; this command family does not start external processes.
+runs them. A model acquisition or runtime install is explicit, never a side
+effect of first use. The only process this family starts is the runtime server,
+and only when the configured endpoint is this machine.
 
 The pre-fetch admission check is the point of ``pull``. A refusal carries its
 typed condition and evidence. Cadrumo never touches a process it does not own.
@@ -22,21 +26,42 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....core.json_contract import ResolvedPreconditionAction
 from ....core.model_catalogue import ModelRole
 from ..common import emit_envelope, resolve_cli_precondition_action
 from .provision_payloads import (
     ProvisionContentionPayload,
+    ProvisionInstallResult,
+    ProvisionLastPullPayload,
     ProvisionModelPayload,
+    ProvisionPullItemPayload,
     ProvisionPullResult,
+    ProvisionRemoveItemPayload,
+    ProvisionRemoveResult,
     ProvisionReportResult,
+    ProvisionRoleStatusPayload,
+    ProvisionRuntimePayload,
+    ProvisionStartResult,
+    ProvisionStatusResult,
+    ProvisionVerifyItemPayload,
     ProvisionVerifyResult,
 )
 from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.provisioning import HardwareProfile, ModelSelection
+    from ....application.local_reader import RoleModelTarget
+    from ....application.operator_actions.models import PreconditionVerdict
+    from ....application.provisioning import HardwareProfile
 
-__all__ = ["provision_pull", "provision_report", "provision_verify"]
+__all__ = [
+    "provision_install",
+    "provision_pull",
+    "provision_remove",
+    "provision_report",
+    "provision_start",
+    "provision_status",
+    "provision_verify",
+]
 
 
 def _contention_payload(snapshot: object | None) -> ProvisionContentionPayload | None:
@@ -65,27 +90,53 @@ def _contention_payload(snapshot: object | None) -> ProvisionContentionPayload |
     )
 
 
-def _resolve_role_model(
-    role_value: ModelRole | None,
-    model: str | None,
-) -> tuple[ModelSelection, str | None, int | None]:
-    """Resolve an operator's ``--role``/``--model`` into a runtime id and requirement.
+def _action(verdict: PreconditionVerdict | None) -> ResolvedPreconditionAction | None:
+    """Resolve an optional verdict through the shared action resolver."""
+    return resolve_cli_precondition_action(verdict) if verdict is not None else None
 
-    An explicit ``--model`` is honoured as given, with the selected role's
-    requirement used for the admission check, because the operator naming a
-    model does not tell us how much memory it needs -- the catalogue does.
+
+def _targets(role: ModelRole | None, model: str | None) -> tuple[RoleModelTarget, ...]:
+    """Resolve ``--role``/``--model`` into provisioning targets, every role by default.
+
+    An explicit ``--model`` is honoured as the target for the named role (or
+    every role), with the catalogue's requirement used for the admission check,
+    because the operator naming a model does not tell us how much memory it
+    needs -- the catalogue does.
     """
-    from ....application.provisioning import select_model_for_role
+    from ....application.local_reader import role_model_targets
 
-    role = role_value if role_value is not None else ModelRole.VISION_TRANSCRIPTION
-    selection = select_model_for_role(role)
-    assessable = selection.assessable_load
-    if assessable is None:
-        return selection, None, None
-    # An explicit --model is honoured as the target, but the requirement stays
-    # the selected candidate's: what the operator names does not tell us how
-    # much memory it needs, and inventing a number would assess against nothing.
-    return selection, model or assessable[0], assessable[1]
+    return role_model_targets(None if role is None else (role,), explicit_model=model)
+
+
+def _selection_refusal(target: RoleModelTarget) -> PreconditionVerdict:
+    """Return the verdict of a target whose selection refused."""
+    if target.selection_verdict is None:  # pragma: no cover - guarded by ModelSelection validation
+        raise AssertionError
+    return target.selection_verdict
+
+
+def provision_status(ctx: typer.Context) -> None:
+    """Report whether the local runtime is installed and answering, and each reader role's model."""
+    _emit_provision_status(ctx)
+
+
+def provision_install(ctx: typer.Context, confirm: bool = False) -> None:
+    """Install the local runtime through the platform package manager when ``--confirm`` is given."""
+    _emit_provision_install(ctx, confirm=confirm)
+
+
+def provision_start(ctx: typer.Context) -> None:
+    """Start the installed local runtime when it is not already answering."""
+    _emit_provision_start(ctx)
+
+
+def provision_remove(
+    ctx: typer.Context,
+    model: str | None = None,
+    role: ModelRole | None = None,
+) -> None:
+    """Remove the named model, or the named role's model, from the local runtime's store."""
+    _emit_provision_remove(ctx, model=model, role=role)
 
 
 def provision_report(ctx: typer.Context) -> None:
@@ -218,71 +269,195 @@ def _emit_provision_report(ctx: typer.Context) -> None:
 
 
 def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
-    """Fetch the resolved model and emit the pull envelope, exiting 2 when nothing pulled."""
+    """Fetch every resolved model and emit the pull envelope, exiting 2 unless all pulled."""
     from ....application.provisioning_runtime import pull_runtime_model
 
-    selection, target, requirement = _resolve_role_model(role, model)
-    if target is None or requirement is None:
-        if selection.precondition_verdict is None:  # pragma: no cover - guarded by ModelSelection validation
-            raise AssertionError
-        result = ProvisionPullResult(
-            model=selection.runtime_id,
-            pulled=False,
-            facts=selection.facts,
-            precondition_action=resolve_cli_precondition_action(selection.precondition_verdict),
+    items: list[ProvisionPullItemPayload] = []
+    for target in _targets(role, model):
+        roles = [served.value for served in target.roles]
+        if target.model is None or target.requirement_bytes is None:
+            items.append(
+                ProvisionPullItemPayload(
+                    model=target.model,
+                    roles=roles,
+                    pulled=False,
+                    facts=target.selection_facts,
+                    precondition_action=resolve_cli_precondition_action(_selection_refusal(target)),
+                )
+            )
+            continue
+        outcome = pull_runtime_model(target.model, target.requirement_bytes)
+        items.append(
+            ProvisionPullItemPayload(
+                model=outcome.model,
+                roles=roles,
+                pulled=outcome.pulled,
+                bytes_fetched=outcome.bytes_fetched,
+                contention=_contention_payload(outcome.contention),
+                facts=outcome.facts,
+                precondition_action=_action(outcome.precondition_verdict),
+            )
         )
-        emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
-        raise typer.Exit(code=2)
-
-    outcome = pull_runtime_model(target, requirement)
-    result = ProvisionPullResult(
-        model=outcome.model,
-        pulled=outcome.pulled,
-        bytes_fetched=outcome.bytes_fetched,
-        contention=_contention_payload(outcome.contention),
-        facts=outcome.facts,
-        precondition_action=(
-            resolve_cli_precondition_action(outcome.precondition_verdict)
-            if outcome.precondition_verdict is not None
-            else None
-        ),
-    )
+    result = ProvisionPullResult(pulled=bool(items) and all(item.pulled for item in items), models=items)
     emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
-    if not outcome.pulled:
+    if not result.pulled:
         raise typer.Exit(code=2)
 
 
 def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
-    """Verify the resolved model is ready and emit the envelope, exiting 2 when it is not."""
+    """Verify every resolved model and emit the envelope, exiting 2 unless all are ready."""
     from ....application.provisioning_runtime import verify_model_ready
 
-    selection, target, requirement = _resolve_role_model(role, model)
-    if target is None or requirement is None:
-        if selection.precondition_verdict is None:  # pragma: no cover - guarded by ModelSelection validation
-            raise AssertionError
-        result = ProvisionVerifyResult(
-            model=selection.runtime_id,
-            ready=False,
-            facts=selection.facts,
-            precondition_action=resolve_cli_precondition_action(selection.precondition_verdict),
+    items: list[ProvisionVerifyItemPayload] = []
+    for target in _targets(role, model):
+        roles = [served.value for served in target.roles]
+        if target.model is None:
+            items.append(
+                ProvisionVerifyItemPayload(
+                    roles=roles,
+                    ready=False,
+                    facts=target.selection_facts,
+                    precondition_action=resolve_cli_precondition_action(_selection_refusal(target)),
+                )
+            )
+            continue
+        outcome = verify_model_ready(target.model)
+        items.append(
+            ProvisionVerifyItemPayload(
+                model=outcome.model,
+                roles=roles,
+                ready=outcome.ready,
+                resident=outcome.resident,
+                answered=outcome.answered,
+                elapsed_ms=outcome.elapsed_ms,
+                facts=outcome.facts,
+                precondition_action=_action(outcome.precondition_verdict),
+            )
         )
-        emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
+    result = ProvisionVerifyResult(ready=bool(items) and all(item.ready for item in items), models=items)
+    emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
+    if not result.ready:
         raise typer.Exit(code=2)
 
-    outcome = verify_model_ready(target)
-    result = ProvisionVerifyResult(
-        model=outcome.model,
-        ready=outcome.ready,
-        resident=outcome.resident,
-        answered=outcome.answered,
-        elapsed_ms=outcome.elapsed_ms,
-        facts=outcome.facts,
-        precondition_action=(
-            resolve_cli_precondition_action(outcome.precondition_verdict)
-            if outcome.precondition_verdict is not None
-            else None
+
+def _emit_provision_status(ctx: typer.Context) -> None:
+    """Measure the local reader and emit its status envelope. Reads only."""
+    from ....application.local_reader import read_local_reader_status
+
+    status = read_local_reader_status()
+    host = status.host
+    last = status.last_pull
+    result = ProvisionStatusResult(
+        runtime=ProvisionRuntimePayload(
+            platform=host.platform.value,
+            endpoint_url=host.endpoint_url,
+            endpoint_local=host.endpoint_local,
+            executable_located=host.executable_located,
+            reachable=host.reachable,
+            version=host.version,
+            installer=host.installer.value,
+            facts=host.facts,
+            precondition_action=_action(host.precondition_verdict),
         ),
+        roles=[
+            ProvisionRoleStatusPayload(
+                role=row.role.value,
+                model=row.model,
+                installed=row.installed,
+                resident=row.resident,
+                load_admitted=row.load_admitted,
+                contention_causes=list(row.contention_causes),
+                ready=row.ready,
+                failed_condition_id=row.failed_condition_id,
+            )
+            for row in status.roles
+        ],
+        last_pull=(
+            None
+            if last is None
+            else ProvisionLastPullPayload(
+                model=last.model,
+                pulled=last.pulled,
+                attempted_at=last.attempted_at.isoformat(),
+                bytes_fetched=last.bytes_fetched,
+                failed_condition_id=last.failed_condition_id,
+            )
+        ),
+        extraction_ready=status.extraction_ready,
     )
-    emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
-    if not outcome.ready:
+    emit_envelope(ctx, command="config.provision.status", result=result, lines=_provision_result_lines(result))
+
+
+def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
+    """Install the runtime when consented and emit the envelope, exiting 2 unless installed."""
+    from ....adapters.outbound.model_runtime.process_control import run_runtime_installer
+    from ....application.provisioning_host import install_runtime
+
+    outcome = install_runtime(consent=confirm, run=run_runtime_installer)
+    result = ProvisionInstallResult(
+        installed=outcome.installed,
+        already_installed=outcome.already_installed,
+        installer=outcome.installer.value,
+        consented=outcome.consented,
+        installer_exit_code=outcome.installer_exit_code,
+        facts=outcome.facts,
+        precondition_action=_action(outcome.precondition_verdict),
+    )
+    emit_envelope(ctx, command="config.provision.install", result=result, lines=_provision_result_lines(result))
+    if not outcome.installed:
+        raise typer.Exit(code=2)
+
+
+def _emit_provision_start(ctx: typer.Context) -> None:
+    """Start the runtime when needed and emit the envelope, exiting 2 unless it answers."""
+    from ....adapters.outbound.model_runtime.process_control import spawn_runtime_server
+    from ....application.provisioning_host import start_runtime
+
+    outcome = start_runtime(spawn=spawn_runtime_server)
+    result = ProvisionStartResult(
+        running=outcome.running,
+        already_running=outcome.already_running,
+        started_pid=outcome.started_pid,
+        facts=outcome.facts,
+        precondition_action=_action(outcome.precondition_verdict),
+    )
+    emit_envelope(ctx, command="config.provision.start", result=result, lines=_provision_result_lines(result))
+    if not outcome.running:
+        raise typer.Exit(code=2)
+
+
+def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
+    """Remove the resolved model and emit the envelope, exiting 2 unless every removal was confirmed."""
+    from ....application.provisioning_runtime import remove_runtime_model
+
+    if model is None and role is None:
+        raise typer.BadParameter("--model or --role is required", param_hint="--model/--role")
+    items: list[ProvisionRemoveItemPayload] = []
+    for target in _targets(role, model):
+        roles = [served.value for served in target.roles]
+        if target.model is None:
+            items.append(
+                ProvisionRemoveItemPayload(
+                    roles=roles,
+                    removed=False,
+                    facts=target.selection_facts,
+                    precondition_action=resolve_cli_precondition_action(_selection_refusal(target)),
+                )
+            )
+            continue
+        outcome = remove_runtime_model(target.model)
+        items.append(
+            ProvisionRemoveItemPayload(
+                model=outcome.model,
+                roles=roles,
+                removed=outcome.removed,
+                was_installed=outcome.was_installed,
+                freed_bytes=outcome.freed_bytes,
+                facts=outcome.facts,
+                precondition_action=_action(outcome.precondition_verdict),
+            )
+        )
+    result = ProvisionRemoveResult(removed=bool(items) and all(item.removed for item in items), models=items)
+    emit_envelope(ctx, command="config.provision.remove", result=result, lines=_provision_result_lines(result))
+    if not result.removed:
         raise typer.Exit(code=2)

@@ -72,3 +72,23 @@ def test_inspect_reads_an_archive_with_no_profile_session(tmp_path: Path) -> Non
 
     assert inspected.exit_code == 0, inspected.output
     assert json.loads(inspected.stdout)["command"] == "config.profile.archive.inspect"
+
+
+def test_an_existing_backup_is_refused_as_the_operators_to_move(tmp_path: Path) -> None:
+    """A second export to the same path must not look like a storage failure.
+
+    Reproduction: re-running ``config profile archive export --output`` onto
+    an existing archive exited 5 with an untranslated storage error naming an
+    internal write operation, after the capsule had already been read and
+    sealed. The existing file is left exactly as it was.
+    """
+    target = tmp_path / f"backup{CADRUMO_BUCKET_BUNDLE_SUFFIX}"
+    assert profile_cli("archive", "export", "--output", str(target)).exit_code == 0
+    original = target.read_bytes()
+
+    refused = profile_cli("archive", "export", "--output", str(target))
+
+    assert refused.exit_code == 2, refused.output
+    assert json.loads(refused.stderr)["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert target.read_bytes() == original
+    assert sorted(path.name for path in tmp_path.iterdir() if path.name.startswith("backup")) == [target.name]

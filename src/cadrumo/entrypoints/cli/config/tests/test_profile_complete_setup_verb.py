@@ -60,7 +60,7 @@ def test_complete_setup_promotes_an_incomplete_profile(config_check_backend: Non
     was stuck in. Asserting that state first is what stops this passing on a
     profile that was already complete for some other reason.
     """
-    profile_id = register_cli_profile(label="promote-me", complete=False)
+    profile_id = register_cli_profile(label="promote-me", complete=False, log_in=False)
     before_state, before_revision = _stored_state(profile_id)
     assert before_state is ProfileSetupState.INCOMPLETE, "precondition: the profile must start incomplete"
 
@@ -85,7 +85,7 @@ def test_a_second_complete_setup_writes_nothing(config_check_backend: None) -> N
     call would bump the revision each time -- so the revision is what this asserts,
     not just the reported flag.
     """
-    profile_id = register_cli_profile(label="promote-once", complete=False)
+    profile_id = register_cli_profile(label="promote-once", complete=False, log_in=False)
     first = invoke_cached_cli(["--format", "json", "config", "profile", "complete-setup"])
     assert first.exit_code == 0, first.stdout + first.stderr
     _state, revision_after_first = _stored_state(profile_id)

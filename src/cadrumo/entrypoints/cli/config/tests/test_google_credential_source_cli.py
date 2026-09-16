@@ -102,10 +102,7 @@ _PROFILE_CREATE_ARGS = (
 
 def _create_profile(name: str = "google-credential-source-operator") -> str:
     """Register the profile through the shared CLI registration door."""
-    return register_cli_profile(
-        label=name,
-        facts={},
-    )
+    return register_cli_profile(label=name, facts={}, log_in=False)
 
 
 def test_set_service_account_impersonation_then_show_reflects_it() -> None:

@@ -46,6 +46,7 @@ def test_profile_add_row_persists_an_activities_row_and_rejects_bad_values_witho
             # reserve slot zero and allocate the next explicit row at one.
             "activities.description": "Existing activity",
         },
+        log_in=False,
     )
 
     success = invoke_typer_app(

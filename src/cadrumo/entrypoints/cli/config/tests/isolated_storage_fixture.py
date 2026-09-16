@@ -13,7 +13,8 @@ from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_
 from .....core.config import override_settings
 from ...tests.cli_runner import invoke_cached_cli
 
-_CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
+#: The passphrase every profile these fixtures create is protected by.
+CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
 _JSON_OBJECT: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 #: Every flag a natural person with activity income needs before
@@ -78,12 +79,12 @@ def live_cli_profile(tmp_path: Path) -> Iterator[None]:
     """
     overrides = {
         "cadrumo_local_storage_root": tmp_path / "cadrumo-storage",
-        "cadrumo_secret_passphrase": _CREDENTIAL_INPUT,
+        "cadrumo_secret_passphrase": CREDENTIAL_INPUT,
     }
     with override_settings(**overrides):
         created = invoke_cached_cli(
             ("--format", "json", "config", "profile", "create", "Editor", "--quiet", "--secrets-stdin"),
-            input=json.dumps({"passphrase": _CREDENTIAL_INPUT, "passphrase_confirmation": _CREDENTIAL_INPUT}),
+            input=json.dumps({"passphrase": CREDENTIAL_INPUT, "passphrase_confirmation": CREDENTIAL_INPUT}),
         )
         assert created.exit_code == 0, created.output
         try:
@@ -119,6 +120,7 @@ def profile_event_count(event_type: str) -> int:
 
 __all__ = [
     "COMPLETE_NATURAL_PERSON_FLAGS",
+    "CREDENTIAL_INPUT",
     "config_check_backend",
     "config_check_isolated_backend",
     "live_cli_profile",

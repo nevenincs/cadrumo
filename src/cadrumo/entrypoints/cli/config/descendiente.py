@@ -40,6 +40,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.contribuyente.descendant import DescendantInfo
@@ -135,6 +136,18 @@ def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
     from ....domain.contribuyente.guarderia_mensual import serialise_guarderia_mensual
 
     return serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales) or "-"
+
+
+def _offending_flag_key(error: CadrumoError) -> dict[str, str]:
+    """Return the ``--descendiente`` key a parse refusal names, when it names one.
+
+    The flag carries about twenty keys and the refusal lists them all, so an
+    operator reading only the typed envelope could not tell which of their own
+    values was unreadable. The parser records it; an older refusal that records
+    none yields no context rather than a guess.
+    """
+    key = (error.context or {}).get("key")
+    return {"key": key} if isinstance(key, str) and key else {}
 
 
 def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset: int) -> tuple[int, ...]:
@@ -335,9 +348,12 @@ def descendiente_add(
         except ProfileAnswerTypeError as exc:
             # The exception CLASS NAME is not operator-facing vocabulary: putting it
             # in context leaks "ValidationError" into the envelope the operator
-            # reads. The translated message carries what they can act on.
+            # reads. The translated message carries what they can act on. The KEY
+            # does belong there: the message lists every accepted key, which does
+            # not tell an automated operator which one of theirs was unreadable.
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.descendiente.invalid_flag",
+                context=_offending_flag_key(exc),
             ) from exc
         except ValidationError as exc:
             # Name the FIELDS that conflict, never the exception class. The class

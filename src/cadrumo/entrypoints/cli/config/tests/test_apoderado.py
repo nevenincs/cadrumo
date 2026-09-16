@@ -104,6 +104,7 @@ def test_apoderado_happy_path_against_active_profile(profile_storage_root: Path)
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
     # status: exit 0 on the active profile (previously crashed with
@@ -180,6 +181,7 @@ def _create_active_profile() -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
 
@@ -268,6 +270,7 @@ def test_apoderado_configure_leaves_profile_facts_untouched(profile_storage_root
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
     from .....application.workflow.profile_bucket_scan import read_profile_bucket
