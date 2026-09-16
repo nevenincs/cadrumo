@@ -123,9 +123,6 @@ if TYPE_CHECKING:
 __all__ = ["extract_invoice_draft_from_evidence"]
 
 
-_CONSENT_BINDING_REFUSAL_LOCALE_KEY = "llm.evidence.consent.binding_mismatch"
-
-
 def _require_consent_token_binds_these_bytes(
     consent_token: EvidenceConsentProof | None,
     evidence_input: EvidenceInput,
