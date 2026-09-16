@@ -5,33 +5,11 @@ from __future__ import annotations
 import pytest
 
 from ......core.access_gate.errors import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
-from ......core.access_gate.gate import AeatAccessGate, AeatGateEnvSnapshot
+from ......core.access_gate.gate import AeatAccessGate
 from ......core.config import Settings, override_settings
 from ......core.errors.error_codes import render_error_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-
-def test_snapshot_env_reports_present_values() -> None:
-    with override_settings(cadrumo_live_tests_enabled="1"):
-        settings = Settings(cadrumo_live_tests_enabled="1")
-        snapshot = AeatAccessGate(settings).snapshot_env(guarded_read_context="")
-        assert isinstance(snapshot, AeatGateEnvSnapshot)
-        assert snapshot.cadrumo_live_tests_enabled == "1"
-        assert snapshot.guarded_read_context == ""
-
-
-def test_snapshot_env_reflects_settings_field_value() -> None:
-    # snapshot_env reports ``settings.cadrumo_live_tests_enabled`` (Settings
-    # surface) and ``os.environ[CADRUMO_GUARDED_READ_CONTEXT]`` (pytest
-    # infrastructure only — not AEAT config, no Settings mirror). Tests
-    # pass an explicit value via the snapshot_env DI seam rather than
-    # mutating the real env var.
-    with override_settings(cadrumo_live_tests_enabled=""):
-        settings = Settings(cadrumo_live_tests_enabled="")
-        snapshot = AeatAccessGate(settings).snapshot_env(guarded_read_context="")
-        assert snapshot.cadrumo_live_tests_enabled == settings.cadrumo_live_tests_enabled
-        assert snapshot.guarded_read_context == ""
 
 
 def test_require_live_read_passes_when_enabled() -> None:

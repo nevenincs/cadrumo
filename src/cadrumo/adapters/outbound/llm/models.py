@@ -273,10 +273,6 @@ class PromptRegistry(BaseModel):
             raise KeyError(prompt_id)
         return max(candidates, key=lambda item: item.version)
 
-    def prompt_ids(self) -> tuple[str, ...]:
-        """Return the distinct prompt identifiers in the registry."""
-        return tuple(sorted({item.id for item in self.definitions.values()}))
-
     @classmethod
     def seeded(cls) -> PromptRegistry:
         """Return a default :class:`~llm.PromptRegistry`."""

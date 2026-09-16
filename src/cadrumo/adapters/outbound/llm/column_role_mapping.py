@@ -171,15 +171,6 @@ class ColumnRoleProposal(BaseModel):
         description="Claims addressing a column position the table does not carry.",
     )
 
-    @property
-    def mapped_column_count(self) -> int:
-        """How many columns carry a role other than :attr:`~core.FieldRole.UNMAPPED`."""
-        return sum(1 for role in self.roles if role is not FieldRole.UNMAPPED)
-
-    def mapped_roles(self) -> frozenset[FieldRole]:
-        """Return the distinct established roles, excluding :attr:`~core.FieldRole.UNMAPPED`."""
-        return frozenset(role for role in self.roles if role is not FieldRole.UNMAPPED)
-
 
 class ProposedColumnRole(BaseModel):
     """One column-to-role claim as the model stated it.
