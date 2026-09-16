@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ...deadlines.models import IrpfEstimationRegime, IrpfSpecialRegime
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "IRPF regime vocabulary"
 
 _FACT_ID = "irpf-regime-vocabulary"
 _ESTIMATION_ORDER_KEY = "irpf_estimation_regime.order"
@@ -111,13 +114,6 @@ class IrpfRegimeVocabulary:
         return next(item for item in self.special_regimes if item.token == token)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IRPF regime vocabulary is missing {key!r}")
-    return value.strip()
-
-
 def _optional(entries: Mapping[str, str], key: str) -> str | None:
     value = entries.get(key)
     if value is None or not value.strip():
@@ -126,21 +122,33 @@ def _optional(entries: Mapping[str, str], key: str) -> str | None:
 
 
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"IRPF regime vocabulary {key!r} must contain unique tokens")
     return values
 
 
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"IRPF regime vocabulary {key!r} must contain unique legal references")
     return values
 
 
 def _modelos(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"IRPF regime vocabulary {key!r} must contain unique filing models")
     return values
@@ -216,13 +224,13 @@ def resolve_irpf_regime_vocabulary(
     for raw_token in _csv(entries, _ESTIMATION_ORDER_KEY):
         token = IrpfEstimationRegime(raw_token, _registry_validated=True)
         prefix = f"{_ESTIMATION_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IRPF estimation token {raw_token!r} declares a mismatched value")
         estimation_regimes.append(
             IrpfEstimationRegimeDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
-                tax_regime=_required(entries, f"{prefix}tax_regime"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
                 filing_modelos=_modelos(entries, f"{prefix}filing_modelos"),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
@@ -233,13 +241,13 @@ def resolve_irpf_regime_vocabulary(
     for raw_token in _csv(entries, _SPECIAL_ORDER_KEY):
         token = IrpfSpecialRegime(raw_token, _registry_validated=True)
         prefix = f"{_SPECIAL_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IRPF special token {raw_token!r} declares a mismatched value")
         special_regimes.append(
             IrpfSpecialRegimeDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
-                tax_regime=_required(entries, f"{prefix}tax_regime"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
                 filing_modelos=_modelos(entries, f"{prefix}filing_modelos"),
                 window_years=_window_years(entries, f"{prefix}window_years"),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),

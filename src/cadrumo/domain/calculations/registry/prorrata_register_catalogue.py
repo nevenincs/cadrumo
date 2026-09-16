@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
@@ -14,9 +15,11 @@ from ....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "prorrata register mapping"
 
 _FACT_ID = "renta-iva-deduction-ratio-policy"
 _REGIME_ORDER_KEY = "prorrata.regime_order"
@@ -282,22 +285,19 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"prorrata register mapping is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"prorrata register mapping {key!r} must contain unique tokens")
     return values
 
 
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key).lower()
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
         return True
     if value == "false":
@@ -334,14 +334,16 @@ def resolve_prorrata_register_catalogue(
     regimes: list[ProrrataRegisterRegimeDefinition] = []
     for raw_token in regime_tokens:
         prefix = f"{_REGIME_PREFIX}{raw_token}"
-        token = ProrrataRegisterRegime.from_registry(_required(entries, f"{prefix}.value"))
+        token = ProrrataRegisterRegime.from_registry(
+            required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
+        )
         if str(token) != raw_token:
             raise RegistryValidationError(f"register regime {raw_token!r} declares a mismatched value")
         regimes.append(
             ProrrataRegisterRegimeDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
                 apportions=_boolean(entries, f"{prefix}.apportions"),
             ),
         )
@@ -349,28 +351,32 @@ def resolve_prorrata_register_catalogue(
     transition_kinds: list[ProrrataTransitionDefinition] = []
     for raw_token in _csv(entries, _TRANSITION_ORDER_KEY):
         prefix = f"{_TRANSITION_PREFIX}{raw_token}"
-        token = ProrrataEspecialTransitionKind.from_registry(_required(entries, f"{prefix}.value"))
+        token = ProrrataEspecialTransitionKind.from_registry(
+            required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
+        )
         if str(token) != raw_token:
             raise RegistryValidationError(f"transition {raw_token!r} declares a mismatched value")
         transition_kinds.append(
             ProrrataTransitionDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
             ),
         )
 
     provenances: list[ProrrataProvenanceDefinition] = []
     for raw_token in _csv(entries, _PROVENANCE_ORDER_KEY):
         prefix = f"{_PROVENANCE_PREFIX}{raw_token}"
-        token = ProrrataProvisionalProvenance.from_registry(_required(entries, f"{prefix}.value"))
+        token = ProrrataProvisionalProvenance.from_registry(
+            required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
+        )
         if str(token) != raw_token:
             raise RegistryValidationError(f"provenance {raw_token!r} declares a mismatched value")
         provenances.append(
             ProrrataProvenanceDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
                 authorisation_required=_boolean(entries, f"{prefix}.authorisation_required"),
                 election_allowed=_boolean(entries, f"{prefix}.election_allowed"),
             ),
@@ -379,14 +385,16 @@ def resolve_prorrata_register_catalogue(
     sector_letters: list[SectorDiferenciadoLetraDefinition] = []
     for raw_token in _csv(entries, _SECTOR_ORDER_KEY):
         prefix = f"{_SECTOR_PREFIX}{raw_token}"
-        token = SectorDiferenciadoLetra.from_registry(_required(entries, f"{prefix}.value"))
+        token = SectorDiferenciadoLetra.from_registry(
+            required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
+        )
         if str(token) != raw_token:
             raise RegistryValidationError(f"sector letter {raw_token!r} declares a mismatched value")
         sector_letters.append(
             SectorDiferenciadoLetraDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
             ),
         )
 
@@ -487,18 +495,6 @@ def carried_prior_definitiva_prorrata_provenance(
         effective_date=effective_date,
         authority=authority,
     ).carried_prior_definitiva_provenance
-
-
-def interrumpida_tres_ultimos_prorrata_provenance(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> ProrrataProvisionalProvenance:
-    """Return the registry-declared interrupted-three-years provenance token."""
-    return resolve_prorrata_register_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).interrumpida_tres_ultimos_provenance
 
 
 def prorrata_provenance_precedence(
@@ -621,7 +617,6 @@ __all__ = [
     "especial_prorrata_register_regime",
     "general_prorrata_register_regime",
     "inicio_actividad_prorrata_provenance",
-    "interrumpida_tres_ultimos_prorrata_provenance",
     "ninguna_prorrata_register_regime",
     "opcion_prorrata_transition",
     "prorrata_electable_provenances",

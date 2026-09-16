@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....domain.renta.rental_reduction import RentalReductionArt232Tier
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "rental reduction mapping"
 
 _FACT_ID = "renta-rental-reduccion-art-23-2-tier-catalogue"
 _ORDER_KEY = "tier_order"
@@ -68,15 +71,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"rental reduction mapping is missing {key!r}")
-    return value.strip()
-
-
 def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    tokens = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not tokens or len(set(tokens)) != len(tokens):
         raise RegistryValidationError(f"rental reduction mapping {key!r} must declare unique non-empty tokens")
     return tokens
@@ -105,7 +105,7 @@ def resolve_rental_reduction_art232_tier_catalogue(
     for raw_token in _csv_tokens(entries, _ORDER_KEY):
         token = RentalReductionArt232Tier(raw_token)
         prefix = f"{_TIER_PREFIX}{raw_token}"
-        declared_value = _required(entries, f"{prefix}.value")
+        declared_value = required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
             raise RegistryValidationError(
                 f"rental reduction tier {raw_token!r} declares mismatched value {declared_value!r}",
@@ -113,9 +113,9 @@ def resolve_rental_reduction_art232_tier_catalogue(
         definitions.append(
             RentalReductionArt232TierDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
-                parameter_id=_required(entries, f"{prefix}.parameter_id"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
+                parameter_id=required_mapping_entry(entries, f"{prefix}.parameter_id", subject=_ENTRY_SUBJECT),
             ),
         )
     return RentalReductionArt232TierCatalogue(definitions=tuple(definitions))

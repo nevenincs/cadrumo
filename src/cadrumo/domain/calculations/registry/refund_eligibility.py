@@ -6,13 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ....core.period import Period, accepted_filing_period_codes, registry_period_kind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "IVA refund eligibility policy"
 
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
@@ -49,22 +51,23 @@ class RefundEligibilityPolicy:
         return period.registry_token in self.final_period_tokens
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IVA refund eligibility policy is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"IVA refund eligibility policy {key!r} must contain unique tokens")
     return values
 
 
 def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"IVA refund eligibility policy {key!r} must contain unique legal references")
     return values
@@ -120,12 +123,12 @@ def _policy(entries: Mapping[str, str]) -> RefundEligibilityPolicy:
                 f"IVA refund eligibility period {raw_token!r} is not a valid filing-period token",
             )
         prefix = f"{_FINAL_PERIOD_PREFIX}{raw_token}."
-        declared_value = _required(entries, f"{prefix}value")
+        declared_value = required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
             raise RegistryValidationError(
                 f"IVA refund eligibility period {raw_token!r} declares mismatched value {declared_value!r}",
             )
-        cadence = _required(entries, f"{prefix}cadence")
+        cadence = required_mapping_entry(entries, f"{prefix}cadence", subject=_ENTRY_SUBJECT)
         try:
             expected_cadence = registry_period_kind(raw_token).value
         except ValueError as exc:
@@ -141,7 +144,7 @@ def _policy(entries: Mapping[str, str]) -> RefundEligibilityPolicy:
             RefundFinalPeriodDefinition(
                 token=raw_token,
                 cadence=cadence,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
             ),
         )

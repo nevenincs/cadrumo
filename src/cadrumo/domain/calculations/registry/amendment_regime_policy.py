@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ....core.amendment_kind_regime import (
     AmendmentKindRegime,
@@ -14,9 +14,11 @@ from ....core.amendment_kind_regime import (
 )
 from ....core.period import Period
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "amendment-regime-policy"
 
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
@@ -29,15 +31,12 @@ _POST_ORDER_KEY = "regime.post_order"
 _BOUNDARY_ORDER_KEY = "boundary.order"
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"amendment-regime-policy is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"amendment-regime-policy {key!r} must contain unique tokens")
     return values
@@ -87,7 +86,7 @@ def _selected_mapping_entries(
 def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
     procedure_order = _csv(entries, _PROCEDURE_ORDER_KEY)
     for token in procedure_order:
-        if _required(entries, f"procedure.{token}.value") != token:
+        if required_mapping_entry(entries, f"procedure.{token}.value", subject=_ENTRY_SUBJECT) != token:
             raise RegistryValidationError(
                 f"amendment-regime-policy procedure {token!r} declares a mismatched value",
             )
@@ -104,7 +103,9 @@ def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
     boundaries: dict[str, date] = {}
     for modelo in boundary_models:
         try:
-            boundaries[modelo] = date.fromisoformat(_required(entries, f"boundary.{modelo}.date"))
+            boundaries[modelo] = date.fromisoformat(
+                required_mapping_entry(entries, f"boundary.{modelo}.date", subject=_ENTRY_SUBJECT)
+            )
         except ValueError as exc:
             raise RegistryValidationError(
                 f"amendment-regime-policy boundary for {modelo!r} must be an ISO date",

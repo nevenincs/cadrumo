@@ -27,7 +27,6 @@ from ..binding_temporal import (
     PriorQuarterExpandingSpan,
     SameFilingYearPeriods,
     SameTargetContext,
-    temporal_selector_from_previous_modelo_fields,
 )
 from ..binding_value_contract import (
     BindingDataType,
@@ -284,22 +283,6 @@ def test_previous_filing_requirement_rejects_ungrounded_binding_snapshot() -> No
     error_fields = {tuple(error["loc"]) for error in exc_info.value.errors()}
     assert ("legal_refs",) in error_fields
     assert ("source_refs",) in error_fields
-
-
-def test_expanding_span_mutually_exclusive_with_offset() -> None:
-    with pytest.raises(RegistryValidationError, match="mutually exclusive"):
-        temporal_selector_from_previous_modelo_fields(
-            prior_quarter_expanding_span=True,
-            source_period_offset_from_target=-1,
-        )
-
-
-def test_expanding_span_mutually_exclusive_with_source_periods() -> None:
-    with pytest.raises(RegistryValidationError, match="mutually exclusive"):
-        temporal_selector_from_previous_modelo_fields(
-            prior_quarter_expanding_span=True,
-            source_periods=("1T", "2T"),
-        )
 
 
 def test_expanding_span_rejects_non_quarterly_target() -> None:

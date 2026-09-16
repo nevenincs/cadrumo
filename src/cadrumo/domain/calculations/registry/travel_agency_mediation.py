@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.aggregation import TravelAgencyMediationType
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "travel-agency mediation catalogue"
 
 _FACT_ID = "travel-agency-mediation-catalogue"
 _ORDER_KEY = "travel_agency_mediation.order"
@@ -73,15 +76,12 @@ class TravelAgencyMediationCatalogue:
         return token == self.air_passenger_transport_token
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"travel-agency mediation catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(
             f"travel-agency mediation catalogue {key!r} must contain unique tokens",
@@ -124,20 +124,22 @@ def _catalogue(entries: Mapping[str, str]) -> TravelAgencyMediationCatalogue:
     for raw_token in _csv(entries, _ORDER_KEY):
         token = TravelAgencyMediationType.from_registry(raw_token)
         prefix = f"{_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(
                 f"travel-agency mediation token {raw_token!r} declares a mismatched value",
             )
         definitions.append(
             TravelAgencyMediationDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
         )
     if len(definitions) != len({item.token for item in definitions}):
         raise RegistryValidationError("travel-agency mediation catalogue contains duplicate tokens")
-    air_token = TravelAgencyMediationType.from_registry(_required(entries, _AIR_PASSENGER_TRANSPORT_KEY))
+    air_token = TravelAgencyMediationType.from_registry(
+        required_mapping_entry(entries, _AIR_PASSENGER_TRANSPORT_KEY, subject=_ENTRY_SUBJECT)
+    )
     if air_token not in {item.token for item in definitions}:
         raise RegistryValidationError("travel-agency mediation air token is not in the declared order")
     return TravelAgencyMediationCatalogue(

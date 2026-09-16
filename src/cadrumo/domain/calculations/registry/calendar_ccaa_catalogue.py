@@ -13,12 +13,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....domain.deadlines.festivos import CalendarCCAA
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "calendar CCAA catalogue"
 
 _FACT_ID = "deadline-calendar-territory-catalogue"
 _ORDER_KEY = "calendar_ccaa.order"
@@ -92,22 +95,19 @@ class CalendarCcaaCatalogue:
         return next(definition for definition in self.definitions if definition.token == token)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"calendar CCAA catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"calendar CCAA catalogue {key!r} must contain unique tokens")
     return values
 
 
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key).lower()
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
         return True
     if value == "false":
@@ -116,7 +116,7 @@ def _boolean(entries: Mapping[str, str], key: str) -> bool:
 
 
 def _integer(entries: Mapping[str, str], key: str) -> int:
-    value = _required(entries, key)
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     try:
         parsed = int(value)
     except ValueError as exc:
@@ -178,15 +178,15 @@ def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
         if not suffix.isalpha() or not suffix.isupper():
             raise RegistryValidationError(f"calendar CCAA code {raw_code!r} is not canonical ISO 3166-2:ES syntax")
         prefix = f"{_PREFIX}{code}."
-        if _required(entries, f"{prefix}value") != code:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != code:
             raise RegistryValidationError(f"calendar CCAA code {code!r} declares a mismatched value")
-        member_name = _required(entries, f"{prefix}member_name").upper()
+        member_name = required_mapping_entry(entries, f"{prefix}member_name", subject=_ENTRY_SUBJECT).upper()
         definitions.append(
             CalendarCcaaDefinition(
                 token=CalendarCCAA.from_registry(code),
                 member_name=member_name,
-                description=_required(entries, f"{prefix}description"),
-                territory_kind=_required(entries, f"{prefix}territory_kind"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                territory_kind=required_mapping_entry(entries, f"{prefix}territory_kind", subject=_ENTRY_SUBJECT),
             ),
         )
     tokens = [definition.token for definition in definitions]
@@ -196,7 +196,9 @@ def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
     if len(member_names) != len(set(member_names)):
         raise RegistryValidationError("calendar CCAA catalogue contains duplicate member names")
 
-    tax_residence_fact_id = _required(entries, f"{_RELATION_PREFIX}tax_residence_fact_id")
+    tax_residence_fact_id = required_mapping_entry(
+        entries, f"{_RELATION_PREFIX}tax_residence_fact_id", subject=_ENTRY_SUBJECT
+    )
     tax_residence_common_regime_count = _integer(
         entries,
         f"{_RELATION_PREFIX}tax_residence_common_regime_count",

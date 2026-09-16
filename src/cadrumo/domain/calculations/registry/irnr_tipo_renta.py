@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.irnr import TipoRentaIrnr
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "M349/M210 catalogue"
 
 _FACT_ID = "detail-m349-m210-catalogues"
 _ORDER_KEY = "m210.tipo_renta.order"
@@ -122,15 +125,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"M349/M210 catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"M349/M210 catalogue {key!r} must contain unique non-empty values")
     return values
@@ -188,12 +188,12 @@ def resolve_tipo_renta_irnr_catalogue(
     for raw_token in _csv(entries, _ORDER_KEY):
         token = TipoRentaIrnr.from_registry(raw_token)
         prefix = f"{_PREFIX}{raw_token}"
-        if _required(entries, f"{prefix}.value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"tipo-renta token {raw_token!r} declares a mismatched value")
         definitions.append(
             TipoRentaIrnrDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_refs=_csv_refs(entries, f"{prefix}.legal_refs"),
             ),
         )
@@ -219,7 +219,7 @@ def resolve_tipo_renta_irnr_catalogue(
             raise RegistryValidationError(f"official tipo-renta code {code!r} must be a two-digit decimal token")
         prefix = f"{_PREFIX}code.{code}"
         if code in catalogue.fetch_gated_codes:
-            if _required(entries, f"{prefix}.status") != "fetch_gated":
+            if required_mapping_entry(entries, f"{prefix}.status", subject=_ENTRY_SUBJECT) != "fetch_gated":
                 raise RegistryValidationError(f"fetch-gated tipo-renta code {code!r} lacks fetch_gated status")
             code_definitions.append(
                 M210TipoRentaCodeDefinition(
@@ -228,19 +228,19 @@ def resolve_tipo_renta_irnr_catalogue(
                     rate_legal_ref=None,
                     grounding_tier=None,
                     fetch_gated=True,
-                    description=_required(entries, f"{prefix}.description"),
+                    description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 ),
             )
             continue
         if code not in projection_codes:
             raise RegistryValidationError(f"tipo-renta code {code!r} is neither projected nor fetch-gated")
-        concept = catalogue.require(_required(entries, f"{prefix}.concept"))
+        concept = catalogue.require(required_mapping_entry(entries, f"{prefix}.concept", subject=_ENTRY_SUBJECT))
         code_definitions.append(
             M210TipoRentaCodeDefinition(
                 code=code,
                 concept=concept,
-                rate_legal_ref=_required(entries, f"{prefix}.rate_legal_ref"),
-                grounding_tier=_required(entries, f"{prefix}.grounding_tier"),
+                rate_legal_ref=required_mapping_entry(entries, f"{prefix}.rate_legal_ref", subject=_ENTRY_SUBJECT),
+                grounding_tier=required_mapping_entry(entries, f"{prefix}.grounding_tier", subject=_ENTRY_SUBJECT),
                 fetch_gated=False,
                 description=None,
             ),
@@ -299,7 +299,7 @@ def tipo_renta_pension_token(
     """Return the pension semantic token declared by fact 0080."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     return require_tipo_renta_irnr(
-        _required(entries, _PENSION_VALUE_KEY),
+        required_mapping_entry(entries, _PENSION_VALUE_KEY, subject=_ENTRY_SUBJECT),
         effective_date=effective_date,
         authority=authority,
     )
@@ -313,7 +313,7 @@ def tipo_renta_ue_residente_token(
     """Return the EU/EEA-resident income token declared by fact 0080."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     return require_tipo_renta_irnr(
-        _required(entries, _UE_RESIDENTE_VALUE_KEY),
+        required_mapping_entry(entries, _UE_RESIDENTE_VALUE_KEY, subject=_ENTRY_SUBJECT),
         effective_date=effective_date,
         authority=authority,
     )
@@ -327,7 +327,7 @@ def tipo_renta_inmobiliaria_token(
     """Return the real-estate income token declared by fact 0080."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     return require_tipo_renta_irnr(
-        _required(entries, _INMOBILIARIA_VALUE_KEY),
+        required_mapping_entry(entries, _INMOBILIARIA_VALUE_KEY, subject=_ENTRY_SUBJECT),
         effective_date=effective_date,
         authority=authority,
     )

@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....domain.iva.prorrata import ProrrataRegime
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "prorrata regime mapping"
 
 _FACT_ID = "renta-iva-deduction-ratio-policy"
 _ORDER_KEY = "prorrata.regime_order"
@@ -69,15 +72,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"prorrata regime mapping is missing {key!r}")
-    return value.strip()
-
-
 def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    tokens = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not tokens or len(set(tokens)) != len(tokens):
         raise RegistryValidationError(f"prorrata regime mapping {key!r} must declare unique non-empty tokens")
     return tokens
@@ -103,12 +103,12 @@ def resolve_prorrata_regime_catalogue(
         raise RegistryValidationError("Renta IVA ratio policy must resolve as a mapping fact")
     entries = _mapping_entries(resolved)
     ordered_tokens = _csv_tokens(entries, _ORDER_KEY)
-    default_token = ProrrataRegime(_required(entries, _DEFAULT_KEY))
+    default_token = ProrrataRegime(required_mapping_entry(entries, _DEFAULT_KEY, subject=_ENTRY_SUBJECT))
     definitions: list[ProrrataRegimeDefinition] = []
     for raw_token in ordered_tokens:
         token = ProrrataRegime(raw_token)
         prefix = f"{_REGIME_PREFIX}{raw_token}"
-        declared_value = _required(entries, f"{prefix}.value")
+        declared_value = required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
             raise RegistryValidationError(
                 f"prorrata regime {raw_token!r} declares mismatched value {declared_value!r}",
@@ -116,8 +116,8 @@ def resolve_prorrata_regime_catalogue(
         definitions.append(
             ProrrataRegimeDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
             ),
         )
     catalogue = ProrrataRegimeCatalogue(definitions=tuple(definitions), default_regime=default_token)

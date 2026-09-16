@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "IVA deduction catalogue"
 
 _FACT_ID = "iva-deduction-applicability-catalogue"
 _KIND_ORDER_KEY = "kind.order"
@@ -72,7 +75,7 @@ class IvaDeductionCatalogue:
 
     def projection(self, key: str) -> frozenset[IvaDeductionFactKind]:
         """Return a fact-0085 kind projection, preserving no Python catalogue."""
-        raw = _required(self.declarations, key)
+        raw = required_mapping_entry(self.declarations, key, subject=_ENTRY_SUBJECT)
         values = frozenset(self.require_kind(value) for value in _csv(raw))
         return values
 
@@ -97,13 +100,6 @@ def _csv(raw: str) -> tuple[str, ...]:
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError("IVA deduction catalogue entries must be unique non-empty tokens")
     return values
-
-
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IVA deduction catalogue is missing {key!r}")
-    return value.strip()
 
 
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
@@ -157,11 +153,11 @@ def resolve_iva_deduction_catalogue(
     declarations = _selected_entries(effective_date=effective_date, authority=authority)
     kinds = tuple(
         IvaDeductionFactKind(value, _registry_validated=True)
-        for value in _csv(_required(declarations, _KIND_ORDER_KEY))
+        for value in _csv(required_mapping_entry(declarations, _KIND_ORDER_KEY, subject=_ENTRY_SUBJECT))
     )
     authorities = tuple(
         IvaDeductionEvidenceAuthority(value, _registry_validated=True)
-        for value in _csv(_required(declarations, _AUTHORITY_ORDER_KEY))
+        for value in _csv(required_mapping_entry(declarations, _AUTHORITY_ORDER_KEY, subject=_ENTRY_SUBJECT))
     )
     catalogue = IvaDeductionCatalogue(
         declarations=declarations,

@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ...deadlines.models import IrpfIncomeCategory
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "IRPF income-category vocabulary"
 
 _FACT_ID = "irpf-income-category-vocabulary"
 _ORDER_KEY = "irpf_income_category.order"
@@ -72,13 +75,6 @@ class IrpfIncomeCategoryCatalogue:
         """Return the declaration for one admitted category."""
         token = self.require(value)
         return next(item for item in self.definitions if item.token == token)
-
-
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IRPF income-category vocabulary is missing {key!r}")
-    return value.strip()
 
 
 def _csv(entries: Mapping[str, str], key: str, *, required: bool = True) -> tuple[str, ...]:
@@ -157,19 +153,21 @@ def resolve_irpf_income_category_catalogue(
     for raw_token in _csv(entries, _ORDER_KEY):
         token = IrpfIncomeCategory(raw_token, _registry_validated=True)
         prefix = f"{_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IRPF income-category token {raw_token!r} declares a mismatched value")
         definitions.append(
             IrpfIncomeCategoryDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
-                tax_regime=_required(entries, f"{prefix}tax_regime"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
                 activity_gate_modelos=_csv(entries, f"{prefix}activity_gate_modelos", required=False),
                 payment_modelos=_csv(entries, f"{prefix}payment_modelos", required=False),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
         )
-    activity_token = IrpfIncomeCategory(_required(entries, _ACTIVITY_CATEGORY_ENTRY), _registry_validated=True)
+    activity_token = IrpfIncomeCategory(
+        required_mapping_entry(entries, _ACTIVITY_CATEGORY_ENTRY, subject=_ENTRY_SUBJECT), _registry_validated=True
+    )
     catalogue = IrpfIncomeCategoryCatalogue(
         definitions=tuple(definitions),
         activity_token=activity_token,

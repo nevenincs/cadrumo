@@ -8,16 +8,18 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from threading import Lock
 from types import MappingProxyType
-from typing import TypeVar
+from typing import Final, TypeVar
 from weakref import ReferenceType, ref
 
 from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from ....domain.iva.schema import IvaArt69DosService, IvaCashAccountingTreatment, IvaExemptionArticle
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "IVA schema vocabulary"
 
 _FACT_ID = "iva-statutory-schema-vocabulary"
 _CASH_ORDER_KEY = "cash_accounting.order"
@@ -345,15 +347,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IVA schema vocabulary is missing {key!r}")
-    return value.strip()
-
-
 def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    tokens = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not tokens or len(set(tokens)) != len(tokens):
         raise RegistryValidationError(f"IVA schema vocabulary {key!r} must contain unique non-empty tokens")
     return tokens
@@ -505,19 +504,21 @@ def resolve_iva_cash_accounting_catalogue(
     for raw_token in _csv_tokens(entries, _CASH_ORDER_KEY):
         token = IvaCashAccountingTreatment(raw_token)
         prefix = f"{_CASH_PREFIX}{raw_token}"
-        if _required(entries, f"{prefix}.value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"cash-accounting token {raw_token!r} declares a mismatched value")
         definitions.append(
             IvaCashAccountingTreatmentDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_refs=_csv_refs(entries, f"{prefix}.legal_refs", required=False),
             ),
         )
     catalogue = IvaCashAccountingTreatmentCatalogue(
         definitions=tuple(definitions),
-        none_token=IvaCashAccountingTreatment(_required(entries, _CASH_NONE_KEY)),
-        supplier_regime_token=IvaCashAccountingTreatment(_required(entries, _CASH_SUPPLIER_KEY)),
+        none_token=IvaCashAccountingTreatment(required_mapping_entry(entries, _CASH_NONE_KEY, subject=_ENTRY_SUBJECT)),
+        supplier_regime_token=IvaCashAccountingTreatment(
+            required_mapping_entry(entries, _CASH_SUPPLIER_KEY, subject=_ENTRY_SUBJECT)
+        ),
     )
     if catalogue.none_token not in catalogue.all_treatments:
         raise RegistryValidationError("cash-accounting none token is not declared in the treatment order")
@@ -538,20 +539,22 @@ def resolve_iva_regime_catalogue(
     for raw_token in _csv_tokens(entries, _REGIME_ORDER_KEY):
         token = IVARegime(raw_token)
         prefix = f"{_REGIME_PREFIX}{raw_token}"
-        if _required(entries, f"{prefix}.value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IVA regime token {raw_token!r} declares a mismatched value")
         definitions.append(
             IvaRegimeDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
-                deadline_applicability=_required(entries, f"{prefix}.deadline_applicability"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                deadline_applicability=required_mapping_entry(
+                    entries, f"{prefix}.deadline_applicability", subject=_ENTRY_SUBJECT
+                ),
                 legal_refs=_csv_refs(entries, f"{prefix}.legal_refs", required=False),
             ),
         )
     catalogue = IvaRegimeCatalogue(
         definitions=tuple(definitions),
-        default_token=IVARegime(_required(entries, _REGIME_DEFAULT_KEY)),
-        no_aplica_token=IVARegime(_required(entries, _REGIME_NO_APLICA_KEY)),
+        default_token=IVARegime(required_mapping_entry(entries, _REGIME_DEFAULT_KEY, subject=_ENTRY_SUBJECT)),
+        no_aplica_token=IVARegime(required_mapping_entry(entries, _REGIME_NO_APLICA_KEY, subject=_ENTRY_SUBJECT)),
         self_assessment_tokens=frozenset(
             IVARegime(raw_token) for raw_token in _csv_tokens(entries, _REGIME_SELF_ASSESSMENT_KEY)
         ),
@@ -563,7 +566,7 @@ def resolve_iva_regime_catalogue(
     if not catalogue.self_assessment_tokens.issubset(catalogue.all_regimes):
         raise RegistryValidationError("IVA self-assessment regimes must be declared in the regime order")
     for semantic_key in (_REGIME_SIMPLIFICADO_KEY, _REGIME_REAGP_KEY, _REGIME_EXENTO_KEY):
-        semantic_token = IVARegime(_required(entries, semantic_key))
+        semantic_token = IVARegime(required_mapping_entry(entries, semantic_key, subject=_ENTRY_SUBJECT))
         if semantic_token not in catalogue.all_regimes:
             raise RegistryValidationError(f"IVA regime semantic token {semantic_key!r} is not declared")
     return catalogue
@@ -580,13 +583,20 @@ def resolve_m303_tax_territory_catalogue(
     for raw_token in _csv_tokens(entries, _TERRITORY_ORDER_KEY):
         try:
             token = M303TaxTerritory.from_registry(raw_token)
-            declared_value = _required(entries, f"{_TERRITORY_PREFIX}{raw_token}.value")
-            description = _required(entries, f"{_TERRITORY_PREFIX}{raw_token}.description")
-            raw_is_foral = _required(entries, f"{_TERRITORY_PREFIX}{raw_token}.is_foral")
-            raw_ratio = _required(entries, f"{_TERRITORY_PREFIX}{raw_token}.state_attribution_ratio")
-            exclusively_foral_mark = _required(
-                entries,
-                f"{_TERRITORY_PREFIX}{raw_token}.exclusively_foral_mark",
+            declared_value = required_mapping_entry(
+                entries, f"{_TERRITORY_PREFIX}{raw_token}.value", subject=_ENTRY_SUBJECT
+            )
+            description = required_mapping_entry(
+                entries, f"{_TERRITORY_PREFIX}{raw_token}.description", subject=_ENTRY_SUBJECT
+            )
+            raw_is_foral = required_mapping_entry(
+                entries, f"{_TERRITORY_PREFIX}{raw_token}.is_foral", subject=_ENTRY_SUBJECT
+            )
+            raw_ratio = required_mapping_entry(
+                entries, f"{_TERRITORY_PREFIX}{raw_token}.state_attribution_ratio", subject=_ENTRY_SUBJECT
+            )
+            exclusively_foral_mark = required_mapping_entry(
+                entries, f"{_TERRITORY_PREFIX}{raw_token}.exclusively_foral_mark", subject=_ENTRY_SUBJECT
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise RegistryValidationError(
@@ -638,10 +648,18 @@ def resolve_m303_regime_composition_catalogue(
     for raw_token in _csv_tokens(entries, _COMPOSITION_ORDER_KEY):
         try:
             token = M303RegimeComposition.from_registry(raw_token)
-            declared_value = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.value")
-            description = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.description")
-            export_code = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.export_code")
-            simplified_scope = _required(entries, f"{_COMPOSITION_PREFIX}{raw_token}.simplified_scope")
+            declared_value = required_mapping_entry(
+                entries, f"{_COMPOSITION_PREFIX}{raw_token}.value", subject=_ENTRY_SUBJECT
+            )
+            description = required_mapping_entry(
+                entries, f"{_COMPOSITION_PREFIX}{raw_token}.description", subject=_ENTRY_SUBJECT
+            )
+            export_code = required_mapping_entry(
+                entries, f"{_COMPOSITION_PREFIX}{raw_token}.export_code", subject=_ENTRY_SUBJECT
+            )
+            simplified_scope = required_mapping_entry(
+                entries, f"{_COMPOSITION_PREFIX}{raw_token}.simplified_scope", subject=_ENTRY_SUBJECT
+            )
         except (KeyError, TypeError, ValueError) as exc:
             raise RegistryValidationError(
                 f"Modelo 303 regime-composition catalogue is missing or invalid for {raw_token!r}",
@@ -684,12 +702,12 @@ def resolve_iva_exemption_article_catalogue(
     for raw_token in _csv_tokens(entries, _EXEMPTION_ORDER_KEY):
         token = IvaExemptionArticle(raw_token)
         prefix = f"{_EXEMPTION_PREFIX}{raw_token}"
-        if _required(entries, f"{prefix}.value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"exemption article token {raw_token!r} declares a mismatched value")
         definitions.append(
             IvaExemptionArticleDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_refs=_csv_refs(entries, f"{prefix}.legal_refs", required=True),
             ),
         )
@@ -707,12 +725,12 @@ def resolve_iva_art69_dos_service_catalogue(
     for raw_token in _csv_tokens(entries, _SERVICE_ORDER_KEY):
         token = IvaArt69DosService(raw_token)
         prefix = f"{_SERVICE_PREFIX}{raw_token}"
-        if _required(entries, f"{prefix}.value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"Art. 69.Dos service token {raw_token!r} declares a mismatched value")
         definitions.append(
             IvaArt69DosServiceDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}.description"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_refs=_csv_refs(entries, f"{prefix}.legal_refs", required=True),
             ),
         )
@@ -914,7 +932,9 @@ def _iva_regime_semantic_token(
     authority: GovernedFactSource | None = None,
 ) -> IVARegime:
     entries = _selected_entries(effective_date=effective_date, authority=authority)
-    return require_iva_regime(_required(entries, key), effective_date=effective_date, authority=authority)
+    return require_iva_regime(
+        required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT), effective_date=effective_date, authority=authority
+    )
 
 
 def iva_regime_simplificado_token(

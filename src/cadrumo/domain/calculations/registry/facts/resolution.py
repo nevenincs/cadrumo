@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from typing import Annotated, Literal
 
@@ -56,6 +57,7 @@ __all__ = [
     "ResolvedOverrideFact",
     "ResolvedScalarFact",
     "ScalarFactQuery",
+    "required_mapping_entry",
     "resolve_governed_fact",
     "resolve_validated_governed_fact",
 ]
@@ -250,6 +252,21 @@ ResolvedGovernedFact = Annotated[
 ]
 
 _RESOLVED_FACT_ADAPTER: TypeAdapter[ResolvedGovernedFact] = TypeAdapter(ResolvedGovernedFact)
+
+
+def required_mapping_entry(entries: Mapping[str, str], key: str, *, subject: str) -> str:
+    """Return the stripped value of one required mapping-fact entry.
+
+    ``subject`` names the mapping in the refusal, so each consumer keeps its own
+    diagnostic wording.
+
+    Raises:
+        RegistryValidationError: When ``key`` is absent or blank.
+    """
+    value = entries.get(key)
+    if value is None or not value.strip():
+        raise RegistryValidationError(f"{subject} is missing {key!r}")
+    return value.strip()
 
 
 def resolve_governed_fact(

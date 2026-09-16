@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ...contribuyente.renta_codes import FiscalResidency
 from .errors import RegistryValidationError
@@ -14,9 +15,12 @@ from .facts.resolution import (
     MappingFactQuery,
     ResolvedEntitySetFact,
     ResolvedMappingFact,
+    required_mapping_entry,
 )
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "fiscal-residency catalogue"
 
 _FISCAL_RESIDENCY_FACT_ID = "renta-fiscal-residency-vocabulary"
 _EU_EEA_COUNTRY_FACT_ID = "eu-eea-country-membership"
@@ -78,22 +82,19 @@ class FiscalResidencyCatalogue:
         return next(item for item in self.definitions if item.token == token)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"fiscal-residency catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"fiscal-residency catalogue {key!r} must contain unique tokens")
     return values
 
 
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key)
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     if value not in {"true", "false"}:
         raise RegistryValidationError(f"fiscal-residency catalogue {key!r} must be true or false")
     return value == "true"
@@ -155,20 +156,22 @@ def resolve_fiscal_residency_catalogue(
     definitions: list[FiscalResidencyDefinition] = []
     for raw_token in _csv(entries, _FISCAL_RESIDENCY_ORDER_KEY):
         prefix = f"{_FISCAL_RESIDENCY_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"fiscal-residency token {raw_token!r} declares a mismatched value")
         definitions.append(
             FiscalResidencyDefinition(
                 token=FiscalResidency.from_registry(raw_token),
-                description=_required(entries, f"{prefix}description"),
-                tax_regime=_required(entries, f"{prefix}tax_regime"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
                 requires_country=_boolean(entries, f"{prefix}requires_country"),
                 is_default=_boolean(entries, f"{prefix}default"),
             ),
         )
     catalogue = FiscalResidencyCatalogue(
         definitions=tuple(definitions),
-        default_token=FiscalResidency.from_registry(_required(entries, _FISCAL_RESIDENCY_DEFAULT_KEY)),
+        default_token=FiscalResidency.from_registry(
+            required_mapping_entry(entries, _FISCAL_RESIDENCY_DEFAULT_KEY, subject=_ENTRY_SUBJECT)
+        ),
     )
     if len(catalogue.all_residencies) != len(catalogue.definitions):
         raise RegistryValidationError("fiscal-residency catalogue has duplicate tokens")

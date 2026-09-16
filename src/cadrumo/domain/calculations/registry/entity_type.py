@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ...contribuyente.entity_type import EntityType, LegalEntityForm
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "taxpayer entity vocabulary"
 
 _FACT_ID = "taxpayer-entity-vocabulary"
 _ENTITY_TYPE_ORDER_KEY = "entity_type.order"
@@ -109,29 +112,30 @@ class EntityVocabulary:
         return next(item for item in self.legal_entity_forms if item.token == token)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"taxpayer entity vocabulary is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must contain unique tokens")
     return values
 
 
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must contain unique legal references")
     return values
 
 
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key).lower()
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value not in {"true", "false"}:
         raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must be true or false")
     return value == "true"
@@ -194,13 +198,13 @@ def resolve_entity_vocabulary(
     for raw_token in _csv(entries, _ENTITY_TYPE_ORDER_KEY):
         token = EntityType.from_registry(raw_token)
         prefix = f"{_ENTITY_TYPE_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"entity-type token {raw_token!r} declares a mismatched value")
         entity_types.append(
             EntityTypeDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
-                tax_regime=_required(entries, f"{prefix}tax_regime"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
         )
@@ -209,9 +213,11 @@ def resolve_entity_vocabulary(
     for raw_token in _csv(entries, _LEGAL_FORM_ORDER_KEY):
         token = LegalEntityForm.from_registry(raw_token)
         prefix = f"{_LEGAL_FORM_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"legal-entity-form token {raw_token!r} declares a mismatched value")
-        entity_type = vocabulary.require_entity_type(_required(entries, f"{prefix}entity_type"))
+        entity_type = vocabulary.require_entity_type(
+            required_mapping_entry(entries, f"{prefix}entity_type", subject=_ENTRY_SUBJECT)
+        )
         if entity_type.value != "legal_entity":
             raise RegistryValidationError(
                 f"legal-entity-form token {raw_token!r} must be scoped to legal_entity",
@@ -219,7 +225,7 @@ def resolve_entity_vocabulary(
         legal_entity_forms.append(
             LegalEntityFormDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 entity_type=entity_type,
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
                 choice_description=_boolean(entries, f"{prefix}choice_description"),
