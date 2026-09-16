@@ -1446,6 +1446,7 @@ tui:
       review: Revisión
     availability:
       available: Disponible
+      choose_entry: Elige un asiento
       locked: Bloqueado
       never_captured: Aún no capturado
       stale: Desactualizado
@@ -1481,6 +1482,7 @@ tui:
     entries:
       empty: Esta captura no contiene asientos.
       title: Asientos del libro contable
+    entry_label: '{date} · {description}'
     evidence:
       column:
         status: Revisión
@@ -1530,6 +1532,7 @@ tui:
       failure: No se pudo guardar el enlace.
       inconsistencies: Incoherencias de enlaces
       invoice: Factura
+      invoice_label: '{counterparty} · {total}'
       local_only: Solo datos locales del libro. Sincronización AEAT es un espacio
         distinto.
       match_evidence: Evidencia canónica de coincidencia

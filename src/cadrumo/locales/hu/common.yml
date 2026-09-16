@@ -1424,6 +1424,7 @@ tui:
       review: Felülvizsgálat
     availability:
       available: Elérhető
+      choose_entry: Válasszon tételt
       locked: Zárolt
       never_captured: Még nincs rögzítve
       stale: Elavult
@@ -1459,6 +1460,7 @@ tui:
     entries:
       empty: Ez a pillanatkép nem tartalmaz tételeket.
       title: Főkönyvi tételek
+    entry_label: '{date} · {description}'
     evidence:
       column:
         status: Ellenőrzés
@@ -1507,6 +1509,7 @@ tui:
       failure: A kapcsolat nem menthető.
       inconsistencies: Hivatkozási eltérések
       invoice: Számla
+      invoice_label: '{counterparty} · {total}'
       local_only: Csak helyi főkönyvi adatok. Az AEAT-szinkron külön munkaterület.
       match_evidence: Kanonikus egyezési adatok
       modelo: Nyomtatvány

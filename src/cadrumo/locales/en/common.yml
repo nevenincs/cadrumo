@@ -1404,6 +1404,7 @@ tui:
       review: Review
     availability:
       available: Available
+      choose_entry: Choose an entry
       locked: Locked
       never_captured: Not captured yet
       stale: Out of date
@@ -1439,6 +1440,7 @@ tui:
     entries:
       empty: No entries are present in this snapshot.
       title: Ledger entries
+    entry_label: '{date} · {description}'
     evidence:
       column:
         status: Review
@@ -1487,6 +1489,7 @@ tui:
       failure: The link could not be saved.
       inconsistencies: Link inconsistencies
       invoice: Invoice
+      invoice_label: '{counterparty} · {total}'
       local_only: Local Ledger evidence only. AEAT Sync is a separate workspace.
       match_evidence: Canonical match evidence
       modelo: Form
