@@ -373,6 +373,6 @@ def test_recargo_equivalencia_is_not_deductible_input_iva(built: _CorpusRows) ->
             soportado = {
                 o.ledger_id
                 for o in result.observations
-                if o.flow_direction is IvaFlowDirection.from_registry("soportado")
+                if o.flow_direction == IvaFlowDirection.from_registry("soportado")
             }
             assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"

@@ -47,4 +47,4 @@ def test_the_cross_industry_invoice_branch_states_a_country_before_postal_routin
         assert parsed.supplier_country_code == "ES"
         assert territorial_scope_for_spanish_postal_code(
             "38001", operation=_authority_operation_for_test
-        ) is IvaTerritorialScope.from_registry("es_canarias")
+        ) == IvaTerritorialScope.from_registry("es_canarias")
