@@ -141,7 +141,7 @@ def test_statutory_cap_accepts_generic_annual_caps() -> None:
     )
 
     assert rule.statutory_cap_eur == Decimal("500")
-    assert rule.statutory_cap_period is StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True)
+    assert rule.statutory_cap_period == StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True)
 
 
 def test_statutory_cap_accepts_daily_cap_variants() -> None:

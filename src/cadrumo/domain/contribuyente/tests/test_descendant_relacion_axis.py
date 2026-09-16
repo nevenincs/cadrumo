@@ -124,7 +124,7 @@ def test_every_entitling_relacion_opens_the_window_with_its_own_anchor(
     anchor = date(_YEAR, 3, 1)
     child = (
         _older_child(relacion, inscripcion_registro_civil_date=anchor)
-        if relacion is DescendantRelacion.from_registry("adoptado")
+        if relacion == DescendantRelacion.from_registry("adoptado")
         else _older_child(relacion, acogimiento_resolucion_date=anchor)
     )
 

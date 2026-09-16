@@ -90,7 +90,7 @@ def test_the_variants_are_annual_per_person_not_daily(operation: PinnedAuthority
     """The article caps per person per year; a daily reading would be a different rule."""
     rule = _shipped_rule(operation)
 
-    assert rule.statutory_cap_period is StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True)
+    assert rule.statutory_cap_period == StatutoryCapPeriod.from_registry("year_per_person", is_per_person=True)
     assert all(not variant.is_per_day for variant in rule.statutory_cap_variants)
     assert all(variant.statutory_cap_eur_per_day is None for variant in rule.statutory_cap_variants)
 
