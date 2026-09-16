@@ -12,10 +12,12 @@ from ..classification.policies import RedactionRule, SensitivityClass, default_p
 from ..errors.hierarchy import RedactionError
 from ..redaction.rules import (
     _CLI_STRING_CACHE_MAX_LENGTH,
+    _REDACTION_KEY_SEPARATOR_RE,
     _apply_one,
     _redact_cli_string_uncached,
     default_rules_for,
     default_rules_for_class,
+    normalise_redaction_key,
     redact,
     redact_for_cli_output,
 )
@@ -125,3 +127,14 @@ def test_a_long_string_is_redacted_without_reuse() -> None:
     assert len(long_text) > _CLI_STRING_CACHE_MAX_LENGTH
 
     assert redact_for_cli_output(long_text) == _redact_cli_string_uncached(long_text, False)
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["tax_id", "Tax-ID", "  bucket id ", "ACTIVE.PROFILE", "Straße_Nr", "__", "", 7, None, ("tax", "id")],
+)
+def test_a_reused_key_fold_equals_a_fresh_one(key: object) -> None:
+    expected = "" if key is None else _REDACTION_KEY_SEPARATOR_RE.sub("_", str(key).casefold()).strip("_")
+
+    assert normalise_redaction_key(key) == expected
+    assert normalise_redaction_key(key) == expected

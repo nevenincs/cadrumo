@@ -905,7 +905,16 @@ def normalise_redaction_key(key: object | None) -> str:
     """
     if key is None:
         return ""
+    if isinstance(key, str):
+        return _normalise_text_redaction_key(key)
     return _REDACTION_KEY_SEPARATOR_RE.sub("_", str(key).casefold()).strip("_")
+
+
+#: Structured output asks for the same few field names once per value, so the
+#: fold is reused; the keys are schema names, not payload values.
+@lru_cache(maxsize=4096)
+def _normalise_text_redaction_key(key: str) -> str:
+    return _REDACTION_KEY_SEPARATOR_RE.sub("_", key.casefold()).strip("_")
 
 
 def _is_cli_profile_reference(value: object) -> bool:
@@ -1015,6 +1024,15 @@ def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
 
 @lru_cache(maxsize=16384)
 def _redact_cli_string_cached(text: str, reveal_identifiers: bool) -> str:
+    """Return the redaction of ``text``, reusing an earlier answer for the same input.
+
+    The cache holds each input string in PLAINTEXT, next to its redaction, for
+    the lifetime of the process: a tax identifier that was redacted on the way
+    out stays readable in memory until it is evicted. The bound is 16,384
+    entries of at most :data:`_CLI_STRING_CACHE_MAX_LENGTH` characters each. A
+    one-shot CLI process exits moments later; the TUI and MCP hosts are
+    long-lived and keep the entries for as long as they run.
+    """
     return _redact_cli_string_uncached(text, reveal_identifiers)
 
 
