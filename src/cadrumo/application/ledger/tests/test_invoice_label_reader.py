@@ -681,3 +681,39 @@ def test_the_ahead_of_extraction_predicate_matches_the_router(operation: PinnedA
     )
 
     assert (complete, partial, scanned, blank) == (True, False, False, False)
+
+
+def test_a_derived_sum_first_does_not_break_identity_resolution(operation: PinnedAuthorityOperation) -> None:
+    text = "Base imponible % IVA Cuota IVA\n1.000,00 21% 210,00\n250,00 10% 25,00\nTotal factura: 1.485,00 EUR"
+
+    reading = _read(text, operation)
+    draft = _grounded(text, operation)
+    envelopes = {envelope.field: envelope for envelope in draft.provenance}
+
+    assert reading.draft.provenance[0].origin is FieldOrigin.DERIVED
+    assert draft.supplier_tax_id is None
+    assert envelopes["supplier_tax_id"].origin is FieldOrigin.TEXT_RULES
+
+
+def test_an_unrated_base_beside_rate_lines_is_the_total_they_must_sum_to(operation: PinnedAuthorityOperation) -> None:
+    text = (
+        "Base21%:435,10 IVA21%:91,37\n"
+        "Base10%:265,40 IVA10%:26,54\n"
+        "Base4%:76,80 IVA4%:3,07\n"
+        "Base imponible: 708,60EUR\n"
+        "IVA(total): 106,56EUR"
+    )
+
+    reading = _read(text, operation)
+
+    assert reading.draft.taxable_base is None
+    assert reading.draft.iva_breakdown == ()
+    assert [(finding.kind, finding.field) for finding in reading.draft.discrepancies] == [
+        (DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT, "taxable_base"),
+    ]
+
+
+def test_a_heading_word_is_never_read_as_a_party_name(operation: PinnedAuthorityOperation) -> None:
+    text = "EMISOR\nInmueblesCastellana200SL DESTINATARIO/CLIENTE\nNIF: B92000017"
+
+    assert _read(text, operation).draft.supplier_name is None

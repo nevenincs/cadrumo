@@ -210,7 +210,7 @@ _AMOUNT_LABELS: tuple[tuple[_Kind, str], ...] = (
         r"total a pagar|total a percibir|total a cobrar|liquido a (?:percibir|pagar)|importe a pagar|"
         r"import a pagar|total a abonar|amount due|total due|balance due|net to pay|a pagar",
     ),
-    (_Kind.IVA_TOTAL, r"total (?:cuotas? )?(?:iva|vat)|total cuotas?|total quotes?|(?:iva|vat|cuota) \(total\)"),
+    (_Kind.IVA_TOTAL, r"total (?:cuotas? )?(?:iva|vat)|total cuotas?|total quotes?|(?:iva|vat|cuota) ?\(total\)"),
     (_Kind.BASE_TOTAL, r"total bases? (?:imponibles?|imposables?)|total bases?|total net"),
     (
         _Kind.GRAND_TOTAL,
@@ -423,6 +423,8 @@ def _rate_and_amounts(
     if rate_match is not None:
         rate = _Printed(_parse_rate(rate_match.group("number")), rate_match.group(0))
         remainder = text[: rate_match.start()] + " " * len(rate_match.group(0)) + text[rate_match.end() :]
+    # OCR glues a unit to its figure ("708,60EUR"); the figure alone is the anchor.
+    remainder = re.sub(r"(?<=\d)(?=[^\W\d_])", " ", remainder)
     amounts: list[_Printed[Decimal]] = []
     ambiguous: list[str] = []
     previous_end = 0
@@ -628,7 +630,7 @@ def _is_name_line(line: str) -> bool:
         bool(re.search(r"[a-z]{2}", folded))
         and _TAX_ID_RE.search(folded) is None
         and _AMOUNT_LABEL_RE.search(folded) is None
-        and _HEADING_RE.match(folded) is None
+        and _HEADING_WORD_RE.search(folded) is None
         and ":" not in line
     )
 
@@ -770,6 +772,26 @@ def _tier_reconciles(tier: _Tier, assembly: _Assembly) -> bool:
     return True
 
 
+def _printed_total(
+    collected: _Collected,
+    total_kind: _Kind,
+    tier_kind: _Kind,
+    name: str,
+    tiers: list[_Tier],
+    assembly: _Assembly,
+) -> _Printed[Decimal] | None:
+    """Return the document's printed total for *name*.
+
+    On a multi-rate document an unrated ``Base imponible`` or ``IVA`` line
+    beside the per-rate lines is that total, so it is kept as a cross-check
+    rather than dropped.
+    """
+    totals = [amount for amount, _ in collected.amounts.get(total_kind, [])]
+    if len(tiers) > 1 and not collected.table_tiers:
+        totals.extend(amount for amount, rate in collected.amounts.get(tier_kind, []) if rate is None)
+    return _single(name, totals, assembly)
+
+
 _TAX_FIGURES = ("taxable_base", "iva_rate", "iva_amount", "recargo_amount", "iva_breakdown")
 
 
@@ -777,8 +799,8 @@ def _assemble_tax_figures(collected: _Collected, assembly: _Assembly) -> None:
     tiers = [tier for tier in _tiers(collected, assembly) if tier.base or tier.iva or tier.rate]
     if not all(_tier_reconciles(tier, assembly) for tier in tiers):
         return
-    printed_base_total = _single("taxable_base", (a for a, _ in collected.amounts.get(_Kind.BASE_TOTAL, [])), assembly)
-    printed_iva_total = _single("iva_amount", (a for a, _ in collected.amounts.get(_Kind.IVA_TOTAL, [])), assembly)
+    printed_base_total = _printed_total(collected, _Kind.BASE_TOTAL, _Kind.BASE, "taxable_base", tiers, assembly)
+    printed_iva_total = _printed_total(collected, _Kind.IVA_TOTAL, _Kind.IVA, "iva_amount", tiers, assembly)
     recargos = [tier.re_amount for tier in tiers if tier.re_amount is not None]
     if len(tiers) == 1 and len(collected.table_tiers) <= 1:
         tier = tiers[0]

@@ -358,9 +358,14 @@ def _identity_candidates(
 
 
 def _reading_origin(envelopes: tuple[FieldProvenance, ...]) -> FieldOrigin:
-    """Return the origin the reading path stamped, defaulting conservatively."""
+    """Return the origin the reading path stamped, defaulting conservatively.
+
+    Only a reading origin qualifies: a derived sum is not a reading, and an
+    identity resolved under ``DERIVED`` would owe inputs it never had.
+    """
     for envelope in envelopes:
-        return envelope.origin
+        if envelope.origin in GROUNDABLE_ORIGINS:
+            return envelope.origin
     return FieldOrigin.TEXT_LAYER
 
 
