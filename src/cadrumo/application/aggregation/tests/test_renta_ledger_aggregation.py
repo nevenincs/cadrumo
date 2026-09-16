@@ -384,4 +384,4 @@ def test_casilla_aggregation_category_id_is_typed_spending_category_instance(
         f"but got {type(row.category_id).__name__!r}; the typed provenance "
         "was lost at the ledger→renta handoff"
     )
-    assert row.category_id is SpendingCategory.from_registry("cuotas_autonomos_ss")
+    assert row.category_id == SpendingCategory.from_registry("cuotas_autonomos_ss")

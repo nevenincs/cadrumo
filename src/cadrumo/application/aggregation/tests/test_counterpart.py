@@ -288,7 +288,7 @@ class TestObservationBoundaryAuthorities:
         ],
     )
     def test_uncanonical_operation_kinds_are_refused(self, uncanonical: str) -> None:
-        """An ``operation_kind`` outside the 347/349 clave vocabulary is refused here.
+        """An ``operation_kind`` outside the 347/349 clave vocabulary is refused at aggregation.
 
         Admitted, such a token did not merely mis-group — it made the operation
         *vanish*. The aggregator routes each observation by testing this field
@@ -298,12 +298,14 @@ class TestObservationBoundaryAuthorities:
         Before this refusal, the observation below aggregated to
         ``total_counterparties == 0`` and ``total_taxable_base == 0`` with no
         error and no notice, silently under-declaring a real above-threshold
-        operation on an informativa a human files.
+        operation on an informativa a human files. Membership needs the pinned
+        registry generation, so construction checks shape only.
         """
-        from pydantic import ValidationError
+        observation = _obs(nif="A1", op_kind=uncanonical, base="10000")
 
-        with pytest.raises(ValidationError):
-            _obs(nif="A1", op_kind=uncanonical, base="10000")
+        for aggregate in (aggregate_counterpart_347, aggregate_counterpart_349):
+            with pytest.raises(ValueError, match="not a declared 347/349 clave"):
+                aggregate((observation,), period=_P_2025_ANNUAL)
 
     def test_a_349_clave_still_routes_past_the_347_pass(self) -> None:
         """Cross-modelo filtering is correct and is deliberately left intact.

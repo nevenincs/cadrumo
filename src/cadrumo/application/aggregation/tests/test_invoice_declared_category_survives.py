@@ -156,7 +156,7 @@ def test_the_declared_reverse_charge_survives_the_projection() -> None:
     assert observation.category == IvaCategory("domestic_reverse_charge"), (
         f"the declared treatment was overwritten from the rate slot: {observation.category.value}"
     )
-    assert observation.flow_direction is IvaFlowDirection.from_registry("inversion_sujeto_pasivo"), (
+    assert observation.flow_direction == IvaFlowDirection.from_registry("inversion_sujeto_pasivo"), (
         f"the recipient is not recorded as self-assessing: {observation.flow_direction.value}"
     )
     assert observation.base_amount == _BASE
