@@ -19,6 +19,7 @@ between the catalogues moves here with it.
 
 from __future__ import annotations
 
+import contextvars
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -29,6 +30,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.schema import require_eu_member_state
 
@@ -110,6 +112,23 @@ def test_the_member_state_is_derived_and_never_stored_twice() -> None:
                 "counterparty_eu_member_state": "fr",
             },
         )
+
+
+@pytest.mark.parametrize("country", ("US", "XX"))
+def test_a_country_that_names_no_member_state_derives_none(country: str) -> None:
+    assert _transaction(counterparty_country=country).counterparty_eu_member_state is None
+
+
+def test_a_missing_authority_scope_is_refused_rather_than_read_as_outside_the_union() -> None:
+    """``None`` claims the country names no Member State; without a scope nobody knows.
+
+    Read in an empty context, the accessor must surface the missing scope. Turning
+    it into ``None`` would let an EU counterparty look like a third-country one.
+    """
+    transaction = _transaction(counterparty_country="DE")
+
+    with pytest.raises(RegistryValidationError, match="requires an explicit authority operation or scope"):
+        contextvars.Context().run(lambda: transaction.counterparty_eu_member_state)
 
 
 @pytest.mark.parametrize(
