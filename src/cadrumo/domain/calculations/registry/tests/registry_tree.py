@@ -1,10 +1,10 @@
-"""Canonical compiled-registry-tree accessor for registry-aware tests."""
+"""Structural view of the published registry generation for registry-aware tests."""
 
 from __future__ import annotations
 
 from functools import cache
 
-from ..authority import PinnedAuthorityOperation, ValidatedRegistryAuthority, bundled_indexed_authority
+from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..authority_artifact import SnapshotGlobalsComponentQuery
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, RegistryCatalogues, SnapshotGlobalCatalogues
@@ -28,21 +28,22 @@ def full_published_modelo(operation: PinnedAuthorityOperation, modelo_id: str) -
 
 
 @cache
-def _bundled_registry_tree_with_identity() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues, str]:
-    """Return the immutable bundled registry published for runtime use.
+def bundled_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    """Return a structural view of the published registry generation.
 
-    Test fixtures that need a mutable source tree must live in the development
-    authoring test lane. This accessor is deliberately limited to the
-    published artifact, so shared source tests do not reach ``dev`` or a root
-    test-support package just to obtain bundled facts.
+    The view lists every published modelo with every revision the generation
+    stores, and the legal and source references those modelos cite. A query for
+    an id no modelo cites is absent here, exactly as it is absent from any one
+    modelo's own snapshot closure.
 
-    The legal and source catalogues carry every reference the published
-    modelos actually cite, not the raw authored corpus; a query for an id no
-    modelo cites is absent here exactly as it is absent from any one modelo's
-    own snapshot closure. The governed-fact catalogue is intentionally empty:
-    callers that need governed-fact resolution must do so from inside a
-    :func:`bundled_indexed_authority` operation lease, which is itself
-    registered as the ambient governed-fact source for that lease.
+    It is a view for inspecting declarations, not a stand-in for the published
+    generation. Its catalogues carry no governed facts, and revision selection,
+    projection and admission stay with the generation itself. A snapshot built
+    from this view must therefore be built inside a published operation lease,
+    which scopes the generation's governed facts for that build.
+
+    Tests that need a mutable source tree belong to the development authoring
+    lane, not here.
     """
     with bundled_indexed_authority().operation() as operation:
         modelo_ids = operation.modelo_ids()
@@ -67,43 +68,16 @@ def _bundled_registry_tree_with_identity() -> tuple[tuple[ModeloDefinition, ...]
             supplementary_ordenes=globals_value.supplementary_ordenes,
             supported_filing_years=directory.supported_filing_years,
         )
-        return modelos, catalogues, operation.pin().logical_generation
+        return modelos, catalogues
 
 
-def bundled_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    """Return the immutable bundled registry published for runtime use.
-
-    Test fixtures that need a mutable source tree must live in the development
-    authoring test lane. This accessor is deliberately limited to the
-    published artifact, so shared source tests do not reach ``dev`` or a root
-    test-support package just to obtain bundled facts.
-
-    The legal and source catalogues carry every reference the published
-    modelos actually cite, not the raw authored corpus; a query for an id no
-    modelo cites is absent here exactly as it is absent from any one modelo's
-    own snapshot closure. The governed-fact catalogue is intentionally empty:
-    callers that need governed-fact resolution must do so from inside a
-    :func:`bundled_indexed_authority` operation lease, which is itself
-    registered as the ambient governed-fact source for that lease.
-    """
-    modelos, catalogues, _identity_digest = _bundled_registry_tree_with_identity()
-    return modelos, catalogues
+def bundled_modelo_components(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
+    """Return one modelo of :func:`bundled_registry_tree` together with the view's catalogues."""
+    modelos, catalogues = bundled_registry_tree()
+    for modelo in modelos:
+        if modelo.id == modelo_id:
+            return modelo, catalogues
+    raise LookupError(f"published registry generation declares no modelo {modelo_id!r}")
 
 
-def bundled_validated_registry_authority() -> ValidatedRegistryAuthority:
-    """Return an eager :class:`ValidatedRegistryAuthority` view of the published tree.
-
-    Only for legacy production surfaces (such as
-    :class:`~..queries.RegistryQueryService`) that deliberately accept no
-    other authority shape. Built from the same published components
-    :func:`bundled_registry_tree` returns, never from mutable source.
-    """
-    modelos, catalogues, identity_digest = _bundled_registry_tree_with_identity()
-    return ValidatedRegistryAuthority.from_validated_components(
-        modelos=modelos,
-        catalogues=catalogues,
-        identity_digest=identity_digest,
-    )
-
-
-__all__ = ["bundled_registry_tree", "bundled_validated_registry_authority", "full_published_modelo"]
+__all__ = ["bundled_modelo_components", "bundled_registry_tree", "full_published_modelo"]

@@ -9,13 +9,17 @@ under-declaration would pass silently because the shorter tuple is still valid.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import ValidatedRegistryAuthority
-from ..censo_modelos import CENSO_MODELO_EVENT_KINDS, _active_036_ownership_from_registry
-from ..errors import RegistryValidationError
-from ..schema import ModeloRevision
-from ..schema_references import PeriodOverride, PeriodSelector
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.censo_modelos import (
+    CENSO_MODELO_EVENT_KINDS,
+    _active_036_ownership_from_registry,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -28,12 +28,11 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-
 from .....application.filing.runtime import build_runtime_schema_provider
 from .....core.export_layout_format import ExportLayoutFormat
 from .....core.period import Period
 from .....domain.calculations.export_field_kind import CasillaFieldKind
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ..engine import build_export_plan
@@ -71,9 +70,9 @@ def _workbook_emitted_ids(snapshot: RegistrySnapshot) -> set[str]:
     return emitted
 
 
-def _boe_representable_ids(modelo: str, year: int, period: str) -> set[str]:
+def _boe_representable_ids(modelo: str, year: int, period: str, *, operation: PinnedAuthorityOperation) -> set[str]:
     provider = build_runtime_schema_provider(
-        filing_year=year, period=Period.from_year_and_code(year, period), modelos=(modelo,)
+        filing_year=year, period=Period.from_year_and_code(year, period), modelos=(modelo,), operation=operation
     )
     layout = provider.get_subview(modelo).export_layouts[0]
     return _fixed_width_layout_casilla_slots(layout)
@@ -92,12 +91,14 @@ def _fixed_width_layout_casilla_slots(layout: ExportLayoutDefinition) -> set[str
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_fichero_boe_and_workbook_share_computed_export_surface(modelo: str, year: int, period: str, on: date) -> None:
-    snapshot = published_snapshot(modelo, filing_year=year, period=period, on=on)
+def test_fichero_boe_and_workbook_share_computed_export_surface(
+    operation: PinnedAuthorityOperation, modelo: str, year: int, period: str, on: date
+) -> None:
+    snapshot = operation.snapshot(modelo, filing_year=year, period=period, on=on)
     revision = snapshot.revision
     by_id = {casilla.id: casilla for casilla in revision.casillas}
     workbook = _workbook_emitted_ids(snapshot)
-    boe = _boe_representable_ids(modelo, year, period)
+    boe = _boe_representable_ids(modelo, year, period, operation=operation)
 
     assert boe, f"modelo {modelo} has an empty fichero-BOE representable set"
     assert workbook, f"modelo {modelo} has an empty workbook emitted set"

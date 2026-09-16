@@ -5,15 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from functools import cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -24,13 +22,8 @@ _M100_2024_MATERNIDAD_BINDINGS = {
 }
 
 
-@cache
-def _authority() -> ValidatedRegistryAuthority:
-    return compiled_bundled_authority()
-
-
 def _snapshot(year: int) -> RegistrySnapshot:
-    return _authority().snapshot(
+    return published_snapshot(
         "100",
         filing_year=year,
         period="0A",

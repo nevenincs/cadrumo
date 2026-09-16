@@ -28,10 +28,11 @@ See Also:
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .....core.export_layout_format import ExportLayoutFormat
-from ..support_matrix import ModeloEntry, build_support_matrix
+from cadrumo.core.export_layout_format import ExportLayoutFormat
+from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry, build_support_matrix
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

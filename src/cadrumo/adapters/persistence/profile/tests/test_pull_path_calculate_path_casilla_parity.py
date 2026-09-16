@@ -354,7 +354,7 @@ def _m303_iva_transaction(
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "group_label": None,
-            "category_id": "test_iva_operation",
+            "category_id": "material_oficina",
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,

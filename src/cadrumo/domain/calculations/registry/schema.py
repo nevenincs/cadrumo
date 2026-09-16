@@ -1602,6 +1602,7 @@ class RegistrySnapshot(RegistryModel):
     filing_period: Period | None = None
     filing_year: FilingYear
     authored_filing_year: FilingYear | None = None
+    supported_filing_years: SupportedFilingYearsCatalogue | None = None
     revision_projection_direction: TemporalProjectionDirection = TemporalProjectionDirection.AUTHORED
     # Accepts normal period codes and declared event-period names; upstream
     # PeriodSelector + ModeloScheduleDefinition constrain the token set.

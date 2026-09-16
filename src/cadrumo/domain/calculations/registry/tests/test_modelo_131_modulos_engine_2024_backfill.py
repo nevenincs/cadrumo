@@ -42,7 +42,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
 from ..temporal import select_revision
-from ._published_authority import artifact_snapshot
+from .published_authority import published_snapshot
 from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -130,7 +130,7 @@ def _run_modulos_engine_2024(
     modulo_3: Decimal = Decimal("0"),
     modulo_4: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    snapshot = artifact_snapshot("131", 2024, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = published_snapshot("131", filing_year=2024, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
@@ -236,7 +236,9 @@ class TestModulos2024PartialTableCoverageDoesNotSilentlyMisattribute:
         that the 2024 back-fill did not silently drift from its 2025 source
         (aeat-calculation-aggregation).
         """
-        snapshot_2025 = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot_2025 = published_snapshot(
+            "131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        )
         assert snapshot_2025.filing_period is not None
         result_2025 = calculate_registry_snapshot(
             snapshot_2025,
@@ -292,7 +294,7 @@ class TestModulos2024DateAxisBoundaries:
         assert revision_2025.id == "2025"
 
     def test_2024_coefficient_parameters_are_scoped_to_calendar_year_2024(self) -> None:
-        snapshot = artifact_snapshot("131", 2024, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot("131", filing_year=2024, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
         coeficientes = next(
             parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-coeficientes"
         )
@@ -310,8 +312,12 @@ class TestModulos2024DateAxisBoundaries:
     def test_2024_and_2025_coefficient_tables_are_distinct_parameter_ids(self) -> None:
         """The 2024 and 2025 revisions each own a year-scoped parameter id;
         neither revision's snapshot resolves the other year's parameter."""
-        snapshot_2024 = artifact_snapshot("131", 2024, "1T", grade=RegistryAuthorityGrade.CALCULATION)
-        snapshot_2025 = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot_2024 = published_snapshot(
+            "131", filing_year=2024, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        )
+        snapshot_2025 = published_snapshot(
+            "131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        )
         ids_2024 = {parameter.id for parameter in snapshot_2024.revision.parameters}
         ids_2025 = {parameter.id for parameter in snapshot_2025.revision.parameters}
         assert "m131-modulos-coeficientes" in ids_2024

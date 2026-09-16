@@ -54,7 +54,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
-from ._published_authority import artifact_snapshot
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -87,7 +87,7 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
 
 
 def _snapshot_2024():
-    return artifact_snapshot("200", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 # ---------------------------------------------------------------------------

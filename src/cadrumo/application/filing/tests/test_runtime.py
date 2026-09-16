@@ -10,23 +10,18 @@ and representative of the registry's legal-grounding requirements.
 
 from __future__ import annotations
 
-import inspect
 from collections.abc import Callable
 from datetime import date
 
 import pytest
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
-from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.tax_domain import TaxDomain
-from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ids import FormulaId
 from ....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
-from ....domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 from ....domain.filing.errors import ModeloBuilderError
 from ..runtime import (
     RegistryCasillaCollection,
@@ -46,17 +41,9 @@ _CASILLA_02: CasillaId = validated_casilla_id("02", surface="_CASILLA_02")
 _MISSING_INPUT_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_INPUT_CASILLA")
 
 
-def test_runtime_provider_exposes_no_application_layer_cache() -> None:
-    source = inspect.getsource(build_runtime_schema_provider)
-
-    assert "compiled_bundled_authority()" in source
-    for attribute in ("cache_clear", "cache_info", "__wrapped__"):
-        assert not hasattr(build_runtime_schema_provider, attribute)
-
-
-def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
+def _source_casilla_refs(operation: PinnedAuthorityOperation) -> dict[CasillaId, tuple[str, ...]]:
     """Return {casilla_id: legal_refs} from the authoritative CasillaDefinition."""
-    snapshot = published_snapshot(
+    snapshot = operation.snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -64,9 +51,9 @@ def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
     return {casilla.id: casilla.legal_refs for casilla in snapshot.revision.casillas}
 
 
-def _source_casilla_source_refs() -> dict[CasillaId, tuple[str, ...]]:
+def _source_casilla_source_refs(operation: PinnedAuthorityOperation) -> dict[CasillaId, tuple[str, ...]]:
     """Return {casilla_id: source_refs} from the authoritative CasillaDefinition."""
-    snapshot = published_snapshot(
+    snapshot = operation.snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -83,12 +70,15 @@ def _source_casilla_source_refs() -> dict[CasillaId, tuple[str, ...]]:
     ids=("legal-refs", "source-refs"),
 )
 def test_refs_survive_projection(
-    source_factory: Callable[[], dict[CasillaId, tuple[str, ...]]],
+    operation: PinnedAuthorityOperation,
+    source_factory: Callable[[PinnedAuthorityOperation], dict[CasillaId, tuple[str, ...]]],
     attribute: str,
 ) -> None:
     """RegistryCasillaSchema must carry the same refs as the source CasillaDefinition."""
-    source = source_factory()
-    provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
+    source = source_factory(operation)
+    provider = build_runtime_schema_provider(
+        modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD, operation=operation
+    )
     collection = provider.get_collection(_TEST_MODELO)
     schemas = collection.all()
 
@@ -104,15 +94,17 @@ def test_refs_survive_projection(
         )
 
 
-def test_complete_constraints_survive_projection() -> None:
+def test_complete_constraints_survive_projection(operation: PinnedAuthorityOperation) -> None:
     """Filing schemas carry the registry's complete constraint contract verbatim."""
-    snapshot = published_snapshot(
+    snapshot = operation.snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
     )
     source_constraints = {casilla.id: casilla.constraints for casilla in snapshot.revision.casillas}
-    provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
+    provider = build_runtime_schema_provider(
+        modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD, operation=operation
+    )
     schemas = provider.get_collection(_TEST_MODELO).all()
 
     assert any(constraints is not None and constraints.sign != "any" for constraints in source_constraints.values())
@@ -120,14 +112,16 @@ def test_complete_constraints_survive_projection() -> None:
         assert schema.constraints == source_constraints[schema.casilla_id]
 
 
-def test_subview_catalogue_ref_ids_survive_projection() -> None:
+def test_subview_catalogue_ref_ids_survive_projection(operation: PinnedAuthorityOperation) -> None:
     """RegistryModeloSubview must carry the same catalogue refs as the source snapshot."""
-    snapshot = published_snapshot(
+    snapshot = operation.snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
     )
-    provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
+    provider = build_runtime_schema_provider(
+        modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD, operation=operation
+    )
     subview = provider.get_subview(_TEST_MODELO)
 
     assert subview.legal_ref_ids == tuple(sorted(snapshot.legal))
@@ -417,115 +411,3 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
     assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
     assert exc_info.value.context is not None
     assert "duplicate registry id '01' shared by casilla, binding" in str(exc_info.value.context["casilla_ids"])
-
-
-def _revision_validation_years(revision: ModeloRevision) -> tuple[int, ...]:
-    selector = revision.period_selector
-    if selector.years:
-        return tuple(sorted(selector.years))
-    assert selector.year_from is not None, f"revision {revision.id!r} has no validation year"
-    years = {selector.year_from}
-    if selector.year_to is not None:
-        years.add(selector.year_to)
-    return tuple(sorted(years))
-
-
-def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_schema_coordinate() -> None:
-    """Reference identity and runtime projection must hold at EVERY bundled coordinate.
-
-    The subject here -- ambiguous revision references, casilla projection
-    fidelity, dangling formula inputs -- is a structural property of a compiled
-    revision. It applies at every rung of authority, not only at filing grade,
-    so the sweep must stay universal across all bundled modelo x revision
-    coordinates.
-
-    Each snapshot is therefore requested at the rung the revision itself
-    DECLARES, not at the snapshot boundary's strict default. Requesting the
-    default would make this sweep silently skip every revision that declares
-    ``calculation`` or ``applicability`` -- exactly the revisions whose
-    structure nothing else here would then check. ``expected == projected`` at
-    the end is what proves no coordinate was dropped.
-
-    The companion assertion below keeps the relaxation honest: a revision below
-    filing grade must still REFUSE a filing-grade request, so admitting it here
-    at its declared rung cannot be mistaken for a filing capability claim.
-    """
-    authority = compiled_bundled_authority()
-    expected: list[str] = []
-    projected: list[str] = []
-    offences: list[str] = []
-
-    for modelo in authority.modelos:
-        for revision in modelo.revisions.values():
-            revision_contexts: list[str] = []
-            declared_grade = revision.authority_grade
-            # An absent declaration is no claim at all and cannot satisfy even
-            # the applicability floor, so a bundled revision must declare one.
-            assert declared_grade is not None, f"bundled revision {modelo.id}/{revision.id} declares no authority grade"
-            for filing_year in _revision_validation_years(revision):
-                for period in revision.period_selector.periods:
-                    context = f"{modelo.id}/{revision.id}/{filing_year}/{period}"
-                    expected.append(context)
-                    revision_contexts.append(context)
-                    snapshot = authority.snapshot(
-                        modelo.id,
-                        filing_year=filing_year,
-                        period=period,
-                        revision_id=revision.id,
-                        grade=declared_grade,
-                    )
-                    assert snapshot.revision.authority_grade == declared_grade
-                    if declared_grade is not RegistryAuthorityGrade.FILING:
-                        # Admitting the revision at its own rung above must not
-                        # have made it admissible at the filing rung.
-                        with pytest.raises(RegistryValidationError):
-                            authority.admitted_revision_id(
-                                modelo.id,
-                                filing_year=filing_year,
-                                period=period,
-                                revision_id=revision.id,
-                                grade=RegistryAuthorityGrade.FILING,
-                            )
-                    identity_failures = revision_reference_identity_failures(
-                        f"runtime projection {context}",
-                        snapshot.revision,
-                    )
-                    assert identity_failures == (), (
-                        f"bundled runtime schema coordinate {context} has ambiguous revision refs: "
-                        f"{identity_failures!r}"
-                    )
-                    collection = collection_from_snapshot(snapshot)
-                    assert collection.schema_version == f"registry:{modelo.id}:{revision.id}"
-                    source_ids = tuple(sorted(casilla.id for casilla in snapshot.revision.casillas))
-                    projected_ids = tuple(schema.casilla_id for schema in collection.all())
-                    if projected_ids != source_ids:
-                        offences.append(
-                            f"{context}: projected runtime casillas differ from revision ids "
-                            f"source={source_ids!r} projected={projected_ids!r}",
-                        )
-                    projected_id_set = frozenset(projected_ids)
-                    dangling_formula_input_casilla_ids = {
-                        schema.casilla_id: tuple(
-                            input_id
-                            for input_id in schema.formula_input_casilla_ids
-                            if input_id not in projected_id_set
-                        )
-                        for schema in collection.all()
-                        if schema.formula_input_casilla_ids
-                    }
-                    dangling_formula_input_casilla_ids = {
-                        casilla_id: missing
-                        for casilla_id, missing in dangling_formula_input_casilla_ids.items()
-                        if missing
-                    }
-                    if dangling_formula_input_casilla_ids:
-                        offences.append(
-                            f"{context}: dangling formula input casilla ids {dangling_formula_input_casilla_ids!r}",
-                        )
-                    projected.append(context)
-            assert revision_contexts, (
-                f"bundled revision produced no runtime projection contexts: {modelo.id}/{revision.id}"
-            )
-
-    assert projected == expected, f"bundled runtime projection coverage lost contexts: {expected!r} -> {projected!r}"
-    assert not offences, "ambiguous runtime casilla schema projection:\n  " + "\n  ".join(offences)

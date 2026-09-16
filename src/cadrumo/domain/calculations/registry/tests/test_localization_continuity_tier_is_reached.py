@@ -36,11 +36,11 @@ from __future__ import annotations
 from typing import NamedTuple
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.i18n.render import lookup_translation, lookup_translation_entry
 from ..modelo_localization import resolve_modelo_localization
 from ..schema_surfaces import CasillaDefinition
+from .registry_tree import bundled_modelo_components, bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -84,7 +84,7 @@ def _witnesses() -> list[_Witness]:
     exact shape the tier exists to serve.
     """
     found: list[_Witness] = []
-    for modelo in compiled_bundled_authority().modelos:
+    for modelo in bundled_registry_tree()[0]:
         for revision_id, revision in modelo.revisions.items():
             for casilla in revision.casillas:
                 for field in ("label", "help"):
@@ -128,7 +128,7 @@ def _contested_chains() -> list[tuple[tuple[str, ...], str, str, str]]:
     assertion under either resolution order.
     """
     contested: list[tuple[tuple[str, ...], str, str, str]] = []
-    for modelo in compiled_bundled_authority().modelos:
+    for modelo in bundled_registry_tree()[0]:
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
                 for field in ("label", "help"):
@@ -151,7 +151,7 @@ def _contested_chains() -> list[tuple[tuple[str, ...], str, str, str]]:
 
 
 def _casilla(witness: _Witness) -> CasillaDefinition:
-    revision = compiled_bundled_authority().modelo(witness.modelo_id).revisions[witness.revision_id]
+    revision = bundled_modelo_components(witness.modelo_id)[0].revisions[witness.revision_id]
     return next(casilla for casilla in revision.casillas if casilla.id == witness.casilla_id)
 
 
@@ -252,7 +252,7 @@ def test_the_spanish_backstop_still_serves_an_untranslated_locale() -> None:
     """
     casilla = next(
         candidate
-        for modelo in compiled_bundled_authority().modelos
+        for modelo in bundled_registry_tree()[0]
         for revision in modelo.revisions.values()
         for candidate in revision.casillas
         if all(lookup_translation(key, locale="hu") is None for key in _chain_for(candidate, "label"))

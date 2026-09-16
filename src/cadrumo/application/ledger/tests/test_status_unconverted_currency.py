@@ -440,7 +440,7 @@ def iva_transaction(
             "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": "BUSINESS",
-            "category_id": "test_iva_operation",
+            "category_id": "material_oficina",
             "taxable_base": taxable_base,
             "iva_rate": _IVA_RATE,
             "iva_amount": iva_amount,

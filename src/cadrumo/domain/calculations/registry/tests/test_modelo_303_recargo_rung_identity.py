@@ -43,10 +43,10 @@ that bound both would fail.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..schema import ModeloRevision
 from ..schema_surfaces import CasillaDefinition
+from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -67,7 +67,7 @@ _TABACO_CUOTA_BOX = "158"
 
 
 def _revision() -> ModeloRevision:
-    return compiled_bundled_authority().modelo("303").revisions[_REVISION]
+    return bundled_modelo_components("303")[0].revisions[_REVISION]
 
 
 def _casillas_by_number() -> dict[str, CasillaDefinition]:

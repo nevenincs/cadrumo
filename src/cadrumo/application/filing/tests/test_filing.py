@@ -301,8 +301,8 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
     assert values[_M115_CASILLA_05].formula_trace_casilla_ids == _M115_CASILLA_05_TRACE
 
 
-def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
-    snapshot = published_snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
+def test_build_draft_uses_registry_snapshot_for_modelo_123(operation: PinnedAuthorityOperation) -> None:
+    snapshot = operation.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
     draft = build_draft(
         modelo="123",
         period=_PERIOD,
@@ -318,7 +318,9 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
             _M123_CASILLA_11: Decimal("7.50"),
             _M123_CASILLA_13: Decimal("12.25"),
         },
-        schema_provider=_unscoped_schema_provider(),
+        schema_provider=build_runtime_schema_provider(
+            modelos=("123",), filing_year=_PERIOD.filing_year, period=_PERIOD, operation=operation
+        ),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -627,8 +629,10 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint(operation: Pi
 
 
 def test_approve_modelo_123_draft_uses_registry_schema_fingerprint(operation: PinnedAuthorityOperation) -> None:
-    snapshot = published_snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
-    schema_provider = _unscoped_schema_provider()
+    snapshot = operation.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    schema_provider = build_runtime_schema_provider(
+        modelos=("123",), filing_year=_PERIOD.filing_year, period=_PERIOD, operation=operation
+    )
     draft = build_draft(
         modelo="123",
         period=_PERIOD,

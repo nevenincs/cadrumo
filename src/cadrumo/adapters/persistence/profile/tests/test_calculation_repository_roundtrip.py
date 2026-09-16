@@ -142,7 +142,7 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
                     scope_decision=scope,
                     rows=RegimenSimplificadoFilingRows(ejercicio=2026, activities=()),
                     regimen_snapshot=snapshot,
-                    dana_2024_eligibility=None,
+                    dana_eligibility=None,
                     operation=operation,
                 ),
             ),

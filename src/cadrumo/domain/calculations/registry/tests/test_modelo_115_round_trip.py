@@ -11,7 +11,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
-from ._published_authority import artifact_components
+from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -25,7 +25,7 @@ _M115_UNKNOWN_INPUT_CASILLA: CasillaId = validated_casilla_id("99", surface="mod
 def test_modelo_115_rejects_unknown_input_casilla() -> None:
     """The runtime rejects synthetic input keyed by a casilla id the schema does not declare."""
 
-    modelo, catalogues = artifact_components("115")
+    modelo, catalogues = bundled_modelo_components("115")
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
 
     inputs: dict[CasillaId, Decimal] = {

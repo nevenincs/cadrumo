@@ -18,7 +18,7 @@ import pytest
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ._published_authority import artifact_components
+from .registry_tree import bundled_modelo_components
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -89,7 +89,7 @@ _RELATION_ZERO_VALUES_2025 = {
 
 @lru_cache(maxsize=1)
 def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]]:
-    modelo, _catalogues = artifact_components("100")
+    modelo, _catalogues = bundled_modelo_components("100")
     revision = modelo.revisions["2025"]
     refs: dict[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]] = {
         casilla.id: (
@@ -227,7 +227,7 @@ def test_minimo_personal_y_familiar_aggregates_all_four_components_estatal() -> 
     covered by the live Renta WEB Open replay parity tests.
     """
 
-    modelo, _catalogues = artifact_components("100")
+    modelo, _catalogues = bundled_modelo_components("100")
     revision = modelo.revisions["2025"]
     formula = next(f for f in revision.formulas if f.target_casilla_id == _C0519)
     expression = formula.expression.model_dump(exclude_none=True)

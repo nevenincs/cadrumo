@@ -21,7 +21,6 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingSourceKind
@@ -30,6 +29,7 @@ from ..binding_targets import bound_casilla_binding_ids, casillas_by_binding
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
+from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -145,11 +145,10 @@ def test_the_dual_transposes_the_forward_primitive_across_the_whole_corpus() -> 
     against registry-authoritative data rather than a fixture, so a predicate
     added to either direction alone reds here.
     """
-    authority = compiled_bundled_authority()
     checked_revisions = 0
     checked_pairs = 0
 
-    for definition in authority.modelos:
+    for definition in bundled_registry_tree()[0]:
         modelo_id = definition.id
         for revision in definition.revisions.values():
             expected: dict[str, list[str]] = {}
@@ -186,11 +185,10 @@ def test_no_ledger_iva_revision_declares_a_binding_on_a_non_bound_casilla() -> N
     revision declares fifty of them. An emptiness assertion would red here on
     its first run and the cheapest repair would be an M232 allowlist.
     """
-    authority = compiled_bundled_authority()
     offenders: list[str] = []
     ledger_iva_revisions = 0
 
-    for definition in authority.modelos:
+    for definition in bundled_registry_tree()[0]:
         modelo_id = definition.id
         for revision in definition.revisions.values():
             if not any(binding.source is _RATE_BOX_SOURCE for binding in revision.bindings):

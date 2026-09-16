@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ..inventory_bindings import InventoryProvider
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_m100_2025_loads_exact_grounded_inventory_operation_templates() -> None:
-    revision = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+    revision = published_snapshot("100", filing_year=2025, period="0A").revision
     bindings = tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)
 
     assert {binding.id for binding in bindings} == {
@@ -37,7 +37,7 @@ def test_m100_2025_loads_exact_grounded_inventory_operation_templates() -> None:
 
 
 def test_inventory_templates_carry_no_taxpayer_activity_identity_or_legacy_shape() -> None:
-    revision = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+    revision = published_snapshot("100", filing_year=2025, period="0A").revision
     bindings = tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)
 
     for binding in bindings:
@@ -50,6 +50,6 @@ def test_inventory_templates_carry_no_taxpayer_activity_identity_or_legacy_shape
 
 
 def test_inventory_templates_are_absent_from_other_m100_revisions() -> None:
-    revision = compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A").revision
+    revision = published_snapshot("100", filing_year=2024, period="0A").revision
 
     assert not tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)

@@ -73,7 +73,7 @@ def _transaction(provider_id: str) -> Transaction:
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "group_label": None,
-            "category_id": "test_iva_operation",
+            "category_id": "material_oficina",
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),

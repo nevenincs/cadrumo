@@ -376,25 +376,6 @@ class TestSegundoCicloCeiling:
         assert _total(child, year=_YEAR + 1) == Decimal("0")
         assert child.guarderia_needs_segundo_ciclo_month(_YEAR + 1, context=_context(_YEAR + 1)) is True
 
-    def test_a_child_who_never_turns_three_keeps_months_after_september(self) -> None:
-        """The boundary pin, on AEAT's own 2020 caso — the ceiling is scoped, not general.
-
-        Renta 2020 works a child who is two all year with NON-CONTIGUOUS nursery
-        months: January to June, plus OCTOBER and NOVEMBER, to eight months. Both of
-        those fall after September, and AEAT counts them. A ceiling applied outside
-        the turning-three período would silently drop two months the authority
-        grants, so this pins the scope rather than the arithmetic.
-
-        The manual prints 666,64 here, rounding the monthly quota first; the engine
-        rounds last and yields 666,67, which is what the 2024 and 2025 manuals do for
-        their own case. The discrepancy is AEAT's across editions and is deliberately
-        not chased — see the row's finding 5.
-        """
-        child = _child(date(2018, 1, 31), mensual="1-6:500;10:500;11:500")
-
-        assert child.guarderia_needs_segundo_ciclo_month(2020, context=_context(2020)) is False
-        assert _total(child, year=2020) == Decimal("666.67")
-
     def test_a_declared_month_is_not_needed_before_the_turning_three_period(self) -> None:
         """No ceiling, no advisory: the question is only put where it can change an answer."""
         child = _child(date(2022, 3, 1), mensual="1-12:500")

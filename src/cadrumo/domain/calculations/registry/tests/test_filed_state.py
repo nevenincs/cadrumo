@@ -19,7 +19,7 @@ from ..filed_state import (
 )
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._published_authority import artifact_components
+from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -58,7 +58,7 @@ _MODELO_130_COMPUTED_CASILLA_IDS: tuple[CasillaId, ...] = (
 
 
 def _modelo_130_snapshot() -> RegistrySnapshot:
-    modelo, catalogues = artifact_components("130")
+    modelo, catalogues = bundled_modelo_components("130")
     return build_snapshot(
         modelo,
         catalogues,
@@ -397,7 +397,7 @@ def test_filed_state_comparison_tolerance_is_registry_published_and_differs_by_m
 
 
 def _committed_modelo_snapshot(modelo_id: str) -> RegistrySnapshot:
-    modelo, catalogues = artifact_components(modelo_id)
+    modelo, catalogues = bundled_modelo_components(modelo_id)
     return build_snapshot(
         modelo,
         catalogues,

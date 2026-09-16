@@ -21,7 +21,7 @@ from decimal import Decimal
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
-from ._published_authority import artifact_snapshot
+from .published_authority import published_snapshot
 
 # Rendimiento anual por unidad antes de amortización (Orden HAC/1347/2024
 # Anexo II, filing year 2025), independently transcribed for cross-check —
@@ -535,7 +535,7 @@ def _run_modulos_engine(
     indice_temporada: Decimal = Decimal("0"),
     indice_inicio_actividad: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(

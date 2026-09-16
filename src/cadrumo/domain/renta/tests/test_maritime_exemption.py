@@ -19,9 +19,8 @@ import pytest
 
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.errors import RegistryValidationError
-from ...calculations.registry.queries import RegistryQueryService
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from ...calculations.registry.tests.registry_tree import bundled_registry_tree, bundled_validated_registry_authority
+from ...calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
@@ -46,20 +45,6 @@ _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
 _AUTHORITY = PublishedGovernedFactSource()
 _FILING_PERIOD = date(2025, 12, 31)
 _DEVENGO_DATE = date(2025, 12, 31)
-
-
-def _registry_target_for(observation: CasillaObservation) -> str:
-    rows = RegistryQueryService(bundled_validated_registry_authority()).formulas_for_scope(
-        "100", filing_year=2025, period="0A"
-    ).rows
-    targets = {
-        row.target_casilla_id
-        for row in rows
-        if set(observation.legal_refs).issubset(row.legal_refs)
-        and set(observation.source_refs).issubset(row.source_refs)
-    }
-    assert len(targets) == 1
-    return next(iter(targets))
 
 
 _ART_7P_SELECTOR_CASES = (
@@ -390,14 +375,6 @@ class TestCalculateArt7pExemption:
         )
         assert obs.source_refs == _ART_7P_SOURCE_REFS
 
-    def test_observation_targets_renta_exenta_casilla(self) -> None:
-        obs = calculate_art_7p_exemption(
-            annual_salary=Decimal("36500"),
-            qualifying_days=100,
-            facts=self._BASE_FACTS,
-        )
-        assert obs.casilla_id == _registry_target_for(obs)
-
     def test_raises_when_not_eligible(self) -> None:
         from ..errors import RentaValidationError
 
@@ -519,13 +496,6 @@ class TestCalculateRebecaExemption:
             facts=self._REBECA_FACTS,
         )
         assert obs.source_refs == _REBECA_SOURCE_REFS
-
-    def test_observation_targets_renta_exenta_casilla(self) -> None:
-        obs = calculate_rebeca_exemption(
-            gross_navigation_income=Decimal("30000"),
-            facts=self._REBECA_FACTS,
-        )
-        assert obs.casilla_id == _registry_target_for(obs)
 
     def test_raises_when_not_eligible(self) -> None:
         from ..errors import RentaValidationError

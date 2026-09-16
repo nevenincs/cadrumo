@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..applicability import MODELO_APPLICABILITY_RULES
-from ..facts.schema import GovernedFactCatalogue, MappingFactPayload
-from ..governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.applicability import MODELO_APPLICABILITY_RULES
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue, MappingFactPayload
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -29,7 +29,7 @@ import pytest
 
 from ..schema import ModeloDefinition
 from ..temporal import select_revision
-from ._published_authority import artifact_modelo
+from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -42,13 +42,13 @@ _ANNUAL_PERIOD = "0A"
 @pytest.fixture(scope="session")
 def modelo_100() -> ModeloDefinition:
     """The published modelo 100 definition, every revision materialized."""
-    return artifact_modelo("100")
+    return bundled_modelo_components("100")[0]
 
 
 @pytest.fixture(scope="session")
 def modelo_303() -> ModeloDefinition:
     """The published modelo 303 definition, every revision materialized."""
-    return artifact_modelo("303")
+    return bundled_modelo_components("303")[0]
 
 
 def _modelo_100_years(modelo_100: ModeloDefinition) -> tuple[int, ...]:

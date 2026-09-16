@@ -19,13 +19,11 @@ from typing import cast
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.published_authority import (
-    PublishedGovernedFactSource,
-    published_snapshot,
-)
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.casilla_membership import format_noncanonical_casilla_reference
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -78,13 +76,14 @@ def _profile() -> ModeloOperatorProfile:
 
 
 def _schema_provider(
-    *, filing_year: int, period: Period, modelos: tuple[str, ...] | None = None
+    *, filing_year: int, period: Period, modelos: tuple[str, ...], operation: PinnedAuthorityOperation
 ) -> RegistrySchemaAccessor:
-    """Project the published authority through the production filing seam."""
+    """Project the leased published generation through the production filing seam."""
     return build_runtime_schema_provider(
         modelos=modelos,
         filing_year=filing_year,
         period=period,
+        operation=operation,
     )
 
 
@@ -94,7 +93,7 @@ def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     )
 
 
-def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
+def test_build_draft_populates_subject_tax_id_and_snapshot_ref(operation: PinnedAuthorityOperation) -> None:
     """The production build_draft path populates both identity fields.
 
     This contract test pins that a freshly built draft carries the
@@ -128,8 +127,10 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         schema_provider=_schema_provider(
+            modelos=("130",),
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
+            operation=operation,
         ),
     )
 
@@ -137,7 +138,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     assert draft.subject_tax_id == "12345678Z"
     assert draft.subject_tax_id == draft.profile_tax_id
 
-    snapshot = published_snapshot("130", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    snapshot = operation.snapshot("130", filing_year=2026, period="1T", on=date(2026, 4, 1))
 
     assert draft.snapshot_ref is not None
     assert draft.snapshot_ref.modelo == "130"
@@ -146,7 +147,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     assert draft.snapshot_ref.period == "1T"
 
 
-def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
+def test_build_draft_rejects_whitespace_padded_casilla_input_key(operation: PinnedAuthorityOperation) -> None:
     """The filing builder must not silently ignore an inexact casilla key."""
     period = Period.from_year_and_code(2026, "1T")
 
@@ -158,7 +159,7 @@ def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
             inputs={
                 cast(CasillaId, " 01"): Decimal("10000"),
             },
-            schema_provider=_schema_provider(modelos=("130",), filing_year=2026, period=period),
+            schema_provider=_schema_provider(modelos=("130",), filing_year=2026, period=period, operation=operation),
         )
 
 
@@ -179,13 +180,14 @@ def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
     ids=("printed-number", "export-ref"),
 )
 def test_build_draft_rejects_noncanonical_casilla_reference_token(
+    operation: PinnedAuthorityOperation,
     casilla_id: CasillaId,
     reference_kind: str,
     expected_fragment: str,
 ) -> None:
     """Printed numbers and export refs must not be accepted as input casilla references."""
     period = Period.from_year_and_code(2026, "1T")
-    snapshot = published_snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
+    snapshot = operation.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
     casilla = next(c for c in snapshot.revision.casillas if c.id == casilla_id)
     if reference_kind == "printed_number":
         input_key = casilla.number
@@ -203,7 +205,7 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
             inputs={
                 input_key: Decimal("100.00"),
             },
-            schema_provider=_schema_provider(modelos=("303",), filing_year=2026, period=period),
+            schema_provider=_schema_provider(modelos=("303",), filing_year=2026, period=period, operation=operation),
         )
 
     # The refusal renders through the locale catalogue, so the offending token
@@ -241,7 +243,7 @@ def _reused_printed_number(revision: ModeloRevision) -> tuple[str, tuple[Casilla
     return number, reused[number]
 
 
-def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
+def test_build_draft_rejects_ambiguous_reused_printed_number(operation: PinnedAuthorityOperation) -> None:
     """A reused printed number must fail before any filing calculation can run.
 
     The invariant is the AMBIGUITY, not the modelo: when one printed number
@@ -251,7 +253,7 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
     THAN ONE canonical candidate -- that is the ambiguity, asserted here.
     """
     period = Period.from_year_and_code(_REUSED_NUMBER_FILING_YEAR, _REUSED_NUMBER_PERIOD_CODE)
-    snapshot = published_snapshot(
+    snapshot = operation.snapshot(
         _REUSED_NUMBER_MODELO,
         filing_year=_REUSED_NUMBER_FILING_YEAR,
         period=_REUSED_NUMBER_PERIOD_CODE,
@@ -273,6 +275,7 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
                 modelos=(_REUSED_NUMBER_MODELO,),
                 filing_year=_REUSED_NUMBER_FILING_YEAR,
                 period=period,
+                operation=operation,
             ),
         )
 

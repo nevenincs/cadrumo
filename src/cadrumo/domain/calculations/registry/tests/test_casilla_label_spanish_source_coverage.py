@@ -21,7 +21,8 @@ refusal rather than as a foreign-language string.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,7 +32,7 @@ _SOURCE_LOCALE = "es"
 def _unresolved_spanish_casilla_labels() -> tuple[str, ...]:
     """Return every casilla whose label the resolver cannot answer in Spanish."""
     unresolved: list[str] = []
-    for modelo in compiled_bundled_authority().modelos:
+    for modelo in bundled_registry_tree()[0]:
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
                 try:
@@ -65,7 +66,7 @@ def test_the_spanish_label_sweep_covers_the_whole_bundled_tree() -> None:
     yielding casillas -- an empty sweep and a fully-translated corpus produce
     the same empty tuple.
     """
-    modelos = tuple(compiled_bundled_authority().modelos)
+    modelos = tuple(bundled_registry_tree()[0])
     revisions = [revision for modelo in modelos for revision in modelo.revisions.values()]
     casillas = [casilla for revision in revisions for casilla in revision.casillas]
 

@@ -23,7 +23,7 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "34d42853-3d81-4c00-b0b9-ad6c27290c49"  # was 'bi-advisory-bucket'
 

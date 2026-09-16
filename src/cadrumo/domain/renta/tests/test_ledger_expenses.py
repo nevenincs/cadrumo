@@ -7,15 +7,12 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
 from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.authority_artifact import GovernedFactComponentQuery
-from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (
     CategoryCitation,
@@ -39,16 +36,6 @@ from ..ledger_expenses import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture(scope="session")
-def operation() -> PinnedAuthorityOperation:
-    """Expose canonical authored facts through one generation-pinned operation."""
-    authority = compiled_bundled_authority()
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
-    )
-    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 @pytest.fixture(scope="module")

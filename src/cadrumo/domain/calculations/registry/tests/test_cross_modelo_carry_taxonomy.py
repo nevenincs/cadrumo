@@ -40,7 +40,6 @@ from dataclasses import dataclass
 from typing import TypedDict
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.aggregation import BindingSourceKind
 from ..binding_selector_utils import selector_as_dict
@@ -55,6 +54,7 @@ from ..bindings_previous_filing import (
     is_direct_previous_filing_binding,
 )
 from ..schema import BindingDefinition, ModeloRevision
+from .registry_tree import bundled_registry_tree
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
@@ -172,7 +172,6 @@ def _relation_targets(revision: ModeloRevision) -> frozenset[str]:
 
 def _scan() -> _ScanResult:
     """Walk every modelo × revision and collect the cross-modelo carry facts."""
-    authority = compiled_bundled_authority()
 
     modelos_scanned: set[str] = set()
     revisions_scanned = 0
@@ -183,7 +182,7 @@ def _scan() -> _ScanResult:
     non_direct_selectors: list[str] = []
     also_relation_targets: list[str] = []
 
-    for modelo in authority.modelos:
+    for modelo in bundled_registry_tree()[0]:
         owning_modelo = str(modelo.id)
         modelos_scanned.add(owning_modelo)
         for revision_id, revision in modelo.revisions.items():

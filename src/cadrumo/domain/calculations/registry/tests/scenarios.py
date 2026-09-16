@@ -19,7 +19,7 @@ from .....core.casilla_id import CasillaId
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.period import Period
 from ..authority import bundled_indexed_authority
-from ..errors import RegistrySnapshotError, RegistryValidationError
+from ..errors import RegistryValidationError
 from ..formula_runtime import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
@@ -248,7 +248,7 @@ def run_registry_calculation_scenario(
     with bundled_indexed_authority().operation() as authority:
         try:
             authority.modelo_directory(scenario.modelo)
-        except (RegistrySnapshotError, LookupError) as exc:
+        except LookupError as exc:
             raise RegistryValidationError(f"unknown modelo for registry scenario: {scenario.modelo!r}") from exc
         snapshot = authority.snapshot(
             scenario.modelo,

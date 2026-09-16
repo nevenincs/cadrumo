@@ -6,7 +6,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args, _m210_allows_art_24_6_expenses
 from ..errors import RegistryValidationError
@@ -18,6 +17,7 @@ from ..formula_runtime_ops import (
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue, tipo_renta_ue_residente_token
 from ..schema import FormulaDefinition, RegistrySnapshot
 from ..schema_formula import FormulaExpression
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -30,7 +30,7 @@ _M210_TIPO_GRAVAMEN_CASILLA = "tipo_gravamen"
 
 
 def _current_m210_snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("210", filing_year=2025, period="EVENT-1")
+    return published_snapshot("210", filing_year=2025, period="EVENT-1")
 
 
 def _current_m210_rate_formula() -> FormulaDefinition:

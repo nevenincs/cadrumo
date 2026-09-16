@@ -44,7 +44,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period
-from ._published_authority import artifact_components
+from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -87,7 +87,7 @@ _CASILLA_1547_FORESTAL = validated_casilla_id("1547", surface="test")
 
 
 def _modelo_100_2025_snapshot():
-    modelo, catalogues = artifact_components("100")
+    modelo, catalogues = bundled_modelo_components("100")
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
 
 

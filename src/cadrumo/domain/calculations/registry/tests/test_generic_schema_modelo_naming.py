@@ -23,14 +23,14 @@ import re
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....tests.inventory import SRC_CADRUMO, aeat_relative, production_ast_items
+from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: Canonical modelo-code value set, derived from the published authority.
-_CODES: frozenset[str] = frozenset(modelo.id for modelo in compiled_bundled_authority().modelos)
+_CODES: frozenset[str] = frozenset(modelo.id for modelo in bundled_registry_tree()[0])
 
 #: Registry package whose generic types this gate governs.
 _REGISTRY_PACKAGE = "domain/calculations/registry"

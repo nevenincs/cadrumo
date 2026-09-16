@@ -17,13 +17,13 @@ from __future__ import annotations
 from functools import cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..bindings_previous_filing import (
     previous_filing_observation_requirements,
 )
 from ..relations import RegistryFoldRequirement
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,7 +35,7 @@ _MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_MINORACION
 
 @cache
 def _casilla_05_requirements(period: str) -> tuple[RegistryFoldRequirement, ...]:
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=_FILING_YEAR, period=period)
+    snapshot = published_snapshot("130", filing_year=_FILING_YEAR, period=period)
     return tuple(
         requirement
         for requirement in previous_filing_observation_requirements(

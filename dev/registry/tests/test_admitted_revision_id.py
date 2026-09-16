@@ -14,10 +14,11 @@ answer, same refusals, and nothing mutable handed out.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .....core.authority_grade import RegistryAuthorityGrade
-from ..errors import RegistryValidationError
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

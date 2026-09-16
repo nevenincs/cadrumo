@@ -43,7 +43,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.iva.prorrata import ProrrataKind
 
@@ -54,6 +53,7 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import apply_rounding
 from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..schema_rounding import RegistryRoundingCode
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -116,7 +116,7 @@ def _domain_percentage(con_derecho: Decimal, total: Decimal) -> Decimal:
 
 def _registry_percentage(filing_year: int, con_derecho: Decimal, total: Decimal) -> Decimal:
     """The same legal quantity via the real registry snapshot and formula runtime."""
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
+    snapshot = published_snapshot("303", filing_year=filing_year, period="4T")
     declared = {binding.id for binding in snapshot.revision.bindings}
     binding_values: dict[str, Decimal] = {
         binding_id: Decimal("100") if binding_id.endswith("state-attribution-ratio") else Decimal("0")
@@ -190,7 +190,7 @@ def test_selected_ratios_discriminate_between_the_two_roundings() -> None:
 @pytest.mark.parametrize("filing_year", _LIVE_FILING_YEARS)
 def test_both_live_m303_revisions_declare_the_round_up_code(filing_year: int) -> None:
     """Both live revisions must carry ``integer-ceiling`` on the prorrata percentage."""
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
+    snapshot = published_snapshot("303", filing_year=filing_year, period="4T")
     formula = next(entry for entry in snapshot.revision.formulas if entry.id == _FORMULA_ID)
 
     assert formula.rounding == RegistryRoundingCode.INTEGER_CEILING, (

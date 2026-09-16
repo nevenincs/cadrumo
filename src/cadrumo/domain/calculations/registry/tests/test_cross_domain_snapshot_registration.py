@@ -68,7 +68,11 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
         import sys
 
         from cadrumo.domain.resources.registry import resources
-        from dev.registry.compiler.authority import compiled_bundled_authority
+        from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+        def _published_snapshot(modelo, **coordinate):
+            with bundled_indexed_authority().operation() as operation:
+                return operation.snapshot(modelo, **coordinate)
         import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         assert "cadrumo.domain.renta" not in sys.modules, (
@@ -78,7 +82,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
             "no cross-domain checks must be registered before the snapshot build"
         )
 
-        snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+        snapshot = _published_snapshot("100", filing_year=2025, period="0A")
         assert snapshot.modelo.id == "100"
         assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
             "building an M100 snapshot must register the renta first-slice "
@@ -115,14 +119,18 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
         import cadrumo.domain.renta.first_slice_routing_integrity  # registration side effect
 
         from cadrumo.domain.resources.registry import resources
-        from dev.registry.compiler.authority import compiled_bundled_authority
+        from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+        def _published_snapshot(modelo, **coordinate):
+            with bundled_indexed_authority().operation() as operation:
+                return operation.snapshot(modelo, **coordinate)
         import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
             "importing the check module must register at least one cross-domain check"
         )
 
-        snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+        snapshot = _published_snapshot("100", filing_year=2025, period="0A")
         assert snapshot.modelo.id == "100"
         print("M100_BUILD_OK")
         """,
@@ -147,7 +155,11 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         import sys
 
         from cadrumo.domain.resources.registry import resources
-        from dev.registry.compiler.authority import compiled_bundled_authority
+        from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+        def _published_snapshot(modelo, **coordinate):
+            with bundled_indexed_authority().operation() as operation:
+                return operation.snapshot(modelo, **coordinate)
         import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         assert "cadrumo.domain.renta" not in sys.modules, (
@@ -157,7 +169,7 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
             "no cross-domain checks must be registered without renta imported"
         )
 
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T")
+        snapshot = _published_snapshot("303", filing_year=2025, period="1T")
         assert snapshot.modelo.id == "303"
         print("M303_BUILD_OK")
         """,

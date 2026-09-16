@@ -5,23 +5,24 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingSourceKind
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.modelo import Modelo
-from ..binding_temporal import TargetPeriodOffset
-from ..bindings_previous_filing import PreviousFilingProvider
-from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from ..queries import RegistryQueryService, ResolvedRegistryQueryContext
-from ..query_reports import (
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.binding_temporal import TargetPeriodOffset
+from cadrumo.domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
+from cadrumo.domain.calculations.registry.queries import RegistryQueryService, ResolvedRegistryQueryContext
+from cadrumo.domain.calculations.registry.query_reports import (
     ModeloBindingsReport,
     ModeloCasillaDetailReport,
     ModeloFormulaRow,
 )
-from ..relations import relation_prefill_bindings_for_period
-from ..schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -6,7 +6,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
@@ -16,7 +15,8 @@ from ..relations import relation_prefill_bindings_for_period, relation_source_re
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
-from ._published_authority import artifact_components
+from .published_authority import published_legal_evidence_text
+from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -125,7 +125,7 @@ _PATRIMONIO_FORM_ORDER_REF = "orden-hfp-207-2022:art-4"
 
 
 def _load_modelo_714() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return artifact_components("714")
+    return bundled_modelo_components("714")
 
 
 def _zero_art31_inputs(base_liquidable: Decimal) -> dict[CasillaId, Decimal]:
@@ -189,8 +189,7 @@ def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_714()
     legal = {legal_ref: catalogues.legal[legal_ref] for legal_ref in _PATRIMONIO_LEGAL_REFS}
 
-    authority = compiled_bundled_authority()
-    assert all(authority.legal_evidence_text(reference_id) for reference_id in legal)
+    assert all(published_legal_evidence_text(reference_id) for reference_id in legal)
 
     assert set(_PATRIMONIO_LEGAL_REFS) <= set(modelo.legal_refs)
     assert {entry.document_id for entry in legal.values()} == {"BOE-A-1991-14392"}
@@ -214,7 +213,7 @@ def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
     revision = modelo.revisions["2021"]
     legal = {_PATRIMONIO_FORM_ORDER_REF: catalogues.legal[_PATRIMONIO_FORM_ORDER_REF]}
 
-    assert compiled_bundled_authority().legal_evidence_text(_PATRIMONIO_FORM_ORDER_REF)
+    assert published_legal_evidence_text(_PATRIMONIO_FORM_ORDER_REF)
 
     assert _PATRIMONIO_FORM_ORDER_REF in modelo.legal_refs
     assert _PATRIMONIO_FORM_ORDER_REF in revision.legal_refs

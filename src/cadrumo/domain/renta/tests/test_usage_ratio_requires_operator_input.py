@@ -40,11 +40,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.authority_artifact import GovernedFactComponentQuery
-from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ...categories.proportionality import ProportionalityKind
 from ...categories.proportionality_catalogue import require_proportionality_kind
 from ...categories.registry import resolve_category_profiles
@@ -61,16 +58,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _YEAR = 2025
 _USAGE_RATIO_KIND_TOKENS = ("usage_ratio_home_area", "usage_ratio_personal")
-
-
-@pytest.fixture(scope="session")
-def operation() -> PinnedAuthorityOperation:
-    """Expose canonical authored facts through one generation-pinned operation."""
-    authority = compiled_bundled_authority()
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
-    )
-    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 def _usage_ratio_kinds(operation: PinnedAuthorityOperation) -> frozenset[ProportionalityKind]:

@@ -54,6 +54,7 @@ from cadrumo.domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
 )
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import (
@@ -214,8 +215,8 @@ def _seed_verified_m303_settlement(
         updated_at=verified_at,
         current_calculation_revision_id=calculation_revision_id,
     )
-    calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
+    calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     return revision, work_unit
 
 
@@ -550,7 +551,6 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator(
 @pytest.mark.parametrize(
     ("filing_year", "period", "revision_id"),
     (
-        (2020, "4T", "2022"),
         (2024, "2T", "2024-hasta-08-y-2t"),
         (2024, "4T", "2024-desde-09-y-3t"),
         (2026, "4T", "2026-y-siguientes"),
@@ -572,6 +572,12 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
     assert "61" not in declared_casilla_ids(snapshot.revision)
     assert casilla_noncanonical_reference_targets(snapshot.revision, "61") == ()
     assert not any("casilla-61" in binding.id for binding in snapshot.revision.bindings)
+
+
+def test_modelo_303_period_below_the_support_floor_refuses() -> None:
+    """A filing year below the registry support floor refuses instead of projecting."""
+    with pytest.raises(NoRevisionForPeriodError, match="year=2020"):
+        compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2020, period="4T")
 
 
 def test_advisory_is_silent_when_no_sin_derecho_operations() -> None:

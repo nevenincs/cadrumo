@@ -5,12 +5,13 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..deadline_coordinate import deadline_window_semantic_coordinates
-from ..schema import ModeloRevision
-from ..schema_deadlines import DeadlineWindowDefinition
-from ..temporal import select_revision
+from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_window_semantic_coordinates
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
+from cadrumo.domain.calculations.registry.temporal import select_revision
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

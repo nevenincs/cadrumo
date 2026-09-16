@@ -243,7 +243,7 @@ def _non_agricultural_source_evidence(
         scope_decision=scope,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=None,
+        dana_eligibility=None,
         operation=operation,
     )
     baseline = general_m303_filing_evidence(period, reference="test:s84:source", operation=operation)
@@ -951,7 +951,7 @@ def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort
             scope_decision=scope,
             rows=RegimenSimplificadoFilingRows(ejercicio=_YEAR, activities=(agricultural,)),
             regimen_snapshot=regimen_snapshot,
-            dana_2024_eligibility=None,
+            dana_eligibility=None,
             operation=operation,
         )
 

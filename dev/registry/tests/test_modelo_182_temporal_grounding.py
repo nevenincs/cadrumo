@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

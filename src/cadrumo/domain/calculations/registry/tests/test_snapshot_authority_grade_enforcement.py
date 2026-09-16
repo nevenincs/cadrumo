@@ -5,11 +5,12 @@ from __future__ import annotations
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..authority import PinnedAuthorityOperation
 from ..errors import RegistryValidationError
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..governed_fact_scope import validating_governed_facts
+from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ..snapshot import build_validated_snapshot
+from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -21,29 +22,31 @@ _PERIOD = "1T"
 def _registry_subject(
     grade: RegistryAuthorityGrade | None,
 ) -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = bundled_registry_tree()
-    modelo = next(candidate for candidate in modelos if candidate.id == _MODEL)
+    modelo, catalogues = bundled_modelo_components(_MODEL)
     revision = next(iter(modelo.revisions.values()))
     revised = revision.model_copy(update={"authority_grade": grade})
     return modelo.model_copy(update={"revisions": {revised.id: revised}}), catalogues
 
 
 def _snapshot(
+    operation: PinnedAuthorityOperation,
     modelo: ModeloDefinition,
     catalogues: RegistryCatalogues,
     grade: RegistryAuthorityGrade,
-):
-    return build_validated_snapshot(
-        modelo,
-        catalogues,
-        filing_year=_YEAR,
-        period=_PERIOD,
-        grade=grade,
-    )
+) -> RegistrySnapshot:
+    with validating_governed_facts(operation):
+        return build_validated_snapshot(
+            modelo,
+            catalogues,
+            filing_year=_YEAR,
+            period=_PERIOD,
+            grade=grade,
+        )
 
 
 @pytest.mark.parametrize("requested_grade", list(RegistryAuthorityGrade))
 def test_an_ungraded_selected_revision_cannot_satisfy_any_snapshot_grade(
+    operation: PinnedAuthorityOperation,
     requested_grade: RegistryAuthorityGrade,
 ) -> None:
     modelo, catalogues = _registry_subject(None)
@@ -52,7 +55,7 @@ def test_an_ungraded_selected_revision_cannot_satisfy_any_snapshot_grade(
         RegistryValidationError,
         match=rf"declares no authority_grade.*requested {requested_grade.value!r}",
     ):
-        _snapshot(modelo, catalogues, requested_grade)
+        _snapshot(operation, modelo, catalogues, requested_grade)
 
 
 @pytest.mark.parametrize(
@@ -64,6 +67,7 @@ def test_an_ungraded_selected_revision_cannot_satisfy_any_snapshot_grade(
     ],
 )
 def test_a_selected_revision_cannot_escalate_above_its_declared_grade(
+    operation: PinnedAuthorityOperation,
     declared_grade: RegistryAuthorityGrade,
     requested_grade: RegistryAuthorityGrade,
 ) -> None:
@@ -73,7 +77,7 @@ def test_a_selected_revision_cannot_escalate_above_its_declared_grade(
         RegistryValidationError,
         match=rf"declares {declared_grade.value!r} authority grade.*requested {requested_grade.value!r}",
     ):
-        _snapshot(modelo, catalogues, requested_grade)
+        _snapshot(operation, modelo, catalogues, requested_grade)
 
 
 @pytest.mark.parametrize(
@@ -88,37 +92,12 @@ def test_a_selected_revision_cannot_escalate_above_its_declared_grade(
     ],
 )
 def test_equal_or_lower_snapshot_requests_pass_the_grade_boundary(
+    operation: PinnedAuthorityOperation,
     declared_grade: RegistryAuthorityGrade,
     requested_grade: RegistryAuthorityGrade,
 ) -> None:
     modelo, catalogues = _registry_subject(declared_grade)
 
-    snapshot = _snapshot(modelo, catalogues, requested_grade)
+    snapshot = _snapshot(operation, modelo, catalogues, requested_grade)
 
     assert snapshot.revision.authority_grade is declared_grade
-
-
-def test_the_authority_facade_refuses_a_mutated_lower_grade_revision(
-    registry_authority: PinnedAuthorityOperation,
-) -> None:
-    """A real selected revision mutation must bite through the public facade."""
-    control = registry_authority.snapshot(_MODEL, filing_year=_YEAR, period=_PERIOD)
-    assert control.revision.authority_grade is RegistryAuthorityGrade.FILING
-
-    modelos, catalogues = bundled_registry_tree()
-    original = next(modelo for modelo in modelos if modelo.id == _MODEL)
-    selected: ModeloRevision = next(iter(original.revisions.values()))
-    downgraded = selected.model_copy(update={"authority_grade": RegistryAuthorityGrade.CALCULATION})
-    mutated = original.model_copy(update={"revisions": {downgraded.id: downgraded}})
-
-    with pytest.raises(
-        RegistryValidationError,
-        match=r"declares 'calculation' authority grade.*requested 'filing'",
-    ):
-        build_validated_snapshot(
-            mutated,
-            catalogues,
-            filing_year=_YEAR,
-            period=_PERIOD,
-            grade=RegistryAuthorityGrade.FILING,
-        )

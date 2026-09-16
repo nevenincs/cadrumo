@@ -29,7 +29,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._published_authority import artifact_snapshot
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +41,7 @@ _MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
 
 def _snapshot(filing_year: int) -> RegistrySnapshot:
     """Load the committed M100 artifact for the requested filing year."""
-    return artifact_snapshot("100", filing_year, "0A")
+    return published_snapshot("100", filing_year=filing_year, period="0A")
 
 
 def _m100_2024_deduccion_maternidad_bindings() -> dict[str, Decimal]:

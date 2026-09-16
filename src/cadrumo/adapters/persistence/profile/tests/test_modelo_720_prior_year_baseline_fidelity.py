@@ -58,12 +58,21 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    BUCKET_ID as CLEAN_STATE_BUCKET_ID,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import evaluate_clean_state
 from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+from cadrumo.application.calculations.cross_period_models import (
+    CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyOrigin,
+)
 from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
 from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
 from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
@@ -733,6 +742,102 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
                 iva_history_repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
+
+
+def _prior_year_baseline_consumer_outcome(
+    tmp_path: Path,
+    *,
+    prior_observation: RegistryModeloObservation | None,
+) -> tuple[CalculationSourceResolution, CrossPeriodCleanStateVerdict]:
+    """Resolve the year-N+1 baselines and the clean-state verdict over one isolated bucket."""
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=CLEAN_STATE_BUCKET_ID):
+        repository = CalculationObservationRepository()
+        if prior_observation is not None:
+            repository.save(
+                repository.prepare_observation_envelope(
+                    prior_observation,
+                    source_kind="app_filing",
+                    captured_at=_CLOCK_N,
+                    stamped_revision_id=revision_id_for_observation(prior_observation),
+                )
+            )
+        with _indexed_authority_for_test().operation() as operation:
+            resolution = PreviousFilingSourceResolver(
+                repository=repository,
+                registry_snapshot=snapshot,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                profile_read_ports=empty_profile_read_ports(),
+                operation=operation,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id=CLEAN_STATE_BUCKET_ID,
+                    modelo=_MODELO,
+                    filing_year=_YEAR_N_PLUS_1,
+                    period=Period.from_year_and_code(_YEAR_N_PLUS_1, "0A"),
+                    revision=snapshot.revision,
+                )
+            )
+        verdict = evaluate_clean_state(snapshot, observation_repository=repository)
+    return resolution, verdict
+
+
+def _baseline_dependency_blockers(verdict: CrossPeriodCleanStateVerdict) -> frozenset[CrossPeriodCleanStateBlocker]:
+    (evidence,) = (
+        item
+        for item in verdict.dependencies
+        if item.requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
+        and frozenset(item.requirement.origin_ids) == _BASELINE_BINDINGS
+    )
+    assert evidence.requirement.source_modelo == _MODELO
+    assert evidence.requirement.period == Period.from_year_and_code(_YEAR_N, "0A")
+    return frozenset(evidence.blockers)
+
+
+def test_absent_prior_year_filing_stays_unresolved_and_blocking_while_explicit_zero_resolves(
+    tmp_path: Path,
+) -> None:
+    """An absent year-N filing never reads as the explicit-zero baseline at the consumer boundary."""
+    absent_resolution, absent_verdict = _prior_year_baseline_consumer_outcome(
+        tmp_path / "absent",
+        prior_observation=None,
+    )
+    zero_observation = registry_grounded_modelo_observation(
+        modelo=_MODELO,
+        filing_year=_YEAR_N,
+        period="0A",
+        casilla_values={
+            _CUENTAS_VALORACION_CASILLA: Decimal("0.00"),
+            _VALORES_VALORACION_CASILLA: Decimal("0.00"),
+            _INMUEBLES_VALORACION_CASILLA: Decimal("0.00"),
+        },
+    )
+    zero_resolution, zero_verdict = _prior_year_baseline_consumer_outcome(
+        tmp_path / "zero",
+        prior_observation=zero_observation,
+    )
+
+    assert dict(absent_resolution.binding_values) == {}
+    assert frozenset(absent_resolution.unresolved_binding_ids) == _BASELINE_BINDINGS
+    absent_diagnostics = {
+        item.binding_id: item.message for item in absent_resolution.diagnostics if item.reason == "unresolved_binding"
+    }
+    assert frozenset(absent_diagnostics) == _BASELINE_BINDINGS
+    assert all(f"modelo {_MODELO} {_YEAR_N} 0A" in message for message in absent_diagnostics.values())
+    absent_blockers = _baseline_dependency_blockers(absent_verdict)
+    assert CrossPeriodCleanStateBlocker.MISSING_OBSERVATION in absent_blockers
+    assert absent_verdict.clean is False
+
+    assert dict(zero_resolution.binding_values) == dict.fromkeys(_BASELINE_BINDINGS, Decimal("0"))
+    assert all(isinstance(value, Decimal) for value in zero_resolution.binding_values.values())
+    assert zero_resolution.unresolved_binding_ids == ()
+    assert not any(item.reason == "unresolved_binding" for item in zero_resolution.diagnostics)
+    zero_blockers = _baseline_dependency_blockers(zero_verdict)
+    assert CrossPeriodCleanStateBlocker.MISSING_OBSERVATION not in zero_blockers
+    assert CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA not in zero_blockers
+    # A locally filed zero is supplied data, not filing-grade proof: it stays unclean for other reasons.
+    assert zero_blockers
+    assert zero_verdict.clean is False
 
 
 def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_delta_is_below_threshold() -> None:

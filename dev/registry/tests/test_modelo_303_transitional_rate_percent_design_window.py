@@ -49,15 +49,16 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.period import Period
-from ....period import calculation_filing_date
-from ..bindings import resolve_available_bound_inputs_by_casilla_id
-from ..errors import RegistryValidationError
-from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.period import calculation_filing_date
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
