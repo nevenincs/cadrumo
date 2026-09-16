@@ -10,11 +10,12 @@ from typing import Final
 
 from ....domain.iva.prorrata import ProrrataRegime
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "prorrata regime mapping"
+_UNIQUE_TOKENS_REQUIREMENT: Final = "must declare unique non-empty tokens"
 
 _FACT_ID = "renta-iva-deduction-ratio-policy"
 _ORDER_KEY = "prorrata.regime_order"
@@ -72,17 +73,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not tokens or len(set(tokens)) != len(tokens):
-        raise RegistryValidationError(f"prorrata regime mapping {key!r} must declare unique non-empty tokens")
-    return tokens
-
-
 def resolve_prorrata_regime_catalogue(
     *,
     effective_date: date | None = None,
@@ -102,7 +92,9 @@ def resolve_prorrata_regime_catalogue(
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("Renta IVA ratio policy must resolve as a mapping fact")
     entries = _mapping_entries(resolved)
-    ordered_tokens = _csv_tokens(entries, _ORDER_KEY)
+    ordered_tokens = unique_mapping_tokens(
+        entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
     default_token = ProrrataRegime(required_mapping_entry(entries, _DEFAULT_KEY, subject=_ENTRY_SUBJECT))
     definitions: list[ProrrataRegimeDefinition] = []
     for raw_token in ordered_tokens:

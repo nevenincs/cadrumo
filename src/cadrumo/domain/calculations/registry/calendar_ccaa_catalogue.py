@@ -17,7 +17,7 @@ from typing import Final
 
 from ....domain.deadlines.festivos import CalendarCCAA
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -95,17 +95,6 @@ class CalendarCcaaCatalogue:
         return next(definition for definition in self.definitions if definition.token == token)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"calendar CCAA catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
@@ -170,7 +159,7 @@ def _selected_entries(
 
 def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
     definitions: list[CalendarCcaaDefinition] = []
-    for raw_code in _csv(entries, _ORDER_KEY):
+    for raw_code in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         code = raw_code.upper()
         if code != raw_code or not code.startswith("ES-") or len(code) != 5:
             raise RegistryValidationError(f"calendar CCAA code {raw_code!r} is not canonical ISO 3166-2:ES syntax")

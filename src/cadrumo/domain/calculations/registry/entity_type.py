@@ -10,8 +10,13 @@ from typing import Final
 
 from ...contribuyente.entity_type import EntityType, LegalEntityForm
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
+from .governed_fact_scope import (
+    GovernedFactSource,
+    cache_governed_projection,
+    governed_facts_in_scope,
+    validating_governed_facts,
+)
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "taxpayer entity vocabulary"
@@ -102,17 +107,6 @@ class EntityVocabulary:
         return token
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must contain unique tokens")
-    return values
-
-
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     values = tuple(
         token.strip()
@@ -165,27 +159,32 @@ def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
     raise RegistryValidationError("entity vocabulary requires an explicit authority operation or scope")
 
 
-def _selected_mapping_entries(
-    *,
-    effective_date: date | None,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    coordinate = effective_date or date.today()
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is not None:
-        return _resolve_mapping_entries(effective_date=coordinate, authority=selected_authority)
-    return _bundled_mapping_entries(coordinate)
-
-
 def resolve_entity_vocabulary(
     *,
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> EntityVocabulary:
     """Resolve and validate all entity types and legal forms from fact 0124."""
-    entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
+    coordinate = effective_date or date.today()
+    selected = authority or governed_facts_in_scope()
+    if selected is None:
+        _bundled_mapping_entries(coordinate)
+        raise RegistryValidationError("the unscoped vocabulary path must refuse")
+    if selected is governed_facts_in_scope():
+        return _scoped_entity_vocabulary(coordinate)
+    with validating_governed_facts(selected):
+        return _scoped_entity_vocabulary(coordinate)
+
+
+@cache_governed_projection(maxsize=64)
+def _scoped_entity_vocabulary(effective_date: date) -> EntityVocabulary:
+    """Build the vocabulary once per scoped authority generation and coordinate."""
+    selected = governed_facts_in_scope()
+    if selected is None:
+        raise RegistryValidationError("a scoped vocabulary projection ran without its scope")
+    entries = _resolve_mapping_entries(effective_date=effective_date, authority=selected)
     entity_types: list[EntityTypeDefinition] = []
-    for raw_token in _csv(entries, _ENTITY_TYPE_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _ENTITY_TYPE_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = EntityType.from_registry(raw_token)
         prefix = f"{_ENTITY_TYPE_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -200,7 +199,7 @@ def resolve_entity_vocabulary(
         )
     vocabulary = EntityVocabulary(entity_types=tuple(entity_types), legal_entity_forms=())
     legal_entity_forms: list[LegalEntityFormDefinition] = []
-    for raw_token in _csv(entries, _LEGAL_FORM_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _LEGAL_FORM_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = LegalEntityForm.from_registry(raw_token)
         prefix = f"{_LEGAL_FORM_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:

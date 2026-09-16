@@ -11,7 +11,7 @@ from typing import Final
 
 from ....core.identity.nif_iva import NifIvaFormatSpec, NifIvaPrefix
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -91,17 +91,6 @@ class NifIvaCatalogue:
         return self.definition(value).iso_country
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"NIF-IVA catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
@@ -136,7 +125,9 @@ def _definition(entries: Mapping[str, str], raw_prefix: str) -> NifIvaDefinition
         raise RegistryValidationError(f"NIF-IVA prefix {raw_prefix!r} declares a mismatched value")
     prefix = NifIvaPrefix.from_registry(raw_prefix)
     iso_country = required_mapping_entry(entries, f"{key}iso_country", subject=_ENTRY_SUBJECT).upper()
-    iso_aliases = tuple(alias.upper() for alias in _csv(entries, f"{key}iso_aliases"))
+    iso_aliases = tuple(
+        alias.upper() for alias in unique_mapping_tokens(entries, f"{key}iso_aliases", subject=_ENTRY_SUBJECT)
+    )
     if iso_country not in iso_aliases:
         raise RegistryValidationError(f"NIF-IVA prefix {raw_prefix!r} omits its canonical ISO country")
     pattern = required_mapping_entry(entries, f"{key}pattern", subject=_ENTRY_SUBJECT)
@@ -164,7 +155,10 @@ def _definition(entries: Mapping[str, str], raw_prefix: str) -> NifIvaDefinition
 
 
 def _catalogue(entries: Mapping[str, str]) -> NifIvaCatalogue:
-    definitions = tuple(_definition(entries, raw_prefix) for raw_prefix in _csv(entries, _ORDER_KEY))
+    definitions = tuple(
+        _definition(entries, raw_prefix)
+        for raw_prefix in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
+    )
     prefixes = [item.prefix for item in definitions]
     if len(prefixes) != len(set(prefixes)):
         raise RegistryValidationError("NIF-IVA catalogue contains duplicate prefixes")

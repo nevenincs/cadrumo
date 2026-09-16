@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Final
 
 from ....domain.iva.flow import IvaFlowDirection, IvaSettlementSide
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -146,17 +146,6 @@ class IvaFlowDirectionCatalogue:
         return self.deducible_token in self.settlement_sides_for(value)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"IVA flow catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     refs = tuple(token.strip() for token in value.split(",") if token.strip())
@@ -208,7 +197,7 @@ def _selected_mapping_entries(
 
 def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
     settlement_definitions: list[IvaSettlementSideDefinition] = []
-    settlement_tokens = _csv(entries, _SETTLEMENT_ORDER_KEY)
+    settlement_tokens = unique_mapping_tokens(entries, _SETTLEMENT_ORDER_KEY, subject=_ENTRY_SUBJECT)
     for raw_token in settlement_tokens:
         token = IvaSettlementSide.from_registry(raw_token)
         prefix = f"{_SETTLEMENT_PREFIX}{raw_token}."
@@ -239,7 +228,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
         raise RegistryValidationError("IVA flow catalogue no-settlement token collides with a settlement side")
 
     flow_definitions: list[IvaFlowDirectionDefinition] = []
-    for raw_token in _csv(entries, _FLOW_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _FLOW_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IvaFlowDirection.from_registry(raw_token)
         prefix = f"{_FLOW_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:

@@ -11,7 +11,7 @@ from typing import Final
 from ....core.text_fold import fold_diacritics
 from ...contribuyente.ccaa import CCAA
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -120,17 +120,6 @@ def _normalize_token(value: str) -> str:
     return fold_diacritics(value.strip().casefold().replace(" ", "_").replace("-", "_"))
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"CCAA catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     if value not in {"true", "false"}:
@@ -167,7 +156,7 @@ def _resolve_entries(
 
 
 def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
-    raw_tokens = _csv(entries, _CCAA_ORDER_KEY)
+    raw_tokens = unique_mapping_tokens(entries, _CCAA_ORDER_KEY, subject=_ENTRY_SUBJECT)
     definitions: list[CcaaDefinition] = []
     for raw_token in raw_tokens:
         token = _normalize_token(raw_token)
@@ -189,7 +178,7 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
 
     token_set = frozenset(tokens)
     iso_aliases: dict[str, CCAA] = {}
-    for alias in _csv(entries, _ISO_ORDER_KEY):
+    for alias in unique_mapping_tokens(entries, _ISO_ORDER_KEY, subject=_ENTRY_SUBJECT):
         normalized_alias = alias.upper()
         if normalized_alias != alias:
             raise RegistryValidationError(f"CCAA ISO alias {alias!r} must be uppercase")
@@ -203,11 +192,13 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
             raise RegistryValidationError(f"duplicate CCAA ISO alias {alias!r}")
         iso_aliases[alias] = target
 
-    raw_foral_aliases = _csv(entries, _FORAL_ORDER_KEY)
+    raw_foral_aliases = unique_mapping_tokens(entries, _FORAL_ORDER_KEY, subject=_ENTRY_SUBJECT)
     foral_aliases = frozenset(_normalize_token(alias) for alias in raw_foral_aliases)
     if foral_aliases & {str(token) for token in token_set}:
         raise RegistryValidationError("foral aliases must remain outside the common-regime CCAA vocabulary")
-    excluded_territories = frozenset(_normalize_token(value) for value in _csv(entries, _EXCLUDED_ORDER_KEY))
+    excluded_territories = frozenset(
+        _normalize_token(value) for value in unique_mapping_tokens(entries, _EXCLUDED_ORDER_KEY, subject=_ENTRY_SUBJECT)
+    )
     for territory in excluded_territories:
         required_mapping_entry(entries, f"{_EXCLUDED_PREFIX}{territory}.classification", subject=_ENTRY_SUBJECT)
         required_mapping_entry(entries, f"{_EXCLUDED_PREFIX}{territory}.iso_aliases", subject=_ENTRY_SUBJECT)

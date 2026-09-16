@@ -10,7 +10,7 @@ from typing import Final
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -85,21 +85,8 @@ class ThirdPartyDeclarationRoleCatalogue:
         return frozenset(self.selections[normalized])
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(
-            f"third-party declaration role catalogue {key!r} must contain unique tokens",
-        )
-    return values
-
-
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    return _csv(entries, key)
+    return unique_mapping_tokens(entries, key, subject=_ENTRY_SUBJECT)
 
 
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
@@ -130,7 +117,7 @@ def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> 
 
 def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue:
     definitions: list[ThirdPartyDeclarationRoleDefinition] = []
-    for raw_token in _csv(entries, _ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = ThirdPartyDeclarationRole.from_registry(raw_token)
         prefix = f"{_ROLE_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -150,7 +137,7 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
     role_choices = {item.token for item in definitions}
     selections: dict[str, tuple[ThirdPartyDeclarationRole, ...]] = {}
     for clave in _SELECTION_CLAVES:
-        raw_roles = _csv(entries, f"{_SELECTION_PREFIX}{clave}.roles")
+        raw_roles = unique_mapping_tokens(entries, f"{_SELECTION_PREFIX}{clave}.roles", subject=_ENTRY_SUBJECT)
         selected = tuple(ThirdPartyDeclarationRole.from_registry(raw) for raw in raw_roles)
         if not set(selected).issubset(role_choices):
             raise RegistryValidationError(

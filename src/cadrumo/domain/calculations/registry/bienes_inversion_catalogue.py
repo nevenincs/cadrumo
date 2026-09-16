@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -116,19 +116,8 @@ class BienInversionCatalogue:
         return token
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"LIVA capital-goods vocabulary {key!r} must contain unique tokens")
-    return values
-
-
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = _csv(entries, key)
+    values = unique_mapping_tokens(entries, key, subject=_ENTRY_SUBJECT)
     if not values:
         raise RegistryValidationError(f"LIVA capital-goods vocabulary {key!r} must contain legal references")
     return values
@@ -185,7 +174,7 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
         raise RegistryValidationError("LIVA capital-goods minimum acquisition year must be positive")
 
     kind_definitions: list[BienInversionKindDefinition] = []
-    for raw_token in _csv(entries, _KIND_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _KIND_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = BienInversionKind.from_registry(raw_token)
         prefix = f"{_KIND_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -201,7 +190,7 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
         raise RegistryValidationError("LIVA capital-goods vocabulary contains duplicate kinds")
 
     disposal_definitions: list[BienInversionDisposalRegimeDefinition] = []
-    for raw_token in _csv(entries, _DISPOSAL_REGIME_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _DISPOSAL_REGIME_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = BienInversionDisposalRegime.from_registry(raw_token)
         prefix = f"{_DISPOSAL_REGIME_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:

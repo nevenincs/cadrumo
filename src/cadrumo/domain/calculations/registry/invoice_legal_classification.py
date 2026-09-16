@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...invoices.enums import InvoiceClass, InvoiceOperationDateRole
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -116,17 +116,6 @@ class InvoiceLegalClassificationCatalogue:
         return token
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"invoice legal-classification catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     values = tuple(
         token.strip()
@@ -202,7 +191,7 @@ def _pointer(
 
 def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogue:
     invoice_classes: list[InvoiceClassDefinition] = []
-    invoice_class_order = _csv(entries, _INVOICE_CLASS_ORDER_KEY)
+    invoice_class_order = unique_mapping_tokens(entries, _INVOICE_CLASS_ORDER_KEY, subject=_ENTRY_SUBJECT)
     for raw_token in invoice_class_order:
         token = InvoiceClass.from_registry(raw_token)
         prefix = f"{_INVOICE_CLASS_PREFIX}{raw_token}."
@@ -219,7 +208,7 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
         raise RegistryValidationError("invoice legal-classification catalogue contains duplicate invoice classes")
 
     operation_date_roles: list[InvoiceOperationDateRoleDefinition] = []
-    operation_date_role_order = _csv(entries, _OPERATION_DATE_ROLE_ORDER_KEY)
+    operation_date_role_order = unique_mapping_tokens(entries, _OPERATION_DATE_ROLE_ORDER_KEY, subject=_ENTRY_SUBJECT)
     for raw_token in operation_date_role_order:
         token = InvoiceOperationDateRole.from_registry(raw_token)
         prefix = f"{_OPERATION_DATE_ROLE_PREFIX}{raw_token}."

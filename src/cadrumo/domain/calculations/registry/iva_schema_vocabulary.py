@@ -15,11 +15,12 @@ from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303Ta
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from ....domain.iva.schema import IvaArt69DosService, IvaCashAccountingTreatment, IvaExemptionArticle
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IVA schema vocabulary"
+_UNIQUE_TOKENS_REQUIREMENT: Final = "must contain unique non-empty tokens"
 
 _FACT_ID = "iva-statutory-schema-vocabulary"
 _CASH_ORDER_KEY = "cash_accounting.order"
@@ -347,17 +348,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not tokens or len(set(tokens)) != len(tokens):
-        raise RegistryValidationError(f"IVA schema vocabulary {key!r} must contain unique non-empty tokens")
-    return tokens
-
-
 def _csv_refs(entries: Mapping[str, str], key: str, *, required: bool) -> tuple[str, ...]:
     value = entries.get(key)
     if value is None or not value.strip():
@@ -501,7 +491,9 @@ def resolve_iva_cash_accounting_catalogue(
         return projections.cash_accounting[0]
     entries = projections.entries
     definitions: list[IvaCashAccountingTreatmentDefinition] = []
-    for raw_token in _csv_tokens(entries, _CASH_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(
+        entries, _CASH_ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    ):
         token = IvaCashAccountingTreatment(raw_token)
         prefix = f"{_CASH_PREFIX}{raw_token}"
         if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -536,7 +528,9 @@ def resolve_iva_regime_catalogue(
     """Resolve the dated IVA-regime vocabulary from governed facts."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaRegimeDefinition] = []
-    for raw_token in _csv_tokens(entries, _REGIME_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(
+        entries, _REGIME_ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    ):
         token = IVARegime(raw_token)
         prefix = f"{_REGIME_PREFIX}{raw_token}"
         if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -556,7 +550,10 @@ def resolve_iva_regime_catalogue(
         default_token=IVARegime(required_mapping_entry(entries, _REGIME_DEFAULT_KEY, subject=_ENTRY_SUBJECT)),
         no_aplica_token=IVARegime(required_mapping_entry(entries, _REGIME_NO_APLICA_KEY, subject=_ENTRY_SUBJECT)),
         self_assessment_tokens=frozenset(
-            IVARegime(raw_token) for raw_token in _csv_tokens(entries, _REGIME_SELF_ASSESSMENT_KEY)
+            IVARegime(raw_token)
+            for raw_token in unique_mapping_tokens(
+                entries, _REGIME_SELF_ASSESSMENT_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+            )
         ),
     )
     if catalogue.default_token not in catalogue.all_regimes:
@@ -580,7 +577,9 @@ def resolve_m303_tax_territory_catalogue(
     """Resolve the dated Modelo 303 territory vocabulary and semantics."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[M303TaxTerritoryDefinition] = []
-    for raw_token in _csv_tokens(entries, _TERRITORY_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(
+        entries, _TERRITORY_ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    ):
         try:
             token = M303TaxTerritory.from_registry(raw_token)
             declared_value = required_mapping_entry(
@@ -645,7 +644,9 @@ def resolve_m303_regime_composition_catalogue(
     """Resolve the dated Modelo 303 regime-composition vocabulary."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[M303RegimeCompositionDefinition] = []
-    for raw_token in _csv_tokens(entries, _COMPOSITION_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(
+        entries, _COMPOSITION_ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    ):
         try:
             token = M303RegimeComposition.from_registry(raw_token)
             declared_value = required_mapping_entry(
@@ -699,7 +700,9 @@ def resolve_iva_exemption_article_catalogue(
     """Resolve the dated IVA exemption-article vocabulary from governed facts."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaExemptionArticleDefinition] = []
-    for raw_token in _csv_tokens(entries, _EXEMPTION_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(
+        entries, _EXEMPTION_ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    ):
         token = IvaExemptionArticle(raw_token)
         prefix = f"{_EXEMPTION_PREFIX}{raw_token}"
         if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -722,7 +725,9 @@ def resolve_iva_art69_dos_service_catalogue(
     """Resolve the dated Art. 69.Dos service vocabulary from governed facts."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[IvaArt69DosServiceDefinition] = []
-    for raw_token in _csv_tokens(entries, _SERVICE_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(
+        entries, _SERVICE_ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    ):
         token = IvaArt69DosService(raw_token)
         prefix = f"{_SERVICE_PREFIX}{raw_token}"
         if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:

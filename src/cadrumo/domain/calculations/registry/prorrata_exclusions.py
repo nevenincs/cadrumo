@@ -10,11 +10,12 @@ from typing import Final
 
 from ....core.prorrata_exclusions import Art104TresExclusion
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "art. 104.Tres mapping"
+_UNIQUE_TOKENS_REQUIREMENT: Final = "must declare unique non-empty tokens"
 
 _FACT_ID = "renta-iva-deduction-ratio-policy"
 _ORDER_KEY = "art104_tres.exclusion_order"
@@ -83,17 +84,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not tokens or len(set(tokens)) != len(tokens):
-        raise RegistryValidationError(f"art. 104.Tres mapping {key!r} must declare unique non-empty tokens")
-    return tokens
-
-
 def resolve_art104_tres_exclusion_catalogue(
     *,
     effective_date: date | None = None,
@@ -113,9 +103,15 @@ def resolve_art104_tres_exclusion_catalogue(
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("Renta IVA ratio policy must resolve as a mapping fact")
     entries = _mapping_entries(resolved)
-    ordered_tokens = _csv_tokens(entries, _ORDER_KEY)
-    operator_tokens = _csv_tokens(entries, _OPERATOR_KEY)
-    auto_tokens = _csv_tokens(entries, _AUTO_KEY)
+    ordered_tokens = unique_mapping_tokens(
+        entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
+    operator_tokens = unique_mapping_tokens(
+        entries, _OPERATOR_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
+    auto_tokens = unique_mapping_tokens(
+        entries, _AUTO_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
     ordered = tuple(Art104TresExclusion(token) for token in ordered_tokens)
     operator = frozenset(Art104TresExclusion(token) for token in operator_tokens)
     auto = frozenset(Art104TresExclusion(token) for token in auto_tokens)

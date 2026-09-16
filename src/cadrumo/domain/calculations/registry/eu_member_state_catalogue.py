@@ -10,7 +10,7 @@ from typing import Final
 
 from ...iva.schema import EUMemberState
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, unique_mapping_tokens
 from .governed_fact_scope import (
     GovernedFactSource,
     cache_governed_projection,
@@ -78,17 +78,6 @@ class EuMemberStateCatalogue:
         return next(definition for definition in self.definitions if definition.token == token)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"EU member-state catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
@@ -127,8 +116,8 @@ def _scoped_entries(effective_date: date) -> Mapping[str, str]:
 @cache_governed_projection(maxsize=512)
 def _scoped_catalogue(effective_date: date) -> EuMemberStateCatalogue:
     entries = _scoped_entries(effective_date)
-    raw_order = _csv(entries, _ORDER_KEY)
-    raw_aliases = _csv(entries, _ALIASES_KEY)
+    raw_order = unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
+    raw_aliases = unique_mapping_tokens(entries, _ALIASES_KEY, subject=_ENTRY_SUBJECT)
     aliases: dict[str, EUMemberState] = {}
     definitions: list[EuMemberStateDefinition] = []
     aliases_by_token: dict[EUMemberState, list[str]] = {}

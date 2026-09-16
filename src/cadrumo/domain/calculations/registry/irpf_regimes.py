@@ -10,8 +10,13 @@ from typing import Final
 
 from ...deadlines.models import IrpfEstimationRegime, IrpfSpecialRegime
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
+from .governed_fact_scope import (
+    GovernedFactSource,
+    cache_governed_projection,
+    governed_facts_in_scope,
+    validating_governed_facts,
+)
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IRPF regime vocabulary"
@@ -116,17 +121,6 @@ def _optional(entries: Mapping[str, str], key: str) -> str | None:
     return value.strip()
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"IRPF regime vocabulary {key!r} must contain unique tokens")
-    return values
-
-
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     values = tuple(
         token.strip()
@@ -196,27 +190,32 @@ def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
     raise RegistryValidationError("IRPF regime catalogue requires an explicit authority operation or scope")
 
 
-def _selected_mapping_entries(
-    *,
-    effective_date: date | None,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    coordinate = effective_date or date.today()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_mapping_entries(coordinate)
-    return _resolve_mapping_entries(effective_date=coordinate, authority=selected)
-
-
 def resolve_irpf_regime_vocabulary(
     *,
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IrpfRegimeVocabulary:
     """Resolve and validate all five IRPF regime tokens from fact 0125."""
-    entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
+    coordinate = effective_date or date.today()
+    selected = authority or governed_facts_in_scope()
+    if selected is None:
+        _bundled_mapping_entries(coordinate)
+        raise RegistryValidationError("the unscoped vocabulary path must refuse")
+    if selected is governed_facts_in_scope():
+        return _scoped_irpf_regime_vocabulary(coordinate)
+    with validating_governed_facts(selected):
+        return _scoped_irpf_regime_vocabulary(coordinate)
+
+
+@cache_governed_projection(maxsize=64)
+def _scoped_irpf_regime_vocabulary(effective_date: date) -> IrpfRegimeVocabulary:
+    """Build the vocabulary once per scoped authority generation and coordinate."""
+    selected = governed_facts_in_scope()
+    if selected is None:
+        raise RegistryValidationError("a scoped vocabulary projection ran without its scope")
+    entries = _resolve_mapping_entries(effective_date=effective_date, authority=selected)
     estimation_regimes: list[IrpfEstimationRegimeDefinition] = []
-    for raw_token in _csv(entries, _ESTIMATION_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _ESTIMATION_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IrpfEstimationRegime(raw_token, _registry_validated=True)
         prefix = f"{_ESTIMATION_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -233,7 +232,7 @@ def resolve_irpf_regime_vocabulary(
 
     vocabulary = IrpfRegimeVocabulary(estimation_regimes=tuple(estimation_regimes), special_regimes=())
     special_regimes: list[IrpfSpecialRegimeDefinition] = []
-    for raw_token in _csv(entries, _SPECIAL_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _SPECIAL_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IrpfSpecialRegime(raw_token, _registry_validated=True)
         prefix = f"{_SPECIAL_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:

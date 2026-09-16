@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Final
 from ....core.aggregation import ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -88,17 +88,6 @@ class ForeignAssetObligationCatalogue:
         return frozenset(definition.token for definition in self.groups if definition.establishing_legal_ref in cited)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"foreign-asset obligation taxonomy {key!r} must contain unique tokens")
-    return values
-
-
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
@@ -144,7 +133,7 @@ def _selected_mapping_entries(
 
 def _catalogue(entries: Mapping[str, str]) -> ForeignAssetObligationCatalogue:
     definitions: list[ForeignAssetObligationDefinition] = []
-    for raw_token in _csv(entries, _GROUP_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _GROUP_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = ForeignAssetObligationGroup.from_registry(raw_token)
         prefix = f"{_GROUP_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:

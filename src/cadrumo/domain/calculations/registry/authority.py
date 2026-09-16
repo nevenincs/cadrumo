@@ -89,20 +89,6 @@ _artifact_process_nonce = token_bytes(32)
 
 
 @dataclass(frozen=True, slots=True)
-class RegistryCoverageFacts:
-    """Immutable evidence collections for one admitted filing coordinate."""
-
-    modelo: ModeloId
-    revision: RevisionId
-    filing_year: int
-    period: str
-    legal: tuple[LegalRefId, ...]
-    sources: Mapping[SourceRefId, SourceReference]
-    workbook_parity_refs: tuple[WorkbookParityReference, ...]
-    live_cross_references: tuple[LiveCrossReferenceDecision, ...]
-
-
-@dataclass(frozen=True, slots=True)
 class RegistryAuthorityCapture:
     """One isolated law-selected registry projection and its currentness coordinate."""
 
@@ -258,20 +244,6 @@ class ValidatedRegistryAuthority:
                 f"modelo {normalized.value!r} is not present in the calculation registry"
             ) from exc
 
-    def project_filing_year(self, filing_year: int) -> int:
-        """Project an admitted filing year onto the authority's authored horizon."""
-        support = self.catalogues.supported_filing_years
-        if support is None:
-            raise RegistrySnapshotError("the calculation registry declares no supported filing years")
-        projected = support.projection_coordinate(filing_year)
-        if projected is None:
-            ceiling = support.hard_ceiling
-            span = f"{support.floor} and later" if ceiling is None else f"{support.floor}..{ceiling}"
-            raise RegistrySnapshotError(
-                f"filing year {filing_year} is outside the calculation registry's supported span {span}"
-            )
-        return projected
-
     def tax_domain(
         self,
         tax_domain: str | TaxDomain,
@@ -294,30 +266,6 @@ class ValidatedRegistryAuthority:
         if normalized.value not in declared:
             raise RegistrySnapshotError(f"tax domain {normalized.value!r} is not present in the calculation registry")
         return normalized
-
-    def legal_evidence_text(self, legal_ref_id: LegalRefId) -> str:
-        """Return the published anchor text for one runtime legal citation.
-
-        Published authorities answer this without resolving a source root.  A
-        development authority has no projection until it passes publication,
-        so absence is a refusal rather than a corpus fallback.
-        """
-        with self._state_lock:
-            return self.evidence.legal_text(str(legal_ref_id))
-
-    def legal_quotation_is_grounded(self, legal_ref_id: LegalRefId, quotation: str) -> bool:
-        """Answer one citation query entirely from published evidence."""
-        with self._state_lock:
-            return self.evidence.quotation_is_grounded(str(legal_ref_id), quotation)
-
-    def legal_corpus_provenance(self, legal_ref_id: LegalRefId) -> NormativeCorpusProvenance:
-        """Return one legal reference's provenance through this validated authority.
-
-        The publisher's validated evidence projection is the sole runtime
-        provenance authority; product code never resolves a corpus path.
-        """
-        with self._state_lock:
-            return self.evidence.legal_provenance(str(legal_ref_id))
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one typed governed-fact query through this validated authority."""
@@ -416,60 +364,6 @@ class ValidatedRegistryAuthority:
                 on=on,
                 revision_id=revision_id,
                 grade=grade,
-            )
-
-    def admitted_revision_id(
-        self,
-        modelo_id: str,
-        *,
-        filing_year: int,
-        period: str,
-        on: date | None = None,
-        revision_id: RevisionId | None = None,
-        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
-    ) -> str:
-        """Return the revision identifier admitted by the canonical snapshot boundary."""
-        with self._state_lock:
-            return str(
-                self._cached_snapshot(
-                    modelo_id,
-                    filing_year=filing_year,
-                    period=period,
-                    on=on,
-                    revision_id=revision_id,
-                    grade=grade,
-                ).revision.id
-            )
-
-    def coverage_facts(
-        self,
-        modelo_id: str,
-        *,
-        filing_year: int,
-        period: str,
-        on: date | None = None,
-        revision_id: RevisionId | None = None,
-        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
-    ) -> RegistryCoverageFacts:
-        """Project immutable evidence from the same admitted snapshot consumers read."""
-        with self._state_lock:
-            snapshot = self._cached_snapshot(
-                modelo_id,
-                filing_year=filing_year,
-                period=period,
-                on=on,
-                revision_id=revision_id,
-                grade=grade,
-            )
-            return RegistryCoverageFacts(
-                modelo=snapshot.modelo.id,
-                revision=snapshot.revision.id,
-                filing_year=snapshot.filing_year,
-                period=snapshot.period,
-                legal=tuple(snapshot.legal),
-                sources=snapshot.sources,
-                workbook_parity_refs=tuple(snapshot.workbook_parity_refs.values()),
-                live_cross_references=tuple(snapshot.live_cross_references.values()),
             )
 
     def _cached_snapshot(

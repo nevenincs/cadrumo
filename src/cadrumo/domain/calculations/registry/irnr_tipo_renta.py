@@ -10,11 +10,12 @@ from typing import Final
 
 from ....core.irnr import TipoRentaIrnr
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "M349/M210 catalogue"
+_UNIQUE_TOKENS_REQUIREMENT: Final = "must contain unique non-empty values"
 
 _FACT_ID = "detail-m349-m210-catalogues"
 _ORDER_KEY = "m210.tipo_renta.order"
@@ -111,17 +112,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"M349/M210 catalogue {key!r} must contain unique non-empty values")
-    return values
-
-
 def _csv_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     value = entries.get(key)
     if value is None or not value.strip():
@@ -171,7 +161,9 @@ def resolve_tipo_renta_irnr_catalogue(
     """Resolve and validate every tipo-renta/category/code declaration in 0080."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[TipoRentaIrnrDefinition] = []
-    for raw_token in _csv(entries, _ORDER_KEY):
+    for raw_token in unique_mapping_tokens(
+        entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    ):
         token = TipoRentaIrnr.from_registry(raw_token)
         prefix = f"{_PREFIX}{raw_token}"
         if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -187,11 +179,19 @@ def resolve_tipo_renta_irnr_catalogue(
     catalogue = TipoRentaIrnrCatalogue(
         definitions=tuple(definitions),
         code_definitions=(),
-        fetch_gated_codes=frozenset(_csv(entries, _FETCH_GATED_KEY)),
+        fetch_gated_codes=frozenset(
+            unique_mapping_tokens(
+                entries, _FETCH_GATED_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+            )
+        ),
     )
     all_tokens = catalogue.all_tokens
-    projection_codes = _csv(entries, _CODE_PROJECTION_ORDER_KEY)
-    official_codes = _csv(entries, _CODE_ORDER_KEY)
+    projection_codes = unique_mapping_tokens(
+        entries, _CODE_PROJECTION_ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
+    official_codes = unique_mapping_tokens(
+        entries, _CODE_ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
     if set(catalogue.fetch_gated_codes) - set(official_codes):
         raise RegistryValidationError("fetch-gated tipo-renta codes must be present in code_order")
     if set(projection_codes) & catalogue.fetch_gated_codes:
