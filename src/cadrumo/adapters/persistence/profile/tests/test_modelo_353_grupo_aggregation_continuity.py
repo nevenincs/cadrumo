@@ -117,7 +117,7 @@ _MEMBER_DEC_IVA: dict[str, tuple[Decimal, Decimal]] = {
 
 
 def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva: Decimal) -> IvaLedgerObservation:
-    is_input = flow is IvaFlowDirection.from_registry("soportado")
+    is_input = flow == IvaFlowDirection.from_registry("soportado")
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,

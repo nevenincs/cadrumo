@@ -286,7 +286,7 @@ def test_m303_settlement_preserves_existing_register_facts(
     assert carried is not None
     assert carried.regime == ProrrataRegisterRegime.from_registry("general")
     assert carried.provisional_percentage == Decimal("80")
-    assert carried.provisional_provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
+    assert carried.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
     assert carried.source_observation_ref == "303:2025:4T"
     assert carried.definitive_percentage == Decimal("75")
     assert carried.definitive_volume_con_derecho == Decimal("150000.00")

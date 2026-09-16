@@ -44,7 +44,7 @@ class TestRuntimeFacade:
             assert report.overrides_count == 1
 
             rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id, year=2025, operation=operation)
-            targeted = next(row for row in rows if row.category is SpendingCategory.from_registry("telefonia_movil"))
+            targeted = next(row for row in rows if row.category == SpendingCategory.from_registry("telefonia_movil"))
             assert targeted.override_present is True
 
             cleared = unset_usage_ratio(
