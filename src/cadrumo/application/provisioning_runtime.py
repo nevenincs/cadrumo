@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import time
 from collections.abc import Callable, Mapping
+from datetime import datetime
 from time import monotonic
 from typing import TYPE_CHECKING, TypedDict, cast
 
@@ -14,11 +15,13 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ..core.config import Settings, load_settings
 from ..core.hardware import AcceleratorKind, ContentionCause
 from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.time.clock import now
 from .provisioning_contracts import (
     OLLAMA_PROBE_CACHE_TTL_S,
     OLLAMA_PROBE_TIMEOUT_S,
     OLLAMA_PULL_TIMEOUT_S,
     OLLAMA_READINESS_TIMEOUT_S,
+    ProvisioningFactValue,
     ProvisioningOutcome,
     ProvisioningPreconditionCondition,
     provisioning_no_recovery_verdict,
@@ -61,6 +64,18 @@ def ollama_endpoint(chat_url: str, path: str) -> str:
 #: -- which on a host with no local runtime was being rediscovered once per
 #: document at ~0.94s per refused connection.
 _UNREACHABLE_SINCE: dict[str, float] = {}
+
+
+def forget_runtime_unreachable(settings: Settings | None = None) -> None:
+    """Drop the remembered unreachable answer for the configured runtime.
+
+    Called by the one action that changes the answer on purpose -- starting the
+    runtime -- so the reads that follow ask the endpoint instead of replaying a
+    failure recorded seconds before the server came up.
+    """
+    resolved = settings if settings is not None else load_settings()
+    base = ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "ps").rsplit("/api/", 1)[0]
+    _UNREACHABLE_SINCE.pop(base, None)
 
 
 def _read_runtime_json(settings: Settings, path: str) -> object | None:
@@ -597,6 +612,45 @@ class PullProgress(BaseModel):
         return min(100, int(self.completed_bytes * 100 / self.total_bytes))
 
 
+class RuntimePullRecord(BaseModel):
+    """The last model fetch this process attempted, for status projections.
+
+    Process-local on purpose: it answers "what did this session last try"
+    for a status area, and a model name with a timestamp is not worth a new
+    persisted record. A fresh process reports no pull rather than a stale one.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1)
+    pulled: bool
+    attempted_at: datetime
+    bytes_fetched: int | None = Field(default=None, ge=0)
+    failed_condition_id: str | None = None
+
+
+_LAST_PULL: list[RuntimePullRecord] = []
+
+
+def last_runtime_pull() -> RuntimePullRecord | None:
+    """Return the most recent fetch this process attempted, or ``None``."""
+    return _LAST_PULL[-1] if _LAST_PULL else None
+
+
+def _record_pull(outcome: PullOutcome) -> PullOutcome:
+    verdict = outcome.precondition_verdict
+    _LAST_PULL[:] = [
+        RuntimePullRecord(
+            model=outcome.model,
+            pulled=outcome.pulled,
+            attempted_at=now(),
+            bytes_fetched=outcome.bytes_fetched,
+            failed_condition_id=verdict.failed_condition_id if verdict is not None else None,
+        )
+    ]
+    return outcome
+
+
 class PullOutcome(ProvisioningOutcome):
     """The result of an explicit model fetch, including a fetch that never started.
 
@@ -653,6 +707,20 @@ def pull_runtime_model(
         means the fetch was refused before it began.
     """
     resolved = settings if settings is not None else load_settings()
+    return _record_pull(
+        _pull_runtime_model(model, requirement_bytes, profile=profile, settings=resolved, on_progress=on_progress)
+    )
+
+
+def _pull_runtime_model(
+    model: str,
+    requirement_bytes: int,
+    *,
+    profile: HardwareProfile | None,
+    settings: Settings,
+    on_progress: Callable[[PullProgress], None] | None,
+) -> PullOutcome:
+    resolved = settings
     snapshot = assess_model_load_contention(model, requirement_bytes, profile=profile, settings=resolved)
     if not snapshot.admitted:
         contention_verdict = snapshot.precondition_verdict
@@ -672,6 +740,8 @@ def pull_runtime_model(
 
     url = ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "pull")
     fetched: int | None = None
+    completed = False
+    runtime_refused = False
     try:
         with (
             httpx.Client(timeout=OLLAMA_PULL_TIMEOUT_S) as client,
@@ -679,9 +749,14 @@ def pull_runtime_model(
         ):
             response.raise_for_status()
             for line in response.iter_lines():
+                if _pull_error_reported(line):
+                    runtime_refused = True
+                    continue
                 progress = _pull_progress(line)
                 if progress is None:
                     continue
+                if progress.status == "success":
+                    completed = True
                 if progress.completed_bytes is not None:
                     fetched = progress.completed_bytes
                 if on_progress is not None:
@@ -707,12 +782,41 @@ def pull_runtime_model(
                 },
             ),
         )
+    if runtime_refused or not completed:
+        # The runtime answered 200 and then reported the failure in-stream (an
+        # unknown model name, a registry outage, a full disk), or the stream
+        # ended without its terminal success line. Neither is a pull.
+        facts: dict[str, ProvisioningFactValue] = {
+            "model": model,
+            "runtime_reachable": True,
+            "runtime_reported_error": runtime_refused,
+            "pull_completed": False,
+        }
+        return PullOutcome(
+            model=model,
+            pulled=False,
+            bytes_fetched=fetched,
+            facts=facts,
+            precondition_verdict=provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.MODEL_PULL_SUCCEEDED,
+                facts=facts,
+            ),
+        )
     return PullOutcome(
         model=model,
         pulled=True,
         bytes_fetched=fetched,
         facts={"model": model, "runtime_reachable": True, "bytes_fetched_known": fetched is not None},
     )
+
+
+def _pull_error_reported(line: str) -> bool:
+    """Return whether one NDJSON line is the runtime's in-stream error report."""
+    try:
+        payload = json.loads(line.strip() or "null")
+    except ValueError:
+        return False
+    return isinstance(payload, dict) and "error" in payload
 
 
 def _pull_progress(line: str) -> PullProgress | None:
@@ -791,12 +895,34 @@ def verify_model_ready(
             ),
         )
     resident = any(matches_selected_model(entry.name, frozenset({model})) for entry in residents)
+    if not resident:
+        # A generate call against an absent model is refused by the runtime
+        # anyway; asking the inventory first names the actual gap -- a pull --
+        # instead of reporting a load failure.
+        inventory = read_installed_models(resolved)
+        if inventory is not None and not any(
+            matches_selected_model(entry.name, frozenset({model})) for entry in inventory
+        ):
+            return ReadinessOutcome(
+                model=model,
+                ready=False,
+                facts={"model": model, "model_installed": False},
+                precondition_verdict=provisioning_no_recovery_verdict(
+                    ProvisioningPreconditionCondition.MODEL_INSTALLED,
+                    facts={"model": model, "model_installed": False},
+                ),
+            )
 
     url = ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "generate")
     started = time.monotonic()
     try:
         with httpx.Client(timeout=bound) as client:
-            response = client.post(url, json={"model": model, "prompt": "ok", "stream": False})
+            # One token proves the load and the transport; an unbounded reply
+            # from a reasoning model measures its verbosity instead.
+            response = client.post(
+                url,
+                json={"model": model, "prompt": "ok", "stream": False, "options": {"num_predict": 1}},
+            )
             response.raise_for_status()
     except httpx.HTTPError as exc:
         elapsed = int((time.monotonic() - started) * 1000)

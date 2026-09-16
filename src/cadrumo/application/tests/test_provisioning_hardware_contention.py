@@ -17,6 +17,7 @@ through the same call, so a refusal cannot pass for the wrong reason.
 
 from __future__ import annotations
 
+import json
 from http import HTTPStatus
 from queue import Queue
 from typing import ClassVar, override
@@ -31,6 +32,7 @@ from ...tests.loopback_llm import (
     read_json_body,
     serving_loopback,
     write_json_response,
+    write_raw_response,
 )
 from ..provisioning import (
     AcceleratorDevice,
@@ -46,6 +48,7 @@ from ..provisioning_runtime import (
     RuntimeResident,
     assess_model_load_contention,
     cadrumo_selected_models,
+    last_runtime_pull,
     pull_runtime_model,
     read_runtime_residents,
     unload_runtime_model,
@@ -423,16 +426,25 @@ class _RuntimeLoopbackHandler(SilentLoopbackHandler):
     """
 
     residents: ClassVar[list[dict[str, object]]] = []
+    installed: ClassVar[list[dict[str, object]]] = []
+    pull_lines: ClassVar[list[dict[str, object]]] = []
     events: ClassVar[Queue[dict[str, object]]]
 
     @override
     def do_GET(self) -> None:
         self.events.put({"method": "GET", "path": self.path})
-        write_json_response(self, {"models": list(self.residents)}, status=HTTPStatus.OK)
+        inventory = self.installed if self.path == "/api/tags" else self.residents
+        write_json_response(self, {"models": list(inventory)}, status=HTTPStatus.OK)
 
     @override
     def do_POST(self) -> None:
         self.events.put({"method": "POST", "path": self.path, "body": dict(read_json_body(self))})
+        if self.path == "/api/pull":
+            # The runtime streams NDJSON progress and closes with a terminal
+            # status line; failures arrive in-stream under HTTP 200.
+            body = "".join(json.dumps(line) + "\n" for line in self.pull_lines).encode("utf-8")
+            write_raw_response(self, body, status=HTTPStatus.OK)
+            return
         write_json_response(self, {"done": True}, status=HTTPStatus.OK)
 
 
@@ -442,6 +454,13 @@ def runtime() -> object:
     events: Queue[dict[str, object]] = Queue()
     _RuntimeLoopbackHandler.events = events
     _RuntimeLoopbackHandler.residents = []
+    _RuntimeLoopbackHandler.installed = []
+    _RuntimeLoopbackHandler.pull_lines = [
+        {"status": "pulling manifest"},
+        {"status": "downloading", "completed": GIB // 2, "total": GIB},
+        {"status": "downloading", "completed": GIB, "total": GIB},
+        {"status": "success"},
+    ]
     with serving_loopback(_RuntimeLoopbackHandler, path="/api/chat") as chat_url:
         yield (chat_url, events)
 
@@ -643,7 +662,52 @@ def test_an_admitted_pull_does_issue_the_fetch(runtime: tuple[str, Queue[dict[st
         outcome = pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
 
     assert outcome.pulled is True
+    assert outcome.bytes_fetched == GIB
     assert "/api/pull" in _paths(events)
+
+
+def test_a_pull_the_runtime_fails_in_stream_is_not_reported_as_pulled(
+    runtime: tuple[str, Queue[dict[str, object]]],
+) -> None:
+    """HTTP 200 with an ``error`` line is a failed pull, as an unknown model name produces."""
+    chat_url, events = runtime
+    _RuntimeLoopbackHandler.pull_lines = [{"status": "pulling manifest"}, {"error": "file does not exist"}]
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        outcome = pull_runtime_model("no-such-model:1b", 1 * GIB, profile=_roomy_profile())
+
+    assert outcome.pulled is False
+    assert outcome.facts["runtime_reported_error"] is True
+    assert outcome.precondition_verdict is not None
+    assert outcome.precondition_verdict.failed_condition_id == "provisioning.model.pull_succeeded"
+    assert "/api/pull" in _paths(events)
+
+
+def test_a_pull_stream_that_ends_without_success_is_not_reported_as_pulled(
+    runtime: tuple[str, Queue[dict[str, object]]],
+) -> None:
+    """A stream cut before its terminal status proves no complete download."""
+    chat_url, _events = runtime
+    _RuntimeLoopbackHandler.pull_lines = [{"status": "downloading", "completed": 10, "total": GIB}]
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        outcome = pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
+
+    assert outcome.pulled is False
+    assert outcome.facts["pull_completed"] is False
+    assert outcome.bytes_fetched == 10
+
+
+def test_every_pull_attempt_is_recorded_as_the_last_pull(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
+    """The status projection's last-pull row reflects the most recent attempt, refused or not."""
+    chat_url, _events = runtime
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
+        pulled = last_runtime_pull()
+        pull_runtime_model("huge-model:70b", 40 * GIB, profile=_starved_profile())
+        refused = last_runtime_pull()
+
+    assert pulled is not None and pulled.model == "small-model:1b" and pulled.pulled is True
+    assert refused is not None and refused.model == "huge-model:70b" and refused.pulled is False
+    assert refused.failed_condition_id == "provisioning.load_capacity.available"
 
 
 def test_a_pull_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:
@@ -693,3 +757,19 @@ def test_a_readiness_check_reports_ready_when_the_runtime_answers(
     assert outcome.elapsed_ms is not None
     assert events.get(timeout=5)["path"] == "/api/ps"
     assert events.get(timeout=5)["path"] == "/api/generate"
+
+
+def test_a_readiness_check_for_a_model_that_is_not_installed_names_the_pull_and_loads_nothing(
+    runtime: tuple[str, Queue[dict[str, object]]],
+) -> None:
+    """An absent model is reported as absent; the check never asks the runtime to load it."""
+    chat_url, events = runtime
+    _RuntimeLoopbackHandler.installed = [{"name": "other-model:1b", "size": GIB}]
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        outcome = verify_model_ready("small-model:1b")
+
+    assert outcome.ready is False
+    assert outcome.facts["model_installed"] is False
+    assert outcome.precondition_verdict is not None
+    assert outcome.precondition_verdict.failed_condition_id == "provisioning.model.installed"
+    assert "/api/generate" not in _paths(events)

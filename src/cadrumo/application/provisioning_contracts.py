@@ -12,10 +12,10 @@ from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOut
 from .operator_actions.models import PreconditionVerdict
 
 __all__ = [
+    "OLLAMA_INSTALL_TIMEOUT_S",
     "OLLAMA_PROBE_CACHE_TTL_S",
     "OLLAMA_PROBE_TIMEOUT_S",
     "OLLAMA_PULL_TIMEOUT_S",
-    "OLLAMA_INSTALL_TIMEOUT_S",
     "OLLAMA_READINESS_TIMEOUT_S",
     "OLLAMA_START_TIMEOUT_S",
     "ProvisioningFactValue",
