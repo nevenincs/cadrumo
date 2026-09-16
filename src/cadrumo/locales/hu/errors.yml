@@ -138,8 +138,6 @@ errors:
       %{casilla_ids}.'
     unknown_input_casillas: 'Ismeretlen nyilvántartási bemeneti mező-azonosítók: {casilla_ids}.'
     unknown_text_input_casillas: 'Ismeretlen szövegbeviteli mezőazonosítók: %{casilla_ids}.'
-    unsupported_comparison_op: 'Nem támogatott összehasonlító operátor: %{op}.'
-    unsupported_op: 'Nem támogatott képletoperátor: %{op}.'
   censo:
     bucket_id_blank: A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.
     certificado_extraction_unpinned: A kiállított tanúsítvány beolvasása még nem támogatott;
@@ -242,12 +240,6 @@ errors:
     error_justificante_csv_not_found: A PDF nem tartalmaz Código Seguro de Verificación
       kódot.
     error_llm: Nyelvi modell hiba történt.
-    error_manuals_manual: Kézikönyvekkel kapcsolatos hiba történt.
-    error_manuals_manual_not_found: A kért kézikönyv, év vagy rész nem található.
-    error_manuals_manual_review_required: Egy kézikönyv-rekordból hiányoznak a felülvizsgálói
-      metaadatok.
-    error_manuals_rule_extraction: Kézikönyvi szabályok kinyerése nem érhető el.
-    error_manuals_validation: Egy kézikönyv-rekord nem ment át az érvényesítésen.
     error_modelo_aggregation_binding: A bucket-alapú összesítési kötések ellentmondanak
       a megadott bemenetnek.
     error_modelo_amendment_evidence_missing: Bevallás nem módosítható importált hivatalos
@@ -435,7 +427,6 @@ errors:
       a kérést. Várjon néhány percet, és próbálja újra.
     fail_llm_transient_transport: A kérés nem jutott el a nyelvi modell futtatókörnyezetéhez,
       és az újrapróbálkozási keret elfogyott.
-    fail_manuals_manual_parse: Egy kézikönyv-rekord nem ment át a sémaérvényesítésen.
     fail_modelo_calculation_revision_persistence: A számítás-revízió katalógust nem
       sikerült menteni vagy betölteni.
     fail_modelo_filing_record_persistence: A benyújtás-rekord katalógust nem sikerült
@@ -565,8 +556,6 @@ errors:
       át az érvényesítésen.
     canonical_modelo_workspace_absent_registry_projection: A nyilvántartási rögzítés
       az ígért vetítés nélkül tért vissza.
-    canonical_orden_anual_html_parse: Az éves IVA-rendelet HTML-dokumentuma érvénytelen
-      vagy nem támogatott szerkezetű.
     canonical_relation_binding_join: A csomagolt reláció–kötés megfeleltetés nem olvasható
       a deklarált módon.
     canonical_tampered_manifest_payload: A korpusz manifesztjének kivonata nem egyezik
@@ -589,7 +578,6 @@ errors:
       NIE vagy CIF.
     integrity_justificante_verification: Az AEAT-tal való bizonylat-ellenőrzést nem
       sikerült elvégezni.
-    integrity_manuals_manifest: A kézikönyv-manifeszt nem ment át a séma- vagy hash-ellenőrzésen.
     integrity_observability_run_trace_validation: A tárolt futási nyomkövetés nem
       ment át a szigorú érvényesítésen.
     integrity_outbound_storage: A letöltött tartalom nem ment át az integritás-ellenőrzésen
@@ -681,8 +669,6 @@ errors:
       a megjelenítendő szövegeit.'
     internal_flow_validator_registry: 'Belső hiba: a vezetett folyamat ellenőrző-nyilvántartása
       elutasította a műveletet.'
-    internal_master_key_reentrant: 'Belső hiba: a mesterkulcs-szolgáltató reentráns
-      módon lett meghívva; zárja be az aktív munkamenetet, mielőtt újra belépne.'
     internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
       rögzítettek aktív futási kontextuson kívül.'
     internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
@@ -695,10 +681,6 @@ errors:
     internal_profile_registration: 'Belső hiba: a profil regisztrálása sikertelen.'
     internal_wipe_type: 'Belső hiba: a törlési művelet olyan értéket kapott, amelyet
       nem tud felülírni.'
-    internal_wizard_catalogue_already_registered: 'Belső hiba: a varázsló-katalógus
-      másodszor is regisztrálva lett, eltérő objektumokkal.'
-    internal_wizard_catalogue_not_registered: 'Belső hiba: a varázsló-katalógus nincs
-      regisztrálva az alkalmazás indításakor.'
     internal_workflow_abort_signal: 'Belső hiba: egy munkafolyamat-szakasz megszakítási
       jelet adott ki.'
     internal_workflow_unhandled: 'Belső hiba: egy munkafolyamat-szakasz kezeletlen
@@ -756,8 +738,6 @@ errors:
       elutasított a jelenlegi hozzáférési hatókörben.
     canonical_inventory_closing_authority_conflict: Már rögzítve van egy másik, megváltoztathatatlan
       készletzárási hatóság.
-    canonical_ledger_period_validation: A főkönyvi időszaktoken nem érvényes kanonikus
-      AEAT-időszak.
     canonical_m036_declaration_ambiguous: A Modelo 036-bevallás azonosítójának előtagja
       több rekordra illeszkedik.
     canonical_m036_declaration_not_found: A kért azonosítónak megfelelő Modelo 036-
@@ -1007,6 +987,10 @@ errors:
       config provision status` paranccsal, indítsa el az `aeat config provision start`
       paranccsal, és töltse le a modelljeit az `aeat config provision pull` paranccsal,
       vagy válasszon külső szolgáltatót ehhez az olvasáshoz, majd próbálja újra.
+    refused_ledger_evidence_reader_unreadable_answer: A dokumentumolvasó olyan formában
+      válaszolt, amelyet ez a parancs nem tudott értelmezni, ezért semmi sem került
+      átvételre a dokumentumból. Semmi sem lett mentve; futtassa újra a parancsot,
+      és ha továbbra is előfordul, az olvasómodellt kell megváltoztatni.
     refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
       a megadott azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép

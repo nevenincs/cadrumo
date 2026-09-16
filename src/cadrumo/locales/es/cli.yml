@@ -199,6 +199,11 @@ cli:
         field_no_anchor: '{field}: el lector no ofreció nada en el documento a lo
           que señalar, así que no hay forma impresa con la que contrastar este valor.'
         group_help: Justificantes de facturas de compra en PDF o imagen
+        idempotency_key_help: Clave propia para este adjunto. Repetir el comando con
+          la misma clave devuelve el registro ya creado en lugar de añadir otro, y
+          lo rechaza si el documento asociado a la clave ha cambiado. Sin clave, el
+          comando añade un registro nuevo cada vez, porque un mismo archivo puede
+          adjuntarse dos veces legítimamente.
         invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
           p. ej. 2026-01-15.
         invoice_number_help: Número de factura del proveedor

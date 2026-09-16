@@ -1461,31 +1461,147 @@ tui:
       title: Főkönyvi tételek
     entry_label: '{date} · {description}'
     evidence:
+      add: Dokumentum hozzáadása
+      add_failed: A dokumentum nem került hozzáadásra.
+      add_label: Számla PDF-jének vagy képének hozzáadása
+      added: '{file} hozzáadva.'
+      adding: A dokumentum biztonságos tárolása…
       column:
+        file: Fájl
+        invoice: Számla
         status: Ellenőrzés
         type: Típus
+      confirm: Megerősítés számlaként
       detail: 'Méret: {size} bájt · rögzítve: {captured}'
       empty: Nincs ellenőrzésre váró bizonylat.
+      extract: Dokumentum beolvasása
+      path_placeholder: Írd be a fájl elérési útját
       pending: Függőben
+      queue_heading: Ellenőrzésre váró mellékletek
+      reader_not_ready: 'A dokumentumolvasó nem áll készen ({condition}). Ellenőrizd
+        ezzel: `aeat config provision status`.'
+      reader_ready: A dokumentumolvasó készen áll ezen a gépen.
+      reading_refused:
+        confirm: 'Dokumentum megerősítése ebből a nézetből még nem érhető el. Futtasd:
+          `aeat app ledger evidence confirm --evidence-id {evidence_id}` a számla
+          típusával és az országgal.'
+        extract: 'Dokumentum beolvasása ebből a nézetből még nem érhető el. Futtasd:
+          `aeat app ledger evidence extract --evidence-id {evidence_id}`.'
+        reader: 'Ezen a gépen még nem olvashatók dokumentumok ({condition}). Indítsd
+          el vagy telepítsd az olvasót ezzel: `aeat config provision`, majd próbáld
+          újra.'
+      record_detail: '{kind} · szállító: {supplier} · hozzáadva: {added} · {status}'
+      record_status:
+        awaiting: Megerősítésre vár
+        confirmed: Megerősítve
+        declined: Elutasítva
+        unmeasured: Nincs mérve
+      records_empty: Még nincs rögzített számladokumentum.
+      records_heading: Számladokumentumok ezen a gépen
       reviewed: Ellenőrizve
       safe_metadata: Csak biztonságos metaadatok; a dokumentum tartalma védett marad.
       title: Bizonylatok ellenőrzése
     flow:
       in_flight_refusal: A képernyő elhagyása előtt várja meg a jelenlegi művelet
         befejezését.
+      refresh_failed: A módosítás mentésre került, de ezt a nézetet nem sikerült újraolvasni.
+        Térj vissza a Kezdőlapra a frissítéshez.
     import:
+      again: Másik fájl importálása
+      browse: Tallózás
       cancel: Mégse
+      cancelled: Az importálás megszakítva. Semmi sem került mentésre.
       confirm: Importálás megerősítése
-      confirming: Erősítse meg az előkészített importálást.
+      confirming: Ellenőrizd az előnézetet, majd erősítsd meg a mentéshez.
+      country_label: Partner országa, két betűvel (akkor használjuk, ha a fájlban
+        nincs ország oszlop)
+      country_required: Add meg a partner országát két betűvel, például ES.
       failure: Az importálás nem fejezhető be.
+      kind:
+        bank_statement: Bankszámlakivonat
+        invoices_issued: Kiállított számlák
+        invoices_received: Beérkezett számlák
+      kind_label: A fájl tartalma
+      outcome:
+        diagnostic: 'Megjegyzés: {message}'
+        did_import: 'Importálva: {count}'
+        did_skip: 'Kihagyva, mert már rögzítve volt: {count}'
+        files: 'Beolvasott fájlok: {count}'
+        likely_duplicates: 'Lehetséges ismétlődések: {count} (már a főkönyvben vagy
+          korábban ebben a fájlban). Importálásra kerülnek; ellenőrizd őket.'
+        not_measured: Az új és a már rögzített számlák csak az importálás végrehajtásakor
+          kerülnek megszámlálásra.
+        refused_file: 'Nem beolvasva: {file}: {reason}'
+        refused_row: 'A(z) {row}. sor elutasítva ({field}): {reason}'
+        rows: 'Sorok: {count}'
+        unmapped: 'Nem importált oszlopok: {columns}'
+        would_import: 'Importálásra kerülne: {count}'
+        would_skip: 'Kihagyásra kerülne, mert már rögzítve van: {count}'
+      path_label: Fájl vagy mappa
+      path_missing: 'Itt nincs semmi: {path}.'
+      path_placeholder: Írj be egy elérési utat, vagy használd a Tallózást
+      path_required: Adj meg egy fájl vagy mappa elérési útját.
+      preview: Előnézet
+      previewing: A fájl olvasása…
       progress: Importálás folyamatban…
-      prompt: Válasszon előkészített importálást.
+      prompt: Válaszd ki, mit tartalmaz a fájl és hol van, majd nézd meg az előnézetet.
+        Megerősítésig semmi sem kerül mentésre.
       provider:
-        bank: Banki export
-      source:
-        prepared: Előkészített forrás
+        auto: Automatikus felismerés
+        csv: CSV-fájl
+        ofx: OFX- vagy QFX-fájl
+        pdf_n26: N26 PDF-kivonat
+        xlsx: Excel-munkafüzet
+      provider_label: Kivonat formátuma
       success: 'Importálva: {imported}; kihagyva: {skipped}.'
       title: Főkönyvi tételek importálása
+    invoice:
+      again: Újabb számla hozzáadása
+      cancel: Mégse
+      cancelled: Megszakítva. Semmi sem került rögzítésre.
+      class:
+        ordinaria: Teljes számla (ordinaria)
+        rectificativa: Helyesbítő számla (rectificativa)
+        simplificada: Egyszerűsített számla (simplificada)
+      confirm: Számla rögzítése
+      confirming: Ellenőrizd a számlát, majd rögzítsd.
+      failure: A számla nem került rögzítésre.
+      field:
+        counterparty_name: Partner neve
+        counterparty_nif: Partner NIF-száma
+        country_code: Partner országa (két betű)
+        currency: Pénznem
+        invoice_class: Számla fajtája
+        invoice_date: Számla dátuma (ÉÉÉÉ-HH-NN)
+        invoice_number: Számlaszám
+        iva_rate: IVA-kulcs (%)
+        kind: Számla típusa
+        notes: Megjegyzések
+        retention_amount: IRPF-visszatartás összege
+        retention_rate: IRPF-visszatartás kulcsa (%)
+        series: Sorozat
+        taxable_base: Adóalap
+      kind:
+        issued: Kiállított
+        received: Beérkezett
+      open: Számla hozzáadása
+      optional: '{label} (nem kötelező)'
+      problem:
+        amount: '{field} csak szám lehet, például 1200.00.'
+        date: '{field} ÉÉÉÉ-HH-NN formátumú dátum kell legyen.'
+        required: '{field} megadása kötelező.'
+      progress: A számla rögzítése…
+      prompt: Add meg a számlát úgy, ahogy nyomtatva szerepel. Csak az áttekintés
+        után kerül ellenőrzésre és rögzítésre.
+      review: Áttekintés
+      success: 'A(z) {number} számla rögzítve: alap {base}, IVA {iva}, összesen {total}
+        {currency}.'
+      summary:
+        amounts: Adóalap {base} {currency} · IVA-kulcs {rate}
+        counterparty: 'Partner: {name} · NIF {nif} · {country}'
+        identity: '{kind} számla: {number}, kelte {date}'
+        retention: 'IRPF-visszatartás: kulcs {rate} · összeg {amount}'
+      title: Számla hozzáadása
     overview:
       affected_declarations: Érintett bevallások
       areas: Főkönyvi területek
@@ -1544,6 +1660,49 @@ tui:
       unmeasured: Nincs mérve
     unavailable:
       title: A főkönyvi terület nem érhető el
+  local_reader:
+    answer:
+      'no': nem
+      unmeasured: nincs mérve
+      'yes': igen
+    card:
+      action: Dokumentumolvasó megnyitása
+      description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen, és
+        indítsd el az olvasót vagy töltsd le a modelljeit.
+      title: Dokumentumolvasó
+    choose_role: Válassz egy feladatot a táblázatban a modell letöltéséhez vagy ellenőrzéséhez.
+    column:
+      installed: Telepítve
+      loaded: Betöltve
+      model: Modell
+      ready: Kész
+      role: Feladat
+    extraction_not_ready: A számladokumentumok még nem olvashatók be ezen a gépen.
+    extraction_ready: A számladokumentumok beolvashatók ezen a gépen.
+    host: 'Futtatókörnyezet: {endpoint} · telepítve: {installed} · válaszol: {reachable}
+      · verzió: {version}'
+    install_at_cli: 'A futtatókörnyezet telepítéséhez a parancssorban kell hozzájárulnod:
+      `aeat config provision install`.'
+    intro: A helyi olvasó ezen a gépen olvassa be a számladokumentumokat. Semmi sem
+      kerül máshová.
+    last_pull: 'Utolsó letöltés ebben a munkamenetben: {model} · befejezve: {outcome}
+      · {size} bájt'
+    measuring: Az olvasó ellenőrzése…
+    no_model: nincs kiválasztva
+    pull: Modell letöltése
+    refresh: Újraellenőrzés
+    refused: A műveletet nem sikerült elindítani.
+    role:
+      column_role_mapping: Táblázatoszlopok
+      supply_nature_proposal: Termék vagy szolgáltatás javaslata
+      text_extraction: Szöveges dokumentumok
+      vision_transcription: Szkennelt dokumentumok
+    selected_role: 'Kiválasztva: {role}'
+    start: Futtatókörnyezet indítása
+    submitting: Indítás…
+    title: Dokumentumolvasó
+    unreadable: Az olvasó állapotát nem sikerült lekérdezni.
+    verify: Modell ellenőrzése
   modelo:
     assertion:
       matched: Egyezik

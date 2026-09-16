@@ -127,8 +127,6 @@ errors:
     text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
     unknown_text_input_casillas: 'Unknown text-input field identifiers: %{casilla_ids}.'
-    unsupported_comparison_op: 'Unsupported comparison operator: %{op}.'
-    unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
     bucket_id_blank: The censo sync service requires a profile bucket.
     certificado_extraction_unpinned: Reading the issued certificate layout is not
@@ -234,11 +232,6 @@ errors:
     error_justificante_csv_not_found: The PDF does not contain a Código Seguro de
       Verificación.
     error_llm: A language-model error occurred.
-    error_manuals_manual: A manuals-related error occurred.
-    error_manuals_manual_not_found: The requested manual, year or part was not found.
-    error_manuals_manual_review_required: A manual record lacks reviewer metadata.
-    error_manuals_rule_extraction: Manual rule extraction is not available.
-    error_manuals_validation: A manual record failed validation.
     error_modelo_aggregation_binding: The bucket-derived aggregation bindings conflict
       with the input provided.
     error_modelo_amendment_evidence_missing: A filing cannot be amended without imported
@@ -429,7 +422,6 @@ errors:
       limits. Wait a few minutes and try again.
     fail_llm_transient_transport: The request did not reach the language-model runtime
       and the retry budget was exhausted.
-    fail_manuals_manual_parse: A manual record failed schema validation.
     fail_modelo_calculation_revision_persistence: The calculation-revision catalogue
       could not be saved or loaded.
     fail_modelo_filing_record_persistence: The filing-record catalogue could not be
@@ -555,8 +547,6 @@ errors:
     canonical_manifest_payload_validation: The corpus manifest payload failed validation.
     canonical_modelo_workspace_absent_registry_projection: The registry capture returned
       without its promised projection.
-    canonical_orden_anual_html_parse: The annual IVA order HTML has an invalid or
-      unsupported structure.
     canonical_relation_binding_join: The bundled relation-to-binding join could not
       be read as declared.
     canonical_tampered_manifest_payload: The corpus manifest digest does not match
@@ -578,7 +568,6 @@ errors:
       NIF, NIE or CIF.
     integrity_justificante_verification: The receipt verification with the AEAT could
       not be completed.
-    integrity_manuals_manifest: The manual manifest failed its schema or hash checks.
     integrity_observability_run_trace_validation: The persisted run trace failed strict
       validation.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,
@@ -667,8 +656,6 @@ errors:
       its display copy.'
     internal_flow_validator_registry: 'Internal error: the guided flow validator registry
       rejected the operation.'
-    internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
-      close the active session before re-entering.'
     internal_observability_run_context_missing: 'Internal error: a telemetry event
       was recorded outside an active run context.'
     internal_operation_declaration_breach: 'Internal error: an operation executor
@@ -680,10 +667,6 @@ errors:
     internal_profile_registration: 'Internal error: profile could not be registered.'
     internal_wipe_type: 'Internal error: the wipe operation received a value it cannot
       overwrite.'
-    internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
-      was registered a second time with different objects.'
-    internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue
-      has not been registered at application startup.'
     internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort
       signal.'
     internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled
@@ -742,8 +725,6 @@ errors:
       under the current access scope.
     canonical_inventory_closing_authority_conflict: A different immutable inventory
       closing authority is already recorded.
-    canonical_ledger_period_validation: The ledger period token is not a valid canonical
-      AEAT period.
     canonical_m036_declaration_ambiguous: The Modelo 036 declaration identifier prefix
       matches multiple records.
     canonical_m036_declaration_not_found: No Modelo 036 declaration matches the requested
@@ -989,6 +970,10 @@ errors:
       provision status`, then start it with `aeat config provision start` and fetch
       its models with `aeat config provision pull`, or choose an off-host provider
       for this read, and try again.
+    refused_ledger_evidence_reader_unreadable_answer: The document reader answered
+      in a form this command could not read, so nothing was taken from the document.
+      Nothing was saved; run the command again, and if it keeps happening the reader
+      model is the thing to change.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with

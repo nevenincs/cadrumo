@@ -1441,31 +1441,146 @@ tui:
       title: Ledger entries
     entry_label: '{date} · {description}'
     evidence:
+      add: Add document
+      add_failed: The document was not added.
+      add_label: Add a PDF or image of an invoice
+      added: '{file} was added.'
+      adding: Storing the document securely…
       column:
+        file: File
+        invoice: Invoice
         status: Review
         type: Type
+      confirm: Confirm as invoice
       detail: 'Size: {size} bytes · captured {captured}'
       empty: No evidence awaits review.
+      extract: Read document
+      path_placeholder: Type the path of the file
       pending: Pending
+      queue_heading: Attachments awaiting review
+      reader_not_ready: The document reader is not ready ({condition}). Check it with
+        `aeat config provision status`.
+      reader_ready: The document reader is ready on this machine.
+      reading_refused:
+        confirm: Confirming a document isn't available from this screen yet. Run `aeat
+          app ledger evidence confirm --evidence-id {evidence_id}` with the invoice
+          type and country.
+        extract: Reading a document isn't available from this screen yet. Run `aeat
+          app ledger evidence extract --evidence-id {evidence_id}`.
+        reader: Documents can't be read on this machine yet ({condition}). Start or
+          install the reader with `aeat config provision`, then try again.
+      record_detail: '{kind} · supplier {supplier} · added {added} · {status}'
+      record_status:
+        awaiting: Awaiting confirmation
+        confirmed: Confirmed
+        declined: Declined
+        unmeasured: Not measured
+      records_empty: No invoice documents are registered yet.
+      records_heading: Invoice documents on this machine
       reviewed: Reviewed
       safe_metadata: Safe metadata only; document contents stay protected.
       title: Evidence review
     flow:
       in_flight_refusal: Wait for the current operation to finish before leaving this
         screen.
+      refresh_failed: Your change was saved, but this view could not be re-read. Return
+        to Home to refresh it.
     import:
+      again: Import another file
+      browse: Browse
       cancel: Cancel
+      cancelled: Import cancelled. Nothing was written.
       confirm: Confirm import
-      confirming: Confirm the prepared import.
+      confirming: Check the preview, then confirm to write it.
+      country_label: Counterparty country, two letters (used when the file has no
+        country column)
+      country_required: Enter the counterparty country as two letters, for example
+        ES.
       failure: The import could not be completed.
+      kind:
+        bank_statement: Bank statement
+        invoices_issued: Issued invoices
+        invoices_received: Received invoices
+      kind_label: What the file holds
+      outcome:
+        diagnostic: 'Note: {message}'
+        did_import: 'Imported: {count}'
+        did_skip: 'Skipped as already recorded: {count}'
+        files: 'Files read: {count}'
+        likely_duplicates: 'Possible duplicates: {count} (already in the ledger or
+          earlier in this file). They are imported; review them.'
+        not_measured: New and already-recorded invoices are only counted when the
+          import is applied.
+        refused_file: 'Not read: {file}: {reason}'
+        refused_row: 'Row {row} refused ({field}): {reason}'
+        rows: 'Rows: {count}'
+        unmapped: 'Columns not imported: {columns}'
+        would_import: 'Would import: {count}'
+        would_skip: 'Would skip as already recorded: {count}'
+      path_label: File or folder
+      path_missing: Nothing exists at {path}.
+      path_placeholder: Type a path, or use Browse
+      path_required: Enter a file or folder path.
+      preview: Preview
+      previewing: Reading the file…
       progress: Import in progress…
-      prompt: Choose a prepared import.
+      prompt: Choose what the file holds and where it is, then preview it. Nothing
+        is written until you confirm.
       provider:
-        bank: Bank export
-      source:
-        prepared: Prepared source
+        auto: Detect automatically
+        csv: CSV file
+        ofx: OFX or QFX file
+        pdf_n26: N26 PDF statement
+        xlsx: Excel workbook
+      provider_label: Statement format
       success: Imported {imported}; skipped {skipped}.
       title: Import ledger entries
+    invoice:
+      again: Add another invoice
+      cancel: Cancel
+      cancelled: Cancelled. Nothing was recorded.
+      class:
+        ordinaria: Full invoice (ordinaria)
+        rectificativa: Corrective invoice (rectificativa)
+        simplificada: Simplified invoice (simplificada)
+      confirm: Record invoice
+      confirming: Check the invoice below, then record it.
+      failure: The invoice was not recorded.
+      field:
+        counterparty_name: Counterparty name
+        counterparty_nif: Counterparty NIF
+        country_code: Counterparty country (two letters)
+        currency: Currency
+        invoice_class: Invoice class
+        invoice_date: Invoice date (YYYY-MM-DD)
+        invoice_number: Invoice number
+        iva_rate: IVA rate (%)
+        kind: Invoice type
+        notes: Notes
+        retention_amount: IRPF retention amount
+        retention_rate: IRPF retention rate (%)
+        series: Series
+        taxable_base: Taxable base
+      kind:
+        issued: Issued
+        received: Received
+      open: Add invoice
+      optional: '{label} (optional)'
+      problem:
+        amount: '{field} must be a number such as 1200.00.'
+        date: '{field} must be a date written YYYY-MM-DD.'
+        required: '{field} is required.'
+      progress: Recording the invoice…
+      prompt: Enter the invoice as it is printed. It is checked and recorded only
+        after you review it.
+      review: Review
+      success: 'Invoice {number} recorded: base {base}, IVA {iva}, total {total} {currency}.'
+      summary:
+        amounts: Taxable base {base} {currency} · IVA rate {rate}
+        counterparty: 'Counterparty: {name} · NIF {nif} · {country}'
+        identity: '{kind} invoice {number} dated {date}'
+        retention: 'IRPF retention: rate {rate} · amount {amount}'
+      title: Add an invoice
     overview:
       affected_declarations: Affected declarations
       areas: Ledger areas
@@ -1524,6 +1639,49 @@ tui:
       unmeasured: Not measured
     unavailable:
       title: Ledger area unavailable
+  local_reader:
+    answer:
+      'no': 'no'
+      unmeasured: not measured
+      'yes': 'yes'
+    card:
+      action: Open document reader
+      description: See whether invoice documents can be read on this machine, and
+        start the reader or download its models.
+      title: Document reader
+    choose_role: Choose a task in the table to download or check its model.
+    column:
+      installed: Installed
+      loaded: Loaded
+      model: Model
+      ready: Ready
+      role: Task
+    extraction_not_ready: Invoice documents can't be read on this machine yet.
+    extraction_ready: Invoice documents can be read on this machine.
+    host: 'Runtime at {endpoint} · installed: {installed} · answering: {reachable}
+      · version {version}'
+    install_at_cli: 'Installing the runtime needs your consent at the command line:
+      `aeat config provision install`.'
+    intro: The local reader reads invoice documents on this machine. Nothing is sent
+      elsewhere.
+    last_pull: 'Last download this session: {model} · completed: {outcome} · {size}
+      bytes'
+    measuring: Checking the reader…
+    no_model: none selected
+    pull: Download model
+    refresh: Check again
+    refused: The action could not be started.
+    role:
+      column_role_mapping: Spreadsheet columns
+      supply_nature_proposal: Goods or services proposal
+      text_extraction: Documents with text
+      vision_transcription: Scanned documents
+    selected_role: 'Selected: {role}'
+    start: Start runtime
+    submitting: Starting…
+    title: Document reader
+    unreadable: The reader's state could not be read.
+    verify: Check model
   modelo:
     assertion:
       matched: Matches

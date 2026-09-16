@@ -183,6 +183,11 @@ cli:
         field_no_anchor: '{field}: the reader offered nothing in the document to point
           at, so there is no printed form to check this value against.'
         group_help: Purchase invoice evidence in PDF or image form
+        idempotency_key_help: Your own key for this attachment. Repeating the command
+          with the same key returns the record it already created instead of adding
+          a second one, and refuses if the document behind the key changed. Without
+          a key the command adds a new record every time, because the same file can
+          legitimately be attached twice.
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount

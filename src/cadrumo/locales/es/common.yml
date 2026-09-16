@@ -1483,12 +1483,42 @@ tui:
       title: Asientos del libro contable
     entry_label: '{date} · {description}'
     evidence:
+      add: Añadir documento
+      add_failed: El documento no se ha añadido.
+      add_label: Añade un PDF o una imagen de una factura
+      added: Se ha añadido {file}.
+      adding: Guardando el documento de forma segura…
       column:
+        file: Archivo
+        invoice: Factura
         status: Revisión
         type: Tipo
+      confirm: Confirmar como factura
       detail: 'Tamaño: {size} bytes · capturado {captured}'
       empty: No hay justificantes pendientes de revisión.
+      extract: Leer documento
+      path_placeholder: Escribe la ruta del archivo
       pending: Pendiente
+      queue_heading: Adjuntos pendientes de revisión
+      reader_not_ready: El lector de documentos no está listo ({condition}). Compruébalo
+        con `aeat config provision status`.
+      reader_ready: El lector de documentos está listo en este equipo.
+      reading_refused:
+        confirm: Confirmar un documento aún no está disponible desde esta pantalla.
+          Ejecuta `aeat app ledger evidence confirm --evidence-id {evidence_id}` con
+          el tipo de factura y el país.
+        extract: Leer un documento aún no está disponible desde esta pantalla. Ejecuta
+          `aeat app ledger evidence extract --evidence-id {evidence_id}`.
+        reader: Todavía no se pueden leer documentos en este equipo ({condition}).
+          Inicia o instala el lector con `aeat config provision` y vuelve a intentarlo.
+      record_detail: '{kind} · proveedor {supplier} · añadido el {added} · {status}'
+      record_status:
+        awaiting: Pendiente de confirmar
+        confirmed: Confirmado
+        declined: Descartado
+        unmeasured: Sin medir
+      records_empty: Aún no hay documentos de factura registrados.
+      records_heading: Documentos de factura en este equipo
       reviewed: Revisado
       safe_metadata: Solo metadatos seguros; el contenido del documento permanece
         protegido.
@@ -1496,19 +1526,105 @@ tui:
     flow:
       in_flight_refusal: Espera a que termine la operación actual antes de salir de
         esta pantalla.
+      refresh_failed: El cambio se ha guardado, pero esta vista no se ha podido volver
+        a leer. Vuelve al Inicio para actualizarla.
     import:
+      again: Importar otro archivo
+      browse: Examinar
       cancel: Cancelar
+      cancelled: Importación cancelada. No se ha guardado nada.
       confirm: Confirmar importación
-      confirming: Confirma la importación preparada.
+      confirming: Revisa la previsualización y confirma para guardarla.
+      country_label: País de la contraparte, dos letras (se usa si el archivo no tiene
+        columna de país)
+      country_required: Indica el país de la contraparte con dos letras, por ejemplo
+        ES.
       failure: No se pudo completar la importación.
+      kind:
+        bank_statement: Extracto bancario
+        invoices_issued: Facturas emitidas
+        invoices_received: Facturas recibidas
+      kind_label: Qué contiene el archivo
+      outcome:
+        diagnostic: 'Nota: {message}'
+        did_import: 'Importadas: {count}'
+        did_skip: 'Omitidas por estar ya registradas: {count}'
+        files: 'Archivos leídos: {count}'
+        likely_duplicates: 'Posibles duplicados: {count} (ya en el libro o antes en
+          este archivo). Se importan; revísalos.'
+        not_measured: Las facturas nuevas y las ya registradas solo se cuentan al
+          aplicar la importación.
+        refused_file: 'No leído: {file}: {reason}'
+        refused_row: 'Fila {row} rechazada ({field}): {reason}'
+        rows: 'Filas: {count}'
+        unmapped: 'Columnas no importadas: {columns}'
+        would_import: 'Se importarían: {count}'
+        would_skip: 'Se omitirían por estar ya registradas: {count}'
+      path_label: Archivo o carpeta
+      path_missing: No existe nada en {path}.
+      path_placeholder: Escribe una ruta o usa Examinar
+      path_required: Indica la ruta de un archivo o carpeta.
+      preview: Previsualizar
+      previewing: Leyendo el archivo…
       progress: Importación en curso…
-      prompt: Elige una importación preparada.
+      prompt: Elige qué contiene el archivo y dónde está, y previsualízalo. No se
+        guarda nada hasta que confirmes.
       provider:
-        bank: Exportación bancaria
-      source:
-        prepared: Fuente preparada
+        auto: Detectar automáticamente
+        csv: Archivo CSV
+        ofx: Archivo OFX o QFX
+        pdf_n26: Extracto PDF de N26
+        xlsx: Libro de Excel
+      provider_label: Formato del extracto
       success: 'Importados: {imported}; omitidos: {skipped}.'
       title: Importar apuntes contables
+    invoice:
+      again: Añadir otra factura
+      cancel: Cancelar
+      cancelled: Cancelado. No se ha registrado nada.
+      class:
+        ordinaria: Ordinaria (completa)
+        rectificativa: Rectificativa
+        simplificada: Simplificada
+      confirm: Registrar factura
+      confirming: Revisa la factura y regístrala.
+      failure: La factura no se ha registrado.
+      field:
+        counterparty_name: Nombre de la contraparte
+        counterparty_nif: NIF de la contraparte
+        country_code: País de la contraparte (dos letras)
+        currency: Moneda
+        invoice_class: Clase de factura
+        invoice_date: Fecha de la factura (AAAA-MM-DD)
+        invoice_number: Número de factura
+        iva_rate: Tipo de IVA (%)
+        kind: Tipo de factura
+        notes: Notas
+        retention_amount: Importe de la retención de IRPF
+        retention_rate: Tipo de retención de IRPF (%)
+        series: Serie
+        taxable_base: Base imponible
+      kind:
+        issued: Emitida
+        received: Recibida
+      open: Añadir factura
+      optional: '{label} (opcional)'
+      problem:
+        amount: '{field} debe ser un número como 1200.00.'
+        date: '{field} debe ser una fecha con el formato AAAA-MM-DD.'
+        required: '{field} es obligatorio.'
+      progress: Registrando la factura…
+      prompt: Introduce la factura tal como está impresa. Se comprueba y se registra
+        solo después de revisarla.
+      review: Revisar
+      success: 'Factura {number} registrada: base {base}, IVA {iva}, total {total}
+        {currency}.'
+      summary:
+        amounts: Base imponible {base} {currency} · tipo de IVA {rate}
+        counterparty: 'Contraparte: {name} · NIF {nif} · {country}'
+        identity: Factura {kind} {number} con fecha {date}
+        retention: 'Retención de IRPF: tipo {rate} · importe {amount}'
+      title: Añadir una factura
     overview:
       affected_declarations: Declaraciones afectadas
       areas: Áreas del libro
@@ -1570,6 +1686,50 @@ tui:
       unmeasured: Sin medir
     unavailable:
       title: Área del libro contable no disponible
+  local_reader:
+    answer:
+      'no': 'no'
+      unmeasured: sin medir
+      'yes': sí
+    card:
+      action: Abrir lector de documentos
+      description: Comprueba si los documentos de factura se pueden leer en este equipo
+        e inicia el lector o descarga sus modelos.
+      title: Lector de documentos
+    choose_role: Elige una tarea de la tabla para descargar o comprobar su modelo.
+    column:
+      installed: Instalado
+      loaded: Cargado
+      model: Modelo
+      ready: Listo
+      role: Tarea
+    extraction_not_ready: Todavía no se pueden leer documentos de factura en este
+      equipo.
+    extraction_ready: Los documentos de factura se pueden leer en este equipo.
+    host: 'Runtime en {endpoint} · instalado: {installed} · responde: {reachable}
+      · versión {version}'
+    install_at_cli: 'Instalar el runtime requiere tu consentimiento en la línea de
+      comandos: `aeat config provision install`.'
+    intro: El lector local lee los documentos de factura en este equipo. No se envía
+      nada a otro lugar.
+    last_pull: 'Última descarga en esta sesión: {model} · completada: {outcome} ·
+      {size} bytes'
+    measuring: Comprobando el lector…
+    no_model: ninguno seleccionado
+    pull: Descargar modelo
+    refresh: Volver a comprobar
+    refused: No se ha podido iniciar la acción.
+    role:
+      column_role_mapping: Columnas de hojas de cálculo
+      supply_nature_proposal: Propuesta de bienes o servicios
+      text_extraction: Documentos con texto
+      vision_transcription: Documentos escaneados
+    selected_role: 'Seleccionada: {role}'
+    start: Iniciar runtime
+    submitting: Iniciando…
+    title: Lector de documentos
+    unreadable: No se ha podido leer el estado del lector.
+    verify: Comprobar modelo
   modelo:
     assertion:
       matched: Coincide

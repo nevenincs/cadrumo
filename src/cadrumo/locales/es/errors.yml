@@ -137,8 +137,6 @@ errors:
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
     unknown_text_input_casillas: 'Identificadores de casilla de entrada de texto desconocidos:
       %{casilla_ids}.'
-    unsupported_comparison_op: 'Operador de comparación no admitido: %{op}.'
-    unsupported_op: 'Operador de fórmula no admitido: %{op}.'
   censo:
     bucket_id_blank: El servicio de sincronización censal requiere un bucket de perfil.
     certificado_extraction_unpinned: La lectura del certificado emitido aún no está
@@ -251,12 +249,6 @@ errors:
     error_justificante: Se produjo un error relacionado con el justificante.
     error_justificante_csv_not_found: El PDF no contiene un Código Seguro de Verificación.
     error_llm: Se produjo un error en el modelo de lenguaje.
-    error_manuals_manual: Se produjo un error relacionado con los manuales.
-    error_manuals_manual_not_found: No se encontró el manual, año o parte solicitados.
-    error_manuals_manual_review_required: Un registro de manual no tiene metadatos
-      de revisión.
-    error_manuals_rule_extraction: La extracción de reglas del manual no está disponible.
-    error_manuals_validation: Un registro de manual no superó la validación.
     error_modelo_aggregation_binding: Los bindings de agregación derivados del bucket
       entran en conflicto con los datos indicados.
     error_modelo_amendment_evidence_missing: No se puede complementar una declaración
@@ -471,7 +463,6 @@ errors:
       por límite de uso. Espera unos minutos y vuelve a intentarlo.
     fail_llm_transient_transport: La petición no llegó al motor del modelo de lenguaje
       y se agotó el presupuesto de reintentos.
-    fail_manuals_manual_parse: Un registro de manual no superó la validación del esquema.
     fail_modelo_calculation_revision_persistence: No se pudo guardar o leer el catálogo
       de revisiones de cálculo.
     fail_modelo_filing_record_persistence: No se pudo guardar o leer el catálogo de
@@ -604,8 +595,6 @@ errors:
       no superó la validación.
     canonical_modelo_workspace_absent_registry_projection: La captura del registro
       se devolvió sin la proyección prometida.
-    canonical_orden_anual_html_parse: El HTML de la orden anual del IVA tiene una
-      estructura no válida o no compatible.
     canonical_relation_binding_join: No se pudo leer conforme a lo declarado la correspondencia
       incluida entre relaciones y bindings.
     canonical_tampered_manifest_payload: El resumen del manifiesto del corpus no coincide
@@ -630,8 +619,6 @@ errors:
       NIE ni CIF español válido.
     integrity_justificante_verification: La verificación del justificante con la AEAT
       no se pudo completar.
-    integrity_manuals_manifest: El manifiesto del manual no superó las comprobaciones
-      de esquema o de hash.
     integrity_observability_run_trace_validation: La traza de ejecución guardada no
       superó la validación estricta.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
@@ -729,8 +716,6 @@ errors:
       sus textos de presentación.'
     internal_flow_validator_registry: 'Error interno: el registro de validadores del
       flujo guiado rechazó la operación.'
-    internal_master_key_reentrant: 'Error interno: el proveedor de clave maestra se
-      invocó de forma reentrante; cierra la sesión activa antes de volver a entrar.'
     internal_observability_run_context_missing: 'Error interno: se intentó registrar
       un evento de telemetría fuera de un contexto de ejecución activo.'
     internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
@@ -743,10 +728,6 @@ errors:
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
     internal_wipe_type: 'Error interno: la operación de borrado seguro recibió un
       valor que no puede sobrescribir.'
-    internal_wizard_catalogue_already_registered: 'Error interno: el catálogo del
-      asistente ya está registrado.'
-    internal_wizard_catalogue_not_registered: 'Error interno: el catálogo del asistente
-      no está registrado.'
     internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo
       emitió una señal de cancelación.'
     internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó
@@ -806,8 +787,6 @@ errors:
       un archivo dentro del ámbito de acceso concedido.
     canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
       de cierre del inventario.
-    canonical_ledger_period_validation: El periodo del libro no es un periodo AEAT
-      canónico válido.
     canonical_m036_declaration_ambiguous: El prefijo del identificador de la declaración
       del Modelo 036 coincide con varios registros.
     canonical_m036_declaration_not_found: Ninguna declaración del Modelo 036 coincide
@@ -1069,6 +1048,10 @@ errors:
       Compruébalo con `aeat config provision status`, arráncalo con `aeat config provision
       start` y descarga sus modelos con `aeat config provision pull`, o elige un proveedor
       externo para esta lectura, y vuelve a intentarlo.
+    refused_ledger_evidence_reader_unreadable_answer: El lector de documentos respondió
+      en un formato que este comando no ha podido leer, así que no se ha tomado nada
+      del documento. No se ha guardado nada; vuelve a ejecutar el comando y, si sigue
+      ocurriendo, lo que hay que cambiar es el modelo lector.
     refused_live_borrador_snapshot_not_found: No existe ningún snapshot del borrador
       de Modelo 100 con el identificador indicado.
     refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes

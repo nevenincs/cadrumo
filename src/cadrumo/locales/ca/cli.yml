@@ -198,6 +198,11 @@ cli:
         field_no_anchor: '{field}: el lector no va oferir res en el document a què
           assenyalar, així que no hi ha forma impresa amb què contrastar aquest valor.'
         group_help: Justificants de factures de compra en PDF o imatge
+        idempotency_key_help: Clau pròpia per a aquest adjunt. Repetir l'ordre amb
+          la mateixa clau retorna el registre ja creat en lloc d'afegir-ne un altre,
+          i el rebutja si el document associat a la clau ha canviat. Sense clau, l'ordre
+          afegeix un registre nou cada vegada, perquè un mateix fitxer es pot adjuntar
+          dues vegades legítimament.
         invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
           p. ex. 2026-01-15.
         invoice_number_help: Número de factura del proveïdor

@@ -194,6 +194,11 @@ cli:
         field_no_anchor: '{field}: az olvasó semmit nem jelölt meg a dokumentumban,
           így nincs nyomtatott alak, amelyhez ez az érték ellenőrizhető lenne.'
         group_help: Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.
+        idempotency_key_help: Saját kulcs ehhez a melléklethez. A parancs ugyanazzal
+          a kulccsal megismételve a már létrehozott rekordot adja vissza új helyett,
+          és elutasítja, ha a kulcshoz tartozó dokumentum megváltozott. Kulcs nélkül
+          a parancs minden alkalommal új rekordot hoz létre, mert ugyanaz a fájl jogosan
+          kétszer is csatolható.
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.
         invoice_number_help: Szállítói számlaszám.
