@@ -26,6 +26,7 @@ from cadrumo.core.manual_corpus_sidecar import (
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from dev.cache_root import dev_cache_dir
 
 if TYPE_CHECKING:
     import pypdfium2
@@ -244,10 +245,11 @@ def corpus_text_cache_dir() -> Path:
     """Resolve the runner-local corpus-text validation cache directory.
 
     Follows the development cache convention: an explicit
-    ``CADRUMO_CORPUS_TEXT_CACHE_DIR`` wins, otherwise ``~/.cadrumo`` holds it.
-    The cache lives outside the application's storage root, so validating
-    evidence never changes the application state that root fingerprints, and
-    it stays scoped per user rather than shared through an OS temp directory.
+    ``CADRUMO_CORPUS_TEXT_CACHE_DIR`` wins, otherwise the checkout's own
+    ``.cache/corpus-text`` holds it. The cache lives outside the application's
+    storage root, so validating evidence never changes the application state
+    that root fingerprints, and it stays scoped to the checkout that minted it
+    rather than shared through an OS temp directory.
 
     Returns:
         The directory holding the corpus-text cache file.
@@ -255,7 +257,7 @@ def corpus_text_cache_dir() -> Path:
     override = os.environ.get(CORPUS_TEXT_CACHE_DIR_ENV)
     if override:
         return Path(override)
-    return Path.home() / ".cadrumo" / "corpus-text"
+    return dev_cache_dir("corpus-text")
 
 
 def _corpus_text_cache_path() -> Path:

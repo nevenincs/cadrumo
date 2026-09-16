@@ -15,6 +15,8 @@ import pytest
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
+from dev._paths import REPO_ROOT
+from dev.cache_root import DEV_CACHE_ROOT_ENV
 
 from ..compiler.identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 from ..compiler.verdict_cache import (
@@ -37,9 +39,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _CACHE_DIR_ENV = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 
 
-def test_the_default_verdict_store_is_runner_local_outside_the_application_storage_root() -> None:
-    with scoped_env_var(_CACHE_DIR_ENV, None):
-        assert default_verdict_cache_dir() == Path.home() / ".cadrumo" / "registry-verdict"
+def test_the_default_verdict_store_is_checkout_local_outside_the_application_storage_root() -> None:
+    with scoped_env_var(_CACHE_DIR_ENV, None), scoped_env_var(DEV_CACHE_ROOT_ENV, None):
+        assert default_verdict_cache_dir() == REPO_ROOT / ".cache" / "registry-verdict"
+
+
+def test_the_shared_cache_root_relocates_the_verdict_store(tmp_path: Path) -> None:
+    """One variable moves every development cache, the per-cache override moves one."""
+    with scoped_env_var(_CACHE_DIR_ENV, None), scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "caches")):
+        assert default_verdict_cache_dir() == tmp_path / "caches" / "registry-verdict"
 
 
 def test_an_explicit_verdict_store_wins_and_holds_the_verdict_file(tmp_path: Path) -> None:

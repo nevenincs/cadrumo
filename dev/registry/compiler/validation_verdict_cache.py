@@ -14,8 +14,8 @@ until its inputs change. Processes that start together on the same inputs
 serialise their first validation through a per-key lock file, so one of them
 validates and the others take its verdict. The store follows the development
 cache convention:
-an explicit ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise
-``~/.cadrumo`` holds it, outside the application's storage root.
+an explicit ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise the
+checkout's own ``.cache`` holds it, outside the application's storage root.
 """
 
 from __future__ import annotations
@@ -34,6 +34,7 @@ from typing import Final
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.type_guards import is_str_keyed_dict
+from dev.cache_root import dev_cache_dir
 
 VERDICT_CACHE_DIR_ENV: Final = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 _SCHEMA: Final = "registry-validation-verdict/v1"
@@ -50,7 +51,7 @@ def verdict_cache_dir() -> Path:
     override = os.environ.get(VERDICT_CACHE_DIR_ENV)
     if override:
         return Path(override)
-    return Path.home() / ".cadrumo" / "registry-validation-verdicts"
+    return dev_cache_dir("registry-validation-verdicts")
 
 
 @dataclass(frozen=True, slots=True)

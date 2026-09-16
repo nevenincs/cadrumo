@@ -6,7 +6,7 @@ parse is a pure function of the source bytes, its hand-authored sidecars and
 the extractor code, so its typed result is persisted once per such input
 state and served to every later process, following the corpus-text cache
 convention: an explicit ``CADRUMO_RECORD_DESIGN_CACHE_DIR`` wins, otherwise
-``~/.cadrumo`` holds it, outside the application's storage root.
+the checkout's own ``.cache`` holds it, outside the application's storage root.
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import content_hash_hex, sha256_hex
 from cadrumo.domain.calculations.registry import record_design_schema
 from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignExtraction
+from dev.cache_root import dev_cache_dir
 
 from . import record_design_sources
 
@@ -39,7 +40,7 @@ def record_design_cache_dir() -> Path:
     override = os.environ.get(RECORD_DESIGN_CACHE_DIR_ENV)
     if override:
         return Path(override)
-    return Path.home() / ".cadrumo" / "record-design"
+    return dev_cache_dir("record-design")
 
 
 @cache
