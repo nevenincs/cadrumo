@@ -13,7 +13,7 @@ from ....core.config import override_settings
 from ..command_schema import command_registration_metadata, command_schema_refs
 from ..command_spec import OptionSpec
 from ..command_specs import COMMAND_GRAPH
-from ..verb_input_schema import build_verb_input_schemas, cli_path_for_command_key, is_exposable_command
+from ..verb_input_schema import build_verb_input_schemas, is_exposable_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -38,7 +38,8 @@ def test_schema_and_input_projections_are_exact_graph_sets() -> None:
     assert {ref.command for ref in refs} == set(expected)
     schemas = build_verb_input_schemas(tuple(sorted(expected)))
     assert set(schemas) == set(expected)
-    assert all(schema.cli_path == cli_path_for_command_key(key) for key, schema in schemas.items())
+    cli_paths = {row.command: row.cli_path for row in rows}
+    assert all(schema.cli_path == cli_paths[key] for key, schema in schemas.items())
 
 
 def test_schema_and_operator_help_discovery_loads_no_behavior_target() -> None:
@@ -84,7 +85,7 @@ def test_operator_help_is_resolved_from_each_owning_spec_translation_key() -> No
 
 
 def test_non_leaf_retirement_boolean_pairs_and_modelo_choices_are_truthful() -> None:
-    assert cli_path_for_command_key("root.status") == ()
+    assert next(row.cli_path for row in command_registration_metadata() if row.command == "root.status") == ()
     assert not is_exposable_command("root.status")
     assert "config.passphrase.change" in COMMAND_GRAPH.by_schema_identity()
     create = COMMAND_GRAPH.by_schema_identity()["config.profile.create"]

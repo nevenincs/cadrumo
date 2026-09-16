@@ -72,26 +72,6 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 
-def _declared_max_length(alias: object) -> int:
-    """Read the max_length a constrained string alias declares.
-
-    The refusal messages below quote this bound to the operator. Restating it
-    as a literal makes the message a second declaration that can drift from the
-    type actually enforcing it -- and because the number is only ever printed,
-    nothing would fail when it went wrong. Reading it off the alias keeps one
-    declaration, in the type.
-    """
-    annotated = getattr(alias, "__value__", alias)
-    for field in get_args(annotated)[1:]:
-        for constraint in getattr(field, "metadata", ()):
-            length = getattr(constraint, "max_length", None)
-            if length is not None:
-                return int(length)
-    raise AssertionError(f"{alias} declares no max_length for its refusal message")
-
-
-_BINDING_MAX_LEN = _declared_max_length(BindingId)
-_CASILLA_MAX_LEN = _declared_max_length(CasillaId)
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
 # Routing only: each model owns its row_type, fields, and validation contract.
