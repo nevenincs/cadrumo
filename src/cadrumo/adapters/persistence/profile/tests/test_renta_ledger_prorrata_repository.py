@@ -13,30 +13,30 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.catalogue_reads import (
-    InvoiceCatalogueReadAdapter,
-    TransactionCatalogueReadAdapter,
-)
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
-from cadrumo.application.aggregation.renta_ledger import (
+from .....application.aggregation.renta_ledger import (
     RentaLedgerExpenseAggregation,
     aggregate_renta_ledger_expenses_from_repositories,
 )
-from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from cadrumo.core.period import Period
-from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .....core.period import Period
+from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from .....domain.categories.spending_category import SpendingCategory
+from .....domain.prorrata_register.register import ProrrataRegisterEntry
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ..catalogue_reads import (
+    InvoiceCatalogueReadAdapter,
+    TransactionCatalogueReadAdapter,
+)
+from ..invoices import InvoiceCatalogueRepository
+from ..prorrata_register import ProrrataRegisterRepository
+from ..transactions import TransactionCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

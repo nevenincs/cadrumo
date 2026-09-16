@@ -398,6 +398,7 @@ class TransactionCatalogueRepository:
             StoredTransactionDriftError: If a row payload fails pydantic schema
                 validation on deserialization.
         """
+        from ..storage.crypto.encrypted_columns import secure_object_key_digest
         from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError
         from ..storage.schema_lineage import (
@@ -408,22 +409,27 @@ class TransactionCatalogueRepository:
         index_ids = self._load_index_ids()
         if not index_ids:
             return TransactionCatalogue.from_transactions([])
-        index_key = transaction_index_object_key(self._bucket_id)
         transaction_keys = {
             transaction_id: transaction_object_key(self._bucket_id, transaction_id) for transaction_id in index_ids
         }
-        self._require_current_rows(transaction_keys.values())
-        migrated = self._objects.migrate_many_atomically(
-            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-            (index_key, *transaction_keys.values()),
-            expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
-            current_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
-            validate_upgraded_payloads=self._validate_migrated_catalogue_payloads,
-            write_provenance="transaction-catalogue:schema-migration",
-        )
+        # An ordinary read never upgrades: a row below the current schema is
+        # refused before any payload is decrypted, and the explicit IVA
+        # authority cutover is the only path that migrates. Reading through the
+        # migration machinery here re-scanned every row's version and could
+        # never find one to migrate.
+        records_by_digest = {
+            bytes(record.object_key): record
+            for record in self._objects.load_many_current(
+                TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                transaction_keys.values(),
+                expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+                current_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
+                refuse_legacy=self._refuse_targeted_implicit_migration,
+            )
+        }
         transactions: list[Transaction] = []
         for transaction_id, object_key in transaction_keys.items():
-            record = migrated.get(object_key)
+            record = records_by_digest.get(secure_object_key_digest(object_key))
             if record is None:
                 continue
             try:
@@ -497,18 +503,6 @@ class TransactionCatalogueRepository:
             len(transactions),
         )
         return TransactionCatalogue.from_transactions(transactions)
-
-    def _validate_migrated_catalogue_payloads(self, payloads: Mapping[str, bytes]) -> None:
-        """Validate the whole upgraded catalogue before any v2 row replacement."""
-        transactions = self._validated_migrated_transactions(payloads)
-        if any(
-            transaction.deduction_fact_kind is not None
-            and is_iva_deduction_kind(transaction.deduction_fact_kind, "kind.investment_acquisition")
-            for transaction in transactions
-        ):
-            raise LedgerStorageError(
-                "investment IVA v1 backfill requires explicit reciprocal bienes-inversion authority"
-            )
 
     def _validated_migrated_transactions(self, payloads: Mapping[str, bytes]) -> tuple[Transaction, ...]:
         """Return the complete semantically validated upgraded transaction set."""
@@ -1209,19 +1203,6 @@ class TransactionCatalogueRepository:
         cache = self._serialized_hash_cache
         weakref.finalize(transaction, cache.pop, key, None)
         cache[key] = payload_hash
-
-    def _require_current_rows(self, object_keys: Iterable[str]) -> None:
-        """Refuse an ordinary read until the explicit catalogue cutover has persisted v2."""
-        keys = tuple(object_keys)
-        old = [
-            object_key
-            for object_key, schema_version in self._objects.peek_many_schema_versions(
-                TRANSACTION_CATALOGUE_NAMESPACE.namespace, keys
-            ).items()
-            if schema_version != TRANSACTION_CATALOGUE_NAMESPACE.schema_version
-        ]
-        if old:
-            raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")
 
     def _load_index_ids(self, *, require_current: bool = True) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""

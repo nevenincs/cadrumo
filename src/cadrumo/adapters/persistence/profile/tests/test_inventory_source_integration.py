@@ -8,22 +8,22 @@ from typing import Any
 import pytest
 from sqlalchemy import select
 
-from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
-from cadrumo.adapters.persistence.storage.sql.engine import get_engine
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+from .....application.aggregation.inventory import InventorySourceResolver
+from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.aggregation.tests.test_inventory_source import inventory_ledger
+from .....core.period import Period
+from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
+from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ...storage.sql.engine import get_engine
+from ...storage.sql.orm import SecureObjectRow
+from ...storage.tests.secure_sql import (
     TestRuntimeProfile,
     mutate_encrypted_secure_object_json,
 )
-from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from cadrumo.application.aggregation.inventory import InventorySourceResolver
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.aggregation.tests.test_inventory_source import inventory_ledger
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ..inventory import InventoryLedgerRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

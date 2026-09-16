@@ -29,8 +29,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -61,6 +59,7 @@ from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_wo
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 

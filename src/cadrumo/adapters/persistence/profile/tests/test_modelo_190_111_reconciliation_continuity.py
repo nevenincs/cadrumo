@@ -48,37 +48,37 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.retenciones import (
+from .....application.aggregation.retenciones import (
     RetencionObservation,
     aggregate_retenciones_111,
 )
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
-from cadrumo.core.aggregation import (
+from .....application.calculations.relation_prefill import resolve_relations_from_local_store
+from .....core.aggregation import (
     BindingSourceKind,
     RetencionScheme,
 )
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.bindings import (
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import RelationId
-from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
-from cadrumo.domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from .....domain.calculations.registry.ids import RelationId
+from .....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
+from .....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from cadrumo.domain.calculations.registry.withholding_bindings import (
+from .....domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

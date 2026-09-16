@@ -8,25 +8,25 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError
-from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.modelo import Modelo
-from cadrumo.core.observed_header_fact import ObservedHeaderFact
-from cadrumo.core.period import Period
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
-from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+from .....application.calculations.m303_carry_ingress import M303CarryIngressError
+from .....application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
+from .....core.casilla_id import CasillaId
+from .....core.modelo import Modelo
+from .....core.observed_header_fact import ObservedHeaderFact
+from .....core.period import Period
+from .....core.result_disposition import ResultDisposition
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.casilla_membership import casillas_by_id
+from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

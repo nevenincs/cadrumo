@@ -41,54 +41,54 @@ import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import SecretStr
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
-from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.action_errors import ModeloRefundElectionNotEligibleError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.config import Settings
-from cadrumo.core.period import Period
-from cadrumo.core.refund_election import RefundElection
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.ids import RelationId
-from cadrumo.domain.deadlines.models import (
+from .....application.calculations.binding_prefill import BindingPrefillReport
+from .....application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from .....application.calculations.relation_prefill import resolve_relations_from_local_store
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.modelo.action_errors import ModeloRefundElectionNotEligibleError
+from .....application.modelo.calculation_actions import calculate_modelo_revision
+from .....application.modelo.filing_actions import file_modelo_revision
+from .....application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
+from .....application.modelo.verification_actions import verify_modelo_revision
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....core.auth_provider import AuthProviderKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.config import Settings
+from .....core.period import Period
+from .....core.refund_election import RefundElection
+from .....core.result_disposition import ResultDisposition
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.ids import RelationId
+from .....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.entrypoints.adapter_composition import (
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....entrypoints.adapter_composition import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_work_lifecycle_ports,
+)
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ._operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
+from .published_authority_support import published_authority_operation
+from .verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
 )
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()

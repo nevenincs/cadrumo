@@ -9,22 +9,23 @@ from functools import cache
 import pytest
 
 import cadrumo.application.aggregation.modelo_bindings as modelo_bindings
-from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.aggregation.errors import AggregationValidationError
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from cadrumo.core.period import Period
-from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
-from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+
+from .....application.aggregation.errors import AggregationValidationError
+from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .....core.period import Period
+from .....domain.bienes_inversion.register import BienesInversionIvaRegister
+from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.invoices.enums import IvaRate, PaymentStatus
+from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
+from .....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..catalogue_reads import InvoiceCatalogueReadAdapter
+from ..invoices import InvoiceCatalogueRepository
+from ..prorrata_register import ProrrataRegisterRepository
+from ..transactions import TransactionCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -16,32 +16,32 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.calculations.relation_prefill import (
+from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.calculations.relation_prefill import (
     RelationPrefillSourceResolver,
     resolve_relations_from_local_store,
 )
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
-from cadrumo.domain.calculations.registry.relations import (
+from .....core.aggregation import BindingSourceKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
+from .....domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_requirement_index,
     relation_source_requirements,
 )
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from ._relation_prefill_support import empty_profile_read_ports
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -19,41 +19,41 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.sql.engine import get_engine
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
-from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.application.calculations.cross_period_clean_state import (
+from .....application.calculations.binding_prefill import resolve_bindings_from_local_store
+from .....application.calculations.cross_period_clean_state import (
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
 )
-from cadrumo.application.calculations.cross_period_models import (
+from .....application.calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
 )
-from cadrumo.application.calculations.observations_repository import observation_key
-from cadrumo.application.calculations.revision_carry_gate import revision_carry_outcome
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.observed_header_fact import ObservedHeaderFact
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import (
+from .....application.calculations.observations_repository import observation_key
+from .....application.calculations.revision_carry_gate import revision_carry_outcome
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.observed_header_fact import ObservedHeaderFact
+from .....core.period import Period
+from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
 )
-from cadrumo.domain.calculations.registry.authority import (
+from .....domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from ...storage.sql.engine import get_engine
+from ...storage.sql.orm import SecureObjectRow
+from ...storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
+from ..calculation_observations import CalculationObservationRepository
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..justificante import JustificanteRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_verification_reports import VerificationReportCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

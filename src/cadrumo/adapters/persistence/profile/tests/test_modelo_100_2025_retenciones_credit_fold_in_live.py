@@ -56,46 +56,46 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.aggregation.retenciones import RetencionObservation
-from cadrumo.application.aggregation.source_mesh import (
+from .....application.aggregation.retenciones import RetencionObservation
+from .....application.aggregation.source_mesh import (
     CallerOverrideDisposition,
     precedence_ladder_sources,
 )
-from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from cadrumo.application.modelo.calculation_actions import (
+from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from .....application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.aggregation import (
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,
     RetencionScheme,
 )
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..invoices import InvoiceCatalogueRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ..retencion_observations import RetencionObservationRepositoryAdapter
+from ..transactions import TransactionCatalogueRepository
+from ._fold_in_assertions_support import _assert_distinct_positive
+from .file_flow_test_support import calculation_ports_for_test
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

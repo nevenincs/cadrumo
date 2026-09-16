@@ -16,8 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
@@ -31,6 +29,7 @@ from .....core.period import Period
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

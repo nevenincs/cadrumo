@@ -39,49 +39,49 @@ from typing import Any
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....application.calculations.binding_prefill import resolve_bindings_from_local_store
+from .....application.modelo.external_import_actions import import_external_filing_evidence
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_coordinates,
     revision_id_for_observation,
 )
-from cadrumo.domain.deadlines.models import (
+from .....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
-from cadrumo.tests.env_scope import ready_clave_settings
+from .....domain.modelos.calculation_revision import CalculationRevision
+from .....domain.modelos.filing_record import ExternalEvidenceKind
+from .....domain.modelos.verification_report import ModeloVerificationFindingKind
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....entrypoints.adapter_composition import build_calculation_action_ports
+from .....tests.env_scope import ready_clave_settings
+from ...storage.operator_scope import build_operator_scope_ports
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_verification_reports import VerificationReportCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from .justificante_metadata import persist_justificante_metadata
+from .published_authority_support import published_authority_operation
+from .verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -6,60 +6,60 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._export_test_support import _seed_profile, _synthetic_valid_nif
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
-from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.config import Settings
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.iva_compensation.reconciliation import (
+from .....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.modelo.calculation_actions import calculate_modelo_revision
+from .....application.modelo.verification_actions import verify_modelo_revision
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.config import Settings
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.casilla_membership import casillas_by_id
+from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.deadlines.models import IVARegime, TaxpayerProfile
+from .....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (
+from .....domain.modelos.calculation_repository import upsert_calculation_revision
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.filing_record import (
+from .....domain.modelos.filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from cadrumo.domain.modelos.filing_repository import upsert_filing_record
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.tests.env_scope import ready_clave_settings
+from .....domain.modelos.filing_repository import upsert_filing_record
+from .....domain.modelos.repository import upsert_work_unit
+from .....tests.env_scope import ready_clave_settings
+from ...storage.operator_scope import build_operator_scope_ports
+from ...storage.runtime import inspect_bucket_storage_runtime
+from ...storage.runtime_repository import secure_object_repository_for_bucket
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ._export_test_support import _seed_profile, _synthetic_valid_nif
+from .file_flow_test_support import calculation_ports_for_test
+from .justificante_metadata import persist_justificante_metadata
+from .published_authority_support import published_authority_operation
+from .verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

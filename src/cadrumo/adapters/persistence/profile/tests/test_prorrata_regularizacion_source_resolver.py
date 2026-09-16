@@ -28,30 +28,30 @@ from typing import Any, cast
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
-from cadrumo.application.calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.modelo import Modelo
-from cadrumo.core.period import Period
-from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.calculations.observations_repository import ResultDispositionProjection
+from .....application.calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
+from .....core.aggregation import BindingSourceKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.modelo import Modelo
+from .....core.period import Period
+from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from .....core.resources.bundled_data import bundled_path
+from .....core.result_disposition import ResultDisposition
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ..calculation_observations import CalculationObservationRepository
+from ..prorrata_register import ProrrataRegisterRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

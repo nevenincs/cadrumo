@@ -56,34 +56,34 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.observations_repository import ObservationSourceKind
-from cadrumo.application.modelo.pulled_filing_reconcile import pulled_filing_divergence_findings
-from cadrumo.application.modelo.reconcile_casilla import (
+from .....application.calculations.observations_repository import ObservationSourceKind
+from .....application.modelo.pulled_filing_reconcile import pulled_filing_divergence_findings
+from .....application.modelo.reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )
-from cadrumo.core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.modelos.calculation_revision import (
+from .....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
+from .....core.casilla_id import CasillaId
+from .....core.period import Period
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.errors import RegistrySnapshotError
+from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from .....domain.calculations.registry.schema_input_kind import InputKind
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

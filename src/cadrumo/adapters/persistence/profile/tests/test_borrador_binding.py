@@ -13,36 +13,36 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.secure_object_namespaces import LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.live.borrador_100 import (
+from .....application.live.borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     BorradorSnapshotNotFoundError,
     borrador_100_snapshot_object_key,
 )
-from cadrumo.application.live.errors import LiveApplicationInputError
-from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.period import Period
-from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
+from .....application.live.errors import LiveApplicationInputError
+from .....application.live.snapshot_base import SnapshotLifecycleState
+from .....application.modelo.calculation_actions import calculate_modelo_revision
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.period import Period
+from .....domain.buckets.event import BucketEventType
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.ids import BindingId, RelationId
+from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....tests.aeat_literal_fixtures import aeat_url, configured_path
+from ...storage.secure_object_namespaces import LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ..snapshots import SecureSnapshotRepository
+from .file_flow_test_support import calculation_ports_for_test
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

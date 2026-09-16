@@ -42,28 +42,28 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
-from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
-from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
-from cadrumo.application.ledger.closure_findings import closure_findings
-from cadrumo.application.ledger.evidence_input import EvidenceInput, resolve_attachment_evidence_input
-from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
-from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft, InvoiceDraftRateBreakdown
-from cadrumo.core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingSourceKind
-from cadrumo.core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
-from cadrumo.core.period import Period
-from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
-from cadrumo.domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.invoices.models import Invoice
-from cadrumo.domain.iva.classification import InvoiceKind
+from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from .....application.invoices.source_resolver import InvoiceCatalogueSourceResolver
+from .....application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
+from .....application.ledger.closure_findings import closure_findings
+from .....application.ledger.evidence_input import EvidenceInput, resolve_attachment_evidence_input
+from .....application.ledger.evidence_input_ports import EvidenceInputPorts
+from .....application.ledger.invoice_draft_records import InvoiceDraft, InvoiceDraftRateBreakdown
+from .....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingSourceKind
+from .....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from .....core.period import Period
+from .....domain.attachments.enums import AttachmentKind, AttachmentSource
+from .....domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment
+from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.invoices.models import Invoice
+from .....domain.iva.classification import InvoiceKind
+from ...storage.attachment import AttachmentStore
+from ...storage.tests.secure_sql import TestRuntimeProfile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ..catalogue_creation import build_catalogue_creation_ports
+from ..invoices import InvoiceCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 __all__ = ["evidence_input_ports"]

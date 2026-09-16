@@ -32,20 +32,20 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from cadrumo.application.filing.draft_construction import build_draft
-from cadrumo.application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
-from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.filing.protocols import CasillaSchemaProvider
-from cadrumo.domain.filing.schema import ModeloDraft
-from cadrumo.domain.submission.models import ModeloDraftStatus
-from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
+from .....application.filing.draft_construction import build_draft
+from .....application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
+from .....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.filing.protocols import CasillaSchemaProvider
+from .....domain.filing.schema import ModeloDraft
+from .....domain.submission.models import ModeloDraftStatus
+from .....entrypoints.adapter_composition import build_draft_review_ports
+from ...storage.tests.secure_sql import TestRuntimeProfile
+from ..calculation_observations import CalculationObservationRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

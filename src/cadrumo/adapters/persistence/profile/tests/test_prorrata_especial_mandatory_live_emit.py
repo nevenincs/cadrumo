@@ -39,30 +39,30 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
-from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from cadrumo.application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
-from cadrumo.application.prorrata_register.service import ProrrataRegisterService
-from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.core.modelo import Modelo
-from cadrumo.core.prorrata_register import (
+from .....application.aggregation.source_mesh import CalculationSourceDiagnostic
+from .....application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .....application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
+from .....application.prorrata_register.service import ProrrataRegisterService
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.modelo import Modelo
+from .....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva.prorrata import InputClassification
-from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry, SectorDefinition
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from .....domain.iva.prorrata import InputClassification
+from .....domain.prorrata_register.register import ProrrataRegisterEntry, SectorDefinition
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..bienes_inversion import BienesInversionIvaRegisterRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..prorrata_register import ProrrataRegisterRepository
+from ..transactions import TransactionCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

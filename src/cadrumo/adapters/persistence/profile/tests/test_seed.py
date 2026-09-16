@@ -21,16 +21,16 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
-from cadrumo.application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.modelo import Modelo
-from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from .....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
+from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.modelo import Modelo
+from .....core.prorrata_register import ProrrataProvisionalProvenance
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

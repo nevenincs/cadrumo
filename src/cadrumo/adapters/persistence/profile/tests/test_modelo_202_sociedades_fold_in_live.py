@@ -88,36 +88,36 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....entrypoints.adapter_composition import build_calculation_action_ports
+from ..buckets import BucketEventHistoryRepository
+from .published_authority_support import published_authority_operation
 
 __all__ = ["register_wizard_catalogue"]
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from cadrumo.application.modelo.action_errors import ModeloRequiredBindingsMissingError
-from cadrumo.application.modelo.calculation_actions import (
+from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from .....application.modelo.action_errors import ModeloRequiredBindingsMissingError
+from .....application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

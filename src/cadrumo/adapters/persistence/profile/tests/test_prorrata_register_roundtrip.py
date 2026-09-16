@@ -33,8 +33,6 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-
 from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -63,6 +61,7 @@ from .....domain.prorrata_register.register import (
 from ....persistence.storage.errors import EnvelopeVersionError, SecureObjectRevisionConflictError
 from ....persistence.storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 

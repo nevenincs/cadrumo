@@ -26,20 +26,20 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+from .....application.calculations.binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
+from .....application.calculations.observations_repository import observation_key
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.observed_header_fact import ObservedHeaderFact
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
-from cadrumo.application.calculations.binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
-from cadrumo.application.calculations.observations_repository import observation_key
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.observed_header_fact import ObservedHeaderFact
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ..calculation_observations import CalculationObservationRepository
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -174,8 +174,8 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
     """
     from sqlalchemy import select
 
-    from cadrumo.adapters.persistence.storage.sql.engine import get_engine
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+    from ...storage.sql.engine import get_engine
+    from ...storage.sql.orm import SecureObjectRow
 
     namespace = CalculationObservationRepository.namespace
 
@@ -291,8 +291,8 @@ def test_carry_divergent_stamp_refuses_single_observation(
     """
     from sqlalchemy import select
 
-    from cadrumo.adapters.persistence.storage.sql.engine import get_engine
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+    from ...storage.sql.engine import get_engine
+    from ...storage.sql.orm import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = CalculationObservationRepository()
