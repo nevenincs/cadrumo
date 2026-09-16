@@ -48,9 +48,6 @@ from typing import TypeGuard
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.governed_fact_scope import GovernedFactSource
-from ..calculations.registry.queries import RegistryQueryService
-from ..calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
-from ..user_profile.schema import ProfileSchemaDefinition
 from .errors import RentaError, RentaValidationError
 
 # The selected registry revision supplies cap, fraction, target, and eligibility
@@ -60,26 +57,6 @@ from .errors import RentaError, RentaValidationError
 # Day-count and input mechanics remain below; no fallback facts are retained.
 #
 #
-
-
-def maritime_exemption_registry_declarations(
-    query_service: RegistryQueryService,
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
-    """Resolve maritime declarations from one selected registry scope.
-
-    Model coordinates, target boxes, source selectors, formula expressions,
-    legal references, and applicability remain in the selected registry
-    revision. A failed query is propagated; this seam does not invent a
-    fallback declaration.
-    """
-    return (
-        query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
-        query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
-    )
 
 
 # Registry-provided provenance is consumed at the authority boundary.
@@ -161,18 +138,6 @@ class ProfileCompletenessError(RentaError):
 def _is_str_enum_type(value: object) -> TypeGuard[type[StrEnum]]:
     """Narrow a dynamically built enum class after checking its bases."""
     return isinstance(value, type) and issubclass(value, StrEnum)
-
-
-def vessel_registry_enum(schema: ProfileSchemaDefinition) -> type[StrEnum]:
-    """Build the typed vessel vocabulary from an operation-pinned schema."""
-    values = schema.field("maritime_worker.vessel_registry").enum_values
-    vessel_registry: object = StrEnum(
-        "VesselRegistry",
-        {value.upper(): value for value in values},
-    )
-    if _is_str_enum_type(vessel_registry):
-        return vessel_registry
-    raise TypeError("the vessel registry vocabulary must be a StrEnum class")
 
 
 @dataclass(frozen=True, slots=True)
@@ -363,7 +328,5 @@ __all__ = [
     "check_retmar_mandatory_filing",
     "da41_eligible",
     "guard_da41_inactive",
-    "maritime_exemption_registry_declarations",
     "rebeca_eligible",
-    "vessel_registry_enum",
 ]

@@ -11,7 +11,7 @@ from ....core.identity.documents import IdentityError
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
-from ...calculations.registry.nif_iva_catalogue import nif_iva_format_for_country, nif_iva_prefix_for_country
+from ...calculations.registry.nif_iva_catalogue import nif_iva_format_for_country, resolve_nif_iva_catalogue
 from ...calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ..validators import validate_country_code, validate_iva_number
 
@@ -303,9 +303,9 @@ def test_every_eu_member_state_except_spain_has_a_nif_iva_format(
     spain = catalogue.require("es")
     for member in catalogue.choices:
         if member == spain:
-            assert nif_iva_prefix_for_country(member.value) is None
+            assert resolve_nif_iva_catalogue().prefix_for_country(member.value) is None
             continue
-        prefix = nif_iva_prefix_for_country(member.value.upper())
+        prefix = resolve_nif_iva_catalogue().prefix_for_country(member.value.upper())
         assert prefix is not None, f"no NIF-IVA prefix resolves for EU member {member.value}"
         assert nif_iva_format_for_country(member.value) is not None, (
             f"no NIF-IVA format resolves for EU member {member.value} ({prefix.value})"

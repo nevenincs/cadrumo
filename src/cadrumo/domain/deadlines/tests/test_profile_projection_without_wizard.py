@@ -9,10 +9,8 @@ schedule at all — the projection raised, and one caller swallowed the
 error and quietly under-resolved.
 
 The proof here is process isolation rather than patching: a child that
-imports the domain and never imports the wizard, asserting first that the
-catalogue really is unregistered. Without that precondition the test would
-pass for the wrong reason, since the root conftest registers the catalogue
-for every ordinary pytest worker.
+imports the domain and asserts that the wizard package was never imported.
+Without that precondition the test could pass for the wrong reason.
 """
 
 from __future__ import annotations
@@ -31,14 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 _CHILD_SCRIPT = r"""
-from cadrumo.core.wizard_catalogue import WizardCatalogueNotRegisteredError, get_setup_flow
-
-try:
-    get_setup_flow()
-    print("CATALOGUE:REGISTERED")
-    raise SystemExit(3)
-except WizardCatalogueNotRegisteredError:
-    print("CATALOGUE:UNREGISTERED")
+import sys
 
 from cadrumo.domain.deadlines.profiles import taxpayer_profile_from_mapping
 
@@ -57,6 +48,7 @@ print("TAX_ID:" + profile.tax_id)
 print("ENTITY:" + str(profile.entity_type))
 print("EMPLOYEES:" + str(profile.has_employees))
 print("PROFESSIONAL_70PCT:" + str(profile.professional_income_withholding_ge_70pct))
+print("WIZARD:" + ("IMPORTED" if "cadrumo.application.wizard" in sys.modules else "NOT_IMPORTED"))
 """
 
 
@@ -96,8 +88,8 @@ def test_the_projection_runs_in_a_process_that_never_built_a_setup_ui(tmp_path: 
     out = child.stdout
     detail = f"\n--- stdout ---\n{out}\n--- stderr ---\n{child.stderr}"
 
-    assert "CATALOGUE:UNREGISTERED" in out, f"test invalid - the wizard catalogue was registered in the child{detail}"
     assert child.returncode == 0, f"child process failed{detail}"
+    assert "WIZARD:NOT_IMPORTED" in out, f"test invalid - the child imported the wizard{detail}"
     assert "TAX_ID:12345678Z" in out, detail
     assert "EMPLOYEES:True" in out, detail
     assert "PROFESSIONAL_70PCT:True" in out, (

@@ -26,8 +26,8 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import (
-    calendar_ccaa_choices,
     require_calendar_ccaa,
+    resolve_calendar_ccaa_catalogue,
 )
 
 from ....core.directory_scan import scan_directory
@@ -389,7 +389,7 @@ def test_ccaa_enum_has_19_members_covering_17_autonomies_plus_2_cities() -> None
     (Ceuta + Melilla). All 19 carry ISO 3166-2:ES codes."""
 
     with bundled_indexed_authority().operation() as operation:
-        members = calendar_ccaa_choices(effective_date=date(2025, 7, 1), authority=operation)
+        members = resolve_calendar_ccaa_catalogue(effective_date=date(2025, 7, 1), authority=operation).choices
         assert len(members) == 19
         codes = {m.value for m in members}
         assert "ES-AN" in codes  # Andalucía
