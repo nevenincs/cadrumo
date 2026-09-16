@@ -79,7 +79,7 @@ from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.profile_session import ProfileSessionRefusalReason
 from .....core.time.utc import validate_utc_aware
-from ..crypto.aead import KEY_SIZE
+from ..crypto.aes_gcm import KEY_SIZE
 from ..errors import (
     DecryptionError,
     KeyringUnavailableError,

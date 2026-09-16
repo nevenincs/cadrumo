@@ -27,21 +27,21 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
+from .....application.aggregation.source_mesh import CalculationSourceDiagnostic
+from .....application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .....application.modelo.tests.advisory_diagnostic_assertions import operator_text as _operator_text
+from .....application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
+from .....core.casilla_id import CasillaId
+from .....core.modelo import Modelo
+from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.contribuyente.descendant import DescendantInfo
+from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
+from .....domain.user_profile.values import UserProfileFact
+from ...storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from .advisory_profile_bucket_fixture import (
     advisory_profile_bucket,
 )
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
-from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
-from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from cadrumo.application.modelo.tests.advisory_diagnostic_assertions import operator_text as _operator_text
-from cadrumo.application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.contribuyente.descendant import DescendantInfo
-from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
-from cadrumo.domain.user_profile.values import UserProfileFact
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -194,7 +194,7 @@ def test_a_declared_zero_survives_the_round_trip_as_an_answer() -> None:
     because the descendant vanished, not because zero was recorded. This pins
     the distinction the whole advisory rests on.
     """
-    from cadrumo.domain.contribuyente.descendant_facts import descendant_list_from_facts
+    from .....domain.contribuyente.descendant_facts import descendant_list_from_facts
 
     stored = dict(descendant_facts_from_list([_contributing_child(rentas_anuales_euros=Decimal("0"))]))
     assert "renta_family.descendiente.0.rentas_anuales" in stored

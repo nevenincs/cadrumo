@@ -24,7 +24,7 @@ import pytest
 
 from ._command_target import resolve_deferred_target
 from .command_spec import CommandSpec
-from .command_specs import COMMAND_SPECS
+from .command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -74,7 +74,7 @@ def _annotation_text(parameter: inspect.Parameter) -> str:
 def test_every_spec_parameter_is_accepted_by_its_handler() -> None:
     """A spec may not declare a parameter the handler cannot receive."""
     unknown: list[str] = []
-    for spec in COMMAND_SPECS:
+    for spec in COMMAND_GRAPH.specs:
         signature = _handler_signature(spec)
         if signature is None:
             continue
@@ -96,7 +96,7 @@ def test_repeatable_options_match_the_arity_their_handler_expects() -> None:
     sequence parameter is iterated as a string, one character at a time.
     """
     mismatched: list[str] = []
-    for spec in COMMAND_SPECS:
+    for spec in COMMAND_GRAPH.specs:
         signature = _handler_signature(spec)
         if signature is None:
             continue
@@ -127,11 +127,11 @@ def test_the_parity_gates_walk_the_corpus_they_claim_to() -> None:
     declared no parameters, would satisfy every assertion above by comparing
     nothing. The floors are the standing claim that it compared something.
     """
-    bound = [spec for spec in COMMAND_SPECS if _handler_signature(spec) is not None]
-    declared = sum(len(spec.parameters) for spec in COMMAND_SPECS)
+    bound = [spec for spec in COMMAND_GRAPH.specs if _handler_signature(spec) is not None]
+    declared = sum(len(spec.parameters) for spec in COMMAND_GRAPH.specs)
     if len(bound) < _MINIMUM_HANDLER_BINDINGS:
         raise AssertionError(
-            f"only {len(bound)} of {len(COMMAND_SPECS)} specs resolved a handler signature; "
+            f"only {len(bound)} of {len(COMMAND_GRAPH.specs)} specs resolved a handler signature; "
             f"the parity gates compare nothing below {_MINIMUM_HANDLER_BINDINGS}"
         )
     if declared < _MINIMUM_DECLARED_PARAMETERS:

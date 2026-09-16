@@ -25,9 +25,11 @@ import sys
 import tempfile
 import time
 import traceback
+import types
 import warnings
 from collections import Counter
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from math import isfinite
 from pathlib import Path
@@ -50,6 +52,7 @@ __all__ = [
     "calibrate_cli_path",
     "evaluate_latency_budget",
     "measure_resolution_costs",
+    "profile_cli_invocation",
     "profile_cli_path",
     "verify_cli_profiler_instrumentation",
 ]
@@ -417,23 +420,77 @@ def profile_cli_path(
     """
     if timeout <= 0:
         raise ValueError("profiler timeout must be positive")
-    path_tokens = tuple(str(token) for token in command_path)
-    argument_tokens = tuple(str(token) for token in invocation_args)
+    with _observed_root(storage_root) as root:
+        return _profile_with_root(
+            tuple(str(token) for token in command_path),
+            tuple(str(token) for token in invocation_args),
+            root,
+            extra_env=extra_env,
+            stdin_payload=stdin_payload,
+            timeout=timeout,
+        )
+
+
+def profile_cli_invocation(
+    command_path: Sequence[str],
+    *,
+    invocation_args: Sequence[str] = (),
+    storage_root: Path | None = None,
+    extra_env: Mapping[str, str] | None = None,
+    stdin_payload: str | None = None,
+    timeout: float = 120.0,
+) -> CliPerformanceObservation:
+    """Observe only the real invocation of a CLI argument vector.
+
+    The invocation half of :func:`profile_cli_path`, for a caller that never
+    reads the resolution observation: it starts one cold child instead of two.
+    Arguments mean exactly what they mean there.
+    """
+    if timeout <= 0:
+        raise ValueError("profiler timeout must be positive")
+    with (
+        _observed_root(storage_root) as root,
+        tempfile.TemporaryDirectory(prefix="cadrumo-cli-cold-roots-") as directory,
+    ):
+        return _invocation_in_clone(
+            tuple(str(token) for token in command_path),
+            tuple(str(token) for token in invocation_args),
+            root,
+            Path(directory),
+            extra_env=extra_env,
+            stdin_payload=stdin_payload,
+            timeout=timeout,
+        )
+
+
+@contextmanager
+def _observed_root(storage_root: Path | None) -> Iterator[Path]:
+    """Yield the root to observe: the caller's, resolved, or a private temporary one."""
     if storage_root is None:
         with tempfile.TemporaryDirectory(prefix="cadrumo-cli-profile-") as directory:
-            return _profile_with_root(
-                path_tokens,
-                argument_tokens,
-                Path(directory),
-                extra_env=extra_env,
-                stdin_payload=stdin_payload,
-                timeout=timeout,
-            )
+            yield Path(directory)
+        return
     storage_root.mkdir(parents=True, exist_ok=True)
-    return _profile_with_root(
-        path_tokens,
-        argument_tokens,
-        storage_root.resolve(),
+    yield storage_root.resolve()
+
+
+def _invocation_in_clone(
+    command_path: tuple[str, ...],
+    invocation_args: tuple[str, ...],
+    storage_root: Path,
+    cold_parent: Path,
+    *,
+    extra_env: Mapping[str, str] | None,
+    stdin_payload: str | None,
+    timeout: float,
+) -> CliPerformanceObservation:
+    invocation_root = cold_parent / "invocation"
+    _clone_storage_root(storage_root, invocation_root)
+    return _run_child(
+        "invocation",
+        command_path,
+        invocation_args,
+        invocation_root,
         extra_env=extra_env,
         stdin_payload=stdin_payload,
         timeout=timeout,
@@ -452,9 +509,7 @@ def _profile_with_root(
     with tempfile.TemporaryDirectory(prefix="cadrumo-cli-cold-roots-") as directory:
         cold_parent = Path(directory)
         resolution_root = cold_parent / "resolution"
-        invocation_root = cold_parent / "invocation"
         _clone_storage_root(storage_root, resolution_root)
-        _clone_storage_root(storage_root, invocation_root)
         resolution = _run_child(
             "resolution",
             command_path,
@@ -463,11 +518,11 @@ def _profile_with_root(
             extra_env=extra_env,
             timeout=timeout,
         )
-        invocation = _run_child(
-            "invocation",
+        invocation = _invocation_in_clone(
             command_path,
             invocation_args,
-            invocation_root,
+            storage_root,
+            cold_parent,
             extra_env=extra_env,
             stdin_payload=stdin_payload,
             timeout=timeout,
@@ -792,6 +847,75 @@ taken from one fresh interpreter per node, and agreed.
 """
 
 
+_MISSING_BINDING = object()
+
+type _Container = dict[Any, Any] | list[Any] | set[Any]
+
+
+@dataclass(frozen=True, slots=True)
+class _RetainedModuleState:
+    """One retained module's globals as the bootstrap left them.
+
+    A retained module can memoise work that imported modules the reset later
+    drops -- a lazily loaded catalogue kept in a module global, a filled
+    ``functools`` cache, a registry dict. Left in place, the next path finds the
+    memo, never imports those modules again, and is measured light. Rebinding
+    the globals, refilling the plain containers and clearing the caches returns
+    every path to the state the first one started from.
+    """
+
+    namespace: dict[str, object]
+    bindings: dict[str, object]
+    containers: tuple[tuple[_Container, _Container], ...]
+    caches: tuple[Callable[[], object], ...]
+
+
+def _capture_module_state(name: str, module: types.ModuleType) -> _RetainedModuleState:
+    namespace = vars(module)
+    # Submodule attributes belong to the module drop, which deletes them with
+    # the submodule; restoring one would let ``from package import submodule``
+    # return a dropped module without importing it.
+    bindings = {key: value for key, value in namespace.items() if not isinstance(value, types.ModuleType)}
+    containers: list[tuple[_Container, _Container]] = []
+    caches: list[Callable[[], object]] = []
+    for value in bindings.values():
+        if isinstance(value, dict | list | set) and type(value) in {dict, list, set}:
+            containers.append((value, value.copy()))
+            continue
+        cache_clear = getattr(value, "cache_clear", None)
+        if callable(cache_clear) and getattr(value, "__module__", None) == name:
+            caches.append(cache_clear)
+    return _RetainedModuleState(
+        namespace=namespace,
+        bindings=bindings,
+        containers=tuple(containers),
+        caches=tuple(caches),
+    )
+
+
+def _restore_module_state(state: _RetainedModuleState) -> None:
+    namespace = state.namespace
+    added = [
+        key for key, value in namespace.items() if key not in state.bindings and not isinstance(value, types.ModuleType)
+    ]
+    for key in added:
+        del namespace[key]
+    for key, value in state.bindings.items():
+        if namespace.get(key, _MISSING_BINDING) is not value:
+            namespace[key] = value
+    for live, saved in state.containers:
+        if isinstance(live, list) and isinstance(saved, list):
+            live[:] = saved
+        elif isinstance(live, dict) and isinstance(saved, dict):
+            live.clear()
+            live.update(saved)
+        elif isinstance(live, set) and isinstance(saved, set):
+            live &= saved
+            live |= saved
+    for cache_clear in state.caches:
+        cache_clear()
+
+
 @dataclass(frozen=True, slots=True)
 class _InterpreterBaseline:
     """Process-global state a resolution may change and a reset must restore."""
@@ -807,6 +931,7 @@ class _InterpreterBaseline:
     meta_path: tuple[Any, ...]
     path_hooks: tuple[Callable[[str], Any], ...]
     path: tuple[str, ...]
+    module_states: tuple[_RetainedModuleState, ...]
 
 
 def _cadrumo_modules() -> frozenset[str]:
@@ -831,6 +956,11 @@ def _capture_baseline(probe_modules: frozenset[str]) -> _InterpreterBaseline:
         meta_path=tuple(sys.meta_path),
         path_hooks=tuple(sys.path_hooks),
         path=tuple(sys.path),
+        module_states=tuple(
+            _capture_module_state(name, module)
+            for name in sorted(retained)
+            if isinstance(module := sys.modules.get(name), types.ModuleType)
+        ),
     )
 
 
@@ -859,9 +989,15 @@ def _restore_baseline(baseline: _InterpreterBaseline) -> None:
     sys.meta_path[:] = baseline.meta_path
     sys.path_hooks[:] = baseline.path_hooks
     sys.path[:] = baseline.path
+    for state in baseline.module_states:
+        _restore_module_state(state)
 
 
-def measure_resolution_costs(command_paths: Sequence[Sequence[str]]) -> list[dict[str, object]]:
+def measure_resolution_costs(
+    command_paths: Sequence[Sequence[str]],
+    *,
+    record_names_for: Collection[str] = (),
+) -> list[dict[str, object]]:
     """Measure the Cadrumo modules each path loads, as a fresh interpreter would.
 
     Meant to run first thing in a dedicated interpreter. The CLI is bootstrapped
@@ -870,10 +1006,16 @@ def measure_resolution_costs(command_paths: Sequence[Sequence[str]]) -> list[dic
     restored. A path that finds any leftover module is reported as an error
     rather than measured, so a broken reset cannot pass as a small count.
 
+    Args:
+        command_paths: The paths to measure, in order.
+        record_names_for: ``/``-joined paths whose records also carry the
+            sorted module names, so a disagreement can be reported as a diff.
+
     Returns:
         One record per requested path, in order: ``path``, ``modules`` (the
         Cadrumo module count), ``digest`` (a fingerprint of the sorted module
-        names, for comparing against a fresh interpreter) and ``error``.
+        names, for comparing against a fresh interpreter), ``names`` (those
+        names for a path in ``record_names_for``, else ``None``) and ``error``.
     """
     probe_modules = _cadrumo_modules()
     from typer.main import get_command
@@ -886,7 +1028,13 @@ def measure_resolution_costs(command_paths: Sequence[Sequence[str]]) -> list[dic
     records: list[dict[str, object]] = []
     for command_path in command_paths:
         path = tuple(str(token) for token in command_path)
-        record: dict[str, object] = {"path": "/".join(path), "modules": None, "digest": None, "error": None}
+        record: dict[str, object] = {
+            "path": "/".join(path),
+            "modules": None,
+            "digest": None,
+            "names": None,
+            "error": None,
+        }
         leftover = sorted(_cadrumo_modules() ^ baseline.retained_modules)
         if leftover:
             record["error"] = f"interpreter was not reset before this path; differing modules: {leftover[:10]}"
@@ -900,6 +1048,8 @@ def measure_resolution_costs(command_paths: Sequence[Sequence[str]]) -> list[dic
                 loaded = sorted(_cadrumo_modules())
                 record["modules"] = len(loaded)
                 record["digest"] = hashlib.sha256("\n".join(loaded).encode()).hexdigest()
+                if record["path"] in record_names_for:
+                    record["names"] = loaded
         records.append(record)
         _restore_baseline(baseline)
     return records

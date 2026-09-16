@@ -24,7 +24,10 @@ if TYPE_CHECKING:
     from ...core.json_contract import RegisteredSchema
     from .manifest import CommandSchemaRef
 
-_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+#: ``defer_build`` keeps these records out of the import cost every process
+#: pays: only the surface manifest, the reconciliation projection and the verb
+#: input schema validate them, and pydantic builds each on its first use.
+_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid", defer_build=True)
 
 
 class CommandNodeKind(StrEnum):

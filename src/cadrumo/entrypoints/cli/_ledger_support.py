@@ -111,9 +111,13 @@ def emit_update_result(
     )
 
 
-def _bucket_transaction_ids(transaction_repository: TransactionRepo) -> tuple[str, ...]:
+def _bucket_transaction_ids(
+    transaction_repository: TransactionRepo,
+    catalogue: TransactionCatalogue | None,
+) -> tuple[str, ...]:
     """Return the full transaction ids known to the active bucket."""
-    return tuple(sorted(transaction_repository.load().transactions))
+    source = catalogue if catalogue is not None else transaction_repository.load()
+    return tuple(sorted(source.transactions))
 
 
 def ledger_cli_no_recovery[ErrorT: CadrumoError](
@@ -129,7 +133,12 @@ def ledger_cli_no_recovery[ErrorT: CadrumoError](
     )
 
 
-def resolve_id(transaction_repository: TransactionRepo, prefix: str) -> str:
+def resolve_id(
+    transaction_repository: TransactionRepo,
+    prefix: str,
+    *,
+    catalogue: TransactionCatalogue | None = None,
+) -> str:
     """Resolve a CLI-supplied id or unambiguous prefix to a live transaction id.
 
     The single shared CLI-boundary wrapper over the canonical
@@ -140,9 +149,12 @@ def resolve_id(transaction_repository: TransactionRepo, prefix: str) -> str:
     lineage-following ``resolve_ledger_transaction_id`` in
     :mod:`_ledger_read_cli` instead, which resolves a superseded id through the
     edit chain.
+
+    ``catalogue`` is a snapshot the verb already loaded and will hand to the
+    same action, so resolving the id does not decrypt the catalogue again.
     """
     try:
-        return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
+        return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository, catalogue))
     except TransactionIdPrefixError as exc:
         raise ledger_cli_no_recovery(
             exc,

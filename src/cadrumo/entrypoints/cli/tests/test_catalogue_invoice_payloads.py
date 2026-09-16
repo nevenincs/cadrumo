@@ -8,11 +8,10 @@ from decimal import Decimal
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-
 from ....application.invoices.catalogue_creation import CatalogueInvoiceCreateResult, build_catalogue_invoice
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoiceRemoveResult, CatalogueInvoiceUpdateResult
 from ....domain.iva.classification import InvoiceKind
+from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from .._ledger_business_invoice_cli import _catalogue_invoice_payload
 from .._ledger_catalogue_invoice_payloads import (
     BulkInvoiceImportRowFailurePayload,
@@ -50,7 +49,7 @@ def _canonical_invoice_payload() -> dict[str, object]:
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
-        rate_provider=default_ecb_rate_provider(),
+        rate_provider=recorded_ecb_rate_provider(),
     )
     return _catalogue_invoice_payload(invoice)
 

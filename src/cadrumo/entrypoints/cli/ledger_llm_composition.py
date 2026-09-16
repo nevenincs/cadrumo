@@ -152,6 +152,7 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
             if status.precondition_verdict is not None:
                 raise PurchaseInvoiceEvidenceInputError(
                     LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value,
+                    translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
                     precondition_verdict=status.precondition_verdict,
                 ) from exc
             raise LLMClassifierError("ledger.evidence.reader.operation_failed") from exc

@@ -19,24 +19,24 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.modelos.errors import ModeloError
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....application.modelo.calculation_actions import calculate_modelo_revision
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.ids import BindingId, RelationId
+from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.modelos.errors import ModeloError
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from .file_flow_test_support import calculation_ports_for_test
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

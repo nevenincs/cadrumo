@@ -62,37 +62,37 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+from .....application.modelo.calculation_actions import calculate_modelo_revision
+from .....application.modelo.verification_actions import verify_modelo_revision
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.contribuyente.renta_codes import FiscalResidency
+from .....domain.deadlines.models import IVARegime, TaxpayerProfile
+from .....domain.modelos.calculation_revision import CalculationRevision
+from .....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ..transactions import TransactionCatalogueRepository
+from ._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+from .file_flow_test_support import calculation_ports_for_test
+from .published_authority_support import published_authority_operation
+from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

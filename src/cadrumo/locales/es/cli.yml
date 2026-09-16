@@ -315,8 +315,9 @@ cli:
         year_help: Ejercicio fiscal
       invoice:
         add_help: Crea una factura de conciliación vinculable en el catálogo.
-        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (por
-          defecto ES).
+        country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte. Obligatorio:
+          determina el encaminamiento de ambas declaraciones informativas, por lo
+          que nunca se presupone.'
         group_help: Registros de facturas de negocio (emitidas o recibidas)
         import_all_refused: 'importación masiva de facturas fallida: se rechazaron
           todas las filas; no se creó ninguna factura'
@@ -329,8 +330,8 @@ cli:
           necesita la columna.
         import_file_help: Ruta a un archivo CSV o XLSX con filas de facturas (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, y opcionalmente
-          iva_rate/currency/country_code/notes).
-        import_file_not_found: 'Archivo no encontrado: {path}'
+          iva_rate/retencion_amount/retencion_rate/currency/country_code/notes). Un
+          retencion_rate solo se acepta junto a su retencion_amount.
         import_help: Crea facturas del catálogo en lote desde un archivo CSV o XLSX.
         import_unmapped_columns: 'columnas no importadas porque ningún campo de factura
           coincidió con ellas: {columns}'
@@ -2068,8 +2069,8 @@ cli:
         export_out_help: Ruta de destino del archivo. El nombre debe terminar en '.cadrumo-bucket.tar.gz'.
         help: Copia de seguridad de un perfil en un archivo sellado y cifrado AEAD,
           o inspeccion de uno; restauralo con 'aeat config profile archive import'.
-        import_file_help: Ruta al directorio de la capsula sin publicar que se va
-          a restaurar.
+        import_file_help: Ruta del archivo sellado o del directorio de cápsula que
+          se va a restaurar.
         import_help: Vuelve a publicar una cápsula de perfil desde un directorio o
           un archivo sellado demostrando su contraseña.
         import_label_help: Nombre visible del perfil restaurado.
@@ -2101,6 +2102,9 @@ cli:
           export_suffix: La ruta de destino debe terminar en '{suffix}'. Vuelve a
             ejecutar el comando con un --output que use esa terminación; no se ha
             leído ningún perfil.
+          export_target_exists: Ya existe un archivo en la ruta de destino y no se
+            sobrescribe una copia de seguridad. Elige otro --output o mueve primero
+            el archivo existente; no se ha leído ningún perfil.
       bundle_flow:
         export_section_title: Exportar el paquete de perfil
         import_section_title: Importar el paquete de perfil
@@ -2305,21 +2309,41 @@ cli:
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     provision:
-      help: 'Gestiona el aprovisionamiento de inferencia local: informe, descarga
-        de modelos y verificación.'
+      help: 'Gestiona el lector local de documentos: estado del runtime, instalación,
+        arranque, descarga, verificación y eliminación de modelos.'
+      install:
+        confirm_help: Acepta descargar y ejecutar la instalación del gestor de paquetes.
+          Sin esta opción no se instala nada.
+        help: Instala el runtime local con el gestor de paquetes de la plataforma
+          (winget en Windows, Homebrew en macOS). No hace nada si ya está instalado;
+          en Linux la instalación queda a cargo del operador.
       pull:
-        help: Descarga un modelo al runtime local. Rechaza antes de descargar si no
-          podría cargarse.
+        help: Descarga modelos al runtime local, el de cada función del lector salvo
+          que --role o --model lo acoten. Rechaza antes de descargar si un modelo
+          no podría cargarse.
         model_help: Identificador del modelo que se descargará. Por defecto, el modelo
           seleccionado para la función.
+      remove:
+        help: Elimina del almacén del runtime local un modelo seleccionado por Cadrumo
+          e informa del espacio recuperado.
+        model_help: Identificador del modelo que se eliminará. Solo pueden eliminarse
+          modelos seleccionados por Cadrumo.
       report:
         help: Informa del hardware medido, el modelo seleccionado por función y si
           puede cargarse ahora.
       role_help: Función del modelo sobre la que actuar (transcripción de imágenes,
-        extracción de texto, mapeo tabular).
+        extracción de texto, mapeo tabular, propuesta de naturaleza del suministro).
+        Por defecto, todas.
+      start:
+        help: Arranca el runtime local instalado cuando el endpoint local configurado
+          no responde. No hace nada si ya responde.
+      status:
+        help: Informa de si el runtime local está instalado y responde, y de si el
+          modelo de cada función del lector está instalado. Solo lee.
       verify:
-        help: Verifica que un modelo está cargado y responde a una consulta trivial
-          dentro de un límite de tiempo.
+        help: Verifica que los modelos cargan y responden a una consulta trivial dentro
+          de un límite de tiempo, el de cada función del lector salvo que --role o
+          --model lo acoten.
         model_help: Identificador del modelo que se verificará. Por defecto, el modelo
           seleccionado para la función.
     repair:
@@ -2644,6 +2668,7 @@ cli:
       commands: Comandos
       error: Error
       options: Opciones
+    path_not_found: la ruta '{path}' no existe o no es un archivo legible.
     try_for_help: Pruebe [blue]'{command_path} {help_option}'[/] para obtener ayuda.
     usage_prefix: 'Uso: '
   ledger:
@@ -2967,15 +2992,15 @@ cli:
       file_refused: 'Extracto rechazado y omitido: {file}. El resto de la carpeta
         se ha importado.'
       help: Importar extractos bancarios o registros al libro contable
-      likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
-        una transacción ya presente en el libro, pero tienen una descripción distinta,
-        lo que indica un probable duplicado del mismo movimiento procedente de otro
-        archivo o formato. Estas filas requieren revisión.'
+      likely_duplicates: '{count} fila(s) importada(s) coinciden en fecha e importe
+        con otro movimiento ya presente en el libro o anterior en este archivo, así
+        que pueden ser el mismo movimiento registrado dos veces. Estas filas requieren
+        revisión.'
       no_rows_imported: 'No se importó ninguna entrada: el archivo se analizó pero
         no contenía filas de datos. Un CSV bancario debe tener una fila de cabecera
         con una columna de fecha, importe y descripción seguida de al menos una fila
         de datos.'
-      provider_help: 'Proveedor del formato del extracto. Valores reconocidos: {providers}'
+      provider_help: Proveedor del formato del extracto.
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
       verify_source_help: Archivo original usado para verificar las filas importadas.
@@ -3273,11 +3298,14 @@ cli:
         paragraph_storage_isolation: Para aislar el estado, defina CADRUMO_LOCAL_STORAGE_ROOT
           y CADRUMO_SECRET_STORE_DIR. Pase secretos de perfil con --profile-secrets-stdin
           o --profile-secrets-fd, y secretos del comando con --secrets-stdin o --secrets-fd.
+        profile_archive: Copia el perfil a un archivo sellado, o restaura uno.
         profile_delete: Elimina un perfil almacenado localmente.
         profile_history: Inspecciona el historial append-only de eventos del perfil.
-        profile_list: Listar los perfiles de contribuyente disponibles.
+        profile_list: Lista los perfiles registrados y marca el activo.
         profile_login: Inicia sesión en un perfil y lo convierte en el activo.
         profile_logout: Cierra la sesión del perfil activo.
+        profile_passphrase: Cambia la contraseña del perfil activo.
+        profile_recovery: Gestiona el código de recuperación del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
         profile_view: Mostrar los datos de un perfil (por defecto, el perfil activo).
         reset_resume: Continúa una operación de reinicio incompleta.

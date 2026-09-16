@@ -66,8 +66,8 @@ def seeded_isolated_backend_fixture(
     Returns both fixtures because pytest resolves fixtures by module-level
     name; the consuming module binds both::
 
-        _seeded_origin, live_fx_seeded_backend = seeded_isolated_backend_fixture(seed=_import_corpus)
-        __all__ = ["_seeded_origin", "live_fx_seeded_backend"]
+        _seeded_origin, recorded_fx_seeded_backend = seeded_isolated_backend_fixture(seed=_import_corpus)
+        __all__ = ["_seeded_origin", "recorded_fx_seeded_backend"]
 
     ``name`` and ``origin_name`` are the two pytest fixture names this returns,
     and they are stated rather than derived one from the other. A module using

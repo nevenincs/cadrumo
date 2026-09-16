@@ -10,7 +10,6 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
-from cadrumo.domain.calculations.registry.facts.modelo_parameter_fact import ModeloParameterFact
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector
 
 from ..compiler.fact_loader import load_governed_facts
@@ -18,6 +17,7 @@ from ..compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,
     compile_registered_fact_providers,
 )
+from ..compiler.modelo_projections import ModeloParameterFact
 
 _ROOT = Path(__file__).resolve().parents[3]
 _MANIFEST = _ROOT / "dev/registry/analysis/facts_wave2_provider_handoff.toml"

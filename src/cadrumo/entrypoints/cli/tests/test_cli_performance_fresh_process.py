@@ -137,8 +137,12 @@ def test_fresh_process_gate_bites_on_filesystem_materialization(tmp_path: Path) 
                 "planted-materialization/unexpected.txt",
             }
         )
-        assert planted_phase.filesystem_operations["open.write"] > control_phase.filesystem_operations["open.write"]
-        assert planted_phase.filesystem_operations["os.mkdir"] > control_phase.filesystem_operations["os.mkdir"]
+        # The control may perform none of these operations: help no longer opens
+        # the diagnostic log at import since logging became lazy, and an operation
+        # that never happened has no counter. The planted run must still exceed it.
+        control_operations = control_phase.filesystem_operations
+        assert planted_phase.filesystem_operations["open.write"] > control_operations.get("open.write", 0)
+        assert planted_phase.filesystem_operations["os.mkdir"] > control_operations.get("os.mkdir", 0)
         with pytest.raises(AssertionError, match=r"planted-materialization/unexpected\.txt") as failure:
             _require_no_new_filesystem_changes(control_phase, planted_phase)
         assert "unexpected filesystem changes" in str(failure.value)

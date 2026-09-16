@@ -22,7 +22,7 @@ from ...workflow.state_models import WorkflowState
 from .. import commands as commands_module
 from .. import status as status_module
 from ..commands import (
-    _missing_filing_baseline_flags,
+    _missing_filing_baseline_flag_groups,
     _require_filing_baseline,
     _require_profile_label_available,
     _require_profile_name,
@@ -431,7 +431,8 @@ def test_missing_filing_baseline_has_an_exact_runtime_operator_decision_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
     answers = registry_setup_flow.answers_model.model_validate({"tax_id": "00000000T"})
-    missing = _missing_filing_baseline_flags(registry_setup_flow, answers)
+    identity_missing, conditional_missing = _missing_filing_baseline_flag_groups(registry_setup_flow, answers)
+    missing = (*identity_missing, *conditional_missing)
     assert missing
 
     with pytest.raises(WizardMissingFlagError) as raised:

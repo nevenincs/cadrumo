@@ -43,7 +43,8 @@ Check which provider CLIs are visible on `PATH` with `aeat config check`.
 It lists each provider as `disponible` or `ausente` with the fix for each
 problem, alongside the profile service capabilities. This reports
 discoverability only, not account login. The local vision reader appears
-there too: it shows `ausente` with a fix until Ollama is running.
+there too: it shows `ausente` until the runtime answers. `aeat config provision status`
+reports the runtime and each reader model in detail.
 
 Install and authenticate the provider with its own CLI or account flow. The
 login command and data-retention settings belong to the provider, not to
@@ -176,18 +177,17 @@ amount from the registry. How the document is read depends on the file:
   is off by default, barred for gestor deployments, and gated behind an
   explicit per-run acknowledgement.
 
-Prefer the on-host path. Install Ollama and pull the default vision model
-first (this is an Ollama command, not an `aeat` command):
+Prefer the on-host path. Provision the local runtime first: install it with
+`aeat config provision install`, start it with `aeat config provision start`,
+and fetch the vision model with `aeat config provision pull`, narrowed to the
+vision role with `--role`. See
+[Set up a workstation](../workstation-setup.md) for the whole sequence.
 
-```bash
-ollama pull qwen2.5vl:3b
-```
-
-`qwen2.5vl:3b` is about 3 GB and runs on a consumer GPU or on CPU. On an
-8 GB or larger GPU, pull `qwen2.5vl:7b` for stronger reading of dense scans;
-for a low-memory or CPU-only machine, pull `moondream`. Then classify from
-the attached image, previewing first. Override the vision model for one run
-with `--vision-model qwen2.5vl:7b`:
+The default vision model, `qwen3-vl:2b`, is about 2 GB and runs on a
+consumer GPU or on CPU. To use a larger model on a GPU with room for it, name
+it with the pull command's `--model` option. Then classify from the attached
+image, previewing first. Override the vision model for one run with
+`--vision-model qwen2.5vl:7b`:
 
 ```{cli-sequence} llm-read-evidence-local
 ```

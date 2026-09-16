@@ -86,8 +86,8 @@ class _ImportRowPlan(NamedTuple):
     ``imported`` rows are new movements; ``skipped_refs`` rows already
     exist (a confident fingerprint match â€” re-import or cross-format
     re-export of a row already present); ``likely_duplicate_refs`` rows
-    are imported but share an effective date and amount with an existing
-    row under a divergent narrative, so the operator is warned.
+    are imported but share an effective date and amount with a row already
+    stored or earlier in the same batch, so the operator is warned.
     """
 
     imported: tuple[Transaction, ...]
@@ -177,6 +177,7 @@ def evaluate_import_rows(
     likely_duplicate_refs: list[BucketTransactionRef] = []
     batch_transaction_ids: set[str] = set()
     batch_fingerprints: set[str] = set()
+    batch_day_keys: set[str] = set()
     for parsed in parsed_rows:
         raw = parsed.raw
         fingerprint = derive_import_fingerprint(raw, direction=parsed.direction)
@@ -227,10 +228,15 @@ def evaluate_import_rows(
         )
         batch_transaction_ids.add(transaction_id)
         imported.append(transaction)
-        if derive_movement_day_key(raw) in existing_day_keys:
+        # Two same-day, same-amount rows in one statement both import, but the
+        # later one is surfaced: a bank export that repeats a line is otherwise
+        # indistinguishable from two genuine movements.
+        day_key = derive_movement_day_key(raw)
+        if day_key in existing_day_keys or day_key in batch_day_keys:
             likely_duplicate_refs.append(
                 BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id),
             )
+        batch_day_keys.add(day_key)
     return _ImportRowPlan(
         imported=tuple(imported),
         skipped_refs=tuple(skipped_refs),

@@ -49,6 +49,7 @@ def _create_profile() -> None:
             "activities.description": "design",
             "taxpayer_type.incn_prior_12_months": "7500000.00",
         },
+        log_in=False,
     )
 
 

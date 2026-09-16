@@ -39,6 +39,7 @@ from http import HTTPStatus
 from typing import ClassVar, override
 
 from ....core.config import override_settings
+from ....core.model_catalogue import ModelRole
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -67,6 +68,21 @@ class _LoopbackRequestHandler(SilentLoopbackHandler):
 
     replies: ClassVar[Sequence[ReaderReply]] = ()
     fallback: ClassVar[Mapping[str, str]] = dict[str, str]()
+    installed_models: ClassVar[tuple[str, ...]] = ()
+    """Model ids this endpoint reports installed on ``GET /api/tags``.
+
+    A fixture that serves a reader must also answer what it has: the batch lane
+    probes the role's model before it reads, so an endpoint that served chat
+    while reporting no inventory would describe a runtime that cannot exist.
+    """
+
+    @override
+    def do_GET(self) -> None:
+        write_json_response(
+            self,
+            {"models": [{"name": name, "model": name, "size": 0} for name in self.installed_models]},
+            status=HTTPStatus.OK,
+        )
 
     def _fields_for(self, prompt: str) -> Mapping[str, str]:
         for marker, fields in self.replies:
@@ -109,8 +125,19 @@ def serving_a_loopback_reader(
     Yields:
         The chat URL, with settings already pointed at it.
     """
+    from ...local_reader import configured_role_model
+
     _LoopbackRequestHandler.replies = tuple(replies)
     _LoopbackRequestHandler.fallback = dict(fallback or {})
+    # Captured here rather than read in the handler: the server answers on its
+    # own thread, which does not see this process's settings override.
+    _LoopbackRequestHandler.installed_models = tuple(
+        model
+        for model in (
+            configured_role_model(role) for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
+        )
+        if model is not None
+    )
     with (
         serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,
         override_settings(cadrumo_llm_ollama_chat_url=chat_url),

@@ -8,21 +8,21 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from cadrumo.core.period import Period
-from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.invoices.models import InvoiceCatalogue
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .....core.period import Period
+from .....domain.bienes_inversion.register import BienesInversionIvaRegister
+from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.invoices.models import InvoiceCatalogue
+from .....domain.iva.schema import IvaCategory
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from .....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..prorrata_register import ProrrataRegisterRepository
+from ..transactions import TransactionCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

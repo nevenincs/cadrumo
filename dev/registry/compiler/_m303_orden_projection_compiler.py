@@ -7,10 +7,6 @@ from datetime import date
 
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.text_fold import ascii_slug
-from cadrumo.domain.calculations.registry.annual_orden_auxiliary_indicator import (
-    AnnualOrdenAuxiliaryActivityIndicators,
-    resolve_annual_orden_auxiliary_activity_indicators,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
@@ -26,6 +22,10 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     PorcentajeIngresoCuentaAgricolaOrdenAnual,
     PorcentajeIngresoCuentaIaeOrdenAnual,
     ReduccionLorcaOrdenAnual,
+)
+from dev.registry.compiler.annual_orden_auxiliary_indicator import (
+    AnnualOrdenAuxiliaryActivityIndicators,
+    resolve_annual_orden_auxiliary_activity_indicators,
 )
 
 from ._m303_orden_keys import (

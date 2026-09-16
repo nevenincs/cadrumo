@@ -11,13 +11,17 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+from importlib.resources import files
 from pathlib import Path
 
 import pytest
 
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....core.config import override_settings
-from .....core.i18n.render import tr
+from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, override_locales_root, tr
+from ...tests._machine_secret_channels_support import _register
+from ...tests.cli_performance import profile_cli_path
 from ...tests.cli_runner import invoke_cached_cli
 from ...verb_input_schema import build_verb_input_schemas
 
@@ -414,3 +418,91 @@ def test_scripted_create_is_refused_for_a_duplicate_label(tmp_path: Path) -> Non
 
     profiles = json.loads(listed.stdout)["result"]["profiles"]
     assert [profile["name"] for profile in profiles] == ["Only One"]
+
+
+def _catalogues_without(tmp_path: Path, key: str) -> Path:
+    """Copy the shipped catalogues and drop one ``cli.yml`` entry from every locale."""
+    root = tmp_path / "locales"
+    shutil.copytree(Path(str(files("cadrumo") / "locales")), root)
+    for catalogue in root.glob("*/cli.yml"):
+        kept: list[str] = []
+        dropping_indent: int | None = None
+        for line in catalogue.read_text(encoding="utf-8").splitlines(keepends=True):
+            indent = len(line) - len(line.lstrip(" "))
+            if dropping_indent is not None and line.strip() and indent <= dropping_indent:
+                dropping_indent = None
+            if dropping_indent is None and line.lstrip(" ").startswith(f"{key}:"):
+                dropping_indent = indent
+            if dropping_indent is None:
+                kept.append(line)
+        catalogue.write_text("".join(kept), encoding="utf-8")
+    return root
+
+
+def test_a_guidance_failure_after_commit_still_reports_the_creation(tmp_path: Path) -> None:
+    """The profile exists once custody commits; the envelope must say so.
+
+    Reproduction: rendering a post-create notice raised after the profile was
+    committed, and the verb reported the failure as a refusal. The operator
+    was told nothing was created and re-ran ``create``, which then refused the
+    now-taken name. Here the login-required notice cannot render because its
+    catalogue entry is missing under strict lookup.
+    """
+    catalogues = _catalogues_without(tmp_path, "create_login_required")
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with (
+            override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)),
+            override_locales_root(catalogues),
+        ):
+            created = invoke_cached_cli(
+                ("--format", "json", "config", "profile", "create", "Guidance", "--quiet", "--secrets-stdin"),
+                input=_creation_payload(),
+            )
+            listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
+            close_active_bucket_session()
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)
+
+    assert created.exit_code == 0, created.output
+    document = json.loads(created.stdout)
+    assert document["result"]["status"] == "created"
+    assert [notice["code"] for notice in document["notices"]] == ["PROFILE_CREATED_GUIDANCE_UNAVAILABLE"]
+    assert listed.exit_code == 0, listed.output
+    assert [profile["name"] for profile in json.loads(listed.stdout)["result"]["profiles"]] == ["Guidance"]
+
+
+#: Calls that mean a password key is being derived: the supervised KDF worker
+#: launch and the key derivation itself.
+_KEY_DERIVATION_CALL_MARKERS = ("_kdf_process:launch_worker", "aead:derive_key")
+
+
+def test_a_duplicate_label_is_refused_before_any_key_is_derived(tmp_path: Path) -> None:
+    """Re-running a setup script must not pay for a key it will throw away.
+
+    Reproduction: on a real store, a second ``config profile create Ana
+    --quiet`` took about twenty seconds to refuse, the time of a full create,
+    because the label collision surfaced only inside the custody transaction
+    after the password key had been calibrated and derived. The label is
+    compared case-insensitively, as the transaction compares it.
+    """
+    root = tmp_path / "store"
+    _register(root, label="Only One")
+    payload = json.dumps({"passphrase": _CREDENTIAL_INPUT, "passphrase_confirmation": _CREDENTIAL_INPUT})
+
+    profile = profile_cli_path(
+        ("config", "profile", "create"),
+        invocation_args=("only one", "--quiet", "--secrets-stdin"),
+        storage_root=root,
+        stdin_payload=payload,
+        timeout=300,
+    )
+
+    refusal = profile.invocation
+    assert refusal.exit_code == 2, refusal.stderr
+    derived = sorted(
+        call
+        for call in refusal.storage_operation_calls
+        if any(marker in call for marker in _KEY_DERIVATION_CALL_MARKERS)
+    )
+    assert derived == []

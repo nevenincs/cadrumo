@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import Decimal
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter
@@ -584,10 +585,29 @@ def normalise_timestamp(value: datetime | None) -> datetime:
     return coerce_utc_aware(timestamp)
 
 
+def _catalogue_from_validated_members(
+    members: dict[str, Transaction],
+    *,
+    newcomer: Transaction | None,
+) -> TransactionCatalogue:
+    """Assemble a catalogue, validating only the member that was not already in one.
+
+    Validating the whole mapping re-runs every transaction's model validators,
+    so a bulk edit re-validated the entire ledger once per row. Every other
+    member came out of a validated catalogue and is frozen; the newcomer is
+    validated through the catalogue's own member contract, which re-derives its
+    id and re-checks its cross-field invariants even when it was produced by a
+    copy that skipped validation. Keys match ids by construction.
+    """
+    if newcomer is not None:
+        TransactionCatalogue.model_validate({"transactions": {newcomer.transaction_id: newcomer}})
+    return TransactionCatalogue.model_construct(transactions=MappingProxyType(members))
+
+
 def upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:
     updated = dict(catalogue.transactions)
     updated[transaction.transaction_id] = transaction
-    return TransactionCatalogue.model_validate({"transactions": updated})
+    return _catalogue_from_validated_members(updated, newcomer=transaction)
 
 
 def replace_transaction(
@@ -599,13 +619,13 @@ def replace_transaction(
     updated = dict(catalogue.transactions)
     updated.pop(old_transaction_id, None)
     updated[replacement.transaction_id] = replacement
-    return TransactionCatalogue.model_validate({"transactions": updated})
+    return _catalogue_from_validated_members(updated, newcomer=replacement)
 
 
 def remove_transaction(catalogue: TransactionCatalogue, *, transaction_id: str) -> TransactionCatalogue:
     updated = dict(catalogue.transactions)
     updated.pop(transaction_id, None)
-    return TransactionCatalogue.model_validate({"transactions": updated})
+    return _catalogue_from_validated_members(updated, newcomer=None)
 
 
 def require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:

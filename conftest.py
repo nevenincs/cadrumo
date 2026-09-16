@@ -131,6 +131,7 @@ register_collection_storage_root_cleanup(collection_storage_root())
 def pytest_configure(config: pytest.Config) -> None:
     """Create and announce this pytest invocation's durable run log."""
     marker_hook.reset_held_serials()
+    marker_hook.reset_marker_violations()
     fixture_resolution_hook.reset_refused_requests()
     # The unraisable-exception plugin forces full gc passes at session end to
     # flush __del__ errors. Over this suite's post-collection heap those passes
@@ -164,17 +165,19 @@ def pytest_internalerror(excrepr: object, excinfo: object) -> None:
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
-    """Fail incomplete serial runs and sessions with unresolved fixture requests, then finalize metadata."""
+    """Fail incomplete serial runs, mis-marked collections and unresolved fixture requests, then finalize metadata."""
     del exitstatus
     marker_hook.fail_session_on_held_serials(session)
+    marker_hook.fail_session_on_marker_violations(session)
     fixture_resolution_hook.fail_session_on_refused_requests(session)
     _run_logging.finish(session.config, session.exitstatus)
 
 
 def pytest_testnodedown(node: object, error: object | None) -> None:
-    """Collect serial items held, and fixture requests refused, inside an xdist worker."""
+    """Collect serial holds, marker violations and refused fixture requests from an xdist worker."""
     del error
     marker_hook.record_held_from_node(node)
+    marker_hook.record_marker_violations_from_node(node)
     fixture_resolution_hook.record_refused_from_node(node)
 
 
@@ -251,8 +254,9 @@ def pytest_terminal_summary(
     exitstatus: int,
     config: pytest.Config,
 ) -> None:
-    """Delegate to the deselection, held-serial, unresolved-fixture and lost-test reporters."""
+    """Delegate to the deselection, held-serial, marker-violation, unresolved-fixture and lost-test reporters."""
     deselection_hook.apply(terminalreporter, exitstatus, config)
     marker_hook.report_held_serials(terminalreporter)
+    marker_hook.report_marker_violations(terminalreporter)
     fixture_resolution_hook.report_refused_requests(terminalreporter)
     lost_test_hook.apply(terminalreporter, exitstatus, config)

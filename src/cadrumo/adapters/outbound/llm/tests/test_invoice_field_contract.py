@@ -423,6 +423,83 @@ class TestThePrintedPercentSignNoLongerLosesTheRate:
         )
 
 
+class TestAnAmountCarryingItsPrintedCurrencyUnit:
+    """A document prints an amount beside its unit, and a model copies both."""
+
+    @pytest.mark.parametrize("printed", ["1200.00 EUR", "EUR 1200.00", " 1200.00  EUR "])
+    def test_an_amount_beside_the_reported_currency_code_still_grounds(
+        self, printed: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(taxable_base=printed, currency="EUR"), anchors=ExtractedFieldAnchors()
+        )
+
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation)
+
+        assert draft.taxable_base == Decimal("1200.00")
+
+    @pytest.mark.parametrize("printed", ["1.200,00 €", "€1200.00", "1200.00 €"])
+    def test_an_amount_beside_a_currency_symbol_still_grounds_without_a_reported_code(
+        self, printed: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        """A symbol is a unit marker; removing it names no currency, which the code field still owns."""
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(grand_total=printed), anchors=ExtractedFieldAnchors()
+        )
+
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation)
+
+        assert draft.grand_total == Decimal("1200.00")
+
+    def test_a_code_the_reply_did_not_report_is_not_stripped(self, *, operation: PinnedAuthorityOperation) -> None:
+        """Corroboration keeps the rule closed: an uncorroborated token is not a unit."""
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(taxable_base="1200.00 EUR"), anchors=ExtractedFieldAnchors()
+        )
+
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation)
+
+        assert draft.taxable_base is None
+
+    @pytest.mark.parametrize("printed", ["1200.00 IVA", "1200.00 XYZ", "1200 EUR EUR", "EUR", "1200.00 EUROS"])
+    def test_any_other_trailing_text_still_drops_the_amount(
+        self, printed: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        """Only a named unit is removed; stripping anything else would launder a misread."""
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(taxable_base=printed, currency="EUR"), anchors=ExtractedFieldAnchors()
+        )
+
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation)
+
+        assert draft.taxable_base is None
+
+    def test_an_ambiguous_thousands_reading_still_drops_beside_its_unit(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        """Removing the unit does not weaken the separator rule underneath it."""
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(taxable_base="1.234 EUR", currency="EUR"), anchors=ExtractedFieldAnchors()
+        )
+
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation)
+
+        assert draft.taxable_base is None
+
+    def test_the_anchor_keeps_the_printed_form_while_the_amount_is_bare(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(iva_amount="252.00 EUR", currency="EUR"),
+            anchors=ExtractedFieldAnchors(iva_amount="Cuota IVA: 252.00 EUR"),
+        )
+
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation)
+
+        assert fields.anchors.iva_amount == "Cuota IVA: 252.00 EUR"
+        assert draft.iva_amount == Decimal("252.00")
+
+
 class TestTheSafetyPropertiesSurviveCompilation:
     """The null-over-guess line is the single most important line in the prompt."""
 

@@ -74,13 +74,21 @@ Two extras need a further provisioning step after the pip install:
   playwright install chromium
   ```
 
-- On-host invoice reading uses a local vision model. Start the Ollama server
-  and pull the model named in the `aeat config check` report:
+- On-host invoice reading uses a local model runtime (Ollama) with a text
+  model for text-layer PDFs and a vision model for scans. Run
+  `aeat config provision status` to see where you stand: whether the runtime
+  is installed, whether it answers, and which reader models are present.
 
-  ```bash
-  ollama serve
-  ollama pull qwen2.5vl:3b
-  ```
+  Then close whatever that report shows as missing.
+  `aeat config provision install` installs the runtime through `winget` on
+  Windows or Homebrew on macOS, and only with `--confirm`; it does nothing
+  when the runtime is already installed. On Linux, install Ollama with its
+  upstream installer, which needs root. `aeat config provision start` starts
+  an installed runtime that is not answering, and does nothing when it
+  already answers. `aeat config provision pull` downloads every reader role's
+  model, a few GB in total; narrow it with `--role` to fetch one role's model
+  at a time. `aeat config provision verify` confirms each model loads and
+  answers.
 
 For cloud LLM classification, put the provider's own CLI on `PATH` and sign in
 with that provider's flow. See

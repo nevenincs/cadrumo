@@ -63,7 +63,7 @@ def _refusal_message(
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(cadrumo_output_language=_LOCALE),
     ):
-        register_cli_profile(label="operator", facts=_SEED_FACTS)
+        register_cli_profile(label="operator", facts=_SEED_FACTS, log_in=False)
         app = typer.Typer()
         app.command()(build_wizard_command(registry_setup_flow, mode="edit", operation=operation))
         command = typer.main.get_command(app)

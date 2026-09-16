@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
 from ...application.ledger.operator_input_contracts import INVOICE_KIND_INPUT
+from ...application.operator_surface.command_ports import CommandNodeKind
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_2,
@@ -90,7 +89,7 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 count=False,
                 eager=False,
-                constraint=ParameterConstraint(),
+                constraint=ParameterConstraint(exists=True, dir_okay=False),
                 show_default=True,
                 hidden=False,
                 transport_locus=TransportLocus.LOCAL_IN,

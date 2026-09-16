@@ -9,9 +9,11 @@ read from validated calculation registry data supplied by
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date
+from threading import Lock
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
 from ...core.logging import get_logger
@@ -24,6 +26,7 @@ from ...core.time.clock import now, today_madrid
 # parse — load it only when a deadline computation actually runs.
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.authority_artifact import AuthorityGenerationPin
     from ..calculations.registry.schema import ModeloRevision
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ..calculations.registry.schema_verification import ProfilePredicateDefinition
@@ -112,11 +115,51 @@ def _window_outside_activity_period(
     return activity_end_date is not None and opens_on > activity_end_date
 
 
+#: One year's projection, keyed by the generation it was read from. An admitted
+#: generation is immutable, so the index is a pure function of that identity and
+#: the year, and every calendar build re-projected it: the whole modelo
+#: directory walked, the owning revision selected and hydrated per window. The
+#: key is the authority's own content identity (logical generation plus reader
+#: incarnation), never a path or an object address, so a different generation --
+#: or the same content behind a fresh reader -- projects again. Bounded because
+#: each entry retains that year's hydrated revisions.
+_DEADLINE_WINDOW_INDEX: OrderedDict[
+    tuple[AuthorityGenerationPin, int],
+    tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...],
+] = OrderedDict()
+_DEADLINE_WINDOW_INDEX_LIMIT: Final = 32
+_DEADLINE_WINDOW_INDEX_LOCK: Final = Lock()
+
+
 def indexed_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
 ) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
     """Project one filing year's deadline windows from a pinned operation.
+
+    Reused for a generation already projected for this year; see
+    :data:`_DEADLINE_WINDOW_INDEX`.
+    """
+    key = (operation.pin(), year)
+    with _DEADLINE_WINDOW_INDEX_LOCK:
+        cached = _DEADLINE_WINDOW_INDEX.get(key)
+        if cached is not None:
+            _DEADLINE_WINDOW_INDEX.move_to_end(key)
+            return cached
+    projected = _project_deadline_windows(operation, year)
+    with _DEADLINE_WINDOW_INDEX_LOCK:
+        _DEADLINE_WINDOW_INDEX[key] = projected
+        _DEADLINE_WINDOW_INDEX.move_to_end(key)
+        while len(_DEADLINE_WINDOW_INDEX) > _DEADLINE_WINDOW_INDEX_LIMIT:
+            _DEADLINE_WINDOW_INDEX.popitem(last=False)
+    return projected
+
+
+def _project_deadline_windows(
+    operation: PinnedAuthorityOperation,
+    year: int,
+) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+    """Walk the directory and hydrate the revisions that own this year's windows.
 
     The directory carries the metadata needed to select the owning revision;
     only revisions that canonically own a matching window are then hydrated.

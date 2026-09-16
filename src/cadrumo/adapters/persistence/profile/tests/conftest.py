@@ -5,25 +5,24 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
+from .....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.iva.regime_legend import resolve_regime_legends
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.secure_sql import (
+    TestRuntimeProfile,
+    isolated_runtime_profile,
+    reset_secure_object_store,
+)
+from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
+from ._invoice_confirmation_test_support import InvoiceAuthorityFixture
+from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from .file_flow_test_support import (
     _file_flow_runtime,
     _FileFlowRuntime,
     _Repos,
     _repos,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    TestRuntimeProfile,
-    isolated_runtime_profile,
-    reset_secure_object_store,
-)
-from cadrumo.adapters.persistence.tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
-from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.iva.regime_legend import resolve_regime_legends
-
-from ._invoice_confirmation_test_support import InvoiceAuthorityFixture
 from .ledger_action_persistence_support import _BUCKET_ID
 from .published_authority_support import release_published_authority_operation
 

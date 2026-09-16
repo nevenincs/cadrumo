@@ -5,26 +5,25 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
-from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.modelos.calculation_revision import (
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.ledger.actions_manual import create_manual_transaction
+from .....application.ledger.models import ManualLedgerTransactionCommand
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from cadrumo.domain.transactions.enums import TransactionDirection
-
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.transactions.enums import TransactionDirection
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,

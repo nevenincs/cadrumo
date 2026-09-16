@@ -75,8 +75,8 @@ class ProvisionReportResult(OutputSchema):
     contention: ProvisionContentionPayload | None = None
 
 
-class ProvisionPullResult(OutputSchema):
-    """JSON envelope for ``aeat config provision pull``.
+class ProvisionPullItemPayload(OutputSchema):
+    """One model fetch, or one role whose selection refused before any fetch.
 
     ``pulled`` false with ``contention`` populated means the fetch was refused
     BEFORE any bytes moved -- the admission check runs first precisely so a
@@ -85,6 +85,7 @@ class ProvisionPullResult(OutputSchema):
     """
 
     model: NonEmptyStr | None = None
+    roles: list[str] = []
     pulled: bool
     bytes_fetched: int | None = None
     contention: ProvisionContentionPayload | None = None
@@ -92,8 +93,15 @@ class ProvisionPullResult(OutputSchema):
     precondition_action: ResolvedPreconditionAction | None = None
 
 
-class ProvisionVerifyResult(OutputSchema):
-    """JSON envelope for ``aeat config provision verify``.
+class ProvisionPullResult(OutputSchema):
+    """JSON envelope for ``aeat config provision pull``; ``pulled`` is true only when every item pulled."""
+
+    pulled: bool
+    models: list[ProvisionPullItemPayload] = []
+
+
+class ProvisionVerifyItemPayload(OutputSchema):
+    """One model's readiness observation, or one role whose selection refused.
 
     ``resident`` and ``answered`` are separate claims: a model can be present
     and not loaded, or loaded and too slow to be useful, and an operator
@@ -101,6 +109,7 @@ class ProvisionVerifyResult(OutputSchema):
     """
 
     model: NonEmptyStr | None = None
+    roles: list[str] = []
     ready: bool
     resident: bool = False
     answered: bool = False
@@ -109,10 +118,118 @@ class ProvisionVerifyResult(OutputSchema):
     precondition_action: ResolvedPreconditionAction | None = None
 
 
+class ProvisionVerifyResult(OutputSchema):
+    """JSON envelope for ``aeat config provision verify``; ``ready`` is true only when every item is."""
+
+    ready: bool
+    models: list[ProvisionVerifyItemPayload] = []
+
+
+class ProvisionRuntimePayload(OutputSchema):
+    """Whether the local runtime is installed on this host and whether it answers."""
+
+    platform: NonEmptyStr
+    endpoint_url: NonEmptyStr
+    endpoint_local: bool
+    executable_located: bool
+    reachable: bool
+    version: str | None = None
+    installer: NonEmptyStr
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+
+class ProvisionRoleStatusPayload(OutputSchema):
+    """One reader role's model and what the runtime reports about it.
+
+    ``installed``, ``resident`` and ``load_admitted`` are null when they could
+    not be measured, which is distinct from false.
+    """
+
+    role: NonEmptyStr
+    model: str | None = None
+    installed: bool | None = None
+    resident: bool | None = None
+    load_admitted: bool | None = None
+    contention_causes: list[ContentionCause] = []
+    ready: bool
+    failed_condition_id: str | None = None
+
+
+class ProvisionLastPullPayload(OutputSchema):
+    """The most recent fetch this process attempted."""
+
+    model: NonEmptyStr
+    pulled: bool
+    attempted_at: NonEmptyStr
+    bytes_fetched: int | None = None
+    failed_condition_id: str | None = None
+
+
+class ProvisionStatusResult(OutputSchema):
+    """JSON envelope for ``aeat config provision status``. Reads only."""
+
+    runtime: ProvisionRuntimePayload
+    roles: list[ProvisionRoleStatusPayload] = []
+    last_pull: ProvisionLastPullPayload | None = None
+    extraction_ready: bool
+
+
+class ProvisionInstallResult(OutputSchema):
+    """JSON envelope for ``aeat config provision install``."""
+
+    installed: bool
+    already_installed: bool = False
+    installer: NonEmptyStr
+    consented: bool
+    installer_exit_code: int | None = None
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+
+class ProvisionStartResult(OutputSchema):
+    """JSON envelope for ``aeat config provision start``."""
+
+    running: bool
+    already_running: bool = False
+    started_pid: int | None = None
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+
+class ProvisionRemoveItemPayload(OutputSchema):
+    """One model removal; ``freed_bytes`` is reported only when the removal was confirmed."""
+
+    model: NonEmptyStr | None = None
+    roles: list[str] = []
+    removed: bool
+    was_installed: bool = False
+    freed_bytes: int | None = None
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+
+class ProvisionRemoveResult(OutputSchema):
+    """JSON envelope for ``aeat config provision remove``; ``removed`` is true only when every item was."""
+
+    removed: bool
+    models: list[ProvisionRemoveItemPayload] = []
+
+
 __all__ = [
     "ProvisionContentionPayload",
+    "ProvisionInstallResult",
+    "ProvisionLastPullPayload",
     "ProvisionModelPayload",
+    "ProvisionPullItemPayload",
     "ProvisionPullResult",
+    "ProvisionRemoveItemPayload",
+    "ProvisionRemoveResult",
     "ProvisionReportResult",
+    "ProvisionRoleStatusPayload",
+    "ProvisionRuntimePayload",
+    "ProvisionStartResult",
+    "ProvisionStatusResult",
+    "ProvisionVerifyItemPayload",
     "ProvisionVerifyResult",
 ]

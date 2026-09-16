@@ -9,43 +9,43 @@ from datetime import datetime as _datetime
 from decimal import Decimal as _Decimal
 from pathlib import Path as _Path
 
-from cadrumo.adapters.inbound.financial.providers.base import ParsedLedgerRow
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository as _BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import (
-    CalculationRevisionCatalogueRepository as _CalculationRevisionCatalogueRepository,
-)
-from cadrumo.adapters.persistence.profile.modelos_work_units import (
-    WorkUnitCatalogueRepository as _WorkUnitCatalogueRepository,
-)
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.transactions import (
-    TransactionCatalogueRepository as _TransactionCatalogueRepository,
-)
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository as _SecureObjectRepository
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.ledger.actions_manual import create_manual_transaction as _create_manual_transaction
-from cadrumo.application.ledger.models import ManualLedgerTransactionCommand as _ManualLedgerTransactionCommand
-from cadrumo.application.ledger.models import ManualLedgerTransactionResult as _ManualLedgerTransactionResult
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.modelos.calculation_revision import (
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.ledger.actions_manual import create_manual_transaction as _create_manual_transaction
+from .....application.ledger.models import ManualLedgerTransactionCommand as _ManualLedgerTransactionCommand
+from .....application.ledger.models import ManualLedgerTransactionResult as _ManualLedgerTransactionResult
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.invoices.enums import IvaRate, PaymentStatus
+from .....domain.invoices.models import Invoice, InvoiceLine
+from .....domain.iva.classification import InvoiceKind
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from cadrumo.domain.transactions.enums import (
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.transactions.enums import (
     TransactionDirection as _TransactionDirection,
 )
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction
-from cadrumo.domain.transactions.raw_transaction import SourceFormat as _SourceFormat
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction
+from .....domain.transactions.raw_transaction import SourceFormat as _SourceFormat
+from ....inbound.financial.providers.base import ParsedLedgerRow
+from ...storage.sql.secure_objects import SecureObjectRepository as _SecureObjectRepository
+from ..buckets import BucketEventHistoryRepository as _BucketEventHistoryRepository
+from ..modelos_calculation import (
+    CalculationRevisionCatalogueRepository as _CalculationRevisionCatalogueRepository,
+)
+from ..modelos_work_units import (
+    WorkUnitCatalogueRepository as _WorkUnitCatalogueRepository,
+)
+from ..transactions import (
+    TransactionCatalogueRepository as _TransactionCatalogueRepository,
+)
+from .published_authority_support import published_authority_operation
 
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 _BUCKET_ID = "26262626-2626-4626-8626-262626262626"

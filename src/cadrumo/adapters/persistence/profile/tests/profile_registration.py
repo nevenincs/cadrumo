@@ -98,8 +98,22 @@ def register_minimal_profile(
         return seeded
 
 
-def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, complete: bool = True) -> str:
-    """Register and log in a profile for a real CLI-surface test."""
+def register_cli_profile(
+    *,
+    label: str,
+    facts: Mapping[str, str] | None = None,
+    complete: bool = True,
+    log_in: bool = True,
+) -> str:
+    """Register and log in a profile for a real CLI-surface test.
+
+    Registration already publishes the new profile's session for this process,
+    exactly as a login does, except that it mints no acceleration receipt; the
+    receipt is what lets a LATER process resume the session. ``log_in=False``
+    skips the second authentication -- one supervised Argon2id derivation --
+    for a test that only drives the CLI in this process and so never needs the
+    receipt.
+    """
     from .....application.user_profile.login_session import login_profile
     from .....application.user_profile.registration import register_profile_with_credentials
     from .....core.config import load_settings, override_settings
@@ -120,11 +134,12 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, 
                 profile_create_context=create_context,
                 profile_decode_context=decode_context,
             )
-        login_profile(
-            name=label,
-            passphrase_callback=lambda: passphrase,
-            profile_decode_context=decode_context,
-        )
+        if log_in:
+            login_profile(
+                name=label,
+                passphrase_callback=lambda: passphrase,
+                profile_decode_context=decode_context,
+            )
         if complete:
             identity = UUID(outcome.profile_id)
             with bound_test_profile_record(identity) as repository:

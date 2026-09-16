@@ -79,7 +79,7 @@ def _assert_clean_retired_custody_refusal(result: Result) -> None:
 
 def test_config_list_refuses_cleanly_on_a_retired_custody_member() -> None:
     """`config profile list` renders the retired-custody refusal, not a traceback."""
-    create_profile_via_cli("workable")
+    create_profile_via_cli("workable", log_in=False)
     _stage_retired_custody_member(bucket_id=_LEGACY_BUCKET_ID)
 
     _assert_clean_retired_custody_refusal(_invoke(("config", "profile", "list")))
@@ -87,7 +87,7 @@ def test_config_list_refuses_cleanly_on_a_retired_custody_member() -> None:
 
 def test_overview_calendar_refuses_cleanly_on_a_retired_custody_member() -> None:
     """The overview calendar renders the same refusal rather than leaking it."""
-    create_profile_via_cli("filer")
+    create_profile_via_cli("filer", log_in=False)
     _stage_retired_custody_member(bucket_id=_LEGACY_BUCKET_ID)
 
     result = _invoke(

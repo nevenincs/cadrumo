@@ -41,6 +41,7 @@ from pathlib import Path
 import pytest
 
 from ....core.config import load_settings
+from ....tests.os_keychain_hook import require_os_credential_store
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -143,8 +144,7 @@ def _provision_profile(tmp_path: Path, passphrase: str) -> None:
     the caller -- which cannot pass against an empty root -- is what carries
     that guarantee now.
     """
-    from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
+    from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
     from ....core.config import override_settings
 
     with override_settings(
@@ -265,6 +265,9 @@ def test_store_writing_verb_still_demands_the_passphrase(tmp_path: Path) -> None
     root or a missing profile, neither of which is the contract under test,
     which is why the profile is provisioned first.
     """
+    # The provisioned profile's session must resume in the child process, which
+    # needs the OS credential store; refuse before provisioning on a host without one.
+    require_os_credential_store()
     _provision_profile(tmp_path, _provisioning_passphrase())
 
     result = _run(["config", "profile", "edit", "control", "--quiet", "--activity", "consulting"], tmp_path)
@@ -294,6 +297,9 @@ def test_data_verb_still_refuses_without_passphrase(tmp_path: Path) -> None:
     the wording of the refusal is free to change (a session door now
     fronts the key gate for this route), the secret's necessity is not.
     """
+    # The provisioned profile's session must resume in the child process, which
+    # needs the OS credential store; refuse before provisioning on a host without one.
+    require_os_credential_store()
     passphrase = _provisioning_passphrase()
     _provision_profile(tmp_path, passphrase)
 

@@ -36,7 +36,7 @@ import pytest
 from click.testing import Result
 
 from ....tests.inventory import FIXTURES_DIR
-from ._isolated_profile_storage_fixtures import live_fx_seeded_backend
+from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
 from ._ledger_corpus_support import _match, _oracle_rules
 from .cli_runner import invoke_cached_cli
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
@@ -68,8 +68,8 @@ def _import_corpus() -> None:
 # The cross-year corpus is the starting state every test here reads or
 # disposes from, not the thing under test. Seeded once and copied per test:
 # each test still gets its own storage root, so nothing it changes escapes.
-_seeded_origin, live_fx_seeded_world = live_fx_seeded_backend(seed=_import_corpus)
-__all__ = ["_seeded_origin", "live_fx_seeded_world"]
+_seeded_origin, recorded_fx_seeded_world = recorded_fx_seeded_backend(seed=_import_corpus)
+__all__ = ["_seeded_origin", "recorded_fx_seeded_world"]
 
 
 def _year_of(row: dict[str, object]) -> int:

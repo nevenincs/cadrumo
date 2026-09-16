@@ -32,7 +32,6 @@ Submodules
    cadrumo.domain.calculations.registry._m347_threshold
    cadrumo.domain.calculations.registry._relation_aggregation
    cadrumo.domain.calculations.registry._schema_export_exemption
-   cadrumo.domain.calculations.registry._schema_family_coverage
    cadrumo.domain.calculations.registry._schema_governance
    cadrumo.domain.calculations.registry._snapshot_internals
    cadrumo.domain.calculations.registry._source_evidence_fingerprint

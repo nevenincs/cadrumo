@@ -85,6 +85,7 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
     from ....application.wizard.catalogue import build_setup_flow
     from ....application.wizard.commands import build_wizard_command
     from ....domain.calculations.registry.authority import bundled_indexed_authority
+    from .._profile_authentication_notice import drain_profile_authentication_notices
 
     def _run(*args: object, **kwargs: object) -> None:
         # Keep the flow, command, and every profile context-dependent action
@@ -92,7 +93,15 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
         # generation must not escape the lease that made its choices valid.
         with bundled_indexed_authority().operation() as operation:
             flow = build_setup_flow(operation)
-            wizard_command = build_wizard_command(flow, mode=mode, operation=operation)
+            # The wizard emits its own envelope, below this package's funnel,
+            # so it is handed the drain for the notices root authentication
+            # staged for this invocation.
+            wizard_command = build_wizard_command(
+                flow,
+                mode=mode,
+                operation=operation,
+                invocation_notices=drain_profile_authentication_notices,
+            )
             projected = with_profile_cli_projection(
                 wizard_command,
                 mode=mode,

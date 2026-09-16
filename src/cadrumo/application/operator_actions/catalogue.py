@@ -203,6 +203,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.logout",
+            target_command_key="config.logout",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.repair_clear_active",
             target_command_key="config.repair.profile",
             argument_specifications=(

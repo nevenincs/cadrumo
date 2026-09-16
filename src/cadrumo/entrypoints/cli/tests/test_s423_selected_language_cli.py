@@ -27,7 +27,7 @@ os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = "s423-selected-language-passphrase"
 sys.argv = ["aeat", *sys.argv[3:]]
 
-from cadrumo.entrypoints.cli.main import main
+from ..main import main
 
 try:
     main()
@@ -46,8 +46,8 @@ os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = "s423-selected-language-passphrase"
 
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....core.bucket_pointer import resolve_active_bucket_id
 
 bucket_id = resolve_active_bucket_id()
 assert bucket_id is not None

@@ -23,6 +23,7 @@ Live AEAT submission is permanently forbidden: no live-write tool is ever expose
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
 from ._annotations import McpAnnotations, annotations_for_command
@@ -78,6 +79,14 @@ def main() -> None:
     runtime is incomplete, it refuses with the install hint and a non-zero exit rather than
     raising a raw ``ModuleNotFoundError``.
     """
+    # Pydantic scans every installed distribution's entry points on its first
+    # model build, which costs about a tenth of a second in a process that
+    # builds models before it has parsed a command. Cadrumo declares no
+    # pydantic plugin, and a third-party one would observe taxpayer models it
+    # has no business seeing. ``setdefault`` leaves an operator's explicit
+    # value alone.
+    os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
+
     from cadrumo.core.logging import configure_logging
 
     from .server import serve

@@ -55,38 +55,38 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    BUCKET_ID as CLEAN_STATE_BUCKET_ID,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import evaluate_clean_state
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
-from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.application.calculations.cross_period_models import (
+from .....application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from .....application.calculations.binding_prefill import resolve_bindings_from_local_store
+from .....application.calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyOrigin,
 )
-from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
-from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
-from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....application.calculations.foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
+from .....application.calculations.multi_year import PreviousFilingSourceResolver
+from .....application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.foreign_asset_obligation import ForeignAssetObligationGroup
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from .....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ..calculation_observations import CalculationObservationRepository
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ._cross_period_clean_state_support import (
+    BUCKET_ID as CLEAN_STATE_BUCKET_ID,
+)
+from ._cross_period_clean_state_support import evaluate_clean_state
+from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
+from ._observation_lookup_support import find_observation
+from ._relation_prefill_support import empty_profile_read_ports
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

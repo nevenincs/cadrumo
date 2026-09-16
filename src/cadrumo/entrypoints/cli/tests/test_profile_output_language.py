@@ -52,7 +52,7 @@ def _seed_profile(name: str, **facts: str) -> str:
         "identity.surnames": "Test",
         **facts,
     }
-    return register_cli_profile(label=name, facts=merged)
+    return register_cli_profile(label=name, facts=merged, log_in=False)
 
 
 def _json_output(result: Result) -> str:

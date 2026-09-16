@@ -77,7 +77,7 @@ class _LedgerLifecycleOutcome:
 
 def _drive_ledger_lifecycle_round_trip(tmp_path: Path) -> _LedgerLifecycleOutcome:
     """Drive the lifecycle round-trip: attach -> archive -> stash -> remove -> export -> reset."""
-    create_cli_surface_profile()
+    create_cli_surface_profile(log_in=False)
     bucket_id = _active_bucket_id()
 
     purchase_evidence_id = _seed_purchase_invoice_evidence(bucket_id)

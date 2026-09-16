@@ -204,6 +204,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.auth.protocols import bind_session_store
     from .application.auth.providers import bind_auth_provider_selector
     from .application.bucket_event_repository import bind_bucket_event_history_repository_factory
+    from .application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from .application.ledger.confirmation_record import bind_confirmation_record_repository_factory
     from .application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
     from .application.ledger.participation_read import bind_transaction_participation_index_repository_factory
@@ -220,6 +221,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .application.workflow.persistence import bind_workflow_persistence_port
+    from .tests.recorded_ecb_rates import recorded_ecb_rate_provider
 
     with (
         composed_profile_persistence_ports(),
@@ -240,6 +242,9 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_modelo_reconciliation_persistence_factory(build_modelo_reconciliation_persistence),
         bind_auth_provider_selector(select_outbound_auth_provider),
         bind_session_store(build_session_store()),
+        # Lane tests convert currency against recorded ECB answers; only an
+        # aeat_live test binds the live provider.
+        bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
     ):
         yield
 

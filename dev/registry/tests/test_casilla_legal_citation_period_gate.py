@@ -17,14 +17,14 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.casilla_legal_citation_period import (
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev.registry.analysis.casilla_legal_citation_period import (
     CasillaCitationKey,
     CitationPeriodRefusal,
     casilla_citation_period_refusals,
     citation_period_correctness,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.legal_citation_period_ledger import (

@@ -7,9 +7,9 @@ import os
 import sys
 from typing import Any, cast
 
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ._kdf_codec import KDF_TRANSPORT_ENCODING
 from ._kdf_codec import canonical_frame_bytes as _canonical_frame_bytes
-from ._kdf_windows_job import (
+from ._kdf_worker_limits import (
     PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS,
     PROFILE_CUSTODY_KDF_WORKER_MAX_PROCESSES,
     PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,
@@ -80,7 +80,7 @@ def expected_kdf_worker_limits(platform: str) -> dict[str, int]:
 
 
 def parse_ready_attestation(value: bytes) -> dict[str, object]:
-    parsed = json.loads(value.decode(_UTF_8_ENCODING, errors="strict"))
+    parsed = json.loads(value.decode(KDF_TRANSPORT_ENCODING, errors="strict"))
     if not isinstance(parsed, dict):
         raise ValueError("profile KDF ready payload is invalid")
     return cast("dict[str, object]", parsed)

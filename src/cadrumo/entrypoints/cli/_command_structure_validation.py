@@ -456,19 +456,6 @@ def graph_by_path(
     return MappingProxyType({node.path: node.spec for node in graph_nodes(specs, node_type=node_type)})
 
 
-def resolve_graph_path(
-    specs: tuple[CommandSpec, ...],
-    path: tuple[str, ...],
-    *,
-    node_type: type[Any],
-) -> CommandSpec:
-    """Resolve one complete operator path, failing closed on absence."""
-    try:
-        return graph_by_path(specs, node_type=node_type)[path]
-    except KeyError as error:
-        raise LookupError(f"unknown command spec path: {' '.join(path)!r}") from error
-
-
 def graph_by_schema_identity(specs: tuple[CommandSpec, ...]) -> MappingProxyType[str, CommandSpec]:
     """Return the unique executable result-schema identity index."""
     target_specs = tuple(
@@ -489,7 +476,6 @@ __all__ = [
     "graph_nodes",
     "recovery_descriptor_parameters",
     "recovery_references",
-    "resolve_graph_path",
     "validate_callback_parameters",
     "validate_command_identity",
     "validate_command_spec",

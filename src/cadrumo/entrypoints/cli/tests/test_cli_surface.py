@@ -85,7 +85,7 @@ def test_app_overview_status_bare_renders_counts() -> None:
 
 
 def test_app_ledger_import_dry_run_does_not_persist(tmp_path: Path) -> None:
-    create_cli_surface_profile()
+    create_cli_surface_profile(log_in=False)
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -318,7 +318,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket() -> Non
     reads as a linear narrative of the workflow with the
     transaction-id and intermediate payloads threaded through.
     """
-    create_cli_surface_profile()
+    create_cli_surface_profile(log_in=False)
     bucket_id = _active_bucket_id()
 
     created = _ledger_add_manual_transaction(bucket_id)
@@ -355,7 +355,7 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id() -> 
     profile/bucket identifier surfaces while the paste-safe placeholder stays
     the default.
     """
-    create_cli_surface_profile()
+    create_cli_surface_profile(log_in=False)
     bucket_id = _active_bucket_id()
     _ledger_add_manual_transaction(bucket_id)
 
@@ -380,7 +380,7 @@ def test_config_profile_view_reveal_identifiers_opt_in_surfaces_real_profile_id(
     ``CADRUMO_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the opaque profile UUID so
     a multi-client gestor's automation can key on the addressed profile.
     """
-    create_cli_surface_profile()
+    create_cli_surface_profile(log_in=False)
     profile_id = _active_bucket_id()
 
     default_shown = _run_ledger_cli_json(["config", "profile", "view"])
@@ -404,7 +404,7 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
     header carries field names, never identifier values. The header row must pass
     through verbatim so automation can parse the columns.
     """
-    create_cli_surface_profile()
+    create_cli_surface_profile(log_in=False)
 
     listed = _invoke(["app", "modelo", "filing-record", "list"])
     assert listed.exit_code == 0, listed.output
@@ -418,7 +418,7 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
 
 
 def test_app_modelo_filing_record_list_accepts_modelo_filter() -> None:
-    create_cli_surface_profile()
+    create_cli_surface_profile(log_in=False)
 
     text_result = _invoke(["app", "modelo", "filing-record", "list", "--modelo", "303"])
     assert text_result.exit_code == 0, text_result.output
@@ -432,7 +432,7 @@ def test_app_modelo_filing_record_list_accepts_modelo_filter() -> None:
 
 
 def test_app_ledger_import_reimport_review_round_trips_state(tmp_path: Path) -> None:
-    create_cli_surface_profile()
+    create_cli_surface_profile(log_in=False)
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"

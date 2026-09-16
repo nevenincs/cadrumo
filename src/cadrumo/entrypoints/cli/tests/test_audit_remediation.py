@@ -109,6 +109,7 @@ class TestOverviewCalendarRequiresProfileCreate:
                 "iva.voluntary_sii_enrolled": "false",
                 "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
+            log_in=False,
         )
 
         # Modelo applicability is derived from the taxpayer model — declare

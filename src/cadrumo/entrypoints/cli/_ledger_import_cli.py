@@ -261,10 +261,10 @@ def ledger_import(
     """Import a financial-statement file via the existing provider registry."""
     normalised_provider = _validate_import_provider(provider)
     context = _import_bucket_context(dry_run=dry_run)
-    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...application.exchange_rate_provider import exchange_rate_provider
     from ...domain.currency.service import CurrencyNormalizationService
 
-    currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
+    currency_normalizer = CurrencyNormalizationService(rate_provider=exchange_rate_provider())
     canonical_period = _optional_canonical_period(period, year=year)
     import_ports = compose_ledger_import_ports()
     action_ports = (

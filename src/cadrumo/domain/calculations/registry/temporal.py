@@ -21,6 +21,7 @@ from .errors import (
 )
 from .ids import RevisionId
 from .modelo_inception import ModeloInceptionField
+from .modelo_localization import require_modelo_localization
 from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
 from .period_selector_match import selector_token_for_request
 from .schema import (
@@ -84,6 +85,11 @@ class ModeloDirectoryMetadata(RegistryModel):
     source_refs: SourceRefs
     inception: ModeloInceptionField | None = None
     pending_ejercicio_ordenes: PendingEjercicioOrdenes = ()
+
+    @property
+    def title(self) -> str:
+        """Return the strict official-Spanish Modelo title, as the materialized view does."""
+        return require_modelo_localization((self.title_localization_key,), locale="es")
 
     @classmethod
     def from_modelo(cls, modelo: ModeloDefinition) -> ModeloDirectoryMetadata:

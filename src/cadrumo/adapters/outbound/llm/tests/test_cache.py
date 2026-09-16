@@ -145,6 +145,23 @@ def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
     assert not cache_entries, f"cache must not materialise plaintext entries: {cache_entries}"
 
 
+def test_a_response_redaction_would_alter_is_never_replayed(tmp_path: Path) -> None:
+    """A read carrying a tax identifier is not cached, so no hit returns its hash.
+
+    The stored entry is redacted, and a replay of it answered an invoice read
+    with the identifier's hash in place of the identifier, which then failed
+    validation on the second read of the same document.
+    """
+    cache = LLMCache(root_dir=tmp_path)
+    request = LLMRequest(prompt="Read the invoice", temperature=0.0, language="es")
+    identity_bearing = _response().model_copy(update={"text": '{"supplier_tax_id": "B92000090"}'})
+
+    cache.write(request, identity_bearing)
+
+    assert cache.read(request, LLMProvider.ANTHROPIC, "claude-sonnet-4-6") is None
+    assert cache.stats().entries == 0
+
+
 def test_cache_default_root_uses_central_settings(tmp_path: Path) -> None:
     """Direct cache construction must honor the centralized cache directory setting."""
 

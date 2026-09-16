@@ -216,7 +216,7 @@ def _validate_manual_legal_reference(reference: LegalReference, source_root: Pat
     path = (source_root / reference.corpus_ref.split("#", 1)[0]).resolve()
     if not path.is_file():
         return
-    from cadrumo.domain.manuals.schema import Section
+    from dev.registry.compiler.manual_section import Section
 
     section_json = path.read_text(encoding="utf-8")
     try:
@@ -356,7 +356,7 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     if key not in _LEGAL_CORPUS_CACHE:
         try:
             if annotation.is_file():
-                from cadrumo.core.corpus_annotation import resolve_annotated_pdf_pages
+                from dev.registry.compiler.corpus_annotation import resolve_annotated_pdf_pages
 
                 selected = resolve_annotated_pdf_pages(
                     source_path,

@@ -401,8 +401,12 @@ def describe_dialect(dialect: type[csv.Dialect]) -> str:
 
 
 def normalize_header(value: str) -> str:
-    """Normalize a column header for alias matching."""
-    without_diacritics = fold_diacritics(value.replace("\ufeff", "").strip().casefold())
+    """Normalize a column header for alias matching.
+
+    Underscores fold to spaces: a tool-exported statement writes ``value_date``
+    where a bank writes ``Value Date``, and both name the same column.
+    """
+    without_diacritics = fold_diacritics(value.replace("\ufeff", "").replace("_", " ").strip().casefold())
     return " ".join(without_diacritics.split())
 
 

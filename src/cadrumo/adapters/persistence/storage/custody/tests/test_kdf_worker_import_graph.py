@@ -7,6 +7,10 @@ blob store, the capsule machinery -- against 0.275 s of actual cryptography, so
 roughly 86% of every supervised call was import and 11% was the hash. The cost
 is paid on the production login path, not only in the suite.
 
+A second cut removed pydantic and the error hierarchy from the same closure:
+the typed records, the constants catalogue and the error codes together cost
+about twice the hash, for a child that only reads JSON and writes frames.
+
 This gate pins the PROPERTY that made the fix work: the worker's module graph
 excludes the heavy subsystems it never uses. It deliberately does not assert a
 wall-clock budget -- a timing threshold on a contended machine is flaky, and it
@@ -40,6 +44,17 @@ _FORBIDDEN_IN_CHILD: tuple[str, ...] = (
     "...master_key",
     # The capsule machinery: the child is handed framed bytes, never a capsule.
     "..capsule",
+    # Validation and error machinery: the child checks JSON against the
+    # stdlib wire rules and reports refusal as a failure frame.
+    "pydantic",
+    "cadrumo.core.errors",
+    "cadrumo.core.errors.error_codes",
+    "cadrumo.core.external_constants",
+    "cadrumo.core.models",
+    "...errors",
+    "..errors",
+    "..records",
+    "...crypto.aead",
 )
 
 
@@ -105,6 +120,23 @@ def test_the_exclusion_probe_still_bites() -> None:
         "the probe did not observe a module the child provably imported; it can no "
         "longer distinguish a clean graph from a dirty one"
     )
+
+
+@pytest.mark.parametrize(
+    "prelude_target",
+    ["cadrumo.core.external_constants", "cadrumo.adapters.persistence.storage.custody.errors"],
+)
+def test_the_exclusion_probe_bites_on_a_first_party_edge(prelude_target: str) -> None:
+    """A first-party import re-added ahead of the worker is reported, not just a third-party one.
+
+    The prelude stands in for a worker module that imports the target again,
+    which is the regression the validation and error entries exist to catch.
+    """
+    modules = _child_modules(prelude=f"import {prelude_target}")
+
+    present = sorted(_resolved_target(target) for target in _FORBIDDEN_IN_CHILD if _resolved_target(target) in modules)
+    assert prelude_target in modules
+    assert present, f"importing {prelude_target} first left every forbidden target absent; the gate cannot bite"
 
 
 def test_every_forbidden_target_still_resolves() -> None:

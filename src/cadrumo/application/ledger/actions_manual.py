@@ -244,7 +244,7 @@ def attach_manual_transaction_evidence(
         source_command=trimmed_source_command,
         ports=ports,
         occurred_at=occurred_at,
-        _preloaded_catalogue=catalogue,
+        catalogue=catalogue,
         _evidence_authority=True,
     )
 
@@ -314,7 +314,7 @@ def detach_manual_transaction_attachments(
         source_command=trimmed_source_command,
         ports=ports,
         occurred_at=occurred_at,
-        _preloaded_catalogue=catalogue,
+        catalogue=catalogue,
         _evidence_authority=True,
     )
 
@@ -413,16 +413,20 @@ def list_manual_transactions(
     *,
     bucket_id: str,
     ports: LedgerActionPorts,
+    catalogue: TransactionCatalogue | None = None,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id.
 
     Each element is a
     :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` for one
-    stored transaction.
+    stored transaction. ``catalogue`` is the bucket's already-loaded catalogue
+    when the caller holds one; otherwise it is loaded here.
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    if catalogue is None:
+        repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+        catalogue = repository.load()
     transactions = sorted(
-        repository.load().values(),
+        catalogue.values(),
         key=lambda transaction: (
             transaction.raw.value_date or transaction.raw.booked_date,
             transaction.transaction_id,
@@ -435,13 +439,17 @@ def query_ledger_review_rows(
     query: LedgerReviewQuery,
     *,
     ports: LedgerActionPorts,
+    catalogue: TransactionCatalogue | None = None,
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions.
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerReviewQueryResult`.
+    ``catalogue`` is the query bucket's already-loaded catalogue when the caller
+    holds one; otherwise it is loaded here.
     """
-    repository = resolve_transaction_repository(bucket_id=query.bucket_id, repository=ports.transaction_repository)
-    catalogue = repository.load()
+    if catalogue is None:
+        repository = resolve_transaction_repository(bucket_id=query.bucket_id, repository=ports.transaction_repository)
+        catalogue = repository.load()
     return project_ledger_review_query(
         query=query,
         catalogue=catalogue,
@@ -507,6 +515,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         usage_ratio_id=transaction.usage_ratio_id,
         prorrata_reference=transaction.prorrata_reference,
         purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
+        invoice_id=transaction.invoice_id,
         attachment_ids=transaction.attachment_ids,
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
@@ -733,6 +742,7 @@ def update_manual_transaction(
     command: ManualLedgerTransactionCommand,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    catalogue: TransactionCatalogue | None = None,
     _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Replace one manual ledger transaction from a validated command payload.
@@ -748,6 +758,10 @@ def update_manual_transaction(
     ``purchase_invoice_evidence_id`` or ``attachment_ids``; evidence catalogue and
     provenance mutation are reserved for ``aeat app ledger attach``.
 
+    ``catalogue`` is the snapshot a caller in the same action has
+    already decrypted; nothing writes between that load and this replacement,
+    so decrypting the whole catalogue again would only repeat the read.
+
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
     """
     now = normalise_timestamp(occurred_at)
@@ -755,7 +769,8 @@ def update_manual_transaction(
     event_repository = resolve_bucket_event_repository(
         bucket_id=command.bucket_id, repository=ports.bucket_event_repository
     )
-    catalogue = repository.load()
+    if catalogue is None:
+        catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
@@ -891,7 +906,7 @@ def _prepare_manual_transaction_update(
         modified_at=now,
         evidence_records=ports.purchase_invoice_evidence_records,
     )
-    replacement = _carry_forward_fx(current, replacement)
+    replacement = _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement))
     if mutation_signature(current) == mutation_signature(replacement):
         return None
     verify_evidence_references(
@@ -948,7 +963,7 @@ def _prepare_manual_transaction_update(
         modified_at=now,
         evidence_records=ports.purchase_invoice_evidence_records,
     )
-    return _carry_forward_fx(current, replacement), events
+    return _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement)), events
 
 
 def update_manual_transaction_fields(
@@ -962,7 +977,7 @@ def update_manual_transaction_fields(
     reaffirm: bool = False,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
-    _preloaded_catalogue: TransactionCatalogue | None = None,
+    catalogue: TransactionCatalogue | None = None,
     _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Apply a typed field patch to one active bucket-scoped ledger transaction.
@@ -978,12 +993,11 @@ def update_manual_transaction_fields(
     field-for-field identical to the stored transaction. This is the explicit
     operator-driven counterpart to the automatic silent no-op.
 
-    ``_preloaded_catalogue`` is an internal optimisation: a caller that has
-    already decrypted the bucket :class:`TransactionCatalogue` (e.g.
-    :func:`~cadrumo.application.ledger.actions_manual.attach_manual_transaction_evidence`) passes
-    it through so this function does not decrypt the whole catalogue a second
-    time. There is no write between the caller's load and this one, so the
-    preloaded view is current.
+    ``catalogue`` is the bucket :class:`TransactionCatalogue` a caller in the
+    same action has already decrypted (e.g. the CLI resolving an id prefix, or
+    :func:`~cadrumo.application.ledger.actions_manual.attach_manual_transaction_evidence`),
+    passed through so the whole catalogue is not decrypted a second time. The
+    caller must not write between its load and this call, so the view is current.
 
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
     reflecting the updated transaction state after the patch is applied.
@@ -998,7 +1012,8 @@ def update_manual_transaction_fields(
             },
         )
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
-    catalogue = _preloaded_catalogue if _preloaded_catalogue is not None else repository.load()
+    if catalogue is None:
+        catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     command = _command_from_patch(
         bucket_id=bucket_id,
@@ -1025,6 +1040,7 @@ def update_manual_transaction_fields(
         command=command,
         ports=ports,
         occurred_at=occurred_at,
+        catalogue=catalogue,
         _evidence_authority=_evidence_authority,
     )
 
@@ -1503,6 +1519,19 @@ def _fx_conversion_fields(
     if fx_rate is None or value_in_eur is None:
         return {}
     return {"fx_rate": fx_rate, "value_in_eur": value_in_eur}
+
+
+def _carry_forward_invoice_link(current: Transaction, replacement: Transaction) -> Transaction:
+    """Keep an edited row's invoice link.
+
+    The edit command carries no invoice reference, so the rebuilt row came back
+    unlinked and every classify or update erased the transaction half of a
+    link the invoice catalogue still held. Linking and unlinking are their own
+    verbs; an edit never changes the association.
+    """
+    if replacement.invoice_id == current.invoice_id:
+        return replacement
+    return replacement.model_copy(update={"invoice_id": current.invoice_id})
 
 
 def _carry_forward_fx(current: Transaction, replacement: Transaction) -> Transaction:

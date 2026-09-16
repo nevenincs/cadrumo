@@ -26,13 +26,14 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..review.filter import LedgerReviewFilterSpec
 from .action_ports import LedgerActionPorts
+from .actions_common import resolve_transaction_repository
 from .actions_manual import list_manual_transactions, query_ledger_review_rows
 from .models import ManualLedgerTransactionResult
 from .review_filter import ledger_review_query_for_spec
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue
-    from ...domain.transactions.models import Transaction
+    from ...domain.transactions.models import Transaction, TransactionCatalogue
 
 #: Sorts after every real group label, so ungrouped rows trail named groups.
 _UNGROUPED_SENTINEL: Final[str] = "￿"
@@ -226,6 +227,7 @@ def _filter_by_review_spec(
     query: LedgerTransactionListQuery,
     bucket_id: str,
     ports: LedgerActionPorts,
+    catalogue: TransactionCatalogue,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Apply the canonical review-filter projection when clauses are present."""
     if not query.spec.clauses:
@@ -233,6 +235,7 @@ def _filter_by_review_spec(
     matching = query_ledger_review_rows(
         ledger_review_query_for_spec(query.spec, bucket_id=bucket_id),
         ports=ports,
+        catalogue=catalogue,
     )
     matching_ids = {row.id for row in matching.rows}
     return tuple(item for item in results if item.transaction.transaction_id in matching_ids)
@@ -339,12 +342,16 @@ def query_ledger_transaction_list(
         The selected window with its unfiltered total and truncation flag.
 
     """
-    results = list_manual_transactions(bucket_id=bucket_id, ports=ports)
+    # One read serves both the listing and the review filter; loading twice
+    # decrypted and validated every stored row a second time per filtered list.
+    catalogue = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository).load()
+    results = list_manual_transactions(bucket_id=bucket_id, ports=ports, catalogue=catalogue)
     results = _filter_by_review_spec(
         results,
         query=query,
         bucket_id=bucket_id,
         ports=ports,
+        catalogue=catalogue,
     )
     results = _exclude_rejected_results(
         results,

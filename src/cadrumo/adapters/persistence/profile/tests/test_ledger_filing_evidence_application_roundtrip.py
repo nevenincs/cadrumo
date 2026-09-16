@@ -13,30 +13,30 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.aggregation.ledger_filing_snapshot import (
+from .....application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.modelos.calculation_revision import (
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.iva.schema import IvaCategory
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, ManualFactBasisEntry
-from cadrumo.domain.modelos.work_unit import derive_work_unit_id
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, ManualFactBasisEntry
+from .....domain.modelos.work_unit import derive_work_unit_id
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

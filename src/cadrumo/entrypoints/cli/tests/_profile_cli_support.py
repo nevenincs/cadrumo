@@ -21,7 +21,7 @@ def seed_profile(name: str, **facts: str) -> str:
     below instead drives the real scripted CLI creation lane with its bounded
     credential and paired recovery channels.
     """
-    return register_cli_profile(label=name, facts=facts)
+    return register_cli_profile(label=name, facts=facts, log_in=False)
 
 
 def create_quiet_profile(name: str, *options: str) -> Result:

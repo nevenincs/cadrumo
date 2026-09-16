@@ -12,6 +12,7 @@ from cadrumo.application.operator_surface.command_ports import (
 from ..command_spec import (
     ArgumentSpec,
     CommandSpec,
+    CommandSpecFamily,
     CommandSpecGraph,
     DeferredTarget,
     ExecutionPolicySpec,
@@ -240,3 +241,62 @@ def test_every_terminal_group_explicitly_classifies_its_behavior() -> None:
         "config_profile_descendiente",
         "config_repair",
     }
+
+
+FAMILY_LEAVES = (_leaf(),)
+DUPLICATE_FAMILY_LEAVES = (_leaf(), dataclasses.replace(_leaf(), key="duplicate"))
+
+
+def _family(qualname: str, mount_key: str = "config") -> CommandSpecFamily:
+    return CommandSpecFamily(mount_key, DeferredTarget(__name__, qualname))
+
+
+def test_a_family_loads_only_when_its_mount_is_reached() -> None:
+    graph = CommandSpecGraph(
+        (_root(), _group()),
+        (_family("FAMILY_LEAVES"), _family("ABSENT_FAMILY", mount_key="profile_list")),
+    )
+
+    assert graph.root() == _root()
+    assert graph.children("config") == (_leaf(),)
+    assert graph.resolve_path(("aeat", "config", "list")) == _leaf()
+    assert graph.spec("profile_list") == _leaf()
+    with pytest.raises(AttributeError, match="ABSENT_FAMILY"):
+        graph.by_key()
+
+
+def test_whole_graph_queries_load_every_family_in_declaration_order() -> None:
+    graph = CommandSpecGraph((_root(), _group()), (_family("FAMILY_LEAVES"),))
+
+    assert graph.specs == (_root(), _group(), _leaf())
+    assert tuple(node.path for node in graph.nodes())[-1] == ("aeat", "config", "list")
+
+
+def test_a_loaded_family_is_validated_with_the_graph_it_joins() -> None:
+    graph = CommandSpecGraph((_root(), _group()), (_family("DUPLICATE_FAMILY_LEAVES"),))
+
+    with pytest.raises(ValueError, match="operator paths must be unique"):
+        graph.children("config")
+    with pytest.raises(ValueError, match="operator paths must be unique"):
+        assert graph.specs
+
+
+def test_a_family_mounted_under_an_undeclared_node_fails_the_full_load() -> None:
+    graph = CommandSpecGraph((_root(), _group()), (_family("FAMILY_LEAVES", mount_key="missing"),))
+
+    assert graph.children("config") == ()
+    with pytest.raises(ValueError, match="mount at unknown nodes"):
+        graph.by_key()
+
+
+def test_a_node_path_comes_from_its_loaded_ancestors_alone() -> None:
+    graph = CommandSpecGraph(
+        (_root(), _group()),
+        (_family("FAMILY_LEAVES"), _family("ABSENT_FAMILY", mount_key="profile_list")),
+    )
+
+    graph.children("config")
+    node = graph.node("profile_list")
+
+    assert node.path == ("aeat", "config", "list")
+    assert node.spec == _leaf()

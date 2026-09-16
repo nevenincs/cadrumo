@@ -11,7 +11,7 @@ from __future__ import annotations
 from contextlib import ExitStack
 from functools import cache
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 _LEASES = ExitStack()
 

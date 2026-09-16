@@ -12,7 +12,7 @@ them exists anywhere, so to a text scan they are indistinguishable from keys
 nothing uses.
 
 The registry is the authority the text is only evidence for, so this reads the
-registry: it imports ``COMMAND_SPECS`` and takes the fields the codebase
+registry: it reads ``COMMAND_GRAPH.specs`` and takes the fields the codebase
 ANNOTATES ``TranslationKey``. Reading the annotated fields rather than every
 dotted string it can reach is the whole discipline here -- a first attempt
 walked all reachable strings and swept up command paths such as
@@ -89,10 +89,10 @@ def _collect(value: object, seen: set[int], keys: set[str]) -> None:
 
 def scan_command_spec_keys() -> set[str]:
     """Return every translation key the live command-spec registry declares."""
-    from cadrumo.entrypoints.cli.command_specs import COMMAND_SPECS
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     keys: set[str] = set()
-    _collect(COMMAND_SPECS, set(), keys)
+    _collect(COMMAND_GRAPH.specs, set(), keys)
     return keys
 
 

@@ -620,6 +620,10 @@ def ledger_remove(
         raise bad(tr("cli.ledger.errors.confirm_required"))
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(
+        bucket_id=transaction_repository.bucket_id,
+        operation=authority_operation(ctx),
+    )
     resolved_id = resolve_id(transaction_repository, transaction_id)
     report = remove_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
@@ -629,6 +633,10 @@ def ledger_remove(
         dry_run=dry_run,
         source_command="aeat app ledger remove",
         transaction_repository=transaction_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        invoice_repository=ports.invoice_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
     from ._ledger_payloads import LedgerRemoveResult
 
@@ -657,6 +665,10 @@ def ledger_reset(
         raise bad(tr("cli.ledger.errors.confirm_required"))
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(
+        bucket_id=transaction_repository.bucket_id,
+        operation=authority_operation(ctx),
+    )
     report = reset_ledger_catalogue(
         bucket_id=transaction_repository.bucket_id,
         actor=actor or resolve_active_bucket_id() or "operator",
@@ -664,6 +676,10 @@ def ledger_reset(
         dry_run=dry_run,
         source_command="aeat app ledger reset",
         transaction_repository=transaction_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        invoice_repository=ports.invoice_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
     from ._ledger_payloads import LedgerResetResult
 

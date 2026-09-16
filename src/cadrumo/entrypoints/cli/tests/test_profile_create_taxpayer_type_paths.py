@@ -174,6 +174,7 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
     edit = _edit_profile(
@@ -214,6 +215,7 @@ def test_edit_refuses_legal_entity_branch_change_without_surnames() -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
     edit = _edit_profile(

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -735,95 +736,75 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     # event history. The configure verb's stdout redacts the bucket id
     # to a literal ``<profile-id>`` placeholder (security: bucket ids
     # are sha256 fingerprints that must never reach stdout), so the
-    # stdout cannot distinguish alpha from beta. Read each bucket's
-    # event history via ``config profile history`` to count writes per
-    # bucket; the bucket whose count increases by 1 is the one the
-    # configure verb resolved to.
+    # stdout cannot distinguish alpha from beta. Each write therefore runs
+    # inside a recorded time window, and the two buckets' histories are read
+    # once at the end: every configure event must fall inside exactly one
+    # window, and that window's write must be the only one that bucket gained
+    # in it. Reading both histories after every write proved the same
+    # attribution with ten more processes.
+    write_windows: list[tuple[str, datetime, datetime]] = []
 
-    def _auth_event_counts() -> dict[str, int]:
-        counts: dict[str, int] = {}
-        for bucket_id in (alpha_id, beta_id):
-            profile_name = labels_by_id[bucket_id]
-            result = _run_authenticated(
-                (
-                    "--profile",
-                    bucket_id,
-                    "config",
-                    "profile",
-                    "history",
-                    profile_name,
-                    "--event-type",
-                    "auth.provider.configured",
-                ),
-            )
-            assert result.returncode == 0, _combined_output(result)
-            assert f"profile\t{profile_name}" in result.stdout
-            assert f"bucket_id\t{bucket_id}" not in result.stdout
-            counts[bucket_id] = sum(1 for line in result.stdout.splitlines() if "\tauth.provider.configured\t" in line)
-        return counts
-
-    before = _auth_event_counts()
+    def _configure(label: str, prefix: tuple[str, ...], extra_env: dict[str, str] | None = None) -> None:
+        opened = datetime.now(UTC)
+        result = _run_authenticated(
+            (*prefix, "config", "auth", "configure", "--provider", "clave_movil"),
+            extra_env=extra_env,
+        )
+        closed = datetime.now(UTC)
+        assert result.returncode == 0, _combined_output(result)
+        assert "No active profile" not in _combined_output(result)
+        write_windows.append((label, opened, closed))
 
     # Pointer-default precedence: pointer points at beta (last create wins).
-    pointer_write = _run_authenticated(("config", "auth", "configure", "--provider", "clave_movil"))
-    assert pointer_write.returncode == 0, _combined_output(pointer_write)
-    assert "No active profile" not in _combined_output(pointer_write)
-    after_pointer = _auth_event_counts()
-    assert after_pointer[beta_id] == before[beta_id] + 1, (
-        f"pointer default should resolve to beta; counts before={before}, after={after_pointer}"
-    )
-    assert after_pointer[alpha_id] == before[alpha_id], (
-        f"pointer default should not write to alpha; counts before={before}, after={after_pointer}"
-    )
-
+    _configure("pointer", ())
     # The environment is INERT: a stale exported CADRUMO_ACTIVE_PROFILE naming
     # alpha must not redirect the write, so it still lands in the pointer's
     # beta. This is the write-side half of the retired env precedence, and it
     # is asserted rather than deleted because a selection mechanism that
     # silently redirected WRITES is the failure worth guarding against.
-    env_write = _run_authenticated(
-        ("config", "auth", "configure", "--provider", "clave_movil"),
-        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
-    )
-    assert env_write.returncode == 0, _combined_output(env_write)
-    assert "No active profile" not in _combined_output(env_write)
-    after_env = _auth_event_counts()
-    assert after_env[beta_id] == after_pointer[beta_id] + 1, (
-        f"a set environment variable must not displace the pointer; counts before={after_pointer}, after={after_env}"
-    )
-    assert after_env[alpha_id] == after_pointer[alpha_id], (
-        f"a set environment variable must not redirect the write to alpha; "
-        f"counts before={after_pointer}, after={after_env}"
-    )
-
+    _configure("environment", (), extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id})
     # Flag precedence: --profile IS the surviving override and does win.
-    flag_write = _run_authenticated(
-        ("--profile", "alpha", "config", "auth", "configure", "--provider", "clave_movil"),
-    )
-    assert flag_write.returncode == 0, _combined_output(flag_write)
-    assert "No active profile" not in _combined_output(flag_write)
-    after_flag = _auth_event_counts()
-    assert after_flag[alpha_id] == after_env[alpha_id] + 1, (
-        f"--profile should resolve to alpha; counts before={after_env}, after={after_flag}"
-    )
-    assert after_flag[beta_id] == after_env[beta_id], (
-        f"--profile should not write to beta; counts before={after_env}, after={after_flag}"
-    )
-
+    _configure("flag", ("--profile", "alpha"))
     # The flag still decides even while a contradicting variable is exported:
     # --profile names beta, the environment names alpha, and beta wins.
-    explicit_write = _run_authenticated(
-        ("--profile", "beta", "config", "auth", "configure", "--provider", "clave_movil"),
-        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
-    )
-    assert explicit_write.returncode == 0, _combined_output(explicit_write)
-    assert "No active profile" not in _combined_output(explicit_write)
-    after_explicit = _auth_event_counts()
-    assert after_explicit[beta_id] == after_flag[beta_id] + 1, (
-        f"--profile flag should resolve to beta; counts before={after_flag}, after={after_explicit}"
-    )
-    assert after_explicit[alpha_id] == after_flag[alpha_id], (
-        f"--profile flag should not write to alpha; counts before={after_flag}, after={after_explicit}"
+    _configure("flag-over-environment", ("--profile", "beta"), extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id})
+
+    landed: dict[str, str] = {}
+    for bucket_id in (alpha_id, beta_id):
+        profile_name = labels_by_id[bucket_id]
+        result = _run_authenticated(
+            (
+                "--profile",
+                bucket_id,
+                "config",
+                "profile",
+                "history",
+                profile_name,
+                "--event-type",
+                "auth.provider.configured",
+            ),
+        )
+        assert result.returncode == 0, _combined_output(result)
+        assert f"profile\t{profile_name}" in result.stdout
+        assert f"bucket_id\t{bucket_id}" not in result.stdout
+        for line in result.stdout.splitlines():
+            if "\tauth.provider.configured\t" not in line:
+                continue
+            occurred = datetime.fromisoformat(line.split("\t", 1)[0])
+            windows = [label for label, opened, closed in write_windows if opened <= occurred <= closed]
+            assert len(windows) == 1, f"{profile_name} event at {occurred} matches write windows {windows}"
+            assert windows[0] not in landed, f"the {windows[0]} write landed more than once"
+            landed[windows[0]] = profile_name
+
+    assert landed == {
+        "pointer": "beta",
+        "environment": "beta",
+        "flag": "alpha",
+        "flag-over-environment": "beta",
+    }, (
+        "the pointer default and a stale exported variable must write to beta, "
+        "and --profile must win over both; writes landed as "
+        f"{landed}"
     )
 
 

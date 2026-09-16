@@ -41,13 +41,13 @@ from cadrumo.core.directory_scan import (
     scan_directory,
 )
 from cadrumo.core.hashing import sha256_file
-from cadrumo.core.manual_corpus_sidecar import (
+from dev._paths import REPO_ROOT, UTF_8
+from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSchemaVersion,
     ManualCorpusTextSidecar,
 )
-from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _MANUAL_CORPUS_TEXT_SCHEMA_VERSION: Final[ManualCorpusTextSchemaVersion] = 2

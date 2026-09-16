@@ -178,7 +178,9 @@ def _login_through_the_prompt(
     from ....application.user_profile.authentication import ProfileAuthenticationRefusedError
     from ....application.user_profile.login_session import login_profile
     from ....domain.calculations.registry.authority import bundled_indexed_authority
+    from ....domain.user_profile.errors import ProfileNotFoundError
     from ..errors import CliRefusedBoundaryError
+    from ._profile_support import unknown_profile_refusal
     from .secure_input import prompt_secret_no_echo, read_machine_secret_payload, terminal_can_prompt_for_secrets
 
     if machine_secret is not None:
@@ -207,6 +209,13 @@ def _login_through_the_prompt(
                 passphrase_callback=passphrase_callback,
                 profile_decode_context=operation.profile_decode_context(),
             )
+    except ProfileNotFoundError:
+        # The label names no profile. Login published the typed code but no
+        # action, while `view` and `history` answered the same mistake with
+        # the listing action an automated operator recovers through.
+        if name is None:
+            raise
+        raise unknown_profile_refusal(name) from None
     except (ProfileAuthenticationRefusedError, ProfileCustodyPasswordError):
         # The target could not be unlocked (a wrong passphrase, a corrupt
         # bucket DEK); render the refusal in the target's own output

@@ -17,19 +17,19 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import RelationId
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....application.calculations.relation_prefill import resolve_relations_from_local_store
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.ids import RelationId
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -60,6 +60,7 @@ def _create_natural_person() -> None:
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
         },
+        log_in=False,
     )
 
 
@@ -76,6 +77,7 @@ def _create_legal_entity() -> None:
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
         },
+        log_in=False,
     )
 
 
@@ -95,6 +97,7 @@ def _create_non_resident_irnr_natural_person() -> None:
             "taxpayer_type.fiscal_residency": "non_resident_irnr",
             "taxpayer_type.country_of_fiscal_residence": "FR",
         },
+        log_in=False,
     )
 
 

@@ -839,3 +839,10 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
     assert not error_code.startswith("INTERNAL"), _combined(result)
     expected = 2 if leaf in _COLD_REFUSALS[state] else 0
     assert result.returncode == expected, _combined(result)
+    if stdin is _PROFILE_AUTHENTICATION and expected == 0:
+        # No keychain is usable here, so authenticating spent the passphrase on
+        # this process alone. Reproduction: ``config profile edit`` succeeded
+        # without saying so, because the wizard emits its own envelope and
+        # never received the notice root authentication had staged.
+        codes = [notice["code"] for notice in envelope["notices"]]
+        assert "config.login.session_not_persisted" in codes, _combined(result)

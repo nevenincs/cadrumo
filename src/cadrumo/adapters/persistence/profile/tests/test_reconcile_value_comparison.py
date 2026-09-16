@@ -19,42 +19,42 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.inbound.justificante.parser import parse_justificante
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
-from cadrumo.application.modelo.reconciliation import (
+from .....application.modelo.reconciliation import (
     reconcile_parsed_justificante,
 )
-from cadrumo.application.modelo.reconciliation_records import (
+from .....application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import (
+from .....application.workflow.persistence import workflow_state_repository
+from .....core.casilla_id import validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.justificante.schema import Justificante
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.justificante.schema import Justificante
+from .....domain.modelos.calculation_repository import upsert_calculation_revision
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.tests.inventory import FIXTURES_DIR
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.repository import upsert_work_unit
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....tests.inventory import FIXTURES_DIR
+from ....inbound.justificante.parser import parse_justificante
+from ...storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 

@@ -470,21 +470,20 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         )
 
     def _sync_source_actions(self) -> None:
-        """Disable a launch button when the door or the credential is missing.
+        """Hide a launch button with no door, and disable one whose credential is missing.
 
-        A present-but-inert button is honest about "this source is known but
-        not runnable from here"; a hidden action would look like the source
-        does not exist at all, and a silently-inert button would look like a
-        bug the first time an operator presses it. A missing credential
-        disables the button regardless of the injected door: the door would
-        only fail the same way the source's own implementation already does.
+        With no door the button could only ever refuse, so it is not shown;
+        the card stays, so the source is still named and described. A missing
+        credential disables a wired button instead of hiding it: that is
+        something the operator can fix, and the card's badge says what.
         """
         door_ready = self._launch_source is not None
         for source in known_profile_acquisition_sources():
             posture = self._credential_postures.get(source.key)
             credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
-            card = self.query_one(f"#source-{source.key.value}", SourceActionCard)
-            card.query_one(Button).disabled = not (door_ready and credential_ready)
+            button = self.query_one(f"#source-{source.key.value}", SourceActionCard).query_one(Button)
+            button.display = door_ready
+            button.disabled = not (door_ready and credential_ready)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Launch the pressed source's operation through the injected door only.

@@ -162,6 +162,7 @@ class TransactionPayload(OutputSchema):
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
     purchase_invoice_evidence_id: str | None = None
+    invoice_id: str | None = None
     attachment_ids: list[str] = []
     notes: str = ""
     lifecycle_state: NonEmptyStr
@@ -627,6 +628,7 @@ class LedgerListRowPayload(OutputSchema):
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
     purchase_invoice_evidence_id: str | None = None
+    invoice_id: str | None = None
     attachment_ids: list[str] = []
     notes: str = ""
     lifecycle_state: str

@@ -24,14 +24,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-
 from .....core.modelo import Modelo
+from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..prorrata_register import ProrrataRegisterRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

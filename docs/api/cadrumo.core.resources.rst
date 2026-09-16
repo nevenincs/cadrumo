@@ -22,7 +22,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core.resources._keys
-   cadrumo.core.resources.repository
    cadrumo.core.resources.bundled_data
    cadrumo.core.resources.errors
    cadrumo.core.resources.registry

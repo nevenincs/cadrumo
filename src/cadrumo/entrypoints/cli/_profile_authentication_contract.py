@@ -51,7 +51,7 @@ def root_profile_secret_model() -> type[MachineSecretPayload]:
     """Return the conformance-checked graph-owned root payload model."""
     from .command_specs import COMMAND_GRAPH
 
-    spec = COMMAND_GRAPH.by_key()["root"].profile_secret
+    spec = COMMAND_GRAPH.root().profile_secret
     if spec is None:
         raise InternalInvariantError("root command spec must declare a profile-secret contract")
     return resolve_profile_secret_model(spec)

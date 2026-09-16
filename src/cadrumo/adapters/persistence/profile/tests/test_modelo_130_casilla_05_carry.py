@@ -39,22 +39,22 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.cross_period_clean_state import evaluate_cross_period_clean_state
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....application.calculations.cross_period_clean_state import evaluate_cross_period_clean_state
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from ..justificante import JustificanteRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_verification_reports import VerificationReportCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

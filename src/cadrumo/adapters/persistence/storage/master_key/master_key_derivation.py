@@ -13,7 +13,7 @@ from argon2.exceptions import Argon2Error
 from argon2.low_level import Type as _Argon2Type
 from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 
-from ..crypto.aead import KEY_SIZE
+from ..crypto.aes_gcm import KEY_SIZE
 from ..errors import StorageValidationError
 
 

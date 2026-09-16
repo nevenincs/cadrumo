@@ -12,18 +12,20 @@ import tempfile
 import threading
 import time
 from pathlib import Path
-from typing import Final, cast
+from typing import cast
 
 from pydantic import ValidationError
 
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ..crypto.aead import KEY_SIZE
+from ..crypto.aes_gcm import KEY_SIZE
 from ._kdf_attestation import (
     parse_ready_attestation as _parse_ready_attestation,
 )
 from ._kdf_codec import (
+    KDF_CALIBRATED_FRAME,
+    KDF_FAILED_FRAME,
     KDF_FRAME_CONTROL,
     KDF_FRAME_DEK,
+    KDF_TRANSPORT_ENCODING,
     write_kdf_frame,
 )
 from ._kdf_codec import (
@@ -35,12 +37,6 @@ from ._kdf_codec import (
 from ._kdf_codec import (
     read_kdf_frame_to_queue as _read_kdf_frame_to_queue,
 )
-from ._kdf_codec import (
-    resource_refusal as _resource_refusal,
-)
-from ._kdf_codec import (
-    supervision_refusal as _supervision_refusal,
-)
 from ._kdf_operations import KdfOperation
 from ._kdf_process import (
     launch_worker as _launch_worker,
@@ -48,12 +44,11 @@ from ._kdf_process import (
 from ._kdf_process import (
     terminate_process_tree as _terminate_process_tree,
 )
+from ._kdf_refusals import resource_refusal as _resource_refusal
+from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
 from ._kdf_worker_identity import verify_ready_worker as _verify_ready_worker
 from .records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
-
-KDF_CALIBRATED_FRAME: Final = b"cadrumo-profile-kdf-calibrated-v1"
-KDF_FAILED_FRAME: Final = b"cadrumo-profile-kdf-failed-v1"
 
 
 class _SupervisedKdfWorker:
@@ -150,7 +145,7 @@ class _SupervisedKdfWorker:
         if kind != KDF_FRAME_CONTROL:
             raise _supervision_refusal()
         try:
-            payload = json.loads(result.decode(_UTF_8_ENCODING, errors="strict"))
+            payload = json.loads(result.decode(KDF_TRANSPORT_ENCODING, errors="strict"))
             if not isinstance(payload, dict):
                 raise ValueError("profile KDF wrapper response is invalid")
             record = cast("dict[str, object]", payload)
@@ -291,8 +286,4 @@ class _SupervisedKdfWorker:
                 raise _supervision_refusal() from None
 
 
-__all__ = [
-    "KDF_CALIBRATED_FRAME",
-    "KDF_FAILED_FRAME",
-    "_SupervisedKdfWorker",
-]
+__all__ = ["_SupervisedKdfWorker"]

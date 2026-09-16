@@ -32,7 +32,6 @@ Subpackages
    cadrumo.domain.iva
    cadrumo.domain.iva_compensation
    cadrumo.domain.justificante
-   cadrumo.domain.manuals
    cadrumo.domain.modelos
    cadrumo.domain.notifications
    cadrumo.domain.portals

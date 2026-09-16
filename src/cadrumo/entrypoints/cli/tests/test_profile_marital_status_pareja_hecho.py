@@ -35,6 +35,7 @@ def test_profile_create_show_round_trips_pareja_de_hecho_marital_status() -> Non
             "identity.surnames": "High",
             "renta_taxpayer.marital_status": "5",
         },
+        log_in=False,
     )
 
     shown = invoke_cached_cli(["--format", "json", "config", "profile", "view"])

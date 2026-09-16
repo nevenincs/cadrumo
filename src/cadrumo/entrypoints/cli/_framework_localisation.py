@@ -95,6 +95,10 @@ def _localised_missing_prefix(rendered: str) -> str:
     return rendered
 
 
+#: Click's path-existence refusal, whichever kind of path the option accepts.
+_PATH_NOT_FOUND_RE = re.compile(r"(?:File|Directory|Path) '(?P<path>.*)' does not exist\.")
+
+
 def _localised_invalid_value(rendered: str) -> str:
     """Swap Typer's English ``Invalid value`` prefix and integer wording for the locale."""
     if rendered.startswith("Invalid value for "):
@@ -106,6 +110,7 @@ def _localised_invalid_value(rendered: str) -> str:
             "cli.help.invalid_value",
         )
         rendered = f"{invalid_value}{rendered.removeprefix('Invalid value')}"
+    rendered = _PATH_NOT_FOUND_RE.sub(lambda match: tr("cli.help.path_not_found", path=match["path"]), rendered)
     localised_integer = tr(
         "cli.help.not_valid_integer",
     )

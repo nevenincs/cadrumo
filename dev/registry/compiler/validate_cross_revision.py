@@ -1,7 +1,7 @@
 """Cross-revision drift validation policies for registry casillas.
 
 Applies two policies over the divergences detected by
-:mod:`cadrumo.domain.calculations.registry.cross_revision_divergence`: the
+:mod:`dev.registry.compiler.cross_revision_divergence`: the
 strict hard-fail continuity policy for overlapping revisions and declared
 continuity surfaces, and the advisory non-overlapping drift summary. Both
 policies operate over the casillas of each :class:`ModeloRevision`.
@@ -15,14 +15,14 @@ from itertools import combinations
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.i18n.render import MissingTranslationError
-from cadrumo.domain.calculations.registry.cross_revision_divergence import (
-    CrossRevisionCasillaDivergence,
-    iter_cross_revision_casilla_divergences,
-)
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.revision_order import revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev.registry.compiler.cross_revision_divergence import (
+    CrossRevisionCasillaDivergence,
+    iter_cross_revision_casilla_divergences,
+)
 
 from .validate_cross_revision_evolution import strict_continuity_evolution_failures
 from .validate_cross_revision_lineage_origin import role_exempt_occurrences

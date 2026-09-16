@@ -361,7 +361,13 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         self._refresh()
 
     def action_back(self) -> None:
-        """Dismiss only this child screen."""
+        """Leave the calendar for Home.
+
+        The calendar is reached from Home's agenda as often as from the
+        Declarations overview and holds no workspace controller, so it closes
+        the destination rather than routing to an overview it was not opened
+        from.
+        """
         self.dismiss(None)
 
 

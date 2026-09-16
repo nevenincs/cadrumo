@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping
+from functools import cache, lru_cache
 from types import MappingProxyType
 from typing import overload
 from urllib.parse import urlparse
@@ -479,6 +480,7 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
     return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules)
 
 
+@cache
 def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionRule, ...]:
     """Resolve the default rule set for a sensitivity class.
 
@@ -493,9 +495,16 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
             default rules should apply.
 
     Returns:
-        Ordered tuple of rules for that class.
+        Ordered tuple of rules for that class. Cached per class: the policy
+        table and the rule registry are both frozen mappings of frozen
+        records, and every redacted string resolved this afresh.
     """
     return default_rules_for(_default_policy_for(sensitivity))
+
+
+@cache
+def _compiled_rule_pattern(pattern: str) -> re.Pattern[str]:
+    return re.compile(pattern, re.MULTILINE)
 
 
 #: An ISO-8601 instant, matched whole. The fractional-second form is what
@@ -678,7 +687,7 @@ def _gated_replacement(
 
 
 def _apply_one(rule: _RedactionRule, value: str) -> str:
-    pattern = re.compile(rule.pattern, re.MULTILINE)
+    pattern = _compiled_rule_pattern(rule.pattern)
     protected = _timestamp_spans(value)
     identity_protected = (*protected, *_uuid_spans(value))
 
@@ -785,6 +794,11 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         raise RedactionError(f"redact() expects str; got {type(value).__name__}")
     result = value
     for rule in rules:
+        # Every strategy rewrites matches only, so a string the pattern does
+        # not match comes back unchanged; skipping it avoids scanning the
+        # string for timestamp and UUID spans that nothing would consult.
+        if _compiled_rule_pattern(rule.pattern).search(result) is None:
+            continue
         result = _apply_one(rule, result)
     return result
 
@@ -891,7 +905,16 @@ def normalise_redaction_key(key: object | None) -> str:
     """
     if key is None:
         return ""
+    if isinstance(key, str):
+        return _normalise_text_redaction_key(key)
     return _REDACTION_KEY_SEPARATOR_RE.sub("_", str(key).casefold()).strip("_")
+
+
+#: Structured output asks for the same few field names once per value, so the
+#: fold is reused; the keys are schema names, not payload values.
+@lru_cache(maxsize=4096)
+def _normalise_text_redaction_key(key: str) -> str:
+    return _REDACTION_KEY_SEPARATOR_RE.sub("_", key.casefold()).strip("_")
 
 
 def _is_cli_profile_reference(value: object) -> bool:
@@ -986,7 +1009,34 @@ def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
     )
 
 
+#: Structured CLI output repeats the same short strings -- field names, enum
+#: tokens, currencies, dates -- thousands of times per payload, and every rule
+#: here is a pure function of the text and the reveal flag. Longer strings are
+#: redacted afresh so a rendered report never sits in the cache.
+_CLI_STRING_CACHE_MAX_LENGTH = 512
+
+
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
+    if len(text) > _CLI_STRING_CACHE_MAX_LENGTH:
+        return _redact_cli_string_uncached(text, reveal_identifiers)
+    return _redact_cli_string_cached(text, reveal_identifiers)
+
+
+@lru_cache(maxsize=16384)
+def _redact_cli_string_cached(text: str, reveal_identifiers: bool) -> str:
+    """Return the redaction of ``text``, reusing an earlier answer for the same input.
+
+    The cache holds each input string in PLAINTEXT, next to its redaction, for
+    the lifetime of the process: a tax identifier that was redacted on the way
+    out stays readable in memory until it is evicted. The bound is 16,384
+    entries of at most :data:`_CLI_STRING_CACHE_MAX_LENGTH` characters each. A
+    one-shot CLI process exits moments later; the TUI and MCP hosts are
+    long-lived and keep the entries for as long as they run.
+    """
+    return _redact_cli_string_uncached(text, reveal_identifiers)
+
+
+def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
     # A column-header row carries no identifier values, only field names; the
     # ``label<TAB>value`` heuristic would otherwise rewrite the *next column
     # name* into a placeholder. Skip the assignment redactor for headers; the

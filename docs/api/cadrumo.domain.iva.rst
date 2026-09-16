@@ -13,9 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.iva._classification_rules
    cadrumo.domain.iva._component_rows
-   cadrumo.domain.iva._grounding
    cadrumo.domain.iva.catalogue
    cadrumo.domain.iva.classification
    cadrumo.domain.iva.components
@@ -42,4 +40,3 @@ Submodules
    cadrumo.domain.iva.schema
    cadrumo.domain.iva.sepa_marca
    cadrumo.domain.iva.supply_nature
-   cadrumo.domain.iva.verify

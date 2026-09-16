@@ -205,6 +205,7 @@ def test_real_common_guard_projects_login_when_profiles_are_unselected(tmp_path:
                 "activities.description": "design",
                 "tax_residence.jurisdiction_scope": "common_regime",
             },
+            log_in=False,
         )
         close_active_bucket_session()
         active_pointer = pointer_path(storage_root)

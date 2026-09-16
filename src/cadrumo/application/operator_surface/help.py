@@ -343,6 +343,18 @@ def _config_help() -> HelpDocument:
                         command="aeat config profile delete NAME",
                         description=tr("cli.operator_surface.help.config.profile_delete"),
                     ),
+                    HelpEntry(
+                        command="aeat config passphrase change",
+                        description=tr("cli.operator_surface.help.config.profile_passphrase"),
+                    ),
+                    HelpEntry(
+                        command="aeat config profile recovery --help",
+                        description=tr("cli.operator_surface.help.config.profile_recovery"),
+                    ),
+                    HelpEntry(
+                        command="aeat config profile archive --help",
+                        description=tr("cli.operator_surface.help.config.profile_archive"),
+                    ),
                 ),
             ),
             HelpSection(

@@ -20,62 +20,62 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.prorrata_regularizacion import (
+from .....application.calculations.prorrata_regularizacion import (
     build_prorrata_declared_volume_divergence_advisory,
     build_prorrata_missing_provisional_advisory,
     buildprorrata_regularizacion_advisory,
     derive_prorrata_applicability,
     project_prorrata_regularizacion_feed,
 )
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.revision_persistence import persist_filed_revision
-from cadrumo.application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.core.modelo import Modelo
-from cadrumo.core.period import Period
-from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
-from cadrumo.domain.calculations.registry.casilla_membership import (
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.modelo.revision_persistence import persist_filed_revision
+from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
+from .....core.aggregation import BindingSourceKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.modelo import Modelo
+from .....core.period import Period
+from .....core.prorrata_register import ProrrataProvisionalProvenance
+from .....core.result_disposition import ResultDisposition
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.binding_targets import casillas_by_binding
+from .....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
 )
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
-from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import (
+from .....domain.calculations.registry.errors import NoRevisionForPeriodError
+from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from .....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from .....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
     ProrrataRegularizacionProvider,
 )
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.prorrata import RegularizacionProrrataDireccion
-from cadrumo.domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from .....domain.iva.flow import IvaFlowDirection
+from .....domain.iva.prorrata import RegularizacionProrrataDireccion
+from .....domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from .....domain.modelos.calculation_repository import upsert_calculation_revision
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.prorrata_register.register import ProrrataProvisionalResolution
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.repository import upsert_work_unit
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.prorrata_register.register import ProrrataProvisionalResolution
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ..participation_index import TransactionParticipationIndexRepository
+from ..prorrata_register import ProrrataRegisterRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

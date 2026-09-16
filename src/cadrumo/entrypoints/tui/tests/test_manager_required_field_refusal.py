@@ -17,17 +17,17 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import ProfileManagerScreen
@@ -65,22 +65,26 @@ def _ensure_logged_in() -> None:
 
 
 def _live_overview(label: str = _LABEL):
-    _ensure_logged_in()
-    record = load_test_profile_record(require_active_bucket_id())
-    return build_profile_overview(record, label=label)
+    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
+    with bundled_indexed_authority().operation():
+        _ensure_logged_in()
+        record = load_test_profile_record(require_active_bucket_id())
+        return build_profile_overview(record, label=label, schema=_profile_contexts_for_test()[1].schema)
 
 
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    _ensure_logged_in()
-    record = apply_manager_profile_field_mutation(
-        profile_id=require_active_bucket_id(),
-        path=path,
-        value=value,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-    return build_profile_overview(record, label=_LABEL)
+    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _ensure_logged_in()
+        record = apply_manager_profile_field_mutation(
+            profile_id=require_active_bucket_id(),
+            path=path,
+            value=value,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
 
 
 def _stored() -> dict[str, object | None]:
@@ -109,13 +113,15 @@ async def _submit(app, pilot, path: str, value: str) -> None:
 async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path) -> None:
     """The value on the record must be exactly what it was before the edit."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         _persist(_REQUIRED_PATH, "12345678Z")
         assert _stored().get(_REQUIRED_PATH) == "12345678Z", "fixture must start with a value to lose"
 
@@ -133,13 +139,15 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
 async def test_a_whitespace_only_submission_on_a_required_field_does_not_clear_it(tmp_path) -> None:
     """Spaces are blank to every reader, so they must not delete the value either."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         _persist(_REQUIRED_PATH, "12345678Z")
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -160,13 +168,15 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
     narrow rather than merely present.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         _persist(_OPTIONAL_PATH, "Ada Lovelace")
         assert _stored().get(_OPTIONAL_PATH) == "Ada Lovelace"
 
@@ -192,13 +202,15 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
     on the profile's lifecycle state.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:

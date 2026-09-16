@@ -19,19 +19,19 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.profile_binding import resolve_profile_sourced_bindings
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.contribuyente.descendant import DescendantInfo
-from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....application.modelo.profile_binding import resolve_profile_sourced_bindings
+from .....core.casilla_id import validated_casilla_id
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from .....domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.contribuyente.descendant import DescendantInfo
+from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

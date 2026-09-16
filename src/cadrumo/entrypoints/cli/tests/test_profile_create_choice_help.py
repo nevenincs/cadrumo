@@ -22,8 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
+from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.os_keychain_hook import require_os_credential_store
 from .cli_runner import invoke_cached_cli

@@ -68,6 +68,9 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     payment_status: PaymentStatus
     linked_transaction_ids: list[TransactionId] = Field(default_factory=list)
     notes: str = ""
+    retention_rate: NonNegativeDecimal | None = None
+    retention_amount: NonNegativeDecimal | None = None
+    recargo_amount: NonNegativeDecimal | None = None
     operation_type: IntracomOperationType | None = None
     # The euro conversion stamp and the euro projection of the three totals.
     # Present at parity with the evidence-confirm surface through the shared

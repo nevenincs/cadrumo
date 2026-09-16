@@ -60,13 +60,18 @@ def _refuse_deleting_the_active_profile(*, bucket_id: str, label: str) -> None:
     limitation of this verb so much as a statement that closing a session is a
     separate, already-owned operation the operator must perform first.
     """
+    from ....application.profile_preconditions import profile_deletion_requires_logout_verdict
     from ....core.bucket_pointer import resolve_active_bucket_id
+    from ..common import attach_cli_policy_verdict
 
     if resolve_active_bucket_id() != bucket_id:
         return
-    raise CliRefusedBoundaryError(
-        translated_message="cli.config.profile.delete.refusal.active_profile",
-        context={"name": label, "profile_id": bucket_id},
+    raise attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            translated_message="cli.config.profile.delete.refusal.active_profile",
+            context={"name": label, "profile_id": bucket_id},
+        ),
+        verdict=profile_deletion_requires_logout_verdict(requested_profile=label),
     )
 
 
@@ -79,10 +84,9 @@ def _assess(bucket_id: str, *, bucket_storage: ProfileBucketStoragePort) -> Buck
         AssessBucketDeletionCommand(bucket_id=bucket_id),
     )
     if not assessment.exists:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": bucket_id},
-        )
+        from ._profile_support import unknown_profile_refusal
+
+        raise unknown_profile_refusal(bucket_id)
     return assessment
 
 

@@ -184,7 +184,8 @@ CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
 """Ordered tuple of bank layouts the CSV provider will try to match."""
 
 _AEAT_LEDGER_EXPORT_HEADERS = frozenset(
-    {
+    normalize_header(header)
+    for header in (
         "bucket_id",
         "transaction_id",
         "lifecycle_state",
@@ -194,7 +195,7 @@ _AEAT_LEDGER_EXPORT_HEADERS = frozenset(
         "currency",
         "direction",
         "business_classification",
-    },
+    )
 )
 _AEAT_LEDGER_EXPORT_REFUSAL = "AEAT ledger CSV exports cannot be imported through the raw bank CSV provider"
 

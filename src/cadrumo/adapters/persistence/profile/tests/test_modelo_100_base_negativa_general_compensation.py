@@ -27,31 +27,31 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
+from .....application.modelo.calculation_actions import calculate_modelo_revision
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.ids import BindingId, RelationId
+from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from .....domain.modelos.calculation_revision import CalculationRevision
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....entrypoints.adapter_composition import build_work_lifecycle_ports
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from .file_flow_test_support import calculation_ports_for_test
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -165,7 +165,7 @@ def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decima
 def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: CalculationObservationRepository):
     """Run the REAL M100 ``calculate_modelo_revision`` for filing year 2025."""
     snapshot = _snapshot()
-    from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+    from .....application.calculations.binding_prefill import resolve_bindings_from_local_store
 
     with bundled_indexed_authority().operation() as operation:
         carry = resolve_bindings_from_local_store(

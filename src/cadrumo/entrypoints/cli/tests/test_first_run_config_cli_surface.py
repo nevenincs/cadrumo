@@ -138,6 +138,7 @@ def test_setup_auth_rejects_unsupported_provider(tmp_path: Path) -> None:
             "identity.name": "Operator",
             "identity.surnames": "Example",
         },
+        log_in=False,
     )
 
     result = invoke_cached_cli(

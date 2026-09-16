@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from ...application.operations.composition import OperationComposedServices
     from ...application.operations.registry import OperationPublicContractSetV1
     from ...application.operator_actions.models import ActionReference, DeclaredNextAction
-    from ...application.overview.home import HomeProjectionV1
+    from ...application.overview.home import HomeAccountSession, HomeProjectionV1
     from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ...application.user_profile.overview import ProfileOverview
     from ...core.credentials import ProfilePasswordAssessment
@@ -104,11 +104,6 @@ def compose_secure_profile_workbench_generation_provider(
     from ...adapters.persistence.profile.modelos_verification_reports import (
         VerificationReportCatalogueRepository,
     )
-    from ...application.overview.home import HomeAccountSession, HomeSessionPosture
-    from ...application.user_profile.login_session_port import (
-        profile_current_bucket_session,
-        profile_session_serves_bucket,
-    )
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.workbench_generation import (
         InstalledWorkbenchGenerationProviderV1 as ApplicationGenerationProviderV1,
@@ -119,25 +114,7 @@ def compose_secure_profile_workbench_generation_provider(
     from ...core.time.clock import now
     from ..ledger_action_composition import compose_ledger_action_ports
 
-    def account_session() -> HomeAccountSession:
-        """Recheck custody and return the current non-secret account facts."""
-        current_session = profile_current_bucket_session()
-        if (
-            current_session is None
-            or current_session.sealed
-            or not profile_session_serves_bucket(current_session, profile_id)
-        ):
-            raise InternalInvariantError(
-                "installed workbench requires the live secure session for its selected profile"
-            )
-        if current_session.is_expired(now()):
-            raise AccountSessionExpiredError()
-        return HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label=profile_label,
-            expires_at=min(current_session.idle_deadline, current_session.absolute_deadline),
-        )
-
+    account_session = live_account_session_reader(profile_id=profile_id, profile_label=profile_label)
     account_session()
     ledger_action_ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
@@ -163,6 +140,41 @@ def compose_secure_profile_workbench_generation_provider(
         modelo_projection_reader=_modelo_projection_reader(operation),
     )
     return ApplicationGenerationProviderV1(door)
+
+
+def live_account_session_reader(*, profile_id: str, profile_label: str) -> Callable[[], HomeAccountSession]:
+    """Bind a check of the live secure session that reads its deadlines and nothing else.
+
+    It opens no secure object, so calling it never rolls the idle deadline
+    forward: a timer may call it without keeping the session alive.
+    """
+    from ...application.overview.home import HomeAccountSession, HomeSessionPosture
+    from ...application.user_profile.login_session_port import (
+        profile_current_bucket_session,
+        profile_session_serves_bucket,
+    )
+    from ...core.time.clock import now
+
+    def account_session() -> HomeAccountSession:
+        """Recheck custody and return the current non-secret account facts."""
+        current_session = profile_current_bucket_session()
+        if (
+            current_session is None
+            or current_session.sealed
+            or not profile_session_serves_bucket(current_session, profile_id)
+        ):
+            raise InternalInvariantError(
+                "installed workbench requires the live secure session for its selected profile"
+            )
+        if current_session.is_expired(now()):
+            raise AccountSessionExpiredError()
+        return HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label=profile_label,
+            expires_at=min(current_session.idle_deadline, current_session.absolute_deadline),
+        )
+
+    return account_session
 
 
 def _ledger_classification_submitter(
@@ -327,6 +339,8 @@ class InstalledWorkbenchRootInputsV1:
     refusing one that has since become readable.
     """
     action_candidates: Iterable[TuiActionCandidateV1] = ()
+    read_account_session: Callable[[], HomeAccountSession] | None = None
+    """Check the live session without touching it, for the root's expiry watch."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -340,6 +354,7 @@ class InstalledWorkbenchRootCompositionV1:
     refresh_search_inputs: InstalledWorkbenchSearchInputsProviderV1
     refresh_destination_catalogue: Callable[[], TuiDestinationCatalogueV1] | None
     account_factories: AccountFactoriesV1
+    read_account_session: Callable[[], HomeAccountSession] | None = None
 
 
 type InstalledWorkbenchRootInputsProviderV1 = Callable[[TuiOperationCompositionV1], InstalledWorkbenchRootInputsV1]
@@ -498,6 +513,10 @@ def compose_installed_workbench_generation_provider(
             refresh_search_inputs=refresh_search_inputs,
             refresh_destinations=destinations,
             action_candidates=_workspace_action_candidates(dependencies),
+            read_account_session=live_account_session_reader(
+                profile_id=dependencies.account.profile_id,
+                profile_label=dependencies.account.profile_overview.label,
+            ),
         )
 
     return provide
@@ -775,6 +794,8 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     scope has bound them; neither needs to know which concrete adapter serves
     the session.
     """
+    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...core.config import load_settings, override_settings
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
@@ -796,6 +817,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
                 **{secret_field: secret_path},
             )
         )
+        composition.enter_context(bind_exchange_rate_provider_factory(default_ecb_rate_provider))
         composition.enter_context(profile_adapter_composition())
         yield storage_root
 
@@ -909,6 +931,7 @@ def compose_installed_workbench_root(
         refresh_search_inputs=inputs.refresh_search_inputs,
         refresh_destination_catalogue=rebuild if refresh_destinations is not None else None,
         account_factories=inputs.account_factories,
+        read_account_session=inputs.read_account_session,
     )
 
 
@@ -981,6 +1004,7 @@ async def _run_root_session(
             refresh_workbench_search=refresh_search,
             refresh_destination_catalogue=root.refresh_destination_catalogue,
             account_factories=root.account_factories,
+            read_account_session=root.read_account_session,
         ).run_async(headless=headless, auto_pilot=auto_pilot)
 
 
@@ -1064,6 +1088,8 @@ def main(
     generation the root shell consumes. A caller that injects a provider has
     already made those choices, so its session is run exactly as given.
     """
+    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...core.logging import configure_logging
 
     # Importing a module no longer configures logging, so the host does it
@@ -1073,14 +1099,16 @@ def main(
         from .installed_session import run_installed_workbench_session
 
         return run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
-    asyncio.run(
-        run_authenticated_workbench_sessions(
-            headless=headless,
-            auto_pilot=auto_pilot,
-            workbench_root_inputs_provider=workbench_root_inputs_provider,
-            recompose_authenticated_session=recompose_authenticated_session,
+    # Bound before the loop starts, because asyncio.run copies the current context.
+    with bind_exchange_rate_provider_factory(default_ecb_rate_provider):
+        asyncio.run(
+            run_authenticated_workbench_sessions(
+                headless=headless,
+                auto_pilot=auto_pilot,
+                workbench_root_inputs_provider=workbench_root_inputs_provider,
+                recompose_authenticated_session=recompose_authenticated_session,
+            )
         )
-    )
     return 0
 
 
@@ -1101,6 +1129,7 @@ __all__ = [
     "compose_installed_workbench_root",
     "compose_installed_workbench_search",
     "compose_secure_profile_workbench_generation_provider",
+    "live_account_session_reader",
     "main",
     "operation_services_scope",
     "profile_storage_scope",

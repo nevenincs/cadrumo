@@ -65,7 +65,7 @@ def _inspect_lines(inspection: ProfileCapsuleArchiveInspection) -> tuple[str, ..
     )
 
 
-def _refuse_archive_target_without_the_sealed_suffix(target: Path) -> None:
+def _refuse_an_archive_target_the_writer_would_reject(target: Path) -> None:
     """Refuse a destination the sealed-archive writer would reject anyway.
 
     The writer enforces the suffix, but it is an adapter: its refusal arrives
@@ -76,12 +76,18 @@ def _refuse_archive_target_without_the_sealed_suffix(target: Path) -> None:
     from ....adapters.persistence.storage.bucket.sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX
     from ..errors import CliRefusedBoundaryError
 
-    if target.name.endswith(CADRUMO_BUCKET_BUNDLE_SUFFIX):
-        return
-    raise CliRefusedBoundaryError(
-        translated_message="cli.config.profile.archive.refusal.export_suffix",
-        context={"suffix": CADRUMO_BUCKET_BUNDLE_SUFFIX},
-    )
+    if not target.name.endswith(CADRUMO_BUCKET_BUNDLE_SUFFIX):
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.archive.refusal.export_suffix",
+            context={"suffix": CADRUMO_BUCKET_BUNDLE_SUFFIX},
+        )
+    # The writer refuses to replace an existing archive too, but only after
+    # the capsule has been read and sealed, and as an untranslated storage
+    # failure. An existing backup is the operator's to move, not a fault.
+    if target.exists():
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.archive.refusal.export_target_exists",
+        )
 
 
 def archive_export(
@@ -98,7 +104,7 @@ def archive_export(
     from ..config_payloads import ConfigProfileArchiveExportResult
     from ._profile_support import resolve_active_profile_pointer, resolve_profile_by_label
 
-    _refuse_archive_target_without_the_sealed_suffix(output)
+    _refuse_an_archive_target_the_writer_would_reject(output)
     # The archive service takes a UUID and deliberately holds no opinion
     # about labels, so the label is resolved here through the one shared
     # resolver rather than inside the service. An omitted name means the

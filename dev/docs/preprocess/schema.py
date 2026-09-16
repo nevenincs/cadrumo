@@ -22,16 +22,20 @@ detectable by a gate without an allowlist.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from enum import StrEnum
 from pathlib import PurePosixPath
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from cadrumo.core.corpus_sidecar import render_corpus_sidecar_text
-
 #: Current sidecar schema version. Bump on any breaking field change; the
 #: loader refuses an unknown version rather than silently coercing.
 PREPROCESS_SCHEMA_VERSION = "1.0"
+
+
+def render_corpus_sidecar_text(units: Iterable[tuple[str | None, str]]) -> str:
+    """Render titled text units exactly as the committed Markdown sidecar."""
+    return "\n\n".join(f"# {title}\n\n{text}" if title else text for title, text in units)
 
 
 class SourceDocumentKind(StrEnum):

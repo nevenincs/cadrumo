@@ -217,6 +217,8 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
     """One-scroll host-neutral shell with semantic internal navigation."""
 
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
+    IS_WORKSPACE_OVERVIEW: ClassVar[bool] = False
+    """Whether Back from this body leaves the workspace rather than returning to its overview."""
     CSS = BASE_CSS + tokenised(
         """
         .declarations-page { width: 100%; height: 1fr; }
@@ -288,8 +290,16 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         self.query_one("#declarations-refusal", Static).update(declarations_copy("tui.declarations.refusal.handoff"))
 
     def action_back(self) -> None:
-        """Dismiss only this child screen."""
-        self.dismiss(None)
+        """Return an area to the Declarations overview; leave the workspace only from the overview."""
+        # An overview that cannot open would bounce Back straight back here.
+        overview_opens = self.controller.destination_availability("declarations.overview") in {
+            DeclarationsWorkspaceAvailability.AVAILABLE,
+            DeclarationsWorkspaceAvailability.STALE,
+        }
+        if self.IS_WORKSPACE_OVERVIEW or not overview_opens:
+            self.dismiss(None)
+            return
+        self.post_message(DeclarationsRouteRequested(self.controller.target("declarations.overview")))
 
     def on_declarations_route_requested(self, event: DeclarationsRouteRequested) -> None:
         """Resolve the requested internal body here and hand it to the host."""

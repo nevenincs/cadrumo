@@ -21,7 +21,6 @@ backend-boundary rule.
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -82,15 +81,17 @@ def _production_modelo_cli_modules() -> tuple[Path, ...]:
     return tuple(path for path in _modelo_cli_modules() if path.name not in {_MODELO_LEGACY_ROOT, _MODELO_PAYLOADS})
 
 
-def _tree_for_path(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
-    tree = ast_for_path(path, source_tree_ast)
+def _tree_for_path(path: Path) -> ast.AST:
+    # Only the modelo CLI modules are scanned, so each is parsed on demand through
+    # the shared per-file cache instead of waiting for the whole-tree AST fixture.
+    tree = ast_for_path(path)
     if tree is None:
         raise AssertionError(f"unable to parse {path.relative_to(REPO_ROOT).as_posix()}")
     return tree
 
 
-def _import_from_modules(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> tuple[tuple[int, int, str], ...]:
-    tree = _tree_for_path(path, source_tree_ast)
+def _import_from_modules(path: Path) -> tuple[tuple[int, int, str], ...]:
+    tree = _tree_for_path(path)
     modules: list[tuple[int, int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module is not None:
@@ -98,8 +99,8 @@ def _import_from_modules(path: Path, source_tree_ast: Mapping[Path, ast.AST]) ->
     return tuple(modules)
 
 
-def _registry_query_service_call_count(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> int:
-    tree = _tree_for_path(path, source_tree_ast)
+def _registry_query_service_call_count(path: Path) -> int:
+    tree = _tree_for_path(path)
     count = 0
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "RegistryQueryService":
@@ -107,8 +108,8 @@ def _registry_query_service_call_count(path: Path, source_tree_ast: Mapping[Path
     return count
 
 
-def _raw_id_regex_lines(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> tuple[int, ...]:
-    tree = _tree_for_path(path, source_tree_ast)
+def _raw_id_regex_lines(path: Path) -> tuple[int, ...]:
+    tree = _tree_for_path(path)
     lines: list[int] = []
     for node in ast.walk(tree):
         if (
@@ -129,39 +130,35 @@ def _raw_id_regex_lines(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> 
     return tuple(sorted(set(lines)))
 
 
-def test_extracted_modelo_cli_modules_do_not_import_legacy_modelo_root(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_extracted_modelo_cli_modules_do_not_import_legacy_modelo_root() -> None:
     """Extracted command modules must not depend on the monolithic root module."""
     offenders: list[str] = []
     for path in _production_modelo_cli_modules():
-        for line_number, _level, module in _import_from_modules(path, source_tree_ast):
+        for line_number, _level, module in _import_from_modules(path):
             if module == "_modelo":
                 offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{line_number}")
 
     assert offenders == [], "extracted modelo modules import _modelo.py:\n  " + "\n  ".join(offenders)
 
 
-def test_legacy_modelo_root_does_not_add_registry_authority_reads(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_legacy_modelo_root_does_not_add_registry_authority_reads() -> None:
     """Registry authority reads must move out of the CLI root, not multiply."""
     path = _CLI_ROOT / _MODELO_LEGACY_ROOT
     text = path.read_text(encoding="utf-8")
     authority_reads = text.count("bundled_authority()")
-    service_calls = _registry_query_service_call_count(path, source_tree_ast)
+    service_calls = _registry_query_service_call_count(path)
 
     assert authority_reads <= _LEGACY_ROOT_REGISTRY_AUTHORITY_READ_BUDGET
     assert service_calls <= _LEGACY_ROOT_REGISTRY_QUERY_SERVICE_CALL_BUDGET
 
 
-def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_support(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_support() -> None:
     """Raw exact-id shape checks belong in the shared CLI support helper."""
     offenders: list[str] = []
     for path in _production_modelo_cli_modules():
         if path.name in _RAW_ID_REGEX_HELPERS:
             continue
-        for line_number in _raw_id_regex_lines(path, source_tree_ast):
+        for line_number in _raw_id_regex_lines(path):
             offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{line_number}")
 
     assert offenders == [], "modelo CLI modules define raw id regexes outside shared support:\n  " + "\n  ".join(
@@ -169,15 +166,13 @@ def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_suppo
     )
 
 
-def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls() -> None:
     """Extracted command modules delegate work/revision selection to application owners."""
     offenders: list[str] = []
     for path in _production_modelo_cli_modules():
         if path.name in _LEGACY_SELECTOR_HELPERS:
             continue
-        tree = _tree_for_path(path, source_tree_ast)
+        tree = _tree_for_path(path)
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 name = leaf_name(node.func)
@@ -187,13 +182,13 @@ def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls(
     assert offenders == [], "modelo CLI modules reintroduced local selector policy:\n  " + "\n  ".join(offenders)
 
 
-def test_modelo_cli_uses_centralized_operator_addressing_services(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_modelo_cli_uses_centralized_operator_addressing_services() -> None:
     """Modelo CLI code must not rebuild work/revision addressing policy locally."""
     offenders: list[str] = []
     for path in _modelo_cli_modules():
         if path.name in {_MODELO_PAYLOADS, _MODELO_CLI_SUPPORT}:
             continue
-        tree = _tree_for_path(path, source_tree_ast)
+        tree = _tree_for_path(path)
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 for alias in node.names:

@@ -9,8 +9,8 @@ import tempfile
 from pathlib import Path
 
 from ._kdf_attestation import validate_ready_attestation_shape
-from ._kdf_codec import supervision_refusal as _supervision_refusal
 from ._kdf_process import worker_environment
+from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
 
 

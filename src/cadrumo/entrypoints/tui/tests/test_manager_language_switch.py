@@ -23,11 +23,10 @@ import pytest
 from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
@@ -35,6 +34,7 @@ from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.host import ScreenHostApp
 from ..profile.overview import ProfileManagerScreen
@@ -88,16 +88,18 @@ _COLUMN_KEYS = (
 
 def _register_in(language: str) -> None:
     """Create the profile already carrying a language, as registration does."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    from ....domain.user_profile.values import UserProfileFact
+    # Registration validates facts against registry authority, so it runs under a real lease.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        from ....domain.user_profile.values import UserProfileFact
 
-    register_profile_with_credentials(
-        label=_LABEL,
-        passphrase=_CREDENTIAL_INPUT,
-        facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),),
-        profile_create_context=_profile_create_context_for_test,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
+        register_profile_with_credentials(
+            label=_LABEL,
+            passphrase=_CREDENTIAL_INPUT,
+            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),),
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
 
 
 def _ensure_logged_in() -> None:
@@ -115,20 +117,26 @@ def _ensure_logged_in() -> None:
 
 
 def _manager() -> ProfileManagerScreen:
-    _ensure_logged_in()
-    record = load_test_profile_record(require_active_bucket_id())
+    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
+    with bundled_indexed_authority().operation():
+        _ensure_logged_in()
+        record = load_test_profile_record(require_active_bucket_id())
 
-    def persist(path: str, value: str):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        applied = apply_manager_profile_field_mutation(
-            profile_id=require_active_bucket_id(),
-            path=path,
-            value=value,
-            profile_decode_context=_profile_decode_context_for_test,
+        def persist(path: str, value: str):
+            # The write door runs on a worker thread, which inherits no lease.
+            with bundled_indexed_authority().operation():
+                _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+                applied = apply_manager_profile_field_mutation(
+                    profile_id=require_active_bucket_id(),
+                    path=path,
+                    value=value,
+                    profile_decode_context=_profile_decode_context_for_test,
+                )
+                return build_profile_overview(applied, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+
+        return ProfileManagerScreen(
+            build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema), persist=persist
         )
-        return build_profile_overview(applied, label=_LABEL)
-
-    return ProfileManagerScreen(build_profile_overview(record, label=_LABEL), persist=persist)
 
 
 def _footer_entries(app: ProfileManagerScreen) -> dict[str, str]:

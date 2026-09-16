@@ -131,6 +131,7 @@ def _project(transaction: Transaction):
         revisions={},
         work_units=WorkUnitCatalogue(),
         evidence_pending_review=0,
+        last_import_count=0,
         filing_staleness_reader=lambda **_kwargs: (),
     )
 
@@ -170,7 +171,7 @@ def test_projection_is_deterministic_total_local_and_intrinsically_safe() -> Non
             LedgerWorkspaceArea.IMPORT,
             (LedgerWorkspaceSource.LOCAL_LEDGER,),
             LedgerWorkspaceAvailability.AVAILABLE,
-            LedgerWorkspaceStatus.UNMEASURED,
+            LedgerWorkspaceStatus.EMPTY,
             0,
         ),
         (
@@ -266,6 +267,7 @@ def test_each_injected_reader_runs_once_and_no_hidden_reader_is_needed() -> None
         revisions={},
         work_units=WorkUnitCatalogue(),
         evidence_pending_review=0,
+        last_import_count=0,
         invoice_reconciliation_reader=suggestions,
         link_consistency_reader=consistency,
         filing_staleness_reader=staleness,
@@ -307,6 +309,7 @@ def test_bucket_sources_cannot_be_mixed() -> None:
             revisions={},
             work_units=WorkUnitCatalogue(),
             evidence_pending_review=0,
+            last_import_count=0,
             filing_staleness_reader=lambda **_kwargs: (),
         )
 
@@ -330,6 +333,7 @@ def test_foreign_invoice_is_refused_before_any_reconciliation_reader() -> None:
             revisions={},
             work_units=WorkUnitCatalogue(),
             evidence_pending_review=0,
+            last_import_count=0,
             invoice_reconciliation_reader=reader,
             link_consistency_reader=reader,
             filing_staleness_reader=reader,
@@ -363,6 +367,7 @@ def test_contradictory_summary_or_review_facts_are_refused(
             revisions={},
             work_units=WorkUnitCatalogue(),
             evidence_pending_review=0,
+            last_import_count=0,
             filing_staleness_reader=lambda **_kwargs: (),
         )
 
@@ -448,6 +453,39 @@ def test_workspace_module_has_no_adapter_entrypoint_or_io_imports() -> None:
     }
     assert not any("adapters" in module or "entrypoints" in module for module in imported)
     assert not any(module in {"os", "pathlib", "socket", "subprocess"} for module in imported)
+
+
+def test_a_fully_reviewed_ledger_leaves_nothing_to_review() -> None:
+    """The review list still names every row, but only pending rows are work."""
+    from ..workspace import _project_workspace_areas
+
+    def review_area(*, pending: int) -> tuple[LedgerWorkspaceStatus, int]:
+        areas = _project_workspace_areas(
+            entries=(),
+            review_ids=("a" * 64, "b" * 64),
+            pending=pending,
+            readiness_issues=0,
+            affected=(),
+            reconciliation_count=0,
+            evidence_pending_review=0,
+            last_import_count=0,
+        )
+        area = next(item for item in areas if item.area is LedgerWorkspaceArea.REVIEW)
+        return area.status, area.item_count
+
+    assert review_area(pending=0) == (LedgerWorkspaceStatus.READY, 0)
+    assert review_area(pending=1) == (LedgerWorkspaceStatus.NEEDS_ATTENTION, 1)
+
+
+def test_import_area_reports_the_last_batch_it_measured() -> None:
+    """A profile that never imported is empty; an unread history stays unmeasured."""
+    from ..workspace import LedgerWorkspaceProjectionError, _import_status
+
+    assert _import_status(None) is LedgerWorkspaceStatus.UNMEASURED
+    assert _import_status(0) is LedgerWorkspaceStatus.EMPTY
+    assert _import_status(22) is LedgerWorkspaceStatus.READY
+    with pytest.raises(LedgerWorkspaceProjectionError):
+        _import_status(-1)
 
 
 def test_evidence_area_reports_its_measured_review_queue() -> None:

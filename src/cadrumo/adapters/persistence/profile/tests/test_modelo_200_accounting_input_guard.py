@@ -18,33 +18,33 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
-from cadrumo.application.modelo.calculation_actions import (
+from .....application.modelo.action_errors import ModeloAggregationBindingError
+from .....application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.errors.error_codes import resolve_error_message
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.errors.error_codes import resolve_error_message
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ..buckets import BucketEventHistoryRepository
+from ..invoices import InvoiceCatalogueRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ..transactions import TransactionCatalogueRepository
+from .file_flow_test_support import calculation_ports_for_test
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

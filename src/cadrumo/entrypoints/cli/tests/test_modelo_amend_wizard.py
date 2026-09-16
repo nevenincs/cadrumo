@@ -169,6 +169,7 @@ def _create_profile() -> None:
             "identity.surnames": "Amend",
             "activities.description": "design",
         },
+        log_in=False,
     )
 
 

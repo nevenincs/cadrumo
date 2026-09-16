@@ -492,6 +492,22 @@ def emit_json_document(
         sort_keys: Whether to render mapping keys in lexicographic order.
         stream: Target text stream; defaults to :data:`sys.stdout`.
     """
+    _write_json_document(
+        jsonable_output_payload(payload),
+        indent=indent,
+        sort_keys=sort_keys,
+        stream=stream,
+    )
+
+
+def _write_json_document(
+    document_payload: object,
+    *,
+    indent: int | None,
+    sort_keys: bool,
+    stream: IO[str] | None,
+) -> None:
+    """Write an already JSON-shaped payload as one UTF-8 document."""
     target = sys.stdout if stream is None else stream
     if isinstance(target, _ReconfigurableStream):
         try:
@@ -502,7 +518,7 @@ def emit_json_document(
                 exc,
             )
     document = json.dumps(
-        jsonable_output_payload(payload),
+        document_payload,
         ensure_ascii=False,
         indent=indent,
         sort_keys=sort_keys,
@@ -570,7 +586,10 @@ def emit_json_success(
         reveal_identifiers=reveal_cli_identifiers_opt_in(),
     )
     _record_captured_envelope(envelope_payload)
-    emit_json_document(
+    # The envelope was made JSON-shaped before redaction, and redaction keeps
+    # that shape; converting it again walked every node a second time for an
+    # identical document.
+    _write_json_document(
         envelope_payload,
         indent=indent,
         sort_keys=sort_keys,

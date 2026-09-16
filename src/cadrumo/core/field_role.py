@@ -108,6 +108,9 @@ class FieldRole(StrEnum):
     RETENCION_AMOUNT = "retencion_amount"
     """IRPF withheld at source; subtracted from the total to reach cash."""
 
+    RETENCION_RATE = "retencion_rate"
+    """The IRPF retención rate the document prints beside its withheld amount."""
+
     RECARGO_AMOUNT = "recargo_amount"
     """Recargo de equivalencia charged alongside the cuota."""
 

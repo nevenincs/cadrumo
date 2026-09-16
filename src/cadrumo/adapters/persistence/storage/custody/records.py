@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import base64
-import binascii
 import json
 from typing import Annotated, ClassVar, Final, Literal, cast
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core.credentials import assess_profile_password
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
@@ -21,9 +18,18 @@ from .....core.hashing import (
 )
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .._kdf_salt import KDF_SALT_BYTES
-from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
+from ..crypto.aes_gcm import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
+from ._kdf_records import (
+    KdfAlgorithm,
+    KdfIterations,
+    KdfMemoryMib,
+    KdfOutputBytes,
+    KdfParallelism,
+    KdfVersion,
+    canonical_b64,
+)
 from .digest_model import CustodyDigestModel
-from .errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
 #: The password envelope's name inside a capsule's ``custody/`` directory.
@@ -35,27 +41,9 @@ PROFILE_CUSTODY_ENVELOPE_FILENAME: Final = "envelope.v1.json"
 #: predecessor digest, and the ten-digit maximum password generation.
 PROFILE_CUSTODY_ENVELOPE_MAX_BYTES: Final = 704
 PROFILE_CUSTODY_PASSWORD_GENERATION_MAX: Final = 2_147_483_647
-PROFILE_CUSTODY_KDF_MEMORY_MIB: Final[frozenset[int]] = frozenset({19, 32, 64, 128, 256})
-PROFILE_CUSTODY_KDF_ITERATIONS: Final[frozenset[int]] = frozenset({2, 3, 4, 6, 8, 10})
-PROFILE_CUSTODY_KDF_PARALLELISM: Final[frozenset[int]] = frozenset({1, 2, 4})
 
 _DEK_EPOCH_BYTES: Final = 16
 _KEY_SCHEDULE: Final = "profile-password-dek-wrap/v1"
-
-
-def _decode_canonical_b64(value: str, *, field_name: str, expected_bytes: int) -> str:
-    expected_length = 4 * ((expected_bytes + 2) // 3)
-    if len(value) != expected_length:
-        raise ValueError(f"{field_name} must contain exactly {expected_length} base64 characters")
-    try:
-        decoded = base64.b64decode(value.encode("ascii"), validate=True)
-    except (UnicodeEncodeError, binascii.Error) as exc:
-        raise ValueError(f"{field_name} must be canonical base64") from exc
-    if len(decoded) != expected_bytes:
-        raise ValueError(f"{field_name} must encode exactly {expected_bytes} bytes")
-    if base64.b64encode(decoded).decode("ascii") != value:
-        raise ValueError(f"{field_name} must use canonical base64")
-    return value
 
 
 def _canonical_json_bytes(value: object) -> bytes:
@@ -66,43 +54,23 @@ def _canonical_json_bytes(value: object) -> bytes:
     )
 
 
-def encode_profile_password(password: str) -> bytes:
-    """Encode an exact password after canonical defense-in-depth assessment."""
-    assessment = assess_profile_password(password)
-    if assessment.reason is not None:
-        raise ProfileCustodyPasswordError(
-            f"profile password refused by canonical policy: {assessment.reason.value}",
-        )
-    return password.encode(_UTF_8_ENCODING, errors="strict")
-
-
-def decode_profile_password(value: bytes) -> str:
-    """Strictly decode and assess a password received through byte transport."""
-    try:
-        password = value.decode(_UTF_8_ENCODING, errors="strict")
-    except UnicodeDecodeError as exc:
-        raise ProfileCustodyPasswordError("profile password transport is not strict UTF-8") from exc
-    encode_profile_password(password)
-    return password
-
-
 class ProfileCustodyKdfParameters(BaseModel):
     """The finite Argon2id parameter grid accepted by custody v1."""
 
     model_config = _STRICT_FROZEN
 
-    algorithm: Literal["argon2id"]
-    version: Literal[19]
-    memory_mib: Literal[19, 32, 64, 128, 256]
-    iterations: Literal[2, 3, 4, 6, 8, 10]
-    parallelism: Literal[1, 2, 4]
+    algorithm: KdfAlgorithm
+    version: KdfVersion
+    memory_mib: KdfMemoryMib
+    iterations: KdfIterations
+    parallelism: KdfParallelism
     salt_b64: str
-    output_bytes: Literal[32]
+    output_bytes: KdfOutputBytes
 
     @field_validator("salt_b64")
     @classmethod
     def _validate_salt(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="salt_b64", expected_bytes=KDF_SALT_BYTES)
+        return canonical_b64(value, field_name="salt_b64", expected_bytes=KDF_SALT_BYTES)
 
 
 class ProfileCustodyWrappedDek(BaseModel):
@@ -117,17 +85,17 @@ class ProfileCustodyWrappedDek(BaseModel):
     @field_validator("nonce_b64")
     @classmethod
     def _validate_nonce(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="nonce_b64", expected_bytes=NONCE_SIZE)
+        return canonical_b64(value, field_name="nonce_b64", expected_bytes=NONCE_SIZE)
 
     @field_validator("ciphertext_b64")
     @classmethod
     def _validate_ciphertext(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="ciphertext_b64", expected_bytes=KEY_SIZE)
+        return canonical_b64(value, field_name="ciphertext_b64", expected_bytes=KEY_SIZE)
 
     @field_validator("tag_b64")
     @classmethod
     def _validate_tag(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
+        return canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
 
 
 PasswordGeneration = Annotated[int, Field(ge=1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
@@ -162,7 +130,7 @@ class _ProfileCustodyEnvelopePayload(BaseModel):
     @field_validator("dek_epoch")
     @classmethod
     def _validate_dek_epoch(cls, value: str) -> str:
-        return _decode_canonical_b64(value, field_name="dek_epoch", expected_bytes=_DEK_EPOCH_BYTES)
+        return canonical_b64(value, field_name="dek_epoch", expected_bytes=_DEK_EPOCH_BYTES)
 
     @field_validator("previous_envelope_digest")
     @classmethod
@@ -247,9 +215,6 @@ def parse_profile_custody_envelope(value: bytes) -> ProfileCustodyEnvelope:
 __all__ = [
     "PROFILE_CUSTODY_ENVELOPE_MAX_BYTES",
     "PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION",
-    "PROFILE_CUSTODY_KDF_ITERATIONS",
-    "PROFILE_CUSTODY_KDF_MEMORY_MIB",
-    "PROFILE_CUSTODY_KDF_PARALLELISM",
     "PROFILE_CUSTODY_PASSWORD_GENERATION_MAX",
     "ProfileCustodyEnvelope",
     "ProfileCustodyKdfParameters",

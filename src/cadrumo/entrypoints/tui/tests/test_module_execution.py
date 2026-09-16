@@ -15,6 +15,7 @@ asserting it would prove only that one file was consulted twice.
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -31,37 +32,64 @@ _STARTUP_GRACE_SECONDS = 45.0
 _REPO_ROOT = Path(__file__).parents[5]
 
 
-async def _run_module_async(*, timeout: float) -> tuple[int | None, bytes]:
+def _isolated_environment(root: Path) -> dict[str, str]:
+    """An environment whose only profile store is an empty one of its own.
+
+    The module otherwise reads whatever storage the host happens to hold, and
+    what it does next depends on that: an empty store opens registration, a
+    populated one opens login or resumes a session, and a store another
+    process is writing reports itself as changing and exits. A start-up proof
+    that depends on the machine it runs on proves nothing reliably, so the
+    process sees a fresh empty store and a fresh secret store every time.
+    """
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root / "storage")
+    environment["CADRUMO_SECRET_STORE_DIR"] = str(root / "secret-store")
+    return environment
+
+
+async def _run_module_async(*, timeout: float, root: Path) -> tuple[int | None, bytes]:
     """Execute the module through the audited async process boundary."""
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
         _MODULE,
         cwd=_REPO_ROOT,
+        env=_isolated_environment(root),
         stdin=asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
     )
+    stream = process.stdout
+    if stream is None:
+        raise RuntimeError("the TUI module process has no output pipe")
+    received = bytearray()
+
+    async def drain() -> None:
+        # Read into a buffer this frame owns. Cancelling ``communicate()`` on
+        # the timeout discards whatever it had already read, which made a
+        # session that DID take the terminal look as if it had printed nothing.
+        while chunk := await stream.read(4096):
+            received.extend(chunk)
+
     try:
-        output, _ = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        await asyncio.wait_for(drain(), timeout=timeout)
     except TimeoutError:
         process.kill()
-        output, _ = await process.communicate()
-        return None, output
-    returncode = process.returncode
-    if returncode is None:
-        raise RuntimeError("the TUI module did not finish after communicate()")
-    return returncode, output
+        await process.wait()
+        return None, bytes(received)
+    returncode = await process.wait()
+    return returncode, bytes(received)
 
 
-def _run_module(*, timeout: float) -> tuple[int | None, bytes]:
+def _run_module(*, timeout: float, root: Path) -> tuple[int | None, bytes]:
     """Execute the module as a real process and return its status and output."""
-    return asyncio.run(_run_module_async(timeout=timeout))
+    return asyncio.run(_run_module_async(timeout=timeout, root=root))
 
 
-def test_module_execution_starts_a_session_rather_than_raising() -> None:
+def test_module_execution_starts_a_session_rather_than_raising(tmp_path: Path) -> None:
     """The module runs a real full-screen session instead of failing on invocation."""
-    status, output = _run_module(timeout=_STARTUP_GRACE_SECONDS)
+    status, output = _run_module(timeout=_STARTUP_GRACE_SECONDS, root=tmp_path)
 
     assert status is None, (
         f"the session ended by itself with status {status}; a started TUI holds the terminal:\n"
@@ -72,9 +100,9 @@ def test_module_execution_starts_a_session_rather_than_raising() -> None:
     )
 
 
-def test_module_execution_reports_no_traceback() -> None:
+def test_module_execution_reports_no_traceback(tmp_path: Path) -> None:
     """A delegation that resolves but raises on the way up leaves a traceback."""
-    _, output = _run_module(timeout=_STARTUP_GRACE_SECONDS)
+    _, output = _run_module(timeout=_STARTUP_GRACE_SECONDS, root=tmp_path)
     rendered = output.decode("utf-8", errors="replace")
 
     assert "Traceback (most recent call last)" not in rendered, rendered[:2000]

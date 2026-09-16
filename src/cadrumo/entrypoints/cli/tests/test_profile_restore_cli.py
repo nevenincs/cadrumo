@@ -59,10 +59,7 @@ def test_a_capsule_directory_restores_into_a_fresh_storage_root(tmp_path: Path) 
 
     source_root = tmp_path / "source-root"
     with isolated_profile_storage_root(tmp_path=source_root):
-        profile_id = register_cli_profile(
-            label="backup-subject",
-            facts={"identity.tax_id": "12345678Z"},
-        )
+        profile_id = register_cli_profile(label="backup-subject", facts={"identity.tax_id": "12345678Z"}, log_in=False)
         capsule = load_committed_profile_password_material(UUID(profile_id)).capsule_path
 
     restore_root = tmp_path / "restore-root"

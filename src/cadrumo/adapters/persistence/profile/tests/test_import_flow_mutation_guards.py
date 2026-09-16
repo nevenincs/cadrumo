@@ -7,13 +7,47 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
+from .....application.modelo.action_errors import (
+    AmendmentEvidenceMissingError,
+    CalculationRevisionNotFoundError,
+    ExternalModeloImportError,
+    WorkUnitMutationRefusedError,
+    WorkUnitNotFoundError,
+)
+from .....application.modelo.amendment_actions import amend_modelo_revision
+from .....application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
+from .....application.modelo.external_import_actions import import_external_filing_evidence
+from .....application.modelo.work_lifecycle import (
+    create_work_unit,
+    discard_work_unit,
+)
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.casilla_id import validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.modelos.calculation_repository import upsert_calculation_revision
+from .....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from .....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from .....domain.modelos.filing_record import ExternalEvidenceKind
+from .....domain.modelos.repository import upsert_work_unit
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....entrypoints.adapter_composition import (
+    build_amendment_action_ports,
+    build_calculation_action_ports,
+)
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from .file_flow_test_support import calculation_ports_for_test
+from .import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M111_ACTIVITY_AMOUNT_CASILLA,
     _M111_ACTIVITY_COUNT_CASILLA,
@@ -39,41 +73,7 @@ from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     repos,
     seed_ready_profile,
 )
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.action_errors import (
-    AmendmentEvidenceMissingError,
-    CalculationRevisionNotFoundError,
-    ExternalModeloImportError,
-    WorkUnitMutationRefusedError,
-    WorkUnitNotFoundError,
-)
-from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
-from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.work_lifecycle import (
-    create_work_unit,
-    discard_work_unit,
-)
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.entrypoints.adapter_composition import (
-    build_amendment_action_ports,
-    build_calculation_action_ports,
-)
+from .published_authority_support import published_authority_operation
 
 __all__ = ["repos"]
 

@@ -109,7 +109,7 @@ def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
         facts=(UserProfileFact(path="auth.clave_movil_route", value=storage_value),),
         context=_profile_creation_context_for_test(),
     )
-    overview = build_profile_overview(record)
+    overview = build_profile_overview(record, schema=_profile_creation_context_for_test().schema)
     route = next(
         field for section in overview.sections for field in section.fields if field.path == "auth.clave_movil_route"
     )

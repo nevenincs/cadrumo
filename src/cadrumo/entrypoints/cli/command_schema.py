@@ -245,7 +245,7 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
     from .command_specs import COMMAND_GRAPH
     from .config.secure_input import MACHINE_SECRET_MAX_BYTES
 
-    root_profile_secret = COMMAND_GRAPH.by_key()["root"].profile_secret
+    root_profile_secret = COMMAND_GRAPH.root().profile_secret
     if root_profile_secret is None:
         raise InternalInvariantError("root command spec must declare profile-secret metadata authority")
 

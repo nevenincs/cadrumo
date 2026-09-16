@@ -7,11 +7,13 @@ import subprocess
 from ctypes import wintypes
 from typing import Any, Final, cast
 
-from ._kdf_codec import supervision_refusal as _supervision_refusal
+from ._kdf_refusals import supervision_refusal as _supervision_refusal
+from ._kdf_worker_limits import (
+    PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS,
+    PROFILE_CUSTODY_KDF_WORKER_MAX_PROCESSES,
+    PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,
+)
 
-PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES: Final = 1024 * 1024 * 1024
-PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS: Final = 15
-PROFILE_CUSTODY_KDF_WORKER_MAX_PROCESSES: Final = 2
 _WIN32_JOB_OBJECT_EXTENDED_LIMIT_INFORMATION: Final = 9
 _WIN32_JOB_OBJECT_BASIC_PROCESS_ID_LIST: Final = 3
 _WIN32_JOB_OBJECT_LIMIT_PROCESS_TIME: Final = 0x00000002
@@ -158,9 +160,4 @@ class _WindowsJob:
             self._handle = 0
 
 
-__all__ = [
-    "PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS",
-    "PROFILE_CUSTODY_KDF_WORKER_MAX_PROCESSES",
-    "PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES",
-    "_WindowsJob",
-]
+__all__ = ["_WindowsJob"]

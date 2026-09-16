@@ -275,8 +275,8 @@ def test_bulk_import_file_not_found_refuses_cleanly(tmp_path: Path) -> None:
             "--file", str(missing), "--kind", "received",
         ],
     )  # fmt: skip
-    assert result.exit_code != 0
-    assert "not found" in result.output.lower() or "no encontrado" in result.output.lower()
+    assert result.exit_code == 2
+    assert "does-not-exist.csv" in result.output
 
 
 def test_bulk_import_unknown_column_is_reported_and_the_row_still_imports(tmp_path: Path) -> None:

@@ -14,6 +14,15 @@ checking each node separately: if the union is within the declared families,
 every member is. Every node is still covered; the guarantee is not narrowed,
 and the sweep costs 25 processes instead of 365.
 
+**Groups that share an entitlement share a process.** The same union argument
+applies across groups: when several groups are entitled to the same families,
+resolving all of their nodes in one interpreter and finding the union inside
+that entitlement proves every group inside it. Only a violating union is
+attributed further, by resolving the violating group alone, so a finding still
+names the exact declaration that loads too much. One entitlement's merged union
+is also checked against its groups measured one interpreter each, so a merge
+that stopped being a plain union fails rather than passes.
+
 **Resolution, not invocation.** A leaf may load whatever its declared
 capabilities allow once an operator actually runs it. What this measures is the
 cost paid on the way *to* a command, by ancestors and siblings, before anything
@@ -148,6 +157,27 @@ def _loaded_families(paths: list[list[str]]) -> dict[str, int]:
 _GROUPS = _groups()
 
 
+def _checked_groups() -> list[frozenset[Capability]]:
+    return sorted(set(_GROUPS) - set(_PENDING_ADJUDICATION), key=sorted)
+
+
+def _entitlement_buckets() -> dict[frozenset[str], list[frozenset[Capability]]]:
+    """Group the checked declarations by the families they are entitled to load."""
+    buckets: dict[frozenset[str], list[frozenset[Capability]]] = {}
+    for capabilities in _checked_groups():
+        buckets.setdefault(_allowed_families(capabilities), []).append(capabilities)
+    return buckets
+
+
+@pytest.fixture(scope="module")
+def entitlement_unions() -> dict[frozenset[str], dict[str, int]]:
+    """What each entitlement's groups load, resolved together in one interpreter per entitlement."""
+    return {
+        allowed: _loaded_families([path for capabilities in members for path in _GROUPS[capabilities]])
+        for allowed, members in _entitlement_buckets().items()
+    }
+
+
 def test_the_declarations_still_partition_every_live_node() -> None:
     """FIXTURE ANCHOR: the group sweep must cover the whole graph.
 
@@ -161,12 +191,38 @@ def test_the_declarations_still_partition_every_live_node() -> None:
     assert len(_GROUPS) >= 20, f"only {len(_GROUPS)} distinct declarations; the taxonomy may have collapsed"
 
 
+def test_merging_an_entitlement_reports_the_union_of_its_groups(
+    entitlement_unions: dict[frozenset[str], dict[str, int]],
+) -> None:
+    """CONTROL: the shared interpreter loads exactly what its groups load one interpreter each.
+
+    Taken on the smallest entitlement that actually merges groups: the control
+    pays one interpreter per member, and a larger entitlement would spend most
+    of what merging saves on the check itself.
+    """
+    allowed, members = min(
+        ((allowed, members) for allowed, members in _entitlement_buckets().items() if len(members) > 1),
+        key=lambda item: len(item[1]),
+    )
+    separately: set[str] = set()
+    for capabilities in members:
+        separately |= set(_loaded_families(_GROUPS[capabilities]))
+
+    assert set(entitlement_unions[allowed]) == separately, (
+        f"groups {[sorted(caps) for caps in members]} load {sorted(separately)} one interpreter each "
+        f"but {sorted(entitlement_unions[allowed])} together"
+    )
+
+
 @pytest.mark.parametrize(
     "capabilities",
-    sorted(set(_GROUPS) - set(_PENDING_ADJUDICATION), key=sorted),
+    _checked_groups(),
     ids=lambda caps: ",".join(sorted(caps)) or "none",
 )
-def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[Capability]) -> None:
+def test_a_group_loads_only_the_families_it_declares(
+    capabilities: frozenset[Capability],
+    entitlement_unions: dict[frozenset[str], dict[str, int]],
+) -> None:
     """DISCRIMINATING: resolution stays inside the declared capability set.
 
     The pending groups are excluded from this parametrisation rather than
@@ -175,7 +231,9 @@ def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[Cap
     below, which fails the moment one of them stops applying.
     """
     allowed = _allowed_families(capabilities)
-    loaded = _loaded_families(_GROUPS[capabilities])
+    loaded = entitlement_unions[allowed]
+    if any(family not in allowed for family in loaded):
+        loaded = _loaded_families(_GROUPS[capabilities])
     undeclared = sorted(family for family in loaded if family not in allowed)
 
     assert undeclared == [], (

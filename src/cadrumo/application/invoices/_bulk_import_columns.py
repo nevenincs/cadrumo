@@ -46,10 +46,8 @@ __all__ = [
 #: it derives rather than accepts) is absent here, so a column carrying one
 #: resolves to no field and is reported rather than quietly discarded.
 #:
-#: ``FieldRole`` carries no member for a retención *rate*, only its amount, so a
-#: book's ``tipo_retencion`` column reports as unmapped while
-#: ``importe_retencion`` lands. The declared amount is what the filing needs; the
-#: rate is re-derivable from it and the base.
+#: A retención *rate* is accepted only beside its amount: the importer checks
+#: the two against each other and never derives the amount from the rate.
 BULK_IMPORT_FIELD_BY_ROLE: dict[FieldRole, str] = {
     FieldRole.COUNTERPARTY_NIF: "counterparty_nif",
     FieldRole.COUNTERPARTY_NAME: "counterparty_name",
@@ -58,6 +56,7 @@ BULK_IMPORT_FIELD_BY_ROLE: dict[FieldRole, str] = {
     FieldRole.TAXABLE_BASE: "taxable_base",
     FieldRole.IVA_RATE: "iva_rate",
     FieldRole.RETENCION_AMOUNT: "retencion_amount",
+    FieldRole.RETENCION_RATE: "retencion_rate",
     FieldRole.CURRENCY: "currency",
     FieldRole.COUNTRY_CODE: "country_code",
     FieldRole.NOTES: "notes",
@@ -119,9 +118,19 @@ class BulkImportColumnResolution(BaseModel):
         return frozenset(self.field_by_index.values())
 
 
+#: Header spellings that name an importer field outright under another name.
+_BULK_IMPORT_FIELD_ALIASES: dict[str, str] = {
+    "irpf_retention_rate": "retencion_rate",
+    "retention_rate": "retencion_rate",
+    "irpf_retention_amount": "retencion_amount",
+    "retention_amount": "retencion_amount",
+}
+
+
 def _canonical_field(header: str) -> str | None:
     """Return the importer field a header names outright, or ``None``."""
     candidate = header.strip().lstrip("﻿").casefold()
+    candidate = _BULK_IMPORT_FIELD_ALIASES.get(candidate, candidate)
     return candidate if candidate in set(BULK_IMPORT_FIELD_BY_ROLE.values()) else None
 
 

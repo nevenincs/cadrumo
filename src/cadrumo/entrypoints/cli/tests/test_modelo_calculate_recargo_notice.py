@@ -70,6 +70,7 @@ def _create_natural_person_profile() -> None:
             "identity.surnames": "Readiness",
             "activities.description": "design",
         },
+        log_in=False,
     )
 
 

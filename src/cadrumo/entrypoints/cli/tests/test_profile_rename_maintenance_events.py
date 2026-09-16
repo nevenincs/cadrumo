@@ -30,7 +30,7 @@ def test_cli_rename_verb_is_not_registered() -> None:
     the boundary worth pinning is the negative conformance itself.
     """
 
-    create_profile_via_cli("alpha")
+    create_profile_via_cli("alpha", log_in=False)
 
     result = invoke_cached_cli(("config", "profile", "rename", "alpha", "beta"))
     assert result.exit_code != 0, result.output

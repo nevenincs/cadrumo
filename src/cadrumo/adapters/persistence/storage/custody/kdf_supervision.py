@@ -19,7 +19,7 @@ from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
-from ..crypto.aead import KEY_SIZE
+from ..crypto.aes_gcm import KEY_SIZE
 from ._kdf_codec import (
     canonical_frame_bytes as _canonical_frame_bytes,
 )
@@ -30,16 +30,18 @@ from ._kdf_codec import (
     close_fd as _close_fd,
 )
 from ._kdf_codec import (
-    resource_refusal as _resource_refusal,
-)
-from ._kdf_codec import (
-    supervision_refusal as _supervision_refusal,
-)
-from ._kdf_codec import (
     windows_available_memory_bytes as _windows_available_memory_bytes,
 )
-from ._kdf_windows_job import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
+from ._kdf_records import (
+    PROFILE_CUSTODY_KDF_ITERATIONS,
+    PROFILE_CUSTODY_KDF_MEMORY_MIB,
+    PROFILE_CUSTODY_KDF_PARALLELISM,
+)
+from ._kdf_refusals import resource_refusal as _resource_refusal
+from ._kdf_refusals import supervision_refusal as _supervision_refusal
+from ._kdf_worker_limits import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
 from ._kdf_worker_supervision import _SupervisedKdfWorker
+from ._profile_password_codec import encode_profile_password
 from ._recovery_secret_codec import encode_recovery_secret
 from .errors import (
     ProfileCustodyPasswordError,
@@ -49,13 +51,9 @@ from .errors import (
     ProfileCustodyRefusedError,
 )
 from .records import (
-    PROFILE_CUSTODY_KDF_ITERATIONS,
-    PROFILE_CUSTODY_KDF_MEMORY_MIB,
-    PROFILE_CUSTODY_KDF_PARALLELISM,
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    encode_profile_password,
 )
 from .sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Generator, Mapping
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -47,6 +47,7 @@ from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepos
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.auth.operation_definitions import build_auth_operation_definitions
 from ...application.export.google_operation import build_google_sheets_export_operation_definition
+from ...application.local_reader_operation import LOCAL_READER_OPERATION_SUBJECT, LocalReaderProvisionAction
 from ...application.modelo.calculation_actions import calculate_modelo_revision
 from ...application.modelo.external_import_actions import import_external_filing_evidence
 from ...application.modelo.operation_definitions import resolve_active_workflow_profile
@@ -100,7 +101,9 @@ from ...application.user_profile.login_session import login_profile
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core.auth_provider import AuthProviderKind
+from ...core.config import override_settings
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.model_catalogue import ModelRole
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.period import Period
 from ...core.time.clock import now
@@ -198,6 +201,11 @@ def _seeded_modelo_work_unit(profile_id: UUID, *, operation: PinnedAuthorityOper
     )
 
 
+def _closed_model_runtime() -> AbstractContextManager[object]:
+    """Point the local model runtime at a closed port so no live runtime is ever reached."""
+    return override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat")
+
+
 def _registered_definition_ids() -> tuple[str, ...]:
     """Every definition the production registry actually composes.
 
@@ -267,6 +275,11 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
         ),
         _RegisteredExecutorConformanceCase(
             "user-profile.censo-review", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        # Verify against a closed runtime endpoint: the executor settles its
+        # typed not-ready outcome and changes nothing on the host.
+        _RegisteredExecutorConformanceCase(
+            "local-reader.provision", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
         _RegisteredExecutorConformanceCase(
             "modelo.work.rename", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
@@ -755,6 +768,9 @@ def _payload(
             secret = _CREDENTIAL_INPUT.encode()
         case "user-profile.logout":
             values = {"profile_id": profile_id}
+        case "local-reader.provision":
+            subject_ref = LOCAL_READER_OPERATION_SUBJECT
+            values = {"action": LocalReaderProvisionAction.VERIFY, "role": ModelRole.TEXT_EXTRACTION}
         case "live.filed-history.pull":
             subject_ref = str(profile_id)
             values = {"output_root": tmp_path / "filed-history", "dry_run": True}
@@ -1029,7 +1045,10 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
             "scenario, so nothing proves its executor settles, cleans up, or refuses truthfully"
         )
     cleanup = _CloseWitness()
-    with _runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id):
+    with (
+        _closed_model_runtime() if definition_id == "local-reader.provision" else nullcontext(),
+        _runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
+    ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
         subject_ref, payload, secret = _payload(

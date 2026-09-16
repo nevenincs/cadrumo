@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.domain.calculations.registry.facts.modelo_parameter_fact import ModeloParameterFact
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector, ScalarFactPayload
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
@@ -18,6 +17,7 @@ from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinit
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
 from ..compiler.modelo_projections import (
     MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
+    ModeloParameterFact,
     compile_modelo_parameter_projection_facts,
 )
 

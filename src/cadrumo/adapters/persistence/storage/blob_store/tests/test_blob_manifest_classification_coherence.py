@@ -29,7 +29,7 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
-from ...crypto.aead import KEY_SIZE
+from ...crypto.aes_gcm import KEY_SIZE
 from ...errors import BlobIntegrityError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..blob_store import BlobReference, EncryptedBlobStore

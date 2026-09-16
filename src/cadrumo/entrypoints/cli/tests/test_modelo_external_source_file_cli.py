@@ -36,6 +36,7 @@ def test_filing_record_import_file_uses_real_csv_parser_and_persists_lexicals(
             "identity.surnames": "Operator",
             "activities.description": "software",
         },
+        log_in=False,
     )
     completed = invoke_cached_cli(["--format", "json", "config", "profile", "complete-setup"])
     assert completed.exit_code == 0, completed.output
@@ -104,6 +105,7 @@ def test_failed_csv_file_import_creates_no_filing_or_revision(
             "identity.surnames": "Refusal",
             "activities.description": "software",
         },
+        log_in=False,
     )
     completed = invoke_cached_cli(["--format", "json", "config", "profile", "complete-setup"])
     assert completed.exit_code == 0, completed.output

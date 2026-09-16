@@ -40,15 +40,41 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
+from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.modelo.calculation_actions import (
+    calculate_modelo_revision,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+    resolve_bucket_source_mesh,
+)
+from .....application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.iva_wallet_carry_targets import (
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
+    iva_wallet_owned_binding_ids_for_revision,
+)
+from .....domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_verification_reports import VerificationReportCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ._relation_prefill_support import empty_profile_read_ports
+from .file_flow_test_support import (
     _DEFAULT_130_BINDING_VALUES,
     _M130_AGRARIAN_VOLUME_CASILLA,
     _M130_AGRARIAN_WITHHELD_CASILLA,
@@ -62,33 +88,7 @@ from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     _verify_revision,
     calculation_ports_for_test,
 )
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.calculation_actions import (
-    calculate_modelo_revision,
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    resolve_bucket_source_mesh,
-)
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.iva_wallet_carry_targets import (
-    MODELO_303_IVA_COMPENSATION_BINDING_ID,
-    iva_wallet_owned_binding_ids_for_revision,
-)
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
-    registry_grounded_observations,
-    revision_id_for_observation,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -428,12 +428,12 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
     cross-YEAR non-official prior still blocks. The within-year reconstruction can reach
     export; the operator files every period with AEAT externally.
     """
-    from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
-    from cadrumo.application.modelo.verification_cross_period import cross_period_clean_state_verdict_for_work_unit
-    from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-    from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+    from .....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
+    from .....application.modelo.verification_cross_period import cross_period_clean_state_verdict_for_work_unit
+    from .....domain.modelos.calculation_repository import upsert_calculation_revision
+    from .....domain.modelos.calculation_revision import CalculationRevisionState
+    from ..modelos_filing import ModeloRecordCatalogueRepository
+    from ..modelos_verification_reports import VerificationReportCatalogueRepository
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
@@ -562,9 +562,9 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(
     the enrolled resolver receives the registry-declared iva-wallet-owned set as
     ``excluded_binding_ids`` so the iva-wallet decision remains the sole owner.
     """
-    from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-    from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
-    from cadrumo.core.period import Period
+    from .....application.aggregation.source_mesh import CalculationSourceContext
+    from .....application.calculations.multi_year import PreviousFilingSourceResolver
+    from .....core.period import Period
 
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
@@ -921,9 +921,9 @@ def test_first_filer_same_year_chain_is_fully_reachable(
     verdict is clean => the quarter is reachable to verify/export. If suppression did NOT
     cover the previous_filing M100 dep, this verdict would be unclean (a real gap).
     """
-    from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from cadrumo.application.modelo.verification_cross_period import cross_period_clean_state_verdict_for_work_unit
+    from .....application.modelo.verification_cross_period import cross_period_clean_state_verdict_for_work_unit
+    from ..modelos_filing import ModeloRecordCatalogueRepository
+    from ..modelos_verification_reports import VerificationReportCatalogueRepository
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)

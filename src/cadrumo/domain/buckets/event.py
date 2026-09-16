@@ -399,25 +399,35 @@ class BucketEvent(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_derived_id(self) -> BucketEvent:
-        derived = derive_bucket_event_id(
-            bucket_id=self.bucket_id,
-            event_type=self.event_type,
-            occurred_at=self.occurred_at,
-            actor=self.actor,
-            object_type=self.object_type,
-            object_id=self.object_id,
-            payload=self.payload,
-        )
-        if derived != self.event_id:
-            raise BucketEventValidationError(
-                translated_message="errors.error.error_storage_bucket",
-                context={
-                    "declared_event_id": str(self.event_id),
-                    "derived_event_id": str(derived),
-                    "event_id_matches_derivation": False,
-                },
-            )
+        verify_bucket_event_id(self)
         return self
+
+
+def verify_bucket_event_id(event: BucketEvent) -> None:
+    """Refuse an event whose declared id is not the derivation of its body.
+
+    Validation runs this, and so does every path that admits an event instance
+    without re-validating it: a copied or constructed instance never passed
+    the model validator, so its id is checked where it enters a catalogue.
+    """
+    derived = derive_bucket_event_id(
+        bucket_id=event.bucket_id,
+        event_type=event.event_type,
+        occurred_at=event.occurred_at,
+        actor=event.actor,
+        object_type=event.object_type,
+        object_id=event.object_id,
+        payload=event.payload,
+    )
+    if derived != event.event_id:
+        raise BucketEventValidationError(
+            translated_message="errors.error.error_storage_bucket",
+            context={
+                "declared_event_id": str(event.event_id),
+                "derived_event_id": str(derived),
+                "event_id_matches_derivation": False,
+            },
+        )
 
 
 def bucket_event_order_key(event: BucketEvent) -> tuple[datetime, str]:
@@ -523,4 +533,5 @@ __all__ = [
     "BucketEventType",
     "bucket_event_order_key",
     "derive_bucket_event_id",
+    "verify_bucket_event_id",
 ]

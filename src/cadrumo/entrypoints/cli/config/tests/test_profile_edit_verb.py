@@ -9,10 +9,12 @@ operator's own verbs -- ``view`` for facts, ``history`` for the evidence chain
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from .....application.user_profile.language_resolver import resolve_active_profile_output_language
 from .isolated_storage_fixture import (
     COMPLETE_NATURAL_PERSON_FLAGS,
     profile_cli,
@@ -105,3 +107,28 @@ def test_a_complete_profile_still_refuses_to_lose_a_required_answer() -> None:
 
     assert refused.exit_code != 0
     assert "identity.tax_id" in profile_facts()
+
+
+def test_a_blank_choice_flag_clears_the_language_preference_and_its_hint(tmp_path: Path) -> None:
+    """A choice flag clears the same way a text flag does.
+
+    Reproduction: ``edit --quiet --output-language ""`` was refused at parse
+    time as an invalid choice, so a language preference could be set but
+    never removed. Clearing it must also remove the non-secret hint that
+    locked surfaces read, or they would keep speaking the old language.
+    """
+    hints = tmp_path / "cadrumo-storage" / "buckets"
+    assert _status(_edit("--output-language", "ca")) == "updated"
+    assert _resolved_language() == "ca"
+    assert [hint.read_text(encoding="utf-8").strip() for hint in hints.glob("*/output-language.hint")] == ["ca"]
+
+    assert _status(_edit("--output-language", "")) == "updated"
+
+    assert "preferences.output_language" not in profile_facts()
+    assert list(hints.glob("*/output-language.hint")) == []
+    assert _resolved_language() is None
+
+
+def _resolved_language() -> str | None:
+    """The preference the renderer resolves for the live profile."""
+    return resolve_active_profile_output_language()

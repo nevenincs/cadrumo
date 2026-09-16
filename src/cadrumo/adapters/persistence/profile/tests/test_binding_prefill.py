@@ -9,50 +9,50 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
-from cadrumo.application.calculations.binding_prefill import (
+from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
+from .....application.calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     iva_compensation_history_observation,
     observation_from_iva_compensation_history,
     resolve_bindings_from_local_store,
 )
-from cadrumo.application.calculations.errors import BindingPrefillTypeError
-from cadrumo.application.calculations.iva_compensation_annual_partition import (
+from .....application.calculations.errors import BindingPrefillTypeError
+from .....application.calculations.iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
 )
-from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.errors.error_codes import build_error_envelope
-from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
-from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.core.period import Period
-from cadrumo.core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.binding_temporal import FilingYearOffset
-from cadrumo.domain.calculations.registry.bindings import (
+from .....application.calculations.observations_repository import ResultDispositionProjection
+from .....application.calculations.relation_prefill import resolve_relations_from_local_store
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.errors.error_codes import build_error_envelope
+from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.period import Period
+from .....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
+from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.binding_temporal import FilingYearOffset
+from .....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from cadrumo.domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
+from .....domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
+from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from .....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
-from cadrumo.domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
+from .....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from .....domain.iva.flow import IvaFlowDirection
+from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from .....domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..bienes_inversion import BienesInversionIvaRegisterRepository
+from ..calculation_observations import CalculationObservationRepository
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

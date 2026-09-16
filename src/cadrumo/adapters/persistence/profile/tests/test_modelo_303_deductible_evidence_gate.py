@@ -14,93 +14,93 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
-from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-)
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.ledger_filing_snapshot import (
+from .....application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
-from cadrumo.application.ledger.action_ports import LedgerActionPorts
-from cadrumo.application.ledger.actions_manual import (
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from .....application.ledger.action_ports import LedgerActionPorts
+from .....application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
     link_manual_transaction_invoice,
 )
-from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
-from cadrumo.application.modelo.calculation_actions import (
+from .....application.ledger.evidence import PurchaseInvoiceEvidenceService
+from .....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.export import (
+from .....application.modelo.export import (
     ModeloExportCommand,
     ModeloExportEvidenceMissingError,
     export_modelo_revision,
 )
-from cadrumo.application.modelo.export_ports import ModeloExportPorts
-from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
-from cadrumo.application.modelo.filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
-from cadrumo.application.modelo.verification_actions import (
+from .....application.modelo.export_ports import ModeloExportPorts
+from .....application.modelo.filing_action_ports import FilingActionPorts
+from .....application.modelo.filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
+from .....application.modelo.verification_actions import (
     missing_evidence_findings,
     verify_modelo_revision,
     verify_modelo_revision_with_preconditions,
 )
-from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (
+from .....application.modelo.verification_repository_ports import VerificationRepositoryBundle
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.deadlines.models import IVARegime, TaxpayerProfile
+from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from .....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from .....domain.modelos.calculation_repository import upsert_calculation_revision
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.verification_report import (
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
 )
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import (
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....entrypoints.adapter_composition import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_ledger_evidence_ports,
     build_verification_repository_bundle,
 )
-from cadrumo.tests.env_scope import ready_clave_settings
+from .....tests.env_scope import ready_clave_settings
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import IvaWalletDecisionRepository
+from ..catalogue_creation import build_catalogue_creation_ports
+from ..invoices import InvoiceCatalogueRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ..modelos_verification_reports import VerificationReportCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from ..transactions import TransactionCatalogueRepository
+from ._modelo_export_ports_support import modelo_export_ports_for_test
+from ._operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
+from .ledger_action_create_support import ledger_ports_for_test
+from .published_authority_support import published_authority_operation
+from .verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

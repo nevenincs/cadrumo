@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from cadrumo.application.operator_surface.command_ports import CommandNodeKind
-
+from ...application.operator_surface.command_ports import CommandNodeKind
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
@@ -271,7 +270,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=False,
                 count=False,
                 eager=False,
-                constraint=ParameterConstraint(),
+                constraint=ParameterConstraint(exists=True),
                 show_default=True,
                 hidden=False,
                 transport_locus=TransportLocus.LOCAL_IN,

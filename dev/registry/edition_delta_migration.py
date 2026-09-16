@@ -142,7 +142,6 @@ from pydantic import ValidationError
 
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError
-from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.keyed_families import (
     CANONICAL_FAMILY_SPECS,
     CASILLAS_FAMILY,
@@ -155,6 +154,7 @@ from cadrumo.domain.calculations.registry.lineage_attestation import LineageAtte
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev._paths import REPO_ROOT
+from dev.registry.compiler.identifier_lineage import identifier_lineage
 from dev.test_runs.paths import allocate_run_directory
 
 from .compiler.edition_materialisation import materialise_edition

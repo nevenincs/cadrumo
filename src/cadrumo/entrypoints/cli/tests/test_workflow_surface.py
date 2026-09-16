@@ -135,7 +135,7 @@ def _seed_profile(
     }
     if extra_values:
         values.update(extra_values)
-    return register_cli_profile(label=name, facts=values)
+    return register_cli_profile(label=name, facts=values, log_in=False)
 
 
 def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
@@ -167,6 +167,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "tax_residence.ccaa": "madrid",
         },
+        log_in=False,
     )
 
     # Modelo applicability is derived from the taxpayer model; declare
@@ -503,6 +504,7 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
             "identity.surnames": "Workflow",
             "activities.description": "Servicios",
         },
+        log_in=False,
     )
 
     configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
@@ -766,6 +768,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
     with open_test_profile_session(bucket_id):
@@ -793,6 +796,7 @@ def test_config_profile_create_persists_situacion_familiar(
             "activities.description": "Servicios",
             "renta_family.situacion_familiar": "soltero",
         },
+        log_in=False,
     )
 
     with open_test_profile_session(bucket_id):
@@ -820,6 +824,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
             "activities.description": "Servicios",
             "iva.does_intracomunitario": "true",
         },
+        log_in=False,
     )
 
     show_result = _invoke(["--format", "json", "config", "profile", "view"])

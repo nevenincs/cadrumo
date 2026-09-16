@@ -9,16 +9,39 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+from .....application.auth.operator_scope_ports import OperatorScopePorts
+from .....application.modelo.action_errors import StoredCalculationDriftError
+from .....application.modelo.calculation_actions import calculate_modelo_revision
+from .....application.modelo.data_inventory import DataInventoryChecklist, data_inventory_checklist
+from .....application.modelo.verification_actions import verify_modelo_revision
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.casilla_id import CasillaId
+from .....core.identity.hex_ids import CalculationRevisionId
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.schema_verification import (
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    parse_verification_predicate_expression,
+)
+from .....domain.deadlines.models import TaxpayerProfile
+from .....domain.modelos.calculation_repository import upsert_calculation_revision
+from .....domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
+from .....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
+from .....entrypoints.adapter_composition import build_calculation_action_ports
+from ...storage.operator_scope import build_operator_scope_ports
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_verification_reports import VerificationReportCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from .published_authority_support import published_authority_operation
+from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
-from cadrumo.adapters.persistence.profile.tests.verification_substance_support import (
+from .verification_substance_support import (
     _ABSENT_REGISTRY_CASILLA,
     _CASILLA_00501,
     _CASILLA_01,
@@ -41,29 +64,6 @@ from cadrumo.adapters.persistence.profile.tests.verification_substance_support i
     _seed_ready_profile,
     workflow_profile,
 )
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.auth.operator_scope_ports import OperatorScopePorts
-from cadrumo.application.modelo.action_errors import StoredCalculationDriftError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.data_inventory import DataInventoryChecklist, data_inventory_checklist
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.identity.hex_ids import CalculationRevisionId
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema_verification import (
-    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
-    parse_verification_predicate_expression,
-)
-from cadrumo.domain.deadlines.models import TaxpayerProfile
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

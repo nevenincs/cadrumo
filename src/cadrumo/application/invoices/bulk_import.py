@@ -140,6 +140,7 @@ class BulkInvoiceImportRow(BaseModel):
     taxable_base: Decimal
     iva_rate: Decimal | None = None
     retencion_amount: Decimal | None = None
+    retencion_rate: Decimal | None = None
     currency: IsoCurrencyCode = DEFAULT_CURRENCY
     # Required, and deliberately not defaulted to Spain. The counterparty's
     # country decides whether the invoice is treated as domestic or as an
@@ -326,6 +327,39 @@ def _parse_bulk_row_amounts(
     return taxable_base, iva_rate, retencion_amount
 
 
+def _parse_bulk_row_retention_rate(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    decimal_separator: DecimalSeparatorValue,
+    retencion_amount: Decimal | None,
+) -> Decimal | None:
+    """Return the row's retención rate as a fraction, or ``None``.
+
+    A book prints the rate either as a percentage (``15``) or as a fraction
+    (``0.15``); a value above one is read as a percentage. A rate is only
+    accepted beside the amount it produced: the amount is what the document
+    states, and the importer never computes it from the rate. A zero rate with
+    no amount is a book saying nothing was withheld, and is read as no
+    retención rather than refused.
+    """
+    rate = _parse_optional_row_decimal(
+        raw_row,
+        field="retencion_rate",
+        row_number=row_number,
+        decimal_separator=decimal_separator,
+    )
+    if rate is None or (rate == 0 and retencion_amount is None):
+        return None
+    if retencion_amount is None:
+        raise _RowParseError(
+            row_number=row_number,
+            field="retencion_amount",
+            reason="retencion_amount is required when retencion_rate is given; the amount is never derived",
+        )
+    return rate / 100 if rate > 1 else rate
+
+
 def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
     country_code = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
     if not country_code:
@@ -345,6 +379,7 @@ def _build_bulk_invoice_row(
     taxable_base: Decimal,
     iva_rate: Decimal | None,
     retencion_amount: Decimal | None,
+    retencion_rate: Decimal | None,
     country_code: str,
 ) -> BulkInvoiceImportRow:
     try:
@@ -356,6 +391,7 @@ def _build_bulk_invoice_row(
             taxable_base=taxable_base,
             iva_rate=iva_rate,
             retencion_amount=retencion_amount,
+            retencion_rate=retencion_rate,
             currency=coerce_cell_text(raw_row.get("currency")) or DEFAULT_CURRENCY,
             country_code=country_code,
             notes=coerce_cell_text(raw_row.get("notes")),
@@ -398,6 +434,12 @@ def _parse_bulk_invoice_row(
         row_number=row_number,
         decimal_separator=decimal_separator,
     )
+    retencion_rate = _parse_bulk_row_retention_rate(
+        raw_row,
+        row_number=row_number,
+        decimal_separator=decimal_separator,
+        retencion_amount=retencion_amount,
+    )
     country_code = _bulk_row_country_code(raw_row, declared_country=declared_country, row_number=row_number)
     return _build_bulk_invoice_row(
         raw_row,
@@ -406,6 +448,7 @@ def _parse_bulk_invoice_row(
         taxable_base=taxable_base,
         iva_rate=iva_rate,
         retencion_amount=retencion_amount,
+        retencion_rate=retencion_rate,
         country_code=country_code,
     )
 
@@ -697,6 +740,7 @@ def import_invoices_from_rows(
                 issued_at=parsed.invoice_date,
                 taxable_base=parsed.taxable_base,
                 iva_rate=parsed.iva_rate,
+                retention_rate=parsed.retencion_rate,
                 retention_amount=parsed.retencion_amount,
                 currency=parsed.currency,
                 notes=parsed.notes,

@@ -19,10 +19,9 @@ import pytest
 from textual.containers import Vertical
 from textual.widgets import Button, Input, Static
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from .....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.user_profile.authentication import ProfileAuthenticationRefusedError
 from .....application.user_profile.login_session import login_profile
@@ -32,6 +31,7 @@ from .....application.user_profile.passphrase_rotation import (
 )
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.credentials import assess_profile_password
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
@@ -49,14 +49,16 @@ _NEW_CREDENTIAL_INPUT = "secret-journey-replacement-passphrase"
 
 def _enroll() -> UUID:
     """Enroll one profile. Caller must already hold an isolated storage root."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    enrolled = register_profile_with_credentials(
-        label=_LABEL,
-        passphrase=_CURRENT_CREDENTIAL_INPUT,
-        facts=(),
-        profile_create_context=_profile_create_context_for_test,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
+    # Registration validates facts against registry authority, so it runs under a real lease.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        enrolled = register_profile_with_credentials(
+            label=_LABEL,
+            passphrase=_CURRENT_CREDENTIAL_INPUT,
+            facts=(),
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
     return UUID(enrolled.profile_id)
 
 

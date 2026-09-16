@@ -16,12 +16,14 @@ from typing import Any
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....domain.transactions.models import TransactionCatalogue
 from ....tests.inventory import FIXTURES_DIR
-from ._isolated_profile_storage_fixtures import live_fx_isolated_backend_per_module
+from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend_per_module
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["live_fx_isolated_backend_per_module"]
+__all__ = ["recorded_fx_isolated_backend_per_module"]
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _FILES = (
@@ -264,3 +266,23 @@ def test_period_filter_combined_shape_refuses_with_typed_no_recovery() -> None:
     assert '"reason":"invalid-value-ledger-period"' in result.output
     assert "action.action: null" in result.output
     assert 'action.no_recovery_outcome: "operator_decision"' in result.output
+
+
+def test_a_filtered_list_reads_the_ledger_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The listing and its review filter share one read of the stored catalogue.
+
+    Both halves used to load it, which decrypted and validated every stored
+    row twice per filtered listing.
+    """
+    loads: list[str] = []
+    load = TransactionCatalogueRepository.load
+
+    def counting(self: TransactionCatalogueRepository) -> TransactionCatalogue:
+        loads.append(self.bucket_id)
+        return load(self)
+
+    monkeypatch.setattr(TransactionCatalogueRepository, "load", counting)
+    filtered = _list_rows("classification=NOT_YET_PROCESSED")
+
+    assert filtered, "the corpus must reach the filter, or a single read proves nothing"
+    assert len(loads) == 1

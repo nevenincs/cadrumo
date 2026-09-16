@@ -363,6 +363,7 @@ def _refuse_with_unavailable_reader(exc: Exception, *, availability_fact: str) -
         }
     raise PurchaseInvoiceEvidenceInputError(
         context=facts,
+        translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
             facts=facts,
@@ -800,7 +801,10 @@ def _extract_invoice_fields_via_vision(
             _refuse_with_unavailable_reader(cause, availability_fact="vision_reader_available")
         status = probe_ollama_vision(settings)
         if status.precondition_verdict is not None:
-            raise PurchaseInvoiceEvidenceInputError(precondition_verdict=status.precondition_verdict) from cause
+            raise PurchaseInvoiceEvidenceInputError(
+                translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
+                precondition_verdict=status.precondition_verdict,
+            ) from cause
         facts: dict[str, str | bool] = {
             "vision_reader_available": False,
             "vision_reader_probe_available": True,
@@ -808,6 +812,7 @@ def _extract_invoice_fields_via_vision(
         }
         raise PurchaseInvoiceEvidenceInputError(
             context=facts,
+            translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
                 facts=facts,

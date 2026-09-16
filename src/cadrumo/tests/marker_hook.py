@@ -7,9 +7,12 @@ through the same enforcement surface.
 The marker contract enforced by :func:`apply` on every collected item:
 
 - Each item must carry exactly one execution marker from
-  ``{unit, integration, aeat_live}``. Zero or more than one raises
-  :class:`pytest.UsageError`.
+  ``{unit, integration, aeat_live}``. Zero or more than one is refused.
 - Each item must carry exactly one accepted ``hex_*`` marker at module level.
+- A refusal raises :class:`pytest.UsageError` outside an xdist worker. Inside
+  one it takes the same worker-to-controller channel as the serial hold, for
+  the reason given below: raising there kills the worker, and the controller
+  can then name neither the test nor the contract.
 - A ``serial`` item is held out of any run with xdist workers active, and the
   hold is announced.
 
@@ -80,9 +83,16 @@ _BANNED_LIVE_IMPORTS = frozenset(
 SERIAL_HELD_WORKEROUTPUT_KEY = "cadrumo_serial_held"
 """``config.workeroutput`` key carrying the node ids held out of an xdist run."""
 
+MARKER_VIOLATIONS_WORKEROUTPUT_KEY = "cadrumo_marker_violations"
+"""``config.workeroutput`` key carrying marker-contract violations found in a worker."""
+
 
 class SerialTestsHeldWarning(pytest.PytestWarning):
     """Announces ``serial`` items held out of a run with xdist workers active."""
+
+
+class MarkerContractViolationWarning(pytest.PytestWarning):
+    """Announces items refused inside a worker for violating the marker contract."""
 
 
 _HEX_MARKERS = frozenset(
@@ -109,22 +119,62 @@ def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
         items: The mutable collection items list; filtered in-place.
     """
     remaining: list[pytest.Item] = []
+    violations: list[str] = []
+    offending: list[pytest.Item] = []
     for item in items:
-        owned = {m.name for m in item.iter_markers()}
-        execution = owned & _EXECUTION_MARKERS
-        if len(execution) != 1:
-            raise pytest.UsageError(
-                f"{item.nodeid}: must carry exactly one of {{unit, integration, aeat_live}}, "
-                f"found {sorted(execution) or 'none'}",
-            )
-        hex_markers = {name for name in owned if name.startswith("hex_")}
-        if len(hex_markers) != 1 or not hex_markers <= _HEX_MARKERS:
-            raise pytest.UsageError(
-                f"{item.nodeid}: must carry exactly one accepted hex_* marker, found {sorted(hex_markers) or 'none'}",
-            )
+        violation = _marker_contract_violation(item)
+        if violation is not None:
+            violations.append(violation)
+            offending.append(item)
+            continue
         remaining.append(item)
     items[:] = remaining
+    _refuse_marker_violations(config, violations, offending)
     _hold_serial_items_from_xdist(config, items)
+
+
+def _marker_contract_violation(item: pytest.Item) -> str | None:
+    """Return the taxonomy violation this item carries, or ``None`` when it is sound."""
+    owned = {m.name for m in item.iter_markers()}
+    execution = owned & _EXECUTION_MARKERS
+    if len(execution) != 1:
+        return (
+            f"{item.nodeid}: must carry exactly one of {{unit, integration, aeat_live}}, "
+            f"found {sorted(execution) or 'none'}"
+        )
+    hex_markers = {name for name in owned if name.startswith("hex_")}
+    if len(hex_markers) != 1 or not hex_markers <= _HEX_MARKERS:
+        return f"{item.nodeid}: must carry exactly one accepted hex_* marker, found {sorted(hex_markers) or 'none'}"
+    return None
+
+
+def _refuse_marker_violations(
+    config: pytest.Config,
+    violations: list[str],
+    offending: list[pytest.Item],
+) -> None:
+    """Refuse a mis-marked item where the refusal can actually be read.
+
+    Outside a worker the violation raises, which is the clearest report pytest
+    offers. INSIDE an xdist worker it must not: this hook runs in the worker,
+    and an exception there kills it, so the controller reports only
+    ``assert not crashitem`` and never names the test or the contract. The
+    violation therefore travels the same worker-to-controller channel the
+    serial hold uses, leaving a clean worker lifecycle while keeping the run
+    from finishing green.
+    """
+    if not violations:
+        return
+    if not hasattr(config, "workerinput"):
+        raise pytest.UsageError("\n".join(violations))
+    config.hook.pytest_deselected(items=offending)
+    config.workeroutput[MARKER_VIOLATIONS_WORKEROUTPUT_KEY] = violations
+    warnings.warn(
+        "Marker contract violated by "
+        f"{len(violations)} collected test(s), which did NOT execute: {'; '.join(violations)}",
+        MarkerContractViolationWarning,
+        stacklevel=1,
+    )
 
 
 def apply_banned_live_import_policy(items: Iterable[pytest.Item]) -> None:
@@ -281,6 +331,68 @@ def record_held_from_node(node: object) -> None:
     for node_id in payload.get(SERIAL_HELD_WORKEROUTPUT_KEY, ()):
         if node_id not in _held_from_workers:
             _held_from_workers.append(node_id)
+
+
+_marker_violations_from_workers: list[str] = []
+"""Marker-contract violations reported by workers, accumulated across them.
+
+Module-level for the same reason as the held-serial list: the controller sees
+each worker once, on node down, and must still know at session finish.
+"""
+
+
+def reset_marker_violations() -> None:
+    """Clear controller-side marker-violation state for a new pytest session."""
+    _marker_violations_from_workers.clear()
+
+
+def record_marker_violations_from_node(node: object) -> None:
+    """Absorb one worker's marker-contract violations as its node goes down.
+
+    Args:
+        node: The xdist worker node that just went down.
+    """
+    payload = getattr(node, "workeroutput", {}) or {}
+    for violation in payload.get(MARKER_VIOLATIONS_WORKEROUTPUT_KEY, ()):
+        if violation not in _marker_violations_from_workers:
+            _marker_violations_from_workers.append(violation)
+
+
+def marker_violations() -> tuple[str, ...]:
+    """Return the marker-contract violations this run found, in first-seen order."""
+    return tuple(_marker_violations_from_workers)
+
+
+def fail_session_on_marker_violations(session: pytest.Session) -> None:
+    """Refuse a run whose workers collected a mis-marked test.
+
+    ``USAGE_ERROR`` matches the raise this stands in for at ``-n0``: the
+    invocation's test taxonomy is what was wrong, and the status stays
+    distinguishable from tests-failed.
+
+    Args:
+        session: The finishing session, whose exit status may be replaced.
+    """
+    if _marker_violations_from_workers:
+        refuse_session(session)
+
+
+def report_marker_violations(terminalreporter: _TerminalWriter) -> None:
+    """Name every mis-marked test a worker refused, and the contract it broke.
+
+    Args:
+        terminalreporter: The active terminal reporter.
+    """
+    if not _marker_violations_from_workers:
+        return
+    terminalreporter.write_sep("=", "MARKER CONTRACT VIOLATED", red=True, bold=True)
+    terminalreporter.write_line(
+        f"{len(_marker_violations_from_workers)} test(s) were NOT RUN: their markers do not satisfy the taxonomy.",
+        red=True,
+        bold=True,
+    )
+    for violation in _marker_violations_from_workers:
+        terminalreporter.write_line(f"  {violation}")
 
 
 def held_serial_node_ids() -> tuple[str, ...]:

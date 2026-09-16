@@ -7,39 +7,39 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests._export_test_support import (
-    _M130_RESULT_CASILLA,
-    _M200_REFUND_RESULT_CASILLA,
-    _M303_RESULT_CASILLA,
-    _profile,
-)
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.application.modelo.action_errors import (
+from .....application.modelo.action_errors import (
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
     ModeloRefundElectionNotEligibleError,
 )
-from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.payment_election import PaymentElection
-from cadrumo.core.period import Period
-from cadrumo.core.refund_election import RefundElection
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.deadlines.models import (
+from .....application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
+from .....core.casilla_id import CasillaId
+from .....core.payment_election import PaymentElection
+from .....core.period import Period
+from .....core.refund_election import RefundElection
+from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from cadrumo.domain.modelos.calculation_revision import (
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ._export_test_support import (
+    _M130_RESULT_CASILLA,
+    _M200_REFUND_RESULT_CASILLA,
+    _M303_RESULT_CASILLA,
+    _profile,
+)
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

@@ -8,78 +8,78 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    CLOCK as _CLOCK,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    GROUP_MEMBER_A as _GROUP_MEMBER_A,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    GROUP_MEMBER_B as _GROUP_MEMBER_B,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    GROUP_MEMBER_C as _GROUP_MEMBER_C,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    M353_PERIOD as _M353_PERIOD,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    M353_YEAR as _M353_YEAR,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    M390_YEAR as _M390_YEAR,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    evaluate_clean_state as _evaluate_clean_state,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    m390_first_quarter_evidence as _m390_first_quarter_evidence,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    member_fan_in_requirement as _member_fan_in_requirement,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    persist_justificante_metadata as _persist_justificante_metadata,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    save_member_322_observation as _save_member_322_observation,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    seed_member_322_filing as _seed_member_322_filing,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    seed_official_303_source_filings as _seed_official_303_source_filings,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    snapshot_353 as _snapshot_353,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
-    snapshot_390 as _snapshot_390,
-)
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.cross_period_clean_state import (
+from .....application.calculations.cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
     partition_cross_period_requirements_by_activity_start,
 )
-from cadrumo.application.calculations.cross_period_models import (
+from .....application.calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyOrigin,
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenanceKind,
 )
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
+from .....core.period import Period
+from .....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from ._cross_period_clean_state_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from ._cross_period_clean_state_support import (
+    CLOCK as _CLOCK,
+)
+from ._cross_period_clean_state_support import (
+    GROUP_MEMBER_A as _GROUP_MEMBER_A,
+)
+from ._cross_period_clean_state_support import (
+    GROUP_MEMBER_B as _GROUP_MEMBER_B,
+)
+from ._cross_period_clean_state_support import (
+    GROUP_MEMBER_C as _GROUP_MEMBER_C,
+)
+from ._cross_period_clean_state_support import (
+    M353_PERIOD as _M353_PERIOD,
+)
+from ._cross_period_clean_state_support import (
+    M353_YEAR as _M353_YEAR,
+)
+from ._cross_period_clean_state_support import (
+    M390_YEAR as _M390_YEAR,
+)
+from ._cross_period_clean_state_support import (
+    evaluate_clean_state as _evaluate_clean_state,
+)
+from ._cross_period_clean_state_support import (
+    m390_first_quarter_evidence as _m390_first_quarter_evidence,
+)
+from ._cross_period_clean_state_support import (
+    member_fan_in_requirement as _member_fan_in_requirement,
+)
+from ._cross_period_clean_state_support import (
+    persist_justificante_metadata as _persist_justificante_metadata,
+)
+from ._cross_period_clean_state_support import (
+    save_member_322_observation as _save_member_322_observation,
+)
+from ._cross_period_clean_state_support import (
+    seed_member_322_filing as _seed_member_322_filing,
+)
+from ._cross_period_clean_state_support import (
+    seed_official_303_source_filings as _seed_official_303_source_filings,
+)
+from ._cross_period_clean_state_support import (
+    snapshot_353 as _snapshot_353,
+)
+from ._cross_period_clean_state_support import (
+    snapshot_390 as _snapshot_390,
+)
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

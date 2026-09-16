@@ -13,42 +13,42 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, load_external_constants
-from cadrumo.core.observed_header_fact import ObservedHeaderFact
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from cadrumo.domain.modelos.calculation_revision import (
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .....application.modelo.work_lifecycle import create_work_unit
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, load_external_constants
+from .....core.observed_header_fact import ObservedHeaderFact
+from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.deadlines.models import IVARegime, TaxpayerProfile
+from .....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....entrypoints.adapter_composition import build_work_lifecycle_ports
+from ....outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"

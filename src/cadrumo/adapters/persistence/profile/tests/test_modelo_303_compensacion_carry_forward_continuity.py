@@ -52,27 +52,27 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.sql.engine import get_engine
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
-from cadrumo.application.calculations.observations_repository import observation_key
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.bindings import (
+from .....application.calculations.observations_repository import observation_key
+from .....application.calculations.relation_prefill import resolve_relations_from_local_store
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import RelationId
-from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
-from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from .....domain.calculations.registry.ids import RelationId
+from .....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
+from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from ...storage.sql.engine import get_engine
+from ...storage.sql.orm import SecureObjectRow
+from ...storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
+from ..calculation_observations import CalculationObservationRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

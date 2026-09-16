@@ -76,7 +76,7 @@ def _import(pdf: Path, *, filing_year: int = _FIXTURE_YEAR):
 def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> None:
     """A committed borrador PDF imports, persists, and is readable through list and view."""
     with isolated_cli_surface_backend(tmp_path):
-        create_cli_surface_profile()
+        create_cli_surface_profile(log_in=False)
         assert _active_bucket_id()
 
         imported = _import(_FIXTURE_PDF)
@@ -111,7 +111,7 @@ def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> N
 def test_import_stores_a_digest_reference_and_never_the_operator_path(tmp_path: Path) -> None:
     """The persisted source reference is digest-derived; the local path is not retained."""
     with isolated_cli_surface_backend(tmp_path):
-        create_cli_surface_profile()
+        create_cli_surface_profile(log_in=False)
         staged = tmp_path / "operator-download" / "mi-borrador.pdf"
         staged.parent.mkdir(parents=True, exist_ok=True)
         staged.write_bytes(_FIXTURE_PDF.read_bytes())
@@ -153,7 +153,7 @@ def test_import_refuses_a_pdf_below_the_profile_coverage_minimum(tmp_path: Path)
     )
 
     with isolated_cli_surface_backend(tmp_path):
-        create_cli_surface_profile()
+        create_cli_surface_profile(log_in=False)
 
         refused = _import(partial_pdf)
         assert refused.exit_code != 0, refused.output

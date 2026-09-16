@@ -71,7 +71,6 @@ Submodules
    cadrumo.core.config_support
    cadrumo.core.config_timeouts
    cadrumo.core.confirmation_gate
-   cadrumo.core.corpus_sidecar
    cadrumo.core.corpus_text
    cadrumo.core.country_code
    cadrumo.core.credentials
@@ -119,7 +118,6 @@ Submodules
    cadrumo.core.locks
    cadrumo.core.locks_errors
    cadrumo.core.logging
-   cadrumo.core.manual_corpus_sidecar
    cadrumo.core.model_catalogue
    cadrumo.core.modelo
    cadrumo.core.modelo_232_codigos
@@ -183,5 +181,4 @@ Submodules
    cadrumo.core.url_validation
    cadrumo.core.validity_window
    cadrumo.core.windows_contention
-   cadrumo.core.wizard_catalogue
    cadrumo.core.workbook

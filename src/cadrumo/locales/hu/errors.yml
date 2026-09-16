@@ -1002,6 +1002,11 @@ errors:
       számla szerződést. Javítsa a bemenetet, és próbálja újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott
       azonosítóval.
+    refused_ledger_evidence_reader_unavailable: Ehhez az igazoláshoz a dokumentumolvasó
+      nem érhető el ezen a gépen, ezért semmi sem lett beolvasva. Ellenőrizze az `aeat
+      config provision status` paranccsal, indítsa el az `aeat config provision start`
+      paranccsal, és töltse le a modelljeit az `aeat config provision pull` paranccsal,
+      vagy válasszon külső szolgáltatót ehhez az olvasáshoz, majd próbálja újra.
     refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
       a megadott azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép

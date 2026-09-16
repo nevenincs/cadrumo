@@ -19,24 +19,24 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
-from cadrumo.application.live.iva_remote_state import capture_iva_compensation_wallet
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from cadrumo.application.modelo.iva_wallet_gate import (
+from .....application.live.iva_remote_state import capture_iva_compensation_wallet
+from .....application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from .....application.modelo.iva_wallet_gate import (
     apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
 )
-from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
-from cadrumo.application.user_profile.projections import record_to_path_values
-from cadrumo.core.bucket_pointer import require_active_bucket_id
-from cadrumo.core.config import load_settings
-from cadrumo.core.period import Period
-from cadrumo.entrypoints.live_state_composition import compose_live_state
-from cadrumo.tests.live_gate import requires_live_enabled
+from .....application.user_profile.profile_record_repository import ProfileRecordRepository
+from .....application.user_profile.projections import record_to_path_values
+from .....core.bucket_pointer import require_active_bucket_id
+from .....core.config import load_settings
+from .....core.period import Period
+from .....entrypoints.live_state_composition import compose_live_state
+from .....tests.live_gate import requires_live_enabled
+from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ...storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
+from ..calculation_observations import IvaWalletDecisionRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 

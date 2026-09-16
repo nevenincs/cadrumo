@@ -54,6 +54,7 @@ def _create_profile_and_resolve_uuid() -> str:
             "identity.surnames": "Override",
             "activities.description": "design",
         },
+        log_in=False,
     )
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
@@ -123,6 +124,7 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
             "identity.surnames": "Duplicate",
             "activities.description": "design",
         },
+        log_in=False,
     )
     forge_colliding_capsule_label(profile_id=UUID(second_uuid), label=label)
 

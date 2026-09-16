@@ -63,7 +63,7 @@ def _create_profile(**extra_facts: str) -> None:
         "taxpayer_type.irpf_income_categories": "actividad_economica",
     }
     facts.update(extra_facts)
-    register_cli_profile(label="operator", facts=facts)
+    register_cli_profile(label="operator", facts=facts, log_in=False)
 
 
 def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:

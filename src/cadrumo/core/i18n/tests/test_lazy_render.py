@@ -51,20 +51,19 @@ def test_lazy_catalogue_targeted_loading() -> None:
 
         catalogue = LazyLocaleCatalogue("es", shard_dir=es_dir)
 
-        # Before any access, nothing is loaded
-        assert len(catalogue._loaded_shards) == 0
+        # Before any access, nothing is read
+        assert not catalogue._key_cache
+        assert not catalogue._loaded_shards
 
-        # Accessing a CLI key should load only cli.yml
+        # Accessing a CLI key reads only cli.yml
         val = catalogue["cli.root.app_help"]
         assert val == "Spanish Help"
-        assert Path("cli.yml") in catalogue._loaded_shards
-        assert Path("modelo/schema/303.yml") not in catalogue._loaded_shards
-        assert Path("modelo/schema/100.yml") not in catalogue._loaded_shards
+        assert set(catalogue._key_cache) == {"cli.root.app_help"}
 
-        # Accessing M303 loads 303.yml, leaving 100.yml unparsed
+        # Accessing M303 reads 303.yml, leaving 100.yml unread
         val_303 = catalogue["modelo.schema.303.casilla.01.label"]
         assert val_303 == "IVA Devengado"
-        assert Path("modelo/schema/303.yml") in catalogue._loaded_shards
+        assert not [key for key in catalogue._key_cache if key.startswith("modelo.schema.100.")]
         assert Path("modelo/schema/100.yml") not in catalogue._loaded_shards
 
 

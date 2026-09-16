@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast, override
+from typing import ClassVar, cast, override
 
 from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Static
@@ -19,6 +19,8 @@ from .controller import (
 
 class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
     """List local declaration facts without implying filing or AEAT state."""
+
+    IS_WORKSPACE_OVERVIEW: ClassVar[bool] = True
 
     def __init__(
         self,
@@ -116,6 +118,9 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
 
 class DeclarationsModeloWorkspaceLauncherScreen(DeclarationsOverviewScreen):
     """Select a declaration and open its injected existing Modelo workspace."""
+
+    # It shares the overview's mechanics but is an area, so Back returns there.
+    IS_WORKSPACE_OVERVIEW: ClassVar[bool] = False
 
     def __init__(self, controller: DeclarationsWorkspaceController) -> None:
         """Use the landing selection mechanics under a distinct route identity."""

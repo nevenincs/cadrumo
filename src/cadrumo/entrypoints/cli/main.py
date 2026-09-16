@@ -335,7 +335,7 @@ def _emit_command_surface_manifest() -> None:
         "command_schemas": tuple(reference.model_dump(mode="json") for reference in references),
         "global_flags": tuple(
             option
-            for parameter in _COMMAND_GRAPH.by_key()["root"].parameters
+            for parameter in _COMMAND_GRAPH.root().parameters
             for option in getattr(parameter, "declarations", ())
             if isinstance(option, str) and option.startswith("-")
         ),

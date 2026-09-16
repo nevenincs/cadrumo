@@ -7,6 +7,7 @@ import stat
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 from typing import Any, Final, Literal
 
@@ -102,8 +103,13 @@ def ensure_profile_custody_local_directory(path: Path) -> None:
         anchor_directory(anchors, path, final_access=0x80000000)
 
 
+@cache
 def windows_file_information_type() -> type[Any]:
-    """Return the one Win32 identity structure shared by custody operations."""
+    """Return the one Win32 identity structure shared by custody operations.
+
+    Built once per process: the structure is a pure layout, and every anchored
+    operation asked for it anew.
+    """
     import ctypes
     from ctypes import wintypes
 
@@ -127,8 +133,14 @@ def windows_file_information_type() -> type[Any]:
     return _ByHandleFileInformation
 
 
+@cache
 def windows_create_file_api() -> tuple[Any, Any, Any, Any]:
-    """Return configured ``CreateFileW`` bindings for identity-anchored calls."""
+    """Return configured ``CreateFileW`` bindings for identity-anchored calls.
+
+    Built once per process and shared. The binding is pure configuration, and
+    every consumer that configures a further function on the returned library
+    sets the same signature, so sharing cannot change a call's conversion.
+    """
     import ctypes
     from ctypes import wintypes
 
@@ -159,13 +171,11 @@ def windows_directory_anchor(
     file_information_type = windows_file_information_type()
     handles: list[int] = []
     try:
-        current = Path(path.anchor)
-        components = path.parts[1:] if path.anchor else path.parts
-        for index, component in enumerate(components):
-            current /= component
+        component_paths = windows_component_paths(path)
+        for index, current in enumerate(component_paths):
             handle = create_file(
-                str(current),
-                final_access if index == len(components) - 1 else 0,
+                current,
+                final_access if index == len(component_paths) - 1 else 0,
                 0x00000001 | 0x00000002,
                 None,
                 3,
@@ -186,6 +196,23 @@ def windows_directory_anchor(
     finally:
         for handle in reversed(handles):
             kernel32.CloseHandle(handle)
+
+
+def windows_component_paths(path: Path) -> tuple[str, ...]:
+    """Return the path of every component below the anchor, outermost first.
+
+    String-joined rather than built as successive ``Path`` objects: an anchor
+    walks every component of a deep storage path, and rendering each
+    intermediate ``Path`` was the largest cost of anchoring after the Win32
+    calls themselves.
+    """
+    current = path.anchor
+    components = path.parts[1:] if path.anchor else path.parts
+    paths: list[str] = []
+    for component in components:
+        current = os.path.join(current, component) if current else component
+        paths.append(current)
+    return tuple(paths)
 
 
 @contextmanager

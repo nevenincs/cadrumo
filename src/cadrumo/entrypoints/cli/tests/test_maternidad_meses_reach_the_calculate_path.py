@@ -37,9 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.config import override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -47,6 +45,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
@@ -74,6 +73,10 @@ _MELLIZO_BIRTH = "NACIMIENTO=2022-06-01"
 # ``test_modelo_100_descendiente_entry_surface.py``; no binding here touches
 # 0611. Its 2024 registry formula reads the profile-derived scalar, so no
 # command-line flag supplies its value.
+# Modelo 100 revision 2024 declares renta-profile-family-minor-children-in-unit
+# and renta-profile-marriage-full-year as profile-sourced BOOLEAN bindings, so
+# the profile resolver supplies them; a decimal --binding override for either
+# is refused as a misrouted input channel.
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
     "--binding", "renta-modelo-111-retenciones-periodicas=0",
@@ -81,10 +84,8 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-193-retenciones-anuales=0",
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-profile-family-minor-children-in-unit=0",
     "--binding", "renta-profile-guarderia-gastos-reales=0",
     "--binding", "renta-profile-cotizaciones-ss-madre=0",
-    "--binding", "renta-profile-marriage-full-year=0",
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",

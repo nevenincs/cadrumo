@@ -70,6 +70,7 @@ def _create_profile(name: str = "test-operator") -> None:
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "tax_residence.jurisdiction_scope": "common_regime",
         },
+        log_in=False,
     )
 
 

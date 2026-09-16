@@ -72,6 +72,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("iva_rate", ("--iva-rate",), "cli.app.ledger.evidence.iva_rate_help"),
             _optional_text_option("iva_amount", ("--iva-amount",), "cli.app.ledger.evidence.iva_amount_help"),
             _blank_default_text_option("notes", ("--notes",), "cli.app.ledger.evidence.notes_help"),
+            _optional_text_option(
+                "idempotency_key", ("--idempotency-key",), "cli.app.ledger.evidence.idempotency_key_help"
+            ),
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_add", __package__)),

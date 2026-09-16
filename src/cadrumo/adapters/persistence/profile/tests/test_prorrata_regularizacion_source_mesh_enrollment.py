@@ -28,26 +28,26 @@ from typing import Any
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
-from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+from .....application.calculations.observations_repository import ResultDispositionProjection
+from .....application.modelo.calculation_actions import resolve_bucket_source_mesh
+from .....core.aggregation import BindingSourceKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from .....core.resources.bundled_data import bundled_path
+from .....core.result_disposition import ResultDisposition
+from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from ..prorrata_register import ProrrataRegisterRepository
+from .file_flow_test_support import calculation_ports_for_test
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

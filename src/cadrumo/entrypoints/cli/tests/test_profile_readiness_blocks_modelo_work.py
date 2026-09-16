@@ -40,6 +40,7 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
             "identity.surnames": "Navarro",
             "activities.description": "",
         },
+        log_in=False,
     )
 
 
@@ -140,6 +141,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "renta_taxpayer.marital_status": "3",
             "renta_family.situacion_familiar": "soltero",
         },
+        log_in=False,
     )
 
     validate = invoke_cached_cli(["config", "profile", "validate", "pere-landlord"])
@@ -228,6 +230,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
         # The subject is an entity that is NOT configured, and the door
         # marks setup complete unless told otherwise.
         complete=False,
+        log_in=False,
     )
 
     status = invoke_cached_cli(["--format", "json", "config", "profile", "status"])
@@ -263,6 +266,7 @@ def test_economic_activity_m100_still_requires_the_direct_estimation_modality() 
             "renta_taxpayer.marital_status": "1",
             "renta_family.situacion_familiar": "soltero",
         },
+        log_in=False,
     )
 
     work_create = invoke_cached_cli(

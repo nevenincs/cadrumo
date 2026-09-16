@@ -8,40 +8,40 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.m303_carry_ingress import m303_declaration_type_header_key
-from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
-from cadrumo.application.modelo.action_errors import ModeloPriorDomiciliationElectionRefusedError
-from cadrumo.application.modelo.prior_domiciliation import resolveprior_domiciliation_election
-from cadrumo.core.observed_header_fact import ObservedHeaderFact
-from cadrumo.core.period import Period
-from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.domain.modelos.calculation_revision import (
+from .....application.calculations.m303_carry_ingress import m303_declaration_type_header_key
+from .....application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
+from .....application.modelo.action_errors import ModeloPriorDomiciliationElectionRefusedError
+from .....application.modelo.prior_domiciliation import resolveprior_domiciliation_election
+from .....core.observed_header_fact import ObservedHeaderFact
+from .....core.period import Period
+from .....core.prior_domiciliation_election import PriorDomiciliationElection
+from .....core.result_disposition import ResultDisposition
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.calculation_revision_amendment import (
+from .....domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
 )
-from cadrumo.domain.modelos.filing_record import (
+from .....domain.modelos.filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from cadrumo.domain.modelos.filing_repository import upsert_filing_record
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.modelos.filing_repository import upsert_filing_record
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from ..modelos_filing import ModeloRecordCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

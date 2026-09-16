@@ -45,6 +45,7 @@ from pydantic import BaseModel, Field, TypeAdapter
 
 from ...core.directory_scan import scan_directory
 from ...core.identity.digest import ContentDigest
+from ...core.model_catalogue import ModelRole
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.classification import InvoiceKind
@@ -376,39 +377,62 @@ def _reads_without_a_model(data: bytes, *, document_shape_probe: EvidenceDocumen
     return document_shape_probe(data) in STRUCTURED_DOCUMENT_SHAPES
 
 
+def _reader_role_for(data: bytes, *, document_shape_probe: EvidenceDocumentShapeProbe) -> ModelRole | None:
+    """Return the reader role these bytes will reach first, or ``None`` for neither.
+
+    Read off the same shape probe the deterministic test uses, so the two agree
+    by construction: a PDF carrying a text layer reaches the text reader, and a
+    scan or a bare image reaches the vision one. Nothing else about the
+    extractor's routing is reproduced here. A text-layer PDF whose text turns
+    out to be unusable still escalates to vision inside the extractor, and that
+    escalation is discovered the way it always was -- by the refusal, which then
+    probes the vision role.
+    """
+    from ...core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+
+    shape = document_shape_probe(data)
+    if shape in STRUCTURED_DOCUMENT_SHAPES:
+        return None
+    if shape is DocumentShape.PDF_TEXT_LAYER:
+        return ModelRole.TEXT_EXTRACTION
+    if shape in {DocumentShape.PDF_SCAN, DocumentShape.IMAGE}:
+        return ModelRole.VISION_TRANSCRIPTION
+    return None
+
+
 class _InferenceLaneState:
     """Whether inference-bearing items may still be attempted in this run.
 
-    Batch-wide rather than per item because both conditions that close it are
-    batch-wide: memory pressure is a property of the machine and a missing
-    reader is a property of the installation. Neither changes between two
-    documents, so re-asking per item would re-derive one answer while the
-    operator watched N identical refusals accumulate.
+    Measured contention is batch-wide: it is a property of the machine, so one
+    measurement closes the lane for every model-bearing document before any
+    attempt. Admission control exists precisely so an unsafe load is not
+    attempted, so learning about it by attempting would defeat it.
 
-    The lane closes two ways, and the asymmetry is deliberate.
+    Reader availability is per ROLE, not batch-wide, because that is how it
+    actually fails: a machine with a text model and no vision model reads every
+    text-layer PDF and can read no scan. Each role is probed at most once, ahead
+    of the first document that needs it, so the first such document is PAUSED
+    with the provisioning outcome rather than refused as though the document
+    were at fault -- and a role that is present keeps working while another is
+    missing.
 
-    **Measured contention closes it BEFORE any attempt.** Admission control
-    exists precisely so an unsafe load is not attempted, so learning about it by
-    attempting would defeat it.
-
-    **A missing reader closes it AFTER the first attempt.** There is nothing
-    unsafe about trying, no model is selected for admission to judge, and
-    predicting which documents need a reader would mean reproducing the
-    extractor's routing here — a second copy that would drift. One document pays
-    for the discovery and every later one is paused on it.
+    A document whose role probed available can still refuse for want of a
+    reader, because a text-layer PDF may escalate to vision inside the
+    extractor. That discovery still closes the role it names, so the pause
+    reaches every later document of that role.
     """
 
-    __slots__ = ("_assessed", "_pause", "_profile", "_reader_probed", "_settings")
+    __slots__ = ("_assessed", "_contention", "_profile", "_reader_pauses", "_settings")
 
     def __init__(self, *, settings: Settings, profile: HardwareProfile | None = None) -> None:
         self._settings = settings
         self._profile = profile
         self._assessed = False
-        self._reader_probed = False
-        self._pause: InferencePause | None = None
+        self._contention: InferencePause | None = None
+        self._reader_pauses: dict[ModelRole, InferencePause] = {}
 
-    def admits(self, *, deterministic: bool) -> bool:
-        """Return whether this item may be attempted, measuring contention once.
+    def admits(self, *, deterministic: bool, role: ModelRole | None = None) -> bool:
+        """Return whether this item may be attempted, measuring each cause once.
 
         A document that reads without a model is always attempted: a closed lane
         says nothing about work that never needed the lane.
@@ -417,35 +441,44 @@ class _InferenceLaneState:
             return True
         if not self._assessed:
             self._assessed = True
-            self._pause = _assess_model_load_contention_once(self._settings, profile=self._profile)
-        return self._pause is None
+            self._contention = _assess_model_load_contention_once(self._settings, profile=self._profile)
+        if self._contention is not None:
+            return False
+        return role is None or self._reader_is_available(role)
 
-    def close_if_no_reader_is_available(self) -> None:
-        """Close the lane when a refusal turns out to be the environment's, not the document's.
+    def close_if_no_reader_is_available(self, role: ModelRole | None = None) -> None:
+        """Close one role when a refusal turns out to be the environment's.
 
-        Asks the runtime whether a reader is actually there, rather than reading
-        an error string. A measurement answers the question the same way for
-        every reader path and hands the exact provisioning outcome downstream.
-
-        Probed at most once, and only after something has already refused, so a
-        healthy run never pays for it.
+        Asks the runtime whether that reader is actually there, rather than
+        reading an error string. ``None`` probes both reading roles, which is
+        what a refusal from a document the lane could not attribute needs.
         """
-        if self._pause is not None or self._reader_probed:
+        if self._contention is not None:
             return
-        self._reader_probed = True
-        from ...application.provisioning import probe_ollama_vision
+        roles = (role,) if role is not None else (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
+        for candidate in roles:
+            self._reader_is_available(candidate)
 
-        status = probe_ollama_vision(self._settings)
+    def _reader_is_available(self, role: ModelRole) -> bool:
+        """Return whether ``role``'s reader can run, probing it at most once."""
+        if role in self._reader_pauses:
+            return False
+        from ...application.local_reader import probe_local_reader
+
+        status = probe_local_reader(role, self._settings)
         if status.available:
-            return
-        self._pause = _inference_pause(
+            return True
+        self._reader_pauses[role] = _inference_pause(
             facts=status.facts,
             precondition_verdict=status.precondition_verdict,
         )
+        return False
 
     def pause(self) -> InferencePause | None:
-        """Return the pause record, or ``None`` when the lane never closed."""
-        return self._pause
+        """Return the pause that closed work, or ``None`` when nothing closed."""
+        if self._contention is not None:
+            return self._contention
+        return next(iter(self._reader_pauses.values()), None)
 
 
 def _assess_model_load_contention_once(
@@ -611,6 +644,7 @@ def run_evidence_batch(
 
     addressed: dict[tuple[str, str], Path] = {}
     deterministic: set[str] = set()
+    roles: dict[str, ModelRole] = {}
     unresolved: list[UnresolvedBatchSource] = []
     for path in _batch_sources(sources):
         try:
@@ -636,11 +670,12 @@ def run_evidence_batch(
             )
             continue
         content_address = sha256_hex(data)
-        if _reads_without_a_model(
-            data,
-            document_shape_probe=extraction_ports.evidence_input_ports.document_shape_probe,
-        ):
+        probe = extraction_ports.evidence_input_ports.document_shape_probe
+        if _reads_without_a_model(data, document_shape_probe=probe):
             deterministic.add(content_address)
+        role = _reader_role_for(data, document_shape_probe=probe)
+        if role is not None:
+            roles[content_address] = role
         addressed[(content_address, str(path))] = path
 
     lane = _InferenceLaneState(settings=resolved_settings, profile=profile)
@@ -648,7 +683,7 @@ def run_evidence_batch(
     for content_address, source_name in order_batch_sources(addressed):
         path = addressed[(content_address, source_name)]
         reads_without_a_model = content_address in deterministic
-        if not lane.admits(deterministic=reads_without_a_model):
+        if not lane.admits(deterministic=reads_without_a_model, role=roles.get(content_address)):
             # Paused, not refused: the document is fine and the work simply has
             # not happened. One run-level explanation carries the reason, rather
             # than stamping N identical refusals onto N innocent documents.
@@ -677,7 +712,7 @@ def run_evidence_batch(
                 write_draft=write_extraction_draft,
             )
             if row.status == "refused":
-                lane.close_if_no_reader_is_available()
+                lane.close_if_no_reader_is_available(roles.get(content_address))
         rows.append(row)
         if on_item is not None:
             # Progress reporting is incidental to the run; a sink that fails

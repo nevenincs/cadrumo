@@ -18,11 +18,10 @@ import pytest
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
@@ -30,6 +29,7 @@ from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import ProfileManagerScreen
@@ -46,31 +46,35 @@ _EDITED_PATH = "identity.name"
 
 
 def _live_overview(label: str = "Manager Subject"):
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    # Registration closes its own session, so a freshly registered profile is
-    # LOCKED and the capsule -- the sole profile authority -- will not yield its
-    # record. Logging in with the passphrase derives the SAME DEK the capsule was
-    # sealed under; synthesising a session instead gives a different key and the
-    # capsule refuses it as a row addressed to another object key.
-    login_profile(
-        name=label,
-        passphrase_callback=lambda: _CREDENTIAL_INPUT,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-    record = load_test_profile_record(require_active_bucket_id())
-    return build_profile_overview(record, label=label)
+    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        # Registration closes its own session, so a freshly registered profile is
+        # LOCKED and the capsule -- the sole profile authority -- will not yield its
+        # record. Logging in with the passphrase derives the SAME DEK the capsule was
+        # sealed under; synthesising a session instead gives a different key and the
+        # capsule refuses it as a row addressed to another object key.
+        login_profile(
+            name=label,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        record = load_test_profile_record(require_active_bucket_id())
+        return build_profile_overview(record, label=label, schema=_profile_contexts_for_test()[1].schema)
 
 
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    record = apply_manager_profile_field_mutation(
-        profile_id=require_active_bucket_id(),
-        path=path,
-        value=value,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-    return build_profile_overview(record, label="Manager Subject")
+    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        record = apply_manager_profile_field_mutation(
+            profile_id=require_active_bucket_id(),
+            path=path,
+            value=value,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        return build_profile_overview(record, label="Manager Subject", schema=_profile_contexts_for_test()[1].schema)
 
 
 def _notice(app: ProfileManagerScreen) -> str:
@@ -120,13 +124,15 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
     there to fill in.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         overview = _live_overview()
 
         app = ProfileManagerScreen(overview, persist=_persist)
@@ -146,13 +152,15 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
     from textual.css.query import NoMatches
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         overview = _live_overview()
 
         app = ProfileManagerScreen(overview, persist=_persist)
@@ -180,13 +188,15 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
     from ....core.json_contract import Notice, NoticeSeverity
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         overview = _live_overview().model_copy(
             update={
                 "notices": (
@@ -229,13 +239,15 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
     as a write-through defect rather than as an under-waited test.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -270,13 +282,15 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
     ultimately show the right number.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -330,13 +344,15 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
     """
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         release = threading.Event()
 
         def _gated(path: str, value: str):
@@ -401,13 +417,15 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
         required=False,
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Masked Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Masked Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         app = ProfileManagerScreen(_live_overview("Masked Subject"), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             pilot.app.push_screen(FieldEditScreen(masked))
@@ -434,13 +452,15 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
         raise RuntimeError
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         app = ProfileManagerScreen(_live_overview(), persist=_persist_wordlessly)
         expected = tr("flows.manager.edit.write_failed")
 
@@ -466,13 +486,15 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
     from textual.css.query import NoMatches
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
@@ -504,13 +526,15 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
     _long_label_field_path = "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label="Manager Subject",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
         _live_overview()
         written = _persist(_long_label_field_path, "12345.67")
 

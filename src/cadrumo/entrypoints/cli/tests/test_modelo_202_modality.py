@@ -254,6 +254,7 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
             "taxpayer_type.irpf_income_categories": "",
             "irpf.estimation_regime": "",
         },
+        log_in=False,
     )
 
     result = invoke_cached_cli(

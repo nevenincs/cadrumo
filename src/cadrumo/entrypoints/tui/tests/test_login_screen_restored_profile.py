@@ -15,10 +15,9 @@ from pathlib import Path
 import pytest
 from textual.widgets import Input
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.capsule_restore import (
     read_profile_capsule_source,
@@ -31,6 +30,7 @@ from ....application.user_profile.login_interaction import (
 )
 from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.login import LoginScreen
@@ -69,13 +69,15 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
     """A profile that arrives by restore (not registration) is a login citizen."""
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "source-root") as source_root:
-        profile_create_context, profile_decode_context = _profile_contexts_for_test()
-        outcome = register_profile_with_credentials(
-            label="Restore-born",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=profile_create_context,
-            profile_decode_context=profile_decode_context,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            profile_create_context, profile_decode_context = _profile_contexts_for_test()
+            outcome = register_profile_with_credentials(
+                label="Restore-born",
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=profile_create_context,
+                profile_decode_context=profile_decode_context,
+            )
         capsule = source_root / "buckets" / outcome.profile_id
         restored = restore_profile_capsule_with_password(
             label="Restore-born",

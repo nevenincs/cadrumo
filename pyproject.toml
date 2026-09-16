@@ -757,6 +757,12 @@ convention = "google"
 # explicit resolved path for tests) before invoking it with a fixed argv;
 # ruff's S603 heuristic cannot see the resolved-executable contract.
 "dev/release/readiness.py" = ["S603"]
+# The local model runtime host adapter starts `<located ollama> serve` and runs
+# one closed-table package-manager install (`winget`/`brew`). argv[0] is an
+# absolute path the application located on PATH or in the platform's standard
+# install directory; every other element is a literal. No operator text,
+# environment value or file content reaches the argument list.
+"src/cadrumo/adapters/outbound/model_runtime/process_control.py" = ["S603"]
 # The forge environment inventory carries the identical contract: `gh` resolved
 # via `shutil.which` or an explicit test-stub path, then a fixed three-element
 # argv whose only interpolations are the repository slug and an environment
