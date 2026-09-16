@@ -20,6 +20,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, JsonValue, TypeAdapter, model_validator
 
@@ -32,9 +33,10 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.clock import now
-from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
-from ....persistence.storage.sql.secure_objects import SecureObjectRepository
+
+if TYPE_CHECKING:
+    from ....persistence.storage.sql.secure_objects import SecureObjectRepository
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 type JsonObject = Mapping[str, JsonValue]
@@ -170,6 +172,9 @@ def _key(path: Path) -> str:
 
 
 def _repository() -> SecureObjectRepository:
+    # The storage runtime loads on first session access, not when a host binds the store.
+    from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+
     return secure_object_repository_for_active_bucket()
 
 

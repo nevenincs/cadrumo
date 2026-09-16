@@ -12,13 +12,13 @@ from typing import TYPE_CHECKING
 from .....application.auth.protocols import BrowserSessionFactoryPort
 from .....application.auth_credentials import ActiveCertificateCredentials
 from .....core.auth_provider import AuthProviderKind
-from .authenticator import AeatAuthenticator
-from .clave_movil import ClaveMovilAuthProvider
-from .clave_permanente import ClavePermanenteAuthProvider
 from .errors import AuthConfigurationError
 
 if TYPE_CHECKING:
     from .....core.config import Settings
+    from .authenticator import AeatAuthenticator
+    from .clave_movil import ClaveMovilAuthProvider
+    from .clave_permanente import ClavePermanenteAuthProvider
 
 __all__ = ["select_provider"]
 
@@ -36,6 +36,8 @@ def select_provider(
     receive the optional shared browser-session factory.
     """
     if kind is AuthProviderKind.CERTIFICATE:
+        from .authenticator import AeatAuthenticator
+
         if certificate_credentials is None:
             raise AuthConfigurationError(
                 "certificate provider construction requires ActiveCertificateCredentials",
@@ -46,11 +48,15 @@ def select_provider(
             browser_session_factory=browser_session_factory,
         )
     if kind is AuthProviderKind.CLAVE_MOVIL:
+        from .clave_movil import ClaveMovilAuthProvider
+
         return ClaveMovilAuthProvider(
             settings,
             browser_session_factory=browser_session_factory,
         )
     if kind is AuthProviderKind.CLAVE_PERMANENTE:
+        from .clave_permanente import ClavePermanenteAuthProvider
+
         return ClavePermanenteAuthProvider(
             settings,
             browser_session_factory=browser_session_factory,
