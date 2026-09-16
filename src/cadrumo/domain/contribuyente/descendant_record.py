@@ -729,17 +729,6 @@ class DescendantRecordBase(DescendantRecordFields):
             return True
         return self.dependencia_economica is True and dependencia_assimilation_available
 
-    def assimilated_by_dependencia(self, *, dependencia_assimilation_available: bool = False) -> bool:
-        """True when this descendant reaches the mínimo ONLY through the dependency limb.
-
-        The disclosure predicate: a descendant who cohabits is not assimilated
-        even when the dependency fact is also set, so the advisory reports only
-        the households where the assimilation is actually load-bearing.
-        """
-        if self.convive_con_contribuyente:
-            return False
-        return self.dependencia_economica is True and dependencia_assimilation_available
-
     def is_eligible_menor_tres(self, filing_year: int, *, context: FamilyFactResolutionContext) -> bool:
         """True when the descendant is under three at the devengo date and cohabits.
 
