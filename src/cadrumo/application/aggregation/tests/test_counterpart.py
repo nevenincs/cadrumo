@@ -13,7 +13,6 @@ from ..counterpart import (
     CounterpartObservation,
     aggregate_counterpart_347,
     aggregate_counterpart_349,
-    declarable_counterparty_nifs_347,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -96,64 +95,10 @@ class TestAggregate347:
         result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         assert result.total_counterparties == 2
         x1_delivery = next(
-            r
-            for r in result.rollups
-            if r.counterparty_nif == "X1" and r.operation_kind == "entregas_y_prestaciones"
+            r for r in result.rollups if r.counterparty_nif == "X1" and r.operation_kind == "entregas_y_prestaciones"
         )
         assert x1_delivery.observations_count == 2
         assert x1_delivery.total_taxable_base == Decimal("5000")
-
-
-class TestThreshold347:
-    def test_threshold_is_canonical_3005_06(self) -> None:
-        at_floor = aggregate_counterpart_347(
-            (
-                _obs(
-                    nif="X1",
-                    op_kind="entregas_y_prestaciones",
-                    base="0",
-                    invoice_total="3005.06",
-                    source_id="floor",
-                ),
-            ),
-            period=_P_2025_ANNUAL,
-        )
-        just_above = aggregate_counterpart_347(
-            (
-                _obs(
-                    nif="X2",
-                    op_kind="entregas_y_prestaciones",
-                    base="0",
-                    invoice_total="3005.07",
-                    source_id="above-floor",
-                ),
-            ),
-            period=_P_2025_ANNUAL,
-        )
-
-        assert "X1" not in declarable_counterparty_nifs_347(at_floor)
-        assert "X2" in declarable_counterparty_nifs_347(just_above)
-
-    def test_declarable_when_above_threshold(self) -> None:
-        observations = (
-            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="5000", invoice_total="6050", source_id="t1"),
-        )
-        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
-        assert "X1" in declarable_counterparty_nifs_347(result)
-
-    def test_not_declarable_when_at_or_below_threshold(self) -> None:
-        observations = (
-            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="2500", invoice_total="3000", source_id="t1"),
-        )
-        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
-        assert "X1" not in declarable_counterparty_nifs_347(result)
-
-    def test_threshold_excludes_exactly_at_floor(self) -> None:
-        observations = (
-            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="0", invoice_total="3005.06", source_id="t1"),
-        )
-        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
-        assert "X1" not in declarable_counterparty_nifs_347(result)
 
 
 class TestAggregate349:

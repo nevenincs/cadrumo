@@ -16,9 +16,7 @@ that percentage only to deducible IVA cuota bindings; bases and output IVA
 cuotas stay unapportioned.
 
 The repository-backed entry point requires the application-owned transaction
-catalogue capability for the active bucket. Pre-classified callers can use
-:class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidates`
-to run the same validation path.
+catalogue capability for the active bucket.
 
 See Also:
     :mod:`~domain.prorrata_register`
@@ -40,12 +38,11 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Final
 
-from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core.decimal.constants import HUNDRED
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.i18n.translatable import Translatable as t
@@ -68,11 +65,6 @@ from ...domain.calculations.registry.iva_deduction_catalogue import (
     is_iva_deduction_kind,
     iva_deduction_fact_kinds,
 )
-from ...domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
-from ...domain.calculations.registry.iva_schema_vocabulary import (
-    require_iva_cash_accounting_treatment,
-    require_iva_exemption_article,
-)
 from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -92,14 +84,12 @@ from ...domain.calculations.registry.prorrata_vocabulary import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva.classification import iva_territorial_scope_alias
-from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ...domain.iva.errors import ProrrataInputError
 from ...domain.iva.establishment import (
     StatedCountryCodeStatus,
     stated_country_code_status,
     territorial_scope_for_country,
 )
-from ...domain.iva.flow import IvaFlowDirection, is_deducible_flow
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
 from ...domain.iva.prorrata import (
     InputClassification,
@@ -109,10 +99,7 @@ from ...domain.iva.prorrata import (
 )
 from ...domain.iva.schema import (
     EUMemberState,
-    IvaCashAccountingTreatment,
     IvaCategory,
-    IvaExemptionArticle,
-    IvaLedgerObservationRole,
     IvaRateKind,
     spanish_eu_member_state,
 )
@@ -125,11 +112,6 @@ from ..prorrata_register.service import require_prorrata_register_coordinates_cu
 from . import _shared_issue_reasons
 from .business_proportion import business_proportion
 from .errors import AggregationValidationError
-
-_LedgerId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
 
 
 class IvaLedgerAggregationIssueReason(StrEnum):
@@ -239,11 +221,6 @@ class IvaLedgerAggregationIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    # NOT core.identity.TransactionId, deliberately: most call sites feed a real
-    # Transaction's id, but aggregate_iva_ledger_candidates feeds candidate.ledger_id
-    # (IvaLedgerCandidate.ledger_id: _LedgerId, 1-128 chars, no hex-64 pattern) --
-    # a pre-classified ledger line that need not be a catalogued Transaction. The
-    # 128-char bound below matches _LedgerId's own bound, not TransactionId's.
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: IvaLedgerAggregationIssueReason
     detail: IssueDetail
@@ -366,76 +343,6 @@ class AnnualDeducibleTotalsByRegime(BaseModel):
     deduction_under_especial: Decimal = Field(..., ge=Decimal("0"))
     unclassified_deducible_count: int = Field(..., ge=0)
     regime: ProrrataRegisterRegime
-
-
-class IvaLedgerCandidate(BaseModel):
-    """One pre-classified ledger line for generic IVA aggregation.
-
-    This is the application hand-off shape for IVA facts that cannot be
-    inferred safely from a bank transaction direction plus a rate:
-    exenciones, no-sujetas, recargo de equivalencia, intra-community
-    reverse-charge operations, imports/exports, and explicit
-    adjustments. Upstream classifiers must supply the authoritative IVA
-    category, rate kind, and flow direction before this layer creates a
-    registry-ready :class:`IvaLedgerObservation`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    ledger_id: _LedgerId
-    transaction_date: date
-    category: IvaCategory
-    exemption_article: IvaExemptionArticle | None = None
-    rate_kind: IvaRateKind
-    flow_direction: IvaFlowDirection
-    base_amount: Decimal
-    iva_amount: Decimal
-    deduction_fact_kind: IvaDeductionFactKind | None = None
-    deduction_provenance: IvaDeductionClassificationProvenance | None = None
-    investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
-    rectifies_ledger_id: str | None = Field(default=None, min_length=1, max_length=128)
-    prorrata_reference_id: _LedgerId | None = None
-    cash_accounting_treatment: IvaCashAccountingTreatment
-    observation_role: IvaLedgerObservationRole
-    input_classification: InputClassification | None = None
-    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
-
-    @field_validator("input_classification", mode="before")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_registry_input_classification(cls, value: object) -> object:
-        """Accept only art. 106 tokens declared by the selected 0116 fact."""
-        if value is None or isinstance(value, InputClassification):
-            return value
-        raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.input_facts_missing_deduction_authority"),
-            context={"input_classification": str(value)},
-        )
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
-        if not is_deducible_flow(self.flow_direction):
-            if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
-                raise AggregationValidationError(
-                    t("aggregation.iva_ledger.errors.output_facts_carry_deduction_authority"),
-                    context={
-                        "ledger_id": self.ledger_id,
-                        "flow_direction": self.flow_direction.value,
-                        "category": self.category.value,
-                    },
-                )
-            return self
-        if self.deduction_fact_kind is None or self.deduction_provenance is None:
-            raise AggregationValidationError(
-                t("aggregation.iva_ledger.errors.input_facts_missing_deduction_authority"),
-                context={
-                    "ledger_id": self.ledger_id,
-                    "flow_direction": self.flow_direction.value,
-                    "category": self.category.value,
-                },
-            )
-        return self
 
 
 class IvaLedgerAggregation(BaseModel):
@@ -660,153 +567,6 @@ def _validate_rectifications_consumed_once(
             t("aggregation.iva_ledger.errors.rectification_consumed_more_than_once"),
             context={"rectified_ledger_id_count": len(rectified_ids)},
         )
-
-
-def validate_iva_ledger_observation(
-    candidate: IvaLedgerCandidate,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> IvaLedgerObservation:
-    """Validate a pre-classified IVA candidate and return an :class:`IvaLedgerObservation`.
-
-    The validator does not re-classify the operation and does not derive
-    IVA from the base. It only blocks sentinel categories that are not
-    declarable ledger facts; the category, rate, and flow axes must have
-    been resolved upstream from invoice/operation evidence.
-    """
-    category = require_iva_category(candidate.category, authority=operation)
-    rate_kind = require_iva_rate_kind(
-        candidate.rate_kind,
-        effective_date=candidate.transaction_date,
-        authority=operation,
-    )
-    require_iva_cash_accounting_treatment(candidate.cash_accounting_treatment, authority=operation)
-    if candidate.exemption_article is not None:
-        require_iva_exemption_article(candidate.exemption_article, authority=operation)
-        if category != require_iva_category("domestic_exempt", authority=operation):
-            raise AggregationValidationError(
-                t("aggregation.iva_ledger.errors.unsupported_iva_category"),
-                context={
-                    "ledger_id": candidate.ledger_id,
-                    "category": category.value,
-                    "exemption_article": candidate.exemption_article.value,
-                },
-            )
-    if category in {
-        require_iva_category("unknown", authority=operation),
-        require_iva_category("erroneous_invoice", authority=operation),
-    }:
-        raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.unsupported_iva_category"),
-            context={
-                "ledger_id": candidate.ledger_id,
-                "category": category.value,
-            },
-        )
-    if not is_deducible_flow(candidate.flow_direction) or category == require_iva_category(
-        "recargo_equivalencia",
-        authority=operation,
-    ):
-        if candidate.deduction_fact_kind is not None or candidate.deduction_provenance is not None:
-            raise AggregationValidationError(
-                t("aggregation.iva_ledger.errors.output_facts_carry_deduction_authority"),
-                context={
-                    "ledger_id": candidate.ledger_id,
-                    "flow_direction": candidate.flow_direction.value,
-                    "category": category.value,
-                },
-            )
-    elif candidate.deduction_fact_kind is None or candidate.deduction_provenance is None:
-        raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.input_facts_missing_deduction_authority"),
-            context={
-                "ledger_id": candidate.ledger_id,
-                "flow_direction": candidate.flow_direction.value,
-                "category": category.value,
-            },
-        )
-    else:
-        validate_iva_deduction_fact(
-            kind=candidate.deduction_fact_kind,
-            provenance=candidate.deduction_provenance,
-            category=category,
-            rate_kind=rate_kind,
-            flow_direction=candidate.flow_direction,
-            base_amount=candidate.base_amount,
-            iva_amount=candidate.iva_amount,
-            investment_asset_id=candidate.investment_asset_id,
-            rectifies_ledger_id=candidate.rectifies_ledger_id,
-        )
-    return IvaLedgerObservation(
-        ledger_id=candidate.ledger_id,
-        transaction_date=candidate.transaction_date,
-        category=category,
-        exemption_article=candidate.exemption_article,
-        rate_kind=rate_kind,
-        flow_direction=candidate.flow_direction,
-        base_amount=candidate.base_amount,
-        iva_amount=candidate.iva_amount,
-        prorrata_reference_id=candidate.prorrata_reference_id,
-        cash_accounting_treatment=candidate.cash_accounting_treatment,
-        observation_role=candidate.observation_role,
-        input_classification=candidate.input_classification,
-        prorrata_sector_id=candidate.prorrata_sector_id,
-        deduction_fact_kind=candidate.deduction_fact_kind,
-        deduction_provenance=candidate.deduction_provenance,
-        investment_asset_id=candidate.investment_asset_id,
-        rectifies_ledger_id=candidate.rectifies_ledger_id,
-    )
-
-
-def aggregate_iva_ledger_candidates(
-    candidates: Iterable[IvaLedgerCandidate],
-    *,
-    period: Period,
-    ledger_profile_id: str,
-    investment_asset_register: BienesInversionIvaRegister,
-    investment_asset_profile_id: str,
-    operation: PinnedAuthorityOperation,
-) -> IvaLedgerAggregation:
-    """Project pre-classified IVA candidates into period-scoped observations.
-
-    This path complements :func:`aggregate_iva_ledger_observations`,
-    which remains the domestic-rate projection from bank
-    transactions. Pre-classified candidates are required for non-domestic
-    IVA and adjustments because those axes cannot be recovered from a
-    transaction amount or direction without guessing.
-
-    Returns an :class:`IvaLedgerAggregation` carrying the accepted
-    observations and any period-exclusion issues.
-    """
-    resolved_period = period
-    observations: list[IvaLedgerObservation] = []
-    issues: list[IvaLedgerAggregationIssue] = []
-    for candidate in candidates:
-        if not resolved_period.contains(candidate.transaction_date):
-            issues.append(
-                IvaLedgerAggregationIssue(
-                    transaction_id=candidate.ledger_id,
-                    reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-                    detail=(f"transaction date {candidate.transaction_date.isoformat()} is outside {resolved_period}"),
-                ),
-            )
-            continue
-        observations.append(validate_iva_ledger_observation(candidate, operation=operation))
-    result = IvaLedgerAggregation(
-        period=resolved_period,
-        observations=tuple(observations),
-        issues=tuple(issues),
-    )
-    _validate_investment_asset_authority(
-        result.observations,
-        period=period,
-        ledger_profile_id=ledger_profile_id,
-        investment_asset_register=investment_asset_register,
-        investment_asset_profile_id=investment_asset_profile_id,
-        operation=operation,
-    )
-    _validate_rectifications_consumed_once(result.observations, operation=operation)
-    return result
 
 
 def aggregate_iva_ledger_observations(
@@ -1857,16 +1617,13 @@ __all__ = [
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
     "IvaLedgerAggregationIssueReason",
-    "IvaLedgerCandidate",
     "IvaLedgerProrrataApportionment",
     "IvaLedgerSectorApportionment",
     "ProrrataLedgerReference",
-    "aggregate_iva_ledger_candidates",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
     "compute_annual_deducible_totals_by_regime",
     "iva_ledger_missing_fact_reasons",
     "resolve_iva_ledger_binding_values",
     "validate_iva_ledger_counterparty_category",
-    "validate_iva_ledger_observation",
 ]

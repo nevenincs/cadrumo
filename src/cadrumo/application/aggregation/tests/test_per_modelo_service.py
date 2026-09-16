@@ -45,7 +45,6 @@ from .._preconditions import AggregationPreconditionCondition
 from ..counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
-    declarable_counterparty_nifs_347,
 )
 from ..errors import (
     AggregationUnsupportedModeloError,
@@ -267,7 +266,6 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
             BindingSourceKind.LEDGER_TRANSACTION,
             BindingSourceKind.PAYABLE_INVOICE,
         )
-        assert declarable_counterparty_nifs_347(result.aggregation) == frozenset({"B00000001"})
 
 
 def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics() -> None:

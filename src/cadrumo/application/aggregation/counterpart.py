@@ -9,8 +9,7 @@ Modelo 347 covers annual operations with third parties whose total exceeds the
 declaration floor. Modelo 349 covers intra-EU operations by member-state
 operation kind. Both aggregate per ``(source_kind, counterparty_nif,
 operation_kind)`` using the counterpart subset of the canonical source-kind
-taxonomy, then expose helpers such as :func:`declarable_counterparty_nifs_347`
-for consumers that need the 347 threshold decision.
+taxonomy.
 """
 
 from __future__ import annotations
@@ -33,7 +32,6 @@ from ...core.parsing.dates import IsoDateString
 from ...core.period import FilingPeriodCode, Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.m347_threshold import m347_declarable_party_ids
 from ...domain.calculations.registry.schema_base import DateAxis
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
@@ -413,27 +411,10 @@ def _counterpart_readiness_for_modelo(
     }
 
 
-def declarable_counterparty_nifs_347(
-    aggregation: CounterpartAggregation,
-    *,
-    operation: PinnedAuthorityOperation | None = None,
-) -> frozenset[str]:
-    """Return counterparties whose full Modelo 347 total exceeds the declaration floor."""
-    totals: dict[str, Decimal] = {}
-    for rollup in aggregation.rollups:
-        totals[rollup.counterparty_nif] = totals.get(rollup.counterparty_nif, Decimal("0")) + rollup.total_invoice_total
-    return m347_declarable_party_ids(
-        totals,
-        effective_date=aggregation.period.end_date,
-        authority=operation,
-    )
-
-
 __all__ = [
     "CounterpartAggregation",
     "CounterpartObservation",
     "CounterpartRollup",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
-    "declarable_counterparty_nifs_347",
 ]

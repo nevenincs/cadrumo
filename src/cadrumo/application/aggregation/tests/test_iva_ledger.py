@@ -692,7 +692,6 @@ def test_no_devengo_basis_selector_exists_on_iva_aggregation_surface() -> None:
     for entry_point in (
         iva_ledger.aggregate_iva_ledger_observations,
         iva_ledger.aggregate_iva_ledger_observations_from_repositories,
-        iva_ledger.aggregate_iva_ledger_candidates,
     ):
         params = inspect.signature(entry_point).parameters
         assert not any(token in name.lower() for name in params for token in forbidden_tokens), (

@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
-from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
+from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as t
 from ...core.logging import LogExtra, get_logger
@@ -71,34 +71,6 @@ class PerModeloAggregationContributor(StrEnum):
     FOREIGN_ASSETS = "foreign_assets"
 
 
-AggregationErrorCodes: tuple[str, ...] = (
-    "ERROR_FINANCIAL_AGGREGATION",
-    "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
-    "ERROR_FINANCIAL_AGGREGATION_VALIDATION",
-)
-
-
-class PerModeloAggregationContributorContract(BaseModel):
-    """Backend-owned contract for one aggregation provider family."""
-
-    model_config = _STRICT_FROZEN
-
-    provider: PerModeloAggregationContributor
-    modelos: tuple[str, ...] = Field(min_length=1)
-    service_owner: str = Field(pattern=r"^cadrumo\.application\.aggregation$")
-    accepted_source_kinds: tuple[BindingSourceKind, ...] = Field(min_length=1)
-
-    @field_validator("modelos")
-    @classmethod
-    @pydantic_validation_boundary
-    def _modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(value) != len(set(value)):
-            raise AggregationConfigError(
-                translated_message="aggregation.service.errors.provider_modelos_not_unique",
-            )
-        return value
-
-
 class PerModeloAggregationLogFields(BaseModel):
     """Stable, non-secret log fields emitted by the aggregation service."""
 
@@ -125,47 +97,6 @@ class PerModeloAggregationLogFields(BaseModel):
                 "result_row_count": self.result_row_count,
             }
         )
-
-
-class PerModeloAggregationContract(BaseModel):
-    """Complete backend contract consumed by current and future adapters."""
-
-    model_config = _STRICT_FROZEN
-
-    schema_version: str = "1"
-    service_owner: str = "cadrumo.application.aggregation"
-    providers: tuple[PerModeloAggregationContributorContract, ...]
-    accepted_source_kinds: tuple[BindingSourceKind, ...]
-    error_codes: tuple[str, ...]
-
-    @field_validator("providers")
-    @classmethod
-    @pydantic_validation_boundary
-    def _providers_are_unique(
-        cls,
-        value: tuple[PerModeloAggregationContributorContract, ...],
-    ) -> tuple[PerModeloAggregationContributorContract, ...]:
-        providers = tuple(provider.provider for provider in value)
-        if len(providers) != len(set(providers)):
-            raise AggregationConfigError(
-                translated_message="aggregation.service.errors.per_modelo_providers_not_unique",
-            )
-        modelos = tuple(modelo for provider in value for modelo in provider.modelos)
-        if len(modelos) != len(set(modelos)):
-            raise AggregationConfigError(
-                translated_message="aggregation.service.errors.per_modelo_modelos_not_unique",
-            )
-        return value
-
-    @field_validator("accepted_source_kinds")
-    @classmethod
-    @pydantic_validation_boundary
-    def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
-        if value != COUNTERPART_SOURCE_KIND_ORDER:
-            raise AggregationConfigError(
-                translated_message="aggregation.service.errors.source_kinds_mismatch",
-            )
-        return value
 
 
 class PerModeloAggregationCommand(BaseModel):
@@ -467,11 +398,8 @@ def _observation_count_for_command(
 
 
 __all__ = [
-    "AggregationErrorCodes",
     "PerModeloAggregationCommand",
-    "PerModeloAggregationContract",
     "PerModeloAggregationContributor",
-    "PerModeloAggregationContributorContract",
     "PerModeloAggregationLogFields",
     "PerModeloAggregationPayload",
     "PerModeloAggregationResult",
