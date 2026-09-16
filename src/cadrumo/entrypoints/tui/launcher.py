@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
     from textual.screen import Screen
 
+    from ...application.ledger.attachment_review import AttachmentReviewItem
     from ...application.ledger.models import ManualLedgerTransactionResult
     from ...application.ledger.workspace import LedgerWorkspaceProjectionV1
     from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
@@ -82,6 +83,8 @@ class TuiOperationCompositionV1:
     services: OperationComposedServices
     public_contracts: OperationPublicContractSetV1
     authority_operation: PinnedAuthorityOperation
+    event_loop: asyncio.AbstractEventLoop | None = None
+    """The loop the session's screens read shared state on; captures publish to it."""
 
     def __post_init__(self) -> None:
         """Refuse a public inventory detached from the composed service graph."""
@@ -499,25 +502,50 @@ def compose_installed_workbench_generation_provider(
 
     def provide(operation_runtime: TuiOperationCompositionV1) -> InstalledWorkbenchRootInputsV1:
         account_factories = dependencies.account.factories(operation_runtime.services)
+        profile_id = dependencies.account.profile_id
         current = [generation_provider()]
         home_pending: list[WorkbenchGenerationV1 | None] = [current[0]]
+        attachment_queue = [_read_attachment_queue(profile_id)]
+        loop = operation_runtime.event_loop
 
-        def capture() -> WorkbenchGenerationV1:
+        def publish(apply: Callable[[], None]) -> None:
+            """Swap shared state on the loop that reads it.
+
+            Captures run on worker threads while factories and the catalogue
+            read this state on the loop. The swap is queued before the
+            capturing thread returns, so the awaiting caller resumes after it.
+            """
+            if loop is None or _on_loop_thread(loop):
+                apply()
+            else:
+                loop.call_soon_threadsafe(apply)
+
+        def capture(*, for_home: bool = False) -> WorkbenchGenerationV1:
             generation = generation_provider()
-            current[0] = generation
+            attachments = _read_attachment_queue(profile_id)
+
+            def apply() -> None:
+                current[0] = generation
+                attachment_queue[0] = attachments
+                if for_home:
+                    home_pending[0] = generation
+
+            publish(apply)
             return generation
 
         def refresh_home() -> HomeProjectionV1:
             generation = home_pending[0]
             if generation is None:
                 generation = capture()
-            home_pending[0] = None
+
+            def consume() -> None:
+                home_pending[0] = None
+
+            publish(consume)
             return _required_projection(generation.home, "Home")
 
         def refresh_search_inputs() -> InstalledWorkbenchSearchInputsV1 | None:
-            generation = capture()
-            home_pending[0] = generation
-            return _search_inputs(generation)
+            return _search_inputs(capture(for_home=True))
 
         def destinations() -> InstalledWorkbenchDestinationsV1:
             """Read admissions and factories from the generation in hand.
@@ -546,6 +574,7 @@ def compose_installed_workbench_generation_provider(
             factories: dict[str, TuiScreenFactoryV1] = {}
             ledger_factory = _ledger_generation_factory(
                 current,
+                attachment_queue,
                 dependencies,
                 operation_runtime.authority_operation,
                 lambda: _required_projection(capture().ledger, "Ledger"),
@@ -655,6 +684,21 @@ def _available_admission(destination: str) -> WorkbenchDestinationAdmission:
     )
 
 
+def _read_attachment_queue(profile_id: str) -> tuple[AttachmentReviewItem, ...]:
+    """List the attachments awaiting review; it decrypts every manifest, so only captures call it."""
+    from ...adapters.persistence.storage.attachment import AttachmentStore
+    from ...application.ledger.attachment_review import list_attachment_review_queue
+
+    return tuple(list_attachment_review_queue(AttachmentStore(bucket_id=profile_id)))
+
+
+def _on_loop_thread(loop: asyncio.AbstractEventLoop) -> bool:
+    try:
+        return asyncio.get_running_loop() is loop
+    except RuntimeError:
+        return False
+
+
 def _required_projection[ProjectionT](
     result: WorkbenchGenerationProjectionResultV1[ProjectionT],
     label: str,
@@ -691,6 +735,7 @@ def _search_inputs(generation: WorkbenchGenerationV1) -> InstalledWorkbenchSearc
 
 def _ledger_generation_factory(
     current: list[WorkbenchGenerationV1],
+    attachment_queue: list[tuple[AttachmentReviewItem, ...]],
     dependencies: InstalledWorkbenchFactoryDependenciesV1,
     operation: PinnedAuthorityOperation,
     capture_ledger: Callable[[], LedgerWorkspaceProjectionV1],
@@ -706,8 +751,6 @@ def _ledger_generation_factory(
     from .ledger.routes import ledger_screen_factory
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
-        from ...adapters.persistence.storage.attachment import AttachmentStore
-        from ...application.ledger.attachment_review import list_attachment_review_queue
         from .ledger_doors import (
             LedgerEvidenceDoor,
             LedgerImportDoor,
@@ -722,10 +765,9 @@ def _ledger_generation_factory(
             evidence_action=dependencies.ledger_evidence_action,
             # A TUPLE, including an empty one: the evidence area distinguishes
             # "read, nothing outstanding" from "never read", and only the
-            # second is an absent door. Read here rather than in the
-            # generation because the queue is per-visit state an operator acts
-            # on, not part of the immutable session snapshot.
-            evidence_items=list_attachment_review_queue(AttachmentStore(bucket_id=dependencies.account.profile_id)),
+            # second is an absent door. Read with each capture, on the
+            # capture's thread, because listing it decrypts every manifest.
+            evidence_items=attachment_queue[0],
             # The link door is passed as a pair. The reconciliation body reads
             # without either, but its confirmation control stays hidden unless
             # BOTH the admitted action and a submitter are present, so passing
@@ -946,6 +988,7 @@ async def operation_services_scope() -> AsyncGenerator[TuiOperationCompositionV1
                 services=services,
                 public_contracts=services.public_contracts,
                 authority_operation=authority_operation,
+                event_loop=asyncio.get_running_loop(),
             )
         finally:
             await services.shutdown()
@@ -1059,50 +1102,55 @@ async def _run_root_session(
     the root never constructs its own graph and the scope still settles if
     the application raises on the way up or down.
     """
-    from .app import CadrumoTuiApp
+    from .app import CadrumoTuiApp, RootBindingV1
 
     async with operation_services_scope() as operation_runtime:
-        root = (
-            compose_installed_workbench_root(workbench_root_inputs_provider(operation_runtime))
-            if workbench_root_inputs_provider is not None
-            else None
-        )
-        if root is None:
+        if workbench_root_inputs_provider is None:
             return await CadrumoTuiApp(services=operation_runtime.services).run_async(
                 headless=headless,
                 auto_pilot=auto_pilot,
             )
-        service = None if root.search_inputs is None else compose_installed_workbench_search(root.search_inputs)
+        provider = workbench_root_inputs_provider
 
-        def refresh_search() -> WorkbenchSearchDoorV1:
-            refreshed_inputs = root.refresh_search_inputs()
-            if refreshed_inputs is None:
-                raise InternalInvariantError("installed workbench search is unavailable in the refreshed generation")
-            # Parity is checked against the admissions of the SAME capture the
-            # inputs came from, not against the session's first ones: a refresh
-            # that legitimately changes availability is coherent, and comparing
-            # it to a stale snapshot is what made a supported profile edit kill
-            # search for the rest of the session.
-            _require_search_admission_parity(
-                refreshed_inputs,
-                {
-                    "workbench.ledger": refreshed_inputs.ledger_admission,
-                    "workbench.declarations": refreshed_inputs.declarations_admission,
-                    "workbench.aeat_sync": refreshed_inputs.aeat_sync_admission,
-                },
+        def load_root() -> RootBindingV1:
+            """Build the root on a worker thread: the first capture is the slow part."""
+            root = compose_installed_workbench_root(provider(operation_runtime))
+            service = None if root.search_inputs is None else compose_installed_workbench_search(root.search_inputs)
+
+            def refresh_search() -> WorkbenchSearchDoorV1:
+                refreshed_inputs = root.refresh_search_inputs()
+                if refreshed_inputs is None:
+                    raise InternalInvariantError(
+                        "installed workbench search is unavailable in the refreshed generation"
+                    )
+                # Parity is checked against the admissions of the SAME capture the
+                # inputs came from, not against the session's first ones: a refresh
+                # that legitimately changes availability is coherent, and comparing
+                # it to a stale snapshot is what made a supported profile edit kill
+                # search for the rest of the session.
+                _require_search_admission_parity(
+                    refreshed_inputs,
+                    {
+                        "workbench.ledger": refreshed_inputs.ledger_admission,
+                        "workbench.declarations": refreshed_inputs.declarations_admission,
+                        "workbench.aeat_sync": refreshed_inputs.aeat_sync_admission,
+                    },
+                )
+                return compose_installed_workbench_search(refreshed_inputs)
+
+            return RootBindingV1(
+                destination_catalogue=root.destination_catalogue,
+                refresh_home=root.refresh_home,
+                workbench_search_service=service,
+                refresh_workbench_search=refresh_search,
+                refresh_destination_catalogue=root.refresh_destination_catalogue,
+                account_factories=root.account_factories,
+                read_account_session=root.read_account_session,
             )
-            return compose_installed_workbench_search(refreshed_inputs)
 
-        return await CadrumoTuiApp(
-            services=operation_runtime.services,
-            destination_catalogue=root.destination_catalogue,
-            refresh_home=root.refresh_home,
-            workbench_search_service=service,
-            refresh_workbench_search=refresh_search,
-            refresh_destination_catalogue=root.refresh_destination_catalogue,
-            account_factories=root.account_factories,
-            read_account_session=root.read_account_session,
-        ).run_async(headless=headless, auto_pilot=auto_pilot)
+        return await CadrumoTuiApp(services=operation_runtime.services, load_root=load_root).run_async(
+            headless=headless, auto_pilot=auto_pilot
+        )
 
 
 async def run_authenticated_workbench_sessions(

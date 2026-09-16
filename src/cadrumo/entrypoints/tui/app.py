@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, ClassVar, Final, override
 
 from textual.app import App, ComposeResult, SystemCommand
@@ -84,6 +84,22 @@ type WorkbenchSearchRefreshDoorV1 = Callable[[], WorkbenchSearchDoorV1]
 type DestinationCatalogueRefreshDoorV1 = Callable[[], TuiDestinationCatalogueV1]
 
 
+@dataclass(frozen=True, slots=True)
+class RootBindingV1:
+    """Every door the root needs for one authenticated session, built off the loop."""
+
+    destination_catalogue: TuiDestinationCatalogueV1
+    refresh_home: HomeRefreshDoorV1
+    workbench_search_service: WorkbenchSearchDoorV1 | None
+    refresh_workbench_search: WorkbenchSearchRefreshDoorV1 | None
+    refresh_destination_catalogue: DestinationCatalogueRefreshDoorV1 | None
+    account_factories: AccountFactoriesV1
+    read_account_session: Callable[[], HomeAccountSession] | None
+
+
+type RootLoaderV1 = Callable[[], RootBindingV1]
+
+
 class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     """Host one composed TUI session and whichever areas are joinable."""
 
@@ -124,8 +140,14 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         refresh_destination_catalogue: DestinationCatalogueRefreshDoorV1 | None = None,
         account_factories: AccountFactoriesV1 | None = None,
         read_account_session: Callable[[], HomeAccountSession] | None = None,
+        load_root: RootLoaderV1 | None = None,
     ) -> None:
-        """Bind the root to the operation services composed for this session."""
+        """Bind the root to the operation services composed for this session.
+
+        ``load_root`` replaces the individual doors: the shell renders first,
+        and the doors arrive from a worker thread that builds the first
+        generation, so opening the workbench never freezes the terminal.
+        """
         super().__init__()
         self._services = services
         self._destination_catalogue = destination_catalogue
@@ -135,6 +157,12 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._refresh_workbench_search = refresh_workbench_search
         self._returning_home = False
         """Whether a return to Home is re-reading the generation off the event loop."""
+        self._home_rebuilding = False
+        """Whether a Home rebuild is reading its projection off the event loop."""
+        self._home_request: HomeTarget | None = None
+        """The row the next rebuilt Home restores; the latest request wins."""
+        self._load_root = load_root
+        """Builds the workbench root off the event loop once the shell has rendered."""
         self._refresh_destination_catalogue = refresh_destination_catalogue
         self._account_factories = account_factories
         self._home_refresh_refusal_code: str | None = None
@@ -195,6 +223,37 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def on_mount(self) -> None:
         """Install the shared appearance for this session."""
         install_cadrumo_themes(self)
+        if self._load_root is not None:
+            opening = self.query_one("#root-updating", Static)
+            opening.update(tr("tui.root.opening"))
+            opening.display = True
+            self.run_worker(self._open_root(self._load_root), group="root-open")
+            return
+        self._start_session()
+
+    async def _open_root(self, load_root: RootLoaderV1) -> None:
+        """Build the workbench root on a worker thread, then bind it on the loop."""
+        binding = await asyncio.to_thread(load_root)
+        self._bind_root(binding)
+        opening = self.query_one("#root-updating", Static)
+        opening.display = False
+        opening.update(tr("tui.root.updating"))
+        self._start_session()
+
+    def _bind_root(self, binding: RootBindingV1) -> None:
+        self._destination_catalogue = binding.destination_catalogue
+        self._active_destination_catalogue = binding.destination_catalogue
+        self._refresh_home = binding.refresh_home
+        self._workbench_search_service = binding.workbench_search_service
+        self._refresh_workbench_search = binding.refresh_workbench_search
+        self._refresh_destination_catalogue = binding.refresh_destination_catalogue
+        self._account_factories = binding.account_factories
+        self._read_account_session = binding.read_account_session
+        self._workbench_search_refusal_code = (
+            None if binding.workbench_search_service is not None else "workbench.search.unavailable"
+        )
+
+    def _start_session(self) -> None:
         if self._read_account_session is not None:
             self.set_interval(_SESSION_WATCH_SECONDS, self._watch_account_session)
         self._describe_account_keys()
@@ -504,12 +563,36 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             self._show_home(self._home_semantic_focus)
 
     def _show_home(self, semantic_focus: HomeTarget | None) -> None:
-        """Rebuild Home and restore its actual semantic row after every return."""
+        """Rebuild Home off the event loop and restore its semantic row.
+
+        The Home read can take a whole generation capture. A request made while
+        one is out does not read again: it only replaces the row the rebuilt
+        Home restores, so the operator's latest position wins.
+        """
+        if self._refresh_home is None:
+            return
+        self._home_request = semantic_focus
+        if self._home_rebuilding:
+            return
+        self._home_rebuilding = True
+        self.query_one("#root-updating", Static).display = True
+        self.run_worker(self._rebuild_home(), group="root-home")
+
+    async def _rebuild_home(self) -> None:
+        try:
+            await self._show_home_now(self._home_request)
+        finally:
+            self._home_rebuilding = False
+            if self.is_running and not self._returning_home:
+                self.query_one("#root-updating", Static).display = False
+
+    async def _show_home_now(self, semantic_focus: HomeTarget | None) -> None:
+        """Read Home on a worker thread, then rebuild it on the loop."""
         refresh_home = self._refresh_home
         if refresh_home is None:
             return
         try:
-            projection = refresh_home()
+            projection = await asyncio.to_thread(refresh_home)
         except AccountSessionExpiredError:
             self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
             return
@@ -557,7 +640,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         try:
             await self._rebuild_workbench_search()
             self._rebuild_destination_catalogue()
-            self._show_home(self._home_semantic_focus)
+            await self._show_home_now(self._home_semantic_focus)
         finally:
             self._returning_home = False
             if self.is_running:
@@ -660,5 +743,7 @@ __all__ = [
     "CadrumoTuiApp",
     "DestinationCatalogueRefreshDoorV1",
     "HomeRefreshDoorV1",
+    "RootBindingV1",
+    "RootLoaderV1",
     "WorkbenchSearchRefreshDoorV1",
 ]

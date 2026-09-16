@@ -22,6 +22,7 @@ from textual.screen import Screen
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 
 from ....application.aeat_sync.workspace import (
@@ -492,7 +493,7 @@ def _declaration_catalogues(
         kind=DeclarationsLifecycleKind.FILED,
     )
     return (
-        WorkUnitCatalogue.from_work_units((unit,)),
+        build_work_unit_catalogue((unit,)),
         CalculationRevisionCatalogue(revisions={revision_id: revision}),
         ModeloRecordCatalogue(records={filing_id: filing}),
         (lifecycle,),

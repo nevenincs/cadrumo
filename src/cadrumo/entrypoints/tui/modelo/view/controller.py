@@ -102,11 +102,6 @@ class ModeloWorkspaceReadSession:
         """Return the language this session's text was actually resolved in."""
         return self.projection.locale.resolved_language.value
 
-    @property
-    def baseline_token(self) -> str:
-        """Return this session's baseline token, which is language-scoped."""
-        return self.projection.baseline.token
-
     def cursor_for(self, facet: ModeloWorkspaceFacetName) -> ModeloWorkspaceCursorV1 | None:
         """Return the continuation this facet declared, or ``None`` when complete.
 

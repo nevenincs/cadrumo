@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import ClassVar, Final, cast, override
 
@@ -177,13 +178,21 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
 
     def _open_browser(self) -> None:
         """Mount the tree only when asked: it keeps a loader running for as long as it exists."""
-        typed = Path(self.query_one("#ledger-import-path", Input).value.strip()).expanduser()
-        if typed.is_dir():
-            root = typed
-        elif str(typed) != "." and typed.parent.is_dir():
-            root = typed.parent
-        else:
-            root = Path.cwd()
+        typed = self.query_one("#ledger-import-path", Input).value.strip()
+        self.run_worker(self._mount_browser(typed), group="ledger-import-browse", exclusive=True)
+
+    @staticmethod
+    def _browse_root(typed: str) -> Path:
+        """Pick the folder to browse from; a stat can wait on a network drive, so it runs on a thread."""
+        path = Path(typed).expanduser()
+        if path.is_dir():
+            return path
+        if typed and path.parent.is_dir():
+            return path.parent
+        return Path.cwd()
+
+    async def _mount_browser(self, typed: str) -> None:
+        root = await asyncio.to_thread(self._browse_root, typed)
         for existing in self.query("#ledger-import-tree"):
             existing.remove()
         tree = DirectoryTree(root, id="ledger-import-tree")
@@ -198,9 +207,6 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
             notice.update(ledger_copy("tui.ledger.import.path_required"))
             return None
         path = Path(raw_path).expanduser()
-        if not path.exists():
-            notice.update(ledger_copy("tui.ledger.import.path_missing", path=raw_path))
-            return None
         kind = self.source_kind
         country: str | None = None
         if kind is not LedgerImportSourceKind.BANK_STATEMENT:
@@ -249,6 +255,13 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
     async def _preview(self, request: LedgerImportRequestV1) -> None:
         """Read the source without writing, then ask for confirmation."""
         status = self.query_one("#ledger-flow-status", Static)
+        if not await asyncio.to_thread(request.path.exists):
+            status.update("")
+            self.query_one("#ledger-refusal", Static).update(
+                ledger_copy("tui.ledger.import.path_missing", path=str(request.path))
+            )
+            self.query_one("#ledger-import-preview-button", Button).disabled = False
+            return
         try:
             outcome = await self.controller.preview_import(request)
         except (CadrumoError, ValidationError) as error:

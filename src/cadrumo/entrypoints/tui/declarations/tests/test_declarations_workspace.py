@@ -14,6 +14,8 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+
 from .....application.modelo.declarations_workspace import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
@@ -258,7 +260,7 @@ def _projection(
     return project_declarations_workspace(
         operation=operation,
         bucket_id=_BUCKET,
-        work_units=WorkUnitCatalogue.from_work_units((unit,)),
+        work_units=build_work_unit_catalogue((unit,)),
         calculation_revisions=CalculationRevisionCatalogue(
             revisions={
                 filed_revision_id: filed_revision,

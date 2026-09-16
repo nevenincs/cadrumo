@@ -153,9 +153,19 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         table.focus()
 
     def _show_records(self) -> None:
+        """Read the records off the event loop; listing them decrypts the whole evidence catalogue."""
+        self.query_one("#ledger-evidence-record-detail", Static).update(ledger_copy("tui.ledger.evidence.loading"))
+        self.run_worker(self._load_records(), group="ledger-evidence-records", exclusive=True)
+
+    async def _load_records(self) -> None:
+        loaded = await asyncio.to_thread(self.controller.evidence_records)
+        self._render_records(loaded)
+
+    def _render_records(self, loaded: tuple[LedgerEvidenceRecordRowV1, ...] | None) -> None:
         records = cast("DataTable[str]", self.query_one("#ledger-evidence-records", DataTable))
         records.clear()
-        self._records = self.controller.evidence_records()
+        self._records = loaded
+        self.query_one("#ledger-evidence-record-detail", Static).update("")
         for position, record in enumerate(self._records or (), start=1):
             records.add_row(
                 str(position),
@@ -347,7 +357,6 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self.query_one("#ledger-evidence-path", Input).value = ""
-            self._show_records()
             added = ledger_copy("tui.ledger.evidence.added", file=record.file_name)
             self.refresh_then(lambda: self._after_reread(added))
         self.query_one("#ledger-evidence-add", Button).disabled = False
