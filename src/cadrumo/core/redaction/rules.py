@@ -59,7 +59,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping
-from functools import cache
+from functools import cache, lru_cache
 from types import MappingProxyType
 from typing import overload
 from urllib.parse import urlparse
@@ -1000,7 +1000,25 @@ def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
     )
 
 
+#: Structured CLI output repeats the same short strings -- field names, enum
+#: tokens, currencies, dates -- thousands of times per payload, and every rule
+#: here is a pure function of the text and the reveal flag. Longer strings are
+#: redacted afresh so a rendered report never sits in the cache.
+_CLI_STRING_CACHE_MAX_LENGTH = 512
+
+
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
+    if len(text) > _CLI_STRING_CACHE_MAX_LENGTH:
+        return _redact_cli_string_uncached(text, reveal_identifiers)
+    return _redact_cli_string_cached(text, reveal_identifiers)
+
+
+@lru_cache(maxsize=16384)
+def _redact_cli_string_cached(text: str, reveal_identifiers: bool) -> str:
+    return _redact_cli_string_uncached(text, reveal_identifiers)
+
+
+def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
     # A column-header row carries no identifier values, only field names; the
     # ``label<TAB>value`` heuristic would otherwise rewrite the *next column
     # name* into a placeholder. Skip the assignment redactor for headers; the
