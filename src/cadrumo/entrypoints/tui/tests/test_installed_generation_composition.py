@@ -8,9 +8,8 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
+from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from ....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ....application.ledger.models import LedgerReviewQueryResult, LedgerStatusReport

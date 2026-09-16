@@ -1064,6 +1064,11 @@ def main(
     generation the root shell consumes. A caller that injects a provider has
     already made those choices, so its session is run exactly as given.
     """
+    from ...core.logging import configure_logging
+
+    # Importing a module no longer configures logging, so the host does it
+    # before anything records; earlier INFO records would otherwise be lost.
+    configure_logging()
     if workbench_root_inputs_provider is None:
         from .installed_session import run_installed_workbench_session
 
