@@ -25,6 +25,7 @@ from .event import (
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
+    verify_bucket_event_id,
 )
 from .protocols import BucketEventHistoryRepositoryProtocol
 
@@ -77,7 +78,14 @@ def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEve
         )
     mapping = dict(catalogue.events)
     mapping[event.event_id] = event
-    return BucketEventHistoryCatalogue(events=mapping)
+    if not isinstance(event, BucketEvent):
+        return BucketEventHistoryCatalogue(events=mapping)
+    # Re-validating the catalogue re-derives the id of every event already in
+    # it, so a batch of appends cost quadratic hashing. Those members came out
+    # of a validated catalogue and are frozen; only the newcomer is unproven,
+    # and it is checked here. The key-match invariant holds by construction.
+    verify_bucket_event_id(event)
+    return BucketEventHistoryCatalogue.model_construct(events=mapping)
 
 
 def bucket_event_history_write(
