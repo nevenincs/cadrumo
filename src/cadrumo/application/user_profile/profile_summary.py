@@ -16,6 +16,9 @@ projection.  Those all remain with the commands that own them.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -77,6 +80,34 @@ class ProfileSummaryInventory(BaseModel):
         return self.outcome is ProfileSummaryOutcome.RECOGNIZED
 
 
+_INVENTORY_SNAPSHOT: ContextVar[dict[Path, ProfileSummaryInventory] | None] = ContextVar(
+    "profile_summary_inventory_snapshot",
+    default=None,
+)
+
+
+@contextmanager
+def summary_inventory_snapshot() -> Iterator[None]:
+    """Let everything inside one read-only command share one listing observation.
+
+    A single command asks which profiles exist from several layers -- the
+    session gate, the active-bucket resolver, the envelope's profile label, the
+    sandbox notice -- and each paid a full anchored scan. Inside this scope the
+    first recognized observation of a root answers the rest. The scope is the
+    whole cache: nothing survives it, because the store belongs to other
+    processes too, and a command that writes profile state must not open one.
+    Nested scopes share the outermost observation.
+    """
+    if _INVENTORY_SNAPSHOT.get() is not None:
+        yield
+        return
+    token = _INVENTORY_SNAPSHOT.set({})
+    try:
+        yield
+    finally:
+        _INVENTORY_SNAPSHOT.reset(token)
+
+
 def summary_inventory(*, root: Path | None = None) -> ProfileSummaryInventory:
     """Project every committed capsule from recognized witnesses alone.
 
@@ -85,9 +116,26 @@ def summary_inventory(*, root: Path | None = None) -> ProfileSummaryInventory:
     profile.  Both failure endings are typed rather than raised, because a
     listing that cannot be trusted must still render -- saying so -- instead of
     aborting the command an operator ran to find out what they have.
+
+    Within :func:`summary_inventory_snapshot` a recognized observation is reused
+    for the same root; a degraded or concurrent one never is, so a retry inside
+    the command observes the store again.
     """
+    resolved_root = effective_storage_root(root)
+    snapshot = _INVENTORY_SNAPSHOT.get()
+    if snapshot is not None:
+        observed = snapshot.get(resolved_root)
+        if observed is not None:
+            return observed
+    inventory = _observe_summary_inventory(resolved_root)
+    if snapshot is not None and inventory.recognized:
+        snapshot[resolved_root] = inventory
+    return inventory
+
+
+def _observe_summary_inventory(root: Path) -> ProfileSummaryInventory:
     try:
-        witnesses = profile_custody_port().list_committed_capsule_summaries(root=effective_storage_root(root))
+        witnesses = profile_custody_port().list_committed_capsule_summaries(root=root)
     except ProfileCustodyConcurrentChangeError as exc:
         return ProfileSummaryInventory(outcome=ProfileSummaryOutcome.CONCURRENT_CHANGE, detail=str(exc))
     except ProfileCustodyRecordIntegrityError as exc:
@@ -122,4 +170,10 @@ def _summary_of(witness: ProfileCustodyCapsuleSummaryWitnessPort) -> ProfileSumm
     )
 
 
-__all__ = ["ProfileSummary", "ProfileSummaryInventory", "require_summaries", "summary_inventory"]
+__all__ = [
+    "ProfileSummary",
+    "ProfileSummaryInventory",
+    "require_summaries",
+    "summary_inventory",
+    "summary_inventory_snapshot",
+]
