@@ -15,7 +15,9 @@ __all__ = [
     "OLLAMA_PROBE_CACHE_TTL_S",
     "OLLAMA_PROBE_TIMEOUT_S",
     "OLLAMA_PULL_TIMEOUT_S",
+    "OLLAMA_INSTALL_TIMEOUT_S",
     "OLLAMA_READINESS_TIMEOUT_S",
+    "OLLAMA_START_TIMEOUT_S",
     "ProvisioningFactValue",
     "ProvisioningOutcome",
     "ProvisioningPreconditionCondition",
@@ -53,6 +55,13 @@ OLLAMA_PULL_TIMEOUT_S = 3600.0
 # enough not to report a working model as unready while still bounded.
 OLLAMA_READINESS_TIMEOUT_S = 120.0
 
+# A freshly spawned runtime binds its port within a few seconds; the bound is
+# generous for a cold disk while still ending a start that will never answer.
+OLLAMA_START_TIMEOUT_S = 30.0
+
+# A package-manager install downloads and unpacks an application bundle.
+OLLAMA_INSTALL_TIMEOUT_S = 1800.0
+
 
 class ProvisioningPreconditionCondition(StrEnum):
     """Stable failed-condition identities emitted by provisioning policy."""
@@ -60,6 +69,13 @@ class ProvisioningPreconditionCondition(StrEnum):
     OPTIONAL_EXTRA_IMPORTABLE = "provisioning.optional_extra.importable"
     PLAYWRIGHT_BROWSER_INSTALLED = "provisioning.playwright_browser.installed"
     RUNTIME_REACHABLE = "provisioning.runtime.reachable"
+    RUNTIME_INSTALLED = "provisioning.runtime.installed"
+    RUNTIME_ENDPOINT_LOCAL = "provisioning.runtime.endpoint_local"
+    RUNTIME_START_SUCCEEDED = "provisioning.runtime.start_succeeded"
+    RUNTIME_INSTALLER_AVAILABLE = "provisioning.runtime.installer_available"
+    RUNTIME_INSTALL_CONSENTED = "provisioning.runtime.install_consented"
+    RUNTIME_INSTALL_SUCCEEDED = "provisioning.runtime.install_succeeded"
+    ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
     VISION_MODEL_INSTALLED = "provisioning.vision_model.installed"
     HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met"
     SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available"
