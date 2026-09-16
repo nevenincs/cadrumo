@@ -607,6 +607,10 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             self._home_refresh_refusal_code = "workbench.home.refresh_unavailable"
             self._refuse_account_action()
             return
+        if self._refresh_home is not refresh_home or not self.is_running:
+            # The session was severed or the app is closing while the read was
+            # out; a Home built now would land on a root that is going away.
+            return
         self._home_refresh_refusal_code = None
         # Home is rebuilt after every return, including from a language
         # change, so this is where the footer catches up with the page.

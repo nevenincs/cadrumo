@@ -859,19 +859,19 @@ def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarReco
                 bucket_id=bucket_id,
                 profile_decode_context=operation.profile_decode_context(),
             )
-        guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
-        ports = build_work_lifecycle_ports(bucket_id=bucket_id)
-        ensure_modelo_work_unit_for_active_target(
-            bucket_id=bucket_id,
-            modelo=str(entry.modelo),
-            filing_year=entry.filing_year,
-            period=entry.period,
-            registry_revision_id=None,
-            actor=actor,
-            catalogue=ports.work_unit_repository.load(),
-            ports=ports,
-            profile=profile,
-        )
+            guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
+            ports = build_work_lifecycle_ports(bucket_id=bucket_id)
+            ensure_modelo_work_unit_for_active_target(
+                bucket_id=bucket_id,
+                modelo=str(entry.modelo),
+                filing_year=entry.filing_year,
+                period=entry.period,
+                registry_revision_id=None,
+                actor=actor,
+                catalogue=ports.work_unit_repository.load(),
+                ports=ports,
+                profile=profile,
+            )
 
     return create
 
