@@ -49,7 +49,11 @@ from ...runtime_repository import secure_object_repository_for_active_bucket
 if TYPE_CHECKING:
     from pathlib import Path
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_persistence_adapter,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
 
 _LABEL = "sanctioned-door-readback"

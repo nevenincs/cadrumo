@@ -50,7 +50,7 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now as _now
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _CREDENTIAL_INPUT = "logout-strong-close-password"
 _LABEL = "Logout operator"
