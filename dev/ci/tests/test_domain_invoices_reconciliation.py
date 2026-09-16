@@ -15,11 +15,12 @@ from cadrumo.application.invoices.transaction_linking import link_invoice_transa
 from cadrumo.core.invoice_link import LinkInconsistencyDirection
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -121,7 +122,7 @@ def test_issued_invoice_matches_positive_incoming_transaction() -> None:
         counterparty="Cliente SL",
     )
     suggestions = suggest_reconciliations(
-        InvoiceCatalogue.from_invoices([invoice]),
+        build_invoice_catalogue([invoice]),
         TransactionCatalogue.from_transactions([transaction]),
     )
     assert len(suggestions) == 1
@@ -140,7 +141,7 @@ def test_received_invoice_matches_outgoing_transaction() -> None:
         direction=TransactionDirection.OUTGOING,
     )
     suggestions = suggest_reconciliations(
-        InvoiceCatalogue.from_invoices([invoice]),
+        build_invoice_catalogue([invoice]),
         TransactionCatalogue.from_transactions([transaction]),
     )
     assert len(suggestions) == 1
@@ -156,7 +157,7 @@ def test_amount_match_without_counterparty_scores_half() -> None:
         counterparty="Some Other Name",
     )
     suggestions = suggest_reconciliations(
-        InvoiceCatalogue.from_invoices([invoice]),
+        build_invoice_catalogue([invoice]),
         TransactionCatalogue.from_transactions([transaction]),
     )
     assert len(suggestions) == 1
@@ -179,7 +180,7 @@ def test_none_counterparty_does_not_boost_score() -> None:
         counterparty=None,
     )
     suggestions = suggest_reconciliations(
-        InvoiceCatalogue.from_invoices([invoice]),
+        build_invoice_catalogue([invoice]),
         TransactionCatalogue.from_transactions([transaction]),
     )
     assert len(suggestions) == 1
@@ -197,7 +198,7 @@ def test_counterparty_only_match_emits_no_suggestion() -> None:
     )
     assert (
         suggest_reconciliations(
-            InvoiceCatalogue.from_invoices([invoice]),
+            build_invoice_catalogue([invoice]),
             TransactionCatalogue.from_transactions([transaction]),
         )
         == ()
@@ -221,7 +222,7 @@ def test_already_linked_items_are_excluded() -> None:
         counterparty="Cliente SL",
     )
     suggestions = suggest_reconciliations(
-        InvoiceCatalogue.from_invoices([linked_invoice, unlinked_invoice]),
+        build_invoice_catalogue([linked_invoice, unlinked_invoice]),
         TransactionCatalogue.from_transactions([linked_transaction, unlinked_transaction]),
     )
     assert all(s.invoice_id == unlinked_invoice.invoice_id for s in suggestions)
@@ -235,7 +236,7 @@ def test_suggestion_ordering_is_deterministic() -> None:
     tx_a = _transaction(provider_id="row-a", amount=Decimal("121.00"), counterparty="Cliente SL")
     tx_b = _transaction(provider_id="row-b", amount=Decimal("121.00"), counterparty=None)
     suggestions = suggest_reconciliations(
-        InvoiceCatalogue.from_invoices([invoice_b, invoice_a]),
+        build_invoice_catalogue([invoice_b, invoice_a]),
         TransactionCatalogue.from_transactions([tx_b, tx_a]),
     )
     # high-score suggestions (score 1.0 with tx_a) come first
@@ -257,7 +258,7 @@ def test_verify_link_consistency_detects_one_sided_links() -> None:
         invoice_id=invoice.invoice_id,
     )
     inconsistencies = verify_link_consistency(
-        InvoiceCatalogue.from_invoices([invoice]),
+        build_invoice_catalogue([invoice]),
         TransactionCatalogue.from_transactions([transaction]),
     )
     directions = {item.direction for item in inconsistencies}
@@ -274,7 +275,7 @@ def test_link_bidirectional_updates_both_catalogues() -> None:
         amount=Decimal("121.00"),
         counterparty="Cliente SL",
     )
-    InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices([invoice]))
+    InvoiceCatalogueRepository().save(build_invoice_catalogue([invoice]))
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID).save(TransactionCatalogue.from_transactions([transaction]))
 
     result = link_invoice_transaction_repositories(
