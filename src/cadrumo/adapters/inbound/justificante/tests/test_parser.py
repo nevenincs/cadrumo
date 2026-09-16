@@ -44,7 +44,7 @@ from .._parsers.text_extraction import TEXT_CACHE, extract_text
 from ..parser import parse_justificante, parse_justificante_bytes
 from .parse_cache import parse_committed_justificante_fixture
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("authority_operation")]
 
 FIXTURES_DIR = _FIXTURES_ROOT / "justificantes"
 _SEDE_HOST = aeat_host("sede")
