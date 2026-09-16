@@ -11,6 +11,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ._cli_json_support import _json_object
@@ -111,7 +113,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
     """Persist one RECEIVED purchase invoice and return its id."""
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ....domain.invoices.enums import IvaRate, PaymentStatus
-    from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+    from ....domain.invoices.models import Invoice, InvoiceLine
     from ....domain.iva.classification import InvoiceKind
 
     purchase_line = InvoiceLine(
@@ -139,7 +141,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
             "payment_status": PaymentStatus.PAID,
         },
     )
-    InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
+    InvoiceCatalogueRepository().save(build_invoice_catalogue((purchase_evidence,)))
     return purchase_evidence.invoice_id
 
 

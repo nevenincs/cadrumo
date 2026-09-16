@@ -45,10 +45,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.text_bounds import NonEmptyStr
 from .command_suggestions import INVOCATION_REMAINDER_META_KEY
-from .operator_surface_reconciliation import (
-    current_operator_surface_reconciliation,
-    operator_surface_target_reconciliation,
-)
+from .operator_surface_reconciliation import operator_surface_target_reconciliation
 
 
 # The accepted-code set for every ``--modelo`` option and argument comes from the
@@ -609,9 +606,9 @@ def emit_progress_line(line: str) -> None:
 @cache
 def _live_action_input_schema(command_key: str) -> VerbInputSchema:
     """Resolve one action target through the command-spec input authority."""
-    from .verb_input_schema import build_verb_input_schemas
+    from .verb_input_schema import build_verb_input_schema
 
-    return build_verb_input_schemas((command_key,))[command_key]
+    return build_verb_input_schema(command_key)
 
 
 def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
@@ -827,7 +824,9 @@ def resolve_notice_action(
         action=action,
         argument_bindings=argument_bindings,
         catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=current_operator_surface_reconciliation(),
+        reconciliation=operator_surface_target_reconciliation(
+            OPERATOR_ACTION_CATALOGUE.lookup(action.action_id).target_command_key,
+        ),
     )
     schema = _live_action_input_schema(resolved.action.target_command_key)
     return resolved.model_copy(

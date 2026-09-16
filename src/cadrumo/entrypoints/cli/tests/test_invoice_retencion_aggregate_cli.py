@@ -25,6 +25,7 @@ from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalo
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -42,7 +43,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -164,7 +165,7 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path)
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(profile.storage_root)
         invoice = _professional_services_invoice(bucket_id=_BUCKET_ID)
-        InvoiceCatalogueRepository(objects=objects).save(InvoiceCatalogue.from_invoices([invoice]))
+        InvoiceCatalogueRepository(objects=objects).save(build_invoice_catalogue([invoice]))
 
         result = invoke_cached_cli(
             [
@@ -216,7 +217,7 @@ def test_excluded_invoice_retencion_is_not_routed_and_surfaces_a_notice(tmp_path
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 invoice retencion") as profile:
         objects: SecureObjectRepository = profile.repository
-        InvoiceCatalogueRepository(objects=objects).save(InvoiceCatalogue.from_invoices([issued]))
+        InvoiceCatalogueRepository(objects=objects).save(build_invoice_catalogue([issued]))
 
         result = invoke_cached_cli(
             [

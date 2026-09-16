@@ -27,6 +27,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
@@ -148,7 +150,7 @@ def test_link_refuses_cross_bucket_catalogue_invoice() -> None:
             currency="EUR",
             rate_provider=recorded_ecb_rate_provider(),
         )
-        _write_raw_catalogue(InvoiceCatalogue.from_invoices([foreign_invoice]))
+        _write_raw_catalogue(build_invoice_catalogue([foreign_invoice]))
 
     linked = invoke_cached_cli(
         ["app", "ledger", "link", transaction_id, "--invoice-id", foreign_invoice.invoice_id],

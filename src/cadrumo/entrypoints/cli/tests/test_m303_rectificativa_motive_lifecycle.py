@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import IVARegime
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -75,7 +76,7 @@ from ....domain.modelos.filing_record import (
     ModeloRecordCatalogue,
     derive_filing_record_id,
 )
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....entrypoints.adapter_composition import (
     build_amendment_action_ports,
     build_modelo_export_ports,
@@ -209,7 +210,7 @@ def _authorities(
         source_pdf_sha256="a" * 64,
         parsed_at=_NOW,
     )
-    work_units = WorkUnitCatalogue.from_work_units((work_unit,))
+    work_units = build_work_unit_catalogue((work_unit,))
     filing_records = ModeloRecordCatalogue(records={target.filing_record_id: target})
     context = CalculationRevisionAggregateContext(
         work_units=work_units,
@@ -358,7 +359,7 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting(*, opera
         ModeloRecord.model_validate({**target.model_dump(mode="python"), "external_evidence": None})
     variants = (
         (
-            context.model_copy(update={"work_units": WorkUnitCatalogue.from_work_units(())}),
+            context.model_copy(update={"work_units": build_work_unit_catalogue(())}),
             "no authoritative parent WorkUnit",
         ),
         (
@@ -420,7 +421,7 @@ def test_encrypted_persistence_reloads_and_revalidates_joined_authority(
             objects=objects,
             m303_rectificativa_taxpayer_tax_id=_TAX_ID,
         )
-        work_repo.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        work_repo.save(build_work_unit_catalogue((work_unit,)))
         filing_repo.save(ModeloRecordCatalogue(records={target.filing_record_id: target}))
         justificante_repo.save(receipt)
         calculation_repo.save(
@@ -463,7 +464,7 @@ def test_public_amend_service_refuses_missing_motive_before_identity_with_real_p
             objects=objects,
             m303_rectificativa_taxpayer_tax_id=_TAX_ID,
         )
-        work_repo.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        work_repo.save(build_work_unit_catalogue((work_unit,)))
         filing_repo.save(ModeloRecordCatalogue(records={target.filing_record_id: target}))
         justificante_repo.save(receipt)
         calculation_repo.save(
@@ -573,7 +574,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)
         filing_repo = ModeloRecordCatalogueRepository(objects=objects)
-        work_repo.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        work_repo.save(build_work_unit_catalogue((work_unit,)))
         filing_repo.save(ModeloRecordCatalogue(records={target.filing_record_id: target}))
         JustificanteRepository(objects=objects).save(receipt)
         justificante_repo = JustificanteRepository(objects=objects)
@@ -646,7 +647,7 @@ def test_export_amendment_gate_refuses_missing_injected_justificante_authority(
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)
         filing_repo = ModeloRecordCatalogueRepository(objects=objects)
-        work_repo.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        work_repo.save(build_work_unit_catalogue((work_unit,)))
         filing_repo.save(ModeloRecordCatalogue(records={target.filing_record_id: target}))
         command = ModeloExportCommand(
             calculation_revision_id=revision.calculation_revision_id,
@@ -682,7 +683,7 @@ def test_public_export_requires_injected_persisted_justificante_authority(
             objects=objects,
             m303_rectificativa_taxpayer_tax_id=_TAX_ID,
         )
-        work_repo.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        work_repo.save(build_work_unit_catalogue((work_unit,)))
         filing_repo.save(ModeloRecordCatalogue(records={target.filing_record_id: target}))
         JustificanteRepository(objects=objects).save(receipt)
         calculation_repo.save(
