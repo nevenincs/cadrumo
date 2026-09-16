@@ -15,14 +15,26 @@ from __future__ import annotations
 
 from collections.abc import Generator, Mapping
 from contextlib import ExitStack, asynccontextmanager, contextmanager
-from dataclasses import dataclass
+from functools import cached_property
 from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from google.auth.credentials import Credentials
 
     from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
     from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
+    from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
+    from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+    from ..adapters.persistence.profile.justificante import JustificanteRepository
+    from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
+    from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
     from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
     from ..application.aggregation.percepciones_observations_repository import (
@@ -47,6 +59,7 @@ if TYPE_CHECKING:
     from ..application.inventory.ports import InventoryServicePorts, InventoryServicePortsFactory
     from ..application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
     from ..application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
+    from ..application.ledger.column_roles import ColumnRoleMappingPort
     from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
     from ..application.ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
     from ..application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
@@ -78,6 +91,7 @@ if TYPE_CHECKING:
         ParticipationIndexRebuildPortsFactory,
     )
     from ..application.modelo.recipient_encryption import RecipientEncryptionCapabilityFactory
+    from ..application.modelo.reconciliation_records import ModeloReconciliationPersistencePort
     from ..application.modelo.review_package_recipient_registry_ports import (
         RecipientFingerprintRegistryPortsFactory,
     )
@@ -96,55 +110,263 @@ if TYPE_CHECKING:
     from ..application.state_projection_ports import StateProjectionReadPorts
     from ..application.storage.calc_sheets.parity_harness import CalcSheetsParityApplyPort
     from ..application.storage.calc_sheets.records import SheetExportPlan
-    from ..application.user_profile.custody_ports import ProfileBucketStoragePort
+    from ..application.user_profile.custody_ports import ProfileBucketStoragePort, ProfileCustodyPort
     from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
     from ..core.config import Settings
+    from ..core.tabular import NormalizedTable
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.calculations.registry.tax_id_format import SubjectTaxId
     from ..domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+    from ..domain.usage_ratios.model import UsageRatioProfile
 
 
-@dataclass(frozen=True, slots=True)
 class ProfileAdapterComposition:
-    """Concrete capabilities composed for one executable profile session."""
+    """Concrete capabilities composed for one executable profile session.
 
-    state_projection_read_ports: StateProjectionReadPorts
-    diagnostics_ports: DiagnosticsPorts
-    certificate_secret_backend_factory: CertificateSecretBackendFactory
-    operator_probe_ports: OperatorProbePorts
-    operator_scope_ports: OperatorScopePorts
-    bucket_storage: ProfileBucketStoragePort
-    verification_repository_bundle_factory: VerificationRepositoryBundleFactory
-    calculation_action_ports_factory: CalculationActionPortsFactory
-    profile_read_ports_factory: ProfileReadPortsFactory
-    amendment_action_ports_factory: AmendmentActionPortsFactory
-    filing_action_ports_factory: FilingActionPortsFactory
-    bienes_inversion_repository_factory: BienesInversionIvaRegisterRepositoryFactory
-    retencion_observation_ports_factory: RetencionObservationPortsFactory
-    percepcion_observation_ports_factory: PercepcionObservationPortsFactory
-    borrador_100_snapshot_repository_factory: Borrador100SnapshotRepositoryFactory
-    censal_fetch_port: CensalFetchPort
-    expedientes_ports_factory: ExpedientesPortsFactory
-    ledger_evidence_ports_factory: LedgerEvidencePortsFactory
-    invoice_confirmation_ports_factory: InvoiceConfirmationPortsFactory
-    counterparty_establishment_repository_factory: CounterpartyEstablishmentRepositoryFactory
-    inventory_service_ports_factory: InventoryServicePortsFactory
-    catalogue_creation_ports_factory: CatalogueCreationPortsFactory
-    catalogue_lifecycle_ports_factory: CatalogueLifecyclePortsFactory
-    draft_review_ports_factory: DraftReviewPortsFactory
-    modelo_export_ports_factory: ModeloExportPortsFactory
-    modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory
-    modelo_history_ports_factory: ModeloHistoryPortsFactory
-    participation_index_rebuild_ports_factory: ParticipationIndexRebuildPortsFactory
-    review_package_signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory
-    modelo_iva_wallet_seed_ports_factory: ModeloIvaWalletSeedPortsFactory
-    prorrata_register_repository_factory: ProrrataRegisterRepositoryFactory
-    m145_communication_records_ports_factory: M145CommunicationRecordsPortsFactory
-    m036_lifecycle_ports_factory: M036LifecyclePortsFactory
-    work_lifecycle_ports_factory: WorkLifecyclePortsFactory
-    recipient_fingerprint_registry_ports_factory: RecipientFingerprintRegistryPortsFactory
-    recipient_encryption_capability_factory: RecipientEncryptionCapabilityFactory
-    apoderado_config_repository_factory: ApoderadoConfigurationRepositoryFactory
+    Each capability resolves on first read, so a command imports only the
+    adapter trees it actually uses.
+    """
+
+    def __init__(self, *, profile_custody: ProfileCustodyPort) -> None:
+        """Hold the custody port the session scope already bound."""
+        self._profile_custody = profile_custody
+
+    @cached_property
+    def state_projection_read_ports(self) -> StateProjectionReadPorts:
+        """Resolve the state projection read ports on first read."""
+        from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
+        from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
+        from ..application.state_projection_ports import StateProjectionReadPorts
+
+        projection_adapter = StateProjectionPersistenceAdapter(diagnostics_ports=self.diagnostics_ports)
+        return StateProjectionReadPorts(
+            workspace=projection_adapter,
+            profile=projection_adapter,
+            usage_ratio_profile_loader=load_usage_ratios,
+        )
+
+    @cached_property
+    def diagnostics_ports(self) -> DiagnosticsPorts:
+        """Resolve the diagnostics ports on first read."""
+        return build_diagnostics_ports()
+
+    @cached_property
+    def certificate_secret_backend_factory(self) -> CertificateSecretBackendFactory:
+        """Resolve the certificate secret backend factory on first read."""
+        from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+
+        return build_certificate_secret_backend
+
+    @cached_property
+    def operator_probe_ports(self) -> OperatorProbePorts:
+        """Resolve the operator probe ports on first read."""
+        from ..adapters.outbound.aeat.auth.certificate import CertificateHealthProbeAdapter
+        from ..adapters.outbound.aeat.auth.clave_movil_support import ClaveIdentityProbeAdapter
+        from ..adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
+        from ..application.auth.operator_probe_ports import OperatorProbePorts
+
+        return OperatorProbePorts(
+            active_profile_session=ActiveProfileSessionPresenceAdapter(),
+            certificate_health=CertificateHealthProbeAdapter(),
+            clave_identity=ClaveIdentityProbeAdapter(),
+        )
+
+    @cached_property
+    def operator_scope_ports(self) -> OperatorScopePorts:
+        """Resolve the operator scope ports on first read."""
+        from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
+        return build_operator_scope_ports()
+
+    @cached_property
+    def bucket_storage(self) -> ProfileBucketStoragePort:
+        """Resolve the bucket storage on first read."""
+        return self._profile_custody.bucket_storage()
+
+    @property
+    def verification_repository_bundle_factory(self) -> VerificationRepositoryBundleFactory:
+        """Resolve the verification repository bundle factory on first read."""
+        return build_verification_repository_bundle
+
+    @property
+    def calculation_action_ports_factory(self) -> CalculationActionPortsFactory:
+        """Resolve the calculation action ports factory on first read."""
+        return build_calculation_action_ports
+
+    @property
+    def profile_read_ports_factory(self) -> ProfileReadPortsFactory:
+        """Resolve the profile read ports factory on first read."""
+        return build_profile_read_ports
+
+    @property
+    def amendment_action_ports_factory(self) -> AmendmentActionPortsFactory:
+        """Resolve the amendment action ports factory on first read."""
+        return build_amendment_action_ports
+
+    @property
+    def filing_action_ports_factory(self) -> FilingActionPortsFactory:
+        """Resolve the filing action ports factory on first read."""
+        return build_filing_action_ports
+
+    @property
+    def bienes_inversion_repository_factory(self) -> BienesInversionIvaRegisterRepositoryFactory:
+        """Resolve the bienes inversion repository factory on first read."""
+        return build_bienes_inversion_repository
+
+    @property
+    def retencion_observation_ports_factory(self) -> RetencionObservationPortsFactory:
+        """Resolve the retencion observation ports factory on first read."""
+        return build_retencion_observation_ports
+
+    @property
+    def percepcion_observation_ports_factory(self) -> PercepcionObservationPortsFactory:
+        """Resolve the percepcion observation ports factory on first read."""
+        return build_percepcion_observation_ports
+
+    @property
+    def borrador_100_snapshot_repository_factory(self) -> Borrador100SnapshotRepositoryFactory:
+        """Resolve the borrador 100 snapshot repository factory on first read."""
+        return build_borrador_100_snapshot_repository
+
+    @cached_property
+    def censal_fetch_port(self) -> CensalFetchPort:
+        """Resolve the censal fetch port on first read."""
+        return build_censal_fetch_port()
+
+    @property
+    def expedientes_ports_factory(self) -> ExpedientesPortsFactory:
+        """Resolve the expedientes ports factory on first read."""
+        return build_expedientes_ports
+
+    @property
+    def ledger_evidence_ports_factory(self) -> LedgerEvidencePortsFactory:
+        """Resolve the ledger evidence ports factory on first read."""
+        return build_ledger_evidence_ports
+
+    @cached_property
+    def invoice_confirmation_ports_factory(self) -> InvoiceConfirmationPortsFactory:
+        """Resolve the invoice confirmation ports factory on first read."""
+        from ..adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
+
+        return build_invoice_confirmation_ports
+
+    @cached_property
+    def counterparty_establishment_repository_factory(self) -> CounterpartyEstablishmentRepositoryFactory:
+        """Resolve the counterparty establishment repository factory on first read."""
+        from ..adapters.persistence.profile.counterparty_establishment import (
+            build_counterparty_establishment_repository,
+        )
+
+        return build_counterparty_establishment_repository
+
+    @property
+    def inventory_service_ports_factory(self) -> InventoryServicePortsFactory:
+        """Resolve the inventory service ports factory on first read."""
+        return build_inventory_service_ports
+
+    @cached_property
+    def catalogue_creation_ports_factory(self) -> CatalogueCreationPortsFactory:
+        """Resolve the catalogue creation ports factory on first read."""
+        from ..adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
+
+        return build_catalogue_creation_ports
+
+    @cached_property
+    def catalogue_lifecycle_ports_factory(self) -> CatalogueLifecyclePortsFactory:
+        """Resolve the catalogue lifecycle ports factory on first read."""
+        from ..adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
+
+        return build_catalogue_lifecycle_ports
+
+    @property
+    def draft_review_ports_factory(self) -> DraftReviewPortsFactory:
+        """Resolve the draft review ports factory on first read."""
+        return build_draft_review_ports
+
+    @property
+    def modelo_export_ports_factory(self) -> ModeloExportPortsFactory:
+        """Resolve the modelo export ports factory on first read."""
+        return build_modelo_export_ports
+
+    @property
+    def modelo_edit_receipt_repository_factory(self) -> ModeloEditReceiptRepositoryFactory:
+        """Resolve the modelo edit receipt repository factory on first read."""
+        return build_modelo_edit_receipt_repository
+
+    @property
+    def modelo_history_ports_factory(self) -> ModeloHistoryPortsFactory:
+        """Resolve the modelo history ports factory on first read."""
+        return build_modelo_history_ports
+
+    @property
+    def participation_index_rebuild_ports_factory(self) -> ParticipationIndexRebuildPortsFactory:
+        """Resolve the participation index rebuild ports factory on first read."""
+        return build_participation_index_rebuild_ports
+
+    @cached_property
+    def review_package_signing_keypair_capability_factory(self) -> ReviewPackageSigningKeypairCapabilityFactory:
+        """Resolve the review package signing keypair capability factory on first read."""
+        from ..adapters.persistence.profile.review_package_signing import (
+            build_review_package_signing_keypair_capability,
+        )
+
+        return build_review_package_signing_keypair_capability
+
+    @property
+    def modelo_iva_wallet_seed_ports_factory(self) -> ModeloIvaWalletSeedPortsFactory:
+        """Resolve the modelo IVA wallet seed ports factory on first read."""
+        return build_modelo_iva_wallet_seed_ports
+
+    @property
+    def prorrata_register_repository_factory(self) -> ProrrataRegisterRepositoryFactory:
+        """Resolve the prorrata register repository factory on first read."""
+        return build_prorrata_register_repository
+
+    @cached_property
+    def m145_communication_records_ports_factory(self) -> M145CommunicationRecordsPortsFactory:
+        """Resolve the Modelo 145 communication records ports factory on first read."""
+        from ..adapters.persistence.profile.m145_communication_records import (
+            build_m145_communication_records_ports,
+        )
+
+        return build_m145_communication_records_ports
+
+    @cached_property
+    def m036_lifecycle_ports_factory(self) -> M036LifecyclePortsFactory:
+        """Resolve the Modelo 036 lifecycle ports factory on first read."""
+        from ..adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
+
+        return build_m036_lifecycle_ports
+
+    @property
+    def work_lifecycle_ports_factory(self) -> WorkLifecyclePortsFactory:
+        """Resolve the work lifecycle ports factory on first read."""
+        return build_work_lifecycle_ports
+
+    @cached_property
+    def recipient_fingerprint_registry_ports_factory(self) -> RecipientFingerprintRegistryPortsFactory:
+        """Resolve the recipient fingerprint registry ports factory on first read."""
+        from ..adapters.persistence.profile.review_package_recipient_registry import (
+            build_recipient_fingerprint_registry_ports,
+        )
+
+        return build_recipient_fingerprint_registry_ports
+
+    @cached_property
+    def recipient_encryption_capability_factory(self) -> RecipientEncryptionCapabilityFactory:
+        """Resolve the recipient encryption capability factory on first read."""
+        from ..adapters.persistence.profile.review_package_recipient_encryption import (
+            build_recipient_encryption_capability,
+        )
+
+        return build_recipient_encryption_capability
+
+    @cached_property
+    def apoderado_config_repository_factory(self) -> ApoderadoConfigurationRepositoryFactory:
+        """Resolve the apoderado config repository factory on first read."""
+        from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
+
+        return build_apoderado_config_repository
 
 
 def build_censal_fetch_port() -> CensalFetchPort:
@@ -1130,68 +1352,125 @@ __all__ = [
 ]
 
 
+def _bucket_event_history_repository(*, bucket_id: str) -> BucketEventHistoryRepository:
+    from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
+
+    return build_bucket_event_history_repository(bucket_id=bucket_id)
+
+
+def _load_usage_ratios(*, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:
+    from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
+
+    return load_usage_ratios(bucket_id=bucket_id, operation=operation)
+
+
+def _save_usage_ratios(profile: UsageRatioProfile, *, bucket_id: str) -> None:
+    from ..adapters.persistence.profile.usage_ratios import save_usage_ratios
+
+    save_usage_ratios(profile, bucket_id=bucket_id)
+
+
+def _load_usage_ratios_with_censo_guard(
+    *,
+    bucket_id: str,
+    raw_afectacion_ratio: Decimal | None,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> UsageRatioProfile:
+    from ..adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
+
+    return load_usage_ratios_with_censo_guard(
+        bucket_id=bucket_id,
+        raw_afectacion_ratio=raw_afectacion_ratio,
+        year=year,
+        operation=operation,
+    )
+
+
+def _confirmation_record_repository(*, bucket_id: str, settings: Settings | None) -> ConfirmationRecordRepository:
+    from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
+
+    return ConfirmationRecordRepository(bucket_id=bucket_id, settings=settings)
+
+
+def _extraction_draft_repository(*, bucket_id: str, settings: Settings) -> ExtractionDraftRepository:
+    from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+
+    return ExtractionDraftRepository(bucket_id=bucket_id, settings=settings)
+
+
+def _transaction_participation_index_repository(
+    *,
+    bucket_id: str | None = None,
+) -> TransactionParticipationIndexRepository:
+    from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+
+    return TransactionParticipationIndexRepository(bucket_id=bucket_id)
+
+
+def _ledger_classification_rule_repository(*, bucket_id: str) -> LedgerClassificationRuleRepository:
+    from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
+
+    return LedgerClassificationRuleRepository(bucket_id=bucket_id)
+
+
+def _transaction_catalogue_repository(*, bucket_id: str) -> TransactionCatalogueRepository:
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
+
+    return TransactionCatalogueRepository(bucket_id=bucket_id)
+
+
+def _calculation_revision_catalogue_repository(*, bucket_id: str) -> CalculationRevisionCatalogueRepository:
+    from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+
+    return CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
+
+
+def _modelo_record_catalogue_repository(*, bucket_id: str) -> ModeloRecordCatalogueRepository:
+    from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+
+    return ModeloRecordCatalogueRepository(bucket_id=bucket_id)
+
+
+def _justificante_repository(*, bucket_id: str) -> JustificanteRepository:
+    from ..adapters.persistence.profile.justificante import JustificanteRepository
+
+    return JustificanteRepository(bucket_id=bucket_id)
+
+
+def _work_unit_catalogue_repository(*, bucket_id: str) -> WorkUnitCatalogueRepository:
+    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+
+    return WorkUnitCatalogueRepository(bucket_id=bucket_id)
+
+
+def _modelo_reconciliation_persistence() -> ModeloReconciliationPersistencePort:
+    from ..adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
+
+    return build_modelo_reconciliation_persistence()
+
+
+def _resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | None:
+    from ..adapters.outbound.llm.column_role_mapping import resolve_column_roles
+
+    return resolve_column_roles(table)
+
+
 @contextmanager
 def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     """Bind every adapter port a frontend session resolves, and unbind after.
 
     The imports are function-local because entering this scope is what pulls the
     adapter layer into the process: a frontend that never serves work should not
-    pay for the persistence and outbound trees at import time.
+    pay for the persistence and outbound trees at import time. The yielded
+    capabilities resolve on first read for the same reason.
     """
     from ..adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
-    from ..adapters.outbound.aeat.auth.certificate import CertificateHealthProbeAdapter
-    from ..adapters.outbound.aeat.auth.clave_movil_support import ClaveIdentityProbeAdapter
     from ..adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ..adapters.outbound.aeat.auth.session_store import build_session_store
-    from ..adapters.outbound.llm.column_role_mapping import resolve_column_roles as resolve_outbound_column_roles
-    from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
-    from ..adapters.persistence.profile.buckets import (
-        build_bucket_event_history_repository,
-    )
-    from ..adapters.persistence.profile.catalogue_creation import (
-        build_catalogue_creation_ports,
-        build_catalogue_lifecycle_ports,
-    )
-    from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
-    from ..adapters.persistence.profile.counterparty_establishment import (
-        build_counterparty_establishment_repository,
-    )
-    from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
-    from ..adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
-    from ..adapters.persistence.profile.justificante import JustificanteRepository
-    from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
-    from ..adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
-    from ..adapters.persistence.profile.m145_communication_records import (
-        build_m145_communication_records_ports,
-    )
-    from ..adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
-    from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-    from ..adapters.persistence.profile.review_package_recipient_encryption import (
-        build_recipient_encryption_capability,
-    )
-    from ..adapters.persistence.profile.review_package_recipient_registry import (
-        build_recipient_fingerprint_registry_ports,
-    )
-    from ..adapters.persistence.profile.review_package_signing import (
-        build_review_package_signing_keypair_capability,
-    )
-    from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
-    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ..adapters.persistence.profile.usage_ratios import (
-        load_usage_ratios,
-        load_usage_ratios_with_censo_guard,
-        save_usage_ratios,
-    )
-    from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-    from ..adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
-    from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
     from ..adapters.persistence.storage.profile_custody import build_profile_custody_port
     from ..adapters.persistence.storage.profile_login_session import build_profile_login_session_port
     from ..adapters.persistence.workflow import build_workflow_persistence_port
-    from ..application.auth.operator_probe_ports import OperatorProbePorts
     from ..application.auth.protocols import bind_session_store
     from ..application.auth.providers import bind_auth_provider_selector
     from ..application.bucket_event_repository import bind_bucket_event_history_repository_factory
@@ -1211,93 +1490,40 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
     from ..application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from ..application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
-    from ..application.state_projection_ports import StateProjectionReadPorts
     from ..application.user_profile.custody_ports import bind_profile_custody_port
     from ..application.user_profile.language_resolver import register_language_resolver
     from ..application.user_profile.login_session_port import bind_profile_login_session_port
     from ..application.workflow.persistence import bind_workflow_persistence_port
-
-    diagnostics_ports = build_diagnostics_ports()
-    projection_adapter = StateProjectionPersistenceAdapter(diagnostics_ports=diagnostics_ports)
-    projection_ports = StateProjectionReadPorts(
-        workspace=projection_adapter,
-        profile=projection_adapter,
-        usage_ratio_profile_loader=load_usage_ratios,
-    )
 
     with ExitStack() as composition:
         profile_custody = build_profile_custody_port()
         composition.enter_context(bind_profile_custody_port(profile_custody))
         composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
         composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
-        composition.enter_context(bind_bucket_event_history_repository_factory(build_bucket_event_history_repository))
-        composition.enter_context(bind_confirmation_record_repository_factory(ConfirmationRecordRepository))
-        composition.enter_context(bind_column_role_mapping_resolver(resolve_outbound_column_roles))
-        composition.enter_context(bind_extraction_draft_repository_factory(ExtractionDraftRepository))
+        composition.enter_context(bind_bucket_event_history_repository_factory(_bucket_event_history_repository))
+        composition.enter_context(bind_confirmation_record_repository_factory(_confirmation_record_repository))
+        composition.enter_context(bind_column_role_mapping_resolver(_resolve_column_roles))
+        composition.enter_context(bind_extraction_draft_repository_factory(_extraction_draft_repository))
         composition.enter_context(
-            bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository)
+            bind_transaction_participation_index_repository_factory(_transaction_participation_index_repository)
         )
         composition.enter_context(
-            bind_ledger_classification_rule_repository_factory(LedgerClassificationRuleRepository)
+            bind_ledger_classification_rule_repository_factory(_ledger_classification_rule_repository)
         )
-        composition.enter_context(bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository))
+        composition.enter_context(bind_transaction_catalogue_repository_factory(_transaction_catalogue_repository))
         composition.enter_context(
-            bind_usage_ratio_profile_persistence(loader=load_usage_ratios, saver=save_usage_ratios)
+            bind_usage_ratio_profile_persistence(loader=_load_usage_ratios, saver=_save_usage_ratios)
         )
-        composition.enter_context(bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard))
+        composition.enter_context(bind_usage_ratio_censo_guard_loader(_load_usage_ratios_with_censo_guard))
         composition.enter_context(
-            bind_calculation_revision_catalogue_repository_factory(CalculationRevisionCatalogueRepository)
+            bind_calculation_revision_catalogue_repository_factory(_calculation_revision_catalogue_repository)
         )
-        composition.enter_context(bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository))
-        composition.enter_context(bind_justificante_repository_factory(JustificanteRepository))
-        composition.enter_context(bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository))
+        composition.enter_context(bind_modelo_record_catalogue_repository_factory(_modelo_record_catalogue_repository))
+        composition.enter_context(bind_justificante_repository_factory(_justificante_repository))
+        composition.enter_context(bind_work_unit_catalogue_repository_factory(_work_unit_catalogue_repository))
         composition.enter_context(bind_reconciliation_evidence_parser(InboundReconciliationEvidenceParser()))
-        composition.enter_context(
-            bind_modelo_reconciliation_persistence_factory(build_modelo_reconciliation_persistence)
-        )
+        composition.enter_context(bind_modelo_reconciliation_persistence_factory(_modelo_reconciliation_persistence))
         composition.enter_context(bind_auth_provider_selector(select_outbound_auth_provider))
         composition.enter_context(bind_session_store(build_session_store()))
         register_language_resolver()
-        yield ProfileAdapterComposition(
-            state_projection_read_ports=projection_ports,
-            diagnostics_ports=diagnostics_ports,
-            certificate_secret_backend_factory=build_certificate_secret_backend,
-            operator_probe_ports=OperatorProbePorts(
-                active_profile_session=ActiveProfileSessionPresenceAdapter(),
-                certificate_health=CertificateHealthProbeAdapter(),
-                clave_identity=ClaveIdentityProbeAdapter(),
-            ),
-            operator_scope_ports=build_operator_scope_ports(),
-            bucket_storage=profile_custody.bucket_storage(),
-            verification_repository_bundle_factory=build_verification_repository_bundle,
-            calculation_action_ports_factory=build_calculation_action_ports,
-            profile_read_ports_factory=build_profile_read_ports,
-            amendment_action_ports_factory=build_amendment_action_ports,
-            filing_action_ports_factory=build_filing_action_ports,
-            bienes_inversion_repository_factory=build_bienes_inversion_repository,
-            retencion_observation_ports_factory=build_retencion_observation_ports,
-            percepcion_observation_ports_factory=build_percepcion_observation_ports,
-            borrador_100_snapshot_repository_factory=build_borrador_100_snapshot_repository,
-            censal_fetch_port=build_censal_fetch_port(),
-            expedientes_ports_factory=build_expedientes_ports,
-            ledger_evidence_ports_factory=build_ledger_evidence_ports,
-            invoice_confirmation_ports_factory=build_invoice_confirmation_ports,
-            counterparty_establishment_repository_factory=build_counterparty_establishment_repository,
-            inventory_service_ports_factory=build_inventory_service_ports,
-            catalogue_creation_ports_factory=build_catalogue_creation_ports,
-            catalogue_lifecycle_ports_factory=build_catalogue_lifecycle_ports,
-            draft_review_ports_factory=build_draft_review_ports,
-            modelo_export_ports_factory=build_modelo_export_ports,
-            modelo_edit_receipt_repository_factory=build_modelo_edit_receipt_repository,
-            modelo_history_ports_factory=build_modelo_history_ports,
-            participation_index_rebuild_ports_factory=build_participation_index_rebuild_ports,
-            review_package_signing_keypair_capability_factory=build_review_package_signing_keypair_capability,
-            modelo_iva_wallet_seed_ports_factory=build_modelo_iva_wallet_seed_ports,
-            prorrata_register_repository_factory=build_prorrata_register_repository,
-            m145_communication_records_ports_factory=build_m145_communication_records_ports,
-            m036_lifecycle_ports_factory=build_m036_lifecycle_ports,
-            work_lifecycle_ports_factory=build_work_lifecycle_ports,
-            recipient_fingerprint_registry_ports_factory=build_recipient_fingerprint_registry_ports,
-            recipient_encryption_capability_factory=build_recipient_encryption_capability,
-            apoderado_config_repository_factory=build_apoderado_config_repository,
-        )
+        yield ProfileAdapterComposition(profile_custody=profile_custody)
