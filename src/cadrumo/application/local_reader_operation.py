@@ -36,7 +36,6 @@ from .local_reader import (
     RoleModelTarget,
     TextExtractionFitnessProbe,
     role_model_targets,
-    runtime_model_names_match,
     verify_role_target,
 )
 from .operations.capabilities import (
@@ -77,6 +76,7 @@ from .provisioning_runtime import (
     pull_runtime_model,
     read_installed_models,
     remove_runtime_model,
+    runtime_model_names_match,
 )
 
 __all__ = [

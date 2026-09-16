@@ -433,3 +433,44 @@ def test_the_direct_call_and_the_supervised_operation_settle_identically(tmp_pat
 
     assert _essence(direct) == _essence(supervised.result)
     assert direct.succeeded is not pull_fails
+
+
+@pytest.mark.timeout(120)
+def test_a_resident_model_of_another_size_does_not_count_as_loaded(tmp_path: Path) -> None:
+    family_sibling = _TEXT.split(":", 1)[0] + ":8b"
+    assert family_sibling != _TEXT
+    ports = _Ports()
+    with _runtime(installed={_TEXT, family_sibling}, residents={family_sibling}):
+        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
+        residents = set(_Runtime.residents)
+
+    (item,) = run.result.models
+    assert item.succeeded is True
+    assert item.already_satisfied is False, "a different tag is a different model"
+    assert residents == {_TEXT, family_sibling}
+
+
+@pytest.mark.timeout(120)
+def test_load_refuses_when_only_another_size_is_pulled(tmp_path: Path) -> None:
+    family_sibling = _TEXT.split(":", 1)[0] + ":8b"
+    ports = _Ports()
+    with _runtime(installed={family_sibling}, residents=set()):
+        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION))
+        loads = [body for path, body in _Runtime.requests if path == "/api/generate"]
+
+    (item,) = run.result.models
+    assert item.succeeded is False
+    assert item.failed_condition_id == ProvisioningPreconditionCondition.MODEL_INSTALLED
+    assert loads == []
+
+
+@pytest.mark.timeout(120)
+def test_an_untagged_model_name_means_latest(tmp_path: Path) -> None:
+    ports = _Ports()
+    with _runtime(installed={"qwen3:latest"}, residents={"qwen3:latest"}):
+        run = _run(tmp_path, ports, build_local_reader_load_request(ModelRole.TEXT_EXTRACTION, "qwen3"))
+
+    (item,) = run.result.models
+    assert item.succeeded is True
+    assert item.already_satisfied is True
+    assert _Runtime.requests == []

@@ -25,11 +25,10 @@ from ..local_reader import (
     probe_local_reader,
     read_local_reader_status,
     role_model_targets,
-    runtime_model_names_match,
     verify_role_target,
 )
 from ..provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
-from ..provisioning_runtime import InstalledModel
+from ..provisioning_runtime import InstalledModel, runtime_model_names_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,6 +89,8 @@ def _runtime(*, installed: list[str], residents: list[str] | None = None) -> Gen
         ("qwen3", "qwen3:latest", True),
         ("qwen3:1.7b", "qwen3:8b", False),
         ("qwen3:1.7b", "qwen3-vl:2b", False),
+        ("qwen3", "qwen3:1.7b", False),
+        ("qwen3:latest", "qwen3:latest", True),
     ],
 )
 def test_model_names_match_on_the_full_tag(left: str, right: str, same: bool) -> None:

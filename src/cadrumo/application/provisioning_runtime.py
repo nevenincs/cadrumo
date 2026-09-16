@@ -165,8 +165,29 @@ def cadrumo_selected_models(settings: Settings | None = None) -> frozenset[str]:
     )
 
 
+def runtime_model_names_match(left: str, right: str) -> bool:
+    """Return whether two runtime model names denote the same tagged model.
+
+    An untagged name means ``:latest`` to the runtime, so ``qwen3`` and
+    ``qwen3:latest`` match while ``qwen3:1.7b`` and ``qwen3:8b`` do not -- a
+    different size is a different download and a different memory claim. Every
+    "is this exact model present or loaded" question uses this comparison.
+    """
+
+    def normalised(name: str) -> str:
+        return name if ":" in name else f"{name}:latest"
+
+    return normalised(left) == normalised(right)
+
+
 def matches_selected_model(name: str, selected: frozenset[str]) -> bool:
-    """Return whether a resident model name is one Cadrumo selected, ignoring the tag suffix."""
+    """Return whether a model name belongs to a family Cadrumo selected, ignoring the tag suffix.
+
+    Family-level on purpose: it bounds which models Cadrumo may unload or
+    remove and which residents count as reclaimable, so a differently sized
+    variant of a selected model stays within Cadrumo's reach. It never answers
+    whether one exact model is present; :func:`runtime_model_names_match` does.
+    """
     stem = name.split(":", 1)[0]
     return name in selected or any(candidate.split(":", 1)[0] == stem for candidate in selected)
 
@@ -557,7 +578,7 @@ def unload_runtime_model(
                 facts={"model": model, "resident_set_readable": False},
             ),
         )
-    if not any(matches_selected_model(resident.name, frozenset({model})) for resident in resident_set):
+    if not any(runtime_model_names_match(model, resident.name) for resident in resident_set):
         return UnloadOutcome(
             model=model,
             unloaded=False,
@@ -629,7 +650,7 @@ def _load_refusal(
 
 
 def _is_resident(model: str, residents: tuple[RuntimeResident, ...]) -> bool:
-    return any(matches_selected_model(entry.name, frozenset({model})) for entry in residents)
+    return any(runtime_model_names_match(model, entry.name) for entry in residents)
 
 
 def load_runtime_model(
@@ -675,7 +696,7 @@ def load_runtime_model(
             ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
             {"model": model, "installed_model_inventory_readable": False},
         )
-    if not any(matches_selected_model(entry.name, frozenset({model})) for entry in inventory):
+    if not any(runtime_model_names_match(model, entry.name) for entry in inventory):
         return _load_refusal(
             model, ProvisioningPreconditionCondition.MODEL_INSTALLED, {"model": model, "model_installed": False}
         )
@@ -1035,15 +1056,13 @@ def verify_model_ready(
                 facts={"model": model, "runtime_reachable": False},
             ),
         )
-    resident = any(matches_selected_model(entry.name, frozenset({model})) for entry in residents)
+    resident = any(runtime_model_names_match(model, entry.name) for entry in residents)
     if not resident:
         # A generate call against an absent model is refused by the runtime
         # anyway; asking the inventory first names the actual gap -- a pull --
         # instead of reporting a load failure.
         inventory = read_installed_models(resolved)
-        if inventory is not None and not any(
-            matches_selected_model(entry.name, frozenset({model})) for entry in inventory
-        ):
+        if inventory is not None and not any(runtime_model_names_match(model, entry.name) for entry in inventory):
             return ReadinessOutcome(
                 model=model,
                 ready=False,
@@ -1245,7 +1264,7 @@ def _confirm_removal(
             facts,
             was_installed=True,
         )
-    if any(matches_selected_model(row.name, frozenset({model})) for row in after):
+    if any(runtime_model_names_match(model, row.name) for row in after):
         facts = {
             "model": model,
             "removal_request_accepted": True,
@@ -1310,7 +1329,7 @@ def remove_runtime_model(
     if inventory is None:
         facts = {"model": model, "installed_model_inventory_readable": False}
         return _remove_refusal(model, ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE, facts)
-    entry = next((row for row in inventory if matches_selected_model(row.name, frozenset({model}))), None)
+    entry = next((row for row in inventory if runtime_model_names_match(model, row.name)), None)
     if entry is None:
         facts = {"model": model, "model_installed": False}
         return _remove_refusal(

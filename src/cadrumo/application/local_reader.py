@@ -51,6 +51,7 @@ from .provisioning_runtime import (
     last_runtime_pull,
     read_installed_models,
     read_runtime_residents,
+    runtime_model_names_match,
     verify_model_ready,
 )
 
@@ -71,7 +72,6 @@ __all__ = [
     "read_local_reader_status",
     "recorded_role_fitness",
     "role_model_targets",
-    "runtime_model_names_match",
     "select_role_model",
     "verify_role_target",
 ]
@@ -278,20 +278,6 @@ def verify_role_target(
 def local_reader_service(role: ModelRole) -> str:
     """Return the stable diagnostic row id for one role's local reader."""
     return f"local-reader:{role.value}"
-
-
-def runtime_model_names_match(left: str, right: str) -> bool:
-    """Return whether two runtime model names denote the same tagged model.
-
-    An untagged name means ``:latest`` to the runtime, so ``qwen3`` and
-    ``qwen3:latest`` match while ``qwen3:1.7b`` and ``qwen3:8b`` do not -- a
-    different size is a different download and a different memory claim.
-    """
-
-    def normalised(name: str) -> str:
-        return name if ":" in name else f"{name}:latest"
-
-    return normalised(left) == normalised(right)
 
 
 def configured_role_model(role: ModelRole, settings: Settings | None = None) -> str | None:
