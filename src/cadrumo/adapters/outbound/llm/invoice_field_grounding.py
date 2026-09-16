@@ -434,7 +434,7 @@ def _grounded_decimal(raw: str | None) -> Decimal | None:
     return coerce_finite_european_decimal(text)
 
 
-def _grounded_percentage(raw: str | None) -> Decimal | None:
+def _grounded_percentage(raw: str | None, currency_unit: str | None = None) -> Decimal | None:
     """Return a transcribed rate as a bare Decimal, dropping the printed unit.
 
     The declared form for a rate is *the bare number*
@@ -460,6 +460,7 @@ def _grounded_percentage(raw: str | None) -> Decimal | None:
     is a misread, not a unit, and tolerating it there would launder a bad
     transcription into a filing figure.
     """
+    del currency_unit  # a rate carries no currency; the shared signature is the form table's
     if raw is None:
         return None
     text = raw.strip()
@@ -468,6 +469,81 @@ def _grounded_percentage(raw: str | None) -> Decimal | None:
             text = text[: -len(unit)].strip()
             break
     return _grounded_decimal(text)
+
+
+#: Currency SYMBOLS treated as unit markers on an amount. Stripping one says
+#: nothing about which currency it denotes -- the code is read from the separate
+#: ``currency`` field, whose own validator refuses to guess a code from a symbol.
+_CURRENCY_UNIT_SYMBOLS = ("€", "$", "£", "¥")
+
+
+def _without_currency_unit(text: str, currency_unit: str | None) -> str:
+    """Return *text* with at most ONE leading or trailing currency unit removed.
+
+    A document prints an amount beside its unit -- ``1.200,00 €``,
+    ``EUR 1200.00``, ``1200.00 EUR`` -- and a model copying what is printed
+    returns the unit with the digits, which the decimal authority then refuses.
+
+    Only a unit this function can NAME is removed: a symbol from the closed set
+    above, or the exact code THIS reply reported in its own ``currency`` field.
+    Corroboration is what keeps the rule closed -- the ISO-4217 authority
+    validates shape rather than membership, so accepting any three letters
+    would strip ``1200.00 IVA`` down to a figure the document never printed
+    beside that label. Any other trailing text is left in place so it still
+    fails the decimal authority, because "strip whatever is not a digit" turns
+    a misread into a filing figure, the exact laundering the grounded
+    discipline exists to prevent. At most one unit is removed, so
+    ``1200 EUR EUR`` still drops.
+
+    Args:
+        text: The amount as the model transcribed it.
+        currency_unit: The grounded ISO-4217 code from the same reply, or
+            ``None`` when the reply named no currency -- in which case only a
+            symbol is recognised.
+    """
+    stripped = text.strip()
+    for symbol in _CURRENCY_UNIT_SYMBOLS:
+        if stripped.endswith(symbol):
+            return stripped[: -len(symbol)].strip()
+        if stripped.startswith(symbol):
+            return stripped[len(symbol) :].strip()
+    if currency_unit is None:
+        return stripped
+    parts = stripped.split()
+    if len(parts) == 2:
+        for index, remainder in ((0, parts[1]), (1, parts[0])):
+            if parts[index].strip().upper() == currency_unit:
+                return remainder.strip()
+    return stripped
+
+
+def _grounded_money(raw: str | None, currency_unit: str | None = None) -> Decimal | None:
+    """Return a transcribed amount as a Decimal, dropping one printed currency unit.
+
+    The declared form for an amount is digits with the printed decimal
+    separator and no currency sign
+    (:attr:`~llm.invoice_field_contract.InvoiceFieldForm.MONETARY_AMOUNT`), and
+    the per-field instruction says so. A model reading a line that prints
+    ``Base imponible: 1200.00 EUR`` nonetheless returns ``"1200.00 EUR"``, and
+    routed straight through :func:`_grounded_decimal` that lost the taxable
+    base outright -- measured live on the text lane, where the base, the cuota
+    and the total all arrived carrying their printed unit.
+
+    A currency token beside an amount is a UNIT MARKER, exactly as a percent
+    sign is beside a rate (:func:`_grounded_percentage`), so removing it is
+    unit normalisation and the number that remains is the one the document
+    printed -- copied, never computed. The anchor still holds the printed form
+    verbatim for the closure check to point at, and an amount whose thousands
+    separator is genuinely ambiguous is still dropped by
+    :func:`_grounded_decimal` rather than read one way.
+
+    The earlier note on :func:`_grounded_percentage` -- that a percent sign on
+    an AMOUNT is a misread rather than a unit -- still holds: ``21%`` is not a
+    currency unit, so it is not removed here and still drops.
+    """
+    if raw is None:
+        return None
+    return _grounded_decimal(_without_currency_unit(raw, currency_unit))
 
 
 def _grounded_currency(raw: str | None) -> str | None:
@@ -495,8 +571,8 @@ _TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | 
 }
 """Validators for the declared forms whose grounded value stays a string."""
 
-_NUMERIC_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], Decimal | None]] = {
-    InvoiceFieldForm.MONETARY_AMOUNT: _grounded_decimal,
+_NUMERIC_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None, str | None], Decimal | None]] = {
+    InvoiceFieldForm.MONETARY_AMOUNT: _grounded_money,
     InvoiceFieldForm.PERCENTAGE_RATE: _grounded_percentage,
 }
 """Validators for the declared forms whose grounded value becomes a Decimal.
@@ -520,14 +596,18 @@ def _ground_text(raw: str | None, field_name: str) -> str | None:
     return _TEXT_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
 
 
-def _ground_numeric(raw: str | None, field_name: str) -> Decimal | None:
+def _ground_numeric(raw: str | None, field_name: str, currency_unit: str | None = None) -> Decimal | None:
     """Ground ``raw`` through the validator ``field_name``'s DECLARED form selects.
+
+    ``currency_unit`` is the code this reply reported for the document, used by
+    the monetary validator to recognise a printed unit beside an amount and
+    ignored by the rate validator.
 
     Raises:
         KeyError: When the field's declared form has no numeric validator, which
             is a declaration error the parity gate exists to catch.
     """
-    return _NUMERIC_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
+    return _NUMERIC_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw, currency_unit)
 
 
 def _read_provenance(
@@ -690,14 +770,17 @@ def ground_extracted_fields(
     customer_country = _ground_text(fields.customer_country, "customer_country")
     invoice_number = _ground_text(fields.invoice_number, "invoice_number")
     invoice_date = _ground_text(fields.invoice_date, "invoice_date")
-    taxable_base = _ground_numeric(fields.taxable_base, "taxable_base")
-    iva_rate = _ground_numeric(fields.iva_rate, "iva_rate")
-    iva_amount = _ground_numeric(fields.iva_amount, "iva_amount")
-    retencion_rate = _ground_numeric(fields.retencion_rate, "retencion_rate")
-    retencion_amount = _ground_numeric(fields.retencion_amount, "retencion_amount")
-    grand_total = _ground_numeric(fields.grand_total, "grand_total")
-    regime_legend = _ground_text(fields.regime_legend, "regime_legend")
+    # Grounded ahead of the amounts, because an amount printed beside its unit
+    # is only recognised as such when this reply's own currency corroborates
+    # the token.
     currency = _ground_text(fields.currency, "currency")
+    taxable_base = _ground_numeric(fields.taxable_base, "taxable_base", currency)
+    iva_rate = _ground_numeric(fields.iva_rate, "iva_rate")
+    iva_amount = _ground_numeric(fields.iva_amount, "iva_amount", currency)
+    retencion_rate = _ground_numeric(fields.retencion_rate, "retencion_rate")
+    retencion_amount = _ground_numeric(fields.retencion_amount, "retencion_amount", currency)
+    grand_total = _ground_numeric(fields.grand_total, "grand_total", currency)
+    regime_legend = _ground_text(fields.regime_legend, "regime_legend")
 
     # Keyed by the ONE contract declaration, so a field added there without a
     # grounded value here raises rather than travelling with no provenance.
