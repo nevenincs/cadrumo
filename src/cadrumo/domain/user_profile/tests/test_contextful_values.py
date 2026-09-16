@@ -23,7 +23,6 @@ from ..values import (
     create_user_profile_record,
     create_user_profile_snapshot,
     decode_user_profile_record,
-    decode_user_profile_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -110,7 +109,7 @@ def test_decode_round_trips_record_and_snapshot_with_decode_context() -> None:
     )
 
     decoded_record = decode_user_profile_record(record.model_dump_json(), context=_DECODE)
-    decoded_snapshot = decode_user_profile_snapshot(snapshot.model_dump_json(), context=_DECODE)
+    decoded_snapshot = UserProfileSnapshot.model_validate_json(snapshot.model_dump_json(), context=_DECODE)
 
     assert decoded_record == record
     assert decoded_snapshot == snapshot
@@ -194,9 +193,9 @@ def test_snapshot_hash_and_serialization_are_canonical_across_fact_order() -> No
 
     assert snapshot_a.facts == snapshot_b.facts
     assert snapshot_a.canonical_hash == snapshot_b.canonical_hash
-    assert decode_user_profile_snapshot(snapshot_a.model_dump_json(), context=_DECODE) == snapshot_a
+    assert UserProfileSnapshot.model_validate_json(snapshot_a.model_dump_json(), context=_DECODE) == snapshot_a
 
     tampered = snapshot_a.model_dump()
     tampered["facts"] = tuple(reversed(tampered["facts"]))
     with pytest.raises(ValidationError, match="canonical_hash"):
-        decode_user_profile_snapshot(tampered, context=_DECODE)
+        UserProfileSnapshot.model_validate(tampered, context=_DECODE)

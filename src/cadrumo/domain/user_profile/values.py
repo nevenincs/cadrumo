@@ -609,23 +609,6 @@ def create_user_profile_snapshot(
     return snapshot
 
 
-def decode_user_profile_snapshot(
-    payload: bytes | str | Mapping[str, object],
-    *,
-    context: ProfileDecodeContext,
-) -> UserProfileSnapshot:
-    """Decode a secure profile snapshot against the pinned schema."""
-    checked = _context_for_schema(context)
-    _, decode_context_type = _authority_context_types()
-    if not isinstance(checked, decode_context_type):
-        raise TypeError("decoding a profile snapshot requires ProfileDecodeContext")
-    if isinstance(payload, Mapping):
-        snapshot = UserProfileSnapshot.model_validate(payload, context=checked)
-    else:
-        snapshot = UserProfileSnapshot.model_validate_json(payload, context=checked)
-    return snapshot
-
-
 __all__ = [
     "PayloadSchemaVersion",
     "ProfileContext",
@@ -638,7 +621,6 @@ __all__ = [
     "create_user_profile_snapshot",
     "declared_provenance_sources",
     "decode_user_profile_record",
-    "decode_user_profile_snapshot",
     "new_profile_id",
     "new_profile_snapshot_id",
     "section_field_key",
