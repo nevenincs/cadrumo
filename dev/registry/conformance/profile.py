@@ -120,7 +120,6 @@ from cadrumo.domain.calculations.registry.ids import RelationId as _RelationId
 from cadrumo.domain.calculations.registry.ids import RevisionId as _RevisionId
 from cadrumo.domain.calculations.registry.ids import SourceRefId as _SourceRefId
 from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
-from cadrumo.domain.calculations.registry.schema import CasillaProducerKind as _CasillaProducerKind
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
@@ -132,6 +131,8 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry as _ModeloEntry
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix as _build_support_matrix
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe as _revision_capability_probe
+from dev.registry.compiler.producer_inventory import CasillaProducerKind as _CasillaProducerKind
+from dev.registry.compiler.producer_inventory import producer_inventory
 
 from ..compiler.authority import compile_validated_authority as _compile_validated_authority
 from ..compiler.identity import resolve_registry_identity as _resolve_registry_identity
@@ -1312,7 +1313,7 @@ def _support_probe(entry: _ModeloEntry, *, revision_id: _RevisionId) -> LatestRe
 
 def _casilla_producer_traces(revision: _ModeloRevision) -> tuple[RevisionCasillaProducerTrace, ...]:
     """Project the revision's typed producer inventory without flattening traces."""
-    inventory = revision.producer_inventory()
+    inventory = producer_inventory(revision)
     projected: list[RevisionCasillaProducerTrace] = []
     for casilla in sorted(revision.casillas, key=lambda item: item.id):
         for trace in inventory.producer_provenance_by_casilla[casilla.id]:

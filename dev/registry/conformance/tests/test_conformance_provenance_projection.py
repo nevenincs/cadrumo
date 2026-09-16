@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.producer_inventory import producer_inventory
 
 from ..profile import RegistryConformanceProfile
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
@@ -52,7 +53,7 @@ def test_validated_rows_keep_construct_floor_and_casilla_provenance_as_separate_
             assert row.construct_evidence.filing_gaps == ()
             assert row.construct_evidence.inspection_gaps == row.construct_evidence.gaps
 
-        inventory = revision.producer_inventory()
+        inventory = producer_inventory(revision)
         expected_traces = tuple(
             (
                 trace.casilla.id,
