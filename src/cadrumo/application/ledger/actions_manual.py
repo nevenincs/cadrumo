@@ -413,16 +413,20 @@ def list_manual_transactions(
     *,
     bucket_id: str,
     ports: LedgerActionPorts,
+    catalogue: TransactionCatalogue | None = None,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id.
 
     Each element is a
     :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` for one
-    stored transaction.
+    stored transaction. ``catalogue`` is the bucket's already-loaded catalogue
+    when the caller holds one; otherwise it is loaded here.
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    if catalogue is None:
+        repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+        catalogue = repository.load()
     transactions = sorted(
-        repository.load().values(),
+        catalogue.values(),
         key=lambda transaction: (
             transaction.raw.value_date or transaction.raw.booked_date,
             transaction.transaction_id,
@@ -435,13 +439,17 @@ def query_ledger_review_rows(
     query: LedgerReviewQuery,
     *,
     ports: LedgerActionPorts,
+    catalogue: TransactionCatalogue | None = None,
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions.
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerReviewQueryResult`.
+    ``catalogue`` is the query bucket's already-loaded catalogue when the caller
+    holds one; otherwise it is loaded here.
     """
-    repository = resolve_transaction_repository(bucket_id=query.bucket_id, repository=ports.transaction_repository)
-    catalogue = repository.load()
+    if catalogue is None:
+        repository = resolve_transaction_repository(bucket_id=query.bucket_id, repository=ports.transaction_repository)
+        catalogue = repository.load()
     return project_ledger_review_query(
         query=query,
         catalogue=catalogue,
@@ -898,7 +906,7 @@ def _prepare_manual_transaction_update(
         modified_at=now,
         evidence_records=ports.purchase_invoice_evidence_records,
     )
-    replacement = _carry_forward_fx(current, replacement)
+    replacement = _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement))
     if mutation_signature(current) == mutation_signature(replacement):
         return None
     verify_evidence_references(
@@ -955,7 +963,7 @@ def _prepare_manual_transaction_update(
         modified_at=now,
         evidence_records=ports.purchase_invoice_evidence_records,
     )
-    return _carry_forward_fx(current, replacement), events
+    return _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement)), events
 
 
 def update_manual_transaction_fields(
@@ -1511,6 +1519,19 @@ def _fx_conversion_fields(
     if fx_rate is None or value_in_eur is None:
         return {}
     return {"fx_rate": fx_rate, "value_in_eur": value_in_eur}
+
+
+def _carry_forward_invoice_link(current: Transaction, replacement: Transaction) -> Transaction:
+    """Keep an edited row's invoice link.
+
+    The edit command carries no invoice reference, so the rebuilt row came back
+    unlinked and every classify or update erased the transaction half of a
+    link the invoice catalogue still held. Linking and unlinking are their own
+    verbs; an edit never changes the association.
+    """
+    if replacement.invoice_id == current.invoice_id:
+        return replacement
+    return replacement.model_copy(update={"invoice_id": current.invoice_id})
 
 
 def _carry_forward_fx(current: Transaction, replacement: Transaction) -> Transaction:

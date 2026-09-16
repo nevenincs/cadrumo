@@ -408,6 +408,7 @@ def _project_workspace_areas(
     affected: tuple[LedgerAffectedDeclarationRefV1, ...],
     reconciliation_count: int,
     evidence_pending_review: int | None,
+    last_import_count: int | None,
 ) -> tuple[LedgerWorkspaceAreaStateV1, ...]:
     """Build the fixed area catalogue from already-validated projection facts."""
     return (
@@ -430,14 +431,22 @@ def _project_workspace_areas(
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.REVIEW,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
-            status=LedgerWorkspaceStatus.EMPTY if not review_ids else LedgerWorkspaceStatus.NEEDS_ATTENTION,
-            item_count=len(review_ids),
+            # The review list carries every row with its status; only the
+            # rows still pending are work, so a fully reviewed ledger is ready.
+            status=(
+                LedgerWorkspaceStatus.EMPTY
+                if not review_ids
+                else LedgerWorkspaceStatus.NEEDS_ATTENTION
+                if pending
+                else LedgerWorkspaceStatus.READY
+            ),
+            item_count=pending,
         ),
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.IMPORT,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
-            status=LedgerWorkspaceStatus.UNMEASURED,
-            item_count=0,
+            status=_import_status(last_import_count),
+            item_count=last_import_count or 0,
         ),
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.CLASSIFICATION,
@@ -481,6 +490,19 @@ def _evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:
     return LedgerWorkspaceStatus.NEEDS_ATTENTION if pending_review else LedgerWorkspaceStatus.EMPTY
 
 
+def _import_status(last_import_count: int | None) -> LedgerWorkspaceStatus:
+    """Classify the import area from the size of the most recent import batch.
+
+    ``None`` is an unmeasured history; a profile that never imported is
+    ``EMPTY``, which the caller states by passing zero.
+    """
+    if last_import_count is None:
+        return LedgerWorkspaceStatus.UNMEASURED
+    if last_import_count < 0:
+        raise LedgerWorkspaceProjectionError("import batch size cannot be negative")
+    return LedgerWorkspaceStatus.READY if last_import_count else LedgerWorkspaceStatus.EMPTY
+
+
 def project_ledger_workspace(
     *,
     summary: LedgerStatusReport,
@@ -491,6 +513,7 @@ def project_ledger_workspace(
     revisions: Mapping[str, CalculationRevision],
     work_units: WorkUnitCatalogue,
     evidence_pending_review: int | None,
+    last_import_count: int | None,
     invoice_reconciliation_reader: LedgerInvoiceReconciliationReaderProtocol = suggest_reconciliations,
     link_consistency_reader: LedgerLinkConsistencyReaderProtocol = verify_link_consistency,
     filing_staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
@@ -525,6 +548,7 @@ def project_ledger_workspace(
         affected=affected,
         reconciliation_count=len(suggestions) + len(inconsistencies) + len(affected),
         evidence_pending_review=evidence_pending_review,
+        last_import_count=last_import_count,
     )
     return LedgerWorkspaceProjectionV1(
         bucket_id=bucket_id,
