@@ -514,6 +514,19 @@ def _timestamp_spans(value: str) -> tuple[tuple[int, int], ...]:
     return tuple(match.span() for match in _ISO_INSTANT_RE.finditer(value))
 
 
+def _uuid_spans(value: str) -> tuple[tuple[int, int], ...]:
+    """Return the spans of ``value`` that are complete canonical UUIDs.
+
+    A UUID is an opaque identifier, never a tax identity or an account number,
+    but its hex groups satisfy the wide identity scans: ``bf82-490d-a09d``
+    reads as a prefixed IVA number, and ``1470176e`` as a NIF. Hashing that
+    group left a profile id in an error context that names no profile. Only
+    the identity and IBAN arms exempt these spans; a URL or token that merely
+    contains a UUID is still redacted whole by its own rule.
+    """
+    return tuple(match.span() for match in _CLI_UUID_PATTERN.finditer(value))
+
+
 def _outside_timestamps(
     replace: Callable[[re.Match[str]], str],
     spans: tuple[tuple[int, int], ...],
@@ -667,14 +680,18 @@ def _gated_replacement(
 def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = re.compile(rule.pattern, re.MULTILINE)
     protected = _timestamp_spans(value)
+    identity_protected = (*protected, *_uuid_spans(value))
 
-    def _sub(replace: Callable[[re.Match[str]], str]) -> str:
-        return pattern.sub(_outside_timestamps(replace, protected), value)
+    def _sub(
+        replace: Callable[[re.Match[str]], str],
+        spans: tuple[tuple[int, int], ...] = protected,
+    ) -> str:
+        return pattern.sub(_outside_timestamps(replace, spans), value)
 
     if rule.strategy is _RedactionStrategy.ELLIPSIS:
         return _sub(lambda m: "...")
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
-        return _sub(lambda m: _sha256_prefix(m.group(0)))
+        return _sub(lambda m: _sha256_prefix(m.group(0)), identity_protected)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
         # Imported here, not at module scope: ``core.identity`` reaches
         # ``core.errors``, which reaches this module — the same cycle the
@@ -697,7 +714,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return None
             return _sha256_prefix(span)
 
-        return _gated_sub(pattern, value, protected, _hash_if_identity)
+        return _gated_sub(pattern, value, identity_protected, _hash_if_identity)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
         # Imported at call time for the reason the identity arm above states.
         from ..identity.documents import is_identity_structurally_shaped
@@ -728,7 +745,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return None
             return _sha256_prefix(span)
 
-        return _gated_sub(pattern, value, protected, _hash_if_nif_iva)
+        return _gated_sub(pattern, value, identity_protected, _hash_if_nif_iva)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
 
         def _hash_if_iban(span: str) -> str | None:
@@ -737,7 +754,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return _sha256_prefix(span)
             return None
 
-        return _gated_sub(pattern, value, protected, _hash_if_iban)
+        return _gated_sub(pattern, value, identity_protected, _hash_if_iban)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
         return _sub(lambda m: _host_only(m.group(0)))
     if rule.strategy is _RedactionStrategy.FINGERPRINT:

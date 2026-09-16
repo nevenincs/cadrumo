@@ -445,3 +445,72 @@ def test_identities_beside_a_timestamp_are_still_redacted() -> None:
     assert "2026-08-08T09:32:12.345678Z" in redacted, "the timestamp must survive"
     assert "12345678Z" not in redacted, "a real identity beside a timestamp must still be redacted"
     assert "sha256:" in redacted, "the identity must be replaced by its hash"
+
+
+#: A profile id whose inner groups (``bf82-490d-a09d``) read as a prefixed IVA
+#: number to the wide scan.
+_IVA_SHAPED_UUID = "7c150b93-bf82-490d-a09d-747b58b055e7"
+
+
+@pytest.mark.parametrize("profile_id", (_IVA_SHAPED_UUID, _NIF_SHAPED_UUID))
+@pytest.mark.parametrize("sensitivity", (SensitivityClass.AUDIT, SensitivityClass.DIAGNOSTIC))
+def test_a_profile_id_survives_the_diagnostic_funnel_whole(profile_id: str, sensitivity: SensitivityClass) -> None:
+    """A UUID is an opaque identifier, not a tax identity.
+
+    Reproduction: ``config profile delete`` on the selected profile refused
+    with a context ``profile_id`` of ``7c150b93-sha256:3e0bfde4-747b58b055e7``:
+    the IVA arm hashed three hex groups from the middle of the UUID, and the
+    NIF arm did the same to ``1470176e``. The value then named no profile.
+    """
+    rules = default_rules_for_class(sensitivity)
+
+    assert redact(f"profile {profile_id} refused", rules=rules) == f"profile {profile_id} refused"
+
+
+def test_identities_and_urls_beside_a_profile_id_are_still_redacted() -> None:
+    """Positive control: the exemption covers the UUID, not its line or a URL around it."""
+    rules = default_rules_for_class(SensitivityClass.AUDIT)
+
+    line = f"{_IVA_SHAPED_UUID} {_NIF} DE811234567 https://example.test/s/{_IVA_SHAPED_UUID}?token=x"
+    redacted = redact(line, rules=rules)
+
+    assert redacted.startswith(f"{_IVA_SHAPED_UUID} "), "the leading profile id must survive"
+    assert _NIF not in redacted
+    assert "DE811234567" not in redacted
+    assert redacted.endswith(" https://example.test"), "a URL embedding a UUID is still reduced to its host"
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        f"/data/cadrumo/buckets/{_PROFILE_ID}/profile.db",
+        rf"C:\data\cadrumo\keystore\{_PROFILE_ID}",
+        f"/data/cadrumo/profile-custody-holds/{_PROFILE_ID}/hold.toml",
+    ),
+)
+def test_a_profile_id_inside_custody_storage_is_masked(path: str) -> None:
+    """The custody directories are named by the profile they hold."""
+    rendered = redact_for_cli_output(f"log written to {path}")
+
+    assert _PROFILE_ID not in rendered
+    assert CLI_PROFILE_ID_PLACEHOLDER in rendered
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        f"/tmp/{_PROFILE_ID}/backup.cadrumo-bucket.tar.gz",
+        rf"C:\Users\op\AppData\Local\Temp\{_PROFILE_ID}\repair.log",
+        f"/data/cadrumo/profile-custody-holds/{_PROFILE_ID}",
+    ),
+)
+def test_a_uuid_the_operator_chose_for_a_directory_survives(path: str) -> None:
+    """An operator path is only useful if it still names a real place.
+
+    Reproduction: the ``config repair`` log path and the ``archive export``
+    target both sat under a UUID-named temporary directory, and both were
+    printed with that directory rewritten to ``<profile-id>``, a path that
+    does not exist. The hold root itself is not an owner directory, so a UUID
+    directly beneath it with nothing further is not treated as one either.
+    """
+    assert redact_for_cli_output(f"written to {path}") == f"written to {path}"
