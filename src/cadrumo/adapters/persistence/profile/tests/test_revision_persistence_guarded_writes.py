@@ -29,6 +29,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -133,7 +134,7 @@ def test_new_revision_co_commits_additional_writes_atomically(tmp_path: Path) ->
         bucket_event_repository = BucketEventHistoryRepository(objects=profile.repository)
         receipt_repository = ModeloEditReceiptRepository(objects=profile.repository)
 
-        work_units = WorkUnitCatalogue.from_work_units((work_unit,))
+        work_units = build_work_unit_catalogue((work_unit,))
         work_unit_repository.save(work_units)
         work_units, work_units_revision_id = work_unit_repository.load_revisioned()
 
@@ -177,7 +178,7 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(tmp_path: 
         bucket_event_repository = BucketEventHistoryRepository(objects=profile.repository)
         receipt_repository = ModeloEditReceiptRepository(objects=profile.repository)
 
-        work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        work_unit_repository.save(build_work_unit_catalogue((work_unit,)))
         work_units, work_units_revision_id = work_unit_repository.load_revisioned()
         first = _persist(
             work_unit=work_unit,
@@ -234,7 +235,7 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(tmp_path: Pat
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         bucket_event_repository = BucketEventHistoryRepository(objects=profile.repository)
 
-        work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
+        work_unit_repository.save(build_work_unit_catalogue((work_unit,)))
         work_units, work_units_revision_id = work_unit_repository.load_revisioned()
         _persist(
             work_unit=work_unit,
@@ -257,7 +258,7 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(tmp_path: Pat
         racing_unit = racing_work_units.get(work_unit.work_unit_id)
         assert racing_unit is not None
         work_unit_repository.save(
-            WorkUnitCatalogue.from_work_units((racing_unit.model_copy(update={"name": "renamed-by-race"}),)),
+            build_work_unit_catalogue((racing_unit.model_copy(update={"name": "renamed-by-race"}),)),
         )
 
         with pytest.raises(SecureObjectRevisionConflictError):

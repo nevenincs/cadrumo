@@ -38,6 +38,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+
 from .....application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
@@ -58,7 +60,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from .....domain.modelos.codes import ModeloCode
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import Transaction, TransactionCatalogue
@@ -261,7 +263,7 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(
         updated_at=_NOW,
         current_calculation_revision_id=revision.calculation_revision_id,
     )
-    WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
+    WorkUnitCatalogueRepository(objects=objects).save(build_work_unit_catalogue((work_unit,)))
     CalculationRevisionCatalogueRepository(objects=objects).save(
         CalculationRevisionCatalogue(revisions={revision.calculation_revision_id: revision}),
     )

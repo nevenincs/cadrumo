@@ -93,7 +93,7 @@ from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
@@ -442,7 +442,7 @@ def _persist_year_of_invoices(
         }
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(tuple(transactions)))
-    InvoiceCatalogueRepository(objects=secure_objects).save(InvoiceCatalogue.from_invoices(tuple(purchase_invoices)))
+    InvoiceCatalogueRepository(objects=secure_objects).save(build_invoice_catalogue(tuple(purchase_invoices)))
     return stored
 
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.ledger.actions_manual import create_manual_transaction
 from .....application.ledger.models import ManualLedgerTransactionCommand
@@ -19,7 +21,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from .....domain.modelos.codes import ModeloCode
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....domain.transactions.enums import TransactionDirection
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
@@ -114,7 +116,7 @@ def seed_revision_citing_transaction(
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
-    WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
+    WorkUnitCatalogueRepository(objects=objects).save(build_work_unit_catalogue((work_unit,)))
     catalogue = CalculationRevisionCatalogueRepository(objects=objects).load()
     merged = dict(catalogue.revisions)
     merged[revision_id] = revision

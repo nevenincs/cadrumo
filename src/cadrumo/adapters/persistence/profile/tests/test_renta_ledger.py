@@ -56,6 +56,7 @@ from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.ccaa import CCAA
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -255,7 +256,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -298,7 +299,7 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
         TransactionCatalogue.from_transactions((linked,)),
     )
     InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
     )
 
     result = aggregate_renta_ledger_expenses_from_repositories(
@@ -714,7 +715,7 @@ def test_repository_backed_aggregation_admits_a_transaction_whose_invoice_date_i
     tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -849,7 +850,7 @@ def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empt
         TransactionCatalogue.from_transactions((linked,)),
     )
     InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
     )
 
     def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:

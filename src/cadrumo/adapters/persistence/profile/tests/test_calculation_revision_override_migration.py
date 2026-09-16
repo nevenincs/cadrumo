@@ -26,6 +26,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -39,7 +41,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_revision_override_migration import (
     OrphanedRelationOverrideError,
     migrate_stored_relation_overrides_to_binding_ids,
@@ -148,7 +150,7 @@ def _parent_work_unit() -> WorkUnit:
 
 def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
     WorkUnitCatalogueRepository(objects=profile.repository).save(
-        WorkUnitCatalogue.from_work_units((_parent_work_unit(),)),
+        build_work_unit_catalogue((_parent_work_unit(),)),
     )
 
 

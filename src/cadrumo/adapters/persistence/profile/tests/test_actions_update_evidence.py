@@ -27,7 +27,7 @@ from cadrumo.application.ledger.actions_manual import (
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.invoices.errors import InvoiceLinkError
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
@@ -54,7 +54,7 @@ def _seed_transaction_and_invoice(
         bucket_event_repository=event_repository,
     ) as ports:
         purchase_evidence = purchase_invoice()
-        invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
+        invoice_repository.save(build_invoice_catalogue((purchase_evidence,)))
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,

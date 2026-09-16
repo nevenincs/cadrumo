@@ -53,7 +53,8 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
@@ -204,7 +205,7 @@ def test_captured_catalogue_selector_uses_no_second_encrypted_sql_read_after_mut
             updated_at=_T0 + timedelta(seconds=1),
         )
         second = WorkUnit(**second_payload)
-        repository.save(WorkUnitCatalogue.from_work_units((first, second)))
+        repository.save(build_work_unit_catalogue((first, second)))
 
         selects: list[str] = []
 
@@ -602,7 +603,7 @@ def test_work_capture_generation_advances_and_refuses_a_superseded_capture(
             created_at=_T0 + timedelta(seconds=1),
             updated_at=_T0 + timedelta(seconds=1),
         )
-        repository.save(WorkUnitCatalogue.from_work_units((first_unit, WorkUnit(**payload))))
+        repository.save(build_work_unit_catalogue((first_unit, WorkUnit(**payload))))
 
         current = read_modelo_work_current_coordinate(request, catalogue_repository=repository)
 

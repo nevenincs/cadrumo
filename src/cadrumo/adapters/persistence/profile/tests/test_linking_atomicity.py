@@ -32,8 +32,9 @@ from cadrumo.application.invoices.transaction_linking import (
 )
 from cadrumo.core.invoice_link import LinkInconsistencyDirection
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.service import verify_link_consistency
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -221,7 +222,7 @@ def _seed(bucket_id: str) -> tuple[Invoice, Transaction]:
     """Persist one unlinked invoice and one unlinked transaction."""
     invoice = _invoice()
     transaction = _transaction()
-    InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue.from_invoices([invoice]))
+    InvoiceCatalogueRepository(bucket_id=bucket_id).save(build_invoice_catalogue([invoice]))
     TransactionCatalogueRepository(bucket_id=bucket_id).save(TransactionCatalogue.from_transactions([transaction]))
     return invoice, transaction
 

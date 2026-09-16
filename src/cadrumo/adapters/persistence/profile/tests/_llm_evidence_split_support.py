@@ -19,7 +19,8 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -125,7 +126,7 @@ def _seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: s
             "payment_status": PaymentStatus.PAID,
         },
     )
-    InvoiceCatalogueRepository(objects=objects).save(InvoiceCatalogue.from_invoices((invoice,)))
+    InvoiceCatalogueRepository(objects=objects).save(build_invoice_catalogue((invoice,)))
     return invoice.invoice_id
 
 

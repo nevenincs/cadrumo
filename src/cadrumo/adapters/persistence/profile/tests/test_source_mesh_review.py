@@ -35,6 +35,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from .....application.filing.draft_construction import build_draft
 from .....application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
 from .....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
@@ -43,7 +45,7 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from .....domain.filing.protocols import CasillaSchemaProvider
 from .....domain.filing.schema import ModeloDraft
-from .....domain.invoices.models import Invoice, InvoiceCatalogue
+from .....domain.invoices.models import Invoice
 from .....domain.iva.classification import InvoiceKind
 from .....domain.submission.models import ModeloDraftStatus
 from .....entrypoints.adapter_composition import build_draft_review_ports
@@ -108,9 +110,7 @@ def test_approval_goes_stale_when_invoice_source_data_changes(
         repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
 
         repository.save(
-            InvoiceCatalogue.from_invoices(
-                [_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]
-            ),
+            build_invoice_catalogue([_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]),
         )
         ports = build_draft_review_ports(bucket_id=bucket_id)
         approved = approve_draft(
@@ -128,9 +128,7 @@ def test_approval_goes_stale_when_invoice_source_data_changes(
         # Mutate ONLY the invoice source: a different taxable base yields a different
         # invoice, so the self-loaded catalogue fingerprint must change.
         repository.save(
-            InvoiceCatalogue.from_invoices(
-                [_invoice("2026-0001", taxable_base=Decimal("250.00"), bucket_id=bucket_id)]
-            ),
+            build_invoice_catalogue([_invoice("2026-0001", taxable_base=Decimal("250.00"), bucket_id=bucket_id)]),
         )
 
         reasons = approval_stale_reasons(
@@ -163,9 +161,7 @@ def test_approval_not_stale_when_invoice_source_unchanged(
         repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
 
         repository.save(
-            InvoiceCatalogue.from_invoices(
-                [_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]
-            ),
+            build_invoice_catalogue([_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]),
         )
         ports = build_draft_review_ports(bucket_id=bucket_id)
         approved = approve_draft(

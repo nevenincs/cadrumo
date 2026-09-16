@@ -9,6 +9,8 @@ from datetime import datetime as _datetime
 from decimal import Decimal as _Decimal
 from pathlib import Path as _Path
 
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.ledger.actions_manual import create_manual_transaction as _create_manual_transaction
 from .....application.ledger.models import ManualLedgerTransactionCommand as _ManualLedgerTransactionCommand
@@ -27,7 +29,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from .....domain.modelos.codes import ModeloCode
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....domain.transactions.enums import (
     TransactionDirection as _TransactionDirection,
 )
@@ -268,7 +270,7 @@ def _persist_verified_revision_citing_transaction(
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
-    _WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
+    _WorkUnitCatalogueRepository(objects=objects).save(build_work_unit_catalogue((work_unit,)))
     _CalculationRevisionCatalogueRepository(objects=objects).save(
         CalculationRevisionCatalogue(revisions={revision_id: revision}),
     )

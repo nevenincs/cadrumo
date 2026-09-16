@@ -38,6 +38,8 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from .....application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
 from .....application.aggregation.source_mesh import (
     CalculationSourceContext,
@@ -49,7 +51,6 @@ from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueRead
 from .....core.aggregation import IntracomOperationType
 from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
-from .....domain.invoices.models import InvoiceCatalogue
 from .....domain.iva.classification import InvoiceKind
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
@@ -101,7 +102,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
         operation_type=IntracomOperationType.E,
         rate_provider=recorded_ecb_rate_provider(),
     )
-    catalogue = InvoiceCatalogue.from_invoices((invoice,))
+    catalogue = build_invoice_catalogue((invoice,))
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(catalogue)
     return invoice.invoice_id
 
@@ -204,7 +205,7 @@ def test_a_supportable_supply_produces_no_advisory(secure_objects: SecureObjectR
         rate_provider=recorded_ecb_rate_provider(),
     )
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
     )
 
     mismatches = _mismatch_diagnostics(_screen(secure_objects))
