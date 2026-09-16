@@ -208,20 +208,6 @@ def pydantic_validation_boundary[**PydanticArgs, PydanticResultT](
     return wrapped
 
 
-def pydantic_validation_registered_error(raised: object) -> CadrumoError | None:
-    """Return the registered failure carried by one Pydantic validator error.
-
-    Pydantic records a validator's ``ValueError`` at
-    ``ValidationError.errors()[...]["ctx"]["error"]``. When that ``ValueError``
-    was produced by :func:`pydantic_validation_boundary`, its ``__cause__`` is
-    the registered Cadrumo failure; any other value carries none.
-    """
-    if not isinstance(raised, ValueError):
-        return None
-    cause = raised.__cause__
-    return cause if isinstance(cause, CadrumoError) else None
-
-
 class AuthError(CadrumoError):
     """Base class for every AEAT authentication boundary failure."""
 
