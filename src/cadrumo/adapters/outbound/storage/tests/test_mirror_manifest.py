@@ -10,10 +10,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
+
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.directory_scan import iter_directory, scan_directory
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ....persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy
 from ..errors import OutboundStorageIntegrityError
 from ..local import LocalFileSystemProvider
@@ -52,7 +53,7 @@ def _assert_manifest_verdict(verdict, condition_id: str, facts: dict[str, object
 def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermark(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="6587f6e5-3b48-4347-ad19-2f0b297786e8") as profile:
         repo = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         first_written_at = datetime(2026, 5, 28, 10, 0, tzinfo=UTC)
         second_written_at = first_written_at + timedelta(minutes=1)
@@ -138,7 +139,7 @@ def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(
     case_root = tmp_path / namespace_key
     with isolated_runtime_profile(tmp_path=case_root, bucket_id=bucket_id) as profile:
         repo = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
+        namespace_definition = lookup_namespace_definition(namespace_key)
         namespace = namespace_definition.namespace
         plaintext_text = plaintext.decode()
         repo.save(
@@ -516,7 +517,7 @@ def _single_object_manifest(tmp_path: Path) -> RemoteMirrorNamespaceManifest:
 def _single_object_manifest_with_payload(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManifest, bytes]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="aef4bd4b-2a08-454e-9e46-ad76d1928ac7") as profile:
         repo = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         repo.save(
             namespace=namespace,
@@ -561,7 +562,7 @@ def _rewrite_local_provider_sidecar(
 def _overwrite_manifest_pair(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManifest, RemoteMirrorNamespaceManifest]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="84dd214d-8ad6-4e98-81b4-435834004934") as profile:
         repo = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         repo.save(
             namespace=namespace,
@@ -589,7 +590,7 @@ def _three_revision_manifest_pair(
 ) -> tuple[RemoteMirrorNamespaceManifest, RemoteMirrorNamespaceManifest]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="17368978-486e-4c41-9793-75a649bafb8b") as profile:
         repo = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         remote_manifest: RemoteMirrorNamespaceManifest | None = None
         for offset, payload in enumerate((b"first-payload", b"second-payload", b"third-payload")):
