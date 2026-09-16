@@ -44,7 +44,7 @@ from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_predicate_expression
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 #: One filing year per M131 revision. Each resolves to its revision through the
 #: law-determined (modelo, filing_year, period) triple rather than by naming a

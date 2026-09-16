@@ -70,7 +70,7 @@ from ..verification_actions import (
 from ..verification_predicates import evaluate_verification_predicates
 from ..workflow_gate import _RevisionInputsProvider, workflow_period_for_work_unit
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 # ---------------------------------------------------------------------------

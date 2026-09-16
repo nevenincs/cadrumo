@@ -39,7 +39,7 @@ from ..verification_predicates import (
     evaluate_verification_predicates,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 # ---------------------------------------------------------------------------
 # contract: unit tests for evaluate_predicate_expression
