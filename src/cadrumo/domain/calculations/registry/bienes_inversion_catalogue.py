@@ -115,14 +115,6 @@ class BienInversionCatalogue:
             )
         return token
 
-    def is_real_estate_kind(self, value: object) -> bool:
-        """Return whether a value is the registry's real-estate kind."""
-        return self.require_kind(value) == self.real_estate_kind
-
-    def is_subject_not_exempt_regime(self, value: object) -> bool:
-        """Return whether a value is the taxable disposal regime."""
-        return self.require_disposal_regime(value) == self.subject_not_exempt_regime
-
 
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     values = tuple(

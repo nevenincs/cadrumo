@@ -204,11 +204,6 @@ class ProrrataRegisterCatalogue:
         return self.provenances[2].token
 
     @property
-    def interrumpida_tres_ultimos_provenance(self) -> ProrrataProvisionalProvenance:
-        """Return the three-period interruption provenance in registry order."""
-        return self.provenances[3].token
-
-    @property
     def provenance_precedence(self) -> tuple[ProrrataProvisionalProvenance, ...]:
         """Return provisional provenances in their registry precedence order."""
         return tuple(definition.token for definition in self.provenances)

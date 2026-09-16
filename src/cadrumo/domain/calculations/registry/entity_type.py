@@ -101,16 +101,6 @@ class EntityVocabulary:
             )
         return token
 
-    def entity_type_definition(self, value: object) -> EntityTypeDefinition:
-        """Return the registry definition for one entity type."""
-        token = self.require_entity_type(value)
-        return next(item for item in self.entity_types if item.token == token)
-
-    def legal_entity_form_definition(self, value: object) -> LegalEntityFormDefinition:
-        """Return the registry definition for one legal-entity form."""
-        token = self.require_legal_entity_form(value)
-        return next(item for item in self.legal_entity_forms if item.token == token)
-
 
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     values = tuple(

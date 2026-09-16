@@ -692,10 +692,6 @@ class CalculationCompletenessManifest(RegistryModel):
         """Return the frozenset of required canonical ``casilla.id`` values."""
         return frozenset(casilla.casilla_id for casilla in self.casillas)
 
-    def manifest_keys(self) -> frozenset[tuple[str, str | None, str]]:
-        """Return canonical ids paired with their reviewed record-design metadata."""
-        return frozenset(casilla.manifest_key() for casilla in self.casillas)
-
 
 # Single source of truth for the predicate-DSL operator names. The
 # registry-load validator

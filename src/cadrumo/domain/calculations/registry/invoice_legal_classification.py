@@ -115,22 +115,6 @@ class InvoiceLegalClassificationCatalogue:
             )
         return token
 
-    def invoice_class_definition(self, value: object) -> InvoiceClassDefinition:
-        """Return the full legal definition for one invoice class."""
-        token = self.require_invoice_class(value)
-        for definition in self.invoice_classes:
-            if definition.token == token:
-                return definition
-        raise RegistryValidationError(f"invoice class {str(token)!r} has no registry definition")
-
-    def operation_date_role_definition(self, value: object) -> InvoiceOperationDateRoleDefinition:
-        """Return the full legal definition for one operation-date role."""
-        token = self.require_operation_date_role(value)
-        for definition in self.operation_date_roles:
-            if definition.token == token:
-                return definition
-        raise RegistryValidationError(f"invoice operation-date role {str(token)!r} has no registry definition")
-
 
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     values = tuple(

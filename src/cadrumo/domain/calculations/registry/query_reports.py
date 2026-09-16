@@ -297,11 +297,6 @@ class RegistrySourceInventoryReport(BaseModel):
 
     rows: tuple[RegistrySourceInventoryRow, ...]
 
-    @property
-    def declared_source_kinds(self) -> frozenset[BindingSourceKind]:
-        """The set of binding source kinds the registry declares."""
-        return frozenset(row.source_kind for row in self.rows)
-
 
 class ModeloSupportMatrixReport(BaseModel):
     """Registry-wide support/capability matrix."""

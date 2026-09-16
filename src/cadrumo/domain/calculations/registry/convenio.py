@@ -221,10 +221,6 @@ class ConvenioAuthority(RegistryModel):
                 )
         return None
 
-    def all_legal_refs(self) -> frozenset[LegalRefId]:
-        """Every ``legal_ref`` cited by any override row across every treaty."""
-        return frozenset(ref for treaty in self.treaties.values() for row in treaty.overrides for ref in row.legal_refs)
-
 
 CONVENIO_OVERRIDE_FACT_ID = "irnr.convenio.override"
 

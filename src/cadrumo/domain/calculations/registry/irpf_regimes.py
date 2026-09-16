@@ -103,11 +103,6 @@ class IrpfRegimeVocabulary:
             )
         return token
 
-    def estimation_definition(self, value: object) -> IrpfEstimationRegimeDefinition:
-        """Return the declaration for one admitted estimation regime."""
-        token = self.require_estimation_regime(value)
-        return next(item for item in self.estimation_regimes if item.token == token)
-
     def special_definition(self, value: object) -> IrpfSpecialRegimeDefinition:
         """Return the declaration for one admitted special regime."""
         token = self.require_special_regime(value)

@@ -99,20 +99,6 @@ class TipoRentaIrnrCatalogue:
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
-    def require_code(self, value: object) -> M210TipoRentaCodeDefinition:
-        """Resolve an official code, refusing unknown and fetch-gated codes."""
-        code = value.strip() if isinstance(value, str) else ""
-        definition = next((item for item in self.code_definitions if item.code == code), None)
-        if definition is None:
-            raise RegistryValidationError(
-                f"official Modelo 210 tipo-renta code {code!r} is not declared by fact {_FACT_ID!r}",
-            )
-        if definition.fetch_gated:
-            raise RegistryValidationError(
-                f"official Modelo 210 tipo-renta code {code!r} is fetch-gated and has no grounded projection",
-            )
-        return definition
-
 
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     entries: dict[str, str] = {}
