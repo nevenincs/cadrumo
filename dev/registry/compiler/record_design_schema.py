@@ -8,10 +8,10 @@ from typing import Annotated, Final, Literal, Self
 
 from pydantic import Field, NonNegativeInt, model_validator
 
-from ....core.modelo import Modelo
-from ....core.models import STRICT_FROZEN_CONFIG
-from .errors import RegistryValidationError
-from .schema_base import RegistryModel
+from cadrumo.core.modelo import Modelo
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_base import RegistryModel
 
 __all__ = [
     "AUXILIARY_ENVELOPE_HEADER_CONTENT",
