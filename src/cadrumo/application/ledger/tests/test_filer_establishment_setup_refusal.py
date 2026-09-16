@@ -86,7 +86,7 @@ def test_a_declared_postcode_resolves_the_filers_own_territory(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert (
             resolve_filer_territorial_scope(profile_record=_profile(postcode), operation=_authority_operation_for_test)
-            is expected
+            == expected
         )
 
 

@@ -108,8 +108,8 @@ def test_a_reclassification_keeps_them_too() -> None:
     """The reclassify path is the one an operator actually runs."""
     rebuilt = _rebuild(ManualLedgerTransactionPatch(category_id="office-supplies"))
 
-    assert rebuilt.art_104_tres_exclusion is Art104TresExclusion("direct_iva_cuotas")
-    assert rebuilt.input_classification is InputClassification.from_registry("common")
+    assert rebuilt.art_104_tres_exclusion == Art104TresExclusion("direct_iva_cuotas")
+    assert rebuilt.input_classification == InputClassification.from_registry("common")
     assert rebuilt.prorrata_sector_id == _SECTOR
 
 

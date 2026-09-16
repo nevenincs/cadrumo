@@ -127,7 +127,7 @@ def test_a_declared_code_is_read_into_a_fact_carrying_its_attribution() -> None:
         )
 
         assert fact is not None
-        assert fact.value is IvaCategory("domestic_reverse_charge")
+        assert fact.value == IvaCategory("domestic_reverse_charge")
         assert fact.source is ClassifierInputSource.DOCUMENT_EVIDENCE
 
 
@@ -171,7 +171,7 @@ def test_a_declared_code_survives_an_operation_the_table_cannot_place() -> None:
     resolution = _resolve(established=False, stated=IvaCategory("domestic_reverse_charge"))
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is IvaCategory("domestic_reverse_charge")
+    assert resolution.category == IvaCategory("domestic_reverse_charge")
     assert resolution.declared is not None
 
 
@@ -187,7 +187,7 @@ def test_the_rule_table_decides_when_it_can_place_the_operation() -> None:
 
     assert resolution.outcome is IvaCategoryOutcome.CLASSIFIED
     assert resolution.category is not None
-    assert resolution.category is resolution.classified
+    assert resolution.category == resolution.classified
 
 
 def test_the_table_and_an_agreeing_code_corroborate() -> None:
@@ -203,7 +203,7 @@ def test_the_table_and_an_agreeing_code_corroborate() -> None:
     resolution = _resolve(established=True, stated=verdict, rate_tier=IvaRateKind("general"))
 
     assert resolution.outcome is IvaCategoryOutcome.CORROBORATED
-    assert resolution.category is verdict
+    assert resolution.category == verdict
     assert resolution.declared is not None
 
 
@@ -219,14 +219,14 @@ def test_a_code_disagreeing_with_the_table_takes_neither_side() -> None:
     verdict = _resolve(established=True, rate_tier=IvaRateKind("general")).category
     assert verdict is not None
     rival = next(
-        c for c in (IvaCategory("domestic_reverse_charge"), IvaCategory("domestic_exempt")) if c is not verdict
+        c for c in (IvaCategory("domestic_reverse_charge"), IvaCategory("domestic_exempt")) if c != verdict
     )
 
     resolution = _resolve(established=True, stated=rival, rate_tier=IvaRateKind("general"))
 
     assert resolution.outcome is IvaCategoryOutcome.CONTRADICTED
     assert resolution.category is None, "a contradicted document must not hand a caller either side"
-    assert resolution.classified is verdict
+    assert resolution.classified == verdict
     assert rival.value in resolution.note and verdict.value in resolution.note
 
 
@@ -265,7 +265,7 @@ def test_the_tier_corroboration_is_silent_on_a_category_carrying_no_tier() -> No
     )
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is IvaCategory("domestic_reverse_charge")
+    assert resolution.category == IvaCategory("domestic_reverse_charge")
 
 
 def test_an_unplaceable_operation_charging_a_registered_tier_stays_declarable() -> None:
@@ -283,7 +283,7 @@ def test_an_unplaceable_operation_charging_a_registered_tier_stays_declarable() 
     resolution = _resolve(established=False, rate_tier=IvaRateKind("general"))
 
     assert resolution.outcome is IvaCategoryOutcome.RATE_INFERRED
-    assert resolution.category is IvaCategory("domestic_general")
+    assert resolution.category == IvaCategory("domestic_general")
     assert resolution.classified is None, "nothing was classified; the tier alone carried this"
 
 
@@ -344,7 +344,7 @@ def test_the_inference_never_displaces_a_verdict_or_a_declaration() -> None:
 
     assert with_verdict.outcome is IvaCategoryOutcome.CLASSIFIED
     assert with_declaration.outcome is IvaCategoryOutcome.DECLARED
-    assert with_declaration.category is IvaCategory("domestic_reverse_charge"), (
+    assert with_declaration.category == IvaCategory("domestic_reverse_charge"), (
         "the tier inference displaced the document's own declaration, which is the "
         "signal only a structured reader recovers"
     )
@@ -456,7 +456,7 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
         )
 
         assert resolution.outcome is IvaCategoryOutcome.DECLARED
-        assert resolution.category is IvaCategory("export_third_country_zero_rated")
+        assert resolution.category == IvaCategory("export_third_country_zero_rated")
 
 
 def test_a_country_our_vocabulary_does_not_carry_forgives_that_partys_slot() -> None:
@@ -534,7 +534,7 @@ def test_a_declared_code_that_rests_on_no_establishment_is_untouched(stated: Iva
     resolution = _relief(stated)
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is stated
+    assert resolution.category == stated
 
 
 def _record_relief(
@@ -629,7 +629,7 @@ def test_the_alpha3_sparing_boundary_runs_where_the_vocabulary_does() -> None:
         "an alpha-3 naming a country our vocabulary omits is OUR gap and must be spared; "
         "if this refuses, the reserved-code assertions above are vacuous"
     )
-    assert spared.category is IvaCategory("export_third_country_zero_rated")
+    assert spared.category == IvaCategory("export_third_country_zero_rated")
 
 
 def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
@@ -662,7 +662,7 @@ def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
         )
 
         assert resolution.outcome is IvaCategoryOutcome.DECLARED
-        assert resolution.category is IvaCategory("export_third_country_zero_rated")
+        assert resolution.category == IvaCategory("export_third_country_zero_rated")
 
 
 def _counterparty_only_relief(

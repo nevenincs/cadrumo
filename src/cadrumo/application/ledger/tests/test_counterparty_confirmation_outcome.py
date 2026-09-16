@@ -46,7 +46,7 @@ def test_a_first_confirmation_reports_that_it_recorded(
     )
 
     assert outcome.recorded is True
-    assert outcome.facts.territorial_scope is IvaTerritorialScope.from_registry("es_mainland")
+    assert outcome.facts.territorial_scope == IvaTerritorialScope.from_registry("es_mainland")
     assert outcome.facts.asserted_by == "operator-a"
 
 
@@ -93,7 +93,7 @@ def test_an_identification_only_confirmation_is_accepted(
     )
 
     assert outcome.recorded is True
-    assert outcome.facts.identification_state is EUMemberState.from_registry("es")
+    assert outcome.facts.identification_state == EUMemberState.from_registry("es")
     assert outcome.facts.territorial_scope is None
 
 
