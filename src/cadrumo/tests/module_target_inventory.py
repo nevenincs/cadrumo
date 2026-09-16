@@ -89,9 +89,14 @@ def assert_all_target_sets_current(metadata_path: str | Path, *, repository: Pat
 
 
 def compile_inventory(
-    *, package: str, source_root: str, subpackages: Sequence[str], target_set: str
+    *,
+    package: str,
+    source_root: str,
+    subpackages: Sequence[str],
+    target_set: str,
+    repository: Path = REPO_ROOT,
 ) -> dict[str, object]:
-    """Compile one reproducible metadata document from path-only source facts."""
+    """Compile one reproducible metadata document from path-only facts below *repository*."""
     source: _SourceSelection = {
         "package": _dotted(package, subject="package"),
         "source_root": _relative_path(source_root, subject="source_root"),
@@ -105,7 +110,7 @@ def compile_inventory(
             target_set: {
                 "kind": TARGET_KIND,
                 "source": source,
-                "targets": list(_enumerate_modules(source)),
+                "targets": list(_enumerate_modules(source, repository=repository)),
             }
         },
     }

@@ -24,19 +24,32 @@
           "owner": {"minLength": 1, "type": "string"},
           "reason": {"minLength": 1, "type": "string"},
           "retirement": {
-            "additionalProperties": false,
-            "properties": {
-              "capability_matrix": {
-                "additionalProperties": {"enum": ["required", "optional", "unsupported"]},
-                "minProperties": 1,
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "capability_matrix": {
+                    "additionalProperties": {"enum": ["required", "optional", "unsupported"]},
+                    "minProperties": 1,
+                    "type": "object"
+                  },
+                  "composition_proof": {"minLength": 1, "type": "string"},
+                  "evidence_digest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+                  "verified_at": {"format": "date-time", "type": "string"}
+                },
+                "required": ["capability_matrix", "composition_proof", "evidence_digest", "verified_at"],
                 "type": "object"
               },
-              "composition_proof": {"minLength": 1, "type": "string"},
-              "evidence_digest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-              "verified_at": {"format": "date-time", "type": "string"}
-            },
-            "required": ["capability_matrix", "composition_proof", "evidence_digest", "verified_at"],
-            "type": "object"
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {"const": "source_module_removed"},
+                  "verified_at": {"format": "date-time", "type": "string"}
+                },
+                "required": ["kind", "verified_at"],
+                "type": "object"
+              }
+            ]
           },
           "source_module": {"minLength": 1, "type": "string"},
           "status": {"enum": ["active", "retired"]},

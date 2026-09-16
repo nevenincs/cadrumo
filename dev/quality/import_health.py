@@ -92,6 +92,7 @@ class _RatchetCounts(TypedDict):
     retirement_candidates: int
     retirement_ready: int
     retired_verified: int
+    retired_source_removed: int
 
 
 class _RatchetEntry(TypedDict):
@@ -137,7 +138,7 @@ def build_import_health(
     graph = _graph_summary(linter_output)
     candidate = _candidate_inventory(authority, checker.occurrences)
     candidate_path = _write_candidate_artifact(authority.repository, candidate)
-    ratchet = _reconcile_ratchet(authority.repository, candidate, _root_boundary_pairs(authority))
+    ratchet = _reconcile_ratchet(authority, candidate, _root_boundary_pairs(authority))
 
     blocking_findings = [finding for finding in checker.findings if not finding.advisory and not finding.fatal]
     advisory_findings = [finding for finding in checker.findings if finding.advisory]
@@ -313,6 +314,7 @@ def render_import_health(payload: dict[str, object]) -> str:
             f"{counts['new_unapproved']} / {counts['expanded_existing']} / {counts['expired']}",
             "Retirement missing evidence / ready / verified: "
             f"{counts['retirement_candidates']} / {counts['retirement_ready']} / {counts['retired_verified']}",
+            f"Retired with removed source module: {counts['retired_source_removed']} occurrence(s)",
             f"Advisories: {advisory['total']}",
             f"Baseline status: {ratchet['baseline_status']}",
         )
@@ -329,6 +331,7 @@ def unavailable_import_health(reason: str) -> dict[str, object]:
         "malformed": 0,
         "new_unapproved": 0,
         "regressed_retired": 0,
+        "retired_source_removed": 0,
         "retired_verified": 0,
         "retirement_candidates": 0,
         "retirement_ready": 0,
@@ -603,10 +606,11 @@ def _crosses_root_boundary(source_module: str, target_module: str, pairs: frozen
 
 
 def _reconcile_ratchet(
-    repository: Path,
+    authority: Authority,
     candidate: _CandidateInventory,
     root_boundaries: frozenset[tuple[str, str]],
 ) -> _RatchetReport:
+    repository = authority.repository
     path = repository / _RATCHET_RELATIVE_PATH
     rows = candidate["occurrences"]
     current = {
@@ -632,6 +636,7 @@ def _reconcile_ratchet(
             "retirement_candidates": 0,
             "retirement_ready": 0,
             "retired_verified": 0,
+            "retired_source_removed": 0,
         }
     )
     if not path.is_file():
@@ -695,6 +700,16 @@ def _reconcile_ratchet(
             if observed:
                 counts["regressed_retired"] += observed
                 details["regressed_retired"].append(fingerprint)
+            elif _is_source_module_removal(raw.get("retirement")):
+                source_module = validated["source_module"]
+                if _source_module_exists(authority, source_module):
+                    counts["malformed"] += allowed
+                    details["malformed"].append(
+                        f"{fingerprint}: retirement claims {source_module} was removed, but it still exists"
+                    )
+                else:
+                    counts["retired_source_removed"] += allowed
+                    details["retired_source_removed"].append(fingerprint)
             elif _valid_retirement(raw.get("retirement"), repository, validated["capability"]):
                 counts["retired_verified"] += allowed
             else:
@@ -716,6 +731,8 @@ def _reconcile_ratchet(
             else:
                 counts["retirement_candidates"] += missing
                 details["retirement_candidates"].append(fingerprint)
+                if not observed and not _source_module_exists(authority, validated["source_module"]):
+                    details["source_module_removed"].append(fingerprint)
 
     for fingerprint, row in current.items():
         if fingerprint not in approved:
@@ -744,7 +761,39 @@ def _ratchet_counts(counts: Counter[str]) -> _RatchetCounts:
         "retirement_candidates": counts["retirement_candidates"],
         "retirement_ready": counts["retirement_ready"],
         "retired_verified": counts["retired_verified"],
+        "retired_source_removed": counts["retired_source_removed"],
     }
+
+
+def _is_source_module_removal(raw: object) -> bool:
+    """Recognise the retirement record that claims the entry's source module was deleted.
+
+    The claim is only a shape here; the reconciler proves it against the live
+    authority tree on every run, so a returning module invalidates it.
+    """
+    if not isinstance(raw, dict) or set(raw) != {"kind", "verified_at"} or raw["kind"] != "source_module_removed":
+        return False
+    verified_at = raw["verified_at"]
+    if not isinstance(verified_at, str):
+        return False
+    try:
+        datetime.fromisoformat(verified_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
+def _source_module_exists(authority: Authority, module: str) -> bool:
+    """Return whether ``module`` is a module or package file below its declared root."""
+    for root in sorted(authority.roots, key=lambda item: len(item.name), reverse=True):
+        if module != root.name and not module.startswith(f"{root.name}."):
+            continue
+        relative = module.split(".")[len(root.name.split(".")) :]
+        base = root.path.joinpath(*relative)
+        if (base / "__init__.py").is_file():
+            return True
+        return bool(relative) and base.with_name(f"{relative[-1]}.py").is_file()
+    return False
 
 
 def _validate_ratchet_entry(entry: dict[str, object]) -> str | _RatchetEntry:
