@@ -11,16 +11,16 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import cast, override
+from typing import TYPE_CHECKING, cast, override
 
 import pytest
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.operations.composition import OperationComposedServices
-from ....application.operator_actions.models import declare_next_action
+from ....application.overview.next_actions import declare_next_action
 from ....application.search.workbench import WorkbenchSearchService
 from ...tui.components.host import ScreenHostApp
 from ..app import CadrumoTuiApp, RootBindingV1
@@ -40,11 +40,15 @@ from ..ledger.models import (
     LedgerReaderReadinessV1,
 )
 from ..ledger.tests.test_ledger_slice3 import _evidence_action
-from ..ledger.tests.test_ledger_workspace import _context, _projection as _ledger_projection, _review_action
+from ..ledger.tests.test_ledger_workspace import _context, _review_action
+from ..ledger.tests.test_ledger_workspace import _projection as _ledger_projection
 from ..ledger.workspace_injection import LedgerWorkspaceInjection
 from ..ledger_doors import LedgerImportDoor
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .test_app import HandoverScreen, _account_factories, _catalogue
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -103,7 +107,6 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
         for _ in range(4):
             await pilot.pause()
         assert isinstance(app.screen, HomeScreen)
-        app.post_message(app.screen.__class__.BackRequested() if hasattr(HomeScreen, "BackRequested") else None) if False else None
         app._show_home(None)
         await app.workers.wait_for_complete()
         app._on_destination_dismissed(None)
@@ -182,7 +185,8 @@ class _GuardedImportDoor(LedgerImportDoor):
 async def test_the_import_door_does_its_reading_and_writing_off_the_loop(tmp_path: Path) -> None:
     boundary = TransportBoundary()
     _GuardedImportDoor.boundary = boundary
-    door = _GuardedImportDoor(profile_id="synthetic", operation=cast("object", None))  # type: ignore[arg-type]
+    # The overridden transport step never reads the authority.
+    door = _GuardedImportDoor(profile_id="synthetic", operation=cast("PinnedAuthorityOperation", object()))
     request = LedgerImportRequestV1(path=tmp_path, source_kind=LedgerImportSourceKind.BANK_STATEMENT)
     await door.preview(request)
     await door.apply(request)
@@ -210,7 +214,7 @@ async def test_the_calendar_creates_a_declaration_off_the_loop() -> None:
         table.move_cursor(row=0)
         await pilot.press("enter")
         await pilot.pause()
-        pilot.app.screen.query_one("#btn-confirm", Button).press()
+        pilot.app.screen.query_one("#btn-confirm-accept", Button).press()
         await pilot.app.workers.wait_for_complete()
         await pilot.pause()
 
@@ -245,7 +249,3 @@ async def test_the_gate_catches_a_door_entered_on_the_loop() -> None:
     await asyncio.to_thread(moved.enter, "read_in_thread")
     assert moved.on_loop == []
     assert moved.names == {"read_in_thread"}
-
-
-def _unused(value: Input) -> Input:
-    return value
