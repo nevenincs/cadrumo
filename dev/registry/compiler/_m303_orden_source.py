@@ -22,7 +22,7 @@ from cadrumo.core.orden_anual_html import (
     OrdenAnualIvaAuthorityUnit,
     OrdenAnualIvaDifficultJustification,
     OrdenAnualIvaIngresoACuenta,
-    OrdenAnualIvaLorca2022Reduction,
+    OrdenAnualIvaLorcaReduction,
     OrdenAnualIvaModule,
     OrdenAnualIvaSeasonalIndex,
     extract_orden_anual_iva_authority,
@@ -44,7 +44,7 @@ from .m303_orden_raw_models import (
     M303AnnualOrdenRawAgriculturalIngresoACuenta,
     M303AnnualOrdenRawDifficultJustification,
     M303AnnualOrdenRawIngresoACuenta,
-    M303AnnualOrdenRawLorca2022Reduction,
+    M303AnnualOrdenRawLorcaReduction,
     M303AnnualOrdenRawModule,
     M303AnnualOrdenRawSeasonalIndex,
     M303AnnualOrdenSourceCensus,
@@ -144,7 +144,7 @@ def extract_m303_annual_orden_source(
             ),
             seasonal_indexes=tuple(_registry_raw_seasonal_index(item) for item in parsed_authority.seasonal_indexes),
             difficult_justification=_registry_raw_difficult_justification(parsed_authority.difficult_justification),
-            lorca_2022_reduction=_registry_raw_lorca_2022_reduction(parsed_authority.lorca_2022_reduction),
+            lorca_reduction=_registry_raw_lorca_reduction(parsed_authority.lorca_reduction),
         )
         validate_m303_annual_orden_lorca_projection(census, source=source)
         return census
@@ -240,12 +240,12 @@ def _registry_raw_difficult_justification(
     )
 
 
-def _registry_raw_lorca_2022_reduction(
-    item: OrdenAnualIvaLorca2022Reduction | None,
-) -> M303AnnualOrdenRawLorca2022Reduction | None:
+def _registry_raw_lorca_reduction(
+    item: OrdenAnualIvaLorcaReduction | None,
+) -> M303AnnualOrdenRawLorcaReduction | None:
     if item is None:
         return None
-    return M303AnnualOrdenRawLorca2022Reduction(
+    return M303AnnualOrdenRawLorcaReduction(
         ejercicio=item.ejercicio,
         municipality=item.municipality,
         annex_scope=item.annex_scope,
@@ -268,7 +268,7 @@ def validate_m303_annual_orden_lorca_projection(
     authored one.  A source may omit the reduction when no fact variant applies;
     an observed reduction without a matching fact is refused.
     """
-    reduction = census.lorca_2022_reduction
+    reduction = census.lorca_reduction
     try:
         declared = resolve_lorca_reduction(effective_date=date(int(census.ejercicio), 12, 31))
     except RegistryValidationError:

@@ -110,13 +110,13 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
         scope_decision=scope,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=None,
+        dana_eligibility=None,
         calculation_result=calculate_m303_regimen_simplificado_result(
             period=period,
             scope_decision=scope,
             rows=rows,
             regimen_snapshot=regimen_snapshot,
-            dana_2024_eligibility=None,
+            dana_eligibility=None,
             operation=authority_operation,
         ),
     )
@@ -263,13 +263,13 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
         scope_decision=scope,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=None,
+        dana_eligibility=None,
         calculation_result=calculate_m303_regimen_simplificado_result(
             period=period,
             scope_decision=scope,
             rows=rows,
             regimen_snapshot=regimen_snapshot,
-            dana_2024_eligibility=None,
+            dana_eligibility=None,
             operation=authority_operation,
         ),
     )

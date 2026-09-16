@@ -108,7 +108,7 @@ class M303AnnualOrdenRawDifficultJustification(RegistryModel):
     non_agricultural_required_text: str = Field(min_length=1)
 
 
-class M303AnnualOrdenRawLorca2022Reduction(RegistryModel):
+class M303AnnualOrdenRawLorcaReduction(RegistryModel):
     """One source-stated municipal IVA reduction candidate.
 
     The source model keeps observed values only.  Exercise applicability and
@@ -137,7 +137,7 @@ class M303AnnualOrdenSourceCensus(RegistryModel):
     agricultural_ingresos_a_cuenta: tuple[M303AnnualOrdenRawAgriculturalIngresoACuenta, ...] = Field(min_length=1)
     seasonal_indexes: tuple[M303AnnualOrdenRawSeasonalIndex, ...] = Field(min_length=1)
     difficult_justification: M303AnnualOrdenRawDifficultJustification
-    lorca_2022_reduction: M303AnnualOrdenRawLorca2022Reduction | None
+    lorca_reduction: M303AnnualOrdenRawLorcaReduction | None
 
     @model_validator(mode="after")
     def _has_the_complete_official_annual_quota_catalogue(self) -> M303AnnualOrdenSourceCensus:
@@ -190,9 +190,9 @@ def _validate_source_common_axes(census: M303AnnualOrdenSourceCensus) -> None:
         scope="source",
         subject="difficult-justification",
     )
-    if census.lorca_2022_reduction is not None:
+    if census.lorca_reduction is not None:
         validate_percentage_shape(
-            census.lorca_2022_reduction.percentage,
+            census.lorca_reduction.percentage,
             scope="source",
             subject="municipal IVA reduction",
         )

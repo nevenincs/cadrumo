@@ -375,6 +375,15 @@ class ActividadAgricolaSimplificado(BaseModel):
         return self
 
 
+class LorcaActivityEligibility(BaseModel):
+    """Evidence that this Annex II activity is, or is not, carried out in Lorca."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    eligible: bool
+    evidence_reference: FilingEvidenceReference
+
+
 class ActividadNoAgricolaSimplificado(BaseModel):
     """One non-agricultural simplified-regime IAE activity."""
 
@@ -386,6 +395,7 @@ class ActividadNoAgricolaSimplificado(BaseModel):
     activity_id: _Token
     iae_epigrafe: IaeEpigrafe
     auxiliary_activity_indicator: IndicadorAuxiliarActividad | None
+    lorca_eligibility: LorcaActivityEligibility | None = None
     modulos: tuple[EntradaModuloSimplificado, ...] = Field(min_length=1, max_length=7)
     facts: tuple[HechoActividadSimplificado, ...] = ()
     evidence_reference: FilingEvidenceReference
@@ -456,6 +466,7 @@ def validate_regimen_simplificado_rows(
     agricultural_authority: AutoridadAgricolaOrdenAnualNoResuelta,
     applicable: bool,
     censo_iae_epigraphs: frozenset[str],
+    orden_ejercicio: int | None = None,
 ) -> None:
     """Fail closed on applicability, annual taxonomy, order, and censo conflicts."""
     if not applicable:
@@ -465,7 +476,8 @@ def validate_regimen_simplificado_rows(
     if not rows.activities:
         raise IvaValidationError("applicable regimen simplificado requires activity rows")
     by_id = {item.orden_id: item for item in orden}
-    if len(by_id) != len(orden) or any(item.ejercicio != rows.ejercicio for item in orden):
+    source_year = rows.ejercicio if orden_ejercicio is None else orden_ejercicio
+    if len(by_id) != len(orden) or any(item.ejercicio != source_year for item in orden):
         raise IvaValidationError("annual Orden taxonomy is duplicate, conflicting, or for the wrong year")
     for row in rows.activities:
         if isinstance(row, ActividadAgricolaSimplificado):

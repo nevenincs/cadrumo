@@ -1,6 +1,9 @@
 [fact]
 fact_id = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
 family = "scalar"
+# RDL 7/2024 art. 11.2 reduces the cuotas devengadas "en el año 2024" only: the
+# authored window is also the hard refusal boundary, so no later year projects it.
+support = { floor = 2024-11-13, horizon = 2024-12-31, hard_ceiling = 2024-12-31 }
 
 [[fact.variants]]
 variant_id = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada:2024-11-13"

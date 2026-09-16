@@ -129,7 +129,7 @@ def _validate_non_applicable_m303_exonerado_evidence(evidence: M303Exonerado390F
         )
 
 
-class M303DANA2024EligibilityEvidence(BaseModel):
+class M303DANAEligibilityEvidence(BaseModel):
     """Attested DANA eligibility without transcribing the mutable municipal anexo."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -152,7 +152,7 @@ class M303RegimenSimplificadoModuleCalculationResult(BaseModel):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
-class M303DANA2024ReductionResult(BaseModel):
+class M303DANAReductionResult(BaseModel):
     """The annually-applied DANA reduction for one evidenced activity."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -165,7 +165,7 @@ class M303DANA2024ReductionResult(BaseModel):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _ineligible_reduction_is_zero(self) -> M303DANA2024ReductionResult:
+    def _ineligible_reduction_is_zero(self) -> M303DANAReductionResult:
         if not self.eligible and self.amount != Decimal("0"):
             raise ModeloValidationError("an ineligible DANA reduction must be zero")
         return self
@@ -181,10 +181,12 @@ class M303RegimenSimplificadoActivityCalculationResult(BaseModel):
     module_results: tuple[M303RegimenSimplificadoModuleCalculationResult, ...] = Field(min_length=1, max_length=7)
     evidence_references: tuple[FilingEvidenceReference, ...] = Field(min_length=1)
     cuota_devengada_operaciones_corrientes: Decimal = Field(ge=Decimal("0"))
-    cuota_devengada_tras_dana_2024: Decimal = Field(ge=Decimal("0"))
+    cuota_devengada_tras_dana: Decimal = Field(ge=Decimal("0"))
+    lorca_reduction_amount: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
+    cuota_devengada_tras_reducciones: Decimal = Field(ge=Decimal("0"))
     deduccion_dificil_justificacion: Decimal = Field(ge=Decimal("0"))
     cuota_minima: Decimal = Field(ge=Decimal("0"))
-    dana_2024_reduction: M303DANA2024ReductionResult | None
+    dana_reduction: M303DANAReductionResult | None
     cuota_resultante: Decimal = Field(ge=Decimal("0"))
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
@@ -194,11 +196,13 @@ class M303RegimenSimplificadoActivityCalculationResult(BaseModel):
         module_ids = tuple(item.module_identity for item in self.module_results)
         if len(set(module_ids)) != len(module_ids):
             raise ModeloValidationError("M303 simplified calculation result contains duplicate modules")
-        reduction = self.dana_2024_reduction.amount if self.dana_2024_reduction is not None else Decimal("0")
-        if self.cuota_devengada_tras_dana_2024 != self.cuota_devengada_operaciones_corrientes - reduction:
+        reduction = self.dana_reduction.amount if self.dana_reduction is not None else Decimal("0")
+        if self.cuota_devengada_tras_dana != self.cuota_devengada_operaciones_corrientes - reduction:
             raise ModeloValidationError("M303 simplified activity result has an incoherent DANA annual cuota")
+        if self.cuota_devengada_tras_reducciones != self.cuota_devengada_tras_dana - self.lorca_reduction_amount:
+            raise ModeloValidationError("M303 simplified activity result has an incoherent Lorca reduction")
         if self.cuota_resultante != max(
-            self.cuota_devengada_tras_dana_2024 - self.deduccion_dificil_justificacion,
+            self.cuota_devengada_tras_reducciones - self.deduccion_dificil_justificacion,
             self.cuota_minima,
         ):
             raise ModeloValidationError("M303 simplified activity result has an incoherent annual cuota")

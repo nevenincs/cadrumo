@@ -23,7 +23,7 @@ EXPECTED_AGRICULTURAL_AXIS_COUNTS = {2022: 16, 2023: 16, 2024: 16, 2025: 17, 202
 #: positive coefficients, which a garbled extraction would violate.
 MINIMUM_SEASONAL_INDEX_BANDS = 1
 FIRST_SEASONAL_INDEX_DAY = 1
-EXTRACTOR_VERSION = "m303-annual-orden-html-v6"
+EXTRACTOR_VERSION = "m303-annual-orden-html-v7"
 
 
 class _GeneratedSourceShape(Protocol):
@@ -37,7 +37,7 @@ class _GeneratedSourceShape(Protocol):
     seasonal_index_day_bands: tuple[tuple[int, int], ...]
     seasonal_index_coefficients: tuple[Decimal, ...]
     difficult_justification_pct: Decimal
-    lorca_2022_reduction_pct: Decimal | None
+    lorca_reduction_pct: Decimal | None
 
 
 def validate_generated_source_counts(source: _GeneratedSourceShape) -> None:
@@ -71,12 +71,8 @@ def validate_generated_source_axis_shape(source: _GeneratedSourceShape) -> None:
         scope="manifest",
         subject="difficult-justification",
     )
-    if source.ejercicio == 2022:
-        if source.lorca_2022_reduction_pct is None:
-            raise RegistryValidationError("annual Orden 2022 manifest lacks its Lorca reduction percentage")
-        validate_percentage_shape(source.lorca_2022_reduction_pct, scope="manifest", subject="Lorca 2022 reduction")
-    elif source.lorca_2022_reduction_pct is not None:
-        raise RegistryValidationError("only the 2022 annual Orden manifest may state the Lorca reduction")
+    if source.lorca_reduction_pct is not None:
+        validate_percentage_shape(source.lorca_reduction_pct, scope="manifest", subject="Lorca reduction")
 
 
 def validate_seasonal_index_shape(

@@ -98,7 +98,7 @@ def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
             scope_decision=scope,
             rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
             regimen_snapshot=snapshot,
-            dana_2024_eligibility=None,
+            dana_eligibility=None,
             calculation_result=calculation_result,
         ),
     )

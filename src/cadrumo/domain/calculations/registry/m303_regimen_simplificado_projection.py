@@ -308,7 +308,7 @@ def _project_calculated_fact_ref(
         ),
         M303RegimenSimplificadoFact.CUOTA_MINIMA: result.cuota_minima,
         M303RegimenSimplificadoFact.REDUCCION_DANA: (
-            result.dana_2024_reduction.amount if result.dana_2024_reduction is not None else None
+            result.dana_reduction.amount if result.dana_reduction is not None else None
         ),
         M303RegimenSimplificadoFact.REDUCCIONES: result.deduccion_dificil_justificacion,
         M303RegimenSimplificadoFact.RESULTADO_CUARTO_TRIMESTRE: result.cuota_resultante,

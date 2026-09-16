@@ -73,32 +73,38 @@ def test_complete_loaded_partial_tree_preserves_modelo_fact_scope(tmp_path: Path
     assert "liva-orden-lorca-reduction" not in catalogues.facts.facts
 
 
-@pytest.mark.parametrize("effective_date", (date(2022, 1, 1), date(2022, 12, 31)))
-def test_lorca_reduction_fact_resolves_at_both_2022_boundaries(effective_date: date) -> None:
-    catalogue = compile_registered_fact_providers(
-        Path(bundled_path("registry", "aeat")),
-        modelos=(_modelo("303"),),
-    )
-    authority = CandidateFactAuthority(catalogue)
-
-    reduction = resolve_lorca_reduction(effective_date=effective_date, authority=authority)
-
-    assert reduction.ejercicio == 2022
-    assert reduction.municipality == "Lorca"
-    assert reduction.annex_scope == "ANEXO II"
-    assert reduction.percentage == Decimal("20")
-    assert reduction.calculation_periods == ("trimestral", "anual")
-    assert reduction.legal_ref == "orden-hfp-1335-2021:da-4-lorca-2022-reduction:lorca-2022-reduction"
-    assert reduction.source_ref == "boe-orden-hfp-1335-2021-iva-authority"
-
-
-@pytest.mark.parametrize("effective_date", (date(2021, 12, 31), date(2023, 1, 1)))
-def test_lorca_reduction_fact_refuses_dates_adjacent_to_2022(effective_date: date) -> None:
-    catalogue = compile_registered_fact_providers(
-        Path(bundled_path("registry", "aeat")),
-        modelos=(_modelo("303"),),
-    )
-    authority = CandidateFactAuthority(catalogue)
-
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        resolve_lorca_reduction(effective_date=effective_date, authority=authority)
+def test_lorca_applicability_across_declared_support_and_projection_boundaries() -> None:
+    _, catalogues = load_registry_tree(Path(bundled_path("registry", "aeat")))
+    support = catalogues.supported_filing_years
+    assert support is not None
+    authority = CandidateFactAuthority(catalogues.facts)
+    fact = catalogues.facts.facts["liva-orden-lorca-reduction"]
+    upper = support.hard_ceiling if support.hard_ceiling is not None else support.horizon
+    years = tuple(range(support.floor, upper + 1))
+    if support.hard_ceiling is None:
+        years += (support.horizon + 1,)
+    assert not support.admits_filing_year(support.floor - 1)
+    if support.hard_ceiling is not None:
+        assert not support.admits_filing_year(support.hard_ceiling + 1)
+    for year in years:
+        for month, day in ((1, 1), (12, 31)):
+            coordinate = date(year, month, day)
+            authored = [
+                variant
+                for variant in fact.variants
+                if (variant.valid_from is None or variant.valid_from <= coordinate)
+                and (variant.valid_to is None or coordinate <= variant.valid_to)
+            ]
+            if authored:
+                reduction = resolve_lorca_reduction(effective_date=coordinate, authority=authority)
+                assert reduction.ejercicio == year
+                assert reduction.municipality == "Lorca"
+                assert reduction.annex_scope == "ANEXO II"
+                assert reduction.percentage == Decimal("20")
+                assert reduction.calculation_periods == ("trimestral", "anual")
+                assert (reduction.source_ref,) == authored[0].source_refs
+            else:
+                # The support envelope admits the request. Projection of an
+                # explicitly exercise-scoped provision cannot renew that law.
+                with pytest.raises(RegistryValidationError, match="exercise does not match its query date"):
+                    resolve_lorca_reduction(effective_date=coordinate, authority=authority)

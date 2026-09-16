@@ -139,7 +139,7 @@ class OrdenAnualIvaDifficultJustification:
 
 
 @dataclass(frozen=True, slots=True)
-class OrdenAnualIvaLorca2022Reduction:
+class OrdenAnualIvaLorcaReduction:
     """One source-stated municipal reduction candidate from an annual Orden.
 
     This is deliberately source IR, not an authored-fact projection.  The
@@ -165,7 +165,7 @@ class OrdenAnualIvaAuthority:
     agricultural_ingresos_a_cuenta: tuple[OrdenAnualIvaAgriculturalIngresoACuenta, ...]
     seasonal_indexes: tuple[OrdenAnualIvaSeasonalIndex, ...]
     difficult_justification: OrdenAnualIvaDifficultJustification
-    lorca_2022_reduction: OrdenAnualIvaLorca2022Reduction | None
+    lorca_reduction: OrdenAnualIvaLorcaReduction | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -186,7 +186,7 @@ def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> Or
         extract_agricultural_indexes,
         extract_difficult_justification,
         extract_ingresos_a_cuenta,
-        extract_lorca_2022_reduction,
+        extract_lorca_reduction,
     )
 
     soup = BeautifulSoup(markup, "lxml")
@@ -214,7 +214,7 @@ def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> Or
         agricultural_ingresos_a_cuenta=agricultural_ingresos_a_cuenta,
         seasonal_indexes=seasonal_indexes,
         difficult_justification=difficult_justification,
-        lorca_2022_reduction=extract_lorca_2022_reduction(soup, source_label=source_label),
+        lorca_reduction=extract_lorca_reduction(soup, source_label=source_label),
     )
 
 
@@ -275,11 +275,14 @@ def orden_anual_iva_authority_units(authority: OrdenAnualIvaAuthority) -> tuple[
             ),
         ),
     )
-    if authority.lorca_2022_reduction is not None:
-        reduction = authority.lorca_2022_reduction
+    if authority.lorca_reduction is not None:
+        reduction = authority.lorca_reduction
         units.append(
             OrdenAnualIvaAuthorityUnit(
-                anchor=(f"#m303-da-4-{_semantic_slug(reduction.municipality)}-{reduction.ejercicio}-reduction"),
+                anchor=(
+                    f"#m303-da-{'4' if 'cuarta' in reduction.required_text[0].casefold() else '5'}"
+                    f"-{_semantic_slug(reduction.municipality)}-{reduction.ejercicio}-reduction"
+                ),
                 title=f"Reducción {reduction.municipality} {reduction.ejercicio} de cuota devengada IVA",
                 section=(f"{reduction.required_text[0].split('Reducción', maxsplit=1)[0].rstrip('. ')} · IVA"),
                 text="\n".join(reduction.required_text),
@@ -599,7 +602,7 @@ __all__ = [
     "OrdenAnualIvaAuthorityUnit",
     "OrdenAnualIvaDifficultJustification",
     "OrdenAnualIvaIngresoACuenta",
-    "OrdenAnualIvaLorca2022Reduction",
+    "OrdenAnualIvaLorcaReduction",
     "OrdenAnualIvaModule",
     "OrdenAnualIvaSeasonalIndex",
     "extract_orden_anual_iva_authority",

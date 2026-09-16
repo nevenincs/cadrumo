@@ -16,7 +16,7 @@ from .orden_anual_html import (
     OrdenAnualIvaAgriculturalIngresoACuenta,
     OrdenAnualIvaDifficultJustification,
     OrdenAnualIvaIngresoACuenta,
-    OrdenAnualIvaLorca2022Reduction,
+    OrdenAnualIvaLorcaReduction,
     annex_heading_for,
     normalise_html_text,
     parse_decimal,
@@ -24,7 +24,7 @@ from .orden_anual_html import (
     row_values,
 )
 
-_LORCA_2022_HEADING_MARKERS = ("disposición adicional cuarta", "reducción", "2022", "lorca")
+_LORCA_HEADING_MARKERS = ("disposición adicional", "reducción", "lorca")
 _REDUCTION_IVA_MARKERS = ("cuotas devengadas", "operaciones corrientes", "reduc")
 _REDUCTION_PERIOD_MARKERS = ("cálculo", "cuota")
 _REDUCTION_RATE_RE = re.compile(r"reducir\s+en\s+un\s+([0-9]+(?:,[0-9]+)?)\s+por\s+ciento", re.I)
@@ -119,22 +119,22 @@ def extract_difficult_justification(
     )
 
 
-def extract_lorca_2022_reduction(
+def extract_lorca_reduction(
     soup: BeautifulSoup,
     *,
     source_label: str,
-) -> OrdenAnualIvaLorca2022Reduction | None:
-    """Return the source-observed Lorca 2022 reduction, when published.
+) -> OrdenAnualIvaLorcaReduction | None:
+    """Return the source-observed annual Lorca reduction, when published.
 
     Other municipal reductions are not interchangeable with this source shape
     and remain outside this singular extraction contract.  The compiler still
     validates the observed values against its typed facts authority before use.
     """
-    heading = _find_lorca_2022_heading(soup, source_label=source_label)
+    heading = _find_lorca_heading(soup, source_label=source_label)
     if heading is None:
         return None
-    paragraphs = _lorca_2022_paragraphs(heading)
-    iva_clause, period_clause = _lorca_2022_clauses(paragraphs, source_label=source_label)
+    paragraphs = _lorca_paragraphs(heading)
+    iva_clause, period_clause = _lorca_clauses(paragraphs, source_label=source_label)
     source_text = " ".join((normalise_html_text(heading.get_text(" ", strip=True)), iva_clause, period_clause))
     exercises = tuple(sorted({int(match.group("exercise")) for match in _REDUCTION_EXERCISE_RE.finditer(source_text)}))
     if len(exercises) != 1:
@@ -160,11 +160,11 @@ def extract_lorca_2022_reduction(
         raise OrdenAnualHtmlParseError(
             f"annual Orden source {source_label!r} municipal reduction has no calculation period",
         )
-    return OrdenAnualIvaLorca2022Reduction(
+    return OrdenAnualIvaLorcaReduction(
         ejercicio=exercises[0],
         municipality=municipalities[0],
         annex_scope=f"ANEXO {annexes[0]}",
-        percentage=_lorca_2022_rate(iva_clause, source_label=source_label),
+        percentage=_lorca_rate(iva_clause, source_label=source_label),
         calculation_periods=periods,
         required_text=(
             normalise_html_text(heading.get_text(" ", strip=True)),
@@ -174,12 +174,12 @@ def extract_lorca_2022_reduction(
     )
 
 
-def _find_lorca_2022_heading(soup: BeautifulSoup, *, source_label: str) -> Tag | None:
+def _find_lorca_heading(soup: BeautifulSoup, *, source_label: str) -> Tag | None:
     headings = tuple(
         tag
         for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
-        if _contains_all_markers(normalise_html_text(tag.get_text(" ", strip=True)), _LORCA_2022_HEADING_MARKERS)
-        and any(_contains_all_markers(text, _REDUCTION_IVA_MARKERS) for text in _lorca_2022_paragraphs(tag))
+        if _contains_all_markers(normalise_html_text(tag.get_text(" ", strip=True)), _LORCA_HEADING_MARKERS)
+        and any(_contains_all_markers(text, _REDUCTION_IVA_MARKERS) for text in _lorca_paragraphs(tag))
     )
     if not headings:
         return None
@@ -195,7 +195,7 @@ def _contains_all_markers(text: str, markers: tuple[str, ...]) -> bool:
     return bool(text) and all(marker.casefold() in folded for marker in markers)
 
 
-def _lorca_2022_paragraphs(heading: Tag) -> tuple[str, ...]:
+def _lorca_paragraphs(heading: Tag) -> tuple[str, ...]:
     paragraphs: list[str] = []
     for tag in heading.find_all_next(["h1", "h2", "h3", "h4", "h5", "h6", "p"]):
         if tag is not heading and tag.name.startswith("h"):
@@ -207,7 +207,7 @@ def _lorca_2022_paragraphs(heading: Tag) -> tuple[str, ...]:
     return tuple(paragraphs)
 
 
-def _lorca_2022_clauses(paragraphs: tuple[str, ...], *, source_label: str) -> tuple[str, str]:
+def _lorca_clauses(paragraphs: tuple[str, ...], *, source_label: str) -> tuple[str, str]:
     iva_clauses = tuple(text for text in paragraphs if _contains_all_markers(text, _REDUCTION_IVA_MARKERS))
     period_clauses = tuple(
         text
@@ -222,7 +222,7 @@ def _lorca_2022_clauses(paragraphs: tuple[str, ...], *, source_label: str) -> tu
     return iva_clauses[0], period_clauses[0]
 
 
-def _lorca_2022_rate(iva_clause: str, *, source_label: str):
+def _lorca_rate(iva_clause: str, *, source_label: str):
     rate_match = _REDUCTION_RATE_RE.search(iva_clause)
     if rate_match is None:
         raise OrdenAnualHtmlParseError(

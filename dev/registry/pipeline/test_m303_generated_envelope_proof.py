@@ -321,14 +321,14 @@ def _m303_2026_6919_regimen_evidence(snapshot, *, operation: PinnedAuthorityOper
         scope_decision=scope,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=None,
+        dana_eligibility=None,
         operation=operation,
     )
     return M303RegimenSimplificadoFilingEvidence(
         scope_decision=scope,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=None,
+        dana_eligibility=None,
         calculation_result=calculation_result,
     )
 

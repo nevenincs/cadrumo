@@ -36,7 +36,7 @@ from ..iva.regimen_simplificado_rows import (
     RegimenSimplificadoFilingRows,
 )
 from .calculation_revision_m303_evidence import (
-    M303DANA2024EligibilityEvidence,
+    M303DANAEligibilityEvidence,
     M303Exonerado390FilingEvidence,
     M303InsolvencyFilingFact,
     M303RegimenSimplificadoActivityCalculationResult,
@@ -331,7 +331,7 @@ class M303RegimenSimplificadoFilingEvidence(BaseModel):
     scope_decision: M303RegimenSimplificadoScopeDecision
     rows: RegimenSimplificadoFilingRows
     regimen_snapshot: M303RegimenSimplificadoSnapshot
-    dana_2024_eligibility: M303DANA2024EligibilityEvidence | None
+    dana_eligibility: M303DANAEligibilityEvidence | None
     calculation_result: M303RegimenSimplificadoCalculationResult
 
     @model_validator(mode="after")
@@ -452,7 +452,7 @@ class M303FilingInstanceEvidence(BaseModel):
         result = self.regimen_simplificado.calculation_result
         if result.period != self.period:
             raise ModeloValidationError("M303 simplified calculation result must use the filing period")
-        eligibility = self.regimen_simplificado.dana_2024_eligibility
+        eligibility = self.regimen_simplificado.dana_eligibility
         requires_dana_eligibility = (
             is_last_filing_period_of_year(self.period)
             and not self.regimen_simplificado.scope_decision.is_not_claimed

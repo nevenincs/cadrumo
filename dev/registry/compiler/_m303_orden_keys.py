@@ -20,7 +20,7 @@ def annual_orden_legal_keys(census: M303AnnualOrdenSourceCensus) -> set[str]:
         *(seasonal_index_legal_key(index) for index, _ in enumerate(census.seasonal_indexes)),
         difficult_justification_legal_key("agricola"),
         difficult_justification_legal_key("no_agricola"),
-        *(() if census.lorca_2022_reduction is None else (lorca_2022_reduction_legal_key(),)),
+        *(() if census.lorca_reduction is None else (lorca_reduction_legal_key(),)),
     }
 
 
@@ -48,5 +48,5 @@ def difficult_justification_legal_key(cohort: Literal["agricola", "no_agricola"]
     return f"difficult-justification:{cohort}"
 
 
-def lorca_2022_reduction_legal_key() -> str:
-    return "lorca-2022-reduction"
+def lorca_reduction_legal_key() -> str:
+    return "lorca-reduction"

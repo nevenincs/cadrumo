@@ -116,7 +116,7 @@ def _evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingI
                     registry_snapshot=registry_snapshot,
                     scope_decision=scope,
                 ),
-                dana_2024_eligibility=None,
+                dana_eligibility=None,
                 operation=operation,
             ),
         ),

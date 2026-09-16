@@ -13,7 +13,7 @@ from cadrumo.core.orden_anual_html import (
     OrdenAnualIvaAuthority,
     OrdenAnualIvaDifficultJustification,
     OrdenAnualIvaIngresoACuenta,
-    OrdenAnualIvaLorca2022Reduction,
+    OrdenAnualIvaLorcaReduction,
     OrdenAnualIvaSeasonalIndex,
     orden_anual_iva_authority_units,
 )
@@ -30,7 +30,7 @@ from ._m303_orden_keys import (
     agricultural_index_legal_key,
     agricultural_ingreso_legal_key,
     difficult_justification_legal_key,
-    lorca_2022_reduction_legal_key,
+    lorca_reduction_legal_key,
     non_agricultural_ingreso_legal_key,
     seasonal_index_legal_key,
 )
@@ -40,7 +40,7 @@ from ._m303_orden_source import (
     validate_pinned_boe_orden_source,
 )
 from .m303_orden_raw_models import (
-    M303AnnualOrdenRawLorca2022Reduction,
+    M303AnnualOrdenRawLorcaReduction,
     M303AnnualOrdenSourceCensus,
 )
 
@@ -67,7 +67,7 @@ def compile_annual_orden_legal_references(
         unit.anchor for unit in units[agricultural_offset : agricultural_offset + len(census.agricultural_indexes)]
     )
     common_units = units[agricultural_offset + len(census.agricultural_indexes) :]
-    expected_common_count = 4 + int(census.lorca_2022_reduction is not None)
+    expected_common_count = 4 + int(census.lorca_reduction is not None)
     if len(common_units) != expected_common_count:
         raise RegistryValidationError("annual Orden authority has the wrong common-axis corpus unit count")
 
@@ -126,10 +126,10 @@ def compile_annual_orden_legal_references(
         effective_from=effective_from,
         effective_to=effective_to,
     )
-    if census.lorca_2022_reduction is not None:
-        _compile_lorca_2022_reduction_legal_reference(
+    if census.lorca_reduction is not None:
+        _compile_lorca_reduction_legal_reference(
             output,
-            reduction=census.lorca_2022_reduction,
+            reduction=census.lorca_reduction,
             anchor=common_anchors[4],
             source=source,
             document_id=document_id,
@@ -309,10 +309,10 @@ def _compile_difficult_justification_legal_references(
         )
 
 
-def _compile_lorca_2022_reduction_legal_reference(
+def _compile_lorca_reduction_legal_reference(
     output: dict[str, LegalReference],
     *,
-    reduction: M303AnnualOrdenRawLorca2022Reduction,
+    reduction: M303AnnualOrdenRawLorcaReduction,
     anchor: str,
     source: SourceReference,
     document_id: str,
@@ -328,7 +328,7 @@ def _compile_lorca_2022_reduction_legal_reference(
         document_id=document_id,
         effective_from=effective_from,
         effective_to=effective_to,
-        key=lorca_2022_reduction_legal_key(),
+        key=lorca_reduction_legal_key(),
         axis="annual-orden-municipal-reduction",
         anchor=anchor,
         article=declared.article,
@@ -432,16 +432,16 @@ def _shared_annual_orden_authority(census: M303AnnualOrdenSourceCensus) -> Orden
             agricultural_required_text=census.difficult_justification.agricultural_required_text,
             non_agricultural_required_text=census.difficult_justification.non_agricultural_required_text,
         ),
-        lorca_2022_reduction=(
+        lorca_reduction=(
             None
-            if census.lorca_2022_reduction is None
-            else OrdenAnualIvaLorca2022Reduction(
-                ejercicio=int(census.lorca_2022_reduction.ejercicio),
-                municipality=census.lorca_2022_reduction.municipality,
-                annex_scope=census.lorca_2022_reduction.annex_scope,
-                percentage=census.lorca_2022_reduction.percentage,
-                calculation_periods=census.lorca_2022_reduction.calculation_periods,
-                required_text=census.lorca_2022_reduction.required_text,
+            if census.lorca_reduction is None
+            else OrdenAnualIvaLorcaReduction(
+                ejercicio=int(census.lorca_reduction.ejercicio),
+                municipality=census.lorca_reduction.municipality,
+                annex_scope=census.lorca_reduction.annex_scope,
+                percentage=census.lorca_reduction.percentage,
+                calculation_periods=census.lorca_reduction.calculation_periods,
+                required_text=census.lorca_reduction.required_text,
             )
         ),
     )

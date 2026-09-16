@@ -390,13 +390,13 @@ def _m303_filing_facts(
             scope_decision=scope,
             rows=regimen_rows,
             regimen_snapshot=regimen_snapshot,
-            dana_2024_eligibility=None,
+            dana_eligibility=None,
             calculation_result=calculate_m303_regimen_simplificado_result(
                 period=period,
                 scope_decision=scope,
                 rows=regimen_rows,
                 regimen_snapshot=regimen_snapshot,
-                dana_2024_eligibility=None,
+                dana_eligibility=None,
                 operation=operation,
             ),
         )
