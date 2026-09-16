@@ -26,7 +26,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Annotated, ClassVar, Final, Literal, NamedTuple, Protocol, Self, runtime_checkable
 
-from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
@@ -59,6 +59,7 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
 from ...domain.modelos.row_models import ModeloDetailRow
+from ..modelo.work_profile import ModeloWorkProfile
 
 RowBindingValue = str | Decimal | int | bool
 
@@ -421,6 +422,11 @@ class CalculationSourceContext(BaseModel):
     that need the raw token for a downstream ``str``-typed API should use
     ``context.period.registry_token``; those that need only the year can use
     ``context.period.filing_year`` (which mirrors ``context.filing_year``).
+
+    ``profile`` is the profile the calculation loaded once for ``bucket_id``.
+    A resolver that needs profile facts reads them here rather than decrypting
+    the record again; it is ``None`` only for contexts built outside a
+    calculation command.
     """
 
     model_config = _STRICT_FROZEN
@@ -438,6 +444,7 @@ class CalculationSourceContext(BaseModel):
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     calculated_at: datetime | None = None
+    profile: InstanceOf[ModeloWorkProfile] | None = None
 
 
 #: Cap on a diagnostic's operator-facing message.
@@ -619,29 +626,6 @@ def out_of_window_summary_source_diagnostic(
         out_of_window_min_filing_date=min_filing_date,
         out_of_window_max_filing_date=max_filing_date,
     )
-
-
-def casilla_registry_legal_refs(revision: ModeloRevision, casilla_id: CasillaId) -> tuple[LegalRefId, ...]:
-    """Return one casilla's own legal grounding, plus its binding's, off ``revision``.
-
-    The CASILLA-DERIVED path shared by every advisory whose subject IS the
-    named casilla's own computation: :attr:`CalculationSourceDiagnostic.legal_refs`
-    is populated by READING this off the registry definitions the caller already
-    resolved, never by restating an article in the caller's own layer. Ordered
-    union, casilla first: the casilla is the subject an operator reads about, and
-    the binding grounds the route the value would have taken.
-
-    Returns an empty tuple when ``casilla_id`` is absent from ``revision`` --
-    the caller's subject casilla is not on this filing, which is a statement
-    about the registry rather than about the taxpayer, or when the casilla
-    carries no grounding of its own.
-    """
-    casilla = next((candidate for candidate in revision.casillas if candidate.id == casilla_id), None)
-    if casilla is None:
-        return ()
-    binding = next((candidate for candidate in revision.bindings if candidate.id == casilla.binding), None)
-    binding_legal = binding.legal_refs if binding is not None else ()
-    return tuple(dict.fromkeys((*casilla.legal_refs, *binding_legal)))
 
 
 class CalculationSourceProvenance(BaseModel):

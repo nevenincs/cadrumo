@@ -72,10 +72,13 @@ class ProfileSourceResolver:
 
         from ..modelo.profile_binding import resolve_profile_sourced_bindings
 
+        profile_record = self._profile_record
+        if profile_record is None and context.profile is not None:
+            profile_record = context.profile.record
         return resolve_profile_sourced_bindings(
             snapshot,
             bucket_id=context.bucket_id,
-            profile_record=self._profile_record,
+            profile_record=profile_record,
             caller_binding_ids=self._caller_binding_ids,
             operation=self._operation,
         )

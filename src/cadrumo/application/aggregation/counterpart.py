@@ -57,18 +57,12 @@ class _CounterpartRegistryCatalogue:
         return frozenset(operation_kinds)
 
 
-# Registry authority: selected M347/M349 counterpart declarations are consumed through
-# one generation-pinned operation and the dated mapping fact.
-def _registry_counterpart_catalogue(
+def counterpart_operation_catalogue_entries(
     effective_date: date,
     *,
     operation: PinnedAuthorityOperation,
-) -> _CounterpartRegistryCatalogue:
-    """Resolve counterpart kinds and readiness gates from registry authority."""
-    for modelo in (Modelo("347").value, Modelo("349").value):
-        directory = operation.modelo_directory(modelo)
-        if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
-            raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+) -> dict[str, str]:
+    """Return the dated M347/M349 counterpart operation mapping as unique string pairs."""
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m347-m349-counterpart-operation-catalogue",
@@ -85,6 +79,22 @@ def _registry_counterpart_catalogue(
         if entry.key in entries:
             raise ValueError(f"duplicate counterpart registry mapping key {entry.key!r}")
         entries[entry.key] = entry.value
+    return entries
+
+
+# Registry authority: selected M347/M349 counterpart declarations are consumed through
+# one generation-pinned operation and the dated mapping fact.
+def _registry_counterpart_catalogue(
+    effective_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> _CounterpartRegistryCatalogue:
+    """Resolve counterpart kinds and readiness gates from registry authority."""
+    for modelo in (Modelo("347").value, Modelo("349").value):
+        directory = operation.modelo_directory(modelo)
+        if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
+            raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
+    entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
 
     def required(key: str) -> str:
         value = entries.get(key)
@@ -417,4 +427,5 @@ __all__ = [
     "CounterpartRollup",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
+    "counterpart_operation_catalogue_entries",
 ]
