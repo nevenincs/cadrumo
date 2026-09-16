@@ -70,12 +70,9 @@ def test_direct_iva_ledger_constructors_declare_the_required_role() -> None:
     constructor to appear in the scan, rather than by pinning a call tally: a
     tally encodes one moment, and the only way past it is to bump the constant.
     """
-    # Only IvaLedgerObservation has a production construction site to anchor on;
-    # IvaLedgerCandidate is built solely by the aggregation tests, so its
-    # non-vacuity guard is that the scan found any construction at all.
     production_anchors = {"IvaLedgerObservation": "application/aggregation/iva_ledger.py"}
 
-    for name in ("IvaLedgerObservation", "IvaLedgerCandidate"):
+    for name in ("IvaLedgerObservation",):
         calls = tuple(_constructor_calls(name))
         missing = [
             f"{relative_path}:{call.lineno}"

@@ -14,14 +14,14 @@ from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING, TypeGuard
 
-from ...core.citation_grounding import CitationGrounding
-from ...core.validity_window import years_covered_by_every_group
-from ..calculations.registry.iva_category_catalogue import require_iva_category
-from .errors import IvaCatalogueError
-from .schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
+from cadrumo.core.citation_grounding import CitationGrounding
+from cadrumo.core.validity_window import years_covered_by_every_group
+from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
+from cadrumo.domain.iva.errors import IvaCatalogueError
+from cadrumo.domain.iva.schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
 
 if TYPE_CHECKING:
-    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
@@ -35,7 +35,7 @@ def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation) -> IvaCatalogu
     ``operation`` addresses only the IVA regulation component already pinned by
     the caller.
     """
-    from ..calculations.registry.runtime_catalogues import PublishedIvaRegulation
+    from cadrumo.domain.calculations.registry.runtime_catalogues import PublishedIvaRegulation
 
     loaded = operation.runtime_catalogue("iva_regulations")
     if not _is_object_mapping(loaded):
