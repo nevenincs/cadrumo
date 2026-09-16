@@ -3,97 +3,34 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from ...core.async_cleanup import AsyncCloseable, close_async_resources
+from ...core.async_cleanup import close_async_resources
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import (
     LIFECYCLES_BEFORE_EXECUTOR_ENTRY,
     OperationCancellation,
-    OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ._execution_context import DefinitionBoundContext
+from ._supervisor_host import SupervisorHost
 from .errors import OperationDeclarationError
-from .interactions import OperationConsumedInteraction, OperationPendingInteraction
-from .models import OperationId, OperationIdentity, OperationReference, OperationTerminalReceipt
+from .models import OperationId, OperationTerminalReceipt
 from .persistence.events import (
     OperationDiagnosticEvent,
     OperationEvent,
     OperationTerminalEvent,
 )
-from .persistence.journal import OperationJournal, OperationPersistedSnapshot
+from .persistence.journal import OperationPersistedSnapshot
 from .persistence.leases import OperationOwnerLease
 
 if TYPE_CHECKING:
-    from .registry import OperationDefinition, OperationRegistry
-    from .secret_submission import EphemeralSecretBroker
+    pass
 
 
-class SupervisorSettlementMixin:
+class SupervisorSettlementMixin(SupervisorHost):
     """Own cancellation requests, cleanup, terminal receipts, and commits."""
-
-    if TYPE_CHECKING:
-        registry: OperationRegistry
-        _journal: OperationJournal
-        _clock: Callable[[], datetime]
-        _cleanup_timeout: timedelta | None
-        _contexts: dict[OperationId, DefinitionBoundContext]
-        _executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]]
-        _cleanup_tasks: dict[OperationId, asyncio.Task[None]]
-        _continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
-        _resources: dict[OperationId, list[AsyncCloseable]]
-        _ephemeral_secrets: EphemeralSecretBroker
-
-        def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition: ...
-
-        def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None: ...
-
-        def _lease_lock(self, operation_id: OperationId) -> asyncio.Lock: ...
-
-        async def _require_owned_lease_unlocked(
-            self,
-            identity: OperationIdentity,
-            now: datetime,
-        ) -> OperationOwnerLease: ...
-
-        async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None: ...
-
-        async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
-
-        async def _cancel_pre_entry_secret(
-            self,
-            snapshot: OperationPersistedSnapshot,
-        ) -> OperationPersistedSnapshot | None: ...
-
-        def _notify_durable_change(self, snapshot: OperationPersistedSnapshot) -> None: ...
-
-        async def _advance(
-            self,
-            snapshot: OperationPersistedSnapshot,
-            *,
-            lifecycle: OperationLifecycle,
-            events: tuple[OperationEvent, ...] = (),
-            pending: OperationPendingInteraction | None = None,
-            consumed: tuple[OperationConsumedInteraction, ...] | None = None,
-            effect: OperationEffect | None = None,
-            execution_deadline: datetime | None = None,
-            cleanup_deadline: datetime | None = None,
-            cancellation_requested_at: datetime | None = None,
-            cancellation_acknowledged_at: datetime | None = None,
-            cancellation_deferred: bool | None = None,
-            executor_entered_at: datetime | None = None,
-            discard_ephemeral_secret: bool = False,
-        ) -> OperationPersistedSnapshot: ...
-
-        def _validate_executor_stopped_for_settlement(
-            self,
-            snapshot: OperationPersistedSnapshot,
-            condition: OperationTerminalCondition,
-        ) -> None: ...
 
     def _validate_cancellation_request(self, snapshot: OperationPersistedSnapshot) -> timedelta:
         """Validate cancellation policy and return the configured cleanup window."""
@@ -129,6 +66,7 @@ class SupervisorSettlementMixin:
             context.cancellation.record_request(successor)
         return successor
 
+    @override
     async def request_cancel(
         self,
         operation_id: OperationId,
@@ -147,6 +85,7 @@ class SupervisorSettlementMixin:
             return snapshot
         return await self._persist_cancellation_request(operation_id, snapshot, cleanup_timeout)
 
+    @override
     async def _acknowledge_cancellation(
         self,
         context_snapshot: OperationPersistedSnapshot,
@@ -167,6 +106,7 @@ class SupervisorSettlementMixin:
             cancellation_acknowledged_at=self._clock(),
         )
 
+    @override
     async def _set_cancellation_deferred(
         self,
         context_snapshot: OperationPersistedSnapshot,
@@ -192,6 +132,7 @@ class SupervisorSettlementMixin:
                 if latest.revision == current.revision:
                     raise
 
+    @override
     async def _escalate_cleanup_deadline(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Retain uncertainty after the cleanup window without publishing a false terminal state."""
         snapshot = await self.inspect(operation_id)
@@ -291,6 +232,7 @@ class SupervisorSettlementMixin:
         self._ephemeral_secrets.discard(operation_id)
         return successor, False
 
+    @override
     async def settle(
         self,
         operation_id: OperationId,
@@ -322,6 +264,7 @@ class SupervisorSettlementMixin:
         self._notify_durable_change(successor)
         return successor
 
+    @override
     def _validate_executor_stopped_for_settlement(
         self,
         snapshot: OperationPersistedSnapshot,
@@ -334,6 +277,7 @@ class SupervisorSettlementMixin:
         if executor_task is None or not executor_task.done():
             raise ValueError(f"{condition.value} settlement requires completed executor work")
 
+    @override
     def _validate_cancelled_settlement(self, snapshot: OperationPersistedSnapshot) -> None:
         """Reject a cancellation terminal claim until the executor's safe stop is proven."""
         if snapshot.cancellation_acknowledged_at is None:
