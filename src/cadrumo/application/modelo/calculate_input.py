@@ -1183,13 +1183,15 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
         return None
 
     from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..user_profile.projections import projection_for_taxpayer
     from ..workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
-    profile = projection_for_taxpayer(record or {})
-    verdict = derive_modelo_202_modality(profile, effective_date=date(work_unit.filing_year, 12, 31))
+    with bundled_indexed_authority().operation() as operation:
+        profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
+        verdict = derive_modelo_202_modality(profile, effective_date=date(work_unit.filing_year, 12, 31))
     return Modelo202ModalitySummary(modality=verdict.modality.value, reason=verdict.reason)
 
 

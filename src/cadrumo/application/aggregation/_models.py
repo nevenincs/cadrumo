@@ -9,8 +9,6 @@ expense aggregation) subclasses. These models import the canonical
 in core, not in an application-layer wrapper.
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from types import MappingProxyType
@@ -127,7 +125,11 @@ class LedgerAggregationResultBase[ObservationT: BaseModel, IssueT: BaseModel](Ba
 
     The PEP 695 type parameters are bounded to strict pydantic models, and
     concrete projection subclasses specialise this envelope in their own
-    modules.
+    modules. This module deliberately evaluates annotations eagerly (no
+    postponed ``__future__`` annotations): a PEP 695 parameter exists only in
+    the class scope, so a postponed ``Sequence[ObservationT]`` string cannot be
+    resolved when a subclass in another module parametrises this base, and the
+    subclass is left incomplete until its first use fails.
 
     Every ledger-projection family (renta income, renta gasto, IRNR income,
     impatriado income, and the Modelo 100 first-slice expense aggregation)

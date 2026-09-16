@@ -103,9 +103,18 @@ class HomeZoneState(BaseModel):
     availability: HomeAvailability
     observed_at: datetime | None = None
     reason_code: str | None = Field(default=None, min_length=1, max_length=128)
+    missing_profile_paths: tuple[str, ...] = ()
+    """Profile paths whose absence is the reason, when the reason is one.
+
+    A zone refused because the profile is incomplete must name what to fill
+    in; a reason code alone sends the operator to guess which of dozens of
+    fields the refusal meant.
+    """
 
     @model_validator(mode="after")
     def _require_honest_availability_evidence(self) -> Self:
+        if self.missing_profile_paths and self.reason_code is None:
+            raise ValueError("missing profile paths explain a reason and require one")
         if self.availability is HomeAvailability.AVAILABLE and self.reason_code is not None:
             raise ValueError("an available Home zone cannot carry an unavailability reason")
         if self.availability is not HomeAvailability.AVAILABLE and self.reason_code is None:

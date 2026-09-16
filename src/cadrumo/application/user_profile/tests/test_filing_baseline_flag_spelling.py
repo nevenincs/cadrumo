@@ -17,7 +17,11 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...wizard.commands import SETUP_OPTION_INFOS
-from ..filing_baseline import _profile_path_flag, missing_filing_baseline_flags
+from ..filing_baseline import (
+    _profile_path_flag,
+    missing_filing_baseline_flag_groups,
+    missing_filing_baseline_flags,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,6 +42,10 @@ _PROFILE_PATH_FLAGS = {
     "iva.redeme_enrolled": "iva-redeme-enrolled",
     "iva.regime": "iva-regime",
     "tax_residence.jurisdiction_scope": "tax-residence-jurisdiction-scope",
+    # The live wizard spells these two exactly as the identity branch does,
+    # which is what lets a requirement both authorities name collapse to one.
+    "taxpayer_type.legal_entity_form": "legal-entity-form",
+    "identity.legal_name": "legal-name",
 }
 
 
@@ -93,3 +101,42 @@ def test_an_unregistered_path_still_yields_a_well_formed_flag() -> None:
     derived = _profile_path_flag("nonexistent_namespace.some_field", profile_path_flags=_PROFILE_PATH_FLAGS)
     assert "." not in derived
     assert "_" not in derived
+
+
+@pytest.mark.parametrize(
+    ("values", "identity_expected", "conditional_expected"),
+    [
+        # A natural person with complete identity who declared an IVA regime:
+        # only the Modelo 303 block is owed. Reported under the identity key,
+        # this told the operator their name and NIF were missing when both
+        # were set.
+        (_IVA_BLOCK_OWED, (), True),
+        # A legal entity missing its form and legal name. The conditional
+        # resolver ALSO demands those two once the entity type is legal, and
+        # deriving identity by subtracting the conditional set emptied the
+        # identity group, so a missing legal name was reported as a Modelo 303
+        # requirement.
+        (
+            {"taxpayer_type.entity_type": "legal_entity", "identity.tax_id": "B12345674"},
+            ("legal-entity-form", "legal-name"),
+            False,
+        ),
+        # Nothing answered at all: every identity flag is owed.
+        ({}, ("entity-type", "name", "surnames"), False),
+    ],
+)
+def test_identity_and_conditional_groups_partition_the_refusal(
+    operation: PinnedAuthorityOperation,
+    values: dict[str, str],
+    identity_expected: tuple[str, ...],
+    conditional_expected: bool,
+) -> None:
+    """The two groups never overlap, cover the union, and identity wins overlaps."""
+    with validating_governed_facts(operation):
+        identity, conditional = missing_filing_baseline_flag_groups(values, profile_path_flags=_PROFILE_PATH_FLAGS)
+        union = missing_filing_baseline_flags(values, profile_path_flags=_PROFILE_PATH_FLAGS)
+
+    assert not set(identity) & set(conditional)
+    assert sorted((*identity, *conditional)) == sorted(union)
+    assert identity == identity_expected
+    assert bool(conditional) is conditional_expected

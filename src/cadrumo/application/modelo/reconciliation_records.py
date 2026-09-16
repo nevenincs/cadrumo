@@ -41,7 +41,6 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.filing_text import ModeloActorLabel
-from ..calculations.revision_carry_gate import revision_carry_outcome
 from .action_errors import WorkUnitRevisionDivergenceError
 
 if TYPE_CHECKING:
@@ -336,6 +335,10 @@ def list_modelo_reconciliations(
     none for the requested work unit) returns an empty tuple — the clean "no
     reconciliations recorded yet" signal, not an error.
     """
+    # The carry gate loads the registry authority; binding the persistence port
+    # at host start must not pay for it.
+    from ..calculations.revision_carry_gate import revision_carry_outcome
+
     records: list[ModeloReconciliationRecord] = []
     for record in modelo_reconciliation_persistence().iter_records():
         if record.bucket_id != bucket_id or (work_unit_id is not None and record.work_unit_id != work_unit_id):
