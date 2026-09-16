@@ -8,8 +8,8 @@ from typing import NoReturn
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support import (
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.tests._llm_evidence_split_support import (
     _BUCKET,
     _NOW,
     _seed_parent,
@@ -17,20 +17,20 @@ from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support impo
     _split_subprocess_proposer,
     _two_line_proposal,
 )
-from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_split_merge import split_transaction_with_classified_children
-from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from cadrumo.application.ledger.llm_classification import apply_evidence_split, suggest_evidence_split
-from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitApplyResult
-from cadrumo.application.ledger.models import ManualLedgerTransactionPatch, SplitChildCommand
-from cadrumo.core.config import load_settings
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
-from cadrumo.domain.transactions.errors import TransactionValidationError
-
+from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
+from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from .....application.ledger.actions_split_merge import split_transaction_with_classified_children
+from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
+from .....application.ledger.llm_classification import apply_evidence_split, suggest_evidence_split
+from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitApplyResult
+from .....application.ledger.models import ManualLedgerTransactionPatch, SplitChildCommand
+from .....core.config import load_settings
+from .....core.model_catalogue import ModelRole
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.iva.schema import IvaCategory
+from .....domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
+from .....domain.transactions.errors import TransactionValidationError
 from ._llm_evidence_split_support import repositories as repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -42,7 +42,7 @@ def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
     raise AssertionError("the no-evidence split path must not use this reader port")
 
 
-def _run_reader(run: Callable[[], object]) -> object:
+def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
     return run()
 
 

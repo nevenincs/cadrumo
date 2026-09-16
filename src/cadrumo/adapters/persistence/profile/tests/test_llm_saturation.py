@@ -23,27 +23,28 @@ from typing import NoReturn
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.tests._llm_saturation_support import (
     _BUCKET,
     _saturating_subprocess_classifier,
     _seed_unclassified,
 )
-from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
+from .....adapters.persistence.profile.tests._llm_saturation_support import (
     repositories as repositories,
 )
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from cadrumo.application.ledger.llm_classification import saturate_llm_classification
-from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSaturatedSuggestion
-from cadrumo.core.config import load_settings
-from cadrumo.domain.calculations.registry.authority import (
+from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
+from .....application.ledger.llm_classification import saturate_llm_classification
+from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSaturatedSuggestion
+from .....core.config import load_settings
+from .....core.model_catalogue import ModelRole
+from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
 )
-from cadrumo.domain.calculations.registry.authority import (
+from .....domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
-from cadrumo.domain.iva.schema import IvaCategory
+from .....domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -55,7 +56,7 @@ def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
     raise AssertionError("the no-evidence saturation path must not use this reader port")
 
 
-def _run_reader(run: Callable[[], object]) -> object:
+def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
     return run()
 
 
