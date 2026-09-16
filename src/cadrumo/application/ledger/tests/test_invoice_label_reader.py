@@ -717,3 +717,9 @@ def test_a_heading_word_is_never_read_as_a_party_name(operation: PinnedAuthority
     text = "EMISOR\nInmueblesCastellana200SL DESTINATARIO/CLIENTE\nNIF: B92000017"
 
     assert _read(text, operation).draft.supplier_name is None
+
+
+def test_figures_with_no_base_to_check_them_against_are_not_read(operation: PinnedAuthorityOperation) -> None:
+    draft = _read("IVA 21%: 160,92\nTotal factura: 890,00 EUR", operation).draft
+
+    assert (draft.iva_amount, draft.iva_rate, draft.grand_total) == (None, None, None)

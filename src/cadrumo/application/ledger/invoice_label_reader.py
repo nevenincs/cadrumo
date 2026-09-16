@@ -804,7 +804,11 @@ def _assemble_tax_figures(collected: _Collected, assembly: _Assembly) -> None:
     recargos = [tier.re_amount for tier in tiers if tier.re_amount is not None]
     if len(tiers) == 1 and len(collected.table_tiers) <= 1:
         tier = tiers[0]
-        assembly.put("taxable_base", tier.base or printed_base_total)
+        base = tier.base or printed_base_total
+        if base is None:
+            # A cuota or rate with no base has nothing to be checked against.
+            return
+        assembly.put("taxable_base", base)
         # A printed 0 % charges no rate; the draft's single rate stays empty.
         assembly.put("iva_rate", tier.rate if tier.rate is None or tier.rate.value != 0 else None)
         assembly.put("iva_amount", tier.iva or printed_iva_total)
@@ -881,7 +885,9 @@ def _assemble_totals(collected: _Collected, assembly: _Assembly) -> None:
             )
             assembly.clear(*_TAX_FIGURES, "suplidos_amount")
             grand_total = None
-    assembly.put("grand_total", grand_total)
+    if base is not None:
+        # A total with no base has nothing to be checked against.
+        assembly.put("grand_total", grand_total)
 
     retention_entries = collected.amounts.get(_Kind.RETENCION, [])
     retention = _single("retencion_amount", (a for a, _ in retention_entries), assembly)
