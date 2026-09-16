@@ -132,6 +132,12 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     assert postures["config.profile.create"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["config.profile.archive.import"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["ledger.list"] is ProfileAuthenticationPosture.RESUME_FALLBACK
+    # Leaves declaring nothing a profile holds never open a session; one
+    # declaration more and the same family is gated again.
+    for profile_free in ("config.provision.status", "config.provision.verify", "config.provision.pull"):
+        assert postures[profile_free] is ProfileAuthenticationPosture.NOT_APPLICABLE, profile_free
+    assert postures["config.check"] is ProfileAuthenticationPosture.RESUME_FALLBACK
+    assert postures["app.diagnostics.telemetry.flush"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     metadata = {row.command: row.profile_authentication for row in command_registration_metadata()}
     assert metadata == {identity: posture.value for identity, posture in postures.items() if identity is not None}
 
