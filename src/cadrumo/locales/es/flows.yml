@@ -43,6 +43,15 @@ flows:
       field: Campo
       state: Estado
       value: Valor
+    complete_setup:
+      button: Declarar configuración completa ({key})
+      completed: La configuración está completa. Ya tienes acceso a las declaraciones
+        que la necesitaban.
+      failed: No se pudo completar la configuración.
+      incomplete: 'Aún no se puede completar la configuración. Falta: {fields}.'
+      incomplete_unnamed: 'Aún no se puede completar la configuración: faltan respuestas
+        obligatorias o no son coherentes.'
+      running: Comprobando el perfil y completando la configuración…
     edit:
       cancel: Cancelar
       clear: Borrar
@@ -163,16 +172,14 @@ flows:
     column:
       capability: Capacidad
       disposition: Disposición
-      producer: Productor
-      why: Motivo
     handoff: La presentación se realiza fuera de esta aplicación. Construya, verifique
       y exporte aquí, y presente usted mismo ante la AEAT.
-    state_not_carried: Esta lectura no incluye el estado ni el historial de presentación.
-      Ningún productor los aporta.
-    title: "Presentación - modelo {modelo}\r"
+    state_not_carried: Esta página no muestra el estado ni el historial de presentación.
+    title: Presentación - modelo {modelo}
     why:
-      draft_structural: 'Sin medir de forma permanente: la construcción del borrador
-        no guarda estado, así que ningún productor registra un veredicto que leer.'
+      draft_structural: Cadrumo no puede saber de antemano si el borrador de presentación
+        se podrá generar; se comprueba al generarlo.
+    why_line: '{capability}: {why}'
   modelo_workspace_inputs:
     column:
       address: Dirección
@@ -185,17 +192,15 @@ flows:
       son accesibles desde esta lectura.
     section:
       unsectioned: Sin sección
-    title: "Entradas - modelo {modelo}\r"
-    values_unmeasured: En esta lectura no se ha medido ningún valor. La inspección
-      estática solo lee el esquema.
+    title: Entradas - modelo {modelo}
+    values_unmeasured: Esta página solo muestra la estructura del formulario; aún
+      no muestra valores calculados.
   modelo_workspace_overview:
-    actions_not_carried: Ningún productor aporta acciones de recuperación para esta
-      lectura. No afirma que no existan.
+    actions_not_carried: Esta página aún no sugiere pasos siguientes.
     column:
       capability: Capacidad
       disposition: Disposición
       field: Campo
-      producer: Productor
       value: Valor
     label:
       filing_year: Ejercicio
@@ -211,7 +216,7 @@ flows:
       address: Dirección
       capabilities: Capacidades
       revision: Coordenadas de revisión
-    title: "Resumen - modelo {modelo}\r"
+    title: Resumen - modelo {modelo}
     value:
       no_work_unit: aún sin unidad de trabajo
   modelo_workspace_provenance:
@@ -220,11 +225,10 @@ flows:
       source_ref: Referencia de origen
       subject: Sujeto
     empty: Este cálculo no ha registrado fuentes contribuyentes.
-    not_applicable: No aplicable a esta lectura. Esta admisión no incluye faceta de
-      procedencia.
+    not_applicable: Esta página aún no muestra de dónde proceden los valores.
     page_bounded: Se muestran {shown} de un conjunto mayor. Una fuente puede aportar
       muchas filas, así que el número de filas no indica completitud.
-    title: "Procedencia - modelo {modelo}\r"
+    title: Procedencia - modelo {modelo}
     value:
       unattributed: sin atribuir
   modelo_workspace_results:
@@ -233,12 +237,11 @@ flows:
       formula: Fórmula
       value: Valor
     empty: Este cálculo no ha producido ninguna casilla calculada.
-    not_applicable: No aplicable a esta lectura. Separar los resultados calculados
-      de las entradas del operador requiere la revisión de trabajo, que una inspección
-      estática no incluye.
+    not_applicable: 'Esta página aún no puede mostrar resultados calculados: no distingue
+      las casillas calculadas de las que rellenas tú.'
     page_bounded: Se muestran {shown} filas de un conjunto mayor; las restantes no
       son accesibles desde esta lectura.
-    title: "Resultados - modelo {modelo}\r"
+    title: Resultados - modelo {modelo}
   modelo_workspace_verification:
     axis:
       binding_ready: Vínculos preparados
@@ -246,23 +249,23 @@ flows:
       profile_ready: Perfil preparado
       ready: Preparado (veredicto del productor)
       registry_ready: Registro preparado
-    capability_line: 'Preparación de verificación: {glyph} {disposition} (de {producer})'
+    capability_line: 'Verificación: {disposition}'
     column:
       axis: Eje
       casilla: Casilla
       kind: Tipo
+      message: Qué se encontró
       severity: Severidad
       value: Valor
-    evidence_not_carried: Ningún productor aporta evidencia ni acciones de recuperación
-      en estos registros. No afirma que no existan.
+    evidence_not_carried: Esta página aún no muestra justificantes ni pasos siguientes
+      sugeridos.
     findings_none: La revisión de trabajo no ha registrado hallazgos.
-    findings_unmeasured: En esta lectura no se ha medido ningún hallazgo. Esta admisión
-      no incluye revisión de trabajo.
-    readiness_unmeasured: La preparación no se ha medido en esta lectura.
+    findings_unmeasured: Esta página aún no muestra los hallazgos de la verificación.
+    readiness_unmeasured: Esta página aún no muestra si la declaración está lista.
     section:
       findings: Hallazgos
       readiness: Ejes de preparación
-    title: "Verificación - modelo {modelo}\r"
+    title: Verificación - modelo {modelo}
     value:
       unmeasured: sin medir
   passphrase:

@@ -1115,8 +1115,9 @@ tui:
       unresolved: Megoldatlan
     refusal:
       notification_handoff: Az értesítési dokumentum lekérése nem érhető el.
-      operation_handoff: A művelet átadása nem érhető el.
+      operation_handoff: AEAT-műveletek ebből a munkamenetből nem indíthatók.
       source: Ez a forrás nem érhető el megtekintésre.
+      sources_missing: 'Ehhez a területhez még nem elérhető adatok kellenek: %{sources}.'
       unread_notification: Olvasatlan értesítések dokumentumai nem nyithatók meg.
     section:
       areas: Szinkronizációs területek
@@ -1141,6 +1142,8 @@ tui:
     sources:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
+    status:
+      items: 'Elemek: %{count}'
     value:
       none: '-'
       unobserved: Nem megfigyelt
@@ -1209,6 +1212,10 @@ tui:
         cancel: Mégse
         confirm: Megerősítés
         failure: A helyreállítási kérelem nem fejezhető be.
+        setup_incomplete: 'Előbb fejezze be a profil beállítását: nyissa meg a Profilt
+          (F4), és nyomja meg az F8-at.'
+        success: '{address} létrejött. A Bevallások között jelenik meg, amikor visszatér
+          oda.'
       scope:
         all: Mind
         evidence_unknown: Ismeretlen AEAT-bizonyíték
@@ -1250,7 +1257,7 @@ tui:
       modelo_workspace: Bevallási munkaterület megnyitása
       overview: Bevallások
       revisions: Számítási változatok
-    empty: Nincs mért rekord.
+    empty: Itt még nincs rögzítve semmi.
     evidence:
       aeat_justificante_pdf: Megfigyelt AEAT PDF-nyugta
       aeat_live_capture: Élő AEAT-megfigyelés
@@ -1278,7 +1285,19 @@ tui:
       declarations: Bevallások
       title: Bevallások áttekintése
     refusal:
-      handoff: A gazda nem biztosította ezt a célt.
+      handoff: Ez ebből a munkamenetből nem nyitható meg.
+      reason:
+        workbench:
+          calendar:
+            taxpayer_model_undeclared: A bevallási naptárhoz tudni kell, milyen típusú
+              adózó ez a profil, és magánszemély esetén az IRPF szerinti jövedelemkategóriáit.
+              Add meg őket a profilban (F4).
+          declarations:
+            lifecycle_reader_unavailable: A benyújtási előzmények ebben a munkamenetben
+              nem olvashatók.
+          home:
+            taxpayer_profile_incomplete: A bevallási naptár nem számítható ki, amíg
+              a profil kötelező válaszai hiányoznak. Töltse ki őket a Profil részben.
       source: Ez a forrás jelenleg nem érhető el.
     revision_state:
       borrador: Piszkozat
@@ -1332,6 +1351,8 @@ tui:
           calendar:
             aeat_reader_unavailable: Még nincs rögzítve - az első AEAT-szinkron után
               jelenik meg
+            taxpayer_model_undeclared: Nem érhető el - a profil még nem adja meg,
+              milyen típusú adózóról van szó
           home:
             actions_projector_unavailable: Nem elérhető - a következő teendők akkor
               jelennek meg, ha a főkönyv minden területét ellenőrizték
@@ -1341,6 +1362,8 @@ tui:
               bevallásokat nem sikerült beolvasni
             messages_never_pulled: Még nincs rögzítve - az AEAT-üzenetek az első AEAT-szinkron
               után jelennek meg
+            taxpayer_profile_incomplete: Nem érhető el - a profilból hiányoznak kötelező
+              válaszok; töltse ki őket a Profil részben
           ledger:
             snapshot_projector_unavailable: Nem elérhető - akkor jelenik meg, ha a
               főkönyv minden területét ellenőrizték
@@ -1498,9 +1521,10 @@ tui:
     refusal:
       application_state: Ez a terület a főkönyv jelenlegi állapotában nem érhető el.
       destination_pending: Ez a terület ebben a verzióban még nem érhető el.
+      no_entries: Még nincsenek besorolandó tételek.
       selection_required: Előbb válassz ki egy tételt, majd nyisd meg rá ezt a feladatot.
-      submission_unavailable: Ez a feladat előkészített művelet nélkül nem érhető
-        el.
+      submission_unavailable: Ez a feladat ebben a munkamenetben erről a képernyőről
+        nem végezhető el.
     review:
       empty: Jelenleg nincs felülvizsgálandó tétel.
       filter_all: 'Szűrő: minden felülvizsgálati állapot'
@@ -1518,6 +1542,62 @@ tui:
       unmeasured: Nincs mérve
     unavailable:
       title: A főkönyvi terület nem érhető el
+  modelo:
+    assertion:
+      matched: Egyezik
+      mismatched: Nem egyezik
+      not_present: Nincs rögzítve
+    capability:
+      calculation_materialization: Számított értékek
+      filing_draft_readiness: Benyújtási tervezet
+      schema_inspection: Nyomtatvány felépítése
+      verification_readiness: Ellenőrzés
+    destination:
+      column: Oldal
+      filing: Benyújtás
+      heading: A bevallás oldalai
+      inputs: Bemenetek
+      provenance: Eredet
+      results: Eredmények
+      verification: Ellenőrzés
+    disposition:
+      available: Elérhető
+      not_applicable: Nem vonatkozik rá
+      refused: Elutasítva
+      unmeasured: Nincs felmérve
+    finding_kind:
+      advisory: Tanács
+      blocking_rule: Nem teljesülő szabály
+      cross_period_dependency_unclean: Egy korábbi időszak figyelmet igényel
+      missing_required_casilla: Hiányzik egy kötelező mező
+      reconciliation_mismatch: Az összegek nem egyeznek
+    finding_severity:
+      blocking: Akadályozza a benyújtást
+      warning: Figyelmeztetés
+    input_kind:
+      bound: Az Ön nyilvántartásából töltődik
+      computed: Számított
+      informational: Csak tájékoztató
+      manual: Ön adja meg
+      projection_only: Megjelenik, de nem kerül benyújtásra
+    record_family:
+      bindings: Értékek a nyilvántartásából
+      casillas: Mezők
+      formulas: Képletek
+      parameters: Paraméterek
+      relations: Kapcsolatok más nyomtatványokkal
+    review_status:
+      agent_reviewed: Automatikusan átnézve
+      operator_reviewed: Ember nézte át
+      pending_review: Még nincs átnézve
+    technical:
+      column:
+        field: Részlet
+        value: Azonosító
+      finding_refs: Jogszabályi hivatkozások, {position}. megállapítás
+      producer_of: „{capability}” forrása
+      record_family: Szakasz
+    technical_details: Technikai részletek
   root:
     account:
       appearance: Megjelenés
@@ -1528,9 +1608,30 @@ tui:
       profile: Profil
       sign_out: Kijelentkezés
       unavailable: A fiókvezérlők ebben a munkamenetben nem érhetők el.
+    account_bar:
+      with_expiry: '%{line} · A munkamenet vége: %{expires_at}'
+    account_help:
+      appearance: Váltás a világos és a sötét megjelenés között
+      change_user: Bejelentkezés egy másik profilba ezen a számítógépen
+      language: Válaszd ki, milyen nyelven jelenjenek meg a profil oldalai
+      password: A profilt védő jelszó módosítása
+      profile: A profil adatainak áttekintése és szerkesztése
+      sign_out: A profil munkamenetének lezárása és adatainak zárolása
+    account_key:
+      appearance: Téma
+      change_user: Felhasználó
+      language: Nyelv
+      password: Jelszó
+      profile: Profil
+      sign_out: Kijelentkezés
     navigation:
       unavailable: A kért terület ebben a munkamenetben nem nyitható meg.
     no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
+    palette:
+      placeholder: Területek, bejegyzések és műveletek keresése…
+    system:
+      quit: Kilépés
+      quit_help: Kilépés a Cadrumóból; a profil munkamenete változatlan marad
     title: Cadrumo terminálmunkamenet
   search:
     action:
@@ -1552,6 +1653,12 @@ tui:
       ledger: Főkönyv megnyitása
       profile: Profil megnyitása
       unknown: Munkafelület megnyitása
+    destination_help:
+      aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
+      declarations: Bevallások, számítási változatok, benyújtási előzmények és naptár
+      home: Következő teendők, bevallások és határidők egy pillantással
+      ledger: Tételek, ellenőrzés, besorolás és igazoló dokumentumok
+      profile: A profil adatai és az azokat kitöltő források
     refusal:
       not_composed: A munkafelület nem minden forrása volt még olvasható.
       refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.

@@ -1134,8 +1134,10 @@ tui:
     refusal:
       notification_handoff: La recuperación del documento de notificación no está
         disponible.
-      operation_handoff: La entrega de la operación no está disponible.
+      operation_handoff: Las operaciones con la AEAT no se pueden iniciar desde esta
+        sesión.
       source: Esta fuente no está disponible para su consulta.
+      sources_missing: 'Esta área necesita datos que aún no están disponibles: %{sources}.'
       unread_notification: Las notificaciones no leídas no pueden abrir documentos.
     section:
       areas: Áreas de sincronización
@@ -1160,6 +1162,8 @@ tui:
     sources:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
+    status:
+      items: 'Elementos: %{count}'
     value:
       none: '-'
       unobserved: No observado
@@ -1228,6 +1232,10 @@ tui:
         cancel: Cancelar
         confirm: Confirmar
         failure: No se pudo completar la recuperación.
+        setup_incomplete: 'Primero declara completa la configuración del perfil: abre
+          Perfil (F4) y pulsa F8.'
+        success: Se ha creado {address}. Aparecerá en Declaraciones cuando vuelvas
+          allí.
       scope:
         all: Todas
         evidence_unknown: Evidencia AEAT desconocida
@@ -1269,7 +1277,7 @@ tui:
       modelo_workspace: Abrir espacio de declaración
       overview: Declaraciones
       revisions: Revisiones de cálculo
-    empty: No hay registros medidos.
+    empty: Todavía no hay nada registrado aquí.
     evidence:
       aeat_justificante_pdf: Justificante PDF de la AEAT observado
       aeat_live_capture: Observación en directo de la AEAT
@@ -1298,7 +1306,20 @@ tui:
       declarations: Declaraciones
       title: Resumen de declaraciones
     refusal:
-      handoff: El anfitrión no ha proporcionado este destino.
+      handoff: Esto no se puede abrir desde esta sesión.
+      reason:
+        workbench:
+          calendar:
+            taxpayer_model_undeclared: El calendario fiscal necesita saber qué tipo
+              de contribuyente es este perfil y, si es una persona física, sus categorías
+              de renta del IRPF. Complétalos en el perfil (F4).
+          declarations:
+            lifecycle_reader_unavailable: El historial de presentaciones no se puede
+              leer en esta sesión.
+          home:
+            taxpayer_profile_incomplete: El calendario fiscal no puede calcularse
+              hasta completar las respuestas obligatorias del perfil. Complétalas
+              en la sección Perfil.
       source: Esta fuente no está disponible actualmente.
     revision_state:
       borrador: Borrador
@@ -1352,6 +1373,8 @@ tui:
           calendar:
             aeat_reader_unavailable: Todavía sin capturar - aparece tras la primera
               Sincronización AEAT
+            taxpayer_model_undeclared: No disponible - el perfil aún no indica qué
+              tipo de contribuyente es
           home:
             actions_projector_unavailable: No disponible - las próximas acciones aparecen
               cuando se han comprobado todas las áreas del libro
@@ -1361,6 +1384,8 @@ tui:
               leer las declaraciones que retomar
             messages_never_pulled: Todavía sin capturar - los mensajes de la AEAT
               aparecen tras la primera Sincronización AEAT
+            taxpayer_profile_incomplete: No disponible - al perfil le faltan respuestas
+              obligatorias; complétalas en Perfil
           ledger:
             snapshot_projector_unavailable: No disponible - se muestra cuando se han
               comprobado todas las áreas del libro
@@ -1521,10 +1546,11 @@ tui:
       application_state: Esta área no está disponible en el estado actual del libro
         contable.
       destination_pending: Esta área aún no está disponible en esta versión.
+      no_entries: Todavía no hay asientos que clasificar.
       selection_required: Selecciona primero un asiento y abre después esta tarea
         para él.
-      submission_unavailable: Esta tarea no está disponible hasta que se proporcione
-        una operación preparada.
+      submission_unavailable: Esta tarea no se puede realizar desde esta pantalla
+        en esta sesión.
     review:
       empty: Ahora mismo no hay asientos que revisar.
       filter_all: 'Filtro: todos los estados de revisión'
@@ -1542,6 +1568,62 @@ tui:
       unmeasured: Sin medir
     unavailable:
       title: Área del libro contable no disponible
+  modelo:
+    assertion:
+      matched: Coincide
+      mismatched: No coincide
+      not_present: Ninguna registrada
+    capability:
+      calculation_materialization: Valores calculados
+      filing_draft_readiness: Borrador de presentación
+      schema_inspection: Estructura del formulario
+      verification_readiness: Verificación
+    destination:
+      column: Página
+      filing: Presentación
+      heading: Páginas de esta declaración
+      inputs: Entradas
+      provenance: Procedencia
+      results: Resultados
+      verification: Verificación
+    disposition:
+      available: Disponible
+      not_applicable: No se aplica
+      refused: Rechazado
+      unmeasured: Sin medir
+    finding_kind:
+      advisory: Consejo
+      blocking_rule: Regla no cumplida
+      cross_period_dependency_unclean: Un periodo anterior requiere atención
+      missing_required_casilla: Falta una casilla obligatoria
+      reconciliation_mismatch: Los totales no cuadran
+    finding_severity:
+      blocking: Impide presentar
+      warning: Aviso
+    input_kind:
+      bound: Se rellena con tus registros
+      computed: Calculado
+      informational: Solo informativo
+      manual: Lo introduces tú
+      projection_only: Se muestra, no se presenta
+    record_family:
+      bindings: Valores de tus registros
+      casillas: Casillas
+      formulas: Fórmulas
+      parameters: Parámetros
+      relations: Vínculos con otros modelos
+    review_status:
+      agent_reviewed: Revisado automáticamente
+      operator_reviewed: Revisado por una persona
+      pending_review: Aún sin revisar
+    technical:
+      column:
+        field: Detalle
+        value: Identificador
+      finding_refs: Referencias legales, hallazgo {position}
+      producer_of: Origen de «{capability}»
+      record_family: Sección
+    technical_details: Detalles técnicos
   root:
     account:
       appearance: Apariencia
@@ -1552,9 +1634,30 @@ tui:
       profile: Perfil
       sign_out: Cerrar sesión
       unavailable: Los controles de la cuenta no están disponibles en esta sesión.
+    account_bar:
+      with_expiry: '%{line} · La sesión termina a las %{expires_at}'
+    account_help:
+      appearance: Cambia entre la apariencia clara y la oscura
+      change_user: Inicia sesión en otro perfil de este equipo
+      language: Elige el idioma en que se muestran las páginas de este perfil
+      password: Cambia la contraseña que protege este perfil
+      profile: Revisa y edita los datos de este perfil
+      sign_out: Cierra la sesión de este perfil y bloquea sus datos
+    account_key:
+      appearance: Tema
+      change_user: Usuario
+      language: Idioma
+      password: Contraseña
+      profile: Perfil
+      sign_out: Cerrar sesión
     navigation:
       unavailable: No se puede abrir el área solicitada en esta sesión.
     no_areas: Ninguna área está disponible todavía en esta sesión.
+    palette:
+      placeholder: Busca áreas, registros y acciones…
+    system:
+      quit: Salir
+      quit_help: Sale de Cadrumo; la sesión del perfil queda como está
     title: 'Cadrumo: sesión de terminal'
   search:
     action:
@@ -1576,6 +1679,13 @@ tui:
       ledger: Abrir libro mayor
       profile: Abrir perfil
       unknown: Abrir área de trabajo
+    destination_help:
+      aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
+      declarations: Declaraciones, revisiones de cálculo, historial de presentaciones
+        y calendario
+      home: Próximas acciones, declaraciones y plazos de un vistazo
+      ledger: Apuntes, revisión, clasificación y justificantes
+      profile: Los datos de este perfil y las fuentes que los completan
     refusal:
       not_composed: Todavía no se han podido leer todas las fuentes del espacio de
         trabajo.
