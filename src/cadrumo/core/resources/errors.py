@@ -1,10 +1,9 @@
 """Canonical typed error hierarchy for resource management.
 
 Three top-level error classes give consumers a uniform catch
-surface across all twelve :class:`ResourceRepository`
-implementations without breaking the existing per-domain error
-classes. Each per-domain error (``RegistryLoadError``,
-``ManualParseError``, etc.) subclasses the appropriate top-level
+surface across bundled-resource loaders without breaking the
+existing per-domain error classes. Each per-domain error
+(``RegistryLoadError``, etc.) subclasses the appropriate top-level
 error.
 """
 
