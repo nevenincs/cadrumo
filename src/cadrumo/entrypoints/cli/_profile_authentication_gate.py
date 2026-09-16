@@ -34,7 +34,7 @@ from .config.secure_input import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
     from ...application.user_profile.login_session import ProfileLoginOutcome
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer
@@ -402,9 +402,6 @@ def consume_root_fallback(
     this one. What stays here is the check only this caller can make: that the
     profile authenticated is the profile the invocation named.
     """
-    from ...application.user_profile.login_session import authenticate_profile_for_invocation
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
-
     _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
     payload = read_profile_secret_payload(root_profile_secret_model(), selection=root)
     passphrase = ""
@@ -412,31 +409,61 @@ def consume_root_fallback(
         if not isinstance(payload, ProfileAuthenticationSecrets):
             raise TypeError("root profile-secret model resolved an unexpected payload type")
         passphrase = payload.profile_passphrase.get_secret_value()
-        # The target named here is scoped to THIS invocation, so it must not
-        # become the operator's selection. Only `config login NAME` selects.
-        with bundled_indexed_authority().operation() as operation:
-            outcome = authenticate_profile_for_invocation(
-                name=bucket_id,
-                passphrase_callback=lambda: passphrase,
-                profile_decode_context=operation.profile_decode_context(),
-            )
-        if outcome.bucket_id != bucket_id:
-            raise InternalInvariantError("profile authentication did not establish the exact requested session")
-        from ._profile_session_gate import bind_profile_target
-
-        bind_profile_target(ctx, bucket_id=bucket_id)
-        if not outcome.session_persisted:
-            from ._profile_authentication_notice import stage_profile_session_not_persisted_notice
-
-            stage_profile_session_not_persisted_notice()
-        return outcome
+        return _authenticate_for_invocation(ctx, bucket_id=bucket_id, passphrase_callback=lambda: passphrase)
     finally:
         passphrase = ""
         del payload
 
 
+def prompt_root_authentication(ctx: typer.Context, *, bucket_id: str) -> ProfileLoginOutcome:
+    """Authenticate exactly ``bucket_id`` for this invocation with a passphrase typed on the terminal.
+
+    Reached only where no session can be resumed on this host at all, so the
+    prompt is the one way an interactive operator gets past the gate. The
+    caller has already established that a hardened no-echo prompt is possible.
+    """
+    from ...core.i18n.render import tr
+    from .config.secure_input import prompt_secret_no_echo
+
+    return _authenticate_for_invocation(
+        ctx,
+        bucket_id=bucket_id,
+        passphrase_callback=lambda: prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")),
+    )
+
+
+def _authenticate_for_invocation(
+    ctx: typer.Context,
+    *,
+    bucket_id: str,
+    passphrase_callback: Callable[[], str],
+) -> ProfileLoginOutcome:
+    from ...application.user_profile.login_session import authenticate_profile_for_invocation
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    # The target named here is scoped to THIS invocation, so it must not
+    # become the operator's selection. Only `config login NAME` selects.
+    with bundled_indexed_authority().operation() as operation:
+        outcome = authenticate_profile_for_invocation(
+            name=bucket_id,
+            passphrase_callback=passphrase_callback,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+    if outcome.bucket_id != bucket_id:
+        raise InternalInvariantError("profile authentication did not establish the exact requested session")
+    from ._profile_session_gate import bind_profile_target
+
+    bind_profile_target(ctx, bucket_id=bucket_id)
+    if not outcome.session_persisted:
+        from ._profile_authentication_notice import stage_profile_session_not_persisted_notice
+
+        stage_profile_session_not_persisted_notice()
+    return outcome
+
+
 __all__ = [
     "consume_root_fallback",
     "preflight_parsed_leaf",
+    "prompt_root_authentication",
     "resolved_command_profile_target",
 ]
