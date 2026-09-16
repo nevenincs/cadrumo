@@ -57,9 +57,6 @@ from .flow import (
     IvaFlowDirection,
     IvaSettlementSide,
     flow_direction_for_invoice_kind,
-    is_deducible_flow,
-    is_devengada_flow,
-    is_inversion_sujeto_pasivo_flow,
     settlement_sides_for_flow,
 )
 from .schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -115,25 +112,6 @@ class IvaInvoiceClassification(BaseModel):
                 f"(expected {sorted(s.value for s in expected)!r})",
             )
         return self
-
-    @property
-    def contributes_to_devengada(self) -> bool:
-        """Return ``True`` iff this line owes IVA to the Treasury."""
-        return is_devengada_flow(self.flow_direction)
-
-    @property
-    def contributes_to_deducible(self) -> bool:
-        """Return ``True`` iff this line reclaims IVA from the Treasury."""
-        return is_deducible_flow(self.flow_direction)
-
-    @property
-    def is_reverse_charge(self) -> bool:
-        """Return ``True`` iff the line is self-assessed reverse charge.
-
-        INVERSION_SUJETO_PASIVO is the only flow that contributes to BOTH
-        settlement sides on the same operation (LIVA art. 84.Uno.2).
-        """
-        return is_inversion_sujeto_pasivo_flow(self.flow_direction)
 
 
 def classify_invoice_line_for_iva(

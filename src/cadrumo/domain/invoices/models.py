@@ -1029,18 +1029,6 @@ class Invoice(BaseModel):
             return None
         return require_eu_member_state(self.counterparty_country)
 
-    @property
-    def counterparty_is_eu_member(self) -> bool:
-        """Return ``True`` iff the counterparty is in one of the 27 EU Member States.
-
-        Convenience predicate keyed off the substrate projection; equivalent
-        to ``invoice.counterparty_eu_member_state is not None``.
-        Modelo classification routes (OSS / IOSS / intra-community)
-        gate on this predicate to decide which substrate flow path
-        applies.
-        """
-        return self.counterparty_eu_member_state is not None
-
 
 def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
