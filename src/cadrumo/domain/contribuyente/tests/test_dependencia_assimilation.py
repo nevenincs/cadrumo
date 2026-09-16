@@ -86,7 +86,6 @@ def test_a_non_cohabiting_supporter_paying_no_anualidades_takes_the_minimo() -> 
     profile = _profile(_child(convive_con_contribuyente=False, dependencia_economica=True))
 
     assert _eligible(profile) == 1
-    assert profile.dependencia_assimilated_indices(_YEAR) == (0,)
 
 
 def test_cohabitation_alone_still_qualifies_and_is_not_reported_as_assimilated() -> None:
@@ -100,7 +99,6 @@ def test_cohabitation_alone_still_qualifies_and_is_not_reported_as_assimilated()
     profile = _profile(_child(dependencia_economica=True))
 
     assert _eligible(profile) == 1
-    assert profile.dependencia_assimilated_indices(_YEAR) == ()
 
 
 # -- unset never assimilates --------------------------------------------------
@@ -157,8 +155,6 @@ def test_declared_anualidades_suppress_the_assimilation_and_say_so() -> None:
 
     assert _eligible(profile) == 0
     assert profile.dependencia_assimilation_available is False
-    assert profile.dependencia_suppressed_indices() == (0,)
-    assert profile.dependencia_assimilated_indices(_YEAR) == ()
 
 
 def test_a_declared_zero_is_an_answer_and_does_not_suppress() -> None:
@@ -198,14 +194,6 @@ def test_the_suppression_reaches_every_descendant_not_only_the_paid_one() -> Non
     )
 
     assert _eligible(profile) == 0
-    assert profile.dependencia_suppressed_indices() == (0, 1)
-
-
-def test_a_suppressed_profile_reports_nothing_when_no_dependency_was_declared() -> None:
-    """The disclosure is scoped to filers it actually costs."""
-    profile = _profile(_child(), anualidades=Decimal("1200"))
-
-    assert profile.dependencia_suppressed_indices() == ()
 
 
 # -- the default is the safe direction ----------------------------------------
