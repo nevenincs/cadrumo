@@ -25,7 +25,7 @@ from ....core.aggregation import BindingAggregation, BindingSourceKind
 from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.classification.policies import SensitivityClass
-from ....core.filing_projection_ref import FilingProjectionRef, filing_projection_ref_casilla_id
+from ....core.filing_projection_ref import FilingProjectionRef
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.modelo import Modelo
 from ....core.period import Period, RegistrySelectorPeriodCode
@@ -824,15 +824,6 @@ class ModeloRevision(RegistryRevisionDeclaration):
         for declaration in self.projection_endpoints:
             declarations_by_ref.setdefault(declaration.projection_ref, []).append(declaration)
         return _frozen_index(declarations_by_ref)
-
-    def projection_declarations_for_casilla(self, casilla_id: CasillaId) -> tuple[ProjectionEndpointDeclaration, ...]:
-        """Return declarations whose typed reference addresses ``casilla_id``."""
-        return tuple(
-            declaration
-            for reference, declarations in self.projection_endpoint_index().items()
-            if filing_projection_ref_casilla_id(reference) == casilla_id
-            for declaration in declarations
-        )
 
     @model_validator(mode="after")
     def _validate_family_dispositions(self) -> ModeloRevision:

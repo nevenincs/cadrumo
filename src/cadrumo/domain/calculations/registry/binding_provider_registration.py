@@ -224,18 +224,6 @@ class BindingProviderRegistration:
         """Return the grouping axis this kind's rows are assembled by, if any."""
         return ROW_SET_GROUPING_FOR_BINDING_SOURCE.get(self.kind)
 
-    @property
-    def row_assembly(self) -> ProviderRowAssembly:
-        """Return which row channel assembles this kind's rows.
-
-        Derived from the canonical grouping correspondence rather than restated
-        as a field: a kind is ``grouped`` exactly when
-        :data:`~core.aggregation.ROW_SET_GROUPING_FOR_BINDING_SOURCE` enrolls
-        it, so the registration cannot claim an assembly mode the row-set
-        dispatcher does not actually offer.
-        """
-        return "grouped" if self.row_grouping is not None else "provider_native"
-
 
 _SCALAR_CHANNELS: Final = frozenset(
     {

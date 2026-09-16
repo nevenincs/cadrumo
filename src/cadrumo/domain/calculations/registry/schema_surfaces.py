@@ -66,20 +66,6 @@ class CasillaEvolutionKind(StrEnum):
     REPURPOSED = "repurposed"
     RETIRED = "retired"
 
-    @property
-    def covered_fields(self) -> frozenset[str]:
-        """The exact divergence axes an attestation may explain."""
-        return {
-            self.UNCHANGED: frozenset[str](),
-            self.LABEL_EVOLVED: frozenset({"label"}),
-            self.SECTION_EVOLVED: frozenset({"section"}),
-            self.REPRESENTATION_EVOLVED: frozenset({"data_type"}),
-            self.LEGAL_REFS_EVOLVED: frozenset({"legal_refs"}),
-            self.LABEL_AND_LEGAL_REFS_EVOLVED: frozenset({"label", "legal_refs"}),
-            self.REPURPOSED: frozenset({"label", "section", "data_type", "semantic_role", "legal_refs"}),
-            self.RETIRED: frozenset[str](),
-        }[self]
-
 
 CasillaEvolutionKindField = Annotated[CasillaEvolutionKind, BeforeValidator(coerce_enum_member(CasillaEvolutionKind))]
 """Registry token hydrated into a CasillaEvolutionKind member."""
