@@ -92,7 +92,7 @@ from .confirmed_field_resolution import (
     resolve_invoice_class,
 )
 from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
-from .evidence import PurchaseInvoiceEvidenceService
+from .evidence import PurchaseInvoiceEvidencePatch, PurchaseInvoiceEvidenceService
 from .evidence_draft import (
     PrintedTotalDiscrepancy,
     counterparty_draft_side,
@@ -320,6 +320,52 @@ def _confirmed_extractor(draft: InvoiceDraft) -> str:
     """
     origins = sorted({envelope.origin.value for envelope in draft.provenance})
     return "+".join(origins) if origins else "unrecorded"
+
+
+def _record_confirmed_summary_on_evidence(
+    *,
+    bucket_id: str,
+    evidence_id: str | None,
+    invoice: Invoice,
+    preparation: _InvoiceConfirmationPreparation,
+    evidence_ports: LedgerEvidencePorts,
+) -> None:
+    """Show the confirmed figures on the evidence record they were read from.
+
+    The record's summary fields are what ``evidence view`` and ``evidence list``
+    print, and nothing else fills them for a document read by extraction. A
+    confirm taken against a bare attachment id has no record to update. The
+    write is skipped when the record already states these figures, so a
+    re-confirm adds no second audit event.
+    """
+    if evidence_id is None:
+        return
+    service = PurchaseInvoiceEvidenceService(ports=evidence_ports)
+    record = find_bytes_bearing_evidence_record(evidence_id, evidence_records=service.list_all(bucket_id=bucket_id))
+    if record is None:
+        return
+    overridden_rate = preparation.operator_overrides.get("iva_rate")
+    rate = overridden_rate if isinstance(overridden_rate, Decimal) else preparation.draft.iva_rate
+    patch = PurchaseInvoiceEvidencePatch(
+        supplier=invoice.counterparty_name if invoice.kind is InvoiceKind.RECEIVED else None,
+        invoice_number=invoice.invoice_number,
+        invoice_date=invoice.issued_at.isoformat(),
+        taxable_base=invoice.base_total,
+        iva_rate=rate,
+        iva_amount=invoice.iva_total,
+    )
+    changes = {
+        field: value
+        for field, value in patch.model_dump().items()
+        if value is not None and getattr(record, field) != value
+    }
+    if changes:
+        service.update(
+            bucket_id=bucket_id,
+            evidence_id=record.evidence_id,
+            patch=PurchaseInvoiceEvidencePatch.model_validate(changes),
+            actor="evidence-confirm",
+        )
 
 
 def _evidence_content_address(
@@ -723,6 +769,13 @@ def _persist_confirmed_invoice(
             attachment_id=preparation.attachment_id,
             invoice_id=existing.invoice_id,
         )
+        _record_confirmed_summary_on_evidence(
+            bucket_id=bucket_id,
+            evidence_id=evidence_id,
+            invoice=existing,
+            preparation=preparation,
+            evidence_ports=evidence_ports,
+        )
         existing_record = _written_confirmation_record(
             bucket_id=bucket_id,
             invoice_id=existing.invoice_id,
@@ -753,6 +806,13 @@ def _persist_confirmed_invoice(
         attachment_store,
         attachment_id=preparation.attachment_id,
         invoice_id=result.invoice.invoice_id,
+    )
+    _record_confirmed_summary_on_evidence(
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+        invoice=result.invoice,
+        preparation=preparation,
+        evidence_ports=evidence_ports,
     )
     confirmation_record = _written_confirmation_record(
         bucket_id=bucket_id,

@@ -679,3 +679,30 @@ def test_the_unit_rule_leaves_other_trailing_text_for_the_decimal_authority_to_r
     assert strip_printed_unit("2.420,00 EUR", "EUR") == "2.420,00"
     assert strip_printed_unit("21%", "EUR") == "21"
     assert strip_printed_unit("2.420,00 IVA", "EUR") == "2.420,00 IVA"
+
+
+@pytest.mark.parametrize(
+    ("printed_total", "currency"),
+    [("1.440,00", None), ("1,440.00", None), ("1,440.00 EUR", "EUR")],
+)
+def test_a_grouped_amount_anchors_in_either_convention(printed_total: str, currency: str | None) -> None:
+    evaluation = evaluate_anchor(
+        value=Decimal("1440.00"),
+        anchor=printed_total,
+        transcription=_transcription(f"Net amount: {printed_total}\nTotal due: {printed_total}\n"),
+        currency_unit=currency,
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+    assert evaluation.parsed_anchor == Decimal("1440.00")
+
+
+def test_a_grouped_amount_that_parses_to_another_figure_is_contradicted() -> None:
+    evaluation = evaluate_anchor(
+        value=Decimal("1.44"),
+        anchor="1,440.00",
+        transcription=_transcription("Total due: 1,440.00\n"),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.CONTRADICTED
+    assert evaluation.parsed_anchor == Decimal("1440.00")
