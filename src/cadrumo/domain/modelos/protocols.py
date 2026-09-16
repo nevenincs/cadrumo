@@ -16,16 +16,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from .calculation_revision import CalculationRevisionCatalogue
-from .filing_record import ModeloRecordCatalogue
-from .participation_index import TransactionRevisionParticipationIndex
-from .verification_report import VerificationReportCatalogue
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
     from ...core.secure_object_write import SecureObjectWrite
+    from .calculation_revision import CalculationRevisionCatalogue
+    from .filing_record import ModeloRecordCatalogue
+    from .participation_index import TransactionRevisionParticipationIndex
+    from .verification_report import VerificationReportCatalogue
 
 
 @runtime_checkable

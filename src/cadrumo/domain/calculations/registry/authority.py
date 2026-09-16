@@ -17,6 +17,7 @@ from datetime import date
 from pathlib import Path
 from secrets import token_bytes
 from threading import RLock
+from typing import TYPE_CHECKING
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex, sha256_hex
@@ -24,7 +25,6 @@ from ....core.identity.digest import ContentDigest
 from ....core.modelo import Modelo
 from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ....core.tax_domain import TaxDomain
-from ...user_profile.schema import ProfileSchemaDefinition
 from .authority_artifact import (
     AuthorityComponentKind,
     AuthorityComponentQuery,
@@ -74,6 +74,9 @@ from .schema_verification import LiveCrossReferenceDecision, WorkbookParityRefer
 from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
 from .static_inspection import RegistryRevisionInspection
 from .temporal import ModeloRevisionDirectory, select_revision, select_revision_metadata
+
+if TYPE_CHECKING:
+    from ...user_profile.schema import ProfileSchemaDefinition
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGrade]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
@@ -678,6 +681,9 @@ class PinnedAuthorityOperation:
 
     def profile_schema(self, schema_id: str = "cadrumo.user_profile") -> ProfileSchemaDefinition:
         """Load the profile declaration used by this exact operation generation."""
+        # The profile schema model tree is only needed by profile-bound operations.
+        from ...user_profile.schema import ProfileSchemaDefinition
+
         value = self._reader.load(ProfileSchemaComponentQuery(schema_id), pin=self.generation)
         if not isinstance(value, ProfileSchemaDefinition):
             raise RegistryValidationError("profile schema component decoded to an unexpected type")
