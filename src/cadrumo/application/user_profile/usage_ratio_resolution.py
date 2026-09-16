@@ -44,10 +44,11 @@ from typing import TYPE_CHECKING
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.usage_ratios.service import derive_home_office_ratios_from_censo
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
-from .censo_sync import bound_raw_afectacion_ratio_for_bucket
+from .censo_sync import bound_raw_afectacion_ratio_for_bucket, raw_afectacion_ratio_for_record
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.values import UserProfileRecord
 
 __all__ = ["resolve_effective_usage_ratios"]
 
@@ -58,6 +59,7 @@ def resolve_effective_usage_ratios(
     year: int,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
     operation: PinnedAuthorityOperation,
+    profile_record: UserProfileRecord | None = None,
 ) -> dict[SpendingCategory, Decimal]:
     """Return the effective usage ratio per category for one bucket and filing year.
 
@@ -73,6 +75,8 @@ def resolve_effective_usage_ratios(
         usage_ratio_profile_loader: Required application-owned read capability for
             the persisted usage-ratio profile.
         operation: Generation-pinned authority for governed ratio vocabulary.
+        profile_record: The bucket's profile record when the caller already
+            loaded it; when omitted, the censo facts are read from the bucket.
 
     Returns:
         Category-to-effective-ratio mapping, ready for
@@ -80,7 +84,11 @@ def resolve_effective_usage_ratios(
         stored nothing and declared no dwelling m².
     """
     stored = dict(usage_ratio_profile_loader(bucket_id=bucket_id, operation=operation).ratios)
-    raw_afectacion_ratio = bound_raw_afectacion_ratio_for_bucket(bucket_id, operation=operation)
+    raw_afectacion_ratio = (
+        bound_raw_afectacion_ratio_for_bucket(bucket_id, operation=operation)
+        if profile_record is None
+        else raw_afectacion_ratio_for_record(profile_record)
+    )
     if raw_afectacion_ratio is None:
         return stored
     derived = derive_home_office_ratios_from_censo(
