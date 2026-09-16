@@ -9,12 +9,13 @@ guarantees is actually required rather than optional.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ..directory_scan import scan_directory
+from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
+
 from ..manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
@@ -22,8 +23,7 @@ from ..manual_corpus_sidecar import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-# src/cadrumo/core/tests/ -> parents[3] is src/cadrumo.
-_MANUAL_CORPUS_TEXT_ROOT = Path(__file__).resolve().parents[1].parent / "_data" / "manual_corpus_text"
+_MANUAL_CORPUS_TEXT_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 

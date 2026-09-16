@@ -22,8 +22,8 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ..core.models import STRICT_FROZEN_CONFIG
-from .hex import HEX_PATTERN_64
+from cadrumo.core.hex import HEX_PATTERN_64
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
 __all__ = [
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",

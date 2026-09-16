@@ -376,7 +376,6 @@ def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: M
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/iva_compensation_wallet.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/parse.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/verify/__init__.py"),
-        repo_path("src/cadrumo/domain/manuals/fetch.py"),
     )
 
     offenders = _token_literal_offenders(
