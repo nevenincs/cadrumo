@@ -111,7 +111,7 @@ if TYPE_CHECKING:
     from ..application.storage.calc_sheets.parity_harness import CalcSheetsParityApplyPort
     from ..application.storage.calc_sheets.records import SheetExportPlan
     from ..application.user_profile.custody_ports import ProfileBucketStoragePort, ProfileCustodyPort
-    from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
+    from ..application.user_profile.profile_read_ports import ProfileReadPorts
     from ..core.config import Settings
     from ..core.tabular import NormalizedTable
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -192,11 +192,6 @@ class ProfileAdapterComposition:
     def calculation_action_ports_factory(self) -> CalculationActionPortsFactory:
         """Resolve the calculation action ports factory on first read."""
         return build_calculation_action_ports
-
-    @property
-    def profile_read_ports_factory(self) -> ProfileReadPortsFactory:
-        """Resolve the profile read ports factory on first read."""
-        return build_profile_read_ports
 
     @property
     def amendment_action_ports_factory(self) -> AmendmentActionPortsFactory:
