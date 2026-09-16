@@ -37,6 +37,7 @@ from .config.secure_input import (
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from ...application.user_profile.login_session import ProfileLoginOutcome
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer
     from ._profile_session_gate import RootAuthenticator
 
@@ -327,8 +328,8 @@ def preflight_parsed_leaf(
         leaf_selection: MachineSecretSelection | None,
         spec: CommandSpec,
         arguments: Mapping[str, object],
-    ) -> None:
-        consume_root_fallback(
+    ) -> ProfileLoginOutcome:
+        return consume_root_fallback(
             ctx,
             bucket_id=bucket_id,
             root=root_selection,
@@ -394,9 +395,14 @@ def consume_root_fallback(
     leaf: MachineSecretSelection | None,
     spec: CommandSpec,
     arguments: Mapping[str, object],
-) -> None:
-    """Read all required payloads, authenticate exactly, and assert the session."""
-    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
+) -> ProfileLoginOutcome:
+    """Read all required payloads and authenticate exactly the requested profile.
+
+    Proving that a live session now serves the profile belongs to the shared
+    admission door, which applies it to every admitting branch rather than to
+    this one. What stays here is the check only this caller can make: that the
+    profile authenticated is the profile the invocation named.
+    """
     from ...application.user_profile.login_session import authenticate_profile_for_invocation
     from ...domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -415,7 +421,7 @@ def consume_root_fallback(
                 passphrase_callback=lambda: passphrase,
                 profile_decode_context=operation.profile_decode_context(),
             )
-        if outcome.bucket_id != bucket_id or not active_bucket_session_serves(bucket_id):
+        if outcome.bucket_id != bucket_id:
             raise InternalInvariantError("profile authentication did not establish the exact requested session")
         from ._profile_session_gate import bind_profile_target
 
@@ -424,6 +430,7 @@ def consume_root_fallback(
             from ._profile_authentication_notice import stage_profile_session_not_persisted_notice
 
             stage_profile_session_not_persisted_notice()
+        return outcome
     finally:
         passphrase = ""
         del payload
