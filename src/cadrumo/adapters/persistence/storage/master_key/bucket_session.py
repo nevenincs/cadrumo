@@ -24,8 +24,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sqlalchemy.exc import SQLAlchemyError
-
 from .....core.logging import get_logger
 from .....core.time.utc import validate_utc_aware
 from ..bucket.errors import BucketLockedError
@@ -402,6 +400,8 @@ class BucketSession:
 
     def _dispose_engine(self) -> None:
         """Dispose the engine(s) bound to this bucket's database."""
+        from sqlalchemy.exc import SQLAlchemyError
+
         from ..sql.engine import dispose_engine_handle, dispose_engines_for_bucket
 
         engine = self._engine
