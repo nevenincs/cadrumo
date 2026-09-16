@@ -145,8 +145,15 @@ def evidence_add(
     iva_rate: str | None = None,
     iva_amount: str | None = None,
     notes: str = "",
+    idempotency_key: str | None = None,
 ) -> None:
-    """Register a purchase invoice evidence record and return its id."""
+    """Register a purchase invoice evidence record and return its id.
+
+    Without ``--idempotency-key`` the verb is additive: the same file attached
+    twice is two pieces of evidence, which is a real case. With one, a repeat of
+    the same key resolves to the record it already made -- no second record, no
+    second bucket event -- and a repeat carrying different content refuses.
+    """
     # The same boundary refusal the import verbs raise for a missing --file; the
     # argument stays a string so the record echoes the path exactly as typed.
     if not Path(source_path).expanduser().is_file():
@@ -162,6 +169,7 @@ def evidence_add(
         iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
         iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
         notes=notes,
+        idempotency_key=idempotency_key,
     )
     payload = _evidence_payload(result.record)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
