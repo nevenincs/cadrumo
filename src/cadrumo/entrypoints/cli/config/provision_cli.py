@@ -12,8 +12,10 @@ The boundaries between the actions are the design:
 * **remove** — deletes a Cadrumo-selected model from the runtime's store.
 * **setup** — install (only with ``--confirm``), start, pull, load and verify as one run.
 
-Install, load, remove and setup run through the supervised ``local-reader.provision``
-operation, the same one the TUI submits, so this module only projects its result.
+Install, load, remove and setup run :func:`provision_local_reader`, the same
+implementation the TUI's supervised operation wraps, so this module only binds
+the host adapters and projects the outcome. Provisioning the machine's runtime
+needs no profile session.
 
 **Nothing here is implicit.** No inference path reaches these verbs; an operator
 runs them. A model acquisition or runtime install is explicit, never a side
@@ -63,8 +65,8 @@ from .status_rendering import precondition_action_lines
 if TYPE_CHECKING:
     from ....application.local_reader import LocalReaderRoleStatus, RoleModelTarget
     from ....application.local_reader_operation import (
-        LocalReaderModelOutcomeV1,
-        LocalReaderProvisionPublicResultV1,
+        LocalReaderModelOutcome,
+        LocalReaderProvisionOutcome,
         LocalReaderProvisionRequest,
     )
     from ....application.operations.models import OperationRequest
@@ -196,70 +198,23 @@ def provision_setup(ctx: typer.Context, confirm: bool = False) -> None:
     _emit_provision_setup(ctx, confirm=confirm)
 
 
-def _run_reader_operation(
-    request: OperationRequest[LocalReaderProvisionRequest],
-) -> LocalReaderProvisionPublicResultV1:
-    """Submit one provisioning request through supervision and return its public result."""
-    from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
-    from ....application.local_reader_operation import LocalReaderProvisionPublicResultV1
-    from ....application.operations.frontend_requests import (
-        OperationObservationRequestV1,
-        OperationObservationSuccessV1,
-        OperationResultProjectionRequestV1,
-        OperationResultProjectionSuccessV1,
+def _provision(request: OperationRequest[LocalReaderProvisionRequest]) -> LocalReaderProvisionOutcome:
+    """Run one provisioning request with the host's process and fitness adapters."""
+    from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
+    from ....adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
+    from ....application.local_reader_operation import provision_local_reader
+
+    return asyncio.run(
+        provision_local_reader(
+            request.payload,
+            spawn=spawn_runtime_server,
+            run_installer=run_runtime_installer,
+            text_probe=probe_text_extraction_fitness,
+        )
     )
-    from ....core.errors.hierarchy import InternalInvariantError
-    from ....core.operations import OperationTerminalCondition
-    from ....domain.calculations.registry.authority import bundled_indexed_authority
-    from ...operation_composition import compose_operation_dependencies
-
-    async def run() -> LocalReaderProvisionPublicResultV1:
-        with bundled_indexed_authority().operation() as authority_operation:
-            services = compose_operation_dependencies(
-                authority_operation=authority_operation,
-                operator_scope_ports=build_operator_scope_ports(),
-            )
-            try:
-                submitted = await services.submission.submit(request, actor_ref=_ACTOR_REF)
-                await services.submission.start(submitted.receipt.operation_id)
-                observed = await services.observation.observe(
-                    OperationObservationRequestV1(
-                        operation_id=submitted.receipt.operation_id,
-                        after_cursor=0,
-                        page_limit=64,
-                    )
-                )
-                if not isinstance(observed, OperationObservationSuccessV1):
-                    raise InternalInvariantError("local reader provisioning observation is unavailable")
-                projection = observed.projection
-                result_schema = projection.definition_contract.result_schema
-                if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED or result_schema is None:
-                    raise InternalInvariantError(
-                        f"local reader provisioning did not settle ({projection.diagnostic_ref or 'no diagnostic'})"
-                    )
-                resolved = await services.result.resolve(
-                    OperationResultProjectionRequestV1(
-                        operation_id=projection.operation_id,
-                        terminal_revision=projection.revision,
-                        definition_contract_digest=projection.definition_contract.definition_contract_digest,
-                        result_schema=result_schema,
-                    )
-                )
-                if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
-                    resolved.projection, LocalReaderProvisionPublicResultV1
-                ):
-                    raise InternalInvariantError("local reader provisioning result is unavailable")
-                return resolved.projection
-            finally:
-                await services.shutdown()
-
-    return asyncio.run(run())
 
 
-_ACTOR_REF = "operator:cli-config-provision"
-
-
-def _roles(item: LocalReaderModelOutcomeV1) -> list[str]:
+def _roles(item: LocalReaderModelOutcome) -> list[str]:
     return [role.value for role in item.roles]
 
 
@@ -267,11 +222,9 @@ def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRo
     """Load every resolved model and emit the envelope, exiting 2 unless all are loaded."""
     from ....application.local_reader_operation import (
         build_local_reader_load_request,
-        local_reader_fact_mapping,
-        local_reader_public_verdict,
     )
 
-    outcome = _run_reader_operation(build_local_reader_load_request(role, model))
+    outcome = _provision(build_local_reader_load_request(role, model))
     items = [
         ProvisionLoadItemPayload(
             model=item.model,
@@ -279,8 +232,8 @@ def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRo
             loaded=item.succeeded,
             already_loaded=item.already_satisfied,
             elapsed_ms=item.elapsed_ms,
-            facts=local_reader_fact_mapping(item.facts),
-            precondition_action=_action(local_reader_public_verdict(item.verdict_condition_id, item.verdict_facts)),
+            facts=item.facts,
+            precondition_action=_action(item.precondition_verdict),
         )
         for item in outcome.models
     ]
@@ -294,11 +247,9 @@ def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
     """Run the one-shot setup and emit its per-step envelope, exiting 2 when a step stopped it."""
     from ....application.local_reader_operation import (
         build_local_reader_setup_request,
-        local_reader_fact_mapping,
-        local_reader_public_verdict,
     )
 
-    outcome = _run_reader_operation(build_local_reader_setup_request(consent=confirm))
+    outcome = _provision(build_local_reader_setup_request(consent=confirm))
     result = ProvisionSetupResult(
         succeeded=outcome.succeeded,
         stopped_step=None if outcome.stopped_step is None else outcome.stopped_step.value,
@@ -321,14 +272,14 @@ def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
                 already_satisfied=item.already_satisfied,
                 bytes_fetched=item.bytes_fetched,
                 elapsed_ms=item.elapsed_ms,
-                facts=local_reader_fact_mapping(item.facts),
-                precondition_action=_action(local_reader_public_verdict(item.verdict_condition_id, item.verdict_facts)),
+                facts=item.facts,
+                precondition_action=_action(item.precondition_verdict),
             )
             for item in outcome.models
             if item.step is not None
         ],
-        facts=local_reader_fact_mapping(outcome.facts),
-        precondition_action=_action(local_reader_public_verdict(outcome.verdict_condition_id, outcome.verdict_facts)),
+        facts=outcome.facts,
+        precondition_action=_action(outcome.precondition_verdict),
     )
     emit_envelope(ctx, command="config.provision.setup", result=result, lines=_provision_result_lines(result))
     if not result.succeeded:
@@ -614,11 +565,9 @@ def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
     """Install the runtime when consented and emit the envelope, exiting 2 unless installed."""
     from ....application.local_reader_operation import (
         build_local_reader_install_request,
-        local_reader_fact_mapping,
-        local_reader_public_verdict,
     )
 
-    outcome = _run_reader_operation(build_local_reader_install_request(consent=confirm))
+    outcome = _provision(build_local_reader_install_request(consent=confirm))
     install = outcome.install
     if install is None:  # pragma: no cover - the install action always records its outcome
         raise AssertionError
@@ -628,8 +577,8 @@ def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
         installer=install.installer.value,
         consented=install.consented,
         installer_exit_code=install.installer_exit_code,
-        facts=local_reader_fact_mapping(outcome.facts),
-        precondition_action=_action(local_reader_public_verdict(outcome.verdict_condition_id, outcome.verdict_facts)),
+        facts=outcome.facts,
+        precondition_action=_action(outcome.precondition_verdict),
     )
     emit_envelope(ctx, command="config.provision.install", result=result, lines=_provision_result_lines(result))
     if not install.installed:
@@ -658,13 +607,11 @@ def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: Model
     """Remove the resolved model and emit the envelope, exiting 2 unless every removal was confirmed."""
     from ....application.local_reader_operation import (
         build_local_reader_remove_request,
-        local_reader_fact_mapping,
-        local_reader_public_verdict,
     )
 
     if model is None and role is None:
         raise typer.BadParameter("--model or --role is required", param_hint="--model/--role")
-    outcome = _run_reader_operation(build_local_reader_remove_request(role, model))
+    outcome = _provision(build_local_reader_remove_request(role, model))
     items = [
         ProvisionRemoveItemPayload(
             model=item.model,
@@ -672,8 +619,8 @@ def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: Model
             removed=item.succeeded,
             was_installed=item.was_installed,
             freed_bytes=item.freed_bytes,
-            facts=local_reader_fact_mapping(item.facts),
-            precondition_action=_action(local_reader_public_verdict(item.verdict_condition_id, item.verdict_facts)),
+            facts=item.facts,
+            precondition_action=_action(item.precondition_verdict),
         )
         for item in outcome.models
     ]

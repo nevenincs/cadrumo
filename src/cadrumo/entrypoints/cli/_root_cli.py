@@ -57,12 +57,10 @@ def root_command(
     requested = preserve_requested_cli_leaf(ctx)
     if requested is not None and _requested_leaf_is_profile_free(requested.canonical_cli_path):
         # A leaf that declares nothing a profile holds never reads a profile
-        # port, so composing them would only cost the adapter imports. The
-        # language resolver is still registered: a selected profile's
-        # plaintext language hint applies to every command's output.
-        from ...application.user_profile.language_resolver import register_language_resolver
+        # port, so composing them all would only cost the adapter imports.
+        from ..adapter_composition import profile_free_adapter_composition
 
-        register_language_resolver()
+        ctx.with_resource(profile_free_adapter_composition())
     else:
         from ..adapter_composition import profile_adapter_composition
 

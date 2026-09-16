@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 import typer
+from typer.core import TyperCommand
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
@@ -99,7 +100,10 @@ def test_a_profile_bound_command_still_refuses_without_a_keychain_or_a_console(a
 
     assert result.returncode != 0, _combined(result)
     envelope = json.loads(result.stderr)
-    assert envelope["error"]["code"] == "AUTH_STORAGE_KEYRING_UNAVAILABLE"
+    # The profile was never unlocked in a process that could keep its session,
+    # so the gate answers with the login action rather than reading anything.
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY", result.stderr
+    assert envelope["error"]["action"]["failed_condition_id"] == "profile.session.logged_in"
 
 
 def test_a_profile_bound_command_runs_when_the_passphrase_is_supplied(active_profile_root: Path) -> None:
@@ -124,12 +128,12 @@ def test_a_profile_bound_command_runs_when_the_passphrase_is_supplied(active_pro
     [reason for reason in ProfileSessionRefusalReason if reason is not ProfileSessionRefusalReason.KEYRING_UNAVAILABLE],
 )
 def test_a_resumable_host_never_prompts_a_parsed_invocation(refusal: ProfileSessionRefusalReason) -> None:
-    context = typer.Context(typer.main.get_command(typer.Typer()))
+    context = typer.Context(TyperCommand("probe"))
     assert _interactive_authentication(context, bucket_id="unused", refusal=refusal) is False
 
 
 def test_a_keychainless_refusal_without_a_console_does_not_prompt() -> None:
     assert terminal_can_prompt_for_secrets() is False, "the test process must not own a console"
-    context = typer.Context(typer.main.get_command(typer.Typer()))
+    context = typer.Context(TyperCommand("probe"))
     refusal = ProfileSessionRefusalReason.KEYRING_UNAVAILABLE
     assert _interactive_authentication(context, bucket_id="unused", refusal=refusal) is False
