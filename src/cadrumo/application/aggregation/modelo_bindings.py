@@ -631,6 +631,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 bucket_id=context.bucket_id,
                 profile_decode_context=profile_decode_context,
                 resolver_id=self.resolver_id,
+                profile=context.profile,
             )
             # Fourth screen, and the only one that can speak when there are NO
             # observations at all. Every screen above reasons about rows that
@@ -1136,6 +1137,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 target_casilla_id=target_casilla_id,
                 accept_activity_marker=str(context.modelo) == Modelo("130").value,
                 transaction_repository=self._transaction_repository,
+                profile_record=context.profile.record if context.profile is not None else None,
                 prorrata_register_repository=self._prorrata_register_repository,
             )
         except STORAGE_DEGRADATION_ERRORS as exc:

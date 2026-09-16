@@ -104,6 +104,9 @@ class AtribucionMemberSourceResolver:
 
         record = self._profile_record
         profile_schema = self._profile_decode_context.schema if self._profile_decode_context is not None else None
+        if record is None and context.profile is not None:
+            record = context.profile.record
+            profile_schema = context.profile.profile_decode_context.schema
         if record is None:
             profile_decode_context = self._profile_decode_context
             if profile_decode_context is None:
