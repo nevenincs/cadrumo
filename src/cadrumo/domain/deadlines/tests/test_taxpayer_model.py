@@ -42,7 +42,7 @@ from ..models import (
     resolve_multiple_pagadores_reduced_limit,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _deadline_facts(filing_year: int) -> DeadlineFactResolutionContext:

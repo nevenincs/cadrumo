@@ -18,22 +18,22 @@ from pydantic import (
     BaseModel,
     BeforeValidator,
     Field,
-    GetCoreSchemaHandler,
     NonNegativeInt,
     field_validator,
     model_validator,
 )
-from pydantic_core import CoreSchema, core_schema
+from pydantic_core import core_schema
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.aggregation import ThirdPartyDeclarationRole
-from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
+from ...core.registry_token import StrictRegistryToken
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..calculations.registry.renta_codes_catalogue import (
@@ -61,8 +61,6 @@ class IVARegime(str):
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
         """Expose the opaque token as a non-empty string to Pydantic."""
-        from pydantic_core import core_schema
-
         return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
 
     @property
@@ -71,197 +69,37 @@ class IVARegime(str):
         return str(self)
 
 
-class IrpfIncomeCategory(str):
+class IrpfIncomeCategory(StrictRegistryToken):
     """Opaque IRPF income-category token projected from fact 0128."""
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated IRPF income-category token."""
-        if not _registry_validated:
-            raise TypeError("IRPF income-category tokens must be projected from the registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("IRPF income-category token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("IRPF income-category must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: type[object],
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Expose the projected token contract to Pydantic."""
-        del source_type, handler
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical income-category token text."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical income-category token name."""
-        return str(self)
+    _vocabulary_label = "IRPF income-category"
+    _projection_source = "registry"
 
 
-class IrpfEstimationRegime(str):
+class IrpfEstimationRegime(StrictRegistryToken):
     """Opaque IRPF estimation-regime token projected from the facts registry."""
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated IRPF estimation-regime token."""
-        if not _registry_validated:
-            raise TypeError("IRPF estimation-regime tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("IRPF estimation-regime token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("IRPF estimation-regime must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Expose the projected token contract to Pydantic."""
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical estimation-regime token text."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical estimation-regime token name."""
-        return str(self)
+    _vocabulary_label = "IRPF estimation-regime"
 
 
-class IrpfActivityKind(str):
+class IrpfActivityKind(StrictRegistryToken):
     """Opaque IRPF activity-kind token projected from fact 0082."""
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated IRPF activity-kind token."""
-        if not _registry_validated:
-            raise TypeError("IRPF activity-kind tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("IRPF activity-kind token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("IRPF activity-kind must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Expose the projected token contract to Pydantic."""
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical activity-kind token text."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical activity-kind token name."""
-        return str(self)
+    _vocabulary_label = "IRPF activity-kind"
 
 
-class IrpfSpecialRegime(str):
+class IrpfSpecialRegime(StrictRegistryToken):
     """Opaque IRPF special-regime token projected from the facts registry."""
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated IRPF special-regime token."""
-        if not _registry_validated:
-            raise TypeError("IRPF special-regime tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("IRPF special-regime token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("IRPF special-regime must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Expose the projected token contract to Pydantic."""
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical special-regime token text."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical special-regime token name."""
-        return str(self)
+    _vocabulary_label = "IRPF special-regime"
 
 
 class ObligationStatus(StrEnum):
@@ -422,7 +260,7 @@ class ChargeAccount(BaseModel):
         return canonical
 
 
-class M303TaxTerritory(str):
+class M303TaxTerritory(StrictRegistryToken):
     """Opaque Modelo 303 territory token projected from fact 0098.
 
     The facts registry owns territory membership, descriptions, and the
@@ -433,97 +271,16 @@ class M303TaxTerritory(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated Modelo 303 territory token."""
-        if not _registry_validated:
-            raise TypeError("M303TaxTerritory tokens must be projected from the registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("M303TaxTerritory token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("M303TaxTerritory must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: type[object],
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Accept only an already projected token and serialize it as text."""
-        del source_type, handler
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical registry token for serialization."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical registry token for diagnostics."""
-        return str(self)
+    _projection_source = "registry"
 
 
-class M303RegimeComposition(str):
+class M303RegimeComposition(StrictRegistryToken):
     """Opaque Modelo 303 regime-composition token projected from fact 0098."""
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Create a validated Modelo 303 regime-composition token."""
-        if not _registry_validated:
-            raise TypeError("M303 regime-composition tokens must be projected from the registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("M303 regime-composition token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("M303 regime-composition must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: type[object],
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Expose the projected token contract to Pydantic."""
-        del source_type, handler
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical regime-composition token text."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical regime-composition token name."""
-        return str(self)
+    _vocabulary_label = "M303 regime-composition"
+    _projection_source = "registry"
 
 
 class ModeloIVAProfile(BaseModel):
