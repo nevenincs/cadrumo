@@ -14,7 +14,7 @@ from .....core.redaction.rules import redact_for_cli_output, redact_for_log
 from ..nif_iva_catalogue import nif_iva_format_for_country
 from ..tax_id_format import runtime_tax_id_format
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _REDACTED_MARKER = "sha256:"
 
