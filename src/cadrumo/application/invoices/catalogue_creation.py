@@ -38,10 +38,8 @@ from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
-from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.currency.service import resolve_fx_conversion_stamp
 from ...domain.invoices.enums import (
     InvoiceClass,
@@ -58,6 +56,7 @@ from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import IvaCategory
+from ..aggregation.counterpart import counterpart_operation_catalogue_entries
 from .catalogue_creation_ports import (
     CatalogueCreationPorts,
     CatalogueInvoiceEventRepositoryPort,
@@ -153,22 +152,7 @@ def _registry_m349_operation_type_requirement(
     directory = operation.modelo_directory("349")
     if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
         raise ValueError(f"Modelo 349 has no registry revision for {effective_date.isoformat()}")
-    resolved = operation.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id="m347-m349-counterpart-operation-catalogue",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise TypeError("counterpart operation declarations must resolve as a mapping fact")
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise TypeError("counterpart operation mapping entries must be string-to-string")
-        if entry.key in entries:
-            raise ValueError(f"duplicate counterpart registry mapping key {entry.key!r}")
-        entries[entry.key] = entry.value
+    entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
 
     def required(key: str) -> str:
         value = entries.get(key)
