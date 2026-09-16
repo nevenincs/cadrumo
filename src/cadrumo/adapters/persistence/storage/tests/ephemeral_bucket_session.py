@@ -7,7 +7,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from .....core.time.clock import now
-from ..crypto.aead import KEY_SIZE
+from ..crypto.aes_gcm import KEY_SIZE
 from ..errors import SecretStoreError
 from ..master_key.active_session import activate_session
 from ..master_key.bucket_session import BucketSession

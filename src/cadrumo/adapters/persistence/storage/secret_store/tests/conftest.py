@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ...blob_store.blob_store import EncryptedBlobStore
-from ...crypto.aead import KEY_SIZE
+from ...crypto.aes_gcm import KEY_SIZE
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ...tests.fixed_master_key import fixed_master_key
 from ..store import SecretStore

@@ -28,7 +28,7 @@ from uuid import UUID
 import pytest
 
 from ......core.config import Settings
-from ...crypto.aead import GCM_TAG_SIZE, NONCE_SIZE
+from ...crypto.aes_gcm import GCM_TAG_SIZE, NONCE_SIZE
 from ..envelope import create_profile_custody_password_envelope
 from ..records import ProfileCustodyKdfParameters
 from ..sentinel import create_profile_custody_sentinel

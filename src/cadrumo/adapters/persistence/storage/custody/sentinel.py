@@ -7,7 +7,8 @@ import os
 from pathlib import Path
 from typing import Final
 
-from ..crypto.aead import GCM_TAG_SIZE, encrypt_record
+from ..crypto.aead import encrypt_record
+from ..crypto.aes_gcm import GCM_TAG_SIZE
 from .errors import ProfileCustodyRecordError
 from .filesystem_primitives import is_real_directory
 from .records import ProfileCustodyEnvelope

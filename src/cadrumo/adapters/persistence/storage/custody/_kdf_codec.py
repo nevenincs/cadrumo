@@ -11,14 +11,22 @@ from contextlib import suppress
 from typing import Final, cast
 
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
-from .errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 
+KDF_TRANSPORT_ENCODING: Final = "utf-8"
+"""Text encoding of every string crossing the supervised-KDF boundary.
+
+Declared here rather than taken from ``core.external_constants``: the worker
+is started for every wrap and unwrap, and that module's import graph is
+several times the cost of the hash itself.
+"""
 KDF_FRAME_MAGIC: Final = b"CKDF"
 KDF_FRAME_VERSION: Final = 1
 KDF_FRAME_CONTROL: Final = 1
 KDF_FRAME_DEK: Final = 2
 KDF_FRAME_HEADER: Final = struct.Struct("!4sBBHI")
 _FRAME_MAX_BYTES: Final = 8 * 1024
+KDF_CALIBRATED_FRAME: Final = b"cadrumo-profile-kdf-calibrated-v1"
+KDF_FAILED_FRAME: Final = b"cadrumo-profile-kdf-failed-v1"
 
 
 def canonical_frame_bytes(payload: object) -> bytes:
@@ -97,20 +105,6 @@ def close_fd(fd: int | None) -> None:
         os.close(fd)
 
 
-def resource_refusal() -> ProfileCustodyRefusedError:
-    return ProfileCustodyRefusedError(
-        ProfileCustodyRefusal.KDF_RESOURCE_LIMIT,
-        translated_message="errors.refused.refused_profile_custody_kdf_resource_limit",
-    )
-
-
-def supervision_refusal() -> ProfileCustodyRefusedError:
-    return ProfileCustodyRefusedError(
-        ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE,
-        translated_message="errors.refused.refused_profile_custody_kdf_supervision_unavailable",
-    )
-
-
 def windows_available_memory_bytes() -> int:
     class _MemoryStatus(ctypes.Structure):
         _fields_ = [
@@ -134,11 +128,14 @@ def windows_available_memory_bytes() -> int:
 
 
 __all__ = [
+    "KDF_CALIBRATED_FRAME",
+    "KDF_FAILED_FRAME",
     "KDF_FRAME_CONTROL",
     "KDF_FRAME_DEK",
     "KDF_FRAME_HEADER",
     "KDF_FRAME_MAGIC",
     "KDF_FRAME_VERSION",
+    "KDF_TRANSPORT_ENCODING",
     "read_kdf_frame",
     "write_kdf_frame",
 ]

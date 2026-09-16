@@ -29,7 +29,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from .....core.logging import get_logger
 from .....core.time.utc import validate_utc_aware
 from ..bucket.errors import BucketLockedError
-from ..crypto.aead import KEY_SIZE
+from ..crypto.aes_gcm import KEY_SIZE
 from ..custody.zeroise import zeroise as _zeroise
 from ..errors import (
     storage_validation_error as _storage_validation_error,

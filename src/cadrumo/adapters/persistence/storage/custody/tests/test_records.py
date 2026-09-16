@@ -21,6 +21,7 @@ from ......core.credentials import (
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
 from .. import records
+from .._profile_password_codec import decode_profile_password, encode_profile_password
 from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -35,8 +36,6 @@ from ..records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    decode_profile_password,
-    encode_profile_password,
     parse_profile_custody_envelope,
 )
 

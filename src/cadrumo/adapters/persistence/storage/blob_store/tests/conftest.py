@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ...crypto.aead import KEY_SIZE
+from ...crypto.aes_gcm import KEY_SIZE
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ...tests.fixed_master_key import fixed_master_key
 from ..blob_store import EncryptedBlobStore

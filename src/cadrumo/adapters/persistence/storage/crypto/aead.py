@@ -1,6 +1,6 @@
-"""AEAD primitives and HKDF derivation for at-rest persistence.
+"""Typed AEAD records and HKDF derivation for at-rest persistence.
 
-Wraps :mod:`cryptography.hazmat.primitives.ciphers.aead.AESGCM` and
+Wraps the AES-256-GCM primitive in :mod:`.aes_gcm` and
 :mod:`cryptography.hazmat.primitives.kdf.hkdf.HKDF` behind a small,
 typed surface. The at-rest crypto stack pivots on this module:
 column-level :class:`TypeDecorator` instances, the encrypted blob
@@ -16,25 +16,14 @@ this raw blob shape.
 
 from __future__ import annotations
 
-import secrets
-
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from pydantic import BaseModel, Field
 
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import DecryptionError, EncryptionError, KeyDerivationError
-
-NONCE_SIZE: int = 12
-"""AES-256-GCM nonce size in bytes (per NIST SP 800-38D)."""
-
-GCM_TAG_SIZE: int = 16
-"""AES-256-GCM authentication-tag size in bytes."""
-
-KEY_SIZE: int = 32
-"""AES-256 key size in bytes."""
+from .aes_gcm import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE, AesGcmKeyLengthError, open_sealed, seal
 
 
 class EncryptedBlob(BaseModel):
@@ -118,14 +107,10 @@ def encrypt_record(
             or if the underlying AEAD operation fails for any other
             reason.
     """
-    if len(key) != KEY_SIZE:
-        raise EncryptionError(
-            f"AES-256-GCM key must be exactly {KEY_SIZE} bytes; got {len(key)}",
-        )
-    cipher = AESGCM(key)
-    nonce = secrets.token_bytes(NONCE_SIZE)
     try:
-        ciphertext = cipher.encrypt(nonce, plaintext, associated_data)
+        nonce, ciphertext = seal(plaintext, key=key, associated_data=associated_data)
+    except AesGcmKeyLengthError as exc:
+        raise EncryptionError(str(exc)) from None
     except (TypeError, ValueError) as exc:
         raise EncryptionError(f"AES-256-GCM encryption failed: {exc}") from exc
     return EncryptedBlob(nonce=nonce, ciphertext=ciphertext)
@@ -154,13 +139,10 @@ def decrypt_record(
             or the associated-data binding is wrong.
         EncryptionError: If ``key`` is not exactly ``KEY_SIZE`` bytes.
     """
-    if len(key) != KEY_SIZE:
-        raise EncryptionError(
-            f"AES-256-GCM key must be exactly {KEY_SIZE} bytes; got {len(key)}",
-        )
-    cipher = AESGCM(key)
     try:
-        return cipher.decrypt(blob.nonce, blob.ciphertext, associated_data)
+        return open_sealed(blob.nonce, blob.ciphertext, key=key, associated_data=associated_data)
+    except AesGcmKeyLengthError as exc:
+        raise EncryptionError(str(exc)) from None
     except InvalidTag as exc:
         raise DecryptionError("AES-256-GCM tag verification failed") from exc
     except (TypeError, ValueError) as exc:
