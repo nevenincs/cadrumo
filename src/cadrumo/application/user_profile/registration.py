@@ -121,6 +121,31 @@ class ProfileRegistrationOutcome(BaseModel):
     setup_state: ProfileSetupState
 
 
+def _refuse_a_label_already_taken(label: str) -> None:
+    """Refuse a label that is visibly taken before deriving any key.
+
+    Deriving the password key is the slow step of creation, and the custody
+    transaction only meets the label collision after it -- so repeating a
+    create, the ordinary re-run of a setup script, waited out a full key
+    derivation just to be told the name is taken. This check is advisory: it
+    reads the same committed label projections the transaction does, with the
+    same case-insensitive comparison, and the transaction's own check under
+    the root lock stays the authority for a label claimed in between.
+    """
+    from ..workflow.errors import ProfileLabelAmbiguousError
+    from ..workflow.profile_bucket_scan import read_profile_bucket
+
+    try:
+        taken = read_profile_bucket(label) is not None
+    except ProfileLabelAmbiguousError:
+        taken = True
+    if taken:
+        raise ProfileRegistrationError(
+            translated_message="application.user_profile.errors.profile_already_exists",
+            context={"profile": label},
+        )
+
+
 def register_profile_with_credentials(
     *,
     label: str,
@@ -195,6 +220,7 @@ def register_profile_with_credentials(
             context=dict(password_refusal.context),
             password_refusal=password_refusal,
         )
+    _refuse_a_label_already_taken(resolved_label)
 
     identity = UUID(new_profile_id())
 

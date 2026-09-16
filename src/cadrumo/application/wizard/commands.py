@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import inspect
 import typing
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -538,29 +538,6 @@ def _format_missing_flags(missing: tuple[str, ...]) -> str:
     tuple.
     """
     return " ".join(f"--{question_id}" for question_id in missing)
-
-
-def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tuple[str, ...]:
-    """Return filing identity facts that must exist before persistence.
-
-    Wizard answer models can carry partial values while prompts are being
-    collected or projected. Persisted create and edit operations are stricter:
-    they must leave a taxpayer-type axis and a filing identity, otherwise
-    modelo work would fail later against an already-committed profile.
-    """
-    from ..user_profile.filing_baseline import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
-    from .persistence import serialise_answers
-
-    profile_path_flags = {
-        question.profile_key: question.id
-        for section in flow.sections
-        for question in section.questions
-        if question.profile_key is not None
-    }
-    return _missing_profile_filing_baseline_flags(
-        serialise_answers(flow, answers),
-        profile_path_flags=profile_path_flags,
-    )
 
 
 def _missing_filing_baseline_flag_groups(
@@ -1746,6 +1723,7 @@ def _emit_wizard_success(
     modify_descendants_via_door: bool = False,
     modify_descendants_message: str | None = None,
     default_ccaa_value: str | None = None,
+    invocation_notices: Callable[[], Sequence[Notice]] = tuple,
 ) -> None:
     """Emit the success payload in JSON or tabular CLI form.
 
@@ -1775,6 +1753,13 @@ def _emit_wizard_success(
     emit runs; the caller freezes the string before the walk and passes it
     here. ``None`` falls back to resolving it now (the direct, walk-less
     callers).
+
+    ``invocation_notices`` supplies the notices the invoking frontend staged
+    for this invocation, such as an authentication that could not be kept for
+    the next process. This emitter reaches the envelope directly rather than
+    through the frontend's own funnel, so without it those notices were lost
+    on every edit. It is called only here, on success, so a refused command
+    leaves them for the frontend's error path.
     """
     from ...core.click_context import json_output_requested
     from ..operator_output.emit import emit_operator_json_success
@@ -1830,6 +1815,7 @@ def _emit_wizard_success(
     # is read from the selection pointer rather than assumed or left unset:
     # every other command reports the active profile on this spine, and an
     # unset one read as "no profile is active" while one plainly was.
+    notices = [*notices, *invocation_notices()]
     active_profile = profile_name if mode == "create" else _selected_profile_label()
     result: ConfigProfileCreateResult | ConfigProfileEditResult = (
         ConfigProfileCreateResult(
@@ -1993,6 +1979,7 @@ def _execute_wizard_command(
     *,
     kwargs: dict[str, object],
     operation: PinnedAuthorityOperation,
+    invocation_notices: Callable[[], Sequence[Notice]],
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
     profile_name, profile_id = _resolve_profile_target_for_mode(
@@ -2062,6 +2049,7 @@ def _execute_wizard_command(
         modify_descendants_via_door=interactive_modify,
         modify_descendants_message=modify_descendants_message,
         default_ccaa_value=default_ccaa_value,
+        invocation_notices=invocation_notices,
     )
 
 
@@ -2070,6 +2058,7 @@ def build_wizard_command(
     *,
     mode: WizardPersistMode,
     operation: PinnedAuthorityOperation,
+    invocation_notices: Callable[[], Sequence[Notice]] = tuple,
 ) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
@@ -2109,7 +2098,13 @@ def build_wizard_command(
             # default. The override unwinds when the command returns.
             _enter_requested_output_language(kwargs, _language_stack)
             try:
-                _execute_wizard_command(flow, mode, kwargs=kwargs, operation=operation)
+                _execute_wizard_command(
+                    flow,
+                    mode,
+                    kwargs=kwargs,
+                    operation=operation,
+                    invocation_notices=invocation_notices,
+                )
             except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack
