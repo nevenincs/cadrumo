@@ -95,18 +95,18 @@ def account_status_line(session: HomeAccountSession | None) -> str:
     """Say who is signed in, in what state, and until when if that is known."""
     if session is None:
         return tr("tui.root.account.default_profile")
-    line = tr(
-        "tui.home.session_line",
-        label=session.profile_label or tr("tui.home.account_fallback"),
-        status=tr(_SESSION_LOCALE_KEYS[session.posture]),
+    # Kept short: the bar is one row, and on an eighty-column terminal a
+    # longer line loses its end -- which is where the expiry time sits.
+    label = session.profile_label or tr("tui.home.account_fallback")
+    status = tr(_SESSION_LOCALE_KEYS[session.posture])
+    if session.expires_at is None:
+        return tr("tui.root.account_bar.line", label=label, status=status)
+    return tr(
+        "tui.root.account_bar.line_with_expiry",
+        label=label,
+        status=status,
+        expires_at=session.expires_at.strftime("%H:%M UTC"),
     )
-    if session.expires_at is not None:
-        line = tr(
-            "tui.root.account_bar.with_expiry",
-            line=line,
-            expires_at=session.expires_at.strftime("%H:%M UTC"),
-        )
-    return line
 
 
 class AccountBar(Static):

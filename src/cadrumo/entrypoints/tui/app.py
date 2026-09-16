@@ -23,6 +23,7 @@ from textual.widgets import Footer, Static
 from ...application.overview.home import HomeSessionPosture
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
+from ...core.logging import get_logger
 from ...core.operations import OperationTerminalCondition
 from .account import (
     AccountFactoriesV1,
@@ -394,6 +395,16 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             screen = catalogue.create_screen(target)
         except NavigationContractError:
             self._refuse_navigation()
+            return
+        except Exception:
+            # A destination reads its sources as it opens, and the usual reason
+            # those reads fail is that the session lapsed while the operator
+            # sat on Home. Home's refresh is what tells expiry apart and
+            # returns to sign-in; any other failure stays a visible refusal
+            # rather than ending the session with a traceback.
+            get_logger(__name__).warning("destination %s could not open", target.destination, exc_info=True)
+            self._refuse_navigation()
+            self._show_home(self._home_semantic_focus)
             return
         self._active_target = target
         self._replace_destination(screen, return_to_home=True)
