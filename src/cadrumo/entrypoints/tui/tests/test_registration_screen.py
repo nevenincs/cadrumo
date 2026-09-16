@@ -28,6 +28,8 @@ from uuid import UUID
 
 import pytest
 from textual.css.query import NoMatches
+from textual.screen import Screen
+from textual.widget import Widget
 from textual.widgets import Button, Input, Static
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -94,14 +96,14 @@ async def _wait_for_screen(pilot, screen_type: type, *, composed: str) -> bool:
     """
 
     def laid_out() -> bool:
-        screen = pilot.app.screen
-        if not isinstance(screen, screen_type):
+        screen: object = pilot.app.screen
+        if not isinstance(screen, Screen) or not isinstance(screen, screen_type):
             return False
         try:
-            area: int = screen.query(composed).first().region.area
+            widget: Widget = screen.query_one(composed, Widget)
         except NoMatches:
             return False
-        return area > 0
+        return widget.region.area > 0
 
     return await _wait_until(pilot, laid_out)
 
