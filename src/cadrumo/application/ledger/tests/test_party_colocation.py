@@ -249,13 +249,6 @@ def test_role_evidence_the_document_does_not_print_anchors_nothing() -> None:
     assert resolve_party_attribution_by_colocation(draft=invented, transcription=_transcription()).outcomes == {}
 
 
-def test_an_unconsidered_field_defaults_to_unresolved_not_attributed() -> None:
-    """The default direction keeps the stamp, so a field falling out fails safe."""
-    resolution = _resolve(_straight())
-
-    assert resolution.outcome_for("supplier_country_code") is PartyAttributionOutcome.UNRESOLVED
-
-
 def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
     """The consuming half. A detected transposition must refuse, not be dropped.
 

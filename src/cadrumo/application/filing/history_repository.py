@@ -82,11 +82,6 @@ class ModeloHistoryRepository:
         """Return every modelo persisted in this repository, sorted."""
         return tuple(sorted(str(history.modelo) for history in self.iter_records()))
 
-    def iter_histories(self) -> Iterator[tuple[str, ModeloHistory]]:
-        """Yield ``(modelo, history)`` tuples of :class:`ModeloHistory` for every persisted modelo."""
-        for history in self._ports.repository.iter_records():
-            yield str(history.modelo), history
-
 
 __all__ = [
     "ModeloHistory",
