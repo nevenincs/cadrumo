@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.iva._component_rows
-   cadrumo.domain.iva.catalogue
    cadrumo.domain.iva.classification
    cadrumo.domain.iva.components
    cadrumo.domain.iva.country_vocabulary
