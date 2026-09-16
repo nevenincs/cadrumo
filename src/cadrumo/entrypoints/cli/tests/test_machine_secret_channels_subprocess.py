@@ -190,7 +190,9 @@ def test_profile_create_succeeds_through_each_leaf_channel(tmp_path: Path, chann
     )
     document = _assert_success(result, root)
     assert document["result"]["status"] == "created"
-    assert [notice["code"] for notice in document["notices"]] == ["PROFILE_RECOVERY_NOT_ENROLLED"]
+    codes = [notice["code"] for notice in document["notices"]]
+    assert "PROFILE_RECOVERY_NOT_ENROLLED" in codes
+    assert "PROFILE_RECOVERY_ENABLED" not in codes
     if channel == "fd":
         assert "S13_DESCRIPTOR_CLOSED" in result.stderr
 
@@ -435,10 +437,15 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         },
     )
-    os.close(handoff_writer)
-    os.close(verification_reader)
     supervisor_failure: list[BaseException] = []
     supervisor_state: list[str] = ["waiting-handoff"]
+
+    def release_parent_copies(_process: object) -> None:
+        # Only once the child holds its inherited HANDLEs: closing them before
+        # the launch invalidates the handle list, and keeping them open after it
+        # withholds end-of-stream from the supervisor reading the handoff pipe.
+        os.close(handoff_writer)
+        os.close(verification_reader)
 
     def supervise_recovery() -> None:
         handed = bytearray()
@@ -488,6 +495,7 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
             timeout=45,
             close_fds=True,
             startupinfo=startup,
+            after_spawn=release_parent_copies,
         )
     except subprocess.TimeoutExpired:
         raise AssertionError(

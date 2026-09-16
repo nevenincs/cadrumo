@@ -31,6 +31,8 @@ import json
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -63,29 +65,58 @@ _CLASS_EXCESS_BUDGET: dict[str, int] = {
     "external-io": 160,
 }
 
+_HEAVY_NODE = "app/ledger/import"
+_BATCH_COUNT = 3
+_MEASUREMENT_TIMEOUT_SECONDS = 600
+
 _PROBE = textwrap.dedent(
     """
     import json
     import sys
+    from pathlib import Path
 
-    from cadrumo.entrypoints.cli.tests.cli_performance import _resolve_cli_path
+    from cadrumo.entrypoints.cli.tests.cli_performance import measure_resolution_costs
 
-    _resolve_cli_path(tuple(json.loads(sys.argv[1])))
-    print(len([name for name in sys.modules if name.startswith("cadrumo")]))
+    paths = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+    records = measure_resolution_costs(paths)
+    Path(sys.argv[2]).write_text(json.dumps(records), encoding="utf-8")
     """
 )
 
+type _CostRecord = dict[str, Any]
 
-def _resolution_cost(path: list[str]) -> int:
-    completed = subprocess.run(
-        [sys.executable, "-c", _PROBE, json.dumps(path)],
-        capture_output=True,
-        text=True,
-        timeout=300,
-        check=False,
-    )
-    assert completed.returncode == 0, f"{path}: {completed.stderr}"
-    return int(completed.stdout.strip().splitlines()[-1])
+
+def _run_measurements(runs: list[list[str]], workdir: Path) -> list[list[_CostRecord]]:
+    """Run each list of node paths in its own interpreter, all concurrently."""
+    started: list[tuple[subprocess.Popen[bytes], Path, Path]] = []
+    try:
+        for index, run in enumerate(runs):
+            request = workdir / f"request-{index}.json"
+            result = workdir / f"result-{index}.json"
+            log = workdir / f"child-{index}.log"
+            request.write_text(json.dumps([name.split("/") for name in run]), encoding="utf-8")
+            with log.open("wb") as output:
+                process = subprocess.Popen(
+                    [sys.executable, "-c", _PROBE, str(request), str(result)],
+                    stdout=output,
+                    stderr=subprocess.STDOUT,
+                )
+            started.append((process, result, log))
+        outcomes: list[list[_CostRecord]] = []
+        for process, result, log in started:
+            returncode = process.wait(timeout=_MEASUREMENT_TIMEOUT_SECONDS)
+            assert returncode == 0, f"measurement child failed: {log.read_text(encoding='utf-8', errors='replace')}"
+            outcomes.append(json.loads(result.read_text(encoding="utf-8")))
+        return outcomes
+    finally:
+        for process, _, _ in started:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+
+
+def _comparable(record: _CostRecord) -> tuple[object, ...]:
+    return record["path"], record["modules"], record["digest"], record["error"] is not None
 
 
 def _budgeted_nodes() -> list[tuple[str, str]]:
@@ -107,9 +138,54 @@ def _budgeted_nodes() -> list[tuple[str, str]]:
 
 
 @pytest.fixture(scope="module")
-def bootstrap_floor() -> int:
+def resolution_costs(tmp_path_factory: pytest.TempPathFactory) -> dict[str, _CostRecord]:
+    """Every budgeted node's cost, measured in batches and checked against fresh interpreters.
+
+    Starting one interpreter per node paid the CLI import floor hundreds of
+    times, so each batch interpreter measures many nodes and resets itself in
+    between (see ``measure_resolution_costs``). That reset is only trusted
+    while it holds here: each batch opens with the heavy node and repeats it
+    last, and every batch measures the same control node after all of its
+    other nodes -- after the most resets -- which is measured again in an
+    interpreter of its own. Any disagreement fails every dependent test
+    instead of reporting a batched number.
+    """
+    *names, control_node = [name for name, _ in _budgeted_nodes()]
+    shards = [names[index::_BATCH_COUNT] for index in range(_BATCH_COUNT)]
+    batches = [[_HEAVY_NODE, *shard, control_node, _HEAVY_NODE] for shard in shards]
+    *batch_records, (control,) = _run_measurements(
+        [*batches, [control_node]], tmp_path_factory.mktemp("resolution-costs")
+    )
+
+    for records in batch_records:
+        first, batched, last = records[0], records[-2], records[-1]
+        if _comparable(first) != _comparable(last):
+            pytest.fail(
+                f"a batch measured `{_HEAVY_NODE}` differently before and after its other nodes "
+                f"({first['modules']} vs {last['modules']} modules): the per-node reset leaks state"
+            )
+        if _comparable(batched) != _comparable(control):
+            pytest.fail(
+                f"`{control_node}` loads {batched['modules']} modules in a batch but "
+                f"{control['modules']} in a fresh interpreter: the batched measurement is not independent"
+            )
+
+    costs = {record["path"]: record for records in batch_records for record in records[1:-2]}
+    costs[control_node] = control
+    costs[_HEAVY_NODE] = batch_records[0][0]
+    return costs
+
+
+def _resolution_cost(costs: dict[str, _CostRecord], name: str) -> int:
+    record = costs[name]
+    assert record["error"] is None, f"{name.split('/')}: {record['error']}"
+    return int(record["modules"])
+
+
+@pytest.fixture(scope="module")
+def bootstrap_floor(resolution_costs: dict[str, _CostRecord]) -> int:
     """The cheapest resolution in the graph: what every node pays regardless."""
-    return min(_resolution_cost(name.split("/")) for name, _ in _budgeted_nodes()[:12])
+    return min(_resolution_cost(resolution_costs, name) for name, _ in _budgeted_nodes()[:12])
 
 
 def test_every_performance_class_has_a_budget() -> None:
@@ -121,9 +197,11 @@ def test_every_performance_class_has_a_budget() -> None:
 
 
 @pytest.mark.parametrize(("name", "klass"), _budgeted_nodes(), ids=lambda value: value)
-def test_a_node_resolves_within_its_class_budget(name: str, klass: str, bootstrap_floor: int) -> None:
+def test_a_node_resolves_within_its_class_budget(
+    name: str, klass: str, bootstrap_floor: int, resolution_costs: dict[str, _CostRecord]
+) -> None:
     """DISCRIMINATING: resolution cost stays near the floor for its class."""
-    excess = _resolution_cost(name.split("/")) - bootstrap_floor
+    excess = _resolution_cost(resolution_costs, name) - bootstrap_floor
     budget = _CLASS_EXCESS_BUDGET[klass]
 
     assert excess <= budget, (
@@ -133,14 +211,16 @@ def test_a_node_resolves_within_its_class_budget(name: str, klass: str, bootstra
     )
 
 
-def test_the_budget_would_reject_a_known_heavy_node(bootstrap_floor: int) -> None:
+def test_the_budget_would_reject_a_known_heavy_node(
+    bootstrap_floor: int, resolution_costs: dict[str, _CostRecord]
+) -> None:
     """ANTI-TAUTOLOGY: the measurement must be able to exceed a budget.
 
     Every budgeted node passing could mean the probe reports a constant. This
     takes a node the other gate lists as heavy and requires it to blow the
     widest budget here -- so a passing run above is a measurement.
     """
-    heavy = _resolution_cost(["app", "ledger", "import"]) - bootstrap_floor
+    heavy = _resolution_cost(resolution_costs, _HEAVY_NODE) - bootstrap_floor
 
     assert heavy > max(_CLASS_EXCESS_BUDGET.values()), (
         f"`app ledger import` resolves only {heavy} modules above the floor, which no longer "

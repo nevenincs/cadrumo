@@ -6,6 +6,7 @@ import ast
 import importlib
 import inspect
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -103,3 +104,35 @@ def test_handler_modules_carry_no_typer_structural_authority() -> None:
         ]
         assert not forbidden_calls, module_name
         assert "command_execution_policy" not in source, module_name
+
+
+@pytest.mark.parametrize("token", ["resident_irpf", "non_resident_irnr"])
+def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str) -> None:
+    """The live parser must pass the flag's documented tokens through untouched.
+
+    ``--fiscal-residency`` once declared its value contract as the domain
+    ``FiscalResidency`` type, which accepts only registry-validated input. Click
+    therefore called that constructor during parsing: ``edit --fiscal-residency
+    resident_irpf`` -- the exact value the flag's own help names -- was refused
+    before any handler ran, and ``--help`` showed the leaked metavar
+    ``<function>``. Registry validation belongs to the wizard, which runs it
+    inside an authority operation; the parser must only carry the string.
+    """
+    from typer._click.core import Context
+    from typer._click.types import StringParamType
+
+    from ...tests.cli_runner import cadrumo_click_command
+
+    # The runner is annotated against upstream Click while Typer builds the
+    # tree from its vendored copy, so the walked node is typed by what it does.
+    command: Any = cadrumo_click_command()
+    context = Context(command)
+    for name in ("config", "profile", "edit"):
+        child = command.get_command(context, name)
+        assert child is not None, name
+        context = Context(child, parent=context, info_name=name)
+        command = child
+    parameter = next(parameter for parameter in command.params if parameter.name == "fiscal_residency")
+
+    assert isinstance(parameter.type, StringParamType)
+    assert parameter.type.convert(token, parameter, context) == token

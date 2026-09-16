@@ -122,7 +122,7 @@ _CONTEXTVAR_HARNESS_SOURCE = dedent(
 
         defer_logging_configuration()
         try:
-            from cadrumo.entrypoints.cli import main
+            from cadrumo.entrypoints.cli.main import main
 
             main()
         finally:

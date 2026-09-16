@@ -166,9 +166,15 @@ def _emit_model_baseline_status(
 ) -> bool:
     """Render the filing-baseline refusal when the health record is otherwise complete."""
     from ....application.modelo.profile_readiness_gate import modelo_work_profile_baseline_missing_paths
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from .status_rendering import blocked_readiness_status
 
-    if not modelo_work_profile_baseline_missing_paths(record):
+    # The baseline resolves governed vocabularies (the IRPF income categories),
+    # which exist only inside a pinned authority operation. Outside one it
+    # worked only when an earlier leased call had already cached the answer.
+    with bundled_indexed_authority().operation():
+        missing = modelo_work_profile_baseline_missing_paths(record)
+    if not missing:
         return False
     result, blocked_lines = blocked_readiness_status(
         active_profile=active_profile,

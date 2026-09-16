@@ -56,46 +56,7 @@ def root_command(
         return
     from ..adapter_composition import profile_adapter_composition
 
-    composed = ctx.with_resource(profile_adapter_composition())
-    state["state_projection_read_ports"] = composed.state_projection_read_ports
-    state["diagnostics_ports"] = composed.diagnostics_ports
-    state["certificate_backend_factory"] = composed.certificate_secret_backend_factory
-    state["operator_probe_ports"] = composed.operator_probe_ports
-    state["operator_scope_ports"] = composed.operator_scope_ports
-    state["bucket_storage"] = composed.bucket_storage
-    state["verification_repository_bundle_factory"] = composed.verification_repository_bundle_factory
-    state["calculation_action_ports_factory"] = composed.calculation_action_ports_factory
-    state["profile_read_ports_factory"] = composed.profile_read_ports_factory
-    state["amendment_action_ports_factory"] = composed.amendment_action_ports_factory
-    state["retencion_observation_ports_factory"] = composed.retencion_observation_ports_factory
-    state["percepcion_observation_ports_factory"] = composed.percepcion_observation_ports_factory
-    state["borrador_100_snapshot_repository_factory"] = composed.borrador_100_snapshot_repository_factory
-    state["censal_fetch_port"] = composed.censal_fetch_port
-    state["expedientes_ports_factory"] = composed.expedientes_ports_factory
-    state["ledger_evidence_ports_factory"] = composed.ledger_evidence_ports_factory
-    state["invoice_confirmation_ports_factory"] = composed.invoice_confirmation_ports_factory
-    state["counterparty_establishment_repository_factory"] = composed.counterparty_establishment_repository_factory
-    state["filing_action_ports_factory"] = composed.filing_action_ports_factory
-    state["bienes_inversion_repository_factory"] = composed.bienes_inversion_repository_factory
-    state["catalogue_creation_ports_factory"] = composed.catalogue_creation_ports_factory
-    state["catalogue_lifecycle_ports_factory"] = composed.catalogue_lifecycle_ports_factory
-    state["modelo_export_ports_factory"] = composed.modelo_export_ports_factory
-    state["modelo_edit_receipt_repository_factory"] = composed.modelo_edit_receipt_repository_factory
-    state["modelo_history_ports_factory"] = composed.modelo_history_ports_factory
-    state["participation_index_rebuild_ports_factory"] = composed.participation_index_rebuild_ports_factory
-    state["prorrata_register_repository_factory"] = composed.prorrata_register_repository_factory
-    state["inventory_service_ports_factory"] = composed.inventory_service_ports_factory
-    state["draft_review_ports_factory"] = composed.draft_review_ports_factory
-    state["modelo_iva_wallet_seed_ports_factory"] = composed.modelo_iva_wallet_seed_ports_factory
-    state["m145_communication_records_ports_factory"] = composed.m145_communication_records_ports_factory
-    state["m036_lifecycle_ports_factory"] = composed.m036_lifecycle_ports_factory
-    state["work_lifecycle_ports_factory"] = composed.work_lifecycle_ports_factory
-    state["recipient_fingerprint_registry_ports_factory"] = composed.recipient_fingerprint_registry_ports_factory
-    state["recipient_encryption_capability_factory"] = composed.recipient_encryption_capability_factory
-    state["review_package_signing_keypair_capability_factory"] = (
-        composed.review_package_signing_keypair_capability_factory
-    )
-    state["apoderado_config_repository_factory"] = composed.apoderado_config_repository_factory
+    state["adapter_composition"] = ctx.with_resource(profile_adapter_composition())
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:

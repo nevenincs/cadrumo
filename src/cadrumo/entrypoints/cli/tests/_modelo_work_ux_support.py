@@ -40,6 +40,9 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
         "identity.name": "Operator",
         "identity.surnames": "Readiness",
         "activities.description": "design",
+        # Modelo 111 readiness requires the colegio concertado answer; these
+        # tests file 111 work units, so the profile states it.
+        "withholding.colegio_concertado": "false",
     }
     if activity_start_date is not None:
         facts["censo.activity_start_date"] = activity_start_date

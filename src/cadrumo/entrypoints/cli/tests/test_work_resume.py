@@ -44,7 +44,7 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
@@ -98,7 +98,11 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+def _isolated_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Iterator[None]:
+    # Seeding builds records with the leased creation context, so the lease
+    # must exist before this fixture runs; an autouse fixture is otherwise set
+    # up ahead of the module's ``usefixtures`` lease.
+    del authority_operation
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),

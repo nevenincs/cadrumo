@@ -14,9 +14,6 @@ from textwrap import dedent
 from typing import Any
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -103,10 +100,13 @@ _HARNESS = (
     try:
         if payload.get("preauthenticate_label") is not None:
             from cadrumo.application.user_profile.login_session import login_profile
-            login_profile(
-                name=payload["preauthenticate_label"],
-                passphrase_callback=lambda: payload["preauthenticate_secret"],
-            )
+            from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+            with bundled_indexed_authority().operation() as operation:
+                login_profile(
+                    name=payload["preauthenticate_label"],
+                    passphrase_callback=lambda: payload["preauthenticate_secret"],
+                    profile_decode_context=operation.profile_decode_context(),
+                )
         before_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
         sys.argv = ["cadrumo", *sys.argv[2:]]
         defer_logging_configuration()
@@ -201,10 +201,13 @@ _WINDOWS_HANDLE_HARNESS = (
     try:
         if payload.get("preauthenticate_label") is not None:
             from cadrumo.application.user_profile.login_session import login_profile
-            login_profile(
-                name=payload["preauthenticate_label"],
-                passphrase_callback=lambda: payload["preauthenticate_secret"],
-            )
+            from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+            with bundled_indexed_authority().operation() as operation:
+                login_profile(
+                    name=payload["preauthenticate_label"],
+                    passphrase_callback=lambda: payload["preauthenticate_secret"],
+                    profile_decode_context=operation.profile_decode_context(),
+                )
         before_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
         sys.argv[:] = argv
         defer_logging_configuration()
@@ -560,14 +563,23 @@ def _assert_success(
 
 
 def _register(storage_root: Path, *, label: str = "s13-operator"):
-    """Register one password-only profile and close its session, as the CLI would."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    with override_settings(cadrumo_local_storage_root=storage_root):
+    """Register one password-only profile and close its session, as the CLI would.
+
+    Registration validates facts against governed registry vocabularies, which
+    resolve only inside a pinned authority operation. The CLI holds one for the
+    whole invocation; registering outside one raised before any subprocess ran.
+    """
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
+
+    with (
+        override_settings(cadrumo_local_storage_root=storage_root),
+        bundled_indexed_authority().operation() as operation,
+    ):
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=_PROFILE_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
+            profile_create_context=operation.profile_create_context(),
+            profile_decode_context=operation.profile_decode_context(),
         )
         close_active_bucket_session()
     return outcome

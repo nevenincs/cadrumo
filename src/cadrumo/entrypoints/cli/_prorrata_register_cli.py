@@ -252,6 +252,9 @@ def prorrata_elect_especial(
     sector: str | None = None,
 ) -> None:
     """Persist an ``ESPECIAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
+    # The regime, transition and provenance vocabularies are registry facts,
+    # so the invocation's authority lease is taken before any of them is read.
+    authority_operation(ctx)
     if provenance is None:
         provenance = carried_prior_definitiva_prorrata_provenance()
     _elect(
@@ -289,6 +292,9 @@ def prorrata_elect_general(
     verb, which requires the revocation evidence: this verb records a plain
     general election and never manufactures a transition.
     """
+    # The regime, transition and provenance vocabularies are registry facts,
+    # so the invocation's authority lease is taken before any of them is read.
+    authority_operation(ctx)
     if provenance is None:
         provenance = carried_prior_definitiva_prorrata_provenance()
     _elect(
@@ -315,6 +321,9 @@ def prorrata_revoke_especial(
     sector: str | None = None,
 ) -> None:
     """Persist a typed prorrata-especial revocation for the ejercicio."""
+    # The regime, transition and provenance vocabularies are registry facts,
+    # so the invocation's authority lease is taken before any of them is read.
+    authority_operation(ctx)
     if provenance is None:
         provenance = carried_prior_definitiva_prorrata_provenance()
     _elect(
@@ -341,6 +350,8 @@ def prorrata_declare_sector(
     activity_code: tuple[str, ...] = (),
 ) -> None:
     """Persist one :class:`SectorDefinition` onto the register partition."""
+    # The sector letter validates against the registry-declared vocabulary.
+    authority_operation(ctx)
     bucket_id = _register_bucket_id()
     try:
         definition = SectorDefinition(

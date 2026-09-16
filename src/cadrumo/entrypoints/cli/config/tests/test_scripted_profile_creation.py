@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from ...tests.cli_runner import invoke_cached_cli
@@ -45,17 +46,24 @@ def _fact_values(document: dict[str, object]) -> dict[str, str]:
     return {str(fact["path"]): str(fact["value"]) for fact in facts}
 
 
+#: An operator label pairing a word with a digit run. The tax-identifier scan
+#: once read ``Probe 3902`` as a prefixed IVA number (PR + OBE3902) and hashed it, so the
+#: envelope, the listing and the login notice all quoted a label no command
+#: could match. It must come back exactly as typed.
+_DIGIT_BEARING_LABEL = "Cli Probe 3902"
+
+
 def test_scripted_create_registers_a_real_profile(tmp_path: Path) -> None:
     """``create NAME --quiet`` brings a real, listable profile into existence."""
     with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
         created = invoke_cached_cli(
-            ("--format", "json", "config", "profile", "create", "Scripted Operator", "--quiet", "--secrets-stdin"),
+            ("--format", "json", "config", "profile", "create", _DIGIT_BEARING_LABEL, "--quiet", "--secrets-stdin"),
             input=_creation_payload(),
         )
 
         assert created.exit_code == 0, created.output
         document = json.loads(created.stdout)
-        assert document["result"]["profile_name"] == "Scripted Operator"
+        assert document["result"]["profile_name"] == _DIGIT_BEARING_LABEL
         assert document["result"]["status"] == "created"
         # A machine caller is never asked about recovery, and is told the next
         # process must authenticate: creation mints no acceleration receipt.
@@ -68,7 +76,7 @@ def test_scripted_create_registers_a_real_profile(tmp_path: Path) -> None:
 
     assert listed.exit_code == 0, listed.output
     profiles = json.loads(listed.stdout)["result"]["profiles"]
-    assert [profile["name"] for profile in profiles] == ["Scripted Operator"]
+    assert [profile["name"] for profile in profiles] == [_DIGIT_BEARING_LABEL]
     assert profiles[0]["active"] is True
     # The bucket identifier is the profile UUID, and it reaches the operator
     # surface through the envelope's redaction funnel rather than raw.
@@ -110,6 +118,13 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
 
         assert created.exit_code == 0, created.output
         assert json.loads(created.stdout)["result"]["status"] == "created"
+
+        # Creation leaves the new profile unlocked for THIS process, and a
+        # supplied root secret over a live session is refused as unused. The
+        # case is about a later invocation authenticating explicitly, which in
+        # a real run is a fresh process with no live session -- so retire the
+        # in-process session the create span published before invoking it.
+        close_active_bucket_session()
 
         shown = invoke_cached_cli(
             ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view"),

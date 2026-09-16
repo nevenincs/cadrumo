@@ -34,8 +34,6 @@ if TYPE_CHECKING:
     from .command_spec import CommandSpec
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
-from ...core.storage_taxonomy import StorageCategory as _StorageCategory
-from ...core.storage_taxonomy_locations import storage_location as _storage_location
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
 from ._framework_localisation import (
@@ -245,10 +243,13 @@ def _metadata_state_isolation(arguments: list[str]) -> Generator[None]:
     # above (`_PRODUCT_IDENTITY`), so reading the taxonomy's declared
     # root-fallback-database subpath here costs nothing extra and tracks a
     # future rename instead of drifting from it.
+    from ...core.storage_taxonomy import StorageCategory
+    from ...core.storage_taxonomy_locations import storage_location
+
     with TemporaryDirectory(prefix="cadrumo-cli-metadata-") as temporary_root:
         root = Path(temporary_root)
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
-        database_filename = _storage_location(_StorageCategory.ROOT_FALLBACK_DATABASE).subpath
+        database_filename = storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
         os.environ["CADRUMO_DATABASE_URL"] = f"sqlite:///{(root / database_filename).as_posix()}"
         try:
             yield
