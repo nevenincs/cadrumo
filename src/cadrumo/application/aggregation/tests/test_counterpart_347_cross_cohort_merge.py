@@ -25,13 +25,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind, OperationKind347
+from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ..counterpart import (
     CounterpartObservation,
     aggregate_counterpart_347,
     declarable_counterparty_nifs_347,
-    declarable_for_347,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -82,17 +81,17 @@ def test_same_nif_two_cohorts_each_below_floor_merge_above_is_declarable() -> No
     assert _DELIVERY_TOTAL + _ACQUISITION_TOTAL > _M347_REGULATORY_FLOOR
 
     observations = (
-        _obs(nif=_MERGED_NIF, op_kind=OperationKind347.DELIVERY.value, invoice_total=_DELIVERY_TOTAL, source_id="tx-a"),
+        _obs(nif=_MERGED_NIF, op_kind="entregas_y_prestaciones", invoice_total=_DELIVERY_TOTAL, source_id="tx-a"),
         _obs(
             nif=_MERGED_NIF,
-            op_kind=OperationKind347.ACQUISITION.value,
+            op_kind="adquisiciones_y_recepciones",
             invoice_total=_ACQUISITION_TOTAL,
             source_id="tx-b",
         ),
         # Control: a different NIF with a single sub-floor cohort.
         _obs(
             nif=_SINGLE_COHORT_NIF,
-            op_kind=OperationKind347.DELIVERY.value,
+            op_kind="entregas_y_prestaciones",
             invoice_total=_SINGLE_COHORT_TOTAL,
             source_id="tx-c",
         ),
@@ -108,13 +107,13 @@ def test_same_nif_two_cohorts_each_below_floor_merge_above_is_declarable() -> No
     )
 
     # The fix: the per-NIF merged total crosses the floor -> declarable.
-    assert declarable_for_347(aggregation, counterparty_nif=_MERGED_NIF), (
+    assert _MERGED_NIF in declarable_counterparty_nifs_347(aggregation), (
         f"{_MERGED_NIF} cohorts merge to {_DELIVERY_TOTAL + _ACQUISITION_TOTAL} > {_M347_REGULATORY_FLOOR}; "
         "must be declarable (per-cohort gating would wrongly exclude it)"
     )
 
     # Control: the single sub-floor cohort is NOT declarable.
-    assert not declarable_for_347(aggregation, counterparty_nif=_SINGLE_COHORT_NIF), (
+    assert _SINGLE_COHORT_NIF not in declarable_counterparty_nifs_347(aggregation), (
         f"{_SINGLE_COHORT_NIF} single cohort {_SINGLE_COHORT_TOTAL} < {_M347_REGULATORY_FLOOR}; must not be declarable"
     )
 

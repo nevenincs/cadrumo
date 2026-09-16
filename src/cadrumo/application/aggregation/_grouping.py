@@ -156,7 +156,7 @@ def filter_observations_for_modelo[T, AttrValue](
     """Keep observations whose classifying attribute is in-scope for ``modelo``.
 
     Shared by both per-modelo aggregators: ``_counterpart`` filters on
-    ``operation_kind`` against an :class:`OperationKind347` / ``349``
+    ``operation_kind`` against the registry's Modelo 347 / 349 operation
     catalogue; ``retenciones`` filters on ``scheme`` against a
     :class:`RetencionScheme` catalogue. The only per-domain inputs are
     the catalogue, the attribute getter, and the label used in the

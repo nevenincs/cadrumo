@@ -27,7 +27,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.aggregation import BindingSourceKind, OperationKind349
+from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ..counterpart import (
     CounterpartObservation,
@@ -46,7 +46,7 @@ def _observation(**overrides: object) -> CounterpartObservation:
         "counterparty_nif": "DE811234567",
         "counterparty_name": "Muster GmbH",
         "counterparty_country": "DE",
-        "operation_kind": OperationKind349.INTRA_DELIVERY.value,
+        "operation_kind": "entrega_intracomunitaria_bienes",
         "operation_period": "2T",
         "taxable_base": Decimal("5000.00"),
         "invoice_total": Decimal("5000.00"),
@@ -67,7 +67,7 @@ def test_an_observation_stating_no_country_is_refused() -> None:
         "source_kind": BindingSourceKind.LEDGER_TRANSACTION,
         "source_object_id": "tx-1",
         "counterparty_nif": "DE811234567",
-        "operation_kind": OperationKind349.INTRA_DELIVERY.value,
+        "operation_kind": "entrega_intracomunitaria_bienes",
         "operation_period": "2T",
         "taxable_base": Decimal("5000.00"),
         "invoice_total": Decimal("5000.00"),

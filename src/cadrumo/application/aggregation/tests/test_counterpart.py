@@ -6,14 +6,14 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind, CounterpartSourceKind, OperationKind347, OperationKind349
+from ....core.aggregation import BindingSourceKind, CounterpartSourceKind
 from ....core.period import Period
 from ..counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
     aggregate_counterpart_347,
     aggregate_counterpart_349,
-    declarable_for_347,
+    declarable_counterparty_nifs_347,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -59,7 +59,7 @@ class TestObservationContract:
             "counterparty_nif": "X1",
             "counterparty_name": "",
             "counterparty_country": "ES",
-            "operation_kind": OperationKind347.DELIVERY.value,
+            "operation_kind": "entregas_y_prestaciones",
             "operation_period": "0A",
             "taxable_base": "100",
             "invoice_total": "100",
@@ -72,33 +72,33 @@ class TestObservationContract:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="uppercase ISO-3166"):
-            _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="100", country="es")
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="100", country="es")
 
 
 class TestAggregate347:
     def test_347_filters_to_347_operation_kinds(self) -> None:
         observations = (
-            _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="5000", source_id="t1"),
-            _obs(nif="X1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="999", source_id="t2"),
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="5000", source_id="t1"),
+            _obs(nif="X1", op_kind="entrega_intracomunitaria_bienes", base="999", source_id="t2"),
         )
         result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         assert result.modelo == "347"
         assert len(result.rollups) == 1
-        assert result.rollups[0].operation_kind == OperationKind347.DELIVERY.value
+        assert result.rollups[0].operation_kind == "entregas_y_prestaciones"
 
     def test_347_groups_by_nif_and_operation_kind(self) -> None:
         observations = (
-            _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="2000", source_id="t1"),
-            _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="3000", source_id="t2"),
-            _obs(nif="X1", op_kind=OperationKind347.ACQUISITION.value, base="500", source_id="t3"),
-            _obs(nif="X2", op_kind=OperationKind347.DELIVERY.value, base="1000", source_id="t4"),
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="2000", source_id="t1"),
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="3000", source_id="t2"),
+            _obs(nif="X1", op_kind="adquisiciones_y_recepciones", base="500", source_id="t3"),
+            _obs(nif="X2", op_kind="entregas_y_prestaciones", base="1000", source_id="t4"),
         )
         result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         assert result.total_counterparties == 2
         x1_delivery = next(
             r
             for r in result.rollups
-            if r.counterparty_nif == "X1" and r.operation_kind == OperationKind347.DELIVERY.value
+            if r.counterparty_nif == "X1" and r.operation_kind == "entregas_y_prestaciones"
         )
         assert x1_delivery.observations_count == 2
         assert x1_delivery.total_taxable_base == Decimal("5000")
@@ -110,7 +110,7 @@ class TestThreshold347:
             (
                 _obs(
                     nif="X1",
-                    op_kind=OperationKind347.DELIVERY.value,
+                    op_kind="entregas_y_prestaciones",
                     base="0",
                     invoice_total="3005.06",
                     source_id="floor",
@@ -122,7 +122,7 @@ class TestThreshold347:
             (
                 _obs(
                     nif="X2",
-                    op_kind=OperationKind347.DELIVERY.value,
+                    op_kind="entregas_y_prestaciones",
                     base="0",
                     invoice_total="3005.07",
                     source_id="above-floor",
@@ -131,46 +131,46 @@ class TestThreshold347:
             period=_P_2025_ANNUAL,
         )
 
-        assert declarable_for_347(at_floor, counterparty_nif="X1") is False
-        assert declarable_for_347(just_above, counterparty_nif="X2") is True
+        assert "X1" not in declarable_counterparty_nifs_347(at_floor)
+        assert "X2" in declarable_counterparty_nifs_347(just_above)
 
     def test_declarable_when_above_threshold(self) -> None:
         observations = (
-            _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="5000", invoice_total="6050", source_id="t1"),
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="5000", invoice_total="6050", source_id="t1"),
         )
         result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
-        assert declarable_for_347(result, counterparty_nif="X1") is True
+        assert "X1" in declarable_counterparty_nifs_347(result)
 
     def test_not_declarable_when_at_or_below_threshold(self) -> None:
         observations = (
-            _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="2500", invoice_total="3000", source_id="t1"),
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="2500", invoice_total="3000", source_id="t1"),
         )
         result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
-        assert declarable_for_347(result, counterparty_nif="X1") is False
+        assert "X1" not in declarable_counterparty_nifs_347(result)
 
     def test_threshold_excludes_exactly_at_floor(self) -> None:
         observations = (
-            _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="0", invoice_total="3005.06", source_id="t1"),
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="0", invoice_total="3005.06", source_id="t1"),
         )
         result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
-        assert declarable_for_347(result, counterparty_nif="X1") is False
+        assert "X1" not in declarable_counterparty_nifs_347(result)
 
 
 class TestAggregate349:
     def test_349_filters_to_intracomunitarias_kinds(self) -> None:
         observations = (
-            _obs(nif="DE1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="10000", country="DE", source_id="t1"),
-            _obs(nif="DE1", op_kind=OperationKind347.DELIVERY.value, base="5000", country="DE", source_id="t2"),
+            _obs(nif="DE1", op_kind="entrega_intracomunitaria_bienes", base="10000", country="DE", source_id="t1"),
+            _obs(nif="DE1", op_kind="entregas_y_prestaciones", base="5000", country="DE", source_id="t2"),
         )
         result = aggregate_counterpart_349(observations, period=_P_2025_Q1)
         assert result.modelo == "349"
         assert len(result.rollups) == 1
-        assert result.rollups[0].operation_kind == OperationKind349.INTRA_DELIVERY.value
+        assert result.rollups[0].operation_kind == "entrega_intracomunitaria_bienes"
 
     def test_349_aggregates_per_country(self) -> None:
         observations = (
-            _obs(nif="DE1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="10000", country="DE", source_id="t1"),
-            _obs(nif="FR1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="5000", country="FR", source_id="t2"),
+            _obs(nif="DE1", op_kind="entrega_intracomunitaria_bienes", base="10000", country="DE", source_id="t1"),
+            _obs(nif="FR1", op_kind="entrega_intracomunitaria_bienes", base="5000", country="FR", source_id="t2"),
         )
         result = aggregate_counterpart_349(observations, period=_P_2025_Q1)
         de1 = next(r for r in result.rollups if r.counterparty_nif == "DE1")
@@ -182,7 +182,7 @@ class TestAggregate349:
         observations = (
             _obs(
                 nif="DE1",
-                op_kind=OperationKind349.INTRA_DELIVERY.value,
+                op_kind="entrega_intracomunitaria_bienes",
                 base="1000.00",
                 country="DE",
                 source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -190,7 +190,7 @@ class TestAggregate349:
             ),
             _obs(
                 nif="IT1",
-                op_kind=OperationKind349.INTRA_SERVICE_IN.value,
+                op_kind="adquisicion_servicios_intracom",
                 base="3000.00",
                 country="IT",
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
@@ -270,8 +270,8 @@ class TestInvariants:
 
     def test_input_order_invariance(self) -> None:
         observations = (
-            _obs(nif="Z1", op_kind=OperationKind347.RENTAL.value, base="500", source_id="t1"),
-            _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="800", source_id="t2"),
+            _obs(nif="Z1", op_kind="arrendamientos_locales", base="500", source_id="t1"),
+            _obs(nif="A1", op_kind="entregas_y_prestaciones", base="800", source_id="t2"),
         )
         forward = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         reverse = aggregate_counterpart_347(tuple(reversed(observations)), period=_P_2025_ANNUAL)
@@ -293,7 +293,7 @@ class TestObservationBoundaryAuthorities:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):
-            _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="100", accrued=impossible)
+            _obs(nif="A1", op_kind="entregas_y_prestaciones", base="100", accrued=impossible)
 
     @pytest.mark.parametrize("malformed", ["20250315", "2025-3-15", "15-03-2025"])
     def test_non_extended_iso_accrued_dates_are_refused(self, malformed: str) -> None:
@@ -301,7 +301,7 @@ class TestObservationBoundaryAuthorities:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):
-            _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="100", accrued=malformed)
+            _obs(nif="A1", op_kind="entregas_y_prestaciones", base="100", accrued=malformed)
 
     @pytest.mark.parametrize(
         "unconstrained",
@@ -329,7 +329,7 @@ class TestObservationBoundaryAuthorities:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):
-            _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="100", period=unconstrained)
+            _obs(nif="A1", op_kind="entregas_y_prestaciones", base="100", period=unconstrained)
 
     @pytest.mark.parametrize(
         "uncanonical",
@@ -367,7 +367,7 @@ class TestObservationBoundaryAuthorities:
         canonical 349 clave handed to the 347 pass must still be skipped rather
         than refused, so the boundary check must not collapse the two cases.
         """
-        observation = _obs(nif="A1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="10000")
+        observation = _obs(nif="A1", op_kind="entrega_intracomunitaria_bienes", base="10000")
 
         aggregation = aggregate_counterpart_347((observation,), period=_P_2025_ANNUAL)
         assert aggregation.total_counterparties == 0
@@ -380,7 +380,7 @@ class TestObservationBoundaryAuthorities:
         """
         observation = _obs(
             nif="A1",
-            op_kind=OperationKind347.DELIVERY.value,
+            op_kind="entregas_y_prestaciones",
             base="100",
             period="0A",
             accrued="2025-03-15",

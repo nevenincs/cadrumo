@@ -29,7 +29,6 @@ from ..foreign_assets import (
     _registry_observations_from_foreign_assets_aggregation,
     aggregate_foreign_assets_720,
     declarable_asset_classes_720,
-    declarable_class,
 )
 from ..source_mesh import CalculationSourceContext
 
@@ -269,17 +268,17 @@ class TestThreshold720:
     def test_declarable_strict_above_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),)
         result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
-        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is True
+        assert ForeignAssetClass.ACCOUNT in declarable_asset_classes_720(result)
 
     def test_not_declarable_at_exactly_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.00", asset_external_id="A1"),)
         result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
-        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
+        assert ForeignAssetClass.ACCOUNT not in declarable_asset_classes_720(result)
 
     def test_not_declarable_below_threshold(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="49999.99", asset_external_id="A1"),)
         result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
-        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
+        assert ForeignAssetClass.ACCOUNT not in declarable_asset_classes_720(result)
 
     def test_security_and_insurance_share_valores_obligation_block_threshold(self) -> None:
         observations = (
@@ -311,9 +310,9 @@ class TestThreshold720:
                 ForeignAssetClass.INSURANCE,
             },
         )
-        assert declarable_class(result, asset_class=ForeignAssetClass.SECURITY) is True
-        assert declarable_class(result, asset_class=ForeignAssetClass.INSURANCE) is True
-        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
+        assert ForeignAssetClass.SECURITY in declarable_asset_classes_720(result)
+        assert ForeignAssetClass.INSURANCE in declarable_asset_classes_720(result)
+        assert ForeignAssetClass.ACCOUNT not in declarable_asset_classes_720(result)
 
     def test_shared_obligation_block_threshold_stays_strict_at_exactly_50000(self) -> None:
         observations = (
@@ -334,8 +333,8 @@ class TestThreshold720:
         result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
 
         assert declarable_asset_classes_720(result) == frozenset()
-        assert declarable_class(result, asset_class=ForeignAssetClass.SECURITY) is False
-        assert declarable_class(result, asset_class=ForeignAssetClass.INSURANCE) is False
+        assert ForeignAssetClass.SECURITY not in declarable_asset_classes_720(result)
+        assert ForeignAssetClass.INSURANCE not in declarable_asset_classes_720(result)
 
 
 class TestForeignAssetSourceResolver:

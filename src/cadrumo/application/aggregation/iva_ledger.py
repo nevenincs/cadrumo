@@ -17,8 +17,8 @@ cuotas stay unapportioned.
 
 The repository-backed entry point requires the application-owned transaction
 catalogue capability for the active bucket. Pre-classified callers can use
-:class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidate_bindings`
-to run the same validation and registry binding path.
+:class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidates`
+to run the same validation path.
 
 See Also:
     :mod:`~domain.prorrata_register`
@@ -78,7 +78,6 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
-    unsupported_ledger_iva_observations,
 )
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
@@ -759,18 +758,6 @@ def validate_iva_ledger_observation(
     )
 
 
-def validate_iva_ledger_observations(
-    candidates: Iterable[IvaLedgerCandidate],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> tuple[IvaLedgerObservation, ...]:
-    """Validate every pre-classified IVA candidate in input order.
-
-    Returns a tuple of :class:`IvaLedgerObservation` instances.
-    """
-    return tuple(validate_iva_ledger_observation(candidate, operation=operation) for candidate in candidates)
-
-
 def aggregate_iva_ledger_candidates(
     candidates: Iterable[IvaLedgerCandidate],
     *,
@@ -820,73 +807,6 @@ def aggregate_iva_ledger_candidates(
     )
     _validate_rectifications_consumed_once(result.observations, operation=operation)
     return result
-
-
-def aggregate_iva_ledger_candidate_bindings(
-    revision: ModeloRevision,
-    candidates: Iterable[IvaLedgerCandidate],
-    *,
-    period: Period,
-    prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
-    ledger_profile_id: str,
-    investment_asset_register: BienesInversionIvaRegister,
-    investment_asset_profile_id: str,
-    operation: PinnedAuthorityOperation,
-) -> dict[BindingId, Decimal]:
-    """Validate pre-classified candidates and resolve registry bindings.
-
-    Args:
-        revision: The :class:`ModeloRevision` used to resolve binding values.
-        candidates: Pre-classified :class:`IvaLedgerCandidate` rows to project
-            into engine binding channels.
-        period: The aggregation :class:`Period` whose date range bounds the
-            candidate set.
-        prorrata_apportionment: Optional active general-prorrata percentage to
-            apply to deducible IVA cuota bindings after selector resolution.
-        ledger_profile_id: Secure profile that owns the candidate ledger facts.
-        investment_asset_register: Explicit typed Bienes register authority for
-            investment acquisition facts.
-        investment_asset_profile_id: Secure profile that owns that register.
-        operation: Caller-owned pinned authority operation for every governed
-            IVA validation and binding projection.
-    """
-    aggregation = aggregate_iva_ledger_candidates(
-        candidates,
-        period=period,
-        ledger_profile_id=ledger_profile_id,
-        investment_asset_register=investment_asset_register,
-        investment_asset_profile_id=investment_asset_profile_id,
-        operation=operation,
-    )
-    if aggregation.issues:
-        first = aggregation.issues[0]
-        raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.candidate_outside_period"),
-            context={
-                "ledger_id": first.transaction_id,
-                "reason": first.reason.value,
-                "detail": first.detail,
-            },
-        )
-    unsupported = unsupported_ledger_iva_observations(revision, aggregation.observations)
-    if unsupported:
-        first = unsupported[0]
-        raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.unsupported_iva_category"),
-            context={
-                "ledger_id": first.ledger_id,
-                "category": first.category.value,
-                "rate_kind": first.rate_kind.value,
-                "flow_direction": first.flow_direction.value,
-                "revision_id": revision.id,
-            },
-        )
-    return resolve_iva_ledger_binding_values(
-        revision,
-        aggregation.observations,
-        prorrata_apportionment=prorrata_apportionment,
-        operation=operation,
-    )
 
 
 def aggregate_iva_ledger_observations(
@@ -1941,7 +1861,6 @@ __all__ = [
     "IvaLedgerProrrataApportionment",
     "IvaLedgerSectorApportionment",
     "ProrrataLedgerReference",
-    "aggregate_iva_ledger_candidate_bindings",
     "aggregate_iva_ledger_candidates",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
@@ -1950,5 +1869,4 @@ __all__ = [
     "resolve_iva_ledger_binding_values",
     "validate_iva_ledger_counterparty_category",
     "validate_iva_ledger_observation",
-    "validate_iva_ledger_observations",
 ]
