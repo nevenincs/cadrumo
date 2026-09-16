@@ -38,6 +38,16 @@ from .base import (
 
 _LOG = logging.getLogger(__name__)
 
+#: Output tokens reserved for a reasoning model's thinking, ON TOP of the answer
+#: budget the request asked for. Ollama counts thinking against ``num_predict``,
+#: so a 1024-token answer budget handed to a model that reasons first can be
+#: spent before the answer starts -- measured on the shipped text model, whose
+#: reasoning alone ran past 1300 tokens on a one-page invoice and left an empty
+#: reply the parser refused. ``num_predict`` is a ceiling, not a target: a model
+#: that does not reason stops at its end-of-answer token and never uses the
+#: allowance, so it is applied without asking the runtime which models reason.
+_REASONING_ALLOWANCE_TOKENS = 4096
+
 
 class _PillowImageLike(Protocol):
     def save(self, fp: BytesIO, format: str | None = None) -> None: ...
@@ -197,9 +207,16 @@ class LocalAdapter(ProviderAdapter):
                     "model": request.model,
                     "messages": messages,
                     "stream": False,
+                    # Every caller of this adapter asks for a transcription or a
+                    # selection, never for a chain of reasoning, so thinking is
+                    # switched off. The runtime rejects only a request to ENABLE
+                    # thinking on a model without it, so the switch is safe to send
+                    # to every model; some reasoning models ignore it, which is why
+                    # the allowance below still applies.
+                    "think": False,
                     "options": {
                         "temperature": request.temperature,
-                        "num_predict": request.max_tokens,
+                        "num_predict": request.max_tokens + _REASONING_ALLOWANCE_TOKENS,
                         # A vision request packs the allow-list prompt plus the encoded
                         # invoice image past Ollama's 4096 default context; size the
                         # window from settings so the request is not truncated/rejected.

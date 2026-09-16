@@ -23,7 +23,7 @@ from ....core.config import load_settings
 from ....core.config_support import LLMProvider
 from ....core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ....core.logging import get_logger
-from ....core.redaction.rules import default_rules_for_class, redact_structured
+from ....core.redaction.rules import carries_redaction_placeholder, default_rules_for_class, redact_structured
 from ....core.time.clock import now
 from ....core.type_guards import is_object_dict
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -109,6 +109,11 @@ class LLMCache:
         text with ``cache_hit`` set. Successful decryption proves custody of
         the bucket key, never that the row holds what was requested.
 
+        An entry whose response carries a redaction placeholder is evicted and
+        reported as a miss: it predates the write-side refusal to store a
+        redacted response, and replaying it would substitute a hash for the
+        value the model returned.
+
         Returns:
             Cached :class:`~llm.LLMResponse` when
             present, otherwise ``None``.
@@ -120,7 +125,8 @@ class LLMCache:
         """
         key = self.build_key(request, provider, model)
         requested_object_key = self._object_key_for(key)
-        record = secure_object_repository_for_active_bucket().load(
+        repository = secure_object_repository_for_active_bucket()
+        record = repository.load(
             _CACHE_NAMESPACE,
             requested_object_key,
             expected_class=_CACHE_SENSITIVITY,
@@ -135,6 +141,19 @@ class LLMCache:
             msg = f"Failed to parse LLM cache entry for {provider.value}/{model}"
             raise LLMCacheError(msg) from exc
         self._assert_entry_bound_to_key(entry, requested_object_key)
+        if carries_redaction_placeholder(entry.response.model_dump(mode="json")):
+            # Written before :meth:`write` refused redacted responses. A replay
+            # would hand the caller a placeholder where the model printed a
+            # value -- an invoice read would ground ``sha256:...`` as a tax
+            # identifier and refuse it -- so the row is evicted and the caller
+            # asks the model again, exactly as on a miss.
+            repository.delete(_CACHE_NAMESPACE, requested_object_key)
+            _log.info(
+                "llm_cache evicted: provider=%s model=%s entry carried redacted content",
+                provider.value,
+                model,
+            )
+            return None
         _log.debug("llm_cache hit: provider=%s model=%s", provider.value, model)
         return entry.response.model_copy(
             update={

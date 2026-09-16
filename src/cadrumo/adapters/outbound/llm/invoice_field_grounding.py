@@ -42,10 +42,13 @@ from typing import cast
 
 from pydantic import BaseModel, Field
 
-from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ....application.ledger.evidence_errors import (
+    PurchaseInvoiceEvidenceReaderError,
+)
 from ....application.ledger.invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
+from ....core.decimal.printed_units import without_currency_unit
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.field_grounding import FieldGroundingOutcome
@@ -224,12 +227,15 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
         evidence assigning each identity to a party.
 
     Raises:
-        PurchaseInvoiceEvidenceInputError: When no JSON object is present, the
+        PurchaseInvoiceEvidenceReaderError: When no JSON object is present, the
             object is not a JSON object, or either half fails schema validation.
+            The reader answered unusably, which is the reader's fault and not
+            the operator's, so the refusal is retryable and says so.
     """
     payload = _extract_json_object(text)
     if payload is None:
-        raise PurchaseInvoiceEvidenceInputError(
+        raise PurchaseInvoiceEvidenceReaderError(
+            translated_message="errors.refused.refused_ledger_evidence_reader_unreadable_answer",
             precondition_verdict=llm_no_recovery_verdict(
                 LLMPreconditionCondition.EVIDENCE_RESPONSE_JSON_OBJECT,
                 facts={"evidence_response_json_object": False, "evidence_response_parseable": False},
@@ -239,8 +245,9 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
     try:
         raw = json.loads(payload)
     except ValueError as exc:
-        raise PurchaseInvoiceEvidenceInputError(
+        raise PurchaseInvoiceEvidenceReaderError(
             context={"evidence_response_error_type": type(exc).__name__},
+            translated_message="errors.refused.refused_ledger_evidence_reader_unreadable_answer",
             precondition_verdict=llm_no_recovery_verdict(
                 LLMPreconditionCondition.EVIDENCE_RESPONSE_JSON_OBJECT,
                 facts={
@@ -252,8 +259,9 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
             ),
         ) from exc
     if not isinstance(raw, dict):
-        raise PurchaseInvoiceEvidenceInputError(
+        raise PurchaseInvoiceEvidenceReaderError(
             context={"evidence_response_type": type(raw).__name__},
+            translated_message="errors.refused.refused_ledger_evidence_reader_unreadable_answer",
             precondition_verdict=llm_no_recovery_verdict(
                 LLMPreconditionCondition.EVIDENCE_RESPONSE_JSON_OBJECT,
                 facts={
@@ -293,8 +301,9 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
             role_evidence=ExtractedRoleEvidence.model_validate(role_evidence),
         )
     except ValueError as exc:
-        raise PurchaseInvoiceEvidenceInputError(
+        raise PurchaseInvoiceEvidenceReaderError(
             context={"evidence_response_validation_error_type": type(exc).__name__},
+            translated_message="errors.refused.refused_ledger_evidence_reader_unreadable_answer",
             precondition_verdict=llm_no_recovery_verdict(
                 LLMPreconditionCondition.EVIDENCE_RESPONSE_SCHEMA_VALID,
                 facts={
@@ -471,52 +480,6 @@ def _grounded_percentage(raw: str | None, currency_unit: str | None = None) -> D
     return _grounded_decimal(text)
 
 
-#: Currency SYMBOLS treated as unit markers on an amount. Stripping one says
-#: nothing about which currency it denotes -- the code is read from the separate
-#: ``currency`` field, whose own validator refuses to guess a code from a symbol.
-_CURRENCY_UNIT_SYMBOLS = ("€", "$", "£", "¥")
-
-
-def _without_currency_unit(text: str, currency_unit: str | None) -> str:
-    """Return *text* with at most ONE leading or trailing currency unit removed.
-
-    A document prints an amount beside its unit -- ``1.200,00 €``,
-    ``EUR 1200.00``, ``1200.00 EUR`` -- and a model copying what is printed
-    returns the unit with the digits, which the decimal authority then refuses.
-
-    Only a unit this function can NAME is removed: a symbol from the closed set
-    above, or the exact code THIS reply reported in its own ``currency`` field.
-    Corroboration is what keeps the rule closed -- the ISO-4217 authority
-    validates shape rather than membership, so accepting any three letters
-    would strip ``1200.00 IVA`` down to a figure the document never printed
-    beside that label. Any other trailing text is left in place so it still
-    fails the decimal authority, because "strip whatever is not a digit" turns
-    a misread into a filing figure, the exact laundering the grounded
-    discipline exists to prevent. At most one unit is removed, so
-    ``1200 EUR EUR`` still drops.
-
-    Args:
-        text: The amount as the model transcribed it.
-        currency_unit: The grounded ISO-4217 code from the same reply, or
-            ``None`` when the reply named no currency -- in which case only a
-            symbol is recognised.
-    """
-    stripped = text.strip()
-    for symbol in _CURRENCY_UNIT_SYMBOLS:
-        if stripped.endswith(symbol):
-            return stripped[: -len(symbol)].strip()
-        if stripped.startswith(symbol):
-            return stripped[len(symbol) :].strip()
-    if currency_unit is None:
-        return stripped
-    parts = stripped.split()
-    if len(parts) == 2:
-        for index, remainder in ((0, parts[1]), (1, parts[0])):
-            if parts[index].strip().upper() == currency_unit:
-                return remainder.strip()
-    return stripped
-
-
 def _grounded_money(raw: str | None, currency_unit: str | None = None) -> Decimal | None:
     """Return a transcribed amount as a Decimal, dropping one printed currency unit.
 
@@ -532,7 +495,10 @@ def _grounded_money(raw: str | None, currency_unit: str | None = None) -> Decima
     A currency token beside an amount is a UNIT MARKER, exactly as a percent
     sign is beside a rate (:func:`_grounded_percentage`), so removing it is
     unit normalisation and the number that remains is the one the document
-    printed -- copied, never computed. The anchor still holds the printed form
+    printed -- copied, never computed. The rule itself is
+    :func:`~core.decimal.printed_units.without_currency_unit`, shared with the
+    anchor check so the value half and the anchor half cannot disagree about
+    the same string. The anchor still holds the printed form
     verbatim for the closure check to point at, and an amount whose thousands
     separator is genuinely ambiguous is still dropped by
     :func:`_grounded_decimal` rather than read one way.
@@ -543,7 +509,7 @@ def _grounded_money(raw: str | None, currency_unit: str | None = None) -> Decima
     """
     if raw is None:
         return None
-    return _grounded_decimal(_without_currency_unit(raw, currency_unit))
+    return _grounded_decimal(without_currency_unit(raw, currency_unit))
 
 
 def _grounded_currency(raw: str | None) -> str | None:
