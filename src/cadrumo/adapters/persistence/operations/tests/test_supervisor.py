@@ -1596,7 +1596,12 @@ def test_heartbeat_owner_loss_cancels_executor_without_mutating_winner_bytes(tmp
             lease_before = lease_path.read_bytes()
             observed_at[0] = _NOW + timedelta(milliseconds=20)
 
-            with pytest.raises(ValueError, match="renewal was refused"):
+            # The lease port yields while it works, so a heartbeat may observe
+            # the replacement before the clock moves (retention refused) or
+            # after (renewal refused); both are the owner-loss refusal.
+            with pytest.raises(
+                ValueError, match=r"renewal was refused|no longer matches this supervisor's exact held lease"
+            ):
                 await start_task
 
             assert executor.cancelled
