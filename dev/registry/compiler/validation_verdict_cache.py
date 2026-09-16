@@ -10,7 +10,10 @@ unchanged modelo when only some modelos changed.
 Only the package-bundled registry tree is recorded, on the same premise as the
 compiled-tree cache: a mutable or synthetic tree is validated afresh in every
 process. A failed validation is never recorded, so a defect is re-detected
-until its inputs change. The store follows the development cache convention:
+until its inputs change. Processes that start together on the same inputs
+serialise their first validation through a per-key lock file, so one of them
+validates and the others take its verdict. The store follows the development
+cache convention:
 an explicit ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise
 ``~/.cadrumo`` holds it, outside the application's storage root.
 """
@@ -20,7 +23,9 @@ from __future__ import annotations
 import json
 import logging
 import os
-from collections.abc import Mapping
+import time
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -32,6 +37,9 @@ from cadrumo.core.type_guards import is_str_keyed_dict
 
 VERDICT_CACHE_DIR_ENV: Final = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 _SCHEMA: Final = "registry-validation-verdict/v1"
+#: A lock older than this belongs to a process that died mid-validation.
+_LOCK_STALE_SECONDS: Final = 900.0
+_LOCK_POLL_SECONDS: Final = 0.25
 _LOGGER = logging.getLogger(__name__)
 
 type FingerprintRows = tuple[tuple[str, int, int, str], ...]
@@ -160,6 +168,56 @@ def record_validated(key: str, *, subject: str) -> None:
         _LOGGER.warning("Could not record validation verdict at %s", path, exc_info=True)
 
 
+def _acquire_lock_file(path: Path) -> bool:
+    """Create ``path`` exclusively, waiting out a live holder; ``False`` when no lock is possible."""
+    while True:
+        try:
+            handle = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            try:
+                age = time.time() - path.stat().st_mtime
+            except FileNotFoundError:
+                continue
+            except OSError:
+                return False
+            if age > _LOCK_STALE_SECONDS:
+                _LOGGER.warning("Breaking stale validation lock at %s", path)
+                path.unlink(missing_ok=True)
+                continue
+            time.sleep(_LOCK_POLL_SECONDS)
+        except OSError:
+            return False
+        else:
+            try:
+                os.write(handle, str(os.getpid()).encode("ascii"))
+            finally:
+                os.close(handle)
+            return True
+
+
+@contextmanager
+def verdict_validation_lock(key: str) -> Iterator[None]:
+    """Hold the cross-process lock for the first validation under ``key``.
+
+    A caller checks :func:`is_validated` inside the lock, so a process that
+    waited behind the validating one sees its verdict instead of validating
+    again. An unusable cache directory degrades to no lock: the only cost is a
+    duplicate validation, never a skipped one.
+    """
+    path = verdict_cache_dir() / f"verdict_{key}.lock"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        acquired = False
+    else:
+        acquired = _acquire_lock_file(path)
+    try:
+        yield
+    finally:
+        if acquired:
+            path.unlink(missing_ok=True)
+
+
 __all__ = [
     "VERDICT_CACHE_DIR_ENV",
     "ValidationVerdictScope",
@@ -167,4 +225,5 @@ __all__ = [
     "record_validated",
     "validation_verdict_scope",
     "verdict_cache_dir",
+    "verdict_validation_lock",
 ]
