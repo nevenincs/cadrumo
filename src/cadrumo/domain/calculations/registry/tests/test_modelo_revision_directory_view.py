@@ -5,10 +5,12 @@ from __future__ import annotations
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.tax_domain import TaxDomain
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..authority_artifact import AuthorityComponentQuery, ModeloDirectoryComponentQuery, ModeloRevisionComponentQuery
 from ..errors import RegistryValidationError
 from ..queries import PinnedRegistryQueryService, ResolvedRegistryQueryContext
+from ..query_reports import ModeloListRow
 from ..revision_contracts import DeclaredPredecessor
 from ..schema import ModeloDefinition
 from ..temporal import ModeloDirectoryMetadata, ModeloRevisionDirectory
@@ -78,6 +80,57 @@ def test_a_directory_backed_listing_counts_and_filters_by_every_directory_revisi
     assert row.revision_count == 2
     assert tuple(year_row.code for year_row in year_rows) == (_MODELO,)
     assert predecessor_query not in reader.loads
+
+
+def test_a_listing_decodes_no_revision_payload() -> None:
+    service, reader = _pinned_service(_modelo())
+
+    service.list_modelos()
+    service.list_modelos(year=2024, domain=TaxDomain("iva"))
+
+    assert reader.loads
+    assert not [query for query in reader.loads if isinstance(query, ModeloRevisionComponentQuery)]
+
+
+def _rows_from_full_decode(
+    operation: PinnedAuthorityOperation,
+    *,
+    year: int | None = None,
+    domain: TaxDomain | None = None,
+) -> tuple[ModeloListRow, ...]:
+    views = [
+        (operation.modelo_directory(str(definition.id)), definition)
+        for definition in PinnedRegistryQueryService(operation).iter_modelo_definitions()
+    ]
+    rows = [
+        ModeloListRow(
+            code=str(definition.id),
+            title=definition.title,
+            cadence=definition.cadence,
+            tax_domain=definition.tax_domain,
+            revision_count=len(directory.revisions),
+        )
+        for directory, definition in views
+        if (year is None or any(metadata.period_selector.includes_year(year) for metadata in directory.revisions))
+        and (domain is None or definition.tax_domain == domain)
+    ]
+    return tuple(sorted(rows, key=lambda row: row.code))
+
+
+def test_the_published_listing_equals_the_listing_built_from_full_revision_views() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        service = PinnedRegistryQueryService(operation)
+        full = _rows_from_full_decode(operation)
+        listed = service.list_modelos().modelos
+        domain = TaxDomain("iva")
+        assert service.list_modelos(year=2024, domain=domain).modelos == _rows_from_full_decode(
+            operation, year=2024, domain=domain
+        )
+
+    assert len(full) > 1
+    assert any(row.revision_count > 1 for row in full)
+    assert listed == full
+    assert [row.model_dump() for row in listed] == [row.model_dump() for row in full]
 
 
 def test_a_directory_backed_support_matrix_reports_every_declared_revision() -> None:

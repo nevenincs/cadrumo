@@ -890,24 +890,27 @@ class PinnedRegistryQueryService:
         year: int | None = None,
         domain: TaxDomain | None = None,
     ) -> ModeloListReport:
-        """Return a metadata catalogue backed by point-loaded directory views.
+        """Return a metadata catalogue read from the modelo directories alone.
 
-        A view carries only its selected revision, so revision count and year
-        coverage come from the directory's complete revision metadata.
+        Every listed field is modelo-level metadata the directory carries, and
+        revision count and year coverage come from its complete revision
+        metadata, so no revision payload is decoded.
         """
         rows: list[ModeloListRow] = []
-        for directory, definition in self._latest_modelo_views():
+        for modelo_id in self._operation.modelo_ids():
+            directory = self._operation.modelo_directory(modelo_id)
+            modelo = directory.modelo
             selectors = (metadata.period_selector for metadata in directory.revisions)
             if year is not None and not _selectors_cover_year(selectors, year):
                 continue
-            if domain is not None and definition.tax_domain != domain:
+            if domain is not None and TaxDomain(modelo.tax_domain) != domain:
                 continue
             rows.append(
                 ModeloListRow(
-                    code=str(definition.id),
-                    title=definition.title,
-                    cadence=definition.cadence,
-                    tax_domain=definition.tax_domain,
+                    code=modelo.id,
+                    title=modelo.title,
+                    cadence=modelo.cadence,
+                    tax_domain=TaxDomain(modelo.tax_domain),
                     revision_count=len(directory.revisions),
                 ),
             )
