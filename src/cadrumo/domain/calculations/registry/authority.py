@@ -10,7 +10,7 @@ the paired pre-cutover JSON benchmark.
 from __future__ import annotations
 
 import hmac
-from collections.abc import Generator, Mapping
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
@@ -57,8 +57,7 @@ from .facts.resolution import (
 )
 from .facts.schema import GovernedFact
 from .governed_fact_scope import validating_governed_facts
-from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
-from .provenance import NormativeCorpusProvenance
+from .ids import LegalRefId, RevisionId
 from .schema import (
     ModeloDefinition,
     ModeloRevision,
@@ -70,7 +69,6 @@ from .schema_base import DateAxis
 from .schema_deadlines import DeadlineWindowDefinition
 from .schema_exports import ExportLayoutDefinition
 from .schema_references import LegalReference, SourceReference
-from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
 from .static_inspection import RegistryRevisionInspection
 from .temporal import ModeloRevisionDirectory, select_revision, select_revision_metadata
@@ -243,6 +241,20 @@ class ValidatedRegistryAuthority:
             raise RegistrySnapshotError(
                 f"modelo {normalized.value!r} is not present in the calculation registry"
             ) from exc
+
+    def project_filing_year(self, filing_year: int) -> int:
+        """Project an admitted filing year onto the authority's authored horizon."""
+        support = self.catalogues.supported_filing_years
+        if support is None:
+            raise RegistrySnapshotError("the calculation registry declares no supported filing years")
+        projected = support.projection_coordinate(filing_year)
+        if projected is None:
+            ceiling = support.hard_ceiling
+            span = f"{support.floor} and later" if ceiling is None else f"{support.floor}..{ceiling}"
+            raise RegistrySnapshotError(
+                f"filing year {filing_year} is outside the calculation registry's supported span {span}"
+            )
+        return projected
 
     def tax_domain(
         self,
