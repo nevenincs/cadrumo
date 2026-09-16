@@ -11,6 +11,7 @@ import json
 
 import pytest
 from click.testing import Result
+from pydantic import TypeAdapter
 
 from ...tests.cli_runner import invoke_cached_cli
 from .isolated_storage_fixture import CREDENTIAL_INPUT, profile_cli
@@ -19,20 +20,20 @@ from .isolated_storage_fixture import live_cli_profile as live_cli_profile
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("live_cli_profile")]
 
 _UNKNOWN = "Nobody"
+_ERROR_OBJECT: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 
 def _error(result: Result) -> dict[str, object]:
     assert result.exit_code == 2, result.output
-    error = json.loads(result.stderr)["error"]
-    assert isinstance(error, dict)
-    return error
+    return _ERROR_OBJECT.validate_python(json.loads(result.stderr)["error"])
 
 
 def _action_id(error: dict[str, object]) -> str | None:
-    action = error["action"]
-    assert isinstance(action, dict)
+    action = _ERROR_OBJECT.validate_python(error["action"])
     reference = action["action"]
-    return None if reference is None else str(reference["action_id"])
+    if reference is None:
+        return None
+    return str(_ERROR_OBJECT.validate_python(reference)["action_id"])
 
 
 def _unknown_profile_refusals() -> dict[str, Result]:

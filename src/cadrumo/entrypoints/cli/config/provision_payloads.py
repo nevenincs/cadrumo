@@ -143,7 +143,8 @@ class ProvisionRoleStatusPayload(OutputSchema):
     """One reader role's model and what the runtime reports about it.
 
     ``installed``, ``resident`` and ``load_admitted`` are null when they could
-    not be measured, which is distinct from false.
+    not be measured, which is distinct from false. ``fit_for_role`` is null for
+    a role without a fitness probe, or when the model was not ready to probe.
     """
 
     role: NonEmptyStr
@@ -152,6 +153,7 @@ class ProvisionRoleStatusPayload(OutputSchema):
     resident: bool | None = None
     load_admitted: bool | None = None
     contention_causes: list[ContentionCause] = []
+    fit_for_role: bool | None = None
     ready: bool
     failed_condition_id: str | None = None
 

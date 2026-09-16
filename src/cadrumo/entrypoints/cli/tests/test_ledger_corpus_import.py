@@ -4,6 +4,8 @@ import json
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....domain.transactions.models import TransactionCatalogue
 from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
 from ._ledger_corpus_support import _CORPUS, _FILES, _import_corpus, _invoke
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
@@ -44,3 +46,24 @@ def test_import_preserves_foreign_currencies() -> None:
     _import_corpus()
     currencies = {row.get("currency") for row in _list_rows()}
     assert {"EUR", "GBP", "USD"} <= currencies, currencies
+
+
+def test_each_imported_file_reads_the_ledger_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The catalogue a source is checked against is the one it is written into.
+
+    Import used to read the stored ledger twice per file -- once to diagnose the
+    source, once more to merge it -- decrypting and validating every row again.
+    """
+    _import_corpus()
+    loads: list[str] = []
+    load = TransactionCatalogueRepository.load
+
+    def counting(self: TransactionCatalogueRepository) -> TransactionCatalogue:
+        loads.append(self.bucket_id)
+        return load(self)
+
+    monkeypatch.setattr(TransactionCatalogueRepository, "load", counting)
+    result = _invoke(["app", "ledger", "import", "--file", str(_CORPUS / _FILES[0]), "--provider", "csv"])
+
+    assert result.exit_code == 0, result.output
+    assert len(loads) == 1

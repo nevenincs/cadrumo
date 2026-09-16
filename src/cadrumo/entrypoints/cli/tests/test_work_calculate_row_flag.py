@@ -353,6 +353,7 @@ class TestParseRowSpecM347:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.usefixtures("authority_operation")
 class TestValidateM347Threshold:
     def test_above_threshold_passes(self) -> None:
         """A contraparte row with total > €3,005.06 passes validation."""

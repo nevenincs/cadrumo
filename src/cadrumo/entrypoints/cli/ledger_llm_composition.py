@@ -20,7 +20,9 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.evidence_errors import (
+    PurchaseInvoiceEvidenceReaderError,
+)
 from ...application.ledger.evidence_input import (
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
@@ -36,8 +38,9 @@ from ...application.ledger.llm_classification_ports import (
     ResolvedEvidenceInput,
 )
 from ...application.ledger.preconditions import LedgerPreconditionCondition
-from ...application.provisioning import probe_ollama_vision
+from ...application.local_reader import probe_local_reader
 from ...core.config import Settings
+from ...core.model_catalogue import ModelRole
 from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import LLMClassifierError, TransactionValidationError
@@ -144,13 +147,15 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
             )
         raise refuse_reference_without_document_bytes(evidence_id)
 
-    def run_reader(run: Callable[[], object]) -> object:
+    def run_reader(role: ModelRole, run: Callable[[], object]) -> object:
         try:
             return run()
         except (httpx.HTTPError, LLMProviderError) as exc:
-            status = probe_ollama_vision(settings)
+            # The role being read, not a fixed one: a text read failing on a
+            # host that holds only the vision model is still the text reader missing.
+            status = probe_local_reader(role, settings)
             if status.precondition_verdict is not None:
-                raise PurchaseInvoiceEvidenceInputError(
+                raise PurchaseInvoiceEvidenceReaderError(
                     LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value,
                     translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
                     precondition_verdict=status.precondition_verdict,

@@ -116,7 +116,7 @@ def auth_providers(
     """List supported authentication providers from the backend catalogue."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import list_operator_auth_providers
-    from ..config_payloads import AuthProvidersResult
+    from ....application.auth.output import AuthProvidersResult
 
     report = list_operator_auth_providers()
     result = AuthProvidersResult(providers=list(report.providers))

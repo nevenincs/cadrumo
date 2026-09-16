@@ -10,6 +10,7 @@ from ...application.modelo.action_errors import (
     WorkUnitNotFoundError,
 )
 from ...application.modelo.profile_readiness_gate import (
+    ModeloWorkProfile,
     load_modelo_work_profile,
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
@@ -75,10 +76,19 @@ def _validate_filing_year(year: int) -> None:
         )
 
 
-def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> None:
+def _guard_modelo_applicability(
+    modelo: str,
+    *,
+    allow_not_applicable: bool,
+    profile: ModeloWorkProfile | None,
+) -> None:
     from .errors import CliRefusedBoundaryError
 
-    refusal = modelo_work_create_applicability_refusal(modelo, allow_not_applicable=allow_not_applicable)
+    refusal = modelo_work_create_applicability_refusal(
+        modelo,
+        allow_not_applicable=allow_not_applicable,
+        record=profile.record if profile is not None else None,
+    )
     if refusal is None:
         return
     raise CliRefusedBoundaryError(
@@ -130,6 +140,7 @@ def _emit_work_create_result(
     name_applied: str | None,
     allow_not_applicable: bool,
     authority_operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
     quiet: bool = False,
 ) -> None:
     status = "reused" if reused else "created"
@@ -151,6 +162,7 @@ def _emit_work_create_result(
     obligation_notices, obligation_lines = _modelo_100_obligation_advisory_output(
         unit,
         operation=authority_operation,
+        profile=profile,
     )
     if quiet:
         lines = list(obligation_lines)
@@ -177,6 +189,7 @@ def _modelo_100_obligation_advisory_output(
     unit: WorkUnit,
     *,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
 ) -> tuple[list[Notice], list[str]]:
     """Project M100 filing-obligation advisories onto notices and text lines.
 
@@ -185,21 +198,12 @@ def _modelo_100_obligation_advisory_output(
     guidance the text surface already showed; the text lines are
     rebuilt from the same advisory messages so the two cannot drift.
     """
-    if unit.modelo != Modelo("100"):
+    if unit.modelo != Modelo("100") or profile is None:
         return ([], [])
     from ...application.overview.status_report import build_filing_obligation_advisories
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.user_profile.projections import record_to_values
-    from ...core.bucket_pointer import resolve_active_bucket_id
 
-    bucket = resolve_active_bucket_id()
-    if bucket is None:
-        return ([], [])
-    record = ProfileRecordRepository.for_current_session(
-        bucket,
-        profile_decode_context=operation.profile_decode_context(),
-    ).load(bucket)
-    raw = record_to_values(record, schema=operation.profile_schema())
+    raw = record_to_values(profile.record, schema=operation.profile_schema())
     messages = [
         tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw, filing_year=unit.filing_year)
     ]
@@ -241,14 +245,14 @@ def work_create(
         operation=operation,
     )
     require_active_profile()
-    guard_active_profile_foral_ccaa()
-    _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
     resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
+    profile_decode_context = operation.profile_decode_context()
+    # One decrypted record serves every guard, gate and advisory this command runs.
+    profile = load_modelo_work_profile(bucket_id=resolved_bucket, profile_decode_context=profile_decode_context)
+    guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
+    _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable, profile=profile)
     resolved_actor = actor or resolve_default_actor()
     lifecycle_ports = work_lifecycle_ports_factory(ctx)(bucket_id=resolved_bucket)
-    profile_decode_context = operation.profile_decode_context()
-    # One decrypted record serves every readiness gate this command runs.
-    profile = load_modelo_work_profile(bucket_id=resolved_bucket, profile_decode_context=profile_decode_context)
     require_existing_profile_baseline_ready_for_modelo_work(
         bucket_id=resolved_bucket,
         modelo=modelo,
@@ -309,6 +313,7 @@ def work_create(
         name_applied=ensure_result.name_applied,
         allow_not_applicable=allow_not_applicable,
         authority_operation=operation,
+        profile=profile,
         quiet=quiet,
     )
 

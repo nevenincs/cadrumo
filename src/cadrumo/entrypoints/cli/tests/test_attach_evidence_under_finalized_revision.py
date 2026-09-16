@@ -286,7 +286,7 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(profile: TestRun
     # returns the discarded unit, stranding the target permanently. The advisory
     # must therefore never point at either. Asserted on the notice's structured
     # suggestion, not on localized prose.
-    from ..ledger_lifecycle_cli import _stale_finalized_revision_notices
+    from ....application.ledger.notices import stale_finalized_revision_notices
 
     blocker = LedgerRemovalBlocker(
         work_unit_id="ab" * 32,
@@ -305,7 +305,7 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(profile: TestRun
         stale_finalized_revisions=(blocker,),
     )
 
-    notices = _stale_finalized_revision_notices(result)
+    notices = stale_finalized_revision_notices(result)
     assert len(notices) == 1
     message = notices[0].message
     assert "work discard" not in message

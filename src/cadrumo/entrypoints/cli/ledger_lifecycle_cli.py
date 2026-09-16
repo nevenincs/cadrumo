@@ -27,6 +27,7 @@ from ...application.ledger.actions_split_merge import merge_transactions, split_
 from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.llm_classification_ports import LLMSplitApplyResult
 from ...application.ledger.models import SplitChildCommand
+from ...application.ledger.notices import stale_finalized_revision_notices
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings
 from ...core.external_constants import PDF_MIME_TYPE
@@ -51,7 +52,7 @@ from .state_projection_support import authority_operation
 if TYPE_CHECKING:
     from ...application.ledger.action_ports import LedgerActionPorts
     from ...application.ledger.llm_classification_ports import LLMSplitSuggestion
-    from ...application.ledger.models import ManualLedgerTransactionResult, SplitTransactionResult
+    from ...application.ledger.models import SplitTransactionResult
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
@@ -85,7 +86,7 @@ def ledger_detach(
         result.bucket_event_ids,
         command="ledger.detach",
         result_cls=LedgerDetachResult,
-        notices=_stale_finalized_revision_notices(result),
+        notices=stale_finalized_revision_notices(result),
     )
 
 
@@ -121,59 +122,8 @@ def ledger_attach(
         result.bucket_event_ids,
         command="ledger.attach",
         result_cls=LedgerAttachResult,
-        notices=_stale_finalized_revision_notices(result),
+        notices=stale_finalized_revision_notices(result),
     )
-
-
-def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> list[Notice]:
-    """Warn that each finalized revision citing this row will not pick the evidence up.
-
-    A revision bundles its ledger evidence when it is VERIFIED, and that bundle
-    is frozen. An attachment landing afterwards is stored on the ledger row but
-    never reaches the already-verified filing, so an export or filing gate
-    reading the bundle keeps refusing.
-
-    The advisory deliberately names NO recovery verb, because neither candidate
-    works and both were measured rather than assumed: ``work calculate``
-    re-derives the same content-addressed revision id (evidence is not part of
-    that hash) and returns the existing finalized revision untouched, and
-    ``work discard`` is worse than useless — it marks the work unit
-    ``descartado``, and the follow-up ``work create`` re-derives the SAME
-    work-unit id and hands the discarded unit back, permanently stranding that
-    (modelo, filing year, period) target for the profile. Suggesting either
-    would send the operator further from a working filing, so the guidance is
-    the ordering rule that does work: link invoices before calculating
-    (``aeat-architecture-boundaries``: name a real way forward, never a bare
-    refusal — and never a false one).
-    """
-    from ._modelo_rendering import advisory_notice
-
-    return [
-        advisory_notice(
-            "ledger.attach.finalized_revision_stale",
-            tr(
-                "cli.ledger.attach.finalized_revision_stale",
-                modelo=blocker.modelo,
-                filing_year=str(blocker.filing_year),
-                period=blocker.period,
-            ),
-            context={
-                "work_unit_id": blocker.work_unit_id,
-                "calculation_revision_id": blocker.calculation_revision_id,
-                "revision_state": blocker.revision_state,
-                "modelo": blocker.modelo,
-                "filing_year": str(blocker.filing_year),
-                "period": blocker.period,
-                "reason": "finalized_revision_predates_evidence",
-                # Neither candidate verb is safe here, so this advisory
-                # carries no action. Saying so explicitly keeps a
-                # deliberate absence distinguishable from an action
-                # nobody got round to attaching.
-                "actionability": "finalized_revision_has_no_safe_recovery_action",
-            },
-        )
-        for blocker in result.stale_finalized_revisions
-    ]
 
 
 def _sniff_document_mime_type(reference: str, data: bytes) -> str:

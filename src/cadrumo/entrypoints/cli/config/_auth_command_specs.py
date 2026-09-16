@@ -24,6 +24,8 @@ from ..command_spec import (
     MachineSecretVariantSpec,
     OptionSpec,
     ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
     ValueContract,
 )
 from ..command_spec import translation_key as _key
@@ -33,6 +35,11 @@ from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRI
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
 _PHONE_STATE = ValueContract(
     DeferredTarget("....application.auth.diagnostics", "AuthDiagnosticPhoneState", __package__)
+)
+_AUTH_PROVIDERS_SCHEMA = ResultSchemaSpec(
+    SchemaState.TARGET,
+    target=DeferredTarget("....application.auth.output", "AuthProvidersResult", __package__),
+    identity="config.auth.providers",
 )
 
 
@@ -98,7 +105,7 @@ def _leaf(
     help_key: str,
     module: str,
     handler: str,
-    schema: str,
+    schema: str | ResultSchemaSpec,
     policy: ExecutionPolicySpec,
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
     machine_secret: MachineSecretSpec | None = None,
@@ -114,7 +121,7 @@ def _leaf(
         parameters=(*parameters, _OUTPUT_LANGUAGE_OPTION),
         policy=policy,
         handler=_handler(module, handler),
-        result_schema=_schema(schema, key.replace("_", ".")),
+        result_schema=schema if isinstance(schema, ResultSchemaSpec) else _schema(schema, key.replace("_", ".")),
         machine_secret=machine_secret,
     )
 
@@ -134,7 +141,7 @@ AUTH_COMMAND_SPECS = (
         "cli.config.auth.providers_help",
         "_auth",
         "auth_providers",
-        "AuthProvidersResult",
+        _AUTH_PROVIDERS_SCHEMA,
         ENCRYPTED_READ,
     ),
     _leaf(

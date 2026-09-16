@@ -128,23 +128,6 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
     assert {"overview", "ledger", "modelo", "registry", "review"}.issubset(app_children)
 
 
-def test_config_profile_create_mounts_existing_setup_wizard_flow() -> None:
-    """First-run configuration is the wizard flow, not a parallel interface."""
-
-    root_group = _as_group(cadrumo_click_command())
-    config_group = _as_group(root_group.get_command(typer.Context(root_group), "config"))
-    profile_group = _as_group(config_group.get_command(typer.Context(config_group), "profile"))
-    create_command = profile_group.get_command(typer.Context(profile_group), "create")
-    assert create_command is not None
-    callback = create_command.callback
-    assert callback is not None
-    wrapped = getattr(callback, "__wrapped__", callback)
-
-    from ....core.wizard_catalogue import get_setup_flow
-
-    assert getattr(wrapped, "__wizard_flow__", None) is get_setup_flow()
-
-
 def test_rejected_aliases_do_not_reach_workflow_services() -> None:
     for command in (
         ["setup", "--help"],

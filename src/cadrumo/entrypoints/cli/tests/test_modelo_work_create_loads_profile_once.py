@@ -1,14 +1,14 @@
-"""``aeat app modelo work create`` authenticates the profile once for its readiness gates.
+"""``aeat app modelo work create`` decrypts the profile once for the whole command.
 
-The command runs the baseline gate and the full readiness gate itself, then the
-work-unit writer runs both again for the same unchanged record. Each gate used to
-decrypt the profile capsule on its own; the command now loads it once and hands
-it down. The count is taken on the real encrypted repository behind the real CLI.
+The command runs the foral and applicability guards, the baseline and full
+readiness gates, the work-unit writer (which replays both gates) and, for
+Modelo 100, the filing-obligation advisory. Each of those used to decrypt the
+profile capsule on its own; the command now loads it once and hands it down.
+The count is taken on the real encrypted repository behind the real CLI.
 """
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Iterator
 from pathlib import Path
 from uuid import UUID
@@ -17,7 +17,6 @@ import pytest
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....application.modelo import profile_readiness_gate
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ....domain.user_profile.values import (
@@ -68,14 +67,13 @@ def runtime_profile(tmp_path: Path, authority_operation: object) -> Iterator[Tes
 
 
 @pytest.fixture
-def gate_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Record every profile decrypt the readiness-gate module performs, still performing it."""
+def profile_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Record every profile decrypt in the process, still performing it."""
     loads: list[str] = []
     real_load = ProfileRecordRepository.load
 
     def counting_load(self: ProfileRecordRepository, profile_id: str | UUID) -> UserProfileRecord:
-        if sys._getframe(1).f_globals.get("__name__") == profile_readiness_gate.__name__:
-            loads.append(str(profile_id))
+        loads.append(str(profile_id))
         return real_load(self, profile_id)
 
     monkeypatch.setattr(ProfileRecordRepository, "load", counting_load)
@@ -83,7 +81,7 @@ def gate_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 
 @pytest.mark.usefixtures("runtime_profile")
-def test_work_create_authenticates_the_profile_once_for_all_its_gates(gate_loads: list[str]) -> None:
+def test_work_create_decrypts_the_profile_once(profile_loads: list[str]) -> None:
     create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
 
-    assert gate_loads == [_PROFILE_ID]
+    assert profile_loads == [_PROFILE_ID]

@@ -14,11 +14,11 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
 from ._ledger_corpus_support import (
     _REVISION_CASILLA,
-    _active_repo,
     _find,
     _import_bbva,
     _import_corpus,
     _invoke,
+    load_active_catalogue,
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
@@ -249,7 +249,7 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
     )
     assert res.exit_code == 0, res.output
 
-    catalogue = _active_repo().load()
+    catalogue = load_active_catalogue()
     # The edit changed the narrative -> a new content-addressed id; locate the
     # heir by its edit_lineage back-pointer.
     heirs = [t for t in catalogue.values() if t.edit_lineage and t.edit_lineage[-1].previous_transaction_id == old_id]
@@ -286,7 +286,7 @@ def test_reclassify_retains_classification_event_chain() -> None:
 
     # The current category reflects the latest decision; the chain proves the
     # earlier one was not silently dropped.
-    catalogue = _active_repo().load()
+    catalogue = load_active_catalogue()
     txn = catalogue.get(tx)
     assert txn is not None
     assert txn.category_id == "asesoria_fiscal"
@@ -420,7 +420,7 @@ def test_evidence_pull_refuses_when_document_bytes_are_unreachable() -> None:
     )
     assert res.exit_code != 0, res.output
 
-    catalogue = _active_repo().load()
+    catalogue = load_active_catalogue()
     txn = catalogue.get(tx)
     assert txn is not None
     assert not txn.attachment_ids, "a refused evidence pull must not bind any attachment to the row"
@@ -484,7 +484,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     )
     assert split.exit_code == 0, split.output
 
-    catalogue = _active_repo().load()
+    catalogue = load_active_catalogue()
     # Locate the two children by their split descriptions.
     children = [
         t for t in catalogue.values() if t.split_lineage is not None and "Material oficina (" in t.raw.description
@@ -512,7 +512,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     )
     assert cls_per.exit_code == 0, cls_per.output
 
-    after = {t.transaction_id: t for t in _active_repo().load().values()}
+    after = {t.transaction_id: t for t in load_active_catalogue().values()}
     assert after[biz_child.transaction_id].business_classification.value == "BUSINESS"
     assert after[per_child.transaction_id].business_classification.value == "PERSONAL"
     # The child amounts reconstruct the parent exactly (no value lost in the split).

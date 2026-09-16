@@ -305,8 +305,13 @@ def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRo
 
 
 def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
-    """Verify every resolved model and emit the envelope, exiting 2 unless all are ready."""
-    from ....application.provisioning_runtime import verify_model_ready
+    """Verify every resolved model and emit the envelope, exiting 2 unless all are ready.
+
+    Readiness includes each served role's fitness probe, so a model that loads
+    and answers but cannot produce the text reader's answer is refused here.
+    """
+    from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
+    from ....application.local_reader import verify_role_target
 
     items: list[ProvisionVerifyItemPayload] = []
     for target in _targets(role, model):
@@ -321,7 +326,7 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
                 )
             )
             continue
-        outcome = verify_model_ready(target.model)
+        outcome = verify_role_target(target, text_probe=probe_text_extraction_fitness)
         items.append(
             ProvisionVerifyItemPayload(
                 model=outcome.model,
@@ -342,9 +347,10 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
 
 def _emit_provision_status(ctx: typer.Context) -> None:
     """Measure the local reader and emit its status envelope. Reads only."""
+    from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
     from ....application.local_reader import read_local_reader_status
 
-    status = read_local_reader_status()
+    status = read_local_reader_status(text_probe=probe_text_extraction_fitness)
     host = status.host
     last = status.last_pull
     result = ProvisionStatusResult(
@@ -367,6 +373,7 @@ def _emit_provision_status(ctx: typer.Context) -> None:
                 resident=row.resident,
                 load_admitted=row.load_admitted,
                 contention_causes=list(row.contention_causes),
+                fit_for_role=row.fit_for_role,
                 ready=row.ready,
                 failed_condition_id=row.failed_condition_id,
             )

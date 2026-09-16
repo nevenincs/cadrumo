@@ -23,9 +23,9 @@ from pydantic import ValidationError
 from cadrumo.core.aggregation import RetencionClave
 
 from ....application.evidence.models import BundleVerificationState
+from ....application.evidence.payloads import EvidenceRecordRefPayload
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..modelo_aux_payloads import (
-    EvidenceRecordRefPayload,
     ModeloAuditViewResult,
     WithholdingClaveBreakdownPayload,
     WorkUnitHistoryEventPayload,

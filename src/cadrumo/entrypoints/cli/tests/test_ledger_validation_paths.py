@@ -20,10 +20,13 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ._ledger_validation_fixtures import _open_bucket_session, bucket
+from ....adapters.persistence.storage.tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
 from ._ledger_validation_support import (
+    _PROFILE_ID,
+    _PROFILE_LABEL,
     _add_eligible_mixed_expense,
     _assert_pipeline_managed_state_refusal,
+    _declare_general_regime_iva_profile,
     _flatten_box,
     _invoke,
     import_validation_transaction,
@@ -39,7 +42,23 @@ def _assert_negative_amount_refusal(result: Result) -> None:
     assert "--direction" in combined, combined
 
 
-__all__ = ["_open_bucket_session", "bucket"]
+#: The world every case here starts from, seeded once and copied per test.
+#:
+#: Publishing a capsule costs ~2.2s, and this file wanted the identical
+#: starting world 22 times: a registered general-regime filer with nothing in
+#: its ledger. Seeding once and handing each test a filesystem copy keeps the
+#: isolation exactly as it was -- every test still gets its own storage root,
+#: and the cases that import or add rows cannot reach each other.
+_seeded_bucket_origin, _open_bucket_session = seeded_isolated_backend_fixture(
+    seed=_declare_general_regime_iva_profile,
+    bucket_id=_PROFILE_ID,
+    display_name=_PROFILE_LABEL,
+    settings_overrides={"cadrumo_output_language": "en"},
+    name="_open_bucket_session",
+    origin_name="_seeded_bucket_origin",
+)
+
+__all__ = ["_open_bucket_session", "_seeded_bucket_origin"]
 
 # ---------------------------------------------------------------------------
 # contract.1  ledger add — business_pct set without MIXED classification

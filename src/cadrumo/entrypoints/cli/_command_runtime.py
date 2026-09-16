@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable, Mapping
+from contextlib import nullcontext
 from enum import Enum
 from functools import cache
 from types import GenericAlias
@@ -335,18 +336,25 @@ def _invoke_bound_behavior(
             # the fully parsed child authority.
             return None
     if context_parameter is not None and _requires_leaf_preflight(spec):
+        from ...application.user_profile.profile_summary import summary_inventory_snapshot
         from ._profile_authentication_gate import preflight_parsed_leaf
         from .config.secure_input import clear_staged_machine_secret_payloads
 
         context = _invocation_context(bound, context_parameter)
+        # A leaf that writes nothing sees one profile listing for its whole run;
+        # any leaf that may write profile state keeps observing live.
+        listing_scope = (
+            summary_inventory_snapshot() if spec.policy.side_effects == frozenset({"none"}) else nullcontext()
+        )
         try:
-            preflight_parsed_leaf(
-                cast(typer.Context, context),
-                graph=graph,
-                spec=spec,
-                arguments=bound.arguments,
-            )
-            return _invoke_deferred_target(target_ref, bound.arguments)
+            with listing_scope:
+                preflight_parsed_leaf(
+                    cast(typer.Context, context),
+                    graph=graph,
+                    spec=spec,
+                    arguments=bound.arguments,
+                )
+                return _invoke_deferred_target(target_ref, bound.arguments)
         finally:
             clear_staged_machine_secret_payloads()
     return _invoke_deferred_target(target_ref, bound.arguments)
