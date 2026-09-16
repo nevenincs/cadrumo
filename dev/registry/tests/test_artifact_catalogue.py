@@ -16,7 +16,10 @@ from pathlib import Path, PurePosixPath
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.artifact_catalogue import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from dev.corpus.artifact_catalogue import (
     ArtifactDiagnosticKind,
     ArtifactDisposition,
     ArtifactIdentity,
@@ -26,9 +29,6 @@ from cadrumo.domain.calculations.registry.artifact_catalogue import (
     SemanticAnnotation,
     compile_artifact_catalogue,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 
 from ..compiler.loader import load_registry_tree
 from ..compiler.validator import RegistryValidator

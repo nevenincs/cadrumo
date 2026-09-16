@@ -21,10 +21,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.artifact_catalogue import ArtifactRole, registry_source_identity
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from dev.corpus.artifact_catalogue import ArtifactRole, registry_source_identity
 
 from ..compiler.corpus_catalogue import (
     compile_record_design_manifest_catalogue,
