@@ -60,16 +60,26 @@ async def _run_module_async(*, timeout: float, root: Path) -> tuple[int | None, 
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
     )
+    stream = process.stdout
+    if stream is None:
+        raise RuntimeError("the TUI module process has no output pipe")
+    received = bytearray()
+
+    async def drain() -> None:
+        # Read into a buffer this frame owns. Cancelling ``communicate()`` on
+        # the timeout discards whatever it had already read, which made a
+        # session that DID take the terminal look as if it had printed nothing.
+        while chunk := await stream.read(4096):
+            received.extend(chunk)
+
     try:
-        output, _ = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        await asyncio.wait_for(drain(), timeout=timeout)
     except TimeoutError:
         process.kill()
-        output, _ = await process.communicate()
-        return None, output
-    returncode = process.returncode
-    if returncode is None:
-        raise RuntimeError("the TUI module did not finish after communicate()")
-    return returncode, output
+        await process.wait()
+        return None, bytes(received)
+    returncode = await process.wait()
+    return returncode, bytes(received)
 
 
 def _run_module(*, timeout: float, root: Path) -> tuple[int | None, bytes]:

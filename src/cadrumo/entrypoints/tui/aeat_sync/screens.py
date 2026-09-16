@@ -473,8 +473,12 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             self._selected_row_key = str(event.row_key.value)
 
     def action_back(self) -> None:
-        """Dismiss only this child; the installed root owns the return journey."""
-        self.dismiss(None)
+        """Return a zone to the AEAT Sync overview; leave the workspace only from the overview."""
+        # An overview that cannot open would bounce Back straight back here.
+        if self.zone is AeatSyncWorkspaceZone.OVERVIEW or not self.controller.can_open(AeatSyncWorkspaceZone.OVERVIEW):
+            self.dismiss(None)
+            return
+        self.post_message(AeatSyncRouteRequested(self.controller.target(AeatSyncWorkspaceZone.OVERVIEW)))
 
     def on_aeat_sync_route_requested(self, event: AeatSyncRouteRequested) -> None:
         """Resolve the requested zone here and hand the finished body to the host."""
