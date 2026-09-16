@@ -13,8 +13,8 @@ That sentence is the whole reason this typed axis exists. The distinction it dra
 between subsidies and other income — it is *inside* subsidies: a subvención corriente
 counts and a subvención de capital does not. No amount, category, counterparty or date
 on a ledger row can tell those two apart, so the concept has to be declared, and
-nothing else in the taxonomy carries it. :class:`OperationKind347` has a ``SUBSIDY``
-member, but that is a Modelo 347 clave describing an operation with a counterparty,
+nothing else in the taxonomy carries it. The Modelo 347 operation catalogue has a
+``subvenciones_y_ayudas`` kind, but that is a Modelo 347 clave describing an operation with a counterparty,
 not a statement about whether a receipt belongs in a base.
 
 Absence means ordinary income, deliberately. The overwhelming majority of receipts are

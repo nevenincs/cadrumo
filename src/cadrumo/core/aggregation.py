@@ -2,9 +2,8 @@
 
 This module owns closed value sets and tiny pydantic carriers only; it does not
 aggregate ledger rows, calculate casilla values, or perform source resolution.
-The registry schema imports :class:`BindingAggregation`,
-:class:`RelationAggregation`, and :class:`BindingSourceKind` to validate TOML
-authoring input. Application resolvers and adapters import the same
+The registry schema imports :class:`BindingAggregation` and
+:class:`BindingSourceKind` to validate TOML authoring input. Application resolvers and adapters import the same
 :class:`BindingSourceKind` members so source tokens do not drift through bare
 strings.
 
@@ -117,43 +116,6 @@ class RelationAggregationOp(StrEnum):
 
     COPY = "copy"
     SUM = "sum"
-
-
-class RelationAggregation(BaseModel):
-    """Typed aggregation rule carried by a registry cross-filing fold.
-
-    Placed in :mod:`core` (cross-layer home) because the domain registry
-    schema declares the field and the application/adapter layers read it. The
-    closed :class:`RelationAggregationOp` set is the only key real relation
-    aggregation mappings carry in the registry authoring tree (every relation
-    declares ``aggregation = {op = "copy" | "sum"}`` or none). The model is strict
-    and frozen, matching the registry schema's
-    :data:`~core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
-    stray extra key is rejected at registry-build validation rather than silently
-    re-parsed at resolve time. This is the relation sibling of
-    :class:`BindingAggregation`; the two op axes are deliberately separate.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    op: RelationAggregationOp
-
-    @field_validator("op", mode="before")
-    @classmethod
-    def _coerce_op(cls, value: object) -> object:
-        """Hydrate the registry TOML's raw ``op`` string into its enum member.
-
-        The authoring tree declares ``aggregation.op`` as a plain string
-        (``"copy"``, ``"sum"``). Under the strict model config a ``StrEnum`` field
-        requires the actual member, not its value, so the raw string from
-        ``model_validate`` would be rejected. Coercing the known closed-set string
-        to its :class:`RelationAggregationOp` member at the boundary keeps the TOML
-        plain while preserving strict rejection of an unknown op
-        (``RelationAggregationOp(value)`` raises on an invalid value).
-        """
-        if isinstance(value, str) and not isinstance(value, RelationAggregationOp):
-            return RelationAggregationOp(value)
-        return value
 
 
 class AggregationCaptureKind(StrEnum):
@@ -845,34 +807,6 @@ class RetencionClave(str):
     def name(self) -> str:
         """Return the canonical token for diagnostics."""
         return str(self)
-
-
-class OperationKind347(StrEnum):
-    """Modelo 347 operation kinds (clave de operación).
-
-    Source: AEAT Modelo 347 instrucciones. Declared in :mod:`core` as a
-    closed value set per the architecture contract.
-    """
-
-    DELIVERY = "entregas_y_prestaciones"  # clave A
-    ACQUISITION = "adquisiciones_y_recepciones"  # clave B
-    INSURANCE = "operaciones_seguros"  # clave C
-    RENTAL = "arrendamientos_locales"  # clave D
-    SUBSIDY = "subvenciones_y_ayudas"  # clave E
-
-
-class OperationKind349(StrEnum):
-    """Modelo 349 intracomunitarias operation kinds.
-
-    Source: AEAT Modelo 349 instrucciones. The clave maps from the underlying
-    directionality (entrega/adquisición) and operation type (bienes/servicios).
-    """
-
-    INTRA_DELIVERY = "entrega_intracomunitaria_bienes"  # clave E
-    INTRA_ACQUISITION = "adquisicion_intracomunitaria_bienes"  # clave A
-    INTRA_SERVICE_OUT = "prestacion_servicios_intracom"  # clave S
-    INTRA_SERVICE_IN = "adquisicion_servicios_intracom"  # clave I
-    TRIANGULAR = "triangular"  # clave T
 
 
 class IntracomOperationType(StrEnum):

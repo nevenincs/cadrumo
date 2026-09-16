@@ -390,26 +390,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.wizard_catalogue.WizardCatalogueNotRegisteredError",
-        ErrorCode(
-            code="INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_wizard_catalogue_not_registered",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.wizard_catalogue.WizardCatalogueAlreadyRegisteredError",
-        ErrorCode(
-            code="INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_wizard_catalogue_already_registered",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.errors.hierarchy.NoActiveProfileError",
         ErrorCode(
             code="REFUSED_NO_ACTIVE_PROFILE",

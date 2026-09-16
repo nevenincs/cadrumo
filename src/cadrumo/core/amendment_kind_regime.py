@@ -137,21 +137,6 @@ def resolve_amendment_kind_regime(
     )
 
 
-def permitted_amendment_kind_values(
-    modelo: str,
-    period: Period,
-    *,
-    policy: AmendmentRegimePolicy,
-) -> frozenset[str]:
-    """Return the closed set of legally-permitted amendment-kind string values.
-
-    Thin convenience wrapper over :func:`resolve_amendment_kind_regime` for
-    callers that only need the permitted set (e.g. rendering an accepted-value
-    list in a refusal message).
-    """
-    return resolve_amendment_kind_regime(modelo, period, policy=policy).permitted_kinds
-
-
 def classify_amendment_liability_direction(
     *,
     baseline_result: SupportsAllComparisons,
@@ -185,6 +170,5 @@ __all__ = [
     "AmendmentLiabilityDirection",
     "AmendmentRegimePolicy",
     "classify_amendment_liability_direction",
-    "permitted_amendment_kind_values",
     "resolve_amendment_kind_regime",
 ]

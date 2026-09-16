@@ -558,16 +558,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.persistence.storage.master_key.errors.MasterKeyReentrantError",
-        ErrorCode(
-            code="INTERNAL_MASTER_KEY_REENTRANT",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_master_key_reentrant",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.persistence.storage.custody.errors.WipeTypeError",
         ErrorCode(
             code="INTERNAL_WIPE_TYPE",

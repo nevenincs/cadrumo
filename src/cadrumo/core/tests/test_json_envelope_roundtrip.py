@@ -18,8 +18,6 @@ from __future__ import annotations
 
 import io
 import json
-from decimal import Decimal
-from pathlib import Path
 from types import MappingProxyType
 
 import pytest
@@ -38,7 +36,6 @@ from ..json_contract import (
     ResolvedNoticeAction,
     ResolvedPreconditionAction,
     SchemaEnvelope,
-    emit_json_document,
     emit_json_success,
 )
 from ..operator_action_enums import (
@@ -145,7 +142,7 @@ def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
     """The bytes emit_json_success writes to stdout re-parse into a SchemaEnvelope.
 
     Captures the emitted text into an :class:`io.StringIO` stream so
-    the test exercises the real :func:`emit_json_document` write path
+    the test exercises the real JSON document write path
     without touching stdout. The captured JSON must:
 
     * decode as a valid JSON document
@@ -186,26 +183,6 @@ def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
     assert roundtripped.result == result
     assert roundtripped.result.operand_refs == _RENDIMIENTO_NETO_OPERANDS
     assert roundtripped.result.operand_casilla_refs == _RENDIMIENTO_NETO_OPERANDS
-
-
-def test_json_document_uses_the_canonical_scalar_normalizer() -> None:
-    """Envelope-independent JSON output preserves CLI scalar wire contracts."""
-    buffer = io.StringIO()
-
-    emit_json_document(
-        {
-            "destination": Path("C:/evidence/result.json"),
-            "amount": Decimal("1E+3"),
-            "as_of": "2026-08-01",
-        },
-        stream=buffer,
-    )
-
-    assert json.loads(buffer.getvalue()) == {
-        "amount": "1000",
-        "as_of": "2026-08-01",
-        "destination": "C:/evidence/result.json",
-    }
 
 
 def test_emit_json_success_redacts_sensitive_values_without_breaking_envelope_shape() -> None:

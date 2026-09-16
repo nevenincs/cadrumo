@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import ctypes
 import os
+from functools import cache
 from pathlib import Path
+from typing import NamedTuple
 
 
 class _FileBasicInfo(ctypes.Structure):
@@ -17,14 +19,23 @@ class _FileBasicInfo(ctypes.Structure):
     )
 
 
-def file_change_time_ns(path: Path, status: os.stat_result) -> int:
-    """Read metadata change time; Windows stat ctime is creation time.
+class _Kernel32Calls(NamedTuple):
+    """The three kernel32 entry points this query binds."""
 
-    Windows FILE_BASIC_INFO exposes ChangeTime independently of the writable
-    LastWriteTime. Share deletion so this query does not prevent publication.
+    create: ctypes._NamedFuncPointer
+    query: ctypes._NamedFuncPointer
+    close: ctypes._NamedFuncPointer
+
+
+@cache
+def _kernel32_calls() -> _Kernel32Calls:
+    """Bind the kernel32 entry points once per process.
+
+    Loading the library and assigning ``argtypes`` costs more than the file
+    query itself, and the authority reader verifies database identity on every
+    component load -- thousands of times in one command. The bindings are
+    process-wide immutable state, so binding them per call bought nothing.
     """
-    if os.name != "nt":
-        return status.st_ctime_ns
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
     create = kernel.CreateFileW
     create.argtypes = (
@@ -43,6 +54,18 @@ def file_change_time_ns(path: Path, status: os.stat_result) -> int:
     close = kernel.CloseHandle
     close.argtypes = (ctypes.c_void_p,)
     close.restype = ctypes.c_int
+    return _Kernel32Calls(create=create, query=query, close=close)
+
+
+def file_change_time_ns(path: Path, status: os.stat_result) -> int:
+    """Read metadata change time; Windows stat ctime is creation time.
+
+    Windows FILE_BASIC_INFO exposes ChangeTime independently of the writable
+    LastWriteTime. Share deletion so this query does not prevent publication.
+    """
+    if os.name != "nt":
+        return status.st_ctime_ns
+    create, query, close = _kernel32_calls()
     handle = create(str(path), 0x80, 0x7, None, 3, 0, None)
     if handle == ctypes.c_void_p(-1).value:
         raise ctypes.WinError(ctypes.get_last_error())

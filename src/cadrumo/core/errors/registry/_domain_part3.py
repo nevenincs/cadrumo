@@ -48,16 +48,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.manuals.errors.ManualValidationError",
-        ErrorCode(
-            code="ERROR_MANUALS_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_manuals_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.bienes_inversion.register.BienInversionRecordError",
         ErrorCode(
             code="ERROR_PROFILE_BIENES_INVERSION_RECORD",

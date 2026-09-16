@@ -174,3 +174,55 @@ def test_settings_for_active_profile_bucket_rejects_blank_bucket_id(tmp_path: Pa
 
     with pytest.raises(CoreValidationError, match="bucket_id must not be blank"):
         settings_for_active_profile_bucket("   ", source)
+
+
+def test_one_settings_instance_reuses_its_classification(tmp_path: Path) -> None:
+    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="bucket-a")
+
+    assert classify_storage_route(settings) is classify_storage_route(settings)
+
+
+def test_a_pointer_change_between_two_classifications_yields_the_new_route(tmp_path: Path) -> None:
+    write_pointer(
+        tmp_path, BucketPointer(selection="selected", bucket_id="bucket-a", transition_revision=1, schema_version=2)
+    )
+    before = classify_storage_route(Settings(cadrumo_local_storage_root=tmp_path))
+    write_pointer(
+        tmp_path, BucketPointer(selection="selected", bucket_id="bucket-b", transition_revision=2, schema_version=2)
+    )
+    after = classify_storage_route(Settings(cadrumo_local_storage_root=tmp_path))
+
+    assert (before.bucket_id, after.bucket_id) == ("bucket-a", "bucket-b")
+
+
+def test_a_changed_route_field_on_the_same_instance_is_classified_afresh(tmp_path: Path) -> None:
+    settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="bucket-a")
+    first = classify_storage_route(settings)
+    moved = tmp_path / "buckets" / "bucket-b" / "db" / "cadrumo.db"
+    object.__setattr__(settings, "cadrumo_database_url", f"sqlite:///{moved.as_posix()}")
+
+    second = classify_storage_route(settings)
+
+    assert (first.bucket_id, second.bucket_id) == ("bucket-a", "bucket-b")
+
+
+def test_a_relative_root_is_classified_against_the_current_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database = tmp_path / "first" / "state" / "buckets" / "bucket-a" / "db" / "cadrumo.db"
+    settings = Settings.model_construct(
+        cadrumo_local_storage_root=Path("state"),
+        cadrumo_database_url=f"sqlite:///{database.as_posix()}",
+    )
+    # A derived route, not an operator-supplied URL.
+    object.__setattr__(settings, "__pydantic_fields_set__", {"cadrumo_local_storage_root"})
+    (tmp_path / "first").mkdir()
+    (tmp_path / "second").mkdir()
+
+    monkeypatch.chdir(tmp_path / "first")
+    inside = classify_storage_route(settings)
+    monkeypatch.chdir(tmp_path / "second")
+    outside = classify_storage_route(settings)
+
+    assert (inside.kind, inside.bucket_id) == (StorageRouteKind.ACTIVE_BUCKET_DATABASE, "bucket-a")
+    assert outside.kind is StorageRouteKind.EXPLICIT_DATABASE_URL

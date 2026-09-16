@@ -43,6 +43,13 @@ class FieldOrigin(StrEnum):
     TEXT_LAYER = "text_layer"
     """Recovered by grounded heuristics over an extracted PDF text layer."""
 
+    TEXT_RULES = "text_rules"
+    """Read by fixed label rules over a text-layer transcription. No model.
+
+    Distinct from :attr:`TEXT_LAYER`, which the semantic text reader also
+    stamps: a rule reading is reproducible from the transcription alone, so a
+    reviewer auditing it needs the rule set rather than a model revision.
+    """
     VISION = "vision"
     """Read by a local vision model from a rasterised page. Probabilistic."""
 
