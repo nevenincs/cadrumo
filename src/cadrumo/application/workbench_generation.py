@@ -445,7 +445,11 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             observed_at=observed_at,
             result_casilla_reader=self.result_casilla_reader,
         )
-        taxpayer = projection_for_taxpayer(record, tax_id_default="00000000T")
+        taxpayer = projection_for_taxpayer(
+            record,
+            tax_id_default="00000000T",
+            schema=self.operation.profile_schema(),
+        )
         raw_values = record_to_path_values(record)
         evidence, declarations_calendar, agenda = _build_workbench_calendar_inputs(
             taxpayer=taxpayer,
