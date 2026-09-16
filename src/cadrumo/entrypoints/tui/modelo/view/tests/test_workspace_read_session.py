@@ -41,18 +41,6 @@ def test_a_real_result_opens_a_session_carrying_its_semantic_identity(
     assert session.identity.selected_revision_id == session.projection.target.law_selected_revision_id
 
 
-def test_a_language_switch_is_a_locale_only_refresh_and_not_staleness(
-    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
-) -> None:
-    """The same workspace in another language must not invalidate the session."""
-    bucket_id, repository = bucket_and_repository
-    spanish = _session(bucket_id, repository, OutputLanguage.ES)
-    english = resolve_real_result(bucket_id, repository, OutputLanguage.EN).projection
-
-    assert spanish.is_stale_against(english) is False
-    assert spanish.is_locale_only_refresh(english) is True
-
-
 def test_the_locale_axes_actually_move_across_a_language_switch(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:

@@ -106,14 +106,6 @@ class PinnedStatusBar(Vertical):
         yield LoadingIndicator(classes="status-spinner")
         yield Static("", markup=False, classes="status-message")
 
-    def set_summary(self, summary: str) -> None:
-        """Render a replacement summary without changing the status message."""
-        self._summary = self._require_text(summary, field="summary")
-        summary_line = self.query_one(".status-summary", Static)
-        summary_line.update(self._summary)
-        summary_line.set_class(not self._summary, "empty")
-        self._sync_visibility()
-
     def clear_message(self) -> None:
         """Render an idle empty message and collapse an empty channel."""
         self._set_message("idle", "")
