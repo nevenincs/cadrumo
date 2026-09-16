@@ -178,7 +178,9 @@ def test_create_never_asks_a_machine_caller_about_recovery(tmp_path: Path) -> No
     with isolated_profile_storage_root(tmp_path=tmp_path):
         created = _create_profile()
         document = json.loads(created.stdout)
-        assert [notice["code"] for notice in document["notices"]] == ["PROFILE_RECOVERY_NOT_ENROLLED"]
+        codes = [notice["code"] for notice in document["notices"]]
+        assert "PROFILE_RECOVERY_NOT_ENROLLED" in codes
+        assert "PROFILE_RECOVERY_ENABLED" not in codes
         assert tr("cli.config.profile.create_recovery_skipped") in [n["message"] for n in document["notices"]]
         assert tr("cli.config.profile.create_recovery_offer_prompt") not in created.stdout + created.stderr
         assert _status()["enrolled"] is False

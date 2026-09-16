@@ -57,8 +57,12 @@ def test_scripted_create_registers_a_real_profile(tmp_path: Path) -> None:
         document = json.loads(created.stdout)
         assert document["result"]["profile_name"] == "Scripted Operator"
         assert document["result"]["status"] == "created"
-        # A machine caller is never asked about recovery; the envelope says so.
-        assert [notice["code"] for notice in document["notices"]] == ["PROFILE_RECOVERY_NOT_ENROLLED"]
+        # A machine caller is never asked about recovery, and is told the next
+        # process must authenticate: creation mints no acceleration receipt.
+        assert [notice["code"] for notice in document["notices"]] == [
+            "PROFILE_RECOVERY_NOT_ENROLLED",
+            "PROFILE_LOGIN_REQUIRED",
+        ]
 
         listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
 

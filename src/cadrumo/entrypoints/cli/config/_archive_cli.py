@@ -86,8 +86,9 @@ def _refuse_archive_target_without_the_sealed_suffix(target: Path) -> None:
 
 def archive_export(
     ctx: typer.Context,
-    output: Path,
+    *,
     name: str | None = None,
+    output: Path,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Write a profile's capsule to a sealed archive, defaulting to the active one."""
