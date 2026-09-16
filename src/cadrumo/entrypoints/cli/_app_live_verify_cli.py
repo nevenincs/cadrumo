@@ -9,7 +9,8 @@ submits, registers, or mutates AEAT state.
 
 from __future__ import annotations
 
-from typing import TypedDict
+from collections.abc import Callable, Mapping, Sequence
+from typing import TYPE_CHECKING, Protocol, TypedDict
 
 import typer
 
@@ -22,6 +23,9 @@ from ...core.identity.tax_id import tax_id_identity_token
 from ...core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from ...core.time.clock import now
 from .common import active_bucket_id_or_refuse, emit_envelope
+
+if TYPE_CHECKING:
+    from ...core.config import Settings
 
 
 class _VerifyRow(TypedDict):
@@ -161,6 +165,51 @@ def verify_latest(
     emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
 
 
+class _LiveNifObservation(Protocol):
+    @property
+    def nif(self) -> str: ...
+
+    @property
+    def verdict(self) -> IdentityCheckVerdictValue: ...
+
+    @property
+    def raw_evidence_locator(self) -> str | None: ...
+
+
+def _record_live_verification(
+    nif: str,
+    expected: str | None,
+    *,
+    surface: VerifySurface,
+    observe: Callable[[Settings, Mapping[str, object]], Sequence[_LiveNifObservation]],
+) -> tuple[str, VerifyObservation]:
+    """Run one live-read NIF check and persist its first observation in the active bucket."""
+    from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
+    from ...application.live.verify import VerifyService
+    from ...core.access_gate.gate import AeatAccessGate
+    from ...core.config import load_settings
+
+    settings = load_settings()
+    AeatAccessGate(settings).require_live_read()
+    expected_verdict = _expected(expected)
+    observations = observe(settings, {tax_id_identity_token(nif): (expected_verdict or "unknown")})
+    if not observations:
+        raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
+    observation = observations[0]
+    bucket_id = active_bucket_id_or_refuse()
+    persistence = VerifyObservationRepository(bucket_id=bucket_id, settings=settings)
+    record = VerifyService(persistence=persistence).record(
+        bucket_id=bucket_id,
+        surface=surface,
+        nif=observation.nif,
+        verdict=observation.verdict,
+        checked_at=now(),
+        expected=expected_verdict,
+        raw_evidence_locator=observation.raw_evidence_locator,
+    )
+    return bucket_id, record
+
+
 def verify_nif_iva(
     ctx: typer.Context,
     nif: str,
@@ -173,31 +222,15 @@ def verify_nif_iva(
     :class:`VerifyNifIvaResult`.
     """
     from ...adapters.outbound.aeat.sede.nif_iva_check import NifIvaCheckSedeDriver
-    from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
-    from ...application.live.verify import VerifyService
-    from ...core.access_gate.gate import AeatAccessGate
-    from ...core.config import load_settings
     from ._app_live_verify_payloads import VerifyNifIvaResult
 
-    settings = load_settings()
-    AeatAccessGate(settings).require_live_read()
-    nif_key = tax_id_identity_token(nif)
-    expected_verdict = _expected(expected)
-    driver = NifIvaCheckSedeDriver(settings=settings)
-    result = driver.collect(b"", expected={nif_key: (expected_verdict or "unknown")})
-    if not result.observations:
-        raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
-    observation = result.observations[0]
-    bucket_id = active_bucket_id_or_refuse()
-    persistence = VerifyObservationRepository(bucket_id=bucket_id, settings=settings)
-    record = VerifyService(persistence=persistence).record(
-        bucket_id=bucket_id,
+    bucket_id, record = _record_live_verification(
+        nif,
+        expected,
         surface=VerifySurface.NIF_IVA,
-        nif=observation.nif,
-        verdict=observation.verdict,
-        checked_at=now(),
-        expected=expected_verdict,
-        raw_evidence_locator=observation.raw_evidence_locator,
+        observe=lambda settings, expected_by_nif: (
+            NifIvaCheckSedeDriver(settings=settings).collect(b"", expected=expected_by_nif).observations
+        ),
     )
     result = VerifyNifIvaResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
@@ -216,31 +249,15 @@ def verify_tgvi(
     :class:`VerifyTgviResult`.
     """
     from ...adapters.outbound.aeat.sede.groi_check import GroiSedeDriver
-    from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
-    from ...application.live.verify import VerifyService
-    from ...core.access_gate.gate import AeatAccessGate
-    from ...core.config import load_settings
     from ._app_live_verify_payloads import VerifyTgviResult
 
-    settings = load_settings()
-    AeatAccessGate(settings).require_live_read()
-    nif_key = tax_id_identity_token(nif)
-    expected_verdict = _expected(expected)
-    driver = GroiSedeDriver(settings=settings)
-    result = driver.collect(b"", expected={nif_key: (expected_verdict or "unknown")})
-    if not result.observations:
-        raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
-    observation = result.observations[0]
-    bucket_id = active_bucket_id_or_refuse()
-    persistence = VerifyObservationRepository(bucket_id=bucket_id, settings=settings)
-    record = VerifyService(persistence=persistence).record(
-        bucket_id=bucket_id,
+    bucket_id, record = _record_live_verification(
+        nif,
+        expected,
         surface=VerifySurface.TGVI,
-        nif=observation.nif,
-        verdict=observation.verdict,
-        checked_at=now(),
-        expected=expected_verdict,
-        raw_evidence_locator=observation.raw_evidence_locator,
+        observe=lambda settings, expected_by_nif: (
+            GroiSedeDriver(settings=settings).collect(b"", expected=expected_by_nif).observations
+        ),
     )
     result = VerifyTgviResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
