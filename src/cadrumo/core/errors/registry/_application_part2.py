@@ -1206,6 +1206,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.operations.errors.OperationUnsettledError",
+        ErrorCode(
+            code="INTERNAL_OPERATION_UNSETTLED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_operation_unsettled",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.workspace_manifest.ModeloWorkspaceManifestCaptureError",
         ErrorCode(
             code="REFUSED_MODELO_WORKSPACE_MANIFEST_CAPTURE_NOT_CURRENT",
