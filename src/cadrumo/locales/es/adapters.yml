@@ -12,10 +12,10 @@ adapters:
           o reauthenticate() antes de autenticar de nuevo.
         assertion_failed: La autenticación AEAT no produjo una aserción de inicio
           de sesión válida.
-        capture_requires_active_session: capture_storage_state() requiere la sesión
-          autenticada actualmente activa.
-        capture_requires_certificate: capture_storage_state() requiere una sesión
-          activa con certificado y metadatos del recurso protegido.
+        capture_requires_active_session: Guardar la sesión del navegador requiere
+          la sesión autenticada actualmente activa.
+        capture_requires_certificate: Guardar la sesión del navegador requiere una
+          sesión activa con certificado y metadatos del recurso protegido.
         metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
         no_active_context: No hay contexto de navegador activo; llame a authenticate()
           primero.
