@@ -186,13 +186,6 @@ class ModeloWorkspaceEpochV1(_WorkspaceProducerModel):
     comparison_domain: ContentDigest
     generation: Annotated[int, Field(ge=1)]
 
-    def require_successor_of(self, predecessor: ModeloWorkspaceEpochV1) -> Self:
-        """Require a later same-owner generation within one process incarnation."""
-        self._require_same_comparison_domain(predecessor)
-        if self.generation <= predecessor.generation:
-            raise ValueError("workspace epoch generation must advance for the same owner")
-        return self
-
     def require_current(self, current: ModeloWorkspaceEpochV1) -> Self:
         """Require this epoch to remain current within its exact comparison domain."""
         self._require_same_comparison_domain(current)

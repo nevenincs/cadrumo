@@ -191,8 +191,12 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
+    from .work_profile import ModeloWorkProfile
 
-from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
+from .m303_regimen_simplificado_scope import (
+    m303_regimen_simplificado_annual_summary_applies_to_profile,
+    taxpayer_profile_for_work,
+)
 from .verification_predicates import (
     evaluate_verification_predicates,
 )
@@ -447,6 +451,7 @@ def _collect_verification_gate_findings(
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
     operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
@@ -460,6 +465,7 @@ def _collect_verification_gate_findings(
             profile=workflow_profile,
             transaction_repository=transaction_repository,
             operation=operation,
+            work_profile=work_profile,
         )
     )
     incomplete_modality_finding = registry_modality_finding(
@@ -766,6 +772,7 @@ def verify_modelo_revision_with_preconditions(
     settings: Settings | None = None,
     clock: datetime | None = None,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> ModeloVerificationResult:
     """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates.
 
@@ -809,6 +816,9 @@ def verify_modelo_revision_with_preconditions(
         operation: Caller-owned generation-pinned authority operation. When
             supplied, every registry snapshot and point consumer in this path
             reads from that operation generation.
+        profile: The work profile the calling command already loaded for the
+            revision's bucket. When omitted, this entry loads it once; every
+            profile read below uses the record the readiness gate checked.
 
     Returns:
         The application result containing the persisted
@@ -881,23 +891,31 @@ def verify_modelo_revision_with_preconditions(
         )
 
     _assert_revision_content_integrity(target)
+    from .profile_readiness_gate import load_modelo_work_profile, require_profile_ready_for_work_unit
+
+    if profile is None:
+        profile = load_modelo_work_profile(
+            bucket_id=work_unit.bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
     validate_m303_regimen_simplificado_annual_summary_target_revision(
         target_work_unit=work_unit,
         target_revision=target,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=repos.filing,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+            taxpayer_profile_for_work(profile),
+        ),
         operation=operation,
     )
     require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
 
-    from .profile_readiness_gate import require_profile_ready_for_work_unit
-
-    require_profile_ready_for_work_unit(
+    checked_profile = require_profile_ready_for_work_unit(
         work_unit,
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
+        profile=profile,
     )
     _require_persisted_required_bindings_resolved(
         work_unit=work_unit, revision=target, action="verify", operation=operation
@@ -916,6 +934,7 @@ def verify_modelo_revision_with_preconditions(
             iva_compensation_decision_repository=repos.iva_compensation_decision,
             cross_period_expected_member_sets=cross_period_expected_member_sets,
             operation=operation,
+            work_profile=checked_profile,
         )
     )
     _append_model_specific_findings(
@@ -1034,6 +1053,7 @@ def verify_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> VerificationReport:
     """Persist and return the domain verification report without transport recovery data.
 
@@ -1055,6 +1075,7 @@ def verify_modelo_revision(
         settings=settings,
         clock=clock,
         operation=operation,
+        profile=profile,
     ).report
 
 
@@ -1231,6 +1252,7 @@ def _append_revision_advisory_findings(
     profile: TaxpayerProfile,
     snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile | None,
 ) -> None:
     fact_coordinate = date(work_unit.filing_year, 12, 31)
     modelo_fact_context = ModeloFactResolutionContext(
@@ -1266,6 +1288,7 @@ def _append_revision_advisory_findings(
             target.casilla_values,
             work_unit=work_unit,
             operation=operation,
+            profile=work_profile,
         ),
         _m210_convenio_lob_advisory_finding(
             snapshot,
@@ -1283,6 +1306,7 @@ def _append_revision_advisory_findings(
             snapshot=snapshot,
             casilla_values=target.casilla_values,
             profile_decode_context=operation.profile_decode_context(),
+            profile_record=work_profile.record if work_profile is not None else None,
         )
     )
 
@@ -1637,6 +1661,7 @@ def _collect_revision_verification_findings(
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile | None,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
@@ -1720,6 +1745,7 @@ def _collect_revision_verification_findings(
         profile=profile,
         snapshot=snapshot,
         operation=operation,
+        work_profile=work_profile,
     )
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 

@@ -25,7 +25,7 @@ from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
+from typing import TYPE_CHECKING, Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator
 
@@ -1469,11 +1469,6 @@ class _WireDetailRowMirror(BaseModel):
     """
 
     model_config = _WIRE_CONFIG
-
-    @classmethod
-    def from_row(cls, row: BaseModel) -> Self:
-        """Mirror one domain detail row onto its wire form."""
-        return cls.model_validate(_wire_row_payload(row))
 
 
 class Modelo184MemberRowWireV1(_WireDetailRowMirror):

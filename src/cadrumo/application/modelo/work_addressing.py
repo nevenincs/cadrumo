@@ -317,16 +317,6 @@ class ModeloWorkAddress:
     registry_revision_id: RevisionId | None = None
     bucket_id: str | None = None
 
-    @classmethod
-    def from_visible_target(cls, target: ModeloVisibleFilingTarget) -> ModeloWorkAddress:
-        """Create a :class:`ModeloWorkAddress` from a natural modelo filing target."""
-        return target.to_work_address()
-
-    @classmethod
-    def from_exact_target(cls, target: ModeloExactWorkUnitTarget) -> ModeloWorkAddress:
-        """Create a :class:`ModeloWorkAddress` from an exact work-unit target."""
-        return target.to_work_address()
-
 
 type ModeloWorkTarget = ModeloVisibleFilingTarget | ModeloExactWorkUnitTarget | ModeloWorkAddress
 """Supported work-target shapes for centralized modelo addressing."""
