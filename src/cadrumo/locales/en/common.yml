@@ -722,6 +722,15 @@ overview:
     The automated retrieval sweep cannot fetch Impuesto sobre Sociedades filing history
     (modelo 200/202); check it directly at the AEAT sede.
 provisioning:
+  condition:
+    role_model_fit_for_role: '%{model} answered the test document, but its answer
+      could not be used to read an invoice. Choose a different text model.'
+    role_model_fitness_verified: 'No fitness check is recorded for the current weights
+      of %{model}. This does not mean the model is unfit: run `aeat config provision
+      verify` to check it.'
+    role_model_fitness_within_timeout: '%{model} did not finish its test answer before
+      the time limit ran out. It may be too slow for this machine; choose a smaller
+      model or raise the LLM timeout, then run `aeat config provision verify` again.'
   model:
     licence:
       non_commercial_advisory: Model %{model} is covered by the %{licence}, which
@@ -1444,27 +1453,38 @@ tui:
       add_label: Add a PDF or image of an invoice
       added: '{file} was added.'
       adding: Storing the document securely…
+      already_confirmed: Invoice {number} was already recorded (total {total} {currency});
+        nothing was added.
       column:
         file: File
         invoice: Invoice
         status: Review
         type: Type
       confirm: Confirm as invoice
+      confirm_failed: The invoice was not recorded.
+      confirmed: 'Invoice {number} recorded: total {total} {currency}.'
+      confirming: Recording the invoice from the document…
       detail: 'Size: {size} bytes · captured {captured}'
+      draft:
+        amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        discrepancies: 'Checks that disagree with the document: {count}'
+        identity: Invoice {number} dated {date}
+        supplier: 'Supplier: {name} · NIF {nif}'
+        unread: unread
       empty: No evidence awaits review.
       extract: Read document
       path_placeholder: Type the path of the file
       pending: Pending
+      printed_total_disagrees: The total printed on the document differs from the
+        recorded total. Check the invoice.
       queue_heading: Attachments awaiting review
+      read_done: Read. Check the values, then confirm the invoice.
+      read_failed: The document could not be read.
       reader_not_ready: The document reader is not ready ({condition}). Check it with
         `aeat config provision status`.
       reader_ready: The document reader is ready on this machine.
+      reading: Reading the document on this machine…
       reading_refused:
-        confirm: Confirming a document isn't available from this screen yet. Run `aeat
-          app ledger evidence confirm --evidence-id {evidence_id}` with the invoice
-          type and country.
-        extract: Reading a document isn't available from this screen yet. Run `aeat
-          app ledger evidence extract --evidence-id {evidence_id}`.
         reader: Documents can't be read on this machine yet ({condition}). Start or
           install the reader with `aeat config provision`, then try again.
       record_detail: '{kind} · supplier {supplier} · added {added} · {status}'
@@ -1654,37 +1674,74 @@ tui:
     card:
       action: Open document reader
       description: See whether invoice documents can be read on this machine, and
-        start the reader or download its models.
+        set up the reader, its runtime and its models.
       title: Document reader
-    choose_role: Choose a task in the table to download or check its model.
+    checklist:
+      models_loaded: Models loaded
+      service_installed: Runtime installed
+      service_running: Runtime running
+      text_model_pulled: Text model downloaded
+      verified: Reader verified
+      vision_model_pulled: Scan model downloaded
+    choose_role: Choose a task in the table to download, load, check or remove its
+      model.
     column:
       installed: Installed
       loaded: Loaded
       model: Model
       ready: Ready
       role: Task
+      state: State
+      step: Step
+    confirm:
+      cancel: Cancel
+      install_accept: Install
+      install_message: Installing runs {installer} to download and install the local
+        model runtime on this computer. Continue?
+      install_title: Install the local runtime?
+      remove_accept: Remove
+      remove_message: Remove {model} from this computer? It must be downloaded again
+        before it can be used.
+      remove_title: Remove this model?
     extraction_not_ready: Invoice documents can't be read on this machine yet.
     extraction_ready: Invoice documents can be read on this machine.
     host: 'Runtime at {endpoint} · installed: {installed} · answering: {reachable}
       · version {version}'
-    install_at_cli: 'Installing the runtime needs your consent at the command line:
-      `aeat config provision install`.'
+    install: Install runtime
+    install_cancelled: Install cancelled; nothing was changed.
     intro: The local reader reads invoice documents on this machine. Nothing is sent
       elsewhere.
     last_pull: 'Last download this session: {model} · completed: {outcome} · {size}
       bytes'
+    load: Load model
     measuring: Checking the reader…
+    no_installer: No installer is available on this system. Install the model runtime
+      yourself, then check again.
     no_model: none selected
     pull: Download model
     refresh: Check again
     refused: The action could not be started.
+    remove: Remove model
+    remove_cancelled: Removal cancelled; nothing was changed.
     role:
       column_role_mapping: Spreadsheet columns
       supply_nature_proposal: Goods or services proposal
       text_extraction: Documents with text
       vision_transcription: Scanned documents
     selected_role: 'Selected: {role}'
+    setup: Set up reader
+    setup_done: The reader is set up.
+    setup_step:
+      install: install
+      load: load
+      pull: download
+      start: start
+      verify: verification
+    setup_stopped: 'Setup stopped at {step}: {condition}.'
     start: Start runtime
+    state:
+      done: done
+      missing: to do
     submitting: Starting…
     title: Document reader
     unreadable: The reader's state could not be read.

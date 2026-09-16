@@ -742,6 +742,16 @@ overview:
     sobre Societats (model 200/202); consulti'l directament a la seu electrònica de
     l'AEAT.
 provisioning:
+  condition:
+    role_model_fit_for_role: '%{model} ha respost al document de prova, però la seva
+      resposta no serveix per llegir una factura. Trieu un altre model de text.'
+    role_model_fitness_verified: 'No hi ha cap comprovació d''aptitud registrada per
+      als pesos actuals de %{model}. Això no vol dir que el model no sigui apte: executeu
+      `aeat config provision verify` per comprovar-ho.'
+    role_model_fitness_within_timeout: '%{model} no ha acabat la resposta de prova
+      abans que s''esgotés el temps límit. Pot ser massa lent per a aquest equip;
+      trieu un model més petit o augmenteu el temps d''espera de l''LLM i torneu a
+      executar `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El model %{model} està subjecte a la %{licence}, que
@@ -1474,27 +1484,38 @@ tui:
       add_label: Afegeix un PDF o una imatge d'una factura
       added: S'ha afegit {file}.
       adding: S'està desant el document de manera segura…
+      already_confirmed: La factura {number} ja estava registrada (total {total} {currency});
+        no s'ha afegit res.
       column:
         file: Fitxer
         invoice: Factura
         status: Revisió
         type: Tipus
       confirm: Confirma com a factura
+      confirm_failed: La factura no s'ha registrat.
+      confirmed: 'Factura {number} registrada: total {total} {currency}.'
+      confirming: S'està registrant la factura a partir del document…
       detail: 'Mida: {size} bytes · capturat {captured}'
+      draft:
+        amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        discrepancies: 'Comprovacions que no quadren amb el document: {count}'
+        identity: Factura {number} amb data {date}
+        supplier: 'Proveïdor: {name} · NIF {nif}'
+        unread: sense llegir
       empty: No hi ha justificants pendents de revisió.
       extract: Llegeix el document
       path_placeholder: Escriu el camí del fitxer
       pending: Pendent
+      printed_total_disagrees: El total imprès al document no coincideix amb el registrat.
+        Revisa la factura.
       queue_heading: Adjunts pendents de revisió
+      read_done: Llegit. Revisa els valors i confirma la factura.
+      read_failed: No s'ha pogut llegir el document.
       reader_not_ready: El lector de documents no està a punt ({condition}). Comprova-ho
         amb `aeat config provision status`.
       reader_ready: El lector de documents està a punt en aquest equip.
+      reading: S'està llegint el document en aquest equip…
       reading_refused:
-        confirm: Confirmar un document encara no està disponible des d'aquesta pantalla.
-          Executa `aeat app ledger evidence confirm --evidence-id {evidence_id}` amb
-          el tipus de factura i el país.
-        extract: Llegir un document encara no està disponible des d'aquesta pantalla.
-          Executa `aeat app ledger evidence extract --evidence-id {evidence_id}`.
         reader: Encara no es poden llegir documents en aquest equip ({condition}).
           Inicia o instal·la el lector amb `aeat config provision` i torna-ho a provar.
       record_detail: '{kind} · proveïdor {supplier} · afegit el {added} · {status}'
@@ -1687,38 +1708,75 @@ tui:
     card:
       action: Obre el lector de documents
       description: Comprova si els documents de factura es poden llegir en aquest
-        equip i inicia el lector o baixa'n els models.
+        equip i prepara el lector, el seu runtime i els seus models.
       title: Lector de documents
-    choose_role: Tria una tasca de la taula per baixar o comprovar-ne el model.
+    checklist:
+      models_loaded: Models carregats
+      service_installed: Runtime instal·lat
+      service_running: Runtime en marxa
+      text_model_pulled: Model de text baixat
+      verified: Lector verificat
+      vision_model_pulled: Model d'escanejos baixat
+    choose_role: Tria una tasca de la taula per baixar, carregar, comprovar o eliminar-ne
+      el model.
     column:
       installed: Instal·lat
       loaded: Carregat
       model: Model
       ready: A punt
       role: Tasca
+      state: Estat
+      step: Pas
+    confirm:
+      cancel: Cancel·la
+      install_accept: Instal·la
+      install_message: La instal·lació executa {installer} per baixar i instal·lar
+        el runtime local de models en aquest equip. Vols continuar?
+      install_title: Vols instal·lar el runtime local?
+      remove_accept: Elimina
+      remove_message: Vols eliminar {model} d'aquest equip? Caldrà tornar-lo a baixar
+        abans de fer-lo servir.
+      remove_title: Vols eliminar aquest model?
     extraction_not_ready: Encara no es poden llegir documents de factura en aquest
       equip.
     extraction_ready: Els documents de factura es poden llegir en aquest equip.
     host: 'Runtime a {endpoint} · instal·lat: {installed} · respon: {reachable} ·
       versió {version}'
-    install_at_cli: 'Instal·lar el runtime requereix el teu consentiment a la línia
-      d''ordres: `aeat config provision install`.'
+    install: Instal·la el runtime
+    install_cancelled: Instal·lació cancel·lada; no s'ha canviat res.
     intro: El lector local llegeix els documents de factura en aquest equip. No s'envia
       res enlloc.
     last_pull: 'Darrera baixada en aquesta sessió: {model} · completada: {outcome}
       · {size} bytes'
+    load: Carrega el model
     measuring: S'està comprovant el lector…
+    no_installer: No hi ha cap instal·lador disponible en aquest sistema. Instal·la
+      tu mateix el runtime de models i torna a comprovar.
     no_model: cap seleccionat
     pull: Baixa el model
     refresh: Torna a comprovar
     refused: No s'ha pogut iniciar l'acció.
+    remove: Elimina el model
+    remove_cancelled: Eliminació cancel·lada; no s'ha canviat res.
     role:
       column_role_mapping: Columnes de fulls de càlcul
       supply_nature_proposal: Proposta de béns o serveis
       text_extraction: Documents amb text
       vision_transcription: Documents escanejats
     selected_role: 'Seleccionada: {role}'
+    setup: Prepara el lector
+    setup_done: El lector està preparat.
+    setup_step:
+      install: la instal·lació
+      load: la càrrega
+      pull: la baixada
+      start: l'arrencada
+      verify: la verificació
+    setup_stopped: 'La preparació s''ha aturat a {step}: {condition}.'
     start: Inicia el runtime
+    state:
+      done: fet
+      missing: pendent
     submitting: S'està iniciant…
     title: Lector de documents
     unreadable: No s'ha pogut llegir l'estat del lector.

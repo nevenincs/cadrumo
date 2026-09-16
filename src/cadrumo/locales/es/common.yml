@@ -752,6 +752,16 @@ overview:
     del Impuesto sobre Sociedades (modelo 200/202); consúltelo directamente en la
     sede electrónica de la AEAT.
 provisioning:
+  condition:
+    role_model_fit_for_role: '%{model} respondió al documento de prueba, pero su respuesta
+      no sirve para leer una factura. Elija otro modelo de texto.'
+    role_model_fitness_verified: 'No hay ninguna comprobación de aptitud registrada
+      para los pesos actuales de %{model}. Esto no significa que el modelo no sea
+      apto: ejecute `aeat config provision verify` para comprobarlo.'
+    role_model_fitness_within_timeout: '%{model} no terminó su respuesta de prueba
+      antes de agotarse el tiempo límite. Puede ser demasiado lento para este equipo;
+      elija un modelo más pequeño o aumente el tiempo de espera del LLM y vuelva a
+      ejecutar `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El modelo %{model} está sujeto a la %{licence}, que
@@ -1486,27 +1496,38 @@ tui:
       add_label: Añade un PDF o una imagen de una factura
       added: Se ha añadido {file}.
       adding: Guardando el documento de forma segura…
+      already_confirmed: La factura {number} ya estaba registrada (total {total} {currency});
+        no se ha añadido nada.
       column:
         file: Archivo
         invoice: Factura
         status: Revisión
         type: Tipo
       confirm: Confirmar como factura
+      confirm_failed: La factura no se ha registrado.
+      confirmed: 'Factura {number} registrada: total {total} {currency}.'
+      confirming: Registrando la factura a partir del documento…
       detail: 'Tamaño: {size} bytes · capturado {captured}'
+      draft:
+        amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        discrepancies: 'Comprobaciones que no cuadran con el documento: {count}'
+        identity: Factura {number} con fecha {date}
+        supplier: 'Proveedor: {name} · NIF {nif}'
+        unread: sin leer
       empty: No hay justificantes pendientes de revisión.
       extract: Leer documento
       path_placeholder: Escribe la ruta del archivo
       pending: Pendiente
+      printed_total_disagrees: El total impreso en el documento no coincide con el
+        registrado. Revisa la factura.
       queue_heading: Adjuntos pendientes de revisión
+      read_done: Leído. Revisa los valores y confirma la factura.
+      read_failed: No se ha podido leer el documento.
       reader_not_ready: El lector de documentos no está listo ({condition}). Compruébalo
         con `aeat config provision status`.
       reader_ready: El lector de documentos está listo en este equipo.
+      reading: Leyendo el documento en este equipo…
       reading_refused:
-        confirm: Confirmar un documento aún no está disponible desde esta pantalla.
-          Ejecuta `aeat app ledger evidence confirm --evidence-id {evidence_id}` con
-          el tipo de factura y el país.
-        extract: Leer un documento aún no está disponible desde esta pantalla. Ejecuta
-          `aeat app ledger evidence extract --evidence-id {evidence_id}`.
         reader: Todavía no se pueden leer documentos en este equipo ({condition}).
           Inicia o instala el lector con `aeat config provision` y vuelve a intentarlo.
       record_detail: '{kind} · proveedor {supplier} · añadido el {added} · {status}'
@@ -1701,38 +1722,75 @@ tui:
     card:
       action: Abrir lector de documentos
       description: Comprueba si los documentos de factura se pueden leer en este equipo
-        e inicia el lector o descarga sus modelos.
+        y prepara el lector, su runtime y sus modelos.
       title: Lector de documentos
-    choose_role: Elige una tarea de la tabla para descargar o comprobar su modelo.
+    checklist:
+      models_loaded: Modelos cargados
+      service_installed: Runtime instalado
+      service_running: Runtime en marcha
+      text_model_pulled: Modelo de texto descargado
+      verified: Lector verificado
+      vision_model_pulled: Modelo de escaneos descargado
+    choose_role: Elige una tarea de la tabla para descargar, cargar, comprobar o eliminar
+      su modelo.
     column:
       installed: Instalado
       loaded: Cargado
       model: Modelo
       ready: Listo
       role: Tarea
+      state: Estado
+      step: Paso
+    confirm:
+      cancel: Cancelar
+      install_accept: Instalar
+      install_message: La instalación ejecuta {installer} para descargar e instalar
+        el runtime local de modelos en este equipo. ¿Quieres continuar?
+      install_title: ¿Instalar el runtime local?
+      remove_accept: Eliminar
+      remove_message: ¿Eliminar {model} de este equipo? Habrá que volver a descargarlo
+        antes de usarlo.
+      remove_title: ¿Eliminar este modelo?
     extraction_not_ready: Todavía no se pueden leer documentos de factura en este
       equipo.
     extraction_ready: Los documentos de factura se pueden leer en este equipo.
     host: 'Runtime en {endpoint} · instalado: {installed} · responde: {reachable}
       · versión {version}'
-    install_at_cli: 'Instalar el runtime requiere tu consentimiento en la línea de
-      comandos: `aeat config provision install`.'
+    install: Instalar runtime
+    install_cancelled: Instalación cancelada; no se ha cambiado nada.
     intro: El lector local lee los documentos de factura en este equipo. No se envía
       nada a otro lugar.
     last_pull: 'Última descarga en esta sesión: {model} · completada: {outcome} ·
       {size} bytes'
+    load: Cargar modelo
     measuring: Comprobando el lector…
+    no_installer: No hay ningún instalador disponible en este sistema. Instala tú
+      el runtime de modelos y vuelve a comprobar.
     no_model: ninguno seleccionado
     pull: Descargar modelo
     refresh: Volver a comprobar
     refused: No se ha podido iniciar la acción.
+    remove: Eliminar modelo
+    remove_cancelled: Eliminación cancelada; no se ha cambiado nada.
     role:
       column_role_mapping: Columnas de hojas de cálculo
       supply_nature_proposal: Propuesta de bienes o servicios
       text_extraction: Documentos con texto
       vision_transcription: Documentos escaneados
     selected_role: 'Seleccionada: {role}'
+    setup: Preparar el lector
+    setup_done: El lector está preparado.
+    setup_step:
+      install: la instalación
+      load: la carga
+      pull: la descarga
+      start: el arranque
+      verify: la verificación
+    setup_stopped: 'La preparación se ha detenido en {step}: {condition}.'
     start: Iniciar runtime
+    state:
+      done: hecho
+      missing: pendiente
     submitting: Iniciando…
     title: Lector de documentos
     unreadable: No se ha podido leer el estado del lector.

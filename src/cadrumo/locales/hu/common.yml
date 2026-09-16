@@ -732,6 +732,16 @@ overview:
     Az automatikus lekérés nem tudja lekérni a társasági adó (200/202 nyomtatvány)
     benyújtási előzményeit; ellenőrizze közvetlenül az AEAT elektronikus ügyfélkapuján.
 provisioning:
+  condition:
+    role_model_fit_for_role: A(z) %{model} válaszolt a tesztdokumentumra, de a válasza
+      nem használható számla beolvasására. Válasszon másik szövegmodellt.
+    role_model_fitness_verified: 'A(z) %{model} jelenlegi súlyaihoz nincs rögzített
+      alkalmassági ellenőrzés. Ez nem jelenti azt, hogy a modell alkalmatlan: az ellenőrzéshez
+      futtassa az `aeat config provision verify` parancsot.'
+    role_model_fitness_within_timeout: A(z) %{model} nem fejezte be a tesztválaszt
+      az időkorlát lejárta előtt. Lehet, hogy túl lassú ehhez a géphez; válasszon
+      kisebb modellt, vagy növelje az LLM időkorlátját, majd futtassa újra az `aeat
+      config provision verify` parancsot.
   model:
     licence:
       non_commercial_advisory: A(z) %{model} modellre a(z) %{licence} vonatkozik,
@@ -1464,27 +1474,38 @@ tui:
       add_label: Számla PDF-jének vagy képének hozzáadása
       added: '{file} hozzáadva.'
       adding: A dokumentum biztonságos tárolása…
+      already_confirmed: A(z) {number} számla már rögzítve volt (összesen {total}
+        {currency}); semmi sem került hozzáadásra.
       column:
         file: Fájl
         invoice: Számla
         status: Ellenőrzés
         type: Típus
       confirm: Megerősítés számlaként
+      confirm_failed: A számla nem került rögzítésre.
+      confirmed: 'A(z) {number} számla rögzítve: összesen {total} {currency}.'
+      confirming: A számla rögzítése a dokumentum alapján…
       detail: 'Méret: {size} bájt · rögzítve: {captured}'
+      draft:
+        amounts: Alap {base} · IVA {rate}% = {iva} · összesen {total} {currency}
+        discrepancies: 'A dokumentummal nem egyező ellenőrzések: {count}'
+        identity: '{number} számla, kelte {date}'
+        supplier: 'Szállító: {name} · NIF {nif}'
+        unread: nem olvasható
       empty: Nincs ellenőrzésre váró bizonylat.
       extract: Dokumentum beolvasása
       path_placeholder: Írd be a fájl elérési útját
       pending: Függőben
+      printed_total_disagrees: A dokumentumon szereplő végösszeg eltér a rögzítettől.
+        Ellenőrizd a számlát.
       queue_heading: Ellenőrzésre váró mellékletek
+      read_done: Beolvasva. Ellenőrizd az értékeket, majd erősítsd meg a számlát.
+      read_failed: A dokumentumot nem sikerült beolvasni.
       reader_not_ready: 'A dokumentumolvasó nem áll készen ({condition}). Ellenőrizd
         ezzel: `aeat config provision status`.'
       reader_ready: A dokumentumolvasó készen áll ezen a gépen.
+      reading: A dokumentum beolvasása ezen a gépen…
       reading_refused:
-        confirm: 'Dokumentum megerősítése ebből a nézetből még nem érhető el. Futtasd:
-          `aeat app ledger evidence confirm --evidence-id {evidence_id}` a számla
-          típusával és az országgal.'
-        extract: 'Dokumentum beolvasása ebből a nézetből még nem érhető el. Futtasd:
-          `aeat app ledger evidence extract --evidence-id {evidence_id}`.'
         reader: 'Ezen a gépen még nem olvashatók dokumentumok ({condition}). Indítsd
           el vagy telepítsd az olvasót ezzel: `aeat config provision`, majd próbáld
           újra.'
@@ -1675,37 +1696,74 @@ tui:
     card:
       action: Dokumentumolvasó megnyitása
       description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen, és
-        indítsd el az olvasót vagy töltsd le a modelljeit.
+        állítsd be az olvasót, a futtatókörnyezetét és a modelljeit.
       title: Dokumentumolvasó
-    choose_role: Válassz egy feladatot a táblázatban a modell letöltéséhez vagy ellenőrzéséhez.
+    checklist:
+      models_loaded: Modellek betöltve
+      service_installed: Futtatókörnyezet telepítve
+      service_running: Futtatókörnyezet fut
+      text_model_pulled: Szövegmodell letöltve
+      verified: Olvasó ellenőrizve
+      vision_model_pulled: Szkennelési modell letöltve
+    choose_role: Válassz egy feladatot a táblázatban a modell letöltéséhez, betöltéséhez,
+      ellenőrzéséhez vagy eltávolításához.
     column:
       installed: Telepítve
       loaded: Betöltve
       model: Modell
       ready: Kész
       role: Feladat
+      state: Állapot
+      step: Lépés
+    confirm:
+      cancel: Mégse
+      install_accept: Telepítés
+      install_message: A telepítés a(z) {installer} programot futtatja, hogy letöltse
+        és telepítse a helyi modell-futtatókörnyezetet erre a gépre. Folytatod?
+      install_title: Telepíted a helyi futtatókörnyezetet?
+      remove_accept: Eltávolítás
+      remove_message: Eltávolítod a(z) {model} modellt erről a gépről? Használat előtt
+        újra le kell tölteni.
+      remove_title: Eltávolítod ezt a modellt?
     extraction_not_ready: A számladokumentumok még nem olvashatók be ezen a gépen.
     extraction_ready: A számladokumentumok beolvashatók ezen a gépen.
     host: 'Futtatókörnyezet: {endpoint} · telepítve: {installed} · válaszol: {reachable}
       · verzió: {version}'
-    install_at_cli: 'A futtatókörnyezet telepítéséhez a parancssorban kell hozzájárulnod:
-      `aeat config provision install`.'
+    install: Futtatókörnyezet telepítése
+    install_cancelled: A telepítés megszakítva; semmi sem változott.
     intro: A helyi olvasó ezen a gépen olvassa be a számladokumentumokat. Semmi sem
       kerül máshová.
     last_pull: 'Utolsó letöltés ebben a munkamenetben: {model} · befejezve: {outcome}
       · {size} bájt'
+    load: Modell betöltése
     measuring: Az olvasó ellenőrzése…
+    no_installer: Ezen a rendszeren nincs elérhető telepítő. Telepítsd saját magad
+      a modell-futtatókörnyezetet, majd ellenőrizd újra.
     no_model: nincs kiválasztva
     pull: Modell letöltése
     refresh: Újraellenőrzés
     refused: A műveletet nem sikerült elindítani.
+    remove: Modell eltávolítása
+    remove_cancelled: Az eltávolítás megszakítva; semmi sem változott.
     role:
       column_role_mapping: Táblázatoszlopok
       supply_nature_proposal: Termék vagy szolgáltatás javaslata
       text_extraction: Szöveges dokumentumok
       vision_transcription: Szkennelt dokumentumok
     selected_role: 'Kiválasztva: {role}'
+    setup: Olvasó beállítása
+    setup_done: Az olvasó be van állítva.
+    setup_step:
+      install: telepítés
+      load: betöltés
+      pull: letöltés
+      start: indítás
+      verify: ellenőrzés
+    setup_stopped: 'A beállítás leállt ennél a lépésnél: {step} ({condition}).'
     start: Futtatókörnyezet indítása
+    state:
+      done: kész
+      missing: teendő
     submitting: Indítás…
     title: Dokumentumolvasó
     unreadable: Az olvasó állapotát nem sikerült lekérdezni.

@@ -2288,13 +2288,21 @@ cli:
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
     provision:
       help: 'Gestiona el lector local de documents: estat del runtime, instal·lació,
-        arrencada, descàrrega, verificació i eliminació de models.'
+        arrencada, descàrrega, càrrega, verificació i eliminació de models, o prepara-ho
+        tot d''una vegada.'
       install:
         confirm_help: Accepta descarregar i executar la instal·lació del gestor de
           paquets. Sense aquesta opció no s'instal·la res.
         help: Instal·la el runtime local amb el gestor de paquets de la plataforma
           (winget a Windows, Homebrew a macOS). No fa res si ja està instal·lat; a
           Linux la instal·lació queda a càrrec de l'operador.
+      load:
+        help: Carrega models a la memòria del runtime local perquè la primera lectura
+          no hagi d'esperar una arrencada en fred; el de cada funció del lector tret
+          que --role o --model ho acotin. Es nega abans de carregar si falta memòria;
+          un model ja carregat es deixa com està.
+        model_help: Identificador al runtime del model que es carregarà. Ja ha d'estar
+          baixat. Per defecte, el model seleccionat per a la funció.
       pull:
         help: Descarrega models al runtime local, el de cada funció del lector llevat
           que --role o --model ho acotin. Rebutja abans de descarregar si un model
@@ -2312,12 +2320,23 @@ cli:
       role_help: Funció del model sobre la qual actuar (transcripció d'imatges, extracció
         de text, mapatge tabular, proposta de naturalesa del subministrament). Per
         defecte, totes.
+      setup:
+        confirm_help: Accepta baixar i executar la instal·lació amb el gestor de paquets
+          si falta el runtime. Sense aquesta opció, la preparació s'atura al pas d'instal·lació
+          en lloc d'instal·lar.
+        help: 'Prepara el lector local d''una vegada: instal·la el runtime (només
+          amb --confirm), l''arrenca, baixa el model de cada funció, els carrega i
+          els verifica. Els passos ja fets s''indiquen sense canvis; el primer pas
+          que falla atura l''execució.'
       start:
         help: Arrenca el runtime local instal·lat quan l'endpoint local configurat
           no respon. No fa res si ja respon.
       status:
         help: Informa de si el runtime local està instal·lat i respon, i de si el
           model de cada funció del lector està instal·lat. Només llegeix.
+        probe_help: Comprova ara l'aptitud del model de text en lloc de llegir el
+          veredicte registrat per `aeat config provision verify`. Carrega el model
+          i consumeix una resposta completa; el resultat no es registra.
       verify:
         help: Verifica que els models es carreguen i responen una consulta trivial
           dins d'un límit de temps, el de cada funció del lector llevat que --role

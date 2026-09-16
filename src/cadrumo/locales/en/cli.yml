@@ -2134,13 +2134,20 @@ cli:
       view_help: Show one profile's facts (defaults to the active profile)
     provision:
       help: 'Manage the local document reader: runtime status, install, start, model
-        pull, verify and remove.'
+        pull, load, verify and remove, or set everything up in one run.'
       install:
         confirm_help: Agree to download and run the package-manager install. Without
           it nothing is installed.
         help: Install the local runtime with the platform package manager (winget
           on Windows, Homebrew on macOS). Does nothing when it is already installed;
           Linux installs are left to the operator.
+      load:
+        help: Load models into the local runtime's memory so the first read does not
+          wait for a cold start, every reader role's model unless --role or --model
+          narrows it. Refuses before loading when memory is short; a model that is
+          already loaded is left as it is.
+        model_help: Runtime identifier of the model to load. It must already be downloaded.
+          Defaults to the model selected for the role.
       pull:
         help: Download models into the local runtime, every reader role's model unless
           --role or --model narrows it. Refuses before downloading when a model could
@@ -2157,12 +2164,23 @@ cli:
           can be loaded now.
       role_help: Model role to act on (vision transcription, text extraction, tabular
         mapping, supply-nature proposal). Defaults to every role.
+      setup:
+        confirm_help: Agree to download and run the package-manager install if the
+          runtime is missing. Without it setup stops at the install step instead of
+          installing.
+        help: 'Set up the local reader in one run: install the runtime (only with
+          --confirm), start it, download every role''s model, load them and verify
+          them. Steps that are already done are reported unchanged; the first step
+          that fails stops the run.'
       start:
         help: Start the installed local runtime when the configured local endpoint
           is not answering. Does nothing when it already answers.
       status:
         help: Report whether the local runtime is installed and answering, and whether
           each reader role's model is installed. Reads only.
+        probe_help: Check the text model's fitness now instead of reading the verdict
+          recorded by `aeat config provision verify`. Loads the model and spends a
+          full answer; the result is not recorded.
       verify:
         help: Verify models load and answer a trivial prompt within a time bound,
           every reader role's model unless --role or --model narrows it.
