@@ -123,23 +123,6 @@ class CitationLookup(ABC):
         """Return pinned verbatim evidence for one selected legal declaration."""
 
     @classmethod
-    def from_component_reader(
-        cls,
-        legal: Mapping[str, LegalReference],
-        *,
-        reader: AuthorityComponentReader,
-        pin: AuthorityGenerationPin,
-    ) -> CitationLookup:
-        """Build a citation lookup over one pinned component reader.
-
-        ``legal`` is the metadata projection selected by the caller. Evidence
-        remains point-addressed: resolving one citation asks the reader for
-        only that citation's legal evidence component and never opens a corpus
-        path or hydrates sibling evidence.
-        """
-        return _ComponentCitationLookup(legal, reader=reader, pin=pin)
-
-    @classmethod
     def from_operation(
         cls,
         reference_ids: Collection[str],

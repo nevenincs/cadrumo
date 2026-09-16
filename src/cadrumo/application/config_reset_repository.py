@@ -204,36 +204,6 @@ class ConfigResetJournalRepository(JournalRepositoryBase[ConfigResetOperation]):
         with exclusive_file_lock(self.path_for(operation_id)):
             yield
 
-    def verify_deletion_ownership(
-        self,
-        *,
-        operation_id: str,
-        bucket_id: str,
-        expected_fingerprint: str,
-    ) -> ConfigResetTarget:
-        """Verify journal ownership of one target deletion.
-
-        The target must have existed in the snapshot with the expected
-        fingerprint, carry a resolved retention decision, and hold a matching
-        deletion marker in the ``deleting`` or ``deleted`` phase.
-        """
-        operation = self.load(operation_id)
-        target = _require_target_present(operation, operation_id=operation_id, bucket_id=bucket_id)
-        _require_owned_fingerprint(
-            target,
-            operation_id=operation_id,
-            bucket_id=bucket_id,
-            expected_fingerprint=expected_fingerprint,
-        )
-        _require_approved_retention(target, operation_id=operation_id, bucket_id=bucket_id)
-        _require_deleting_marker(
-            target,
-            operation_id=operation_id,
-            bucket_id=bucket_id,
-            expected_fingerprint=expected_fingerprint,
-        )
-        return target
-
     def _raise_if_incomplete(self) -> None:
         incomplete = tuple(
             candidate for candidate in self.list() if candidate.status is not ConfigResetOperationStatus.COMPLETE
