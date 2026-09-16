@@ -149,6 +149,7 @@ def test_text_mode_quiet_suppresses_confirmation(capsys: pytest.CaptureFixture[s
             name_applied=None,
             allow_not_applicable=False,
             authority_operation=operation,
+            profile=None,
             quiet=True,
         )
     out = capsys.readouterr().out
@@ -174,6 +175,7 @@ def test_quiet_json_envelope_is_complete(capsys: pytest.CaptureFixture[str]) -> 
             name_applied=None,
             allow_not_applicable=False,
             authority_operation=operation,
+            profile=None,
             quiet=True,
         )
     envelope = json.loads(capsys.readouterr().out)

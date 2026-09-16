@@ -66,6 +66,7 @@ from .common import active_bucket_id_or_refuse, active_profile_label
 from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
+    from ...application.modelo.work_profile import ModeloWorkProfile
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 
@@ -491,6 +492,7 @@ def work_calculate_input_bundle_from_cli(
     sal_capital_social: str | None,
     autoconsumo_promotor_base: str | None,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
+    profile: ModeloWorkProfile | None = None,
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from raw Typer option values."""
     casilla_pairs, binding_pairs, relation_pairs, detail_rows = _parse_work_calculate_cli_specs(
@@ -505,6 +507,7 @@ def work_calculate_input_bundle_from_cli(
         return build_work_calculate_input_bundle(
             work_unit_id=work_unit_id,
             ports=ports,
+            profile=profile,
             casilla_overrides=casilla_pairs,
             binding_overrides=binding_pairs,
             relation_overrides=relation_pairs,

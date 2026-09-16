@@ -35,6 +35,7 @@ from ...application.modelo.action_errors import (
 from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo.calculate_input import calculate_modelo_work_revision
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.irnr import M210GrossIncomeSourceMode
@@ -136,9 +137,15 @@ def _run_work_calculate(
     filing_instance_evidence = m303_filing_instance_evidence_from_cli(
         modelo=str(unit.modelo), period=unit.period, evidence_file=m303_filing_evidence
     )
+    # One decrypted record serves every gate, resolver and advisory this command runs.
+    profile = load_modelo_work_profile(
+        bucket_id=unit.bucket_id,
+        profile_decode_context=calculation_ports.operation.profile_decode_context(),
+    )
     calculation_inputs = deps.calculate_input_bundle_from_cli(
         work_unit_id=resolved_work_unit_id,
         ports=calculation_ports,
+        profile=profile,
         casilla=casilla,
         binding=binding,
         relation=relation,
@@ -165,6 +172,7 @@ def _run_work_calculate(
             actor=resolved_actor,
             inputs=calculation_inputs,
             ports=calculation_ports,
+            profile=profile,
         )
     except RegistryValidationError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
