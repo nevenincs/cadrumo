@@ -167,17 +167,6 @@ class SheetLayout(BaseModel):
             raise _unknown_layout_reference("date_binding")
         return self.date_binding_cells[binding]
 
-    def address_for_relation(self, relation: RelationId) -> SheetCellAddress:
-        """Resolve a registry relation to the ``Entradas`` cell holding its value.
-
-        Refuses a relation the layout never emitted rather than inventing an
-        address, so a prefilled relation cannot be read from a cell that does
-        not exist.
-        """
-        if relation not in self.relation_cells:
-            raise _unknown_layout_reference("relation")
-        return self.relation_cells[relation]
-
 
 def _unknown_layout_reference(reference_kind: str) -> CalcSheetsEngineError:
     return CalcSheetsEngineError(

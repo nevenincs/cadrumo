@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ..operator_actions.catalogue import ActionCatalogue, ActionCatalogueEntry
 from .errors import OperatorSurfaceContractError
-from .models import ManifestActionProfile, MountedCommandFamily
+from .models import ManifestActionProfile
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -240,34 +240,6 @@ class OperatorSurfaceReconciliation(BaseModel):
     model_config = _STRICT_FROZEN
 
     leaves: tuple[ReconciledOperatorLeaf, ...]
-
-    def commands_for_family(self, family: MountedCommandFamily) -> tuple[str, ...]:
-        """Return ``family``'s command inventory, derived from the live tree.
-
-        Membership is read off the reconciled canonical CLI paths, which are the
-        authority for what exists, rather than declared alongside them where the
-        two could disagree. It is deliberately NOT derived from the schema-key
-        spelling: that namespace drops the ``app`` root segment for some families
-        and keeps it for others, so a prefix match would silently report an empty
-        family. A family mounted as one leaf command (``config login``) yields
-        the degenerate self-reference ``(child,)``, matching how the live tree
-        presents it.
-
-        Args:
-            family: One declared family of the operator-surface contract.
-
-        Returns:
-            The family's command tokens, sorted, each token dotted for a nested
-            subgroup (``descendiente.add``).
-        """
-        identity = (family.root.value, family.child)
-        commands: set[str] = set()
-        for leaf in self.leaves:
-            path = leaf.live_leaf.canonical_cli_path
-            if len(path) < 2 or (path[0], path[1]) != identity:
-                continue
-            commands.add(".".join(path[2:]) if len(path) > 2 else family.child)
-        return tuple(sorted(commands))
 
 
 class ResolvedCatalogueAction(BaseModel):
