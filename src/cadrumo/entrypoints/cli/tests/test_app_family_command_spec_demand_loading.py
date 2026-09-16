@@ -29,10 +29,15 @@ import json
 import sys
 from typer.testing import CliRunner
 from cadrumo.entrypoints.cli.main import app
+from cadrumo.entrypoints.cli.command_spec import NON_LEAF_COMMAND_KINDS
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
 nodes = COMMAND_GRAPH.nodes()
-families = {{node.path[2] for node in nodes if len(node.path) == 3 and node.path[:2] == ("aeat", "app")}}
+families = {{
+    node.path[2]
+    for node in nodes
+    if len(node.path) == 3 and node.path[:2] == ("aeat", "app") and node.spec.kind in NON_LEAF_COMMAND_KINDS
+}}
 family = {family!r}
 family_path = ("aeat", "app", family)
 descendants = tuple(node for node in nodes if node.path[:3] == family_path)
