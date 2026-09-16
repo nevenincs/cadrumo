@@ -23,10 +23,9 @@ from uuid import UUID
 import pytest
 from textual.widgets import Button
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from .....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.user_profile.acquisition_sources import (
     AcquisitionSourceCredentialPostureV1,
@@ -37,6 +36,7 @@ from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.overview import ProfileOverview, build_profile_overview
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ...components.host import ScreenHostApp
 from ..overview import ProfileManagerScreen
 
@@ -60,23 +60,25 @@ def _persist_not_exercised(path: str, value: str) -> ProfileOverview:
 
 
 def _build_overview() -> ProfileOverview:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    enrolled = register_profile_with_credentials(
-        label="Acquisition serialisation subject",
-        passphrase=_CREDENTIAL_INPUT,
-        facts=(),
-        profile_create_context=_profile_create_context_for_test,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-    login_profile(
-        name=enrolled.profile_id,
-        passphrase_callback=lambda: _CREDENTIAL_INPUT,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-    record = ProfileRecordRepository.for_current_session(
-        UUID(enrolled.profile_id), profile_decode_context=_profile_decode_context_for_test
-    ).load(UUID(enrolled.profile_id))
-    return build_profile_overview(record)
+    # Registration and the overview both validate facts against registry authority.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        enrolled = register_profile_with_credentials(
+            label="Acquisition serialisation subject",
+            passphrase=_CREDENTIAL_INPUT,
+            facts=(),
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        login_profile(
+            name=enrolled.profile_id,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        record = ProfileRecordRepository.for_current_session(
+            UUID(enrolled.profile_id), profile_decode_context=_profile_decode_context_for_test
+        ).load(UUID(enrolled.profile_id))
+        return build_profile_overview(record, schema=_profile_contexts_for_test()[1].schema)
 
 
 def _screen(launch: _LaunchRecord) -> ProfileManagerScreen:

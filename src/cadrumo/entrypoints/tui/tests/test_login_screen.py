@@ -20,14 +20,14 @@ import asyncio
 import pytest
 from textual.widgets import Button, Input, Select
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
 from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.secret.login import LoginScreen
@@ -57,13 +57,15 @@ actually meet would prove something weaker."""
 
 def _register(label: str) -> str:
     """Create one real profile through the real door and return its id."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    outcome = register_profile_with_credentials(
-        label=label,
-        passphrase=_CREDENTIAL_INPUT,
-        profile_create_context=_profile_create_context_for_test,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
+    # Registration validates facts against registry authority, so it runs under a real lease.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        outcome = register_profile_with_credentials(
+            label=label,
+            passphrase=_CREDENTIAL_INPUT,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
     # Registration leaves the new profile unlocked. The screen under test
     # exists for a LOCKED machine, so the session is closed again here;
     # otherwise the idempotent-login guard would return the already-open

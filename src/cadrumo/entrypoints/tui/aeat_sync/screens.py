@@ -349,7 +349,8 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
                 )
             return
         label_key = _OPERATION_LABEL_KEYS.get((str(request.action.action_id), str(request.operation)))
-        if label_key is None:
+        # Without a host door the button could only refuse; say so once instead.
+        if label_key is None or self.controller.operation_handoff is None:
             self.query_one("#aeat-sync-status", Static).update(
                 aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff")
             )

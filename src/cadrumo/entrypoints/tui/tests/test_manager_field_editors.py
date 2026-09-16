@@ -21,17 +21,17 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Label, OptionList, Static
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.host import ScreenHostApp
 from ..profile.overview import FieldEditScreen, ProfileManagerScreen
@@ -76,22 +76,26 @@ def _ensure_logged_in() -> None:
 
 
 def _live_overview():
-    _ensure_logged_in()
-    record = load_test_profile_record(require_active_bucket_id())
-    return build_profile_overview(record, label=_LABEL)
+    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
+    with bundled_indexed_authority().operation():
+        _ensure_logged_in()
+        record = load_test_profile_record(require_active_bucket_id())
+        return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
 
 
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    _ensure_logged_in()
-    record = apply_manager_profile_field_mutation(
-        profile_id=require_active_bucket_id(),
-        path=path,
-        value=value,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-    return build_profile_overview(record, label=_LABEL)
+    # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _ensure_logged_in()
+        record = apply_manager_profile_field_mutation(
+            profile_id=require_active_bucket_id(),
+            path=path,
+            value=value,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
+        return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
 
 
 def _stored() -> dict[str, object | None]:
@@ -121,13 +125,15 @@ def _open(app: ProfileManagerScreen, path: str) -> None:
 async def test_a_boolean_field_is_picked_from_two_options_not_typed_into(tmp_path) -> None:
     """The operator must never have to guess how yes is spelled."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -153,13 +159,15 @@ async def test_picking_yes_stores_the_canonical_boolean(tmp_path) -> None:
     had to recognise a spelling only this surface could create.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -182,13 +190,15 @@ async def test_picking_no_stores_the_canonical_false(tmp_path) -> None:
     first option would pass the affirmative test above.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -207,13 +217,15 @@ async def test_picking_no_stores_the_canonical_false(tmp_path) -> None:
 async def test_an_enum_field_keeps_its_choice_editor(tmp_path) -> None:
     """The editor that already worked must not have been traded for the new one."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -233,13 +245,15 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
     the boolean tests would still pass.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -256,13 +270,15 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
 async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_path(tmp_path) -> None:
     """A storage address is not usable guidance and must never enter the dialog."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -282,13 +298,15 @@ async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_p
 async def test_a_date_box_says_which_layout_it_wants(tmp_path) -> None:
     """A typed box whose shape is not evident must state it before it is used."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=_LABEL,
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         app = _manager()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:

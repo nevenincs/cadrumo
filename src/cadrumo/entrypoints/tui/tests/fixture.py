@@ -20,10 +20,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....application.user_profile.login_session import logout_active_profile
 from ....core.config import load_settings
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -98,7 +97,6 @@ def ensure_profile() -> str:
     again before returning so the login surface meets the locked machine
     it exists for. Caller must already be inside :func:`harness_storage`.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.workflow.profile_bucket_scan import list_profile_buckets
 
     existing = list_profile_buckets()
@@ -106,15 +104,19 @@ def ensure_profile() -> str:
         return next(iter(existing))
 
     from ....application.user_profile.registration import register_profile_with_credentials
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ....domain.user_profile.values import UserProfileFact
 
-    outcome = register_profile_with_credentials(
-        label=PROFILE_LABEL,
-        passphrase=passphrase(),
-        facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"),),
-        profile_create_context=_profile_create_context_for_test,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
+    # Registration validates facts against registry authority, so it runs under a real lease.
+    with bundled_indexed_authority().operation():
+        profile_create_context, profile_decode_context = _profile_contexts_for_test()
+        outcome = register_profile_with_credentials(
+            label=PROFILE_LABEL,
+            passphrase=passphrase(),
+            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"),),
+            profile_create_context=profile_create_context,
+            profile_decode_context=profile_decode_context,
+        )
     logout_active_profile()
     return outcome.bucket_id
 

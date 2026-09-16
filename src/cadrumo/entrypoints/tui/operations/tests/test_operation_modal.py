@@ -23,17 +23,15 @@ from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
-
+from .....adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from .....adapters.persistence.operations.journal import OperationJournalRepository
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from .....adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from .....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from .....adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.auth.operation_definitions import (
     build_auth_operation_definitions,
@@ -80,8 +78,10 @@ from .....core.config import override_settings
 from .....core.i18n.render import clear_output_language_cache
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.time.clock import now
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url
+from ....adapter_composition import build_censal_fetch_port
 from ...components.host import ScreenHostApp
 from ..controller import OperationController
 from ..interactions import (
@@ -124,65 +124,67 @@ def _runtime(
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
 ) -> Generator[tuple[OperationComposedServices, OperationRegistry, UUID]]:
     """One real production-shaped registry, journal, lease, and custody set."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    # Registration validates facts against registry authority, so it runs under a real lease.
+    with bundled_indexed_authority().operation():
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
-    async def acquire_censo() -> CensalOperationAcquisition:
-        return CensalOperationAcquisition(observation=_observation())
+        async def acquire_censo() -> CensalOperationAcquisition:
+            return CensalOperationAcquisition(observation=_observation())
 
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        enrolled = register_profile_with_credentials(
-            label="Operation modal conformance subject",
-            passphrase=_CREDENTIAL_INPUT,
-            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
-        profile_id = UUID(enrolled.profile_id)
-        initial_login = login_profile(
-            name=enrolled.profile_id,
-            passphrase_callback=lambda: _CREDENTIAL_INPUT,
-            profile_decode_context=_profile_decode_context_for_test,
-        )
-        auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)
-        auth_registrations = build_auth_operation_registrations(auth_definitions)
-        censal_definition = build_censal_operation_definition(
-            certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
-            browser_session_factory=default_browser_session_factory,
-            acquire=acquire_censo,
-            before_irreversible_section=before_irreversible_section,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            censal_fetch_port=build_censal_fetch_port(),
-        )
-        registry = OperationRegistry(
-            definitions=(*auth_definitions, censal_definition),
-            public_registrations=tuple(
-                sorted(
-                    (*auth_registrations, build_censal_operation_registration(censal_definition)),
-                    key=lambda item: item.contract.definition_id,
-                )
-            ),
-        )
-        journal = OperationJournalRepository(storage_root=root / "operations")
-        with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
-            services = compose_operation_services(
-                authority_operation=unread_authority_operation(),
-                registry=registry,
-                journal=journal,
-                reader=journal,
-                event_stream=journal,
-                leases=OperationLeaseFilesystemRepository(storage_root=root / "operations"),
-                operands=operation_secure_reference_repository(objects=cast(SecureObjectRepository, objects)),
-                owner_id="1" * 64,
-                lease_token_factory=lambda: "2" * 64,
-                clock=now,
-                lease_duration=timedelta(minutes=10),
-                execution_timeout=timedelta(hours=1),
-                cleanup_timeout=timedelta(minutes=2),
+        with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+            enrolled = register_profile_with_credentials(
+                label="Operation modal conformance subject",
+                passphrase=_CREDENTIAL_INPUT,
+                facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
-            try:
-                yield services, registry, profile_id
-            finally:
-                asyncio.run(services.shutdown())
+            profile_id = UUID(enrolled.profile_id)
+            initial_login = login_profile(
+                name=enrolled.profile_id,
+                passphrase_callback=lambda: _CREDENTIAL_INPUT,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
+            auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)
+            auth_registrations = build_auth_operation_registrations(auth_definitions)
+            censal_definition = build_censal_operation_definition(
+                certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                browser_session_factory=default_browser_session_factory,
+                acquire=acquire_censo,
+                before_irreversible_section=before_irreversible_section,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                censal_fetch_port=build_censal_fetch_port(),
+            )
+            registry = OperationRegistry(
+                definitions=(*auth_definitions, censal_definition),
+                public_registrations=tuple(
+                    sorted(
+                        (*auth_registrations, build_censal_operation_registration(censal_definition)),
+                        key=lambda item: item.contract.definition_id,
+                    )
+                ),
+            )
+            journal = OperationJournalRepository(storage_root=root / "operations")
+            with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
+                services = compose_operation_services(
+                    authority_operation=unread_authority_operation(),
+                    registry=registry,
+                    journal=journal,
+                    reader=journal,
+                    event_stream=journal,
+                    leases=OperationLeaseFilesystemRepository(storage_root=root / "operations"),
+                    operands=operation_secure_reference_repository(objects=cast(SecureObjectRepository, objects)),
+                    owner_id="1" * 64,
+                    lease_token_factory=lambda: "2" * 64,
+                    clock=now,
+                    lease_duration=timedelta(minutes=10),
+                    execution_timeout=timedelta(hours=1),
+                    cleanup_timeout=timedelta(minutes=2),
+                )
+                try:
+                    yield services, registry, profile_id
+                finally:
+                    asyncio.run(services.shutdown())
 
 
 async def _submit_censal_review(services: OperationComposedServices, profile_id: UUID) -> OperationSubmission:

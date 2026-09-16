@@ -29,15 +29,13 @@ from textual.app import App
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Select
 
-from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
-from cadrumo.entrypoints.adapter_composition import build_verification_repository_bundle
-
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ....adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.modelo.operation_definitions import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
@@ -56,6 +54,7 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...adapter_composition import build_verification_repository_bundle
 from ..components.host import ScreenHostApp
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
@@ -139,7 +138,7 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
     """The profile manager keeps its whole field table inside the terminal."""
     with _registered_profile(tmp_path) as (_root, _authority_operation):
         record = load_test_profile_record(require_active_bucket_id())
-        overview = build_profile_overview(record, label=_LABEL)
+        overview = build_profile_overview(record, label=_LABEL, schema=_authority_operation.profile_schema())
 
         def _refuse_write(path: str, value: str) -> ProfileOverview:
             # This proof measures layout, never storage. A write door that

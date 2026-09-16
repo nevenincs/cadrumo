@@ -18,15 +18,15 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Final
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_interaction import profile_login_choices
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.values import UserProfileFact
 from ..installed_session import compose_authenticated_root_inputs_provider
 from ..launcher import InstalledWorkbenchRootCompositionV1, compose_installed_workbench_root, operation_services_scope
@@ -58,14 +58,16 @@ async def installed_workbench_root(
     identity, which is the state an operator is in before completing setup.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_create_context, profile_decode_context = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label=WORKBENCH_PROFILE_LABEL,
-            passphrase=_WORKBENCH_CREDENTIAL_INPUT,
-            facts=(() if tax_id is None else (UserProfileFact(path="identity.tax_id", value=tax_id),)),
-            profile_create_context=profile_create_context,
-            profile_decode_context=profile_decode_context,
-        )
+        # Registration validates facts against registry authority, so it runs under a real lease.
+        with bundled_indexed_authority().operation():
+            profile_create_context, profile_decode_context = _profile_contexts_for_test()
+            register_profile_with_credentials(
+                label=WORKBENCH_PROFILE_LABEL,
+                passphrase=_WORKBENCH_CREDENTIAL_INPUT,
+                facts=(() if tax_id is None else (UserProfileFact(path="identity.tax_id", value=tax_id),)),
+                profile_create_context=profile_create_context,
+                profile_decode_context=profile_decode_context,
+            )
         # Registration closes its own session and leaves the capsule sealed, so
         # the workbench generation below needs a real login to read anything.
         login_profile(

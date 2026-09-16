@@ -75,6 +75,9 @@ _ACCOUNT_KEYS: Final[dict[str, AccountActionV1]] = {
 }
 """The key for each account control, reachable from every destination."""
 
+_SESSION_WATCH_SECONDS: Final = 30.0
+"""How often the root checks whether the session has lapsed."""
+
 type HomeRefreshDoorV1 = Callable[[], HomeProjectionV1]
 type WorkbenchSearchRefreshDoorV1 = Callable[[], WorkbenchSearchDoorV1]
 type DestinationCatalogueRefreshDoorV1 = Callable[[], TuiDestinationCatalogueV1]
@@ -118,6 +121,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         refresh_workbench_search: WorkbenchSearchRefreshDoorV1 | None = None,
         refresh_destination_catalogue: DestinationCatalogueRefreshDoorV1 | None = None,
         account_factories: AccountFactoriesV1 | None = None,
+        read_account_session: Callable[[], HomeAccountSession] | None = None,
     ) -> None:
         """Bind the root to the operation services composed for this session."""
         super().__init__()
@@ -137,6 +141,12 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._active_target: TuiNavigationTargetV1 | None = None
         self._home_semantic_focus: HomeTarget | None = None
         self._account_session: HomeAccountSession | None = None
+        self._read_account_session = read_account_session
+        """Checks the live session's deadline without touching it, or ``None``.
+
+        Kept apart from the Home refresh on purpose: that refresh opens secure
+        objects, and every open rolls the idle deadline forward, so a timer
+        that refreshed Home would keep an idle session alive forever."""
 
     @property
     def services(self) -> OperationComposedServices:
@@ -180,6 +190,8 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def on_mount(self) -> None:
         """Install the shared appearance for this session."""
         install_cadrumo_themes(self)
+        if self._read_account_session is not None:
+            self.set_interval(_SESSION_WATCH_SECONDS, self._watch_account_session)
         self._describe_account_keys()
         if self._account_factories is None:
             self._refuse_account_action()
@@ -199,6 +211,24 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def account_session(self) -> HomeAccountSession | None:
         """The session the last Home projection described, once there is one."""
         return self._account_session
+
+    def _watch_account_session(self) -> None:
+        """End the session once it has lapsed, without waiting for the operator to act.
+
+        Any failure to confirm the session fails closed: a session that cannot
+        be shown to be live is treated as expired, never as still open.
+        """
+        reader = self._read_account_session
+        if reader is None or self._account_session is None:
+            return
+        try:
+            session = reader()
+        except Exception:
+            self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+            return
+        if session.expires_at != self._account_session.expires_at:
+            self._account_session = session
+            self._refresh_account_bars()
 
     def refresh_account_chrome(self) -> None:
         """Re-word the account keys and every account bar after a language change."""
@@ -594,6 +624,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._refresh_destination_catalogue = None
         self._active_target = None
         self._home_semantic_focus = None
+        self._read_account_session = None
         self.exit(outcome)
 
 
