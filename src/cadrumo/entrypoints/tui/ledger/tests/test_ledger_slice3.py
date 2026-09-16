@@ -26,7 +26,7 @@ from .....domain.attachments.enums import AttachmentSource
 from ....tui.components.host import ScreenHostApp
 from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
-from ..controller import LedgerWorkspaceController
+from ..controller import LedgerWorkspaceController, ledger_copy
 from ..evidence import LedgerEvidenceScreen
 from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1
 from ..reconciliation import LedgerReconciliationScreen
@@ -229,7 +229,9 @@ async def test_reordered_table_selection_resolves_exact_semantic_pair_not_cursor
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         table = screen.query_one("#ledger-suggestions", DataTable)
-        table.sort("invoice", reverse=True)
+        # Invoice cells are "issuer · total", so ascending order puts the
+        # second suggestion (Cliente Omega) above the first (Suministros Delta).
+        table.sort("invoice")
         await pilot.pause()
         assert table.ordered_rows[0].key.value == f"{_TX_B}:{_INVOICE_D}"
         table.move_cursor(row=0)
@@ -380,8 +382,8 @@ async def test_reconciliation_without_mutation_door_preserves_read_only_drift_an
             await pilot.press("enter")
             assert screen.flow_state is LedgerFlowState.EDITING
             assert screen.selected_pair is None
-            assert str(screen.query_one("#ledger-flow-status", Static).render()) == (
-                "This task is unavailable until a prepared operation is supplied."
+            assert str(screen.query_one("#ledger-flow-status", Static).render()) == ledger_copy(
+                "tui.ledger.refusal.submission_unavailable"
             )
 
 

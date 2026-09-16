@@ -210,23 +210,21 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             status.update(ledger_copy("tui.ledger.evidence.add_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
-            status.update(ledger_copy("tui.ledger.evidence.added", file=record.file_name))
             self.query_one("#ledger-evidence-path", Input).value = ""
-            self._reread()
+            self._show_records()
+            added = ledger_copy("tui.ledger.evidence.added", file=record.file_name)
+            self.refresh_then(lambda: self._after_reread(added))
         self.query_one("#ledger-evidence-add", Button).disabled = False
 
-    def _reread(self) -> None:
-        """Re-read the workspace so the area counts include the new document."""
-        if self.controller.can_refresh():
-            try:
-                self.controller = self.controller.refreshed()
-            except CadrumoError:
-                self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.refresh_failed"))
-            else:
-                navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
-                navigation.clear(columns=True)
-                self.populate_navigation()
+    def _after_reread(self, added: str) -> None:
+        """Show the re-read area counts beside the document just added."""
+        navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
+        navigation.clear(columns=True)
+        self.populate_navigation()
         self._show_records()
+        status = self.query_one("#ledger-flow-status", Static)
+        if not str(status.render()):
+            status.update(added)
 
 
 __all__ = ["LedgerEvidenceScreen"]

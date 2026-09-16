@@ -93,9 +93,12 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
 
     def _populate_suggestion_table(self, table: DataTable[str]) -> None:
         """Render canonical match evidence and retain each semantic pair as its row key."""
-        table.add_column(ledger_copy("tui.ledger.reconciliation.entry"), key="entry", width=28)
-        table.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), key="invoice", width=22)
-        table.add_column(ledger_copy("tui.ledger.reconciliation.match_evidence"), key="evidence", width=38)
+        # Fixed so the three columns fit the 80-column floor together; the
+        # compared values sit on their own lines in the evidence cell instead
+        # of widening it.
+        table.add_column(ledger_copy("tui.ledger.reconciliation.entry"), key="entry", width=22)
+        table.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), key="invoice", width=20)
+        table.add_column(ledger_copy("tui.ledger.reconciliation.match_evidence"), key="evidence", width=28)
         for row in self.controller.projection.invoice_reconciliations:
             table.add_row(
                 self.controller.entry_label(row.transaction_id),
@@ -107,7 +110,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
                 ),
                 self._match_evidence(row),
                 key=f"{row.transaction_id}:{row.invoice_id}",
-                height=3,
+                height=None,
             )
 
     @staticmethod
@@ -122,12 +125,12 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
                 # yes/no asks the operator to confirm a link while hiding
                 # what was compared, and a bare "no" reports a
                 # disagreement without saying between what and what.
-                f"{ledger_copy('tui.ledger.reconciliation.amount_match')}: "
-                f"{yes if row.amount_match else no} "
-                f"({row.transaction_amount} / {row.invoice_total})",
+                f"{ledger_copy('tui.ledger.reconciliation.amount_match')}: {yes if row.amount_match else no}",
+                f"  {row.transaction_amount} / {row.invoice_total}",
                 f"{ledger_copy('tui.ledger.reconciliation.counterparty_match')}: "
-                f"{yes if row.counterparty_match else no} "
-                f"({row.transaction_counterparty} / {row.invoice_counterparty})",
+                f"{yes if row.counterparty_match else no}",
+                f"  {row.transaction_counterparty}",
+                f"  {row.invoice_counterparty}",
             )
         )
 

@@ -23,6 +23,7 @@ from .models import (
     LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerEvidenceDoorV1,
+    LedgerExclusionSubmitterV1,
     LedgerImportDoorV1,
     LedgerInvoiceAddDoorV1,
     LedgerLinkSubmitterV1,
@@ -147,6 +148,7 @@ def ledger_screen_factory(
     link_action: ActionReference | None = None,
     link_submitter: LedgerLinkSubmitterV1 | None = None,
     invoice_add_door: LedgerInvoiceAddDoorV1 | None = None,
+    exclusion_submitter: LedgerExclusionSubmitterV1 | None = None,
     evidence_door: LedgerEvidenceDoorV1 | None = None,
     refresh: LedgerWorkspaceRefreshDoorV1 | None = None,
 ) -> TuiScreenFactoryV1:
@@ -161,6 +163,7 @@ def ledger_screen_factory(
         link_action=link_action,
         link_submitter=link_submitter,
         invoice_add_door=invoice_add_door,
+        exclusion_submitter=exclusion_submitter,
         evidence_door=evidence_door,
         refresh=refresh,
     )

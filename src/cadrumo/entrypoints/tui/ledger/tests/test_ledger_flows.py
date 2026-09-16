@@ -577,3 +577,53 @@ async def test_browse_mounts_a_tree_at_the_typed_folder_and_a_choice_fills_the_p
         screen.post_message(DirectoryTree.FileSelected(tree.root, statement))
         await pilot.pause()
         assert screen.query_one("#ledger-import-path", Input).value == str(statement)
+
+
+@pytest.mark.asyncio
+async def test_refresh_after_a_write_runs_off_the_loop_and_coalesces_repeated_back() -> None:
+    import threading
+
+    from ..workspace_injection import LedgerWorkspaceRefreshV1
+
+    projection = _projection()
+    release = threading.Event()
+    calls: list[int] = []
+
+    def slow_refresh() -> LedgerWorkspaceRefreshV1:
+        calls.append(1)
+        release.wait(timeout=10)
+        return LedgerWorkspaceRefreshV1(projection=projection, evidence_items=None)
+
+    controller = LedgerWorkspaceController(
+        _focused_context(projection.entries[0].transaction_id),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=_review_action(),
+            classify_action=_classify_action(),
+            classification_submitter=_ClassificationDoor(),
+            refresh=slow_refresh,
+        ),
+    )
+    screen = LedgerClassificationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            await pilot.press("enter", "enter")
+            await pilot.pause()
+            assert screen.flow_state is LedgerFlowState.SUCCEEDED
+            await pilot.press("escape")
+            await pilot.pause()
+            assert screen.refreshing
+            assert not screen.back_requested
+            assert "Updating" in str(screen.query_one("#ledger-flow-status", Static).render())
+            # The loop still answers keys while the read is out; a second Back joins the first.
+            await pilot.press("escape", "down")
+            await pilot.pause()
+            assert screen.refreshing
+            release.set()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert not screen.refreshing
+            assert screen.back_requested
+            assert calls == [1]
+            assert len(screen.refresh_seconds) == 1

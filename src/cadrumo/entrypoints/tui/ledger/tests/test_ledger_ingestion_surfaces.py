@@ -10,9 +10,11 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from .....application.ledger.models import ManualLedgerTransactionResult
 from .....core.config import override_settings
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.classification import InvoiceKind
+from .....domain.transactions.models import BucketTransactionRef
 from ....tui.components.host import ScreenHostApp
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
@@ -20,12 +22,15 @@ from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..models import (
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
+    LedgerExclusionSubmissionV1,
     LedgerFlowState,
     LedgerInvoiceAddResultV1,
     LedgerInvoiceEntryV1,
     LedgerReaderReadinessV1,
 )
+from ..review import LedgerReviewScreen
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
+from .test_ledger_flows import _ClassificationDoor, _classify_action
 from .test_ledger_slice3 import _evidence_action
 from .test_ledger_workspace import _context, _projection, _review_action
 
@@ -241,3 +246,73 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
             assert "evidence extract --evidence-id 8747cbf318cf0adb" in str(
                 screen.query_one("#ledger-refusal", Static).render()
             )
+
+
+class _ExclusionDoor:
+    def __init__(self) -> None:
+        self.calls: list[LedgerExclusionSubmissionV1] = []
+
+    async def __call__(self, submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
+        self.calls.append(submission)
+        return ManualLedgerTransactionResult.model_construct(
+            ref=BucketTransactionRef.model_construct(transaction_id=submission.transaction_id),
+        )
+
+
+@pytest.mark.asyncio
+async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_confirm() -> None:
+    projection = _projection()
+    door = _ExclusionDoor()
+    refreshes: list[int] = []
+
+    def refresh() -> LedgerWorkspaceRefreshV1:
+        refreshes.append(1)
+        return LedgerWorkspaceRefreshV1(projection=projection, evidence_items=None)
+
+    controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=_review_action(),
+            classify_action=_classify_action(),
+            classification_submitter=_ClassificationDoor(),
+            exclusion_submitter=door,
+            refresh=refresh,
+        ),
+    )
+    screen = LedgerReviewScreen(controller)
+    first = projection.review_transaction_ids[0]
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            assert not screen.query_one("#ledger-exclusion-confirm", Button).display
+            review = screen.query_one("#ledger-review", DataTable)
+            review.focus()
+            review.move_cursor(row=0)
+            await pilot.press("x")
+            await pilot.pause()
+            question = str(screen.query_one("#ledger-exclusion-question", Static).render())
+            assert controller.entry_label(first) in question
+            assert screen.query_one("#ledger-exclusion-confirm", Button).display
+            await pilot.press("escape")
+            await pilot.pause()
+            assert screen.pending_exclusion is None
+            assert not screen.back_requested
+            assert not door.calls
+            await pilot.press("x")
+            await pilot.pause()
+            screen.query_one("#ledger-exclusion-confirm", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+    assert [call.transaction_id for call in door.calls] == [first]
+    assert door.calls[0].action == _classify_action()
+    assert refreshes == [1]
+
+
+def test_exclude_is_not_offered_without_the_classify_authority() -> None:
+    controller = LedgerWorkspaceController(
+        _context(),
+        _projection(),
+        LedgerWorkspaceInjection(review_action=_review_action(), exclusion_submitter=_ExclusionDoor()),
+    )
+    assert not controller.can_exclude()

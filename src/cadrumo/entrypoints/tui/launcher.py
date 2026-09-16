@@ -51,6 +51,8 @@ if TYPE_CHECKING:
     from .ledger.models import (
         LedgerClassificationSubmissionV1,
         LedgerClassificationSubmitterV1,
+        LedgerExclusionSubmissionV1,
+        LedgerExclusionSubmitterV1,
         LedgerLinkResultV1,
         LedgerLinkSubmissionV1,
         LedgerLinkSubmitterV1,
@@ -265,6 +267,33 @@ def _ledger_link_submitter(profile_id: str, operation: PinnedAuthorityOperation)
             ports=ports,
         )
         return _LedgerLinkResultV1(transaction_id=result.transaction_id, invoice_id=result.invoice_id)
+
+    return submit
+
+
+def _ledger_exclusion_submitter(profile_id: str, operation: PinnedAuthorityOperation) -> LedgerExclusionSubmitterV1:
+    """Mark one entry reviewed and excluded in the operator's own ledger.
+
+    The lifecycle writer owns the finalized-modelo guard and the audit event;
+    this door passes the repositories that guard reads, and records the
+    classify authority the operator acted under.
+    """
+
+    async def submit(submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
+        from ...application.ledger.actions_lifecycle import mark_transaction_reviewed_excluded
+        from ..ledger_action_composition import compose_ledger_action_ports
+
+        ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
+        return mark_transaction_reviewed_excluded(
+            bucket_id=profile_id,
+            transaction_id=submission.transaction_id,
+            actor="operator",
+            source_command=str(submission.action.action_id),
+            transaction_repository=ports.transaction_repository,
+            bucket_event_repository=ports.bucket_event_repository,
+            work_unit_repository=ports.work_unit_repository,
+            calculation_repository=ports.calculation_repository,
+        )
 
     return submit
 
@@ -702,6 +731,7 @@ def _ledger_generation_factory(
             # the workspace focus.
             classify_action=dependencies.ledger_classify_action,
             classification_submitter=_ledger_classification_submitter(dependencies.account.profile_id, operation),
+            exclusion_submitter=_ledger_exclusion_submitter(profile_id, operation),
             # Import, invoice entry and evidence each carry the operator's own
             # input -- a path, a typed invoice, a document -- so the launcher
             # gives only the door and the operator supplies the rest.

@@ -177,6 +177,23 @@ class LedgerClassificationSubmitterV1(Protocol):
         ...
 
 
+class LedgerExclusionSubmissionV1(BaseModel):
+    """Catalogue-authorized request to exclude one reviewed entry from filing."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action: ActionReference
+    transaction_id: TransactionId
+
+
+class LedgerExclusionSubmitterV1(Protocol):
+    """Injected application door that marks one entry reviewed and excluded."""
+
+    async def __call__(self, submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
+        """Exclude one active entry through the canonical lifecycle writer."""
+        ...
+
+
 class LedgerImportSourceKind(StrEnum):
     """What an operator-chosen file holds, which decides the door that reads it."""
 
@@ -429,6 +446,8 @@ __all__ = [
     "LedgerEvidenceRecordRowV1",
     "LedgerEvidenceRecordStatus",
     "LedgerEvidenceRowV1",
+    "LedgerExclusionSubmissionV1",
+    "LedgerExclusionSubmitterV1",
     "LedgerFlowState",
     "LedgerImportDoorV1",
     "LedgerImportFileRefusalV1",
