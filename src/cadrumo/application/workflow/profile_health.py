@@ -118,6 +118,14 @@ Derived from :data:`RECORD_FAULT_STATUSES` rather than restated, so the two sets
 disagree about which record faults exist.
 """
 
+#: Where the active-profile selection for this assessment came from.
+#:
+#: ``env_override`` is a misnomer kept for wire compatibility: the environment
+#: CANNOT select a profile. ``CADRUMO_ACTIVE_PROFILE`` is a severed name in
+#: ``core.config``, so no environment source populates the field. The only
+#: writer is the in-process channel ``--profile`` and ``override_settings``
+#: use, which means this value really reports an INVOCATION-scoped override,
+#: and it is therefore expected on any command carrying ``--profile``.
 type ProfileSource = Literal["none", "env_override", "pointer"]
 
 

@@ -563,6 +563,26 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     )
 
 
+def _missing_filing_baseline_flag_groups(
+    flow: WizardFlow,
+    answers: BaseModel,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return the missing filing flags split into identity and Modelo groups."""
+    from ..user_profile.filing_baseline import missing_filing_baseline_flag_groups
+    from .persistence import serialise_answers
+
+    profile_path_flags = {
+        question.profile_key: question.id
+        for section in flow.sections
+        for question in section.questions
+        if question.profile_key is not None
+    }
+    return missing_filing_baseline_flag_groups(
+        serialise_answers(flow, answers),
+        profile_path_flags=profile_path_flags,
+    )
+
+
 def _require_filing_baseline(flow: WizardFlow, answers: BaseModel) -> None:
     """Refuse a wizard write whose projected answers lack the filing baseline.
 
@@ -570,11 +590,20 @@ def _require_filing_baseline(flow: WizardFlow, answers: BaseModel) -> None:
     single terminal-precondition owner after composing their candidate answer
     set and before publishing any profile facts.
     """
-    missing = _missing_filing_baseline_flags(flow, answers)
+    identity_missing, conditional_missing = _missing_filing_baseline_flag_groups(flow, answers)
+    missing = (*identity_missing, *conditional_missing)
     if not missing:
         return
+    # Both groups block the write, but they are different obligations. When the
+    # identity axis is satisfied and only the conditional Modelo requirements
+    # are outstanding, saying "identity data is incomplete" describes a state
+    # the profile is not in.
     raise WizardMissingFlagError(
-        translated_message="application.wizard.errors.edit_missing_filing_baseline",
+        translated_message=(
+            "application.wizard.errors.edit_missing_filing_baseline"
+            if identity_missing
+            else "application.wizard.errors.edit_missing_modelo_requirements"
+        ),
         context={
             "flow_id": flow.id,
             "missing": missing,
@@ -1032,14 +1061,14 @@ def _run_patch_edit(
     *,
     profile_id: str,
     operation: PinnedAuthorityOperation,
-) -> dict[str, str]:
+) -> tuple[dict[str, str], bool]:
     """Persist a non-interactive ``edit`` as a true patch.
 
     Only the flags the operator named on the command line are written;
     every other stored field is left untouched. No full-flow walk, no
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
-    from ...domain.user_profile.values import UserProfileFact
+    from ...domain.user_profile.values import ProfileSetupState, UserProfileFact
     from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values
@@ -1048,7 +1077,11 @@ def _run_patch_edit(
         project_answers,
     )
 
+    # Runs first, and deliberately: its widget validation is what refuses a
+    # blank supplied for a REQUIRED question, so the clear path below can only
+    # ever see optional ones.
     patched_values = profile_values_from_patch(flow, explicit_flags)
+    cleared_paths = _cleared_profile_paths(flow, explicit_flags)
     profile_decode_context = operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(
         profile_id,
@@ -1056,14 +1089,51 @@ def _run_patch_edit(
     ).load(profile_id)
     merged_values = record_to_path_values(record)
     merged_values.update(patched_values)
-    _require_filing_baseline(flow, project_answers(flow, merged_values))
-    apply_profile_fact_changes(
+    for path in cleared_paths:
+        merged_values.pop(path, None)
+    # A profile is born INCOMPLETE and is a real, writable record from that
+    # moment -- the operator completes it against a live profile rather than
+    # through a gated wizard. Both guards below judge a COMPLETE record: the
+    # answers projection validates the whole model, and the baseline demands
+    # the filing identity. Running them while the record is still being filled
+    # in refused every incremental edit, including the ones supplying the very
+    # fields they asked for, and blamed --tax-id for a command that never
+    # named it. `complete-setup` is the gate that judges completeness, and the
+    # fact-write door already defers the same way through `require_complete`.
+    if record.setup_state is not ProfileSetupState.INCOMPLETE:
+        _require_filing_baseline(flow, project_answers(flow, merged_values))
+    published = apply_profile_fact_changes(
         profile_id=profile_id,
-        changes=tuple(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
+        changes=(
+            *(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
+            *(UserProfileFact(path=path, value=None) for path in cleared_paths),
+        ),
         door=ProfileFactWriteDoor.PATCH,
         profile_decode_context=profile_decode_context,
     )
-    return merged_values
+    # The write door returns the CURRENT record untouched when the composed
+    # facts project to the values already stored, so an unchanged revision is
+    # the door's own answer to "did anything change", not a second guess here.
+    return merged_values, published.record_revision != record.record_revision
+
+
+def _cleared_profile_paths(flow: WizardFlow, explicit_flags: Mapping[str, str]) -> tuple[str, ...]:
+    """Return the profile paths an explicitly blank optional flag clears.
+
+    The patch projector drops a blank answer, which is right for deciding what
+    to WRITE and wrong for deciding what the operator asked for: naming a flag
+    with an empty value is a request to clear that answer, not an absent flag.
+    Dropping it meant the CLI could set an optional fact but never unset one,
+    and said "updated" while leaving the old value in place. A cleared path is
+    published as an explicit ``value=None`` fact, which is the record's own
+    representation of a cleared answer -- the same one the manager writes.
+    """
+    questions = {question.id: question for section in flow.sections for question in section.questions}
+    return tuple(
+        question.profile_key
+        for question_id, raw in explicit_flags.items()
+        if (question := questions.get(question_id)) is not None and question.profile_key is not None and not raw.strip()
+    )
 
 
 def _seed_default_answers(flow: WizardFlow, canonical: dict[str, str]) -> dict[str, str]:
@@ -1519,8 +1589,12 @@ def _run_wizard_persistence_path(
     profile_name: str,
     profile_id: str,
     operation: PinnedAuthorityOperation,
-) -> dict[str, str]:
-    """Dispatch to patch-edit or full-flow persistence."""
+) -> tuple[dict[str, str], bool]:
+    """Dispatch to patch-edit or full-flow persistence.
+
+    Returns the resulting values and whether a record revision was published.
+    The full-flow path always writes; only the patch path can be a no-op.
+    """
     non_interactive = quiet or accept_defaults
     if mode == "edit" and non_interactive:
         return _run_patch_edit(flow, explicit_flags, profile_id=profile_id, operation=operation)
@@ -1535,7 +1609,7 @@ def _run_wizard_persistence_path(
         mode=mode,
         operation=operation,
         explicit_question_ids=frozenset(explicit_flags),
-    )
+    ), True
 
 
 #: The routing projection's default suggestion: a profile carrying no
@@ -1664,6 +1738,7 @@ def _emit_wizard_success(
     mode: WizardPersistMode,
     profile_name: str,
     *,
+    record_changed: bool = True,
     next_command: str = DEFAULT_PROFILE_NEXT_COMMAND,
     ccaa_defaulted: bool = False,
     modify_no_resume: bool = False,
@@ -1710,8 +1785,16 @@ def _emit_wizard_success(
     # the localized word the operator reads on the text line. Collapsing them
     # is what let the wizard publish ``creado`` as a contract token while the
     # profile manager published ``created`` for the same command.
-    status_token = ProfileWizardStatus.CREATED if mode == "create" else ProfileWizardStatus.UPDATED
-    verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
+    if mode == "create":
+        status_token = ProfileWizardStatus.CREATED
+        verb_key = "wizard.commands.status.created"
+    elif record_changed:
+        status_token = ProfileWizardStatus.UPDATED
+        verb_key = "wizard.commands.status.updated"
+    else:
+        status_token = ProfileWizardStatus.UNCHANGED
+        verb_key = "wizard.commands.status.unchanged"
+    verb = tr(verb_key)
     resolved_modify_no_resume_message = (
         modify_no_resume_message
         if modify_no_resume_message is not None
@@ -1933,7 +2016,7 @@ def _execute_wizard_command(
     modify_descendants_message = tr("application.wizard.notices.modify_descendants_via_door")
     _refuse_foral_ccaa(canonical, explicit_flags, operation=operation)
     try:
-        profile_values = _run_wizard_persistence_path(
+        profile_values, record_changed = _run_wizard_persistence_path(
             flow,
             mode,
             canonical,
@@ -1965,6 +2048,7 @@ def _execute_wizard_command(
     _emit_wizard_success(
         mode,
         profile_name,
+        record_changed=record_changed,
         next_command=next_command,
         ccaa_defaulted=_ccaa_was_defaulted(
             mode,
