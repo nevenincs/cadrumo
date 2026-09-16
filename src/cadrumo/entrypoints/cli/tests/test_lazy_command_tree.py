@@ -178,3 +178,19 @@ def test_a_whole_graph_query_loads_every_command_spec_family() -> None:
 
     assert "cadrumo.entrypoints.cli.config.command_specs" in families
     assert "cadrumo.entrypoints.cli.modelo_work_command_specs" in families
+
+
+def test_a_real_app_dispatch_loads_no_config_family() -> None:
+    families = _spec_family_modules(
+        """
+        from click.testing import CliRunner
+        import typer.main
+        from cadrumo.entrypoints.cli.main import app
+
+        result = CliRunner().invoke(typer.main.get_command(app), ["app", "live", "portals", "list"])
+        assert result.exit_code == 0, result.output
+        """
+    )
+
+    assert "cadrumo.entrypoints.cli._app_live_command_specs" in families
+    assert not [name for name in families if name.startswith("cadrumo.entrypoints.cli.config.")]
