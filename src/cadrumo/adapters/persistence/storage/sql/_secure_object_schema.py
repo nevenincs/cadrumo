@@ -51,20 +51,6 @@ def ensure_quarantine_table(engine: Engine) -> None:
         )
 
 
-def coerce_raw_bytes(value: object) -> bytes:
-    """Coerce SQLite BLOB/TEXT return values into bytes."""
-    if isinstance(value, bytes | bytearray):
-        return bytes(value)
-    if isinstance(value, memoryview):
-        return value.tobytes()
-    if isinstance(value, str):
-        return value.encode(UTF_8_ENCODING)
-    raise StorageValidationError(
-        context={"value_type": type(value).__name__},
-        translated_message="errors.integrity.integrity_storage_secure_object_raw_bytes",
-    )
-
-
 def parse_revision_ancestor_ids(raw_value: object) -> tuple[str, ...]:
     """Parse stored secure-object revision ancestry JSON."""
     if raw_value in (None, ""):
