@@ -30,13 +30,18 @@ def _rows() -> dict[str, CommandRegistrationMetadata]:
 
 def is_exposable_command(command_key: str) -> bool:
     """Return whether a command schema identity is exposed as an operator verb."""
-    from .command_spec import BindingState
     from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_schema_identity().get(command_key)
+    return spec is not None and is_exposable_command_spec(spec)
+
+
+def is_exposable_command_spec(spec: CommandSpec) -> bool:
+    """Return whether one command declaration is exposed as an operator verb."""
+    from .command_spec import BindingState
+
     return (
-        spec is not None
-        and spec.parent_key not in {None, "root"}
+        spec.parent_key not in {None, "root"}
         and spec.handler is not None
         and spec.handler.state is BindingState.TARGET
         and (spec.kind == "leaf" or spec.invocation.invoke_without_command)
@@ -131,5 +136,6 @@ __all__ = [
     "build_verb_input_schemas",
     "cli_argv_for",
     "is_exposable_command",
+    "is_exposable_command_spec",
     "project_recovery_handoff_contract",
 ]

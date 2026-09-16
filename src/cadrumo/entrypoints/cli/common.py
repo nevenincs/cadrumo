@@ -45,7 +45,10 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.text_bounds import NonEmptyStr
 from .command_suggestions import INVOCATION_REMAINDER_META_KEY
-from .operator_surface_reconciliation import current_operator_surface_reconciliation
+from .operator_surface_reconciliation import (
+    current_operator_surface_reconciliation,
+    operator_surface_target_reconciliation,
+)
 
 
 # The accepted-code set for every ``--modelo`` option and argument comes from the
@@ -444,7 +447,9 @@ def _resolve_cli_precondition_action_reference(
     resolution = resolve_catalogue_action(
         action=action,
         catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=current_operator_surface_reconciliation(),
+        reconciliation=operator_surface_target_reconciliation(
+            OPERATOR_ACTION_CATALOGUE.lookup(action.action_id).target_command_key,
+        ),
     )
     declaration = resolution.declaration
     if resolution.target_leaf.input_schema is None:
