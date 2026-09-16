@@ -376,14 +376,11 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         # The 15 CCAA choices form one ~150-char metavar that Rich
         # wraps mid-token (`com` / `unidad_valenciana`). A short
         # explicit metavar plus `show_choices=False` keeps the metavar
-        # column tidy; the choice values are listed in the help text,
-        # where they wrap on commas / word boundaries.
+        # column tidy; the refusal for an unrecognised value lists the
+        # accepted communities instead.
         metavar="CCAA",
         show_choices=False,
-        help=tr(
-            "wizard.setup.flags.tax-residence-ccaa.help",
-            choices=", ".join(_CCAA_CHOICE_VALUES),
-        ),
+        help=tr("wizard.setup.flags.tax-residence-ccaa.help"),
     ),
     "tax-residence-jurisdiction-scope": typer.Option(
         "--tax-residence-jurisdiction-scope",
@@ -835,10 +832,7 @@ def _python_parameter(
         if question.id == "tax-residence-ccaa":
             option.metavar = "CCAA"
             option.show_choices = False
-            option.help = tr(
-                "wizard.setup.flags.tax-residence-ccaa.help",
-                choices=", ".join(values),
-            )
+            option.help = tr("wizard.setup.flags.tax-residence-ccaa.help")
     if section_title is not None:
         # `OptionInfo` carries `rich_help_panel`; setting it groups the
         # flag under the section's panel in Typer's `--help` output.

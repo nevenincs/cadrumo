@@ -34,6 +34,7 @@ class ProfilePreconditionCondition(StrEnum):
     PROFILE_SELECTION_KNOWN = "profile.selection.known"
     PROFILE_SELECTION_UNAMBIGUOUS = "profile.selection.unambiguous"
     PROFILE_SELECTION_LIVE = "profile.selection.live"
+    PROFILE_TARGET_NOT_SELECTED = "profile.target.not_selected"
     SESSION_LOGGED_IN = "profile.session.logged_in"
     SESSION_CURRENT = "profile.session.current"
     SESSION_SCHEMA_CURRENT = "profile.session.schema_current"
@@ -138,6 +139,32 @@ def inspect_filing_taxpayer_identity_precondition(
         argument_bindings=(binding,),
         missing_argument_names=("profile_name",) if binding.status is ActionArgumentStatus.MISSING else (),
         conditionality=conditionality_for_binding(binding),
+    )
+
+
+def profile_deletion_requires_logout_verdict(*, requested_profile: str) -> PreconditionVerdict:
+    """Return the outcome for deleting the profile that is currently selected.
+
+    Deletion refuses its own selected target, and closing that session is a
+    separate operation the operator already owns. Naming it on the action
+    channel is what lets an automated operator recover without parsing prose.
+    """
+    condition_id = ProfilePreconditionCondition.PROFILE_TARGET_NOT_SELECTED.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            _evidence(
+                condition_id=condition_id,
+                evidence_id=ProfilePreconditionEvidence.PROFILE_SELECTION.value,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                values={
+                    "requested_profile": requested_profile,
+                    "target_is_selected_profile": True,
+                },
+            ),
+        ),
+        action=ActionReference(action_id="operator.profile.logout"),
+        conditionality=ActionConditionality.IMMEDIATE,
     )
 
 
@@ -308,6 +335,7 @@ __all__ = [
     "former_product_state_verdict",
     "inspect_active_profile_precondition",
     "inspect_filing_taxpayer_identity_precondition",
+    "profile_deletion_requires_logout_verdict",
     "profile_selection_failure_verdict",
     "profile_session_failure_verdict",
 ]

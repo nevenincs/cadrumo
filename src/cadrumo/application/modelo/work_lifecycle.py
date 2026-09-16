@@ -32,6 +32,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, field_validator, model_validator
 
@@ -66,6 +67,9 @@ from .action_errors import (
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .work_lifecycle_ports import WorkLifecyclePorts
+
+if TYPE_CHECKING:
+    from .profile_readiness_gate import ModeloWorkProfile
 
 
 class ActiveWorkUnitUse(StrEnum):
@@ -331,6 +335,7 @@ def create_work_unit(
     operation: PinnedAuthorityOperation,
     clock: datetime | None = None,
     enforce_applicability: bool = True,
+    profile: ModeloWorkProfile | None = None,
 ) -> WorkUnit:
     """Create or load the :class:`WorkUnit` for an exact filing target key.
 
@@ -393,6 +398,7 @@ def create_work_unit(
         enforce_applicability=enforce_applicability,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        profile=profile,
     )
     reject_unknown_revision(modelo=modelo, revision_id=revision_id, operation=operation)
     reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period, operation=operation)
@@ -415,6 +421,7 @@ def create_work_unit(
         enforce_applicability=enforce_applicability,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        profile=profile,
     )
     repo = ports.work_unit_repository
     bv_repo = ports.bucket_event_repository

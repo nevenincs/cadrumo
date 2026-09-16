@@ -23,6 +23,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -524,23 +525,51 @@ def _render_missing_requirement(requirement: ProfilePreflightRequirement) -> str
     return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
 
 
-def _load_profile_for_modelo_work(
+@dataclass(frozen=True, slots=True)
+class ModeloWorkProfile:
+    """One authenticated profile record and the decode context its session used.
+
+    A command that runs several readiness gates for the same target loads this
+    once and hands it to each gate, instead of every gate decrypting the same
+    unchanged record again.
+    """
+
+    record: UserProfileRecord
+    profile_decode_context: ProfileDecodeContext
+
+
+def load_modelo_work_profile(
     *,
     bucket_id: str,
-    modelo: str,
     profile_decode_context: ProfileDecodeContext,
-) -> tuple[UserProfileRecord, ProfileDecodeContext]:
+) -> ModeloWorkProfile | None:
+    """Load the bucket's profile for modelo work, or ``None`` when no session serves it."""
     try:
         repository = ProfileRecordRepository.for_current_session(
             bucket_id,
             profile_decode_context=profile_decode_context,
         )
-        return repository.load(bucket_id), repository.session.profile_decode_context
-    except ProfileNotFoundError as exc:
+        return ModeloWorkProfile(
+            record=repository.load(bucket_id),
+            profile_decode_context=repository.session.profile_decode_context,
+        )
+    except ProfileNotFoundError:
+        return None
+
+
+def _load_profile_for_modelo_work(
+    *,
+    bucket_id: str,
+    profile_decode_context: ProfileDecodeContext,
+    profile: ModeloWorkProfile | None,
+) -> ModeloWorkProfile:
+    loaded = profile or load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=profile_decode_context)
+    if loaded is None:
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_profile_missing",
             context={"bucket_id": bucket_id},
-        ) from exc
+        )
+    return loaded
 
 
 def _require_profile_setup_complete(
@@ -604,6 +633,7 @@ def require_profile_ready_for_modelo_work(
     enforce_applicability: bool = True,
     profile_decode_context: ProfileDecodeContext,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> None:
     """Refuse filing-grade modelo work when the active profile is not eligible.
 
@@ -618,13 +648,15 @@ def require_profile_ready_for_modelo_work(
     :class:`ModeloProfileReadinessError` carries real ``legal_refs`` for every
     missing field the registry grounds - the memoised
     ``build_profile_grounding_index`` keeps the added per-call cost bounded on
-    this hot path.
+    this hot path. ``profile`` is the record the calling command already
+    loaded for this target; when omitted the gate loads it.
     """
-    record, resolved_profile_decode_context = _load_profile_for_modelo_work(
+    loaded = _load_profile_for_modelo_work(
         bucket_id=bucket_id,
-        modelo=modelo,
         profile_decode_context=profile_decode_context,
+        profile=profile,
     )
+    record, resolved_profile_decode_context = loaded.record, loaded.profile_decode_context
     _require_profile_setup_complete(
         record=record,
         bucket_id=bucket_id,
@@ -685,6 +717,7 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     enforce_applicability: bool = True,
     profile_decode_context: ProfileDecodeContext,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> None:
     """Refuse plainly incomplete existing profiles before registry work.
 
@@ -693,16 +726,13 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     baseline profile facts, local-work applicability refusals, and pre-activity
     lifecycle periods without requiring a resolvable :class:`ModeloRevision`.
     Missing profiles still pass through so the later full readiness gate can
-    raise the canonical missing-profile error.
+    raise the canonical missing-profile error. ``profile`` is the record the
+    calling command already loaded; when omitted the gate loads it.
     """
-    try:
-        repository = ProfileRecordRepository.for_current_session(
-            bucket_id,
-            profile_decode_context=profile_decode_context,
-        )
-        record = repository.load(bucket_id)
-    except ProfileNotFoundError:
+    loaded = profile or load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=profile_decode_context)
+    if loaded is None:
         return
+    record = loaded.record
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
     if applicability_first:
         _require_modelo_applicable_for_local_work(
@@ -717,7 +747,7 @@ def require_existing_profile_baseline_ready_for_modelo_work(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
-        profile_decode_context=repository.session.profile_decode_context,
+        profile_decode_context=loaded.profile_decode_context,
     )
     if enforce_applicability and not applicability_first:
         _require_modelo_applicable_for_local_work(
@@ -741,6 +771,7 @@ def require_profile_ready_for_work_unit(
     enforce_applicability: bool = True,
     profile_decode_context: ProfileDecodeContext,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> None:
     """Run the profile readiness gate for an existing work unit.
 
@@ -758,11 +789,14 @@ def require_profile_ready_for_work_unit(
         enforce_applicability=enforce_applicability,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        profile=profile,
     )
 
 
 __all__ = [
     "BLOCKING_APPLICABILITY_VERDICTS",
+    "ModeloWorkProfile",
+    "load_modelo_work_profile",
     "modelo_applicability_refusal",
     "modelo_work_profile_baseline_missing_paths",
     "modelo_work_profile_baseline_validation_issues",

@@ -84,6 +84,7 @@ from .work_selection import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .profile_readiness_gate import ModeloWorkProfile
 
 
 class ModeloWorkSelectorError(ModeloError):
@@ -1154,6 +1155,7 @@ def ensure_modelo_work_unit_for_active_target(
     enforce_applicability: bool = True,
     catalogue: WorkUnitCatalogue,
     ports: WorkLifecyclePorts,
+    profile: ModeloWorkProfile | None = None,
 ) -> ModeloWorkEnsureResult:
     """Resume or create the active work unit for one visible filing target.
 
@@ -1189,6 +1191,7 @@ def ensure_modelo_work_unit_for_active_target(
                 enforce_applicability=enforce_applicability,
                 profile_decode_context=profile_decode_context,
                 operation=operation,
+                profile=profile,
             )
             name_applied: str | None = None
             if name is not None and name.strip() and name.strip() != unit.name:
@@ -1216,6 +1219,7 @@ def ensure_modelo_work_unit_for_active_target(
             enforce_applicability=enforce_applicability,
             ports=ports,
             operation=operation,
+            profile=profile,
         )
         return ModeloWorkEnsureResult(work_unit=unit, reused=False)
 
