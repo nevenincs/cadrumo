@@ -108,12 +108,28 @@ class SiteHealthStatusLike(Protocol):
         ...
 
 
+class _DeclaredErrorCode:
+    """Resolve a subclass's declared code on first access.
+
+    Subclasses created before the declared-code catalogue loads are bound
+    lazily; binding stores the code on the subclass itself, which then
+    shadows this descriptor.
+    """
+
+    def __get__(self, instance: object, owner: type[CadrumoError]) -> ErrorCode:
+        if owner is CadrumoError:
+            raise AttributeError("CadrumoError itself declares no error code")
+        from .error_codes import get_registered_error_code
+
+        return get_registered_error_code(owner)
+
+
 class CadrumoError(Exception):
     """Base exception for all registered Cadrumo errors."""
 
     __bare_base_rationale__: ClassVar[str] = "central root of the registry-bound exception hierarchy"
 
-    code: ClassVar[ErrorCode]
+    code = _DeclaredErrorCode()
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         """Bind a registered :class:`ErrorCode` to each declared subclass."""

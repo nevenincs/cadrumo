@@ -55,9 +55,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.application.modelo.pulled_filing_reconcile import pulled_filing_divergence_findings
@@ -154,7 +154,7 @@ def _law_resolved_revision() -> ModeloRevision:
     from a stored revision id, so the revision under test is the law-determined
     one and the work unit below can only assert it rather than select it.
     """
-    return compiled_bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE).revision
+    return published_authority_operation().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE).revision
 
 
 def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, BindingDefinition]:

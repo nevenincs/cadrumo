@@ -59,6 +59,7 @@ from .validation_verdict_cache import (
     is_validated,
     record_validated,
     validation_verdict_scope,
+    verdict_validation_lock,
 )
 
 
@@ -203,6 +204,21 @@ def _compile_validated_authority_uncached(
         profile_schema_path=profile_schema_path,
         captured_profile_schema=captured_profile_schema,
     )
+    if verdicts is None:
+        return _validated_structural_authority(authority, sources_root, verdicts=None)
+    # Workers that start together on the same inputs wait here for the first
+    # one's verdict instead of each validating the whole registry.
+    with verdict_validation_lock(verdicts.registry_key):
+        return _validated_structural_authority(authority, sources_root, verdicts=verdicts)
+
+
+def _validated_structural_authority(
+    authority: StructuralRegistryComponents,
+    sources_root: Path,
+    *,
+    verdicts: ValidationVerdictScope | None,
+) -> ValidatedRegistryAuthority:
+    """Validate structural components unless a recorded clean verdict covers them."""
     modelos, catalogues = authority.modelos, authority.catalogues
     if verdicts is not None and is_validated(verdicts.registry_key):
         return ValidatedRegistryAuthority.from_validated_components(

@@ -34,11 +34,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
     advisory_profile_bucket,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
@@ -75,7 +75,7 @@ def bucket_id() -> str:
 
 
 def _revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
+    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
 
 
 def _write(
@@ -178,7 +178,7 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
     case in this module). The state is a property of the revision alone, so no
     profile setup is needed.
     """
-    revision = compiled_bundled_authority().snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
+    revision = published_authority_operation().snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
@@ -202,7 +202,7 @@ def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> N
     this the test above would pass against a collector that fired on every
     revision, which would say nothing about the condition it claims to detect.
     """
-    revision = compiled_bundled_authority().snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
+    revision = published_authority_operation().snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,

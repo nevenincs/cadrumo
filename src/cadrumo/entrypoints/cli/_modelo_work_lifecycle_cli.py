@@ -198,7 +198,7 @@ def _modelo_100_obligation_advisory_output(
         bucket,
         profile_decode_context=operation.profile_decode_context(),
     ).load(bucket)
-    raw = record_to_values(record)
+    raw = record_to_values(record, schema=operation.profile_schema())
     messages = [
         tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw, filing_year=unit.filing_year)
     ]

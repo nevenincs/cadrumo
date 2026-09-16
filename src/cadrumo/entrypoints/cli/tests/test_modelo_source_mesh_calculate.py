@@ -9,20 +9,19 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -42,7 +41,9 @@ from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+# Seeded rows and stored records decode against registry facts, so the test
+# body holds the same authority lease a CLI invocation holds.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
 
@@ -269,7 +270,7 @@ def _m100_activity_expense_transaction(
 
 
 def _seed_m100_profile_facts(bucket_id: str) -> None:
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
         load_test_profile_record,
         replace_test_profile_record,
     )
@@ -313,7 +314,7 @@ def _seed_m100_profile_facts(bucket_id: str) -> None:
 
 
 def _seed_prior_m100_zero_carry() -> None:
-    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
     CalculationObservationRepository().save(
         CalculationObservationRepository().prepare_observation_envelope(
@@ -671,8 +672,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     # A local_recurrence decision with selected_amount=0 satisfies the guard
     # while leaving the ledger mesh assertions meaningful.
     with open_test_profile_session(bucket_id):
-        from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-
+        from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
         from ....domain.iva_compensation.reconciliation import (
             IvaCompensationAuthoritySource,
             IvaCompensationReconciliationDecision,
@@ -834,8 +834,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
     advisory assertions meaningful.
     """
-    from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-
+    from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
     from ....domain.iva_compensation.reconciliation import (
         IvaCompensationAuthoritySource,
         IvaCompensationReconciliationDecision,

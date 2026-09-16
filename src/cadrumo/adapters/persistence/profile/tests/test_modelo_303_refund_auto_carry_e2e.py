@@ -38,7 +38,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -55,6 +54,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -223,7 +223,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     calc_repo = CalculationRevisionCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
 
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=period)
     with bundled_indexed_authority().operation() as operation:
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -325,7 +325,7 @@ def _next_period_carry_in(*, next_period: str = _NEXT_PERIOD) -> Decimal | None:
     scenarios pass ``_REDEME_NEXT_PERIOD`` (the monthly period following
     ``_REDEME_REFUND_PERIOD``).
     """
-    snapshot_next = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=next_period)
+    snapshot_next = published_authority_operation().snapshot("303", filing_year=_YEAR, period=next_period)
     with bundled_indexed_authority().operation() as operation:
         relation_values = resolve_relations_from_local_store(
             snapshot_next,

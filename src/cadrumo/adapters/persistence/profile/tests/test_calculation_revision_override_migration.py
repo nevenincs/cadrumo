@@ -25,8 +25,8 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -59,7 +59,7 @@ _BUCKET_ID = "9a1c77e0-4b22-4c3e-9a0e-5f0b7c1d2e34"
 @cache
 def _registry_snapshot_ref() -> RegistrySnapshotRef:
     # Compiled on first use, not at import: collection must stay cheap.
-    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2026, period="1T").snapshot_ref
 
 
 @cache

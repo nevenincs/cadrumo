@@ -48,6 +48,7 @@ import inspect
 import textwrap
 from collections.abc import Mapping, Sequence
 from functools import cache
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -63,11 +64,13 @@ from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....core.tabular import NormalizedTable
-from .client import LLMClient
 from .errors import LLMConfigError, LLMValidationError
 from .models import LLMRequest
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .response_json import first_json_object as _first_json_object
+
+if TYPE_CHECKING:
+    from .client import LLMClient
 
 #: Identifier under which this capability's calls are recorded in LLM usage and
 #: run telemetry, so a mapping call is attributable separately from a read.
@@ -564,15 +567,16 @@ class SemanticColumnRoleMapper:
         # client resolve it" -- but a stamp cannot defer, and one that omits the
         # transport is a stamp a consent withdrawal cannot classify.
         self._stamp_provider = self._provider or LLMProvider(resolved_settings.cadrumo_llm_provider)
-        self._client = (
-            client
-            if client is not None
-            else LLMClient(
+        if client is None:
+            # The provider transports load only when a mapping is actually requested.
+            from .client import LLMClient
+
+            client = LLMClient(
                 settings=resolved_settings,
                 caller="cadrumo.adapters.outbound.llm.column_role_mapping",
                 prompt_id=COLUMN_ROLE_MAPPING_PROMPT_ID,
             )
-        )
+        self._client = client
 
     @staticmethod
     def _role_model(settings: Settings) -> str:

@@ -20,7 +20,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -28,6 +27,7 @@ from dev.registry.tests.profile_schema_support import (
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
@@ -188,7 +188,7 @@ def _calculate_m100(
     filing_year: int,
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
 ) -> BucketAggregationCalculationResult:
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=filing_year, period=_PERIOD)
+    snapshot = published_authority_operation().snapshot("100", filing_year=filing_year, period=_PERIOD)
     work_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
@@ -279,7 +279,7 @@ def test_m100_2025_anexo_c_applied_amount_reduces_base_liquidable_not_base_impon
 
 def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> None:
     """The live 2025 registry keeps Art. 48 only on the distinct base-imponible step."""
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period=_PERIOD)
+    snapshot = published_authority_operation().snapshot("100", filing_year=2025, period=_PERIOD)
     revision = snapshot.revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     formulas = {formula.id: formula for formula in revision.formulas}
@@ -296,7 +296,7 @@ def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> N
     assert formulas["renta-base-liquidable-negativa-general-compensacion-total"].legal_refs == (art_50,)
     assert formulas["renta-base-imponible-general"].legal_refs[0] == art_48
     assert art_50 not in formulas["renta-base-imponible-general"].legal_refs
-    prior_snapshot = compiled_bundled_authority().snapshot("100", filing_year=2024, period=_PERIOD)
+    prior_snapshot = published_authority_operation().snapshot("100", filing_year=2024, period=_PERIOD)
     prior_binding = next(
         item
         for item in prior_snapshot.revision.bindings

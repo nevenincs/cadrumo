@@ -517,6 +517,13 @@ def _zone_availability(
     if all(item is AeatSyncWorkspaceAvailability.AVAILABLE for item in states):
         return AeatSyncWorkspaceAvailability.AVAILABLE
     if seen:
+        # STALE asserts a prior capture that has since aged or been withheld.
+        # A zone whose only missing side has never been pulled has no such
+        # capture: it is NEVER_CAPTURED, while still carrying the count its
+        # observed side measured.
+        missing = tuple(item for item in states if item is not AeatSyncWorkspaceAvailability.AVAILABLE)
+        if all(item is AeatSyncWorkspaceAvailability.NEVER_CAPTURED for item in missing):
+            return AeatSyncWorkspaceAvailability.NEVER_CAPTURED
         return AeatSyncWorkspaceAvailability.STALE
     if AeatSyncWorkspaceAvailability.LOCKED in states:
         return AeatSyncWorkspaceAvailability.LOCKED

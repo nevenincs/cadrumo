@@ -50,8 +50,13 @@ class _PydanticStringParamType(ParamType[str]):
 
     @override
     def convert(self, value: Any, param: Parameter | None, ctx: Context | None) -> str:
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        # Registry-declared string types validate against governed facts, and
+        # Click converts before the command body leases its authority.
         try:
-            return self._adapter.validate_python(value)
+            with bundled_indexed_authority().operation():
+                return self._adapter.validate_python(value)
         except (TypeError, ValueError, ValidationError) as exc:
             self.fail(str(exc), param, ctx)
 
@@ -76,12 +81,21 @@ def _parameter_default(default: ParameterDefault) -> tuple[object, Callable[[], 
     factory_target = default.factory
 
     def deferred_factory() -> object:
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
         factory = resolve_deferred_target(factory_target)
         if not callable(factory):
             raise TypeError(f"parameter default target is not callable: {factory_target.identity!r}")
-        return cast(Callable[[], object], factory)()
+        # A default factory runs while Click parses, before the command body
+        # takes its own lease, and registry-declared defaults read governed
+        # facts. It reads them under the same published authority the command
+        # then uses, rather than refusing for want of a scope.
+        with bundled_indexed_authority().operation():
+            return cast(Callable[[], object], factory)()
 
-    return None, deferred_factory
+    # Typer treats any literal other than Ellipsis as a supplied default and
+    # refuses it beside ``default_factory``; Ellipsis is its "no literal" marker.
+    return ..., deferred_factory
 
 
 def _annotation(target: DeferredTarget) -> object:

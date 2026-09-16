@@ -7,12 +7,12 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 import cadrumo.application.aggregation.modelo_bindings as modelo_bindings
 from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.aggregation.errors import AggregationValidationError
@@ -73,7 +73,7 @@ class LedgerIvaAggregationSourceResolver(modelo_bindings.LedgerIvaAggregationSou
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    return published_authority_operation().snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _recargo_invoice(invoice_number: str, *, issued_at: date, taxable_base: Decimal) -> Invoice:

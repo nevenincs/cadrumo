@@ -7,9 +7,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
@@ -62,7 +62,7 @@ def _catalogue_read_ports(
 
 
 def _m303_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
+    return published_authority_operation().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
 
 
 def _domestic_zero_sale() -> Transaction:

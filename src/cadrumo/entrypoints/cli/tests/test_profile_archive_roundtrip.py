@@ -37,8 +37,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
+from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.storage.bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage, isolated_profile_storage_root
 from ....tests.cli_envelope import unwrap_schema_envelope
@@ -147,8 +146,11 @@ def test_archive_export_restore_roundtrip(tmp_path: Path) -> None:
 
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ....core.config import override_settings
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
-    with override_settings(cadrumo_active_profile=source_bucket_id):
+    # Decoding a stored transaction resolves registry facts, so a direct read
+    # holds the same authority lease a CLI invocation holds.
+    with override_settings(cadrumo_active_profile=source_bucket_id), bundled_indexed_authority().operation():
         original_transactions = tuple(TransactionCatalogueRepository(bucket_id=source_bucket_id).load())
     assert len(original_transactions) == 1
 
@@ -165,7 +167,7 @@ def test_archive_export_restore_roundtrip(tmp_path: Path) -> None:
         # would dangle.
         assert (storage_root / "buckets" / source_bucket_id).is_dir()
 
-        with override_settings(cadrumo_active_profile=source_bucket_id):
+        with override_settings(cadrumo_active_profile=source_bucket_id), bundled_indexed_authority().operation():
             restored_transactions = tuple(TransactionCatalogueRepository(bucket_id=source_bucket_id).load())
 
     assert restored_transactions == original_transactions

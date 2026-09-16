@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 from .action_ports import LedgerActionPorts
 from .actions_manual import ledger_transaction_payload, summarize_manual_transactions
+from .attachment_review import list_attachment_review_queue
 from .models import LedgerReviewQuery
 from .review_projection import project_ledger_review_query
 from .workspace import LedgerWorkspaceProjectionV1, project_ledger_workspace
@@ -71,6 +72,9 @@ def read_ledger_workspace_projection(
         invoices=invoice_catalogue,
         revisions=calculation_revisions,
         work_units=work_units,
+        # The evidence area counts the same queue the evidence review action
+        # opens, read through the bucket's own attachment store.
+        evidence_pending_review=len(list_attachment_review_queue(ports.attachment_store)),
     )
 
 

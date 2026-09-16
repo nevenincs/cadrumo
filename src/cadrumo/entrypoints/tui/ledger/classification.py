@@ -63,7 +63,9 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         """Populate explicit authored choices without inferring a classification."""
         self.populate_navigation()
         table = cast("DataTable[str]", self.query_one("#ledger-classifications", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.status"))
+        # The rows are classifications to choose from, not states, so the
+        # column is named after what the operator is choosing.
+        table.add_column(ledger_copy("tui.ledger.area.classification"))
         for classification, key in _CHOICES:
             table.add_row(ledger_copy(key), key=classification.value)
         table.focus()

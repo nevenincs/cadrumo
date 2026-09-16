@@ -10,7 +10,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -28,6 +27,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -253,7 +253,7 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
         taxpayer_nif=_TAX_ID,
         target_year=_YEAR,
         target_period=Period.from_year_and_code(_YEAR, _PERIOD),
-        target_registry_snapshot_ref=compiled_bundled_authority()
+        target_registry_snapshot_ref=published_authority_operation()
         .snapshot("303", filing_year=_YEAR, period=_PERIOD)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
@@ -398,7 +398,7 @@ def _calculate_irene_revision(
         taxable_base=Decimal("200.00"),
     )
     tx_repo.save(TransactionCatalogue.from_transactions((sale, purchase)))
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",

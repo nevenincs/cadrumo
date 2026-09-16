@@ -27,7 +27,15 @@ from ..core.errors.hierarchy import InternalInvariantError
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
+from ..domain.buckets.event import (
+    BucketEvent,
+    BucketEventHistoryCatalogue,
+    BucketEventObjectType,
+    BucketEventType,
+    bucket_event_order_key,
+)
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ..domain.deadlines.errors import ProfileError
 from ..domain.deadlines.models import TaxpayerProfile
 from ..domain.invoices.models import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
@@ -52,6 +60,7 @@ from ..domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitStat
 from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..domain.user_profile.errors import UserProfileValidationError
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from .calculations.verification_report_gate import require_verification_report_coordinates_current
@@ -68,6 +77,8 @@ from .modelo.declarations_calendar import (
 )
 from .modelo.declarations_workspace import (
     DeclarationResultCasillaReaderV1,
+    DeclarationsLifecycleKind,
+    DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionError,
     DeclarationsWorkspaceProjectionV1,
@@ -186,6 +197,82 @@ def _validate_unobservable_result_state(
         raise ValueError(f"{label} {availability.value} result cannot carry a value")
 
 
+_LIFECYCLE_KIND_BY_EVENT: Final[Mapping[BucketEventType, DeclarationsLifecycleKind]] = {
+    BucketEventType.MODELO_WORK_UNIT_CREATED: DeclarationsLifecycleKind.CREATED,
+    BucketEventType.MODELO_WORK_UNIT_RENAMED: DeclarationsLifecycleKind.RENAMED,
+    BucketEventType.MODELO_CALCULATION_CREATED: DeclarationsLifecycleKind.CALCULATED,
+    BucketEventType.MODELO_VERIFICATION_PASSED: DeclarationsLifecycleKind.VERIFIED,
+    BucketEventType.MODELO_VERIFICATION_REFUSED: DeclarationsLifecycleKind.VERIFICATION_REFUSED,
+    BucketEventType.MODELO_FILED: DeclarationsLifecycleKind.FILED,
+}
+"""The bucket events the filing history reports, by the lifecycle meaning they carry.
+
+Every other ``MODELO_*`` event is outside this history's closed vocabulary --
+exports, reconciliations, wallet corrections -- and is left to the per-modelo
+history view that renders raw events.
+"""
+
+
+def _lifecycle_work_unit_id(
+    event: BucketEvent,
+    *,
+    revisions: CalculationRevisionCatalogue,
+    verification: VerificationReportCatalogue | None,
+    filings: ModeloRecordCatalogue,
+) -> str | None:
+    """Resolve the declaration an event belongs to through its own object."""
+    object_id = event.object_id
+    if event.object_type is BucketEventObjectType.WORK_UNIT:
+        return object_id
+    if event.object_type is BucketEventObjectType.CALCULATION_REVISION:
+        revision = revisions.revisions.get(object_id)
+        return None if revision is None else str(revision.work_unit_id)
+    if event.object_type is BucketEventObjectType.VERIFICATION_REPORT:
+        report = None if verification is None else verification.get(object_id)
+        if report is None:
+            return None
+        revision = revisions.revisions.get(report.calculation_revision_id)
+        return None if revision is None else str(revision.work_unit_id)
+    if event.object_type is BucketEventObjectType.FILING_RECORD:
+        record = filings.records.get(object_id)
+        return None if record is None else str(record.work_unit_id)
+    return None
+
+
+def _declarations_lifecycle_facts(
+    events: BucketEventHistoryCatalogue,
+    *,
+    work_units: WorkUnitCatalogue,
+    revisions: CalculationRevisionCatalogue,
+    verification: VerificationReportCatalogue | None,
+    filings: ModeloRecordCatalogue,
+) -> tuple[DeclarationsSanitizedLifecycleFactV1, ...]:
+    """Project the persisted event log into the Declarations filing history.
+
+    Only events whose declaration is still in the catalogue are reported: the
+    workspace joins every fact to a live declaration address, and a fact for a
+    work unit that is no longer there has no row to belong to.
+    """
+    known = {str(unit.work_unit_id) for unit in work_units.values()}
+    facts: list[DeclarationsSanitizedLifecycleFactV1] = []
+    for event in sorted(events.events.values(), key=bucket_event_order_key):
+        kind = _LIFECYCLE_KIND_BY_EVENT.get(event.event_type)
+        if kind is None:
+            continue
+        work_unit_id = _lifecycle_work_unit_id(event, revisions=revisions, verification=verification, filings=filings)
+        if work_unit_id is None or work_unit_id not in known:
+            continue
+        facts.append(
+            DeclarationsSanitizedLifecycleFactV1(
+                fact_id=event.event_id,
+                work_unit_id=work_unit_id,
+                occurred_at=event.occurred_at,
+                kind=kind,
+            )
+        )
+    return tuple(facts)
+
+
 def _read_declarations_workspace(
     *,
     operation: PinnedAuthorityOperation,
@@ -195,7 +282,17 @@ def _read_declarations_workspace(
     filing_records: ModeloRecordCatalogue,
     observed_at: UtcInstant,
     result_casilla_reader: DeclarationResultCasillaReaderV1 | None,
+    lifecycle_facts: tuple[DeclarationsSanitizedLifecycleFactV1, ...] | None,
 ) -> DeclarationsWorkspaceProjectionV1 | None:
+    history_observation = (
+        DeclarationsWorkspaceZoneObservationV1(
+            zone=DeclarationsWorkspaceZone.FILING_HISTORY,
+            availability=DeclarationsWorkspaceAvailability.UNAVAILABLE,
+            reason_code="workbench.declarations.lifecycle_reader_unavailable",
+        )
+        if lifecycle_facts is None
+        else _declarations_observation(DeclarationsWorkspaceZone.FILING_HISTORY, observed_at)
+    )
     try:
         return project_declarations_workspace(
             operation=operation,
@@ -203,16 +300,12 @@ def _read_declarations_workspace(
             work_units=work_units,
             calculation_revisions=calculation_revisions,
             filing_records=filing_records,
-            lifecycle_facts=(),
+            lifecycle_facts=() if lifecycle_facts is None else lifecycle_facts,
             result_casilla_reader=result_casilla_reader,
             zone_observations=(
                 _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
                 _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
-                DeclarationsWorkspaceZoneObservationV1(
-                    zone=DeclarationsWorkspaceZone.FILING_HISTORY,
-                    availability=DeclarationsWorkspaceAvailability.UNAVAILABLE,
-                    reason_code="workbench.declarations.lifecycle_reader_unavailable",
-                ),
+                history_observation,
             ),
         )
     except DeclarationsWorkspaceProjectionError:
@@ -435,6 +528,18 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         work_units, work_units_revision = self.work_unit_repository.load_revisioned()
         revisions, calculations_revision = self.calculation_repository.load_revisioned()
         filings, filings_revision = self.filing_repository.load_revisioned()
+        verification = self._load_verification_reports()
+        lifecycle_facts = (
+            None
+            if self.bucket_event_repository is None
+            else _declarations_lifecycle_facts(
+                self.bucket_event_repository.load(),
+                work_units=work_units,
+                revisions=revisions,
+                verification=verification,
+                filings=filings,
+            )
+        )
 
         declarations = _read_declarations_workspace(
             operation=self.operation,
@@ -444,11 +549,11 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filing_records=filings,
             observed_at=observed_at,
             result_casilla_reader=self.result_casilla_reader,
+            lifecycle_facts=lifecycle_facts,
         )
-        taxpayer = projection_for_taxpayer(record, tax_id_default="00000000T")
         raw_values = record_to_path_values(record)
-        evidence, declarations_calendar, agenda = _build_workbench_calendar_inputs(
-            taxpayer=taxpayer,
+        calendar_inputs = _read_workbench_calendar_inputs(
+            record=record,
             raw_values=raw_values,
             as_of=as_of,
             work_units=work_units,
@@ -457,7 +562,6 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             operation=self.operation,
         )
         ledger_sources = self._load_ledger_sources()
-        verification = self._load_verification_reports()
         custody_count = self._load_custody_count()
         ledger_ports = self.ledger_action_ports
         ledger = (
@@ -487,11 +591,9 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         return _build_workbench_generation_inputs(
             observed_at=observed_at,
             account_session=account_session,
-            agenda=agenda,
-            agenda_evidence_state=evidence.aeat_state,
+            calendar_inputs=calendar_inputs,
             ledger=ledger,
             declarations=declarations,
-            declarations_calendar=declarations_calendar,
             aeat_sync=aeat_sync,
             aeat_sync_refusal=aeat_sync_refusal,
             modelo=modelo,
@@ -698,12 +800,166 @@ def _schedule_observation(
         return DeclarationsCalendarSourceObservationV1(
             source=DeclarationsCalendarSource.SCHEDULE,
             availability=HomeAvailability.UNAVAILABLE,
-            reason_code="workbench.calendar.taxpayer_model_undeclared",
+            reason_code=_TAXPAYER_MODEL_UNDECLARED,
         )
     return DeclarationsCalendarSourceObservationV1(
         source=DeclarationsCalendarSource.SCHEDULE,
         availability=HomeAvailability.AVAILABLE,
         observed_at=observed_at,
+    )
+
+
+_TAXPAYER_PROFILE_INCOMPLETE: Final = "workbench.home.taxpayer_profile_incomplete"
+_TAXPAYER_MODEL_UNDECLARED: Final = "workbench.calendar.taxpayer_model_undeclared"
+
+
+@dataclass(frozen=True, slots=True)
+class _WorkbenchCalendarInputs:
+    """The calendar-derived Home and Declarations inputs, or why there are none.
+
+    ``refusal`` is set exactly when the calendar could not be built at all;
+    ``agenda_refusal`` is set whenever the agenda cannot be offered, which also
+    covers a calendar that was built but has no taxpayer model to schedule.
+    """
+
+    agenda_evidence_state: HomeZoneState
+    declarations_calendar: DeclarationsCalendarProjectionV1
+    agenda: OverviewAgenda | None
+    agenda_refusal: HomeZoneState | None
+    refusal: HomeZoneState | None
+
+
+def _taxpayer_profile_refusal(
+    raw_values: Mapping[str, str],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> HomeZoneState:
+    """Name the profile paths the operator still owes, as one Home zone state.
+
+    The paths come from the profile completeness contract, which the manager
+    reads too, so the zone points the operator at exactly the fields the
+    Profile destination lists as required.
+    """
+    from .user_profile.completeness import conditional_profile_missing_required, missing_required_field_paths
+
+    missing = (
+        *missing_required_field_paths(operation.profile_schema(), raw_values),
+        *conditional_profile_missing_required(raw_values),
+    )
+    return HomeZoneState(
+        availability=HomeAvailability.UNAVAILABLE,
+        reason_code=_TAXPAYER_PROFILE_INCOMPLETE,
+        missing_profile_paths=tuple(dict.fromkeys(missing)),
+    )
+
+
+def _read_workbench_calendar_inputs(
+    *,
+    record: UserProfileRecord,
+    raw_values: Mapping[str, str],
+    as_of: date,
+    work_units: WorkUnitCatalogue,
+    filings: ModeloRecordCatalogue,
+    observed_at: UtcInstant,
+    operation: PinnedAuthorityOperation,
+) -> _WorkbenchCalendarInputs:
+    """Project the taxpayer once and build every calendar-derived input from it.
+
+    A profile the taxpayer projection refuses is an incomplete profile, not a
+    broken session: the operator reached it by editing a field. The refusal is
+    published on the zones that need the projection, and every other zone of
+    the generation is served, rather than the whole workbench failing to start.
+    """
+    try:
+        taxpayer = projection_for_taxpayer(
+            record,
+            tax_id_default="00000000T",
+            schema=operation.profile_schema(),
+        )
+    except (ProfileError, UserProfileValidationError):
+        refusal = _taxpayer_profile_refusal(raw_values, operation=operation)
+        return _WorkbenchCalendarInputs(
+            agenda_evidence_state=refusal,
+            declarations_calendar=_refused_declarations_calendar(refusal, as_of=as_of, observed_at=observed_at),
+            agenda=None,
+            agenda_refusal=refusal,
+            refusal=refusal,
+        )
+    evidence, declarations_calendar, agenda, model_declared = _build_workbench_calendar_inputs(
+        taxpayer=taxpayer,
+        raw_values=raw_values,
+        as_of=as_of,
+        work_units=work_units,
+        filings=filings,
+        observed_at=observed_at,
+        operation=operation,
+    )
+    if not model_declared:
+        # The schedule observation already says why the calendar is empty; the
+        # agenda derived from the same missing model must say so too rather
+        # than read as a verified absence of dates.
+        return _WorkbenchCalendarInputs(
+            agenda_evidence_state=evidence.aeat_state,
+            declarations_calendar=declarations_calendar,
+            agenda=None,
+            agenda_refusal=HomeZoneState(
+                availability=HomeAvailability.UNAVAILABLE,
+                reason_code=_TAXPAYER_MODEL_UNDECLARED,
+            ),
+            refusal=None,
+        )
+    return _WorkbenchCalendarInputs(
+        agenda_evidence_state=evidence.aeat_state,
+        declarations_calendar=declarations_calendar,
+        agenda=agenda,
+        agenda_refusal=None,
+        refusal=None,
+    )
+
+
+def _refused_declarations_calendar(
+    refusal: HomeZoneState,
+    *,
+    as_of: date,
+    observed_at: UtcInstant,
+) -> DeclarationsCalendarProjectionV1:
+    """Publish a Declarations calendar that states why it has no schedule.
+
+    Declarations stays admitted when only the calendar is refused, and an
+    admitted Declarations destination always carries a calendar. The honest
+    calendar here is an empty one whose every source says why it is empty.
+    """
+    reason_code = refusal.reason_code
+    if reason_code is None:
+        raise InternalInvariantError("a refused Declarations calendar requires a reason")
+    unavailable = HomeZoneState(availability=HomeAvailability.UNAVAILABLE, reason_code=reason_code)
+    evidence = build_calendar_evidence_projection(
+        local=CalendarEvidenceReadOutcome[LocalCalendarEvidenceSources](state=unavailable),
+        aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](state=unavailable),
+    )
+    calendar = OverviewCalendar(
+        range=_calendar_query_range(as_of),
+        entries=(),
+        generated_at=observed_at,
+        taxpayer_model_declared=False,
+    )
+    return project_declarations_calendar(
+        calendar=calendar,
+        evidence=evidence,
+        as_of=as_of,
+        schedule_observation=DeclarationsCalendarSourceObservationV1(
+            source=DeclarationsCalendarSource.SCHEDULE,
+            availability=HomeAvailability.UNAVAILABLE,
+            reason_code=reason_code,
+        ),
+    )
+
+
+def _calendar_query_range(as_of: date) -> OverviewCalendarRange:
+    """The calendar year the workbench schedules, containing ``as_of``."""
+    return OverviewCalendarRange(
+        from_date=date(as_of.year, 1, 1),
+        to_date=date(as_of.year, 12, 31),
     )
 
 
@@ -716,11 +972,8 @@ def _build_workbench_calendar_inputs(
     filings: ModeloRecordCatalogue,
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
-) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda]:
-    query_range = OverviewCalendarRange(
-        from_date=date(as_of.year, 1, 1),
-        to_date=date(as_of.year, 12, 31),
-    )
+) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda, bool]:
+    query_range = _calendar_query_range(as_of)
     schedule_calendar = build_overview_calendar(
         taxpayer,
         query_range,
@@ -763,7 +1016,7 @@ def _build_workbench_calendar_inputs(
         schedule_observation=_schedule_observation(calendar, observed_at),
     )
     agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values, operation=operation)
-    return evidence, declarations_calendar, agenda
+    return evidence, declarations_calendar, agenda, calendar.taxpayer_model_declared
 
 
 def _secure_profile_home_input(
@@ -775,6 +1028,7 @@ def _secure_profile_home_input(
     ledger: LedgerWorkspaceProjectionV1 | None,
     declarations: tuple[HomeDeclarationResume, ...] | None,
     blocked_revision_ids: frozenset[str] = frozenset(),
+    agenda_refusal: HomeZoneState | None = None,
 ) -> HomeProjectionInput:
     """Assemble Home from the authorities this session actually read.
 
@@ -836,7 +1090,7 @@ def _secure_profile_home_input(
         agenda_state=(
             HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at)
             if agenda is not None
-            else unavailable("workbench.home.agenda_projector_unavailable")
+            else agenda_refusal or unavailable("workbench.home.agenda_projector_unavailable")
         ),
         ledger_readiness=readiness,
         overview_agenda=agenda,
@@ -1091,11 +1345,9 @@ def _build_workbench_generation_inputs(
     *,
     observed_at: UtcInstant,
     account_session: HomeAccountSession,
-    agenda: OverviewAgenda,
-    agenda_evidence_state: HomeZoneState,
+    calendar_inputs: _WorkbenchCalendarInputs,
     ledger: LedgerWorkspaceProjectionV1 | None,
     declarations: DeclarationsWorkspaceProjectionV1 | None,
-    declarations_calendar: DeclarationsCalendarProjectionV1,
     aeat_sync: AeatSyncWorkspaceProjectionV1 | None,
     aeat_sync_refusal: NamespacedId,
     modelo: tuple[ModeloWorkspaceProjectionV1, ...] | None,
@@ -1108,11 +1360,12 @@ def _build_workbench_generation_inputs(
             _secure_profile_home_input(
                 observed_at=observed_at,
                 account_session=account_session,
-                agenda=agenda,
-                agenda_evidence_state=agenda_evidence_state,
+                agenda=calendar_inputs.agenda,
+                agenda_evidence_state=calendar_inputs.agenda_evidence_state,
                 ledger=ledger,
                 declarations=_home_declarations(declarations, work_units),
                 blocked_revision_ids=_dependency_blocked_revisions(verification),
+                agenda_refusal=calendar_inputs.agenda_refusal,
             ),
             observed_at=observed_at,
         ),
@@ -1127,7 +1380,7 @@ def _build_workbench_generation_inputs(
             refusal="workbench.declarations.snapshot_projector_unavailable",
         ),
         declarations_calendar=WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1].available(
-            declarations_calendar,
+            calendar_inputs.declarations_calendar,
             observed_at=observed_at,
         ),
         aeat_sync=_source_result(aeat_sync, observed_at=observed_at, refusal=aeat_sync_refusal),

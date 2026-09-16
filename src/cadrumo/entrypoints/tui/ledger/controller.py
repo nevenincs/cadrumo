@@ -7,7 +7,6 @@ from typing import ClassVar, Final, cast
 from textual.app import App
 from textual.binding import Binding
 from textual.message import Message
-from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.models import (
@@ -26,9 +25,10 @@ from ....application.ledger.workspace import (
 from ....application.operator_actions.models import ActionReference
 from ....application.review.filter import LedgerReviewStatus
 from ....core.errors.hierarchy import InternalInvariantError
-from ....core.i18n.render import tr
+from ....core.i18n.render import lookup_translation, output_language, tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
+from ..components.account_chrome import AccountChromeScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -115,6 +115,19 @@ def item_count_label(state: LedgerWorkspaceAreaStateV1) -> str:
     return status_label(state.status) if state.status is LedgerWorkspaceStatus.UNMEASURED else str(state.item_count)
 
 
+def _application_reason_key(reason_code: str | None) -> str:
+    """Name the application's own reason for a closed area, or the generic line.
+
+    A reason without authored words falls back to the generic line rather
+    than to an invented phrase.
+    """
+    if reason_code is not None:
+        key = f"tui.ledger.refusal.reason.{reason_code}"
+        if lookup_translation(key, locale=output_language()) is not None:
+            return key
+    return "tui.ledger.refusal.application_state"
+
+
 class LedgerWorkspaceController:
     """Read-only custody of one injected application projection and shell context."""
 
@@ -152,6 +165,17 @@ class LedgerWorkspaceController:
             index for index, row in enumerate(self.projection.entries, start=1) if row.transaction_id == target
         )
         return position, len(self.projection.entries), str(target)[:12]
+
+    def entry_label(self, transaction_id: TransactionId) -> str:
+        """Name one entry the way the operator recorded it: its date and description.
+
+        An entry the projection does not carry falls back to its short
+        identifier rather than to a blank cell.
+        """
+        entry = next((row for row in self.projection.entries if row.transaction_id == transaction_id), None)
+        if entry is None:
+            return str(transaction_id)[:12]
+        return ledger_copy("tui.ledger.entry_label", date=entry.date, description=entry.description)
 
     def state_for(self, area: LedgerWorkspaceArea) -> LedgerWorkspaceAreaStateV1:
         """Return the application-owned area state."""
@@ -191,10 +215,15 @@ class LedgerWorkspaceController:
             return None
         if self.classification_target is not None:
             return None
+        # With no entries there is nothing to choose, and asking for a choice
+        # sends the operator looking for rows that do not exist.
+        reason_key = (
+            "tui.ledger.refusal.selection_required" if self.projection.entries else "tui.ledger.refusal.no_entries"
+        )
         return LedgerRouteRefusalV1(
             target=target,
             availability=LedgerWorkspaceAvailability.UNAVAILABLE,
-            reason_key="tui.ledger.refusal.selection_required",
+            reason_key=reason_key,
         )
 
     def _submission_door_is_missing(self, area: LedgerWorkspaceArea) -> bool:
@@ -213,7 +242,7 @@ class LedgerWorkspaceController:
             return LedgerRouteRefusalV1(
                 target=target,
                 availability=state.availability,
-                reason_key="tui.ledger.refusal.application_state",
+                reason_key=_application_reason_key(state.reason_code),
             )
         selection_refusal = self._selection_refusal(area, target)
         if selection_refusal is not None:
@@ -422,7 +451,7 @@ class LedgerBackRequested(Message):
     """Request that the owning host return to the parent destination."""
 
 
-class LedgerWorkspaceScreen(Screen[None]):
+class LedgerWorkspaceScreen(AccountChromeScreen):
     """Shared one-scroll shell and semantic navigation behavior."""
 
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
@@ -453,7 +482,14 @@ class LedgerWorkspaceScreen(Screen[None]):
             state = self.controller.state_for(area)
             refusal = self.controller.refusal_for(area)
             availability = state.availability if refusal is None else refusal.availability
-            table.add_row(area_label(area), availability_label(availability), item_count_label(state), key=area.value)
+            # An area waiting only for the operator to pick an entry is not
+            # unavailable; saying so would send them away from the fix.
+            availability_cell = (
+                ledger_copy("tui.ledger.availability.choose_entry")
+                if refusal is not None and refusal.reason_key == "tui.ledger.refusal.selection_required"
+                else availability_label(availability)
+            )
+            table.add_row(area_label(area), availability_cell, item_count_label(state), key=area.value)
 
     def handle_navigation_selection(self, event: DataTable.RowSelected) -> bool:
         """Handle the common navigation table and expose refusals as visible copy."""

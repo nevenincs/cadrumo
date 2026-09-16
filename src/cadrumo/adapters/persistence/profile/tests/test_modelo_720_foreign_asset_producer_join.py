@@ -51,11 +51,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -266,7 +266,7 @@ def _calculate_through_the_mesh(
             )
         )
 
-        snapshot = compiled_bundled_authority().snapshot(
+        snapshot = published_authority_operation().snapshot(
             Modelo("720").value,
             filing_year=_YEAR_N_PLUS_1,
             period=_PERIOD,

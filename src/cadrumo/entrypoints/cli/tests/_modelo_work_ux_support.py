@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 # Importing the wizard catalogue + persistence modules triggers
 # register_wizard_catalogue() at import time, exactly as the production CLI
@@ -29,39 +29,47 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
+def operator_profile_facts(*, activity_start_date: str | None = None) -> dict[str, str]:
+    """Return the facts of the operator profile the modelo work UX suites run against."""
+    facts = {
+        "identity.tax_id": "12345678Z",
+        "identity.name": "Operator",
+        "identity.surnames": "Readiness",
+        "activities.description": "design",
+        # Modelo 111 readiness requires the colegio concertado answer; these
+        # tests file 111 work units, so the profile states it.
+        "withholding.colegio_concertado": "false",
+    }
+    if activity_start_date is not None:
+        facts["censo.activity_start_date"] = activity_start_date
+    return facts
+
+
+GB_NON_RESIDENT_PROFILE_FACTS: dict[str, str] = {
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.tax_id": "12345678Z",
+    "identity.name": "Operator",
+    "identity.surnames": "Readiness",
+    "activities.description": "Spanish-source rent",
+    "taxpayer_type.fiscal_residency": "non_resident_irnr",
+    "taxpayer_type.country_of_fiscal_residence": "GB",
+    "taxpayer_type.representante_fiscal_nif": "12345678Z",
+    "taxpayer_type.representante_fiscal_nombre": "Test Representative",
+}
+
+
 def _create_profile(*, activity_start_date: str | None = None) -> None:
     """Register the operator profile through the shared CLI registration door.
 
     Creation is a precondition here, not the subject: these tests exercise the
     modelo work UX against a profile that already exists.
     """
-    facts = {
-        "identity.tax_id": "12345678Z",
-        "identity.name": "Operator",
-        "identity.surnames": "Readiness",
-        "activities.description": "design",
-    }
-    if activity_start_date is not None:
-        facts["censo.activity_start_date"] = activity_start_date
-    register_cli_profile(label=_PROFILE_LABEL, facts=facts)
+    register_cli_profile(label=_PROFILE_LABEL, facts=operator_profile_facts(activity_start_date=activity_start_date))
 
 
 def _create_gb_non_resident_profile() -> None:
     """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
-        label="operator",
-        facts={
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.tax_id": "12345678Z",
-            "identity.name": "Operator",
-            "identity.surnames": "Readiness",
-            "activities.description": "Spanish-source rent",
-            "taxpayer_type.fiscal_residency": "non_resident_irnr",
-            "taxpayer_type.country_of_fiscal_residence": "GB",
-            "taxpayer_type.representante_fiscal_nif": "12345678Z",
-            "taxpayer_type.representante_fiscal_nombre": "Test Representative",
-        },
-    )
+    register_cli_profile(label="operator", facts=GB_NON_RESIDENT_PROFILE_FACTS)
 
 
 def _create_de_nonresident_legal_entity_profile() -> None:

@@ -17,14 +17,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import logging
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import traceback
+import warnings
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from math import isfinite
 from pathlib import Path
@@ -46,6 +49,7 @@ __all__ = [
     "PerformanceCalibrationPolicy",
     "calibrate_cli_path",
     "evaluate_latency_budget",
+    "measure_resolution_costs",
     "profile_cli_path",
     "verify_cli_profiler_instrumentation",
 ]
@@ -775,6 +779,130 @@ def _resolve_cli_path(command_path: tuple[str, ...]) -> None:
         if child is None:
             raise LookupError(f"unknown CLI command token: {token!r}")
         command = child
+
+
+_RESOLUTION_REEXECUTED_PREFIX = "cadrumo.entrypoints"
+"""Cadrumo modules re-executed for every path of a batched resolution measurement.
+
+The entrypoint layer builds Typer objects that Typer mutates in place and caches
+compiled command apps, so a retained copy would answer a later path from the
+first path's state. The inner layers are retained once bootstrapped: batched
+module sets for every budgeted node were compared, name for name, with sets
+taken from one fresh interpreter per node, and agreed.
+"""
+
+
+@dataclass(frozen=True, slots=True)
+class _InterpreterBaseline:
+    """Process-global state a resolution may change and a reset must restore."""
+
+    probe_modules: frozenset[str]
+    retained_modules: frozenset[str]
+    record_factory: Callable[..., logging.LogRecord]
+    loggers: dict[str, logging.Logger | logging.PlaceHolder]
+    root_handlers: tuple[logging.Handler, ...]
+    root_filters: tuple[Any, ...]
+    root_level: int
+    environ: dict[str, str]
+    meta_path: tuple[Any, ...]
+    path_hooks: tuple[Callable[[str], Any], ...]
+    path: tuple[str, ...]
+
+
+def _cadrumo_modules() -> frozenset[str]:
+    return frozenset(name for name in sys.modules if name.startswith("cadrumo"))
+
+
+def _capture_baseline(probe_modules: frozenset[str]) -> _InterpreterBaseline:
+    retained = frozenset(
+        name
+        for name in _cadrumo_modules()
+        if name in probe_modules or not name.startswith(_RESOLUTION_REEXECUTED_PREFIX)
+    )
+    return _InterpreterBaseline(
+        probe_modules=probe_modules,
+        retained_modules=retained,
+        record_factory=logging.getLogRecordFactory(),
+        loggers=dict(logging.Logger.manager.loggerDict),
+        root_handlers=tuple(logging.root.handlers),
+        root_filters=tuple(logging.root.filters),
+        root_level=logging.root.level,
+        environ=dict(os.environ),
+        meta_path=tuple(sys.meta_path),
+        path_hooks=tuple(sys.path_hooks),
+        path=tuple(sys.path),
+    )
+
+
+def _restore_baseline(baseline: _InterpreterBaseline) -> None:
+    for name in _cadrumo_modules() - baseline.retained_modules:
+        del sys.modules[name]
+        # A retained package keeps its submodule as an attribute, and
+        # ``from package import submodule`` would return it without importing.
+        parent, _, child = name.rpartition(".")
+        owner = sys.modules.get(parent)
+        if owner is not None and child in vars(owner):
+            delattr(owner, child)
+    # Importing the CLI installs a chained record factory whose first log record
+    # imports observability modules; a stale chain would charge them to a later path.
+    logging.setLogRecordFactory(baseline.record_factory)
+    logging.Logger.manager.loggerDict.clear()
+    logging.Logger.manager.loggerDict.update(baseline.loggers)
+    for handler in logging.root.handlers:
+        if handler not in baseline.root_handlers:
+            handler.close()
+    logging.root.handlers[:] = baseline.root_handlers
+    logging.root.filters[:] = baseline.root_filters
+    logging.root.setLevel(baseline.root_level)
+    os.environ.clear()
+    os.environ.update(baseline.environ)
+    sys.meta_path[:] = baseline.meta_path
+    sys.path_hooks[:] = baseline.path_hooks
+    sys.path[:] = baseline.path
+
+
+def measure_resolution_costs(command_paths: Sequence[Sequence[str]]) -> list[dict[str, object]]:
+    """Measure the Cadrumo modules each path loads, as a fresh interpreter would.
+
+    Meant to run first thing in a dedicated interpreter. The CLI is bootstrapped
+    once; before each path the entrypoint layer and everything loaded since the
+    bootstrap is dropped and the process-global import and logging state is
+    restored. A path that finds any leftover module is reported as an error
+    rather than measured, so a broken reset cannot pass as a small count.
+
+    Returns:
+        One record per requested path, in order: ``path``, ``modules`` (the
+        Cadrumo module count), ``digest`` (a fingerprint of the sorted module
+        names, for comparing against a fresh interpreter) and ``error``.
+    """
+    probe_modules = _cadrumo_modules()
+    from typer.main import get_command
+
+    from ..main import app
+
+    get_command(app)
+    baseline = _capture_baseline(probe_modules)
+    _restore_baseline(baseline)
+    records: list[dict[str, object]] = []
+    for command_path in command_paths:
+        path = tuple(str(token) for token in command_path)
+        record: dict[str, object] = {"path": "/".join(path), "modules": None, "digest": None, "error": None}
+        leftover = sorted(_cadrumo_modules() ^ baseline.retained_modules)
+        if leftover:
+            record["error"] = f"interpreter was not reset before this path; differing modules: {leftover[:10]}"
+        else:
+            try:
+                with warnings.catch_warnings():
+                    _resolve_cli_path(path)
+            except Exception:
+                record["error"] = traceback.format_exc()
+            else:
+                loaded = sorted(_cadrumo_modules())
+                record["modules"] = len(loaded)
+                record["digest"] = hashlib.sha256("\n".join(loaded).encode()).hexdigest()
+        records.append(record)
+        _restore_baseline(baseline)
+    return records
 
 
 def _invoke_cli(argv: tuple[str, ...]) -> int:

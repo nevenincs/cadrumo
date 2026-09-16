@@ -11,7 +11,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -21,6 +20,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -101,7 +101,7 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
         taxpayer_nif=TAX_ID,
         target_year=_YEAR,
         target_period=Period.from_year_and_code(_YEAR, _PERIOD),
-        target_registry_snapshot_ref=compiled_bundled_authority()
+        target_registry_snapshot_ref=published_authority_operation()
         .snapshot("303", filing_year=_YEAR, period=_PERIOD)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
@@ -226,7 +226,7 @@ def calculate_irene_revision(
         taxable_base=Decimal("200.00"),
     )
     tx_repo.save(TransactionCatalogue.from_transactions((sale, purchase)))
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     work_unit = create_work_unit(
         bucket_id=BUCKET_ID,
         modelo="303",

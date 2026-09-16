@@ -245,6 +245,10 @@ _NIF_IVA_PATTERN = (
     rf"[0-9A-Za-z](?:{_PREFIXED_IDENTITY_SEPARATOR}[0-9A-Za-z]){{1,12}}\b"
 )
 
+#: The most letters any Member State's IVA body opens with; see the gate in
+#: ``_hash_if_nif_iva`` for why a longer leading run is refused.
+_NIF_IVA_BODY_MAX_LEADING_LETTERS = 2
+
 # IBAN — a bank account number is sensitive financial data, so it is hashed
 # out of operator-facing output by operator decision. That decision is BROADER
 # than this module's stated must-handle list, which names the tax-identity
@@ -510,6 +514,19 @@ def _timestamp_spans(value: str) -> tuple[tuple[int, int], ...]:
     return tuple(match.span() for match in _ISO_INSTANT_RE.finditer(value))
 
 
+def _uuid_spans(value: str) -> tuple[tuple[int, int], ...]:
+    """Return the spans of ``value`` that are complete canonical UUIDs.
+
+    A UUID is an opaque identifier, never a tax identity or an account number,
+    but its hex groups satisfy the wide identity scans: ``bf82-490d-a09d``
+    reads as a prefixed IVA number, and ``1470176e`` as a NIF. Hashing that
+    group left a profile id in an error context that names no profile. Only
+    the identity and IBAN arms exempt these spans; a URL or token that merely
+    contains a UUID is still redacted whole by its own rule.
+    """
+    return tuple(match.span() for match in _CLI_UUID_PATTERN.finditer(value))
+
+
 def _outside_timestamps(
     replace: Callable[[re.Match[str]], str],
     spans: tuple[tuple[int, int], ...],
@@ -537,6 +554,40 @@ def _outside_timestamps(
 
 def _is_word_character(character: str) -> bool:
     return character.isalnum() or character == "_"
+
+
+def _nif_iva_span_absorbs_a_word(span: str) -> bool:
+    """Report whether a prefixed-number candidate has swallowed a neighbouring word.
+
+    The scan admits a separator between every character, so it joins the words
+    around a number into one span, and the joined span still has enough digits
+    to pass the structural gate: ``ESB12345674 y`` reads as ``ESB12345674Y``.
+    Nothing leaked -- the number is inside the hash -- but the operator's words
+    went with it. Refusing is safe because :func:`_gated_sub` then tries the
+    shorter reading and the reading one character further in.
+
+    A separator-delimited group of letters only is a word, with one exception:
+    the key-character position, directly after a bare two-letter prefix
+    (``FR XX 999999999``). And a leading two-letter word is the neighbour, not
+    the prefix, whenever what follows it is a prefixed number in its own right
+    (``de SE556677889901``); the number is then found by the re-read.
+    """
+    groups: list[str] = [group for group in re.split(r"[ .\-]", span) if group]
+    if len(groups) < 2:
+        return False
+    bare_prefix = len(groups[0]) == 2 and groups[0].isalpha()
+    for index, group in enumerate(groups[1:], start=1):
+        if not group.isalpha():
+            continue
+        in_key_position = index == 1 and bare_prefix and len(group) <= _NIF_IVA_BODY_MAX_LEADING_LETTERS
+        if not in_key_position:
+            return True
+    if not bare_prefix:
+        return False
+    from ..identity.nif_iva import is_nif_iva_structurally_shaped, normalise_nif_iva
+
+    remainder = normalise_nif_iva("".join(groups[1:]))
+    return remainder[:2].isalpha() and is_nif_iva_structurally_shaped(remainder)
 
 
 def _gated_sub(
@@ -629,14 +680,18 @@ def _gated_replacement(
 def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = re.compile(rule.pattern, re.MULTILINE)
     protected = _timestamp_spans(value)
+    identity_protected = (*protected, *_uuid_spans(value))
 
-    def _sub(replace: Callable[[re.Match[str]], str]) -> str:
-        return pattern.sub(_outside_timestamps(replace, protected), value)
+    def _sub(
+        replace: Callable[[re.Match[str]], str],
+        spans: tuple[tuple[int, int], ...] = protected,
+    ) -> str:
+        return pattern.sub(_outside_timestamps(replace, spans), value)
 
     if rule.strategy is _RedactionStrategy.ELLIPSIS:
         return _sub(lambda m: "...")
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
-        return _sub(lambda m: _sha256_prefix(m.group(0)))
+        return _sub(lambda m: _sha256_prefix(m.group(0)), identity_protected)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
         # Imported here, not at module scope: ``core.identity`` reaches
         # ``core.errors``, which reaches this module — the same cycle the
@@ -659,7 +714,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return None
             return _sha256_prefix(span)
 
-        return _gated_sub(pattern, value, protected, _hash_if_identity)
+        return _gated_sub(pattern, value, identity_protected, _hash_if_identity)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
         # Imported at call time for the reason the identity arm above states.
         from ..identity.documents import is_identity_structurally_shaped
@@ -668,6 +723,18 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
         def _hash_if_nif_iva(span: str) -> str | None:
             normalised = normalise_nif_iva(span)
             prefix, body = normalised[:2], normalised[2:]
+            # No Member State's IVA body opens with more than two letters (the
+            # most are FR's two key characters and Northern Ireland's GD/HA),
+            # so a body that does is the tail of an ordinary WORD the wide scan
+            # joined to a number -- `Probe 3902` read as PR + OBE3902. Hashing
+            # it rewrote operator-chosen profile labels, and the rewritten
+            # label was then quoted back in commands that cannot match it.
+            # Refusing here is safe: _gated_sub re-reads a refused span one
+            # character further in, so a real number inside it is still found.
+            if len(body) - len(body.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ")) >= _NIF_IVA_BODY_MAX_LEADING_LETTERS + 1:
+                return None
+            if _nif_iva_span_absorbs_a_word(span):
+                return None
             if prefix == "ES":
                 # The prefixed branch is a core lexical admission only. The
                 # Spanish authority validates BODY at the filing boundary.
@@ -678,7 +745,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return None
             return _sha256_prefix(span)
 
-        return _gated_sub(pattern, value, protected, _hash_if_nif_iva)
+        return _gated_sub(pattern, value, identity_protected, _hash_if_nif_iva)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
 
         def _hash_if_iban(span: str) -> str | None:
@@ -687,7 +754,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return _sha256_prefix(span)
             return None
 
-        return _gated_sub(pattern, value, protected, _hash_if_iban)
+        return _gated_sub(pattern, value, identity_protected, _hash_if_iban)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
         return _sub(lambda m: _host_only(m.group(0)))
     if rule.strategy is _RedactionStrategy.FINGERPRINT:
@@ -901,7 +968,7 @@ def _cli_uuid_is_custody_identity(text: str, start: int, end: int) -> bool:
         # A longer token that merely starts with a UUID shape; leave it to the
         # remaining passes rather than truncating it into a placeholder.
         return True
-    segments = [segment for segment in re.split(r"[\\/]", before) if segment]
+    segments: list[str] = [segment for segment in re.split(r"[\\/]", before) if segment]
     if not segments:
         return True
     if segments[-1].lower() in _CLI_CUSTODY_UUID_PARENTS:

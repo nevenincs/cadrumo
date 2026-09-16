@@ -10,13 +10,11 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
     seed_test_profile_record,
 )
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.workflow_gate import workflow_period_for_work_unit
@@ -44,12 +42,13 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....entrypoints.adapter_composition import build_work_lifecycle_ports
 from .cli_runner import invoke_cached_cli
 
@@ -98,7 +97,11 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+def _isolated_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Iterator[None]:
+    # Seeding builds records with the leased creation context, so the lease
+    # must exist before this fixture runs; an autouse fixture is otherwise set
+    # up ahead of the module's ``usefixtures`` lease.
+    del authority_operation
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),

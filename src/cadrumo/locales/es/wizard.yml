@@ -8,6 +8,7 @@ wizard:
     status:
       created: creado
       saved: guardado
+      unchanged: sin cambios
       updated: actualizado
   demo:
     description: Una sección de demostración para probar la funcionalidad del asistente.
@@ -20,8 +21,8 @@ wizard:
     blank_secret: Valor secreto requerido para %{prompt_key}.
     blank_text: Valor obligatorio para %{prompt_key}.
     checkbox_required: Selecciona al menos una opción para %{prompt_key}.
-    checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
-      %{choices}.'
+    checkbox_unknown: 'Valor no reconocido para %{flag} (%{prompt_key}): %{raw}. Opciones
+      válidas: %{choices}.'
     checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
     eu_eea_country_required: '%{flag} es obligatorio cuando %{condition_flag} indica
       residencia en la UE o el EEE.'
@@ -33,8 +34,8 @@ wizard:
     invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
       postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
     invalid_tax_id: 'NIF/CIF/DNI/NIE no válido para %{prompt_key}: %{raw}. %{detail}'
-    select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
-      %{choices}.'
+    select_unknown: 'Valor no reconocido para %{flag} (%{prompt_key}): %{raw}. Opciones
+      válidas: %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
     spouse_tax_id_required_joint: '%{flag} es obligatorio cuando %{condition_flag}
       es tributación conjunta.'
@@ -470,7 +471,8 @@ wizard:
       tax-id:
         help: Identificador fiscal (NIF/CIF/DNI/NIE) del perfil activo
       tax-residence-ccaa:
-        help: 'Comunidad autónoma de residencia fiscal. Una de: %{choices}.'
+        help: Comunidad autónoma de residencia fiscal, en territorio común. Si el
+          valor no se reconoce, el error enumera las comunidades aceptadas.
       tax-residence-jurisdiction-scope:
         help: 'Régimen territorial declarado: territorio común o territorio foral
           todavía no compatible.'
@@ -761,7 +763,7 @@ wizard:
             label: Territorio común
           foral_unsupported:
             label: Territorio foral (todavía no compatible)
-        prompt: ¿Qué territorio tributario se aplica a este Modelo 303?
+        prompt: ¿Qué régimen territorial se aplica a tu residencia fiscal?
       title: Residencia fiscal
     review:
       registered-non-official-suffix: ' (del certificado censal - no verificado por

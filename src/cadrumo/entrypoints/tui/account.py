@@ -12,10 +12,14 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import TYPE_CHECKING
+from functools import partial
+from typing import TYPE_CHECKING, ClassVar, override
 from uuid import UUID
 
+from textual.command import DiscoveryHit, Hit, Hits, Provider
+
 from ...core.errors.hierarchy import CadrumoError
+from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
 from .components.theme import AppearanceHost, toggle_appearance
 from .navigation import TuiScreenContextV1
 from .profile.overview import ProfileManagerScreen
@@ -100,6 +104,7 @@ def compose_account_factories(
     launch_profile_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
     credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
     appearance: AccountAppearanceFactoryV1 = toggle_appearance,
+    complete_setup: Callable[[], ProfileOverview] | None = None,
 ) -> AccountFactoriesV1:
     """Bind already-composed account doors to their canonical TUI owners.
 
@@ -115,6 +120,7 @@ def compose_account_factories(
         return ProfileManagerScreen(
             profile_overview,
             persist=persist_profile_field,
+            complete_setup=complete_setup,
             validate=validate_profile_field,
             launch_source=launch_profile_source,
             credential_postures=credential_postures,
@@ -154,9 +160,11 @@ def compose_profile_sign_out_factory(
 ) -> AccountSignOutFactoryV1:
     """Bind the canonical strong-close operation to the current profile.
 
-    The returned door submits only when invoked.  Starting and observing stay
-    with the existing operation modal, so composition performs no operation,
-    persistence, or credential work.
+    The returned door submits and starts the close only when invoked, exactly
+    as ``config logout`` does; composition performs no operation, persistence,
+    or credential work. Observation stays with the operation modal, which
+    watches and never starts: a close that was submitted but not started sat
+    in its created state indefinitely while the modal reported it in progress.
     """
     from ...application.user_profile.operations import build_profile_logout_operation_request
     from .operations.controller import OperationController
@@ -168,9 +176,66 @@ def compose_profile_sign_out_factory(
             build_profile_logout_operation_request(parsed_profile_id),
             actor_ref=actor_ref,
         )
-        return OperationController(services=services, submission=submission, actor_ref=actor_ref)
+        controller = OperationController(services=services, submission=submission, actor_ref=actor_ref)
+        await controller.start()
+        return controller
 
     return sign_out
+
+
+class WorkbenchAccountProviderV1(Provider):
+    """Offer the account controls in the command palette.
+
+    The controls sit on the root shell, which every destination screen covers,
+    so without this the palette was the one cross-screen surface that could not
+    reach them. Entries exist only while the session has account doors;
+    offering a control that can only refuse would be a false promise.
+    Appearance is left to the root's system commands, which offer it with or
+    without a profile, so it is not listed twice.
+    """
+
+    _ACTIONS: ClassVar[tuple[AccountActionV1, ...]] = tuple(
+        action for action in AccountActionV1 if action is not AccountActionV1.APPEARANCE
+    )
+
+    def _host(self) -> TuiAccountHostV1 | None:
+        app = self.app
+        if isinstance(app, TuiAccountHostV1) and app.account_actions_available:
+            return app
+        return None
+
+    @override
+    async def search(self, query: str) -> Hits:
+        """Fuzzy-match the account controls by their on-screen names."""
+        host = self._host()
+        if host is None:
+            return
+        matcher = self.matcher(query)
+        for action in self._ACTIONS:
+            text = account_action_label(action)
+            if (score := matcher.match(text)) > 0:
+                yield Hit(
+                    score=score,
+                    match_display=matcher.highlight(text),
+                    command=partial(host.run_account_action, action),
+                    text=text,
+                    help=account_action_help(action),
+                )
+
+    @override
+    async def discover(self) -> Hits:
+        """List the account controls before anything is typed."""
+        host = self._host()
+        if host is None:
+            return
+        for action in self._ACTIONS:
+            text = account_action_label(action)
+            yield DiscoveryHit(
+                display=text,
+                command=partial(host.run_account_action, action),
+                text=text,
+                help=account_action_help(action),
+            )
 
 
 __all__ = [
@@ -184,6 +249,7 @@ __all__ = [
     "AccountRecomposeRequiredV1",
     "AccountSessionExpiredError",
     "AccountSignOutFactoryV1",
+    "WorkbenchAccountProviderV1",
     "compose_account_factories",
     "compose_profile_sign_out_factory",
 ]

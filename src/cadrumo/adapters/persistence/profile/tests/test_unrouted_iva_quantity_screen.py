@@ -8,9 +8,9 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
@@ -64,7 +64,7 @@ def _resolver(repository: TransactionCatalogueRepository) -> LedgerIvaAggregatio
 def _revision(modelo_id: str) -> ModeloRevision:
     """The committed revision governing each modelo's IVA ledger bindings."""
     period = "1T" if modelo_id == "303" else "0A"
-    return compiled_bundled_authority().snapshot(modelo_id, filing_year=_Q1_2025.filing_year, period=period).revision
+    return published_authority_operation().snapshot(modelo_id, filing_year=_Q1_2025.filing_year, period=period).revision
 
 
 def _sale(

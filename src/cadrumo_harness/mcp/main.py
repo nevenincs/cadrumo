@@ -78,9 +78,12 @@ def main() -> None:
     runtime is incomplete, it refuses with the install hint and a non-zero exit rather than
     raising a raw ``ModuleNotFoundError``.
     """
+    from cadrumo.core.logging import configure_logging
+
     from .server import serve
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile-secrets-file", type=Path)
     args = parser.parse_args()
+    configure_logging()
     serve(profile_secrets_file=args.profile_secrets_file)

@@ -73,8 +73,16 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
     render_context: dict[str, object] = {
         "prompt_key": field_label,
         "question_id": question.id,
+        "flag": f"--{question.id}",
     }
     render_context.update(context)
+    # A sequence interpolated straight into prose renders as its Python repr
+    # (``['a', 'b']``), which is not a sentence in any of the locales and is
+    # not what the operator retypes. Vocabularies are rendered as prose here,
+    # once, rather than at each call site.
+    choices = render_context.get("choices")
+    if isinstance(choices, list | tuple):
+        render_context["choices"] = ", ".join(str(choice) for choice in choices)
     error_context = _redact_validation_context(render_context)
     translated = tr(message_key, **render_context)
     return WizardValidationError(message_key, context=error_context, translated_message=translated)

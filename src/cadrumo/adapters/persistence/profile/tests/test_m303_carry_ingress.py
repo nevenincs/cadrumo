@@ -7,9 +7,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
@@ -46,7 +46,7 @@ def _observed_header(code: str) -> ObservedHeaderFact:
 
 
 def _carry_observation() -> RegistryModeloObservation:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         Modelo("303").value,
         filing_year=_PERIOD.filing_year,
         period=_PERIOD.registry_token,

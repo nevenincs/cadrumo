@@ -20,6 +20,10 @@ into the workspace schema facet at all, and this module does not
 substitute for it: inventing a section structure the projection does not
 carry would be exactly the synthesis the cohort forbids everywhere else.
 
+The family and the declared input kind are shown in words. The family's
+own token, and the binding address of a repeated row, are raw identifiers:
+they sit in a collapsed technical-details group at the end of the page.
+
 Row identity is the canonical identity the producer already assigned -- a
 casilla id for a scalar, a (binding, row index) pair for a repeated row --
 so a row key never encodes an address the registry does not have.
@@ -38,7 +42,6 @@ from typing import ClassVar, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.screen import Screen
 from textual.widgets import Static
 
 from .....application.modelo.workspace_models import (
@@ -47,12 +50,14 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceRepeatedRowMaterializationRecordV1,
     ModeloWorkspaceScalarMaterializationRecordV1,
 )
-from .....core.i18n.render import tr
+from .....core.i18n.render import lookup_translation, output_language, tr
+from ...components.account_chrome import AccountChromeScreen
 from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
 from .controller import ModeloWorkspaceReadSession
-from .models import ModeloWorkspaceBoundedPageV1, display_text
+from .models import ModeloWorkspaceBoundedPageV1, display_text, input_kind_label
+from .technical_details import TechnicalDetailRowV1, mount_technical_details
 
 _COLUMN_KEYS: tuple[str, ...] = ("address", "label", "value", "input_kind")
 """The stable column order for every section table on this destination."""
@@ -78,16 +83,25 @@ def _input_kinds_by_casilla(session: ModeloWorkspaceReadSession) -> dict[str, st
     facet = session.projection.work_review
     if facet.disposition is not ModeloWorkspaceCapabilityDisposition.AVAILABLE or facet.review is None:
         return None
-    return {str(casilla.casilla_id): casilla.declared_input_kind.value for casilla in facet.review.casillas}
+    return {str(casilla.casilla_id): input_kind_label(casilla.declared_input_kind) for casilla in facet.review.casillas}
 
 
 def _family_title(record_family: tuple[str, ...]) -> str:
     """Render one schema record-family label as its disclosure title.
 
     Joined for display only. The label itself stays the grouping key, so two
-    families that render alike still group apart.
+    families that render alike still group apart. A family token with no
+    words yet is shown as itself rather than guessed at.
     """
-    return " / ".join(record_family) if record_family else tr("flows.modelo_workspace_inputs.section.unsectioned")
+    if not record_family:
+        return tr("flows.modelo_workspace_inputs.section.unsectioned")
+    return " / ".join(_family_word(token) for token in record_family)
+
+
+def _family_word(token: str) -> str:
+    """Name one record-family token in words when the catalogue has them."""
+    key = f"tui.modelo.record_family.{token}"
+    return tr(key) if lookup_translation(key, locale=output_language()) is not None else token
 
 
 def _scalar_row(record: ModeloWorkspaceScalarMaterializationRecordV1) -> tuple[str, str]:
@@ -114,7 +128,7 @@ def _repeated_rows(record: ModeloWorkspaceRepeatedRowMaterializationRecordV1) ->
     )
 
 
-class ModeloWorkspaceInputsScreen(TypedAppAccess, Screen[None]):
+class ModeloWorkspaceInputsScreen(TypedAppAccess, AccountChromeScreen):
     """Read-only section, scalar, and repeated-row rendering for one session."""
 
     BINDINGS: ClassVar = [
@@ -183,6 +197,9 @@ class ModeloWorkspaceInputsScreen(TypedAppAccess, Screen[None]):
         unmeasured = tr("flows.modelo_workspace_inputs.input_kind_unmeasured")
         rows_by_family = self._rows_by_family()
         if not rows_by_family:
+            # Unmeasured is already said above; "declares no values" would contradict it.
+            if self._session.projection.materialization_facet is None:
+                return
             body.mount(Static(tr("flows.modelo_workspace_inputs.empty"), id="workspace-inputs-empty"))
             return
         for index, (record_family, rows) in enumerate(sorted(rows_by_family.items())):
@@ -198,6 +215,18 @@ class ModeloWorkspaceInputsScreen(TypedAppAccess, Screen[None]):
                     unmeasured if input_kinds is None else input_kinds.get(address, ""),
                     key=address,
                 )
+        mount_technical_details(body, self._technical_rows(rows_by_family), id="workspace-inputs-technical-table")
+
+    @staticmethod
+    def _technical_rows(
+        rows_by_family: dict[tuple[str, ...], tuple[tuple[str, str], ...]],
+    ) -> tuple[TechnicalDetailRowV1, ...]:
+        """List each section's own family token beside the words it is shown as."""
+        family_label = tr("tui.modelo.technical.record_family")
+        return tuple(
+            (f"family.{'.'.join(family)}", f"{family_label}: {_family_title(family)}", " / ".join(family))
+            for family in sorted(rows_by_family)
+        )
 
     def _rows_by_family(self) -> dict[tuple[str, ...], tuple[tuple[str, str], ...]]:
         """Group every materialized row under the section its schema record declares."""

@@ -4,15 +4,16 @@ App-owned sensitive plaintext files must be restricted to the operator's user
 account. Browser session state is persisted through secure objects and does not
 use this plaintext-file helper.
 
-POSIX: ``chmod 0o600`` is sufficient. Windows: ``icacls.exe
-/inheritance:r /grant:r <user>:(F)`` strips inherited ACLs and grants
-full control to the operator only. The ``icacls`` call is best-effort
-and tries both ``DOMAIN\\user`` and ``user`` candidate names so it works
-on standalone machines and domain-joined hosts.
+POSIX: ``chmod 0o700`` is sufficient. Windows: the DACL is rewritten in
+process to what ``icacls.exe /inheritance:r /grant:r <user>:<rights>`` would
+leave -- inherited ACEs stripped and the DACL protected, explicit ACEs kept,
+and the operator's same-flag allow ACE replaced by (or joined by) a
+full-control grant. The operator is resolved from ``DOMAIN\\user`` and then
+``user`` so it works on standalone machines and domain-joined hosts.
 
-The Windows branch reads ``SYSTEMROOT`` and ``USERDOMAIN`` as operating-system
-ambient context only. It does not read Cadrumo configuration or make permission
-tightening an authorization decision.
+The Windows branch reads ``USERDOMAIN`` as operating-system ambient context
+only. It does not read Cadrumo configuration or make permission tightening an
+authorization decision.
 
 """
 
@@ -21,85 +22,129 @@ from __future__ import annotations
 import getpass
 import os
 import stat
-import subprocess
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from .logging import get_logger
 
+if TYPE_CHECKING:
+    from _win32typing import PyACL, PySECURITY_DESCRIPTOR
+
 _log = get_logger(__name__)
 
-# Windows environment variable names used to locate icacls.exe and the
-# operator's domain-qualified username.  Named constants so grep surfaces
-# every usage site rather than having bare strings spread across the code.
-_SYSTEMROOT_ENV_VAR: Final[str] = "SYSTEMROOT"
+# Named so grep surfaces every read of the operator's domain qualifier.
 _USERDOMAIN_ENV_VAR: Final[str] = "USERDOMAIN"
-_ICACLS_TIMEOUT_SECONDS: Final[float] = 10.0
 
 
-def _run_permission_command(
-    args: Sequence[str],
-    *,
-    timeout: float = _ICACLS_TIMEOUT_SECONDS,
-) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        list(args),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-        timeout=timeout,
+def _operator_account_candidates() -> list[str]:
+    username = getpass.getuser()
+    # os.environ.get allowlist: USERDOMAIN is a Windows OS-integration
+    # variable, not AEAT-prefixed config, so it is read from the environment
+    # rather than from Settings.
+    userdomain = os.environ.get(_USERDOMAIN_ENV_VAR)
+    return [f"{userdomain}\\{username}", username] if userdomain else [username]
+
+
+def _dacl_of(descriptor: PySECURITY_DESCRIPTOR) -> PyACL | None:
+    """Return the descriptor's DACL, or ``None`` for a NULL DACL.
+
+    The published stub declares a ``PyACL`` return, but a NULL DACL -- no DACL
+    at all, which grants everyone access -- comes back as ``None``.
+    """
+    return descriptor.GetSecurityDescriptorDacl()
+
+
+def _grant_operator_full_control(path: Path, account: str, *, inheritable: bool) -> None:
+    """Rewrite ``path``'s DACL as ``icacls /inheritance:r /grant:r account:F`` leaves it.
+
+    Inherited ACEs are dropped and the DACL is protected. Explicit ACEs keep
+    their order; the account's explicit allow ACE carrying the same
+    inheritance flags is replaced in place by the full-control grant, which is
+    otherwise appended. The account's deny ACEs and its allow ACEs with other
+    flags are kept, which is where this differs from ``SetEntriesInAcl``'s
+    ``SET_ACCESS``. Only plain allow and deny ACEs are copied; any other
+    explicit ACE type raises and is logged by the best-effort caller.
+    """
+    import ntsecuritycon
+    import win32security
+
+    operator_sid = win32security.LookupAccountName(None, account)[0]
+    grant_flags = (
+        win32security.OBJECT_INHERIT_ACE | win32security.CONTAINER_INHERIT_ACE
+        if inheritable
+        else win32security.NO_INHERITANCE
+    )
+    descriptor = win32security.GetNamedSecurityInfo(
+        str(path), win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION
+    )
+    current = _dacl_of(descriptor)
+    rewritten = win32security.ACL()
+    granted = False
+    aces = () if current is None else tuple(current.GetAce(index) for index in range(current.GetAceCount()))
+    for ace in aces:
+        (ace_type, ace_flags), mask, sid = ace[0], ace[1], ace[-1]
+        if ace_flags & win32security.INHERITED_ACE:
+            continue
+        if ace_type == ntsecuritycon.ACCESS_ALLOWED_ACE_TYPE and sid == operator_sid and ace_flags == grant_flags:
+            if not granted:
+                rewritten.AddAccessAllowedAceEx(
+                    win32security.ACL_REVISION, grant_flags, ntsecuritycon.FILE_ALL_ACCESS, operator_sid
+                )
+                granted = True
+        elif ace_type == ntsecuritycon.ACCESS_ALLOWED_ACE_TYPE:
+            rewritten.AddAccessAllowedAceEx(win32security.ACL_REVISION, ace_flags, mask, sid)
+        elif ace_type == ntsecuritycon.ACCESS_DENIED_ACE_TYPE:
+            rewritten.AddAccessDeniedAceEx(win32security.ACL_REVISION, ace_flags, mask, sid)
+        else:
+            raise ValueError(f"explicit ACE type {ace_type} cannot be carried over")
+    if not granted:
+        rewritten.AddAccessAllowedAceEx(
+            win32security.ACL_REVISION, grant_flags, ntsecuritycon.FILE_ALL_ACCESS, operator_sid
+        )
+    win32security.SetNamedSecurityInfo(
+        str(path),
+        win32security.SE_FILE_OBJECT,
+        win32security.DACL_SECURITY_INFORMATION | win32security.PROTECTED_DACL_SECURITY_INFORMATION,
+        None,
+        None,
+        rewritten,
+        None,
     )
 
 
 def _windows_restrict_to_operator(path: Path, *, inheritable: bool) -> None:
     r"""Strip inherited ACEs from ``path`` and grant the operator full control.
 
-    The ONE Windows ACL implementation. ``inheritable`` selects the rights
-    string: a directory takes ``(OI)(CI)F`` so every file and subdirectory
-    created inside it inherits the restriction, a file takes plain ``F``.
+    The ONE Windows ACL implementation. ``inheritable`` selects the grant: a
+    directory takes object- and container-inherit so every file and
+    subdirectory created inside it inherits the restriction, a file takes a
+    non-inheritable grant.
 
-    Directory inheritance is why this is affordable. Restricting each file as
-    it is written costs an ``icacls.exe`` spawn per write (~28 ms measured),
-    which is O(N) across the blob and journal writers and turns a bulk import
-    of taxpayer evidence into minutes of subprocess overhead. Hardening the
+    The DACL is rewritten in process. This used to spawn ``icacls.exe`` --
+    twice per call wherever ``USERDOMAIN`` does not resolve -- at ~28 ms per
+    spawn. Directory inheritance is still the intended shape: hardening the
     containing directory once and letting the kernel apply the ACL to new
-    children is O(1) and gives the same confidentiality.
+    children keeps per-file writes free of any ACL call.
 
     Best-effort by contract: every error is swallowed and logged, because a
     hardening side-effect must never abort the flow that triggered it.
     """
     try:
-        username = getpass.getuser()
-        # os.environ.get allowlist: SYSTEMROOT / USERDOMAIN are Windows
-        # OS-integration variables, not AEAT-prefixed config, so they are read
-        # from the environment rather than from Settings.
-        icacls_path = Path(os.environ.get(_SYSTEMROOT_ENV_VAR, r"C:\Windows")) / "System32" / "icacls.exe"
-        rights = "(OI)(CI)F" if inheritable else "(F)"
-        candidates = [username]
-        userdomain = os.environ.get(_USERDOMAIN_ENV_VAR)
-        if userdomain:
-            candidates.insert(0, f"{userdomain}\\{username}")
-        result: subprocess.CompletedProcess[str] | None = None
-        for candidate in candidates:
-            result = _run_permission_command(
-                [
-                    str(icacls_path),
-                    str(path),
-                    "/inheritance:r",
-                    "/grant:r",
-                    f"{candidate}:{rights}",
-                ],
-            )
-            if result.returncode == 0:
-                return
-        _log.warning(
-            "restrict permissions: failed to harden Windows ACLs on %s: %s",
-            path,
-            result.stderr.strip() if result is not None and result.stderr else "icacls returned non-zero",
-        )
+        # Imported here: pywin32 costs several milliseconds to import, and
+        # only a process that actually hardens a directory should pay it.
+        import pywintypes
+
+        failure = "no operator account candidate was tried"
+        for candidate in _operator_account_candidates():
+            try:
+                _grant_operator_full_control(path, candidate, inheritable=inheritable)
+            except pywintypes.error as error:
+                # Mirrors the retired icacls loop: any failure for one account
+                # spelling moves on to the next.
+                failure = f"{candidate}: {error.strerror}"
+                continue
+            return
+        _log.warning("restrict permissions: failed to harden Windows ACLs on %s: %s", path, failure)
     except Exception:
         _log.warning("restrict permissions: best-effort hardening failed on %s", path, exc_info=True)
 

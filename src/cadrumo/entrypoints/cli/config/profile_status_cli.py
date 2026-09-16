@@ -84,7 +84,11 @@ def _emit_initial_profile_status(
             command="config.profile.status",
             result=result,
             lines=(
-                f"profile\t{active_profile}",
+                # A dangling pointer names a capsule that is gone, so there is no
+                # label to read. The sibling emitter below renders an absent label
+                # as an empty cell; formatting the Optional directly put a literal
+                # Python ``None`` in front of the operator.
+                f"profile\t{active_profile or ''}",
                 "readiness\tdangling_pointer",
                 "registered_profile\tmissing",
                 *precondition_action_lines(health_action),
@@ -162,9 +166,15 @@ def _emit_model_baseline_status(
 ) -> bool:
     """Render the filing-baseline refusal when the health record is otherwise complete."""
     from ....application.modelo.profile_readiness_gate import modelo_work_profile_baseline_missing_paths
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from .status_rendering import blocked_readiness_status
 
-    if not modelo_work_profile_baseline_missing_paths(record):
+    # The baseline resolves governed vocabularies (the IRPF income categories),
+    # which exist only inside a pinned authority operation. Outside one it
+    # worked only when an earlier leased call had already cached the answer.
+    with bundled_indexed_authority().operation():
+        missing = modelo_work_profile_baseline_missing_paths(record)
+    if not missing:
         return False
     result, blocked_lines = blocked_readiness_status(
         active_profile=active_profile,

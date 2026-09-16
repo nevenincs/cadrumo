@@ -55,6 +55,7 @@ from .custody_transactions import (
     ProfileCustodyTransactionConflictError,
 )
 from .lifecycle import ProfileCapsuleLifecycle
+from .login_session import publish_created_profile_session
 from .prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
 from .validation import reject_invalid_profile_facts
 
@@ -103,8 +104,13 @@ class ProfileRegistrationConflictError(ProfileRegistrationError):
 class ProfileRegistrationOutcome(BaseModel):
     """Typed result of one successful registration.
 
-    Carries no key material. The unlocked bucket session is bound to the
-    process by the create span, exactly as :func:`login_profile` leaves it.
+    Carries no key material. The created profile is left UNLOCKED: the
+    create span publishes its live bucket session and record authority
+    process-wide through
+    :func:`~cadrumo.application.user_profile.login_session.publish_created_profile_session`,
+    exactly as :func:`login_profile` leaves them, so the operator is not asked
+    for the passphrase they just chose. No acceleration receipt is minted, so
+    the next process authenticates normally.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -147,6 +153,12 @@ def register_profile_with_credentials(
         profile_decode_context: Schema context pinned for the authenticated
             record session. It must share the authority generation with
             ``profile_create_context``.
+
+    The created profile is left unlocked for this process: its live bucket
+    session and record authority are published exactly as a login publishes
+    them. The operator has just chosen and proven this passphrase, so asking
+    for it again before the profile can be used answers a question they have
+    already answered.
 
     Returns:
         A :class:`ProfileRegistrationOutcome` for the newly-live profile.
@@ -255,6 +267,17 @@ def register_profile_with_credentials(
             ) from exc
     finally:
         session.close()
+
+    # Publish before the best-effort snapshots below, not after: they write
+    # through the profile's encrypted store, so they need the session this
+    # call binds. Registration is also the moment the operator's credential
+    # has just been proven, and leaving the profile locked until they retype
+    # it is the defect this closes.
+    publish_created_profile_session(
+        bucket_id=str(identity),
+        dek=dek,
+        profile_decode_context=profile_decode_context,
+    )
 
     # Record that this profile has filed NOTHING, rather than leaving the fact
     # absent. The two states are not the same: an empty recorded snapshot says

@@ -26,8 +26,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
@@ -36,23 +34,24 @@ from ....domain.calculations.registry.tests.registry_tree import bundled_registr
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import (
+    GB_NON_RESIDENT_PROFILE_FACTS,
     _create_calculable_work_unit,
-    _create_gb_non_resident_profile,
     _create_m130_work_unit,
-    _create_profile,
     _invoke,
+    operator_profile_facts,
 )
+from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["_isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def test_work_history_records_creation_event() -> None:
+def test_work_history_records_creation_event(seed_profile: ProfileSeeder) -> None:
     """M17: a freshly-created work unit's history starts with a
     ``modelo.work_unit.created`` event - not an empty stream."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_m130_work_unit()
 
     history = _invoke(["--format", "json", "app", "modelo", "work", "history", work_unit_id])
@@ -73,12 +72,12 @@ def test_work_history_records_creation_event() -> None:
     assert notice["action"]["action"]["action_id"] == "operator.modelo.work.status"
 
 
-def test_first_work_calculate_binding_error_guides_the_operator() -> None:
+def test_first_work_calculate_binding_error_guides_the_operator(seed_profile: ProfileSeeder) -> None:
     """M18: the first ``work calculate`` that hits an unsatisfied binding
     fails with guidance toward ``--binding KEY=VALUE`` and the
     bindings-list discovery command - not a bare refusal."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_m130_work_unit()
 
     result = _invoke(["app", "modelo", "work", "calculate", work_unit_id])
@@ -97,12 +96,12 @@ def test_first_work_calculate_binding_error_guides_the_operator() -> None:
     assert "bindings list" in result.output and "--missing" in result.output
 
 
-def test_work_revisions_accepts_a_positional_work_unit_id() -> None:
+def test_work_revisions_accepts_a_positional_work_unit_id(seed_profile: ProfileSeeder) -> None:
     """`work revisions <id>` must accept the work-unit id positionally,
     matching its sibling `work status <id>` - the inconsistency where
     `revisions` demanded `--work-unit-id` is gone."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_m130_work_unit()
 
     result = _invoke(["--format", "json", "app", "modelo", "work", "revisions", work_unit_id])
@@ -111,10 +110,10 @@ def test_work_revisions_accepts_a_positional_work_unit_id() -> None:
     assert payload["work_unit_id_filter"] == work_unit_id
 
 
-def test_work_status_resolves_a_visible_filing_target() -> None:
+def test_work_status_resolves_a_visible_filing_target(seed_profile: ProfileSeeder) -> None:
     """`work status` accepts the operator-facing modelo/year/period target."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_m130_work_unit()
 
     result = _invoke(
@@ -135,9 +134,9 @@ def test_work_status_resolves_a_visible_filing_target() -> None:
     assert notice["action"]["action"]["action_id"] == "operator.modelo.work.calculate"
 
 
-def test_displayed_short_work_unit_id_drives_status_and_calculate() -> None:
+def test_displayed_short_work_unit_id_drives_status_and_calculate(seed_profile: ProfileSeeder) -> None:
     """The short id surfaced by `work list` is a usable operator handle."""
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_calculable_work_unit()
     short_work_unit_id = work_unit_id[-12:]
 
@@ -150,10 +149,10 @@ def test_displayed_short_work_unit_id_drives_status_and_calculate() -> None:
     assert _payload(calculated.output)["work_unit_id"] == work_unit_id
 
 
-def test_work_list_surfaces_revision_pointer_fields() -> None:
+def test_work_list_surfaces_revision_pointer_fields(seed_profile: ProfileSeeder) -> None:
     """`work list` exposes current/filed calculation pointers for discovery."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_calculable_work_unit()
     calculated = _invoke(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
@@ -172,9 +171,9 @@ def test_work_list_surfaces_revision_pointer_fields() -> None:
     assert unit["filed_calculation_revision_id"] is None
 
 
-def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action() -> None:
+def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(seed_profile: ProfileSeeder) -> None:
     """The list cannot bind one target until the operator selects a work unit."""
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
 
     result = _invoke(["--format", "json", "app", "modelo", "work", "list"])
 
@@ -188,9 +187,9 @@ def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action()
     }
 
 
-def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders() -> None:
+def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders(seed_profile: ProfileSeeder) -> None:
     """Profile-scoped text uses the operator label, never a storage identity."""
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_m130_work_unit()
 
     listed = _invoke(["app", "modelo", "work", "list"])
@@ -254,9 +253,9 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
     }
 
 
-def test_work_list_with_multiple_units_requires_an_explicit_selection() -> None:
+def test_work_list_with_multiple_units_requires_an_explicit_selection(seed_profile: ProfileSeeder) -> None:
     """A multi-row list never projects an action with an invented target."""
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     _create_m130_work_unit()
     second = _invoke(
         [
@@ -295,8 +294,8 @@ def test_work_list_with_multiple_units_requires_an_explicit_selection() -> None:
     }
 
 
-def test_work_status_and_list_show_presentado_after_file() -> None:
-    _create_profile(activity_start_date="2025-10-01")
+def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSeeder) -> None:
+    seed_profile(label="operator", facts=operator_profile_facts(activity_start_date="2025-10-01"))
     created = _invoke(
         [
             "--format", "json",
@@ -355,10 +354,10 @@ def test_work_status_and_list_show_presentado_after_file() -> None:
     assert matching[0]["filed_calculation_revision_id"] == filed_revision_id
 
 
-def test_work_revisions_resolves_a_visible_filing_target() -> None:
+def test_work_revisions_resolves_a_visible_filing_target(seed_profile: ProfileSeeder) -> None:
     """`work revisions` can filter by modelo/year/period instead of raw id."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_calculable_work_unit()
     calculated = _invoke(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
@@ -392,10 +391,10 @@ def test_work_revisions_resolves_a_visible_filing_target() -> None:
     assert "casillas" in _payload(detail.output)
 
 
-def test_work_calculate_resolves_a_visible_filing_target() -> None:
+def test_work_calculate_resolves_a_visible_filing_target(seed_profile: ProfileSeeder) -> None:
     """`work calculate` can use modelo/year/period instead of a work-unit id."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_calculable_work_unit()
 
     result = _invoke(
@@ -411,10 +410,10 @@ def test_work_calculate_resolves_a_visible_filing_target() -> None:
     assert payload["saved"] is True
 
 
-def test_work_verify_defaults_to_current_draft_for_visible_target() -> None:
+def test_work_verify_defaults_to_current_draft_for_visible_target(seed_profile: ProfileSeeder) -> None:
     """`work verify` defaults to the current draft under a natural target."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_calculable_work_unit()
     calculated = _invoke(
         [
@@ -443,10 +442,10 @@ def test_work_verify_defaults_to_current_draft_for_visible_target() -> None:
     assert _payload(status.output)["current_calculation_revision_id"] == revision_id
 
 
-def test_work_file_defaults_to_current_verified_for_visible_target() -> None:
+def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile: ProfileSeeder) -> None:
     """`work file` selects the current verified revision before workflow gating."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     _create_calculable_work_unit()
     calculated = _invoke(
         [
@@ -498,10 +497,10 @@ def test_work_file_help_exposes_explicit_result_elections() -> None:
     assert "--disposition" not in result.output
 
 
-def test_work_dependencies_lists_cross_period_inventory() -> None:
+def test_work_dependencies_lists_cross_period_inventory(seed_profile: ProfileSeeder) -> None:
     """`work dependencies` exposes the registry-derived filing-history inventory."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
 
     result = _invoke(
         [
@@ -530,10 +529,10 @@ def test_work_dependencies_lists_cross_period_inventory() -> None:
         assert "source_presence_groups" in dependency
 
 
-def test_work_dependencies_surfaces_current_clean_state_blockers() -> None:
+def test_work_dependencies_surfaces_current_clean_state_blockers(seed_profile: ProfileSeeder) -> None:
     """A target read includes concrete blocker codes for missing upstream filings."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
 
     result = _invoke(
         [
@@ -561,7 +560,7 @@ def test_work_dependencies_surfaces_current_clean_state_blockers() -> None:
     )
 
 
-def test_work_dependencies_honours_activity_start_date_pre_activity_scoping() -> None:
+def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(seed_profile: ProfileSeeder) -> None:
     """`work dependencies` threads the profile's activity-start-date into the
     clean-state evaluation, so a prior-period dependency that falls strictly
     before the declared activity start is scoped out (clean) - matching the
@@ -569,7 +568,7 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping() ->
     from ``evaluate_cross_period_clean_state``, which made the diagnostic
     report a blocker that verify itself suppresses."""
 
-    register_cli_profile(
+    seed_profile(
         label="operator",
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -606,12 +605,12 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping() ->
     )
 
 
-def test_work_calculate_confirms_the_draft_was_saved() -> None:
+def test_work_calculate_confirms_the_draft_was_saved(seed_profile: ProfileSeeder) -> None:
     """After `work calculate` the operator is told the result was
     persisted as a draft revision and how to resume / re-inspect it -
     the bare casilla table left no save signal."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_calculable_work_unit()
 
     result = _invoke(
@@ -629,12 +628,12 @@ def test_work_calculate_confirms_the_draft_was_saved() -> None:
     assert "persisted" in confirmation
 
 
-def test_work_revision_shows_persisted_casilla_values() -> None:
+def test_work_revision_shows_persisted_casilla_values(seed_profile: ProfileSeeder) -> None:
     """`work revision <id>` shows a stored revision's persisted casilla
     values without recomputing - the operator can re-inspect a saved
     calculation instead of re-running it."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     work_unit_id = _create_calculable_work_unit()
 
     calculated = _invoke(
@@ -653,11 +652,11 @@ def test_work_revision_shows_persisted_casilla_values() -> None:
     assert payload["casilla_values"] == saved_values
 
 
-def test_work_revision_rejects_an_unknown_revision_id() -> None:
+def test_work_revision_rejects_an_unknown_revision_id(seed_profile: ProfileSeeder) -> None:
     """An absent revision id is refused cleanly, not surfaced as an
     opaque internal error."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     unknown = "0" * 64
     result = _invoke(["app", "modelo", "work", "revision", unknown])
     assert result.exit_code != 0
@@ -665,12 +664,12 @@ def test_work_revision_rejects_an_unknown_revision_id() -> None:
     assert unknown in result.output
 
 
-def test_idempotent_work_create_reports_reuse() -> None:
+def test_idempotent_work_create_reports_reuse(seed_profile: ProfileSeeder) -> None:
     """Re-creating an existing (modelo, year, period, revision) work unit
     must report the reuse plainly - status `reused`, not a silent
     `modelo.work.create` that reads as a fresh creation."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     first = _invoke(
         [
             "--format", "json",
@@ -701,10 +700,10 @@ def test_idempotent_work_create_reports_reuse() -> None:
     assert second_payload["name_applied"] is None
 
 
-def test_work_create_without_revision_resumes_existing_visible_target() -> None:
+def test_work_create_without_revision_resumes_existing_visible_target(seed_profile: ProfileSeeder) -> None:
     """A natural-key create searches by visible filing target before revision defaults."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     first = _invoke(
         [
             "--format", "json",
@@ -730,10 +729,10 @@ def test_work_create_without_revision_resumes_existing_visible_target() -> None:
     assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
 
 
-def test_work_create_without_revision_uses_registry_revision_for_supplied_year() -> None:
+def test_work_create_without_revision_uses_registry_revision_for_supplied_year(seed_profile: ProfileSeeder) -> None:
     """A fresh create without ``--revision`` binds to the law-selected registry revision."""
 
-    register_cli_profile(
+    seed_profile(
         label="operator",
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -765,9 +764,9 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year()
     assert payload["revision_id"] == expected_revision
 
 
-def test_modelo_303_workflow_json_resolves_each_2025_quarter_once() -> None:
+def test_modelo_303_workflow_json_resolves_each_2025_quarter_once(seed_profile: ProfileSeeder) -> None:
     """The real workflow boundary binds all four M303 targets through registry authority."""
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     modelos, _catalogues = bundled_registry_tree()
     modelo_303 = next(candidate for candidate in modelos if candidate.id == "303")
     payloads: list[dict[str, object]] = []
@@ -810,8 +809,8 @@ def test_modelo_303_workflow_json_resolves_each_2025_quarter_once() -> None:
     )
 
 
-def test_m131_modulos_manual_entry_calculates_without_ledger_observations() -> None:
-    register_cli_profile(
+def test_m131_modulos_manual_entry_calculates_without_ledger_observations(seed_profile: ProfileSeeder) -> None:
+    seed_profile(
         label="operator",
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -880,11 +879,11 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations() -> N
     assert Decimal(casillas["modulos-rendimiento-neto-actividad"]) != Decimal(casillas["01"])
 
 
-def test_idempotent_work_create_applies_a_new_name_as_a_rename() -> None:
+def test_idempotent_work_create_applies_a_new_name_as_a_rename(seed_profile: ProfileSeeder) -> None:
     """A different --name supplied on an idempotent re-create is not
     silently dropped: it is applied as a rename and the result says so."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     first = _invoke(
         [
             "--format", "json",
@@ -915,12 +914,12 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename() -> None:
     assert _payload(status.output)["name"] == "Renamed Unit"
 
 
-def test_overview_next_step_not_import_after_manual_ledger_entry() -> None:
+def test_overview_next_step_not_import_after_manual_ledger_entry(seed_profile: ProfileSeeder) -> None:
     """M19: after ``ledger add`` records a transaction, ``overview
     status`` next-step guidance must not suggest importing a bank
     statement - the operator already has ledger data."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     added = _invoke(
         [
             "app", "ledger", "add",
@@ -941,10 +940,10 @@ def test_overview_next_step_not_import_after_manual_ledger_entry() -> None:
     assert "modelo work create" in next_section
 
 
-def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident() -> None:
+def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(seed_profile: ProfileSeeder) -> None:
     """A non-resident M210 profile gets discovery/Sede guidance, not work-create."""
 
-    _create_gb_non_resident_profile()
+    seed_profile(label="operator", facts=GB_NON_RESIDENT_PROFILE_FACTS)
     added = _invoke(
         [
             "app", "ledger", "add",
@@ -965,7 +964,7 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident()
     assert "G320" in next_section
 
 
-def test_work_create_rejects_revision_that_does_not_cover_filing_year() -> None:
+def test_work_create_rejects_revision_that_does_not_cover_filing_year(seed_profile: ProfileSeeder) -> None:
     """Supplying a revision whose period_selector excludes the filing year
     must be refused with a clear error naming both the revision and the
     year, not accepted silently.
@@ -975,7 +974,7 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year() -> None:
     DANA rules do not apply to a 2024 filing.
     """
 
-    register_cli_profile(
+    seed_profile(
         label="operator",
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -1002,7 +1001,7 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year() -> None:
     assert "2024" in result.output
 
 
-def test_work_calculate_rejects_decimal_override_for_text_casilla() -> None:
+def test_work_calculate_rejects_decimal_override_for_text_casilla(seed_profile: ProfileSeeder) -> None:
     """Supplying a numeric value for a text-type casilla via --casilla must
     be refused before reaching the engine.
 
@@ -1020,7 +1019,7 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla() -> None:
     the engine is never reached.
     """
 
-    _create_profile()
+    seed_profile(label="operator", facts=operator_profile_facts())
     created = _invoke(
         [
             "--format", "json",

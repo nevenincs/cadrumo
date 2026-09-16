@@ -8,7 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -17,6 +16,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -276,7 +276,7 @@ def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensatio
         taxpayer_nif="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, period),
-        target_registry_snapshot_ref=compiled_bundled_authority()
+        target_registry_snapshot_ref=published_authority_operation()
         .snapshot("303", filing_year=2026, period=period)
         .snapshot_ref,
         source_registry_snapshot_refs=(),

@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import typer
 
 if TYPE_CHECKING:
-    from ....application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ....application.auth.apoderado_service import ApoderadoService
 
-from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -23,18 +21,10 @@ def _service(ctx: typer.Context) -> ApoderadoService:
     """Construct the apoderado service from the root's explicit composition."""
     from ....application.auth.apoderado_service import ApoderadoService
     from ....core.config import load_settings
-    from ..state_projection_support import authority_operation
+    from ..state_projection_support import apoderado_config_repository_factory, authority_operation
 
-    state = cast("dict[str, object]", ctx.ensure_object(dict))
-    try:
-        repository_factory = cast(
-            "ApoderadoConfigurationRepositoryFactory",
-            state["apoderado_config_repository_factory"],
-        )
-    except KeyError as error:
-        raise InternalInvariantError("apoderado configuration persistence has not been composed") from error
     return ApoderadoService(
-        repository_factory=repository_factory,
+        repository_factory=apoderado_config_repository_factory(ctx),
         operation=authority_operation(ctx),
         settings=load_settings(),
     )

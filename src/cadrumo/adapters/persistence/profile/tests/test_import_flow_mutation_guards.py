@@ -6,7 +6,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -40,6 +39,7 @@ from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     repos,
     seed_ready_profile,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import (
     AmendmentEvidenceMissingError,
@@ -125,7 +125,7 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(
 ) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     period = Period.from_year_and_code(2026, "1T")
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="303",

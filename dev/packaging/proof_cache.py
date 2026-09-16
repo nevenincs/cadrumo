@@ -19,8 +19,8 @@ addressed by ``(proof kind, source fingerprint, environment fingerprint)``:
 A carried proof is honest bookkeeping, not silent re-stamping: the stored
 record carries its origin (source digest, CI run id and attempt, timestamp),
 and the campaign driver prints that provenance when it reuses one. Records
-live in a runner-local store (``CADRUMO_PROOF_CACHE_DIR`` or
-``~/.cadrumo/proof-cache``) that never leaves the machine and is not
+live in a checkout-local store (``CADRUMO_PROOF_CACHE_DIR`` or
+``<repository root>/.cache/proof-cache``) that never leaves the machine and is not
 evidence: the full campaign's promotable ``DistributionEvidence`` rows are
 always minted fresh from real runs — this cache only lets the per-push quick
 profile answer "this exact byte-identity was already proven on this exact
@@ -40,6 +40,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cadrumo.core.directory_scan import iter_directory
 from dev._paths import UTF_8
+from dev.cache_root import dev_cache_dir
 from dev.packaging.command_execution import run_command
 from dev.source_tree import content_digest, repository_files
 
@@ -134,7 +135,7 @@ def default_cache_dir() -> Path:
     override = os.environ.get(_CACHE_DIR_ENV)
     if override:
         return Path(override)
-    return Path.home() / ".cadrumo" / "proof-cache"
+    return dev_cache_dir("proof-cache")
 
 
 def _record_path(cache_dir: Path, proof_kind: str, source_fp: str, env_fp: str) -> Path:

@@ -22,7 +22,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -32,6 +31,7 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
@@ -105,7 +105,7 @@ def _seed_verified_m303_revision(
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
     period = Period.from_year_and_code(2026, period_code)
     revision_id = (
-        compiled_bundled_authority().snapshot("303", filing_year=2026, period=period.registry_token).revision.id
+        published_authority_operation().snapshot("303", filing_year=2026, period=period.registry_token).revision.id
     )
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
@@ -243,7 +243,7 @@ def test_m303_settlement_preserves_existing_register_facts(
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref="303:2025:4T",
         source_registry_snapshot_refs=(
-            compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref,
+            published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref,
         ),
     )
     sector_entry = ProrrataRegisterEntry(

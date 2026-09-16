@@ -140,6 +140,13 @@ _DESTINATION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "workbench.aeat_sync": "tui.search.destination.aeat_sync",
     "workbench.profile": "tui.search.destination.profile",
 }
+_DESTINATION_HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
+    "workbench.home": "tui.search.destination_help.home",
+    "workbench.ledger": "tui.search.destination_help.ledger",
+    "workbench.declarations": "tui.search.destination_help.declarations",
+    "workbench.aeat_sync": "tui.search.destination_help.aeat_sync",
+    "workbench.profile": "tui.search.destination_help.profile",
+}
 _ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "operator.profile.edit": "tui.search.action.edit_profile",
     "operator.modelo.work.revisions": "tui.search.action.list_work_revisions",
@@ -186,6 +193,19 @@ def _destination_text(destination: str, *, locale: str | None = None) -> str:
     """Produce localized wording for one admitted destination."""
     key = _DESTINATION_LOCALE_KEYS.get(destination, "tui.search.destination.unknown")
     return _render_locale(key, locale)
+
+
+def _command_help(target: TuiNavigationTargetV1, *, locale: str | None = None) -> str:
+    """Say what a palette entry leads to, without repeating its own name.
+
+    An action's help names the area it runs in. A destination's name already
+    is its area, so its help describes what the area holds instead; using the
+    area name for both printed every destination twice.
+    """
+    if target.action_candidate_id is not None:
+        return _destination_text(target.destination, locale=locale)
+    key = _DESTINATION_HELP_LOCALE_KEYS.get(target.destination)
+    return "" if key is None else _render_locale(key, locale)
 
 
 _ACTION_UNKNOWN_LOCALE_KEY: Final[str] = "tui.search.action.unknown"
@@ -294,7 +314,7 @@ class WorkbenchCommandProviderV1(Provider):
                     match_display=matcher.highlight(text),
                     command=_navigation_command(host.navigate_to, target),
                     text=text,
-                    help=_destination_text(target.destination),
+                    help=_command_help(target),
                 )
 
     @override
@@ -308,7 +328,7 @@ class WorkbenchCommandProviderV1(Provider):
                 display=text,
                 command=_navigation_command(host.navigate_to, target),
                 text=text,
-                help=_destination_text(target.destination),
+                help=_command_help(target),
             )
 
 

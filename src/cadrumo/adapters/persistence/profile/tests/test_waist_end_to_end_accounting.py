@@ -41,10 +41,10 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -450,7 +450,7 @@ class TestHop7WhereTheChainActuallyTerminates:
     @staticmethod
     def _revision() -> ModeloRevision:
         period = Period.from_year_and_code(2024, "1T")
-        return compiled_bundled_authority().snapshot("303", filing_year=2024, period=str(period.code)).revision
+        return published_authority_operation().snapshot("303", filing_year=2024, period=str(period.code)).revision
 
     def test_modelo_303_declares_no_invoice_source_binding(self) -> None:
         revision = self._revision()

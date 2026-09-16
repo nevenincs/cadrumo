@@ -49,7 +49,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl
 
 from cadrumo.adapters.outbound.aeat.sede.schema import (
@@ -59,6 +58,7 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
 )
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
@@ -180,7 +180,7 @@ class _Population:
 
 def _registry_revision_id(*, filing_year: int, period: str) -> str:
     return (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot(
             Modelo("303").value,
             filing_year=filing_year,
@@ -429,7 +429,7 @@ def _binding_prefill_census(*, operation: PinnedAuthorityOperation) -> _PathCens
             )
             continue
         projected = observation_from_iva_compensation_history(state, operation=operation)
-        snapshot = compiled_bundled_authority().snapshot(
+        snapshot = published_authority_operation().snapshot(
             Modelo("303").value,
             filing_year=target_year,
             period=target_period,
@@ -481,7 +481,7 @@ def _carry_ingress_census(*, operation: PinnedAuthorityOperation) -> _PathCensus
         reconstructed = period_state_from_303_envelope(payload, operation=operation)
         rows.append(reconstructed)
         partition = resolve_iva_compensation_annual_partition_binding_values(
-            compiled_bundled_authority()
+            published_authority_operation()
             .snapshot(Modelo("390").value, filing_year=period.filing_year, period="0A")
             .revision,
             (payload,),

@@ -19,7 +19,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -29,6 +28,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import IvaWal
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -127,7 +127,7 @@ def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaComp
         taxpayer_nif=_TAXPAYER_NIF,
         target_year=filing_year,
         target_period=Period.from_year_and_code(filing_year, period),
-        target_registry_snapshot_ref=compiled_bundled_authority()
+        target_registry_snapshot_ref=published_authority_operation()
         .snapshot("303", filing_year=filing_year, period=period)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
@@ -146,7 +146,7 @@ def _calculate_303(
     *, filing_year: int, period: str, period_date: date, tmp_path: Path, operation: PinnedAuthorityOperation
 ):
     with _secure_backend(tmp_path):
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+        snapshot = published_authority_operation().snapshot("303", filing_year=filing_year, period=period)
         typed_period = Period.from_year_and_code(filing_year, period)
         work_repo, calc_repo, event_repo = _repositories()
         work_unit = create_work_unit(

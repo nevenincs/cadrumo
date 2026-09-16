@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import subprocess
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from os import PathLike
 from pathlib import Path
 from typing import TypedDict
@@ -40,8 +40,18 @@ def run_audited_process(
     pass_fds: Sequence[int] = (),
     close_fds: bool | None = None,
     startupinfo: subprocess.STARTUPINFO | None = None,
+    after_spawn: Callable[[asyncio.subprocess.Process], object] | None = None,
 ) -> subprocess.CompletedProcess[str | bytes]:
-    """Run an explicit argv through the audited async process boundary."""
+    """Run an explicit argv through the audited async process boundary.
+
+    ``after_spawn`` runs once the child exists and before it is awaited. A
+    caller handing the child inherited descriptors or HANDLEs needs this gap:
+    the child only inherits what is still open when it starts, and a parent
+    that keeps its own copies open afterwards holds the pipe open, so a reader
+    waiting for end-of-stream never sees it. Closing them before the launch
+    instead makes the handle list invalid, which Windows reports as
+    ``WinError 87``.
+    """
     return asyncio.run(
         _run_audited_process(
             command,
@@ -57,6 +67,7 @@ def run_audited_process(
             pass_fds=pass_fds,
             close_fds=close_fds,
             startupinfo=startupinfo,
+            after_spawn=after_spawn,
         )
     )
 
@@ -76,6 +87,7 @@ async def _run_audited_process(
     pass_fds: Sequence[int],
     close_fds: bool | None,
     startupinfo: subprocess.STARTUPINFO | None,
+    after_spawn: Callable[[asyncio.subprocess.Process], object] | None,
 ) -> subprocess.CompletedProcess[str | bytes]:
     """Implement :func:`run_audited_process` without shell or dispatch."""
     rendered_command = [str(argument) for argument in command]
@@ -105,6 +117,14 @@ async def _run_audited_process(
         stderr=asyncio.subprocess.PIPE if capture_output else None,
         **process_options,
     )
+    if after_spawn is not None:
+        try:
+            after_spawn(process)
+        except BaseException:
+            # The child is running; a hook failure must not leave it orphaned.
+            process.kill()
+            await process.communicate()
+            raise
     try:
         stdout, stderr = await asyncio.wait_for(process.communicate(payload), timeout=timeout)
     except TimeoutError:

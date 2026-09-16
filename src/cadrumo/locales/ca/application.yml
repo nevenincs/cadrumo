@@ -1335,18 +1335,18 @@ application:
         l'esquema de perfil d'usuari.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       passphrase_confirmation_mismatch: La nova contrasenya i la seva confirmació
-        no coincideixen
+        no coincideixen.
       passphrase_current_rejected: La contrasenya actual no és correcta; la contrasenya
-        no s'ha canviat
+        no s'ha canviat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
       profile_authentication_refused: No s'ha acceptat la contrasenya del perfil.
       profile_password_contains_surrogate: La contrasenya del perfil conté un valor
         que no es pot codificar com a UTF-8 estricte.
-      profile_password_too_few_scalars: La contrasenya del perfil ha de contenir almenys
-        {minimum_scalars} escalars Unicode; se n'han rebut {scalar_count}.
-      profile_password_too_many_scalars: La contrasenya del perfil ha de contenir
-        com a màxim {maximum_scalars} escalars Unicode; se n'han rebut {scalar_count}.
+      profile_password_too_few_scalars: La contrasenya del perfil ha de tenir almenys
+        {minimum_scalars} caràcters; se n'han rebut {scalar_count}.
+      profile_password_too_many_scalars: La contrasenya del perfil ha de tenir com
+        a màxim {maximum_scalars} caràcters; se n'han rebut {scalar_count}.
       profile_password_too_many_utf8_bytes: La contrasenya del perfil ha d'ocupar
         com a màxim {maximum_utf8_bytes} bytes UTF-8; se n'han rebut {utf8_byte_count}.
       recovery_already_enrolled: Aquest perfil ja té un codi de recuperació. Desactiva'l
@@ -1367,6 +1367,10 @@ application:
         emmagatzemat és %{classification}.
       repository_profile_snapshot_version_unsupported: La versió de l'esquema de la
         instantània de perfil no és compatible amb aquesta aplicació.
+      row_all_values_blank: 'No s''ha indicat cap valor per a la fila de ''%{section}''.
+        Informa almenys un camp de: %{fields}.'
+      row_unknown_field: 'La secció ''%{section}'' no declara aquests camps: %{unknown}.
+        Camps disponibles: %{fields}.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
@@ -1382,6 +1386,9 @@ application:
       edit_missing_filing_baseline: 'Aquesta edició deixaria incompletes les dades
         d''identitat per presentar models. Afegeix aquests flags a la mateixa ordre
         i torna-la a executar: %{missing_flags}.'
+      edit_missing_modelo_requirements: 'Les dades d''identitat són completes, però
+        aquest perfil declara IVA i encara li falten camps obligatoris del Model 303.
+        Afegeix aquests flags a la mateixa ordre i torna a executar-la: %{missing_flags}.'
       persist_patch_unknown_question_id: El pedaç de l'assistent referència un id
         de pregunta desconegut.
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per

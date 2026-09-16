@@ -36,11 +36,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
     advisory_profile_bucket,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
@@ -79,7 +79,7 @@ def bucket_id() -> str:
 
 
 def _revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
+    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
 
 
 def _write(*descendants: DescendantInfo) -> None:

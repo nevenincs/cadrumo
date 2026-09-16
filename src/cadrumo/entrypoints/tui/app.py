@@ -9,27 +9,47 @@ authority.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import TYPE_CHECKING, ClassVar, override
+from collections.abc import Callable, Iterable
+from dataclasses import replace
+from typing import TYPE_CHECKING, ClassVar, Final, override
 
-from textual.app import App, ComposeResult
+from textual.app import App, ComposeResult, SystemCommand
 from textual.binding import Binding
-from textual.containers import Horizontal, ItemGrid, Vertical
+from textual.command import CommandPalette
+from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Static
+from textual.widgets import Footer, Static
 
 from ...application.overview.home import HomeSessionPosture
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
+from ...core.logging import get_logger
 from ...core.operations import OperationTerminalCondition
 from .account import (
     AccountFactoriesV1,
     AccountRecomposeReasonV1,
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
+    WorkbenchAccountProviderV1,
+)
+from .components.account_chrome import (
+    AccountActionV1,
+    AccountBar,
+    AccountChromeScreen,
+    account_action_label,
+    account_key_label,
 )
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
-from .home import HomeBackRequested, HomeScreen, HomeTarget, HomeTargetSelected
+from .declarations.controller import calendar_address_focus_key
+from .home import (
+    HomeBackRequested,
+    HomeScreen,
+    HomeTarget,
+    HomeTargetSelected,
+    home_target_action_id,
+    home_target_agenda_address,
+    home_target_work_unit_id,
+)
 from .navigation import (
     NavigationContractError,
     TuiDestinationCatalogueV1,
@@ -42,8 +62,18 @@ from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, Workbench
 
 if TYPE_CHECKING:
     from ...application.operations.composition import OperationComposedServices
-    from ...application.overview.home import HomeProjectionV1
+    from ...application.overview.home import HomeAccountSession, HomeProjectionV1
 
+
+_ACCOUNT_KEYS: Final[dict[str, AccountActionV1]] = {
+    "f2": AccountActionV1.LANGUAGE,
+    "f3": AccountActionV1.APPEARANCE,
+    "f4": AccountActionV1.PROFILE,
+    "f5": AccountActionV1.CHANGE_USER,
+    "f6": AccountActionV1.PASSWORD,
+    "f10": AccountActionV1.SIGN_OUT,
+}
+"""The key for each account control, reachable from every destination."""
 
 type HomeRefreshDoorV1 = Callable[[], HomeProjectionV1]
 type WorkbenchSearchRefreshDoorV1 = Callable[[], WorkbenchSearchDoorV1]
@@ -56,14 +86,6 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     CSS = tokenised(
         BASE_CSS
         + """
-    #root-account-bar { width: 100%; height: auto; }
-    #root-account { width: 1fr; height: auto; padding: $cadrumo-gutter-y $cadrumo-gutter; text-style: bold; }
-    #root-account-actions {
-        width: 4fr;
-        height: auto;
-        grid-gutter: $cadrumo-space-0 $cadrumo-control-gap;
-    }
-    #root-account-actions Button { width: 1fr; min-width: 0; margin: 0; }
     #root-account-refusal, #root-navigation-refusal {
         height: auto;
         color: $warning;
@@ -73,10 +95,18 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     )
 
     BINDINGS: ClassVar = [
-        Binding("f3", "toggle_appearance", "", show=False),
+        # Descriptions are written per render by :meth:`_describe_account_keys`,
+        # not here: a class body resolves once at import, in whichever language
+        # the process started in.
+        *(
+            Binding(
+                key, "toggle_appearance" if action is AccountActionV1.APPEARANCE else f"account('{action.value}')", ""
+            )
+            for key, action in _ACCOUNT_KEYS.items()
+        ),
         Binding("q", "quit", "", show=False),
     ]
-    COMMANDS = App.COMMANDS | {WorkbenchSearchProviderV1, WorkbenchCommandProviderV1}
+    COMMANDS = App.COMMANDS | {WorkbenchSearchProviderV1, WorkbenchCommandProviderV1, WorkbenchAccountProviderV1}
 
     def __init__(
         self,
@@ -106,6 +136,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         )
         self._active_target: TuiNavigationTargetV1 | None = None
         self._home_semantic_focus: HomeTarget | None = None
+        self._account_session: HomeAccountSession | None = None
 
     @property
     def services(self) -> OperationComposedServices:
@@ -140,46 +171,140 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     def compose(self) -> ComposeResult:
         with Vertical(id="root-shell"):
             yield Static(tr("tui.root.title"), id="root-title", markup=False)
-            with Horizontal(id="root-account-bar"):
-                yield Static("", id="root-account", markup=False)
-                with ItemGrid(id="root-account-actions", min_column_width=12):
-                    yield Button(tr("tui.root.account.change_user"), id="root-change-user")
-                    yield Button(tr("tui.root.account.password"), id="root-password")
-                    yield Button(tr("tui.root.account.profile"), id="root-profile")
-                    yield Button(tr("tui.root.account.appearance"), id="root-appearance")
-                    yield Button(tr("tui.root.account.language"), id="root-language")
-                    yield Button(tr("tui.root.account.sign_out"), id="root-sign-out")
+            yield AccountBar(id="root-account-bar")
             yield Static("", id="root-account-refusal", markup=False)
             yield Static("", id="root-navigation-refusal", markup=False)
             yield Static(tr("tui.root.no_areas"), id="root-no-areas", markup=False)
-        yield Footer()
+        yield Footer(compact=True)
 
     def on_mount(self) -> None:
         """Install the shared appearance for this session."""
         install_cadrumo_themes(self)
+        self._describe_account_keys()
         if self._account_factories is None:
             self._refuse_account_action()
-            for button in self.query("#root-account-actions Button"):
-                button.disabled = True
         if self._destination_catalogue is not None and self._refresh_home is not None:
             self._show_home(None)
+
+    @property
+    def account_actions_available(self) -> bool:
+        """Whether the account controls can act right now.
+
+        False without account doors, and while a credential or modal screen is
+        open, so the palette withholds them exactly where the keys are hidden.
+        """
+        return self._account_factories is not None and self._account_controls_apply()
+
+    @property
+    def account_session(self) -> HomeAccountSession | None:
+        """The session the last Home projection described, once there is one."""
+        return self._account_session
+
+    def refresh_account_chrome(self) -> None:
+        """Re-word the account keys and every account bar after a language change."""
+        self._describe_account_keys()
+        self._refresh_account_bars()
+
+    def _refresh_account_bars(self) -> None:
+        """Re-word every mounted account bar, beneath the top screen too."""
+        for screen in self.screen_stack:
+            for bar in screen.query(AccountBar):
+                bar.refresh_copy()
+
+    def _account_controls_apply(self) -> bool:
+        """Whether the screen the operator is on is one account controls act from.
+
+        They act from a destination or the bare root. Over a credential or
+        modal screen -- the password form, a login, the sign-out progress --
+        they would stack a second form on the first, so they stand down until
+        it closes. The command palette is looked past: it is opened over the
+        screen the operator is actually on.
+        """
+        screen = next(
+            (candidate for candidate in reversed(self.screen_stack) if not isinstance(candidate, CommandPalette)),
+            None,
+        )
+        return screen is None or screen is self.screen_stack[0] or isinstance(screen, AccountChromeScreen)
+
+    @override
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """Hide the account keys wherever the controls would not act."""
+        if action == "account":
+            return self._account_controls_apply()
+        return True
+
+    def _describe_account_keys(self) -> None:
+        """Name every account key in the footer, in the language now on screen.
+
+        Replaced by assignment on this instance's own table, for the reason
+        ``ProfileManagerScreen._offer_language_in_footer`` gives: Textual's
+        ``bind`` appends, and the table's lists are shared with the class. A
+        session without account doors shows only the appearance key, which
+        needs no profile; advertising the others would promise a refusal.
+        """
+        for key, action in _ACCOUNT_KEYS.items():
+            bindings = self._bindings.key_to_bindings.get(key)
+            if bindings is None:
+                continue
+            # Appearance stays bound and in the palette but leaves the footer:
+            # the footer must hold the other five keys at eighty columns.
+            shown = action is not AccountActionV1.APPEARANCE and self._account_factories is not None
+            self._bindings.key_to_bindings[key] = [
+                replace(binding, description=account_key_label(action), show=shown) for binding in bindings
+            ]
+        self.refresh_bindings()
+
+    @override
+    def get_system_commands(self, screen: Screen[object]) -> Iterable[SystemCommand]:
+        """Offer only Cadrumo's own session commands, in the operator's language.
+
+        Textual's defaults are English whatever the page says, and its theme
+        switcher leaves Cadrumo's light and dark pair for themes the product
+        does not style. Appearance is listed here rather than with the account
+        controls because it needs no profile.
+        """
+        yield SystemCommand(
+            account_action_label(AccountActionV1.APPEARANCE),
+            tr("tui.root.account_help.appearance"),
+            self.action_toggle_appearance,
+        )
+        yield SystemCommand(tr("tui.root.system.quit"), tr("tui.root.system.quit_help"), self.action_quit)
+
+    @override
+    def action_command_palette(self) -> None:
+        """Open the palette with its prompt in the operator's language."""
+        if self.use_command_palette and not any(
+            isinstance(open_screen, CommandPalette) for open_screen in self.screen_stack
+        ):
+            self.push_screen(CommandPalette(id="--command-palette", placeholder=tr("tui.root.palette.placeholder")))
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance."""
         toggle_appearance(self)
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Dispatch account chrome only through the injected existing owners."""
+    def action_account(self, action: str) -> None:
+        """Run the account control a key names."""
+        self.run_account_action(AccountActionV1(action))
+
+    def run_account_action(self, action: AccountActionV1, /) -> None:
+        """Perform one account control through the session's injected doors.
+
+        Every surface that offers a control -- the keys, the palette -- ends
+        here, so none of them can reach a door the others cannot, or refuse
+        differently.
+        """
         factories = self._account_factories
         if factories is None:
             self._refuse_account_action()
             return
-        match event.button.id:
-            case "root-change-user":
+        if action is not AccountActionV1.APPEARANCE and not self._account_controls_apply():
+            return
+        match action:
+            case AccountActionV1.CHANGE_USER:
                 self.push_screen(factories.change_user(), self._on_change_user_dismissed)
-            case "root-password":
+            case AccountActionV1.PASSWORD:
                 self.push_screen(factories.password(), self._on_password_dismissed)
-            case "root-profile":
+            case AccountActionV1.PROFILE:
                 self.navigate_to(
                     TuiNavigationTargetV1(
                         destination="workbench.profile",
@@ -189,16 +314,14 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
                         ),
                     )
                 )
-            case "root-appearance":
+            case AccountActionV1.APPEARANCE:
                 factories.appearance(self)
-            case "root-language":
+            case AccountActionV1.LANGUAGE:
                 screen = factories.profile(TuiScreenContextV1(destination="workbench.profile"))
                 self._replace_destination(screen, return_to_home=True)
                 self.call_after_refresh(factories.language, screen)
-            case "root-sign-out":
+            case AccountActionV1.SIGN_OUT:
                 self.run_worker(self._open_sign_out(), name="account-sign-out", exclusive=True)
-            case _:
-                return
 
     def _on_change_user_dismissed(self, outcome: object | None) -> None:
         """Accept only the real Login owner's non-secret authenticated result."""
@@ -246,12 +369,21 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             self._refuse_account_action()
 
     def _refuse_account_action(self) -> None:
-        """Expose one localized fail-closed message without exception details."""
-        self.query_one("#root-account-refusal", Static).update(tr("tui.root.account.unavailable"))
+        """Expose one localized fail-closed message without exception details.
+
+        Written to the root shell and also raised as a notification: the shell
+        sits beneath every destination, so a refusal written only there was
+        never seen by an operator who was on Home or in a workspace.
+        """
+        message = tr("tui.root.account.unavailable")
+        self.query_one("#root-account-refusal", Static).update(message)
+        self.notify(message, severity="warning")
 
     def _refuse_navigation(self) -> None:
-        """Expose the localized refusal for an unopenable destination."""
-        self.query_one("#root-navigation-refusal", Static).update(tr("tui.root.navigation.unavailable"))
+        """Expose the localized refusal for an unopenable destination, where it can be seen."""
+        message = tr("tui.root.navigation.unavailable")
+        self.query_one("#root-navigation-refusal", Static).update(message)
+        self.notify(message, severity="warning")
 
     def navigate_to(self, target: TuiNavigationTargetV1, /) -> None:
         """Mount only the current admitted destination with its semantic focus."""
@@ -264,12 +396,72 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         except NavigationContractError:
             self._refuse_navigation()
             return
+        except Exception:
+            # A destination reads its sources as it opens, and the usual reason
+            # those reads fail is that the session lapsed while the operator
+            # sat on Home. Home's refresh is what tells expiry apart and
+            # returns to sign-in; any other failure stays a visible refusal
+            # rather than ending the session with a traceback.
+            get_logger(__name__).warning("destination %s could not open", target.destination, exc_info=True)
+            self._refuse_navigation()
+            self._show_home(self._home_semantic_focus)
+            return
         self._active_target = target
         self._replace_destination(screen, return_to_home=True)
 
     def on_home_target_selected(self, event: HomeTargetSelected) -> None:
-        """Remember the Home row by its domain identity, never a row position."""
+        """Open what the selected Home row points at, and remember the row.
+
+        The row is remembered by its domain identity, never its position, so
+        the return journey lands on it again. Selecting a row used to do only
+        that, which left Home's suggested actions, resumable declarations and
+        agenda looking selectable while leading nowhere.
+        """
         self._home_semantic_focus = event.target
+        target = self._home_row_target(event.target)
+        if target is None:
+            self._refuse_navigation()
+            return
+        self.navigate_to(target)
+
+    def _home_row_target(self, row: HomeTarget) -> TuiNavigationTargetV1 | None:
+        """Translate one Home row into the admitted destination it belongs to."""
+        action_id = home_target_action_id(row)
+        if action_id is not None:
+            for route in self.destination_catalogue.routes:
+                if route.admission.state.value != "available":
+                    continue
+                if any(candidate.action_candidate_id == action_id for candidate in route.action_candidates):
+                    destination = route.descriptor.destination
+                    return TuiNavigationTargetV1(
+                        destination=destination,
+                        focus=TuiFocusIdentityV1(destination=destination, semantic_key=f"action.{action_id}"),
+                        action_candidate_id=action_id,
+                    )
+            return None
+        work_unit_id = home_target_work_unit_id(row)
+        if work_unit_id is not None:
+            try:
+                focus = TuiFocusIdentityV1(
+                    destination="workbench.declarations",
+                    semantic_key="declarations.work",
+                    restore_token=work_unit_id,
+                )
+            except ValueError:
+                # An identity the focus contract cannot carry still opens the
+                # declarations; only the row restore is lost.
+                focus = TuiFocusIdentityV1(destination="workbench.declarations", semantic_key="declarations.work")
+            return TuiNavigationTargetV1(destination="workbench.declarations", focus=focus)
+        address = home_target_agenda_address(row)
+        if address is not None:
+            return TuiNavigationTargetV1(
+                destination="workbench.declarations",
+                focus=TuiFocusIdentityV1(
+                    destination="workbench.declarations",
+                    semantic_key=calendar_address_focus_key(*address),
+                ),
+            )
+        return None
 
     def on_home_back_requested(self, _: HomeBackRequested) -> None:
         """Refresh Home after a completed or dismissed journey."""
@@ -298,9 +490,11 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             self._refuse_account_action()
             return
         self._home_refresh_refusal_code = None
-        self.query_one("#root-account", Static).update(
-            projection.account.profile_label or tr("tui.root.account.default_profile")
-        )
+        # Home is rebuilt after every return, including from a language
+        # change, so this is where the footer catches up with the page.
+        self._describe_account_keys()
+        self._account_session = projection.account
+        self._refresh_account_bars()
         self.query_one("#root-no-areas", Static).display = False
         if projection.account.posture is HomeSessionPosture.EXPIRED:
             self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
@@ -372,10 +566,22 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._replace_destination(screen, return_to_home=True)
 
     def _replace_destination(self, screen: Screen[None], *, return_to_home: bool = False) -> None:
-        """Discard the inactive destination before mounting exactly one replacement."""
+        """Discard the inactive destination before mounting exactly one replacement.
+
+        The swap runs on this application's pump and waits for each popped
+        screen to be removed before pushing. Popping only schedules removal, so
+        a replacement carrying the same id as the screen it replaces -- the
+        overview re-selected from its own navigation, Home rebuilt over Home --
+        was inserted beside it and refused as a duplicate, which ended the
+        operator on the empty root.
+        """
+        self.call_next(self._swap_destination, screen, return_to_home)
+
+    async def _swap_destination(self, screen: Screen[None], return_to_home: bool) -> None:
+        """Pop every destination, then push the replacement once they are gone."""
         while len(self.screen_stack) > 1:
-            self.pop_screen()
-        self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
+            await self.pop_screen()
+        await self.push_screen(screen, self._on_destination_dismissed if return_to_home else None)
 
     def _request_recompose(self, outcome: AccountRecomposeRequiredV1) -> None:
         """Sever every profile-bound capability before returning to bootstrap."""

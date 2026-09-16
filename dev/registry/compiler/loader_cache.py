@@ -46,6 +46,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
+from dev.cache_root import dev_cache_dir
 
 from ._toml_helpers import as_toml_table as _as_toml_table
 
@@ -511,14 +512,14 @@ def registry_disk_cache_dir() -> Path:
        touching the shared bundled-root pickle -- while still exercising the
        real filesystem and read/write path. Being an environment variable, it
        also propagates to a subprocess a test spawns via ``env=``.
-    2. Otherwise ``~/.cadrumo/registry-disk-cache``: a runner-local development
-       store outside the application's storage root, following the other
-       development caches.
+    2. Otherwise ``<repository root>/.cache/registry-disk-cache``: a checkout-local
+       development store outside the application's storage root, following the
+       other development caches.
     """
     override = os.environ.get(REGISTRY_DISK_CACHE_DIR_ENV)
     if override:
         return Path(override)
-    return Path.home() / ".cadrumo" / "registry-disk-cache"
+    return dev_cache_dir("registry-disk-cache")
 
 
 def registry_disk_cache_max_entries() -> int:

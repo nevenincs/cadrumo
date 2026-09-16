@@ -59,6 +59,13 @@ class ProfileFactWriteDoor(StrEnum):
     CLI_DESCENDIENTE = "cli.descendiente"
 
 
+def _effective(record: UserProfileRecord) -> dict[str, object]:
+    """Project a record to its effective fact per path for change comparison."""
+    from .projections import record_to_effective_facts as _projector
+
+    return dict(_projector(record))
+
+
 def apply_profile_fact_changes(
     *,
     profile_id: str,
@@ -112,6 +119,14 @@ def apply_profile_fact_changes(
         require_complete=current.setup_state is not ProfileSetupState.INCOMPLETE,
         schema=profile_context.schema,
     )
+    # A write that changes nothing is not a write. Publishing it anyway bumped
+    # the revision and appended a profile.values.updated event, so the evidence
+    # chain recorded changes that never happened -- and a caller submitting a
+    # value identical to the stored one was told it had updated the record.
+    # Effective facts are the comparison, not raw values, so an explicit clear
+    # (value=None) still reads as a real change against a set path.
+    if _effective(current) == _effective(current.model_copy(update={"facts": next_facts})):
+        return current
     published = repository.apply_fact_changes(
         profile_id,
         facts=next_facts,

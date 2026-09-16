@@ -24,8 +24,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
@@ -36,43 +34,33 @@ from ._modelo_work_ux_support import (
 )
 from ._modelo_work_ux_support import _create_m303_work_unit
 from .cli_runner import invoke_cached_cli
+from .modelo_profile_seed import ProfileSeeder, seed_profile
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["_isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _create_profile() -> None:
-    """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
-        label="operator",
-        facts={
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.tax_id": "12345678Z",
-            "identity.name": "Operator",
-            "identity.surnames": "Operator",
-            "activities.description": "design",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-        },
-    )
+_OPERATOR_FACTS = {
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.tax_id": "12345678Z",
+    "identity.name": "Operator",
+    "identity.surnames": "Operator",
+    "activities.description": "design",
+    "taxpayer_type.irpf_income_categories": "actividad_economica",
+}
 
-
-def _create_legal_entity_profile() -> None:
-    """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
-        label="company",
-        facts={
-            "taxpayer_type.entity_type": "legal_entity",
-            "taxpayer_type.legal_entity_form": "sl",
-            "identity.tax_id": "B12345674",
-            "identity.name": "Company",
-            "identity.surnames": "Company SL",
-            "identity.legal_name": "Company SL",
-            "activities.description": "consulting",
-            "taxpayer_type.incn_prior_12_months": "7500000.00",
-            "taxpayer_type.new_entity_first_two_profit_periods": "false",
-        },
-    )
+_LEGAL_ENTITY_FACTS = {
+    "taxpayer_type.entity_type": "legal_entity",
+    "taxpayer_type.legal_entity_form": "sl",
+    "identity.tax_id": "B12345674",
+    "identity.name": "Company",
+    "identity.surnames": "Company SL",
+    "identity.legal_name": "Company SL",
+    "activities.description": "consulting",
+    "taxpayer_type.incn_prior_12_months": "7500000.00",
+    "taxpayer_type.new_entity_first_two_profit_periods": "false",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -80,10 +68,10 @@ def _create_legal_entity_profile() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_work_calculate_rejects_registry_number_as_casilla_reference() -> None:
+def test_work_calculate_rejects_registry_number_as_casilla_reference(seed_profile: ProfileSeeder) -> None:
     """``--casilla`` requires canonical ``casilla.id`` values."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     work_unit_id = _create_m303_work_unit()
     result = invoke_cached_cli(
         [
@@ -98,13 +86,13 @@ def test_work_calculate_rejects_registry_number_as_casilla_reference() -> None:
     assert "iva.regularizacion-inversiones" in output
 
 
-def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate() -> None:
+def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate(seed_profile: ProfileSeeder) -> None:
     """A numeric token that resolves to no canonical casilla.id still refuses.
 
     The canonical-id gate must not turn a typo into a silent no-op.
     """
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     work_unit_id = _create_m303_work_unit()
     result = invoke_cached_cli(
         [
@@ -122,7 +110,7 @@ def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate
 # ---------------------------------------------------------------------------
 
 
-def test_bindings_list_missing_drops_profile_resolved_bindings() -> None:
+def test_bindings_list_missing_drops_profile_resolved_bindings(seed_profile: ProfileSeeder) -> None:
     """``bindings list --missing`` excludes bindings the active profile
     already resolves, so it is a usable "what do I still owe" guide.
 
@@ -132,7 +120,7 @@ def test_bindings_list_missing_drops_profile_resolved_bindings() -> None:
     while the unsatisfied previous-filing bindings still do.
     """
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     full = invoke_cached_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
@@ -153,10 +141,10 @@ def test_bindings_list_missing_drops_profile_resolved_bindings() -> None:
     assert missing_ids < full_ids
 
 
-def test_bindings_list_missing_forwards_as_of_to_profile_readiness() -> None:
+def test_bindings_list_missing_forwards_as_of_to_profile_readiness(seed_profile: ProfileSeeder) -> None:
     """The missing filter resolves profile readiness at the as-of date."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         [
             "app",
@@ -202,7 +190,7 @@ def test_bindings_list_labels_profile_sourced_rows_as_profile_facts() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_bindings_list_year_resolves_the_year_covering_revision() -> None:
+def test_bindings_list_year_resolves_the_year_covering_revision(seed_profile: ProfileSeeder) -> None:
     """``bindings list --modelo 100 --year 2024`` reports binding ids
     for the 2024 revision, not the latest (2025) revision.
 
@@ -211,7 +199,7 @@ def test_bindings_list_year_resolves_the_year_covering_revision() -> None:
     created with ``--year 2024`` then rejects.
     """
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
@@ -227,11 +215,11 @@ def test_bindings_list_year_resolves_the_year_covering_revision() -> None:
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
-def test_work_create_rejects_censo_tokens_as_non_filing_periods(token: str) -> None:
+def test_work_create_rejects_censo_tokens_as_non_filing_periods(token: str, seed_profile: ProfileSeeder) -> None:
     """``modelo work create`` refuses censo registry tokens because work
     units carry typed filing periods, while Modelo 036 declares event tokens."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         [
             "--format", "json",
@@ -259,10 +247,10 @@ def test_describe_and_casillas_accept_censo_period_tokens(token: str) -> None:
     assert casillas.exit_code == 0, casillas.output
 
 
-def test_work_create_still_rejects_an_undeclared_censo_token() -> None:
+def test_work_create_still_rejects_an_undeclared_censo_token(seed_profile: ProfileSeeder) -> None:
     """An undeclared censo token is still refused with a clear error."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
@@ -276,10 +264,10 @@ def test_work_create_still_rejects_an_undeclared_censo_token() -> None:
     assert "alta" in flat and "modificacion" in flat and "baja" in flat
 
 
-def test_work_create_still_accepts_quarterly_tokens() -> None:
+def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder) -> None:
     """The censo-token path does not regress quarterly period tokens."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         [
             "--format", "json",
@@ -297,14 +285,14 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_bindings_list_marks_decimal_consumed_typed_enum_binding() -> None:
+def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: ProfileSeeder) -> None:
     """The Modelo 100 estimación-directa binding carries ``typed_enum``
     yet is consumed as a Decimal operand. ``bindings list`` must report
     its ``input_channel`` as ``decimal`` so the operator is not misled
     into supplying an enum value through the binding channel.
     """
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
@@ -316,12 +304,12 @@ def test_bindings_list_marks_decimal_consumed_typed_enum_binding() -> None:
     assert columns[-2] == "decimal", row
 
 
-def test_modelo_readiness_names_preflight_scope() -> None:
+def test_modelo_readiness_names_preflight_scope(seed_profile: ProfileSeeder) -> None:
     """``readiness`` must not read like filing completeness for manual
     casilla modelos. It reports profile/source preflight readiness.
     """
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         [
             "app",
@@ -341,10 +329,10 @@ def test_modelo_readiness_names_preflight_scope() -> None:
     assert "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness" in result.output
 
 
-def test_modelo_readiness_refuses_revision_mismatch() -> None:
+def test_modelo_readiness_refuses_revision_mismatch(seed_profile: ProfileSeeder) -> None:
     """Readiness resolves the requested revision, not only the modelo/year."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         [
             "app",
@@ -369,10 +357,10 @@ def test_modelo_readiness_refuses_revision_mismatch() -> None:
     assert "aeat app modelo describe 130" in flat
 
 
-def test_modelo_readiness_refuses_period_without_registry_coverage() -> None:
+def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile: ProfileSeeder) -> None:
     """M210 readiness must fail closed when the requested period is not covered."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         [
             "app",
@@ -500,10 +488,10 @@ def test_modelo_readiness_m210_legacy_event_token_reports_current_guidance() -> 
     assert "Traceback" not in flat
 
 
-def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
+def test_modelo_readiness_reports_missing_calculation_bindings(seed_profile: ProfileSeeder) -> None:
     """Blank company facts must keep M200 readiness false before calculate."""
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
         [
             "--format",
@@ -537,10 +525,12 @@ def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
     assert "relation_prefill" in missing_sources
 
 
-def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_boolean() -> None:
+def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_boolean(
+    seed_profile: ProfileSeeder,
+) -> None:
     """A legal-entity M200 profile must not ask for the retired IRPF objective flag."""
 
-    _create_legal_entity_profile()
+    seed_profile(label="company", facts=_LEGAL_ENTITY_FACTS)
     result = invoke_cached_cli(
         [
             "--format",
@@ -571,7 +561,7 @@ def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_bo
 # ---------------------------------------------------------------------------
 
 
-def test_work_calculate_leads_with_a_result_summary() -> None:
+def test_work_calculate_leads_with_a_result_summary(seed_profile: ProfileSeeder) -> None:
     """``work calculate`` emits a headline result summary above the
     full casilla table, surfacing the modelo's key computed figures.
 
@@ -580,7 +570,7 @@ def test_work_calculate_leads_with_a_result_summary() -> None:
     on calculation inputs.
     """
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     work_unit_id = _create_111_work_unit()
     result = invoke_cached_cli(
         ["app", "modelo", "work", "calculate", work_unit_id],
@@ -599,7 +589,7 @@ def test_work_calculate_leads_with_a_result_summary() -> None:
     assert any(line.startswith("result_ingresar\t30\t") for line in lines), result.output
 
 
-def test_work_calculate_json_carries_the_result_summary() -> None:
+def test_work_calculate_json_carries_the_result_summary(seed_profile: ProfileSeeder) -> None:
     """The ``work calculate`` JSON payload carries the result summary
     as a typed list of headline rows.
 
@@ -607,7 +597,7 @@ def test_work_calculate_json_carries_the_result_summary() -> None:
     prior-period data.
     """
 
-    _create_profile()
+    seed_profile(label="operator", facts=_OPERATOR_FACTS)
     work_unit_id = _create_111_work_unit()
     result = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
@@ -644,7 +634,7 @@ def _create_202_work_unit(period: str) -> str:
 
 
 @pytest.mark.parametrize("period", ["1P", "2P", "3P"])
-def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str) -> None:
+def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str, seed_profile: ProfileSeeder) -> None:
     """``work calculate`` accepts every pago-fraccionado clave Modelo 202
     advertises (``1P`` / ``2P`` / ``3P``).
 
@@ -657,7 +647,7 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str)
     quarterly and annual modelos already do.
     """
 
-    _create_legal_entity_profile()
+    seed_profile(label="company", facts=_LEGAL_ENTITY_FACTS)
     work_unit_id = _create_202_work_unit(period)
     result = invoke_cached_cli(
         [
@@ -685,7 +675,7 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str)
     assert payload["casilla_values"], result.output
 
 
-def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
+def test_modelo_202_describe_create_calculate_agree_on_period_tokens(seed_profile: ProfileSeeder) -> None:
     """``describe``, ``work create`` and ``work calculate`` agree on the
     Modelo 202 period tokens.
 
@@ -694,7 +684,7 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
     may advertise a period the others reject.
     """
 
-    _create_legal_entity_profile()
+    seed_profile(label="company", facts=_LEGAL_ENTITY_FACTS)
     described = invoke_cached_cli(["app", "modelo", "describe", "202"])
     assert described.exit_code == 0, described.output
     periods_line = next(line for line in described.output.splitlines() if line.startswith("Periods\t"))

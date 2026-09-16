@@ -1121,8 +1121,11 @@ tui:
       unresolved: No resolta
     refusal:
       notification_handoff: La recuperació del document de notificació no està disponible.
-      operation_handoff: El lliurament de l'operació no està disponible.
+      operation_handoff: Les operacions amb l'AEAT no es poden iniciar des d'aquesta
+        sessió.
       source: Aquesta font no està disponible per consultar-la.
+      sources_missing: 'Aquesta àrea necessita dades que encara no estan disponibles:
+        %{sources}.'
       unread_notification: Les notificacions no llegides no poden obrir documents.
     section:
       areas: Àrees de sincronització
@@ -1147,6 +1150,8 @@ tui:
     sources:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
+    status:
+      items: 'Elements: %{count}'
     value:
       none: '-'
       unobserved: No observat
@@ -1215,6 +1220,9 @@ tui:
         cancel: Cancel·la
         confirm: Confirma
         failure: No s'ha pogut completar la recuperació.
+        setup_incomplete: 'Primer declara completa la configuració del perfil: obre
+          Perfil (F4) i prem F8.'
+        success: S'ha creat {address}. Apareixerà a Declaracions quan hi tornis.
       scope:
         all: Totes
         evidence_unknown: Evidència AEAT desconeguda
@@ -1256,7 +1264,7 @@ tui:
       modelo_workspace: Obre l'espai de declaració
       overview: Declaracions
       revisions: Revisions de càlcul
-    empty: No hi ha registres mesurats.
+    empty: Encara no hi ha res registrat aquí.
     evidence:
       aeat_justificante_pdf: Justificant PDF de l'AEAT observat
       aeat_live_capture: Observació en directe de l'AEAT
@@ -1285,7 +1293,20 @@ tui:
       declarations: Declaracions
       title: Resum de declaracions
     refusal:
-      handoff: L'amfitrió no ha proporcionat aquesta destinació.
+      handoff: Això no es pot obrir des d'aquesta sessió.
+      reason:
+        workbench:
+          calendar:
+            taxpayer_model_undeclared: El calendari fiscal necessita saber quin tipus
+              de contribuent és aquest perfil i, si és una persona física, les seves
+              categories de renda de l'IRPF. Completa-les al perfil (F4).
+          declarations:
+            lifecycle_reader_unavailable: L'historial de presentacions no es pot llegir
+              en aquesta sessió.
+          home:
+            taxpayer_profile_incomplete: El calendari fiscal no es pot calcular fins
+              que es completin les respostes obligatòries del perfil. Completa-les
+              a la secció Perfil.
       source: Aquesta font no està disponible actualment.
     revision_state:
       borrador: Esborrany
@@ -1334,9 +1355,30 @@ tui:
       available_empty: '%{label} - %{detail}'
       locked: Blocat - desbloca el perfil seleccionat per veure aquesta informació
       never_captured: Encara sense capturar
+      reason:
+        workbench:
+          calendar:
+            aeat_reader_unavailable: Encara sense capturar - apareix després de la
+              primera Sincronització AEAT
+            taxpayer_model_undeclared: No disponible - el perfil encara no indica
+              quin tipus de contribuent és
+          home:
+            actions_projector_unavailable: No disponible - les properes accions apareixen
+              quan s'han comprovat totes les àrees del llibre
+            agenda_projector_unavailable: No disponible - no s'ha pogut calcular el
+              calendari de presentació
+            declarations_resume_projector_unavailable: No disponible - no s'han pogut
+              llegir les declaracions per reprendre
+            messages_never_pulled: Encara sense capturar - els missatges de l'AEAT
+              apareixen després de la primera Sincronització AEAT
+            taxpayer_profile_incomplete: No disponible - al perfil li falten respostes
+              obligatòries; completa-les a Perfil
+          ledger:
+            snapshot_projector_unavailable: No disponible - es mostra quan s'han comprovat
+              totes les àrees del llibre
       stale: Desactualitzat - la darrera còpia local necessita actualitzar-se
       stale_observed: '%{label}; darrera observació %{observed_at}'
-      unavailable: No disponible - aquesta font no es pot llegir en la sessió actual
+      unavailable: No disponible - aquesta informació no es pot mostrar ara
     declaration_state:
       discarded: Descartada
       draft: Esborrany
@@ -1378,7 +1420,6 @@ tui:
       expired: Sessió caducada
       locked: Perfil blocat
       no_profile: Cap perfil seleccionat
-    session_line: '%{label} · Estat: %{status}'
     title: Inici
   ledger:
     area:
@@ -1391,6 +1432,7 @@ tui:
       review: Revisió
     availability:
       available: Disponible
+      choose_entry: Tria un assentament
       locked: Bloquejat
       never_captured: Encara no capturat
       stale: Desactualitzat
@@ -1426,6 +1468,7 @@ tui:
     entries:
       empty: Aquesta captura no conté cap apunt.
       title: Apunts del llibre comptable
+    entry_label: '{date} · {description}'
     evidence:
       column:
         status: Revisió
@@ -1474,6 +1517,7 @@ tui:
       failure: No s'ha pogut desar l'enllaç.
       inconsistencies: Incoherències d'enllaços
       invoice: Factura
+      invoice_label: '{counterparty} · {total}'
       local_only: Només dades locals del llibre. Sincronització AEAT és un espai diferent.
       match_evidence: Evidència canònica de coincidència
       modelo: Model
@@ -1489,10 +1533,11 @@ tui:
       application_state: Aquesta àrea no està disponible en l'estat actual del llibre
         comptable.
       destination_pending: Aquesta àrea encara no està disponible en aquesta versió.
+      no_entries: Encara no hi ha apunts per classificar.
       selection_required: Selecciona primer un apunt i obre després aquesta tasca
         per a ell.
-      submission_unavailable: Aquesta tasca no està disponible fins que es proporcioni
-        una operació preparada.
+      submission_unavailable: Aquesta tasca no es pot fer des d'aquesta pantalla en
+        aquesta sessió.
     review:
       empty: Ara mateix no hi ha cap apunt per revisar.
       filter_all: 'Filtre: tots els estats de revisió'
@@ -1510,6 +1555,62 @@ tui:
       unmeasured: Sense mesurar
     unavailable:
       title: Àrea del llibre comptable no disponible
+  modelo:
+    assertion:
+      matched: Coincideix
+      mismatched: No coincideix
+      not_present: Cap de registrada
+    capability:
+      calculation_materialization: Valors calculats
+      filing_draft_readiness: Esborrany de presentació
+      schema_inspection: Estructura del formulari
+      verification_readiness: Verificació
+    destination:
+      column: Pàgina
+      filing: Presentació
+      heading: Pàgines d'aquesta declaració
+      inputs: Entrades
+      provenance: Procedència
+      results: Resultats
+      verification: Verificació
+    disposition:
+      available: Disponible
+      not_applicable: No s'aplica
+      refused: Rebutjat
+      unmeasured: Sense mesurar
+    finding_kind:
+      advisory: Consell
+      blocking_rule: Regla no complerta
+      cross_period_dependency_unclean: Un període anterior requereix atenció
+      missing_required_casilla: Falta una casella obligatòria
+      reconciliation_mismatch: Els totals no quadren
+    finding_severity:
+      blocking: Impedeix presentar
+      warning: Avís
+    input_kind:
+      bound: S'omple amb els teus registres
+      computed: Calculat
+      informational: Només informatiu
+      manual: L'introdueixes tu
+      projection_only: Es mostra, no es presenta
+    record_family:
+      bindings: Valors dels teus registres
+      casillas: Caselles
+      formulas: Fórmules
+      parameters: Paràmetres
+      relations: Vincles amb altres models
+    review_status:
+      agent_reviewed: Revisat automàticament
+      operator_reviewed: Revisat per una persona
+      pending_review: Encara sense revisar
+    technical:
+      column:
+        field: Detall
+        value: Identificador
+      finding_refs: Referències legals, troballa {position}
+      producer_of: Origen de «{capability}»
+      record_family: Secció
+    technical_details: Detalls tècnics
   root:
     account:
       appearance: Aparença
@@ -1520,9 +1621,31 @@ tui:
       profile: Perfil
       sign_out: Tanca la sessió
       unavailable: Els controls del compte no estan disponibles en aquesta sessió.
+    account_bar:
+      line: '{label} · {status}'
+      line_with_expiry: '{label} · {status} · fins a les {expires_at}'
+    account_help:
+      appearance: Canvia entre l'aparença clara i la fosca
+      change_user: Inicia la sessió en un altre perfil d'aquest ordinador
+      language: Tria l'idioma en què es mostren les pàgines d'aquest perfil
+      password: Canvia la contrasenya que protegeix aquest perfil
+      profile: Revisa i edita les dades d'aquest perfil
+      sign_out: Tanca la sessió d'aquest perfil i bloqueja les seves dades
+    account_key:
+      appearance: Tema
+      change_user: Usuari
+      language: Idioma
+      password: Contrasenya
+      profile: Perfil
+      sign_out: Tanca sessió
     navigation:
       unavailable: No es pot obrir l'àrea sol·licitada en aquesta sessió.
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
+    palette:
+      placeholder: Cerca àrees, registres i accions…
+    system:
+      quit: Surt
+      quit_help: Surt de Cadrumo; la sessió del perfil queda com està
     title: 'Cadrumo: sessió de terminal'
   search:
     action:
@@ -1544,6 +1667,13 @@ tui:
       ledger: Obre el llibre major
       profile: Obre el perfil
       unknown: Obre l'espai de treball
+    destination_help:
+      aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
+      declarations: Declaracions, revisions de càlcul, historial de presentacions
+        i calendari
+      home: Properes accions, declaracions i terminis d'un cop d'ull
+      ledger: Apunts, revisió, classificació i justificants
+      profile: Les dades d'aquest perfil i les fonts que les completen
     refusal:
       not_composed: Encara no s'han pogut llegir totes les fonts de l'espai de treball.
       refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.

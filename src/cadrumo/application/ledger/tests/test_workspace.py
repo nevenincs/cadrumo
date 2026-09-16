@@ -130,6 +130,7 @@ def _project(transaction: Transaction):
         invoices=InvoiceCatalogue.from_invoices((_invoice(),)),
         revisions={},
         work_units=WorkUnitCatalogue(),
+        evidence_pending_review=0,
         filing_staleness_reader=lambda **_kwargs: (),
     )
 
@@ -183,7 +184,7 @@ def test_projection_is_deterministic_total_local_and_intrinsically_safe() -> Non
             LedgerWorkspaceArea.EVIDENCE,
             (LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_INVOICES),
             LedgerWorkspaceAvailability.AVAILABLE,
-            LedgerWorkspaceStatus.UNMEASURED,
+            LedgerWorkspaceStatus.EMPTY,
             0,
         ),
         (
@@ -264,6 +265,7 @@ def test_each_injected_reader_runs_once_and_no_hidden_reader_is_needed() -> None
         invoices=InvoiceCatalogue(),
         revisions={},
         work_units=WorkUnitCatalogue(),
+        evidence_pending_review=0,
         invoice_reconciliation_reader=suggestions,
         link_consistency_reader=consistency,
         filing_staleness_reader=staleness,
@@ -304,6 +306,7 @@ def test_bucket_sources_cannot_be_mixed() -> None:
             invoices=InvoiceCatalogue(),
             revisions={},
             work_units=WorkUnitCatalogue(),
+            evidence_pending_review=0,
             filing_staleness_reader=lambda **_kwargs: (),
         )
 
@@ -326,6 +329,7 @@ def test_foreign_invoice_is_refused_before_any_reconciliation_reader() -> None:
             invoices=InvoiceCatalogue.from_invoices((foreign,)),
             revisions={},
             work_units=WorkUnitCatalogue(),
+            evidence_pending_review=0,
             invoice_reconciliation_reader=reader,
             link_consistency_reader=reader,
             filing_staleness_reader=reader,
@@ -358,6 +362,7 @@ def test_contradictory_summary_or_review_facts_are_refused(
             invoices=InvoiceCatalogue(),
             revisions={},
             work_units=WorkUnitCatalogue(),
+            evidence_pending_review=0,
             filing_staleness_reader=lambda **_kwargs: (),
         )
 
@@ -443,3 +448,19 @@ def test_workspace_module_has_no_adapter_entrypoint_or_io_imports() -> None:
     }
     assert not any("adapters" in module or "entrypoints" in module for module in imported)
     assert not any(module in {"os", "pathlib", "socket", "subprocess"} for module in imported)
+
+
+def test_evidence_area_reports_its_measured_review_queue() -> None:
+    """An unmeasured queue stays unmeasured; a measured zero is empty, not unknown.
+
+    Home refuses to offer evidence work it cannot count, so the difference
+    between "nobody looked" and "looked and found nothing" is what decides
+    whether the operator sees the zone at all.
+    """
+    from ..workspace import LedgerWorkspaceProjectionError, _evidence_status
+
+    assert _evidence_status(None) is LedgerWorkspaceStatus.UNMEASURED
+    assert _evidence_status(0) is LedgerWorkspaceStatus.EMPTY
+    assert _evidence_status(2) is LedgerWorkspaceStatus.NEEDS_ATTENTION
+    with pytest.raises(LedgerWorkspaceProjectionError):
+        _evidence_status(-1)

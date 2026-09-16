@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import ModalScreen, Screen
+from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
 from textual.worker import Worker, WorkerState
 
@@ -47,7 +47,10 @@ from ....application.user_profile.acquisition_sources import (
 )
 from ....application.user_profile.presentation import notice_presentation, profile_field_shape_hint
 from ....core.i18n.render import tr
+from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....domain.user_profile.values import ProfileSetupState
+from ....entrypoints.tui.components.account_chrome import AccountChromeScreen
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
@@ -264,6 +267,11 @@ that would lead an operator to it.
 _LANGUAGE_KEY = "f2"
 """The key that opens the language chooser."""
 
+_COMPLETE_SETUP_KEY = "f8"
+"""The key that declares the profile's setup complete, while it is not."""
+
+_COMPLETE_SETUP_ACTION = "complete_setup"
+
 _LANGUAGE_ACTION = "choose_language"
 """The action that key runs.
 
@@ -287,7 +295,7 @@ _SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
 }
 
 
-class ProfileManagerScreen(TypedAppAccess, Screen[None]):
+class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
     """Full-screen profile overview with in-place editing."""
 
     SCOPED_CSS = False
@@ -302,7 +310,6 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
     )
 
     BINDINGS: ClassVar = [
-        Binding("f3", "toggle_appearance", "", show=False),
         # Shown in the footer, unlike the others. The language of the page
         # is the one setting an operator may need to change before they can
         # read the page well enough to find it, so it cannot be one more
@@ -314,6 +321,12 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         # whichever language the process started in. Both are written by
         # :meth:`_offer_language_in_footer` on every render instead.
         Binding(_LANGUAGE_KEY, _LANGUAGE_ACTION, "", show=True),
+        # After the language key, so the footer reads in key order here as it
+        # does on every other destination; described by the account chrome.
+        Binding("f3", "toggle_appearance", "", show=False),
+        # Named on its own button rather than in the footer, which has no
+        # room left for it on an eighty-column terminal.
+        Binding(_COMPLETE_SETUP_KEY, _COMPLETE_SETUP_ACTION, "", show=False),
         Binding("q", "quit", "", show=False),
         Binding("escape", "quit", "", show=False),
     ]
@@ -323,6 +336,7 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         overview: ProfileOverview,
         *,
         persist: Callable[[str, str], ProfileOverview],
+        complete_setup: Callable[[], ProfileOverview] | None = None,
         validate: Callable[[str, str], str | None] | None = None,
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
         credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
@@ -330,6 +344,13 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
         self.overview = overview
+        self._complete_setup = complete_setup
+        """Declares setup complete and hands back the page as storage now holds it.
+
+        Injected like ``persist``. The store judges the record at its
+        strictest setting and refuses a record still missing a required
+        answer, so the page never decides completeness itself. A host that
+        supplies none offers no such action at all."""
         self._launch_source = launch_source
         """Starts one declared acquisition source's operation, or ``None``.
 
@@ -390,6 +411,11 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
 
         Kept because one field decides how the whole page is worded, so
         settling its write needs a different redraw from every other."""
+        self._pending_completion: Worker[ProfileOverview] | None = None
+        """The in-flight setup completion, or ``None``.
+
+        Serialised against field writes for the reason those are serialised
+        against each other: both replace the whole record."""
 
     @override
     def compose(self) -> ComposeResult:
@@ -397,17 +423,10 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         yield PinnedStatusBar(id="manager-status")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             yield Vertical(id="manager-context")
-            with Vertical(id="manager-sources", classes="cadrumo-panel"):
-                for source in known_profile_acquisition_sources():
-                    yield SourceActionCard(
-                        SourceActionDescriptor(
-                            title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
-                            description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
-                            action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
-                            credential_requirement=self._credential_requirement_badge(source.key),
-                        ),
-                        id=f"source-{source.key.value}",
-                    )
+            # Filled by :meth:`_redraw`, not here: a card's text is fixed when
+            # it is built, so cards composed once would keep the language the
+            # page opened in after the operator changes it.
+            yield Vertical(id="manager-sources", classes="cadrumo-panel")
             for section in self.overview.sections:
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
@@ -415,8 +434,22 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
     async def on_mount(self) -> None:
         """Install the presentation theme and render the supplied overview."""
         install_cadrumo_themes(self.app)
-        self._sync_source_actions()
         await self._redraw()
+
+    def _source_cards(self) -> list[SourceActionCard]:
+        """Build one card per known source, worded in the page's current language."""
+        return [
+            SourceActionCard(
+                SourceActionDescriptor(
+                    title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
+                    description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
+                    action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
+                    credential_requirement=self._credential_requirement_badge(source.key),
+                ),
+                id=f"source-{source.key.value}",
+            )
+            for source in known_profile_acquisition_sources()
+        ]
 
     def _credential_requirement_badge(self, key: ProfileAcquisitionSourceKey) -> CredentialRequirement | None:
         """Resolve one source's credential badge from its real posture, if supplied.
@@ -466,6 +499,9 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         disabled and the handler returns above. It becomes reachable the moment
         that door is wired.
         """
+        if event.button.id == "manager-complete-setup":
+            self.action_complete_setup()
+            return
         if self._launch_source is None:
             return
         card = event.button.parent
@@ -497,8 +533,13 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         content actually moved — the same page, at a fraction of the work.
         """
         self._render_chrome()
+        self.refresh_account_chrome()
         self._clear_notice()
         await self._render_profile_context()
+        sources = self.query_one("#manager-sources", Vertical)
+        await sources.remove_children()
+        await sources.mount_all(self._source_cards())
+        self._sync_source_actions()
         self._field_by_key.clear()
         self._table_by_section.clear()
         self._columns_by_section.clear()
@@ -608,6 +649,14 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
             await context.mount(
                 Static(requirements, id="manager-requirements", classes="cadrumo-note", markup=False),
             )
+        if self._completion_offered:
+            await context.mount(
+                Button(
+                    tr("flows.manager.complete_setup.button", key=_COMPLETE_SETUP_KEY.upper()),
+                    id="manager-complete-setup",
+                    compact=True,
+                )
+            )
         if self.overview.notices:
             await context.mount(
                 NoticeBand(
@@ -713,7 +762,9 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         putting a new list in this instance's table cannot.
         """
         field = self._language_field()
-        label = field.label if field is not None else ""
+        # The short account name rather than the field's own label, so the
+        # footer keeps every key on an eighty-column terminal.
+        label = tr("tui.root.account_key.language") if field is not None else ""
         bindings = self._bindings.key_to_bindings.get(_LANGUAGE_KEY)
         if bindings is None:
             return
@@ -827,6 +878,59 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
             thread=True,
         )
 
+    # ── setup completion ────────────────────────────────────────────────
+
+    @property
+    def _completion_offered(self) -> bool:
+        """Whether the page offers to declare setup complete right now."""
+        return self._complete_setup is not None and self.overview.setup_state is ProfileSetupState.INCOMPLETE
+
+    @override
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """Hide the completion key once there is nothing to complete."""
+        if action == _COMPLETE_SETUP_ACTION:
+            return self._completion_offered
+        return super().check_action(action, parameters)
+
+    def action_complete_setup(self) -> None:
+        """Ask the store to declare this profile's setup complete, off the event loop."""
+        door = self._complete_setup
+        if door is None or not self._completion_offered:
+            return
+        if self._pending_write is not None or self._pending_completion is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        completion_context = copy_context()
+        self.query_one("#manager-status", PinnedStatusBar).show_progress(tr("flows.manager.complete_setup.running"))
+        self._pending_completion = self.run_worker(
+            lambda: completion_context.run(door),
+            name="profile-complete-setup",
+            group="profile-complete-setup",
+            exit_on_error=False,
+            thread=True,
+        )
+
+    async def _settle_completion(self, worker: Worker[ProfileOverview]) -> None:
+        """Show the completed page, or why the store would not complete it."""
+        self._pending_completion = None
+        if worker.state is WorkerState.SUCCESS and worker.result is not None:
+            self.overview = worker.result
+            await self._redraw()
+            self.refresh_bindings()
+            self.query_one("#manager-status", PinnedStatusBar).show_success(
+                tr("flows.manager.complete_setup.completed")
+            )
+            return
+        if isinstance(worker.error, ProfileSchemaValidationError):
+            missing = [field.label for field in self.overview.missing_required_fields]
+            self._refuse(
+                tr("flows.manager.complete_setup.incomplete", fields=", ".join(missing))
+                if missing
+                else tr("flows.manager.complete_setup.incomplete_unnamed")
+            )
+            return
+        self._refuse_worker(worker.error, message_key="flows.manager.complete_setup.failed")
+
     async def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
         """Land one finished worker back on Textual's UI task.
 
@@ -839,6 +943,10 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         pending_write = self._pending_write
         if pending_write is not None and event_worker is pending_write:
             await self._settle_write(pending_write)
+            return
+        pending_completion = self._pending_completion
+        if pending_completion is not None and event_worker is pending_completion:
+            await self._settle_completion(pending_completion)
             return
 
     async def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
@@ -922,7 +1030,9 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
 
         The tokens are shown as language names, because an operator whose
         page is in a language they do not read is exactly the one who
-        cannot be asked to recognise ``hu``.
+        cannot be asked to recognise ``hu``. Each name is written in its own
+        language for the same reason: that operator cannot read "Húngaro"
+        on a Spanish page either, but does read "Magyar".
         """
         field = self._language_field()
         if field is None:
@@ -940,7 +1050,10 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
                 field,
                 prompt=tr("wizard.setup.profile.output-language.prompt"),
                 choice_labels={
-                    choice.value: tr(f"wizard.setup.profile.output-language.choices.{choice.value}.label")
+                    choice.value: tr(
+                        f"wizard.setup.profile.output-language.choices.{choice.value}.label",
+                        locale=choice.value,
+                    )
                     for choice in field.choices
                 },
                 validate=self._validator_for(field),

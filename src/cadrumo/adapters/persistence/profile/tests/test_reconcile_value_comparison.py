@@ -18,11 +18,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.inbound.justificante.parser import parse_justificante
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
@@ -74,7 +74,7 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
     # identity assertion holds (a fabricated pin would divert reconcile into a
     # snapshot_unavailable advisory instead of exercising the value compare).
     revision_id = (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot(
             modelo,
             filing_year=filing_year,

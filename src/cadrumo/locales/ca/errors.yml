@@ -1178,8 +1178,8 @@ errors:
     refused_profile_label_ambiguous: 'Refusat: l''etiqueta del perfil és ambigua.'
     refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
       està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
-    refused_profile_login_throttled: Massa intents d'inici de sessió fallits. Espera
-      %{seconds} segons abans de tornar-ho a intentar.
+    refused_profile_login_throttled: L'inici de sessió es pausa després d'un intent
+      fallit. Espera %{seconds} s abans de tornar-ho a intentar.
     refused_profile_not_configured: La verificació de la declaració de la Renda necessita
       un perfil de residència fiscal. Completa el perfil abans de continuar.
     refused_profile_not_found: No existeix cap perfil amb l'identificador indicat.

@@ -18,7 +18,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -35,6 +34,7 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     workflow_profile,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -372,7 +372,7 @@ def _seed_local_filing_record(
 def test_amend_refuses_evidence_less_m303_external_baseline(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
     _, _, baseline = _seed_external_baseline(
         repos,
         modelo="303",

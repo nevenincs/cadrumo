@@ -17,11 +17,11 @@ from ...core.config import override_settings
 from ...core.errors.hierarchy import NoActiveProfileError
 from ...core.logging import get_logger
 from ...core.profile_session import ProfileRecordUnavailability
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .profile_bucket_scan import resolve_profile_bucket
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ...domain.user_profile.values import UserProfileRecord
 
 _log = get_logger(__name__)

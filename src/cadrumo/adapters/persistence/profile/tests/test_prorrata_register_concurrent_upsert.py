@@ -23,8 +23,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 
 from .....core.modelo import Modelo
@@ -41,7 +41,9 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
-    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
+    return (
+        published_authority_operation().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
+    )
 
 
 def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:

@@ -44,7 +44,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -53,6 +52,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -209,7 +209,7 @@ def _calculate_and_verify(
             )
         )
 
-        snapshot = compiled_bundled_authority().snapshot(
+        snapshot = published_authority_operation().snapshot(
             Modelo("720").value,
             filing_year=_YEAR_N_PLUS_1,
             period=_PERIOD,
@@ -295,12 +295,12 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             _INMUEBLES_VALORACION: _INMUEBLES_N,
         },
     )
-    snapshot_n1 = compiled_bundled_authority().snapshot(
+    snapshot_n1 = published_authority_operation().snapshot(
         Modelo("720").value,
         filing_year=_YEAR_N_PLUS_1,
         period=_PERIOD,
     )
-    snapshot_n2 = compiled_bundled_authority().snapshot(
+    snapshot_n2 = published_authority_operation().snapshot(
         Modelo("720").value,
         filing_year=_YEAR_N_PLUS_1 + 1,
         period=_PERIOD,
@@ -494,7 +494,7 @@ def test_modelo_721_declares_no_independent_evidence_source(tmp_path: Path) -> N
     row-evidence binding the omission is revisited rather than forgotten.
     """
     with _secure_backend(tmp_path):
-        snapshot = compiled_bundled_authority().snapshot(
+        snapshot = published_authority_operation().snapshot(
             Modelo("721").value,
             filing_year=2024,
             period=_PERIOD,

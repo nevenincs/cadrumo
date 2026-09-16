@@ -50,9 +50,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -166,7 +166,7 @@ def _calculate_115(
     casilla_inputs: dict[CasillaId, Decimal],
 ) -> RegistryCalculationResult:
     """Run the REAL 115 quarterly calculation and return the engine result."""
-    snapshot = compiled_bundled_authority().snapshot(_MODELO_115, filing_year=filing_year, period=period)
+    snapshot = published_authority_operation().snapshot(_MODELO_115, filing_year=filing_year, period=period)
     binding_values = {
         binding_id: casilla_inputs[casilla_id] for casilla_id, binding_id in _M115_BOUND_BINDINGS_BY_CASILLA.items()
     }
@@ -202,7 +202,7 @@ def _calculate_180(
     relation_values: dict[RelationId, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL 180 annual calculation from resolved relations; return result + count."""
-    snapshot = compiled_bundled_authority().snapshot(_MODELO_180, filing_year=filing_year, period="0A")
+    snapshot = published_authority_operation().snapshot(_MODELO_180, filing_year=filing_year, period="0A")
     relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**relation_binding_values, "modelo-180-115-perceptores-anual": Decimal("2")}
     inputs = {
@@ -279,7 +279,7 @@ def test_modelo_180_relation_prefill_aggregates_115_quarters(tmp_path: Path) -> 
     with isolated_runtime_profile(tmp_path=tmp_path), bundled_indexed_authority().operation() as operation:
         obs_repo = CalculationObservationRepository()
         expected = _compute_year_115_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
-        snapshot_180 = compiled_bundled_authority().snapshot(_MODELO_180, filing_year=_YEAR_N, period="0A")
+        snapshot_180 = published_authority_operation().snapshot(_MODELO_180, filing_year=_YEAR_N, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_180, operation=operation, repository=obs_repo)
 
     resolved: dict[RelationId, Decimal] = {
@@ -306,7 +306,7 @@ def test_modelo_180_year_isolation_ignores_prior_year_observations(tmp_path: Pat
         # Seed both years.
         _compute_year_115_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         expected_n1 = _compute_year_115_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
-        snapshot_180_n1 = compiled_bundled_authority().snapshot(_MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_180_n1 = published_authority_operation().snapshot(_MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_180_n1, operation=operation, repository=obs_repo)
 
     resolved: dict[RelationId, Decimal] = {
@@ -347,7 +347,7 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         # We record the feeder year here using the year-N quarterly count proxy.
         _q1_result = _calculate_115(filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"])
 
-        snapshot_180_n = compiled_bundled_authority().snapshot(_MODELO_180, filing_year=_YEAR_N, period="0A")
+        snapshot_180_n = published_authority_operation().snapshot(_MODELO_180, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_180_n, operation=operation, repository=obs_repo)
         resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
         result_n, _produced_n = _calculate_180(filing_year=_YEAR_N, relation_values=resolved_n)
@@ -361,7 +361,7 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
             casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"],
         )
 
-        snapshot_180_n1 = compiled_bundled_authority().snapshot(_MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_180_n1 = published_authority_operation().snapshot(_MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill_n1 = resolve_relations_from_local_store(snapshot_180_n1, operation=operation, repository=obs_repo)
         resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
         result_n1, _produced_n1 = _calculate_180(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)

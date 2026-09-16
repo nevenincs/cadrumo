@@ -110,6 +110,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         with ledger_workspace_page() as navigation:
             yield navigation
             yield ContentDataTable[str](id="ledger-entries", cursor_type="row", zebra_stripes=True)
+            yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -122,7 +123,9 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
         self._fill_table(table, cast("App[None]", self.app).size.width)
         if not table.row_count:
-            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.entries.empty"))
+            # An empty ledger is a state, not a refusal: it gets the muted line,
+            # and the warning line stays free for a navigation refusal.
+            self.query_one("#ledger-empty", Static).update(ledger_copy("tui.ledger.entries.empty"))
         navigation = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
         restore_transaction_focus(
             navigation=navigation,

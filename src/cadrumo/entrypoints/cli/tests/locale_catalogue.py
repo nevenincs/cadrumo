@@ -44,8 +44,13 @@ def _locale_key(value: object) -> str:
     return str(value)
 
 
-class _StrictUniqueKeyLoader(yaml.SafeLoader):
-    """Reject duplicate YAML keys while retaining the safe-loader boundary."""
+class _StrictUniqueKeyLoader(yaml.CSafeLoader):
+    """Reject duplicate YAML keys while retaining the safe-loader boundary.
+
+    The libyaml parser is used because the catalogues run to megabytes per
+    locale and the pure-Python scanner costs tens of seconds per full load;
+    construction, and so the duplicate-key and value-type checks, is unchanged.
+    """
 
     pass
 

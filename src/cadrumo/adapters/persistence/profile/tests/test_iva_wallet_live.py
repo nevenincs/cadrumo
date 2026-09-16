@@ -18,10 +18,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -94,7 +94,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
 
     backend_bindings: dict[str, Decimal] = {}
     revision = (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot(
             "303",
             filing_year=target_year,

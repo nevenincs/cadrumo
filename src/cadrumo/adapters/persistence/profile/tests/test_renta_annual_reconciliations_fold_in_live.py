@@ -58,7 +58,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -79,6 +78,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -269,7 +269,7 @@ def _calculate_annual(
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = published_authority_operation().snapshot(modelo, filing_year=_YEAR, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
@@ -308,7 +308,7 @@ def _calculate_periodic(
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=_YEAR, period=period)
+    snapshot = published_authority_operation().snapshot(modelo, filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,

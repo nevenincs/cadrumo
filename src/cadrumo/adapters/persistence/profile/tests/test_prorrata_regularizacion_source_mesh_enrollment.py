@@ -27,11 +27,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
 from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
@@ -138,7 +138,7 @@ def _register_with_carried_prior() -> ProrrataRegister:
                 provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                 source_observation_ref=f"303:{_PRIOR_YEAR}:4T",
                 source_registry_snapshot_refs=(
-                    compiled_bundled_authority().snapshot("303", filing_year=_PRIOR_YEAR, period="4T").snapshot_ref,
+                    published_authority_operation().snapshot("303", filing_year=_PRIOR_YEAR, period="4T").snapshot_ref,
                 ),
             ),
         ),
@@ -157,7 +157,7 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
         },
     }
     for period, casilla_values in source_values_by_period.items():
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period=period)
+        snapshot = published_authority_operation().snapshot("303", filing_year=_FILING_YEAR, period=period)
         filing_values = {**casilla_values, M303_COMPENSATION_RESULTADO_CASILLA: Decimal("0.00")}
         repository.save(
             repository.prepare_observation_envelope(
@@ -181,7 +181,7 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
 
 def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) -> None:
     """The live mesh invokes prorrata without requiring unrelated carry bindings."""
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=_FILING_YEAR, period="4T")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
@@ -222,7 +222,7 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
 ) -> None:
     """The M390 binding consumes stamped Modelo 303 source-period observations."""
     period = Period.from_year_and_code(_FILING_YEAR, "0A")
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_FILING_YEAR, period="0A")
+    snapshot = published_authority_operation().snapshot("390", filing_year=_FILING_YEAR, period="0A")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id, modelo=ModeloCode("390"), period=period)
 

@@ -89,7 +89,7 @@ def casilla_labels(locale: str) -> dict[str, dict[str, dict[str, str]]]:
     paths = sorted(source.rglob("*.yml")) if source.is_dir() else [source]
     found: dict[str, dict[str, dict[str, str]]] = {}
     for path in paths:
-        parsed = yaml.safe_load(path.read_text(encoding="utf-8"))
+        parsed = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.CSafeLoader)
         for key, text in _flatten_raw_locale_leaves(parsed).items():
             if not isinstance(text, str) or not key.endswith(_LABEL_SUFFIX):
                 continue

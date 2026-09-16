@@ -41,6 +41,12 @@ class ProfileWizardStatus(StrEnum):
 
     CREATED = "created"
     UPDATED = "updated"
+    #: The command was accepted and published nothing: every supplied value
+    #: already matched the stored record. Distinct from ``UPDATED`` because an
+    #: automation branching on the outcome must be able to tell a real write
+    #: from a request that changed nothing -- reporting both as ``updated``
+    #: claimed a revision the record never gained.
+    UNCHANGED = "unchanged"
     ABANDONED = "abandoned"
 
 

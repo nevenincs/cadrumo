@@ -46,7 +46,6 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -56,6 +55,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import IvaWal
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -211,7 +211,7 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
         taxpayer_nif=_TAX_ID,
         target_year=_YEAR,
         target_period=Period.from_year_and_code(_YEAR, period),
-        target_registry_snapshot_ref=compiled_bundled_authority()
+        target_registry_snapshot_ref=published_authority_operation()
         .snapshot("303", filing_year=_YEAR, period=period)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
@@ -273,7 +273,7 @@ def _calculate_m303_quarter(
         modelo="303",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
-        revision_id=compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period).revision.id,
+        revision_id=published_authority_operation().snapshot("303", filing_year=_YEAR, period=period).revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
         operation=operation,

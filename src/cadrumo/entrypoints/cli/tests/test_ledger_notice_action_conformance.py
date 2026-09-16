@@ -6,6 +6,7 @@ import ast
 import inspect
 import re
 from collections.abc import Iterator
+from functools import cache
 from pathlib import Path
 from types import ModuleType
 
@@ -32,7 +33,7 @@ from .. import (
     _ledger_support,
 )
 from .. import ledger_lifecycle_cli as _ledger_lifecycle_cli
-from .locale_catalogue import LocaleNode, get_yaml_keys, load_locale
+from .locale_catalogue import LocaleNode, load_locale
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -116,12 +117,25 @@ def _caught_names(handler: ast.ExceptHandler) -> set[str]:
     return {item.id for item in ast.walk(handler.type) if isinstance(item, ast.Name)}
 
 
-def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[str, str]]:
+def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[str, LocaleNode]]:
     if isinstance(node, dict):
         for key, child in node.items():
             yield from _iter_locale_leaves(child, f"{prefix}.{key}" if prefix else str(key))
-    elif isinstance(node, str):
+    else:
         yield prefix, node
+
+
+@cache
+def _ledger_locale_leaves(locale: str) -> tuple[tuple[str, LocaleNode], ...]:
+    """Every ``cli.ledger.*`` leaf of one locale, parsed once for the whole session.
+
+    A catalogue is megabytes of YAML; two gates below read the same four, and
+    re-parsing them per gate dominated this module's runtime. Null leaves are
+    kept because they are keys for the set comparison, though they carry no
+    prose to inspect.
+    """
+    catalogue = load_locale(_LOCALES_DIR / locale)
+    return tuple((key, value) for key, value in _iter_locale_leaves(catalogue) if key.startswith("cli.ledger."))
 
 
 #: Below this a notice module has stopped carrying a surface to inspect.
@@ -281,8 +295,7 @@ def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
     """Localized ledger facts cannot carry executable command identity."""
     failures: list[str] = []
     for locale in ("ca", "en", "es", "hu"):
-        catalogue = load_locale(_LOCALES_DIR / locale)
-        ledger_leaves = [(key, value) for key, value in _iter_locale_leaves(catalogue) if key.startswith("cli.ledger.")]
+        ledger_leaves = [(key, value) for key, value in _ledger_locale_leaves(locale) if isinstance(value, str)]
         assert len(ledger_leaves) >= _MINIMUM_LEDGER_LOCALE_KEYS, (
             f"locale {locale} carries only {len(ledger_leaves)} cli.ledger key(s); below this "
             "the claim below holds because that catalogue emptied, not because it is clean"
@@ -440,16 +453,19 @@ def test_ledger_locale_key_sets_match_source_and_each_other() -> None:
     """Ledger catalogue leaves are complete, symmetric, and consumed by source."""
     source_keys: set[str] = set(_REGISTERED_LEDGER_LOCALE_KEYS)
     for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        text = path.read_text(encoding="utf-8")
+        # A ``cli.ledger.`` constant, even one assembled from adjacent literals,
+        # leaves ``ledger`` in the source text; skipping the rest avoids
+        # parsing the whole package for a handful of consumers.
+        if "ledger" not in text:
+            continue
+        tree = ast.parse(text, filename=str(path))
         source_keys.update(
             node.value
             for node in ast.walk(tree)
             if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith("cli.ledger.")
         )
-    key_sets = {
-        locale: {key for key in get_yaml_keys(load_locale(_LOCALES_DIR / locale)) if key.startswith("cli.ledger.")}
-        for locale in ("ca", "en", "es", "hu")
-    }
+    key_sets = {locale: {key for key, _ in _ledger_locale_leaves(locale)} for locale in ("ca", "en", "es", "hu")}
     canonical = key_sets["en"]
     assert {locale: sorted(keys ^ canonical) for locale, keys in key_sets.items()} == {
         "ca": [],

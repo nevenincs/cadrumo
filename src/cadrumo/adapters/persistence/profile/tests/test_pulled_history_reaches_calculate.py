@@ -44,7 +44,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -61,6 +60,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -163,7 +163,7 @@ def _synthetic_register_row(period_code: str) -> FiledDeclaracionObservation:
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_ref=compiled_bundled_authority()
+        registry_snapshot_ref=published_authority_operation()
         .snapshot("130", filing_year=_YEAR, period=period_code)
         .snapshot_ref,
     )
@@ -277,7 +277,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     makes the comparison a statement about the observation store rather than about
     the caller channel.
     """
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         Modelo("100").value,
         filing_year=_YEAR,
         period=_M100_ANNUAL_PERIOD,
@@ -315,7 +315,7 @@ def _calculate_m100_annual(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=bucket_id, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=bucket_id, objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         Modelo("100").value,
         filing_year=_YEAR,
         period=_M100_ANNUAL_PERIOD,

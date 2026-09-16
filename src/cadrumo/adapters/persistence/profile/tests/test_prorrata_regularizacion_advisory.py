@@ -32,10 +32,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
@@ -73,7 +73,7 @@ _CUOTA_DEDUCIBLE_TOTAL_ID = validated_casilla_id("iva.cuota-deducible-total", su
 
 
 def _revision(*, period: str = "4T"):
-    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=_YEAR, period=period)
+    snapshot = published_authority_operation().snapshot(Modelo("303").value, filing_year=_YEAR, period=period)
     return snapshot.revision
 
 

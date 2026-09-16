@@ -25,7 +25,7 @@ import pytest
 from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
 from ._ledger_corpus_support import (
     _active_repo,
-    _import_corpus,
+    _import_bbva,
     _invoke,
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
@@ -36,7 +36,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _intracom_row() -> dict[str, object]:
-    _import_corpus()
+    # The intra-community client row lives in the BBVA business account alone.
+    _import_bbva()
     rows = [row for row in _list_rows() if "cliente DE GmbH intracom" in row["description"]]
     assert rows, "corpus must contain a DE intracommunity client invoice"
     raw_row = rows[0]

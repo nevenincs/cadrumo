@@ -38,7 +38,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import SecretStr
 
@@ -53,6 +52,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -313,7 +313,7 @@ def _calculate_negative_period(
     filing_repo = ModeloRecordCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
 
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period_token)
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=period_token)
     report = _reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=_TAX_ID,
@@ -437,7 +437,7 @@ def _file_period(
 
 def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None:
     """Resolve the next period's casilla-110 carry-in from whatever carry the filing persisted."""
-    snapshot_next = compiled_bundled_authority().snapshot("303", filing_year=next_year, period=next_period)
+    snapshot_next = published_authority_operation().snapshot("303", filing_year=next_year, period=next_period)
     relation_values = _resolve_relations_from_local_store(
         snapshot_next,
         repository=CalculationObservationRepository(),

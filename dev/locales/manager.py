@@ -126,11 +126,10 @@ class LocaleAuditResult:
         return all(file.ok for file in self.files) and not self.placeholder_mismatches
 
 
-#: libyaml's C scanner where the wheel provides it, PyYAML's Python one where
-#: it does not. Only scanning and parsing are C-accelerated; the constructor
-#: below stays Python and keeps running for every mapping, which is what lets
-#: the duplicate-key refusal survive the swap unchanged.
-class StrictUniqueKeyLoader(yaml.SafeLoader):
+#: libyaml's C scanner. Only scanning and parsing are C-accelerated; the
+#: constructor below stays Python and keeps running for every mapping, which is
+#: what lets the duplicate-key refusal survive the swap unchanged.
+class StrictUniqueKeyLoader(yaml.CSafeLoader):
     """YAML loader that raises an error on duplicate keys.
 
     The catalogues are ~3 MB each, and parsing one measured 9.016s on the pure

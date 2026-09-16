@@ -31,9 +31,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
@@ -58,7 +58,7 @@ _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="prior f
 
 
 def _stamped_revision_id() -> str:
-    return str(compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id)
+    return str(published_authority_operation().snapshot("130", filing_year=2026, period="1T").revision.id)
 
 
 def _schema_provider() -> CasillaSchemaProvider:

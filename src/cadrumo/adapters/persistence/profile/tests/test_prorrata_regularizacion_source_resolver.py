@@ -27,10 +27,10 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
@@ -115,7 +115,7 @@ def _current_year_values() -> dict[CasillaId, Decimal]:
 
 
 def _snapshot(modelo: str, period: str) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period)
+    return published_authority_operation().snapshot(modelo, filing_year=_FILING_YEAR, period=period)
 
 
 def _context(
@@ -148,7 +148,7 @@ def _register_with_carried_prior(
                 provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                 source_observation_ref=f"{Modelo('303').value}:{_PRIOR_YEAR}:4T",
                 source_registry_snapshot_refs=(
-                    compiled_bundled_authority().snapshot("303", filing_year=_PRIOR_YEAR, period="4T").snapshot_ref,
+                    published_authority_operation().snapshot("303", filing_year=_PRIOR_YEAR, period="4T").snapshot_ref,
                 ),
             ),
         ),

@@ -10,25 +10,24 @@ from __future__ import annotations
 import importlib.resources  # nosemgrep
 import os
 import re
+import sys
 from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
 from pathlib import Path
 from string import Formatter
-from typing import IO, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import i18n
 import yaml
 
-from ..config import load_settings, settings_override
-from ..config_state_root import FormerProductStateError
-from ..config_support import coerce_output_language_setting
 from ..errors.hierarchy import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
 from ..product_identity import PRODUCT_IDENTITY, normalise_product_identity_references
 from ..type_guards import is_object_mapping
+from ._lazy_catalogue import _load_yaml_handle
 
 if TYPE_CHECKING:
     from ._lazy_catalogue import LazyLocaleCatalogue
@@ -136,6 +135,8 @@ def _ensure_initialised() -> None:
 
 
 def normalise_supported_language(value: object) -> str | None:
+    from ..config_support import coerce_output_language_setting
+
     language = coerce_output_language_setting(str(value))
     return language.value if language is not None else None
 
@@ -199,8 +200,21 @@ _OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
 )
 
 
+def _active_settings_override() -> object | None:
+    """Return the scoped settings override without importing the settings model.
+
+    An override can only have been installed by a module that already imported
+    :mod:`cadrumo.core.config`; until then there is none to observe.
+    """
+    if "cadrumo.core.config" not in sys.modules:
+        return None
+    from ..config import settings_override
+
+    return settings_override.get()
+
+
 def _output_language_cache_key() -> tuple[object, ...]:
-    override = settings_override.get()
+    override = _active_settings_override()
     if override is not None:
         return ("override", id(override), _output_language_cache_version)
     # The key is built from in-memory inputs ONLY — no filesystem call. It
@@ -255,6 +269,11 @@ def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
 
 def _resolve_output_language() -> str:
     """Resolve the language from settings and the active profile, uncached."""
+    if _profile_language_resolver is None and _active_settings_override() is None:
+        return _resolve_output_language_before_profile_composition()
+    from ..config import load_settings
+    from ..config_state_root import FormerProductStateError
+
     try:
         settings = load_settings()
     except (CoreError, FormerProductStateError, KeyError, ValueError, AttributeError) as exc:
@@ -272,6 +291,51 @@ def _resolve_output_language() -> str:
     if profile_language is not None:
         return profile_language
     return normalise_supported_language(settings.cadrumo_output_language) or DEFAULT_OUTPUT_LANGUAGE
+
+
+def _environment_setting(name: str) -> str | None:
+    """Read one setting the way the settings environment source does.
+
+    Names match case-insensitively with the last spelling winning, and an
+    empty value counts as unset.
+    """
+    wanted = name.lower()
+    value: str | None = None
+    for key, candidate in os.environ.items():
+        if key.lower() == wanted:
+            value = candidate
+    return value or None
+
+
+def _resolve_output_language_before_profile_composition() -> str:
+    """Resolve the language with no profile resolver and no settings override.
+
+    Only the environment and the default can decide the language here, so the
+    settings model is not built: command-graph construction renders every help
+    string through this path. The state-root refusals that make settings
+    unloadable are still observed and fall back to the default exactly as
+    :func:`_resolve_output_language` does.
+    """
+    from .._config_runtime import active_profile_pointer_observation
+    from ..config_state_root import FormerProductStateError, default_storage_root, refuse_former_product_database
+    from ..paths import normalize_project_relative_path
+
+    try:
+        root, pointer = active_profile_pointer_observation(
+            normalizer=normalize_project_relative_path,
+            storage_root=default_storage_root,
+        )
+        if _environment_setting("CADRUMO_DATABASE_URL") is None:
+            bucket_id = (pointer.bucket_id or "").strip()
+            refuse_former_product_database(root, bucket_id=bucket_id or None)
+    except (CoreError, FormerProductStateError, KeyError, ValueError, AttributeError) as exc:
+        _log.debug(
+            "i18n: state root cannot back settings for output language; falling back to default (%s)",
+            type(exc).__name__,
+            exc_info=True,
+        )
+        return DEFAULT_OUTPUT_LANGUAGE
+    return normalise_supported_language(_environment_setting(OUTPUT_LANGUAGE_ENV_VAR)) or DEFAULT_OUTPUT_LANGUAGE
 
 
 def _active_profile_output_language() -> str | None:
@@ -494,7 +558,7 @@ def locale_map(locale: str) -> Mapping[str, str | None]:
         monolith = override / f"{locale}.yml"
         if monolith.is_file():
             with monolith.open("r", encoding="utf-8") as handle:
-                return _flatten_translations(_load_locale_yaml(handle))
+                return _flatten_translations(_load_yaml_handle(handle))
     return _packaged_locale_map(locale)
 
 
@@ -506,18 +570,6 @@ def _packaged_locale_map(locale: str) -> LazyLocaleCatalogue:
     locales_root = Path(str(resource))
     shard_dir = locales_root / locale
     return LazyLocaleCatalogue(locale, shard_dir=shard_dir)
-
-
-def _load_locale_yaml(handle: IO[str]) -> object:
-    # CSafeLoader C-accelerates only scanning/parsing; PyYAML's higher-level
-    # "construct Python objects from the parsed node tree" step is always
-    # pure Python and scales with node count. The packaged catalogues now
-    # carry a large modelo.schema.* block (compiled casilla labels/help,
-    # see domain.calculations.registry._modelo_localization). Both loaders
-    # apply identical safe-load semantics.
-    if hasattr(yaml, "CSafeLoader"):
-        return yaml.load(handle, Loader=yaml.CSafeLoader) or {}
-    return yaml.safe_load(handle) or {}
 
 
 def _flatten_translations(value: object, prefix: str = "") -> dict[str, str | None]:

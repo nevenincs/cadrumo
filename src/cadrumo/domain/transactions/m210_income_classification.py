@@ -19,10 +19,6 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.authority import bundled_indexed_authority
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.schema_base import DateAxis
-from ..calculations.registry.temporal import select_revision_metadata_for_year
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
@@ -35,6 +31,12 @@ def _resolved_m210_detail_declarations(
     operation: PinnedAuthorityOperation | None = None,
 ) -> Mapping[str, str]:
     """Resolve the selected detail catalogue as string declarations."""
+    # Registry resolution loads the authority tree; the model itself must stay
+    # importable without it.
+    from ..calculations.registry.authority import bundled_indexed_authority
+    from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from ..calculations.registry.schema_base import DateAxis
+
     query = MappingFactQuery(
         fact_id="detail-m349-m210-catalogues",
         date_axis=DateAxis.FILING_PERIOD,
@@ -120,6 +122,9 @@ def _registry_m210_declarations(
     operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[frozenset[str], frozenset[str], M210PayerMode]:
     """Resolve the selected M210 code and payer-applicability declarations."""
+    from ..calculations.registry.authority import bundled_indexed_authority
+    from ..calculations.registry.temporal import select_revision_metadata_for_year
+
     effective_date = date.today()
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:

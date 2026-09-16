@@ -86,27 +86,29 @@ def _refuse_archive_target_without_the_sealed_suffix(target: Path) -> None:
 
 def archive_export(
     ctx: typer.Context,
-    output: Path,
+    *,
     name: str | None = None,
+    output: Path,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Write a profile's capsule to a sealed archive, defaulting to the active one."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile.capsule_archive import export_profile_capsule_archive
+    from ..common import no_active_profile_refusal
     from ..config_payloads import ConfigProfileArchiveExportResult
-    from ._profile_inspect import _resolve_show_pointer
-    from ._profile_support import resolve_active_profile_pointer
+    from ._profile_support import resolve_active_profile_pointer, resolve_profile_by_label
 
     _refuse_archive_target_without_the_sealed_suffix(output)
     # The archive service takes a UUID and deliberately holds no opinion
     # about labels, so the label is resolved here through the one shared
     # resolver rather than inside the service. An omitted name means the
-    # active profile, resolved by the same helper the inspect verbs use.
-    pointer = _resolve_show_pointer(
-        name,
-        ctx=ctx,
-        resolve_active_profile_pointer=resolve_active_profile_pointer,
-    )
+    # active profile, refused the same way the inspect verbs refuse it.
+    if name is None:
+        pointer = resolve_active_profile_pointer()
+        if pointer is None:
+            raise no_active_profile_refusal()
+    else:
+        pointer = resolve_profile_by_label(name)
     receipt = export_profile_capsule_archive(
         profile_id=UUID(str(pointer.bucket_id)),
         target=output,

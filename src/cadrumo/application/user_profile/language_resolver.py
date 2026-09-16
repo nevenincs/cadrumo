@@ -95,12 +95,17 @@ def mirror_profile_output_language_hint(bucket_id: str, language: str | None) ->
     """Mirror a profile's language preference into its non-secret bucket hint.
 
     The hint answers one question the encrypted preference cannot: which
-    language to speak BEFORE the profile is unlocked.
-    :func:`resolve_active_profile_output_language` falls back to it whenever no
+    language to speak for a SELECTED profile that is not unlocked.
+    :func:`resolve_active_profile_output_language` falls back to it when no
     bucket session is bound, and the reader fails soft on absence -- so while
     nothing wrote the hint, that fallback always returned ``None`` and every
-    pre-login surface silently took the settings default, however deliberately
+    locked surface silently took the settings default, however deliberately
     the operator had chosen a language during setup.
+
+    It is keyed by bucket, so it serves a locked selection and NOT a logged-out
+    one: once ``logout`` clears the pointer there is no bucket to resolve the
+    hint against, and the settings default is the only answer available. That
+    is a property of the selection model, not a gap in the mirror.
 
     Clearing the preference clears the hint, so the two cannot disagree about
     an absence. Failure is swallowed for the same reason the read is: this

@@ -38,8 +38,18 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityV1,
     ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceRecordLabelV1,
+    ModeloWorkspaceRevisionAssertionDisposition,
 )
+from .....core.i18n.render import tr
 from .....core.models import STRICT_FROZEN_CONFIG
+from .....core.revision_review import RevisionReviewStatus
+from .....domain.calculations.registry.schema_input_kind import InputKind
+from .....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
+from .....domain.modelos.work_unit import WorkUnitState
 
 type ModeloWorkspaceDestinationIdV1 = Literal[
     "modelo.workspace.overview",
@@ -190,6 +200,56 @@ def capability_row(capability: ModeloWorkspaceCapabilityV1) -> ModeloWorkspaceCa
     )
 
 
+def disposition_label(disposition: ModeloWorkspaceCapabilityDisposition) -> str:
+    """Name a capability disposition in words, glyph first.
+
+    The glyph stays so a greyscale reading still tells the four apart; the
+    words keep "not measured", "does not apply" and "refused" as distinct
+    sentences rather than one blank.
+    """
+    return f"{_DISPOSITION_GLYPH[disposition]} {tr(f'tui.modelo.disposition.{disposition.value}')}"
+
+
+def capability_label(capability: ModeloWorkspaceCapabilityName) -> str:
+    """Name one workspace capability in words."""
+    return tr(f"tui.modelo.capability.{capability.value}")
+
+
+def assertion_label(disposition: ModeloWorkspaceRevisionAssertionDisposition) -> str:
+    """Say in words whether a revision was asserted and whether it matched."""
+    return tr(f"tui.modelo.assertion.{disposition.value}")
+
+
+def review_status_label(status: RevisionReviewStatus) -> str:
+    """Say in words how far the revision's review has progressed."""
+    return tr(f"tui.modelo.review_status.{status.value}")
+
+
+def work_state_label(state: WorkUnitState) -> str:
+    """Name a work unit's state with the words the Declarations area uses."""
+    return tr(f"tui.declarations.work_state.{state.value}")
+
+
+def input_kind_label(kind: InputKind) -> str:
+    """Say in words how the registry declares a casilla's value is supplied."""
+    return tr(f"tui.modelo.input_kind.{kind.value}")
+
+
+def finding_severity_label(severity: ModeloVerificationFindingSeverity) -> str:
+    """Name a verification finding's severity in words."""
+    return tr(f"tui.modelo.finding_severity.{severity.value}")
+
+
+def finding_kind_label(kind: ModeloVerificationFindingKind) -> str:
+    """Name a verification finding's kind in words."""
+    return tr(f"tui.modelo.finding_kind.{kind.value}")
+
+
+def finding_message(finding: ModeloVerificationFinding) -> str:
+    """Render the finding's own message from its locale key and typed facts."""
+    return tr(finding.message_locale_key, **finding.message_facts)
+
+
 type ModeloWorkspaceConstraintDisclosureV1 = Literal["unmeasured", "none_declared", "declared"]
 """Three states, because the producer distinguishes three and a bool cannot.
 
@@ -236,6 +296,15 @@ __all__ = [
     "ModeloWorkspaceDisplayTextV1",
     "ModeloWorkspaceDispositionGlyphV1",
     "ModeloWorkspacePageCompletenessV1",
+    "assertion_label",
+    "capability_label",
     "capability_row",
     "display_text",
+    "disposition_label",
+    "finding_kind_label",
+    "finding_message",
+    "finding_severity_label",
+    "input_kind_label",
+    "review_status_label",
+    "work_state_label",
 ]

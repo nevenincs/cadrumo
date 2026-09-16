@@ -301,7 +301,7 @@ def test_root_strict_payload_refusals_close_descriptor_without_mutation(
 
 
 def test_retired_restore_password_field_is_refused_without_publication(tmp_path: Path) -> None:
-    capsule, _artifact, _phrase = _restore_material(tmp_path / "legacy-restore-material")
+    capsule = _restore_material(tmp_path / "legacy-restore-material")
     root = tmp_path / "legacy-restore"
     result = _run(
         root,

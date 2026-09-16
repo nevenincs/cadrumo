@@ -40,6 +40,7 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.package_version import PACKAGE_VERSION
+from dev.cache_root import dev_cache_dir
 
 from .compiled_cache import loader_code_fingerprint
 from .identity import RegistryIdentity
@@ -143,9 +144,10 @@ def default_verdict_cache_dir() -> Path:
     """Resolve the runner-local writable verdict store.
 
     Follows the development cache convention: an explicit
-    ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise ``~/.cadrumo`` holds
-    it. The store lives outside the application's storage root, so writing a
-    verdict never changes the application state that root fingerprints.
+    ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise the checkout's own
+    ``.cache/registry-verdict`` holds it. The store lives outside the
+    application's storage root, so writing a verdict never changes the
+    application state that root fingerprints.
 
     Returns:
         The directory holding writable verdict files.
@@ -153,7 +155,7 @@ def default_verdict_cache_dir() -> Path:
     override = os.environ.get(_CACHE_DIR_ENV)
     if override:
         return Path(override)
-    return Path.home() / ".cadrumo" / "registry-verdict"
+    return dev_cache_dir("registry-verdict")
 
 
 def verdict_cache_path(root: Path) -> Path:

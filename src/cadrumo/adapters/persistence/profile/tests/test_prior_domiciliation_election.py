@@ -7,10 +7,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.m303_carry_ingress import m303_declaration_type_header_key
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
@@ -87,7 +87,7 @@ def _source_header_disposition(
 def _work_unit(*, modelo: str = "303") -> WorkUnit:
     period = Period.from_year_and_code(2025, "1T")
     revision_id = (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot(
             modelo,
             filing_year=period.filing_year,

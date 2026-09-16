@@ -19,6 +19,9 @@ inspection, rather than showing the same content the inputs destination
 shows at a different address. Two addresses displaying identical content
 teach an operator to distrust the addresses.
 
+Each row shows the casilla and its value; the formula that produced it is
+a raw identifier and sits in a collapsed technical-details group.
+
 Historical revisions are out of scope and unreachable, not merely unbuilt:
 ``resolve_graded_snapshot_result`` materializes
 ``work_unit.current_calculation_revision_id`` and accepts no selector for
@@ -33,7 +36,6 @@ from typing import ClassVar, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.screen import Screen
 from textual.widgets import Static
 
 from .....application.modelo.workspace_models import (
@@ -42,13 +44,15 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceScalarMaterializationRecordV1,
 )
 from .....core.i18n.render import tr
+from ...components.account_chrome import AccountChromeScreen
 from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
 from .models import ModeloWorkspaceBoundedPageV1
+from .technical_details import TechnicalDetailRowV1, mount_technical_details
 
-_COLUMN_KEYS: tuple[str, ...] = ("casilla", "value", "formula")
+_COLUMN_KEYS: tuple[str, ...] = ("casilla", "value")
 
 
 def _computed_casillas(session: ModeloWorkspaceReadSession) -> dict[str, str] | None:
@@ -69,7 +73,7 @@ def _computed_casillas(session: ModeloWorkspaceReadSession) -> dict[str, str] | 
     }
 
 
-class ModeloWorkspaceResultsScreen(TypedAppAccess, Screen[None]):
+class ModeloWorkspaceResultsScreen(TypedAppAccess, AccountChromeScreen):
     """Computed values for the current session, or an explicit not-applicable."""
 
     BINDINGS: ClassVar = [
@@ -140,6 +144,8 @@ class ModeloWorkspaceResultsScreen(TypedAppAccess, Screen[None]):
 
         facet = self._session.projection.materialization_facet
         rows = 0
+        formulas: list[TechnicalDetailRowV1] = []
+        formula_label = tr("flows.modelo_workspace_results.column.formula")
         if facet is not None:
             for record in facet.records:
                 if not isinstance(record, ModeloWorkspaceScalarMaterializationRecordV1):
@@ -149,10 +155,12 @@ class ModeloWorkspaceResultsScreen(TypedAppAccess, Screen[None]):
                 if formula_id is None:
                     continue
                 value = "" if record.scalar.value is None else str(record.scalar.value)
-                table.add_row(casilla_id, value, formula_id, key=casilla_id)
+                table.add_row(casilla_id, value, key=casilla_id)
+                formulas.append((casilla_id, f"{formula_label} {casilla_id}", formula_id))
                 rows += 1
         if rows == 0:
             body.mount(Static(tr("flows.modelo_workspace_results.empty"), id="workspace-results-empty"))
+        mount_technical_details(body, formulas, id="workspace-results-technical-table")
 
     def action_quit_results(self) -> None:
         """Leave the destination without returning a value; this screen decides nothing."""

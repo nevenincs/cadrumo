@@ -44,6 +44,14 @@ flows:
       field: Mező
       state: Állapot
       value: Érték
+    complete_setup:
+      button: Beállítás befejezése ({key})
+      completed: A beállítás kész. Az ehhez kötött bevallások most már elérhetők.
+      failed: A beállítást nem sikerült befejezni.
+      incomplete: 'A beállítás még nem fejezhető be. Hiányzik: {fields}.'
+      incomplete_unnamed: 'A beállítás még nem fejezhető be: kötelező válaszok hiányoznak
+        vagy nem egyeznek.'
+      running: A profil ellenőrzése és a beállítás befejezése…
     edit:
       cancel: Mégse
       clear: Törlés
@@ -164,16 +172,14 @@ flows:
     column:
       capability: Képesség
       disposition: Diszpozíció
-      producer: Előállító
-      why: Indok
     handoff: A benyújtás ezen az alkalmazáson kívül történik. Itt építsen, ellenőrizzen
       és exportáljon, majd saját maga nyújtsa be az AEAT felé.
-    state_not_carried: Ez az olvasás nem tartalmaz benyújtási állapotot vagy előzményt.
-      Egyetlen előállító sem adja meg.
-    title: "Benyújtás - {modelo} modelo\r"
+    state_not_carried: Ez az oldal nem mutatja a benyújtás állapotát és előzményeit.
+    title: Benyújtás - {modelo} modelo
     why:
-      draft_structural: 'Tartósan nincs mérve: a piszkozat építése állapotmentes,
-        így egyetlen előállító sem rögzít kiolvasható verdiktet.'
+      draft_structural: A Cadrumo előre nem tudja megmondani, hogy a benyújtási tervezet
+        elkészíthető-e; ez a tervezet elkészítésekor derül ki.
+    why_line: '{capability}: {why}'
   modelo_workspace_inputs:
     column:
       address: Cím
@@ -186,17 +192,15 @@ flows:
       olvasásból nem érhető el.'
     section:
       unsectioned: Szakasz nélkül
-    title: "Bemenetek - {modelo} modelo\r"
-    values_unmeasured: Ebben az olvasásban nem mértünk értéket. A statikus vizsgálat
-      csak a sémát olvassa.
+    title: Bemenetek - {modelo} modelo
+    values_unmeasured: Ez az oldal csak a nyomtatvány felépítését mutatja; számított
+      értékeket még nem.
   modelo_workspace_overview:
-    actions_not_carried: Egyetlen előállító sem ad helyreállítási műveletet ehhez
-      az olvasáshoz. Ez nem állítja, hogy nincsenek.
+    actions_not_carried: Ez az oldal még nem javasol következő lépéseket.
     column:
       capability: Képesség
       disposition: Diszpozíció
       field: Mező
-      producer: Előállító
       value: Érték
     label:
       filing_year: Adóév
@@ -212,7 +216,7 @@ flows:
       address: Cím
       capabilities: Képességek
       revision: Revíziós koordináták
-    title: "Áttekintés - {modelo} modelo\r"
+    title: Áttekintés - {modelo} modelo
     value:
       no_work_unit: még nincs munkaegység
   modelo_workspace_provenance:
@@ -221,11 +225,10 @@ flows:
       source_ref: Forráshivatkozás
       subject: Alany
     empty: Ez a számítás nem rögzített közreműködő forrást.
-    not_applicable: Erre az olvasásra nem alkalmazható. Ez az admisszió nem tartalmaz
-      eredet-facettát.
+    not_applicable: Ez az oldal még nem mutatja, honnan származnak az értékek.
     page_bounded: '{shown} sor látható egy nagyobb halmazból. Egy forrás sok sort
       adhat, ezért a sorszám nem jelzi a teljességet.'
-    title: "Eredet - {modelo} modelo\r"
+    title: Eredet - {modelo} modelo
     value:
       unattributed: nincs hozzárendelve
   modelo_workspace_results:
@@ -234,12 +237,11 @@ flows:
       formula: Képlet
       value: Érték
     empty: Ez a számítás nem hozott létre számított casillát.
-    not_applicable: Erre az olvasásra nem alkalmazható. A számított eredmények és
-      az operátori bemenetek szétválasztásához a munkafelülvizsgálat kell, amelyet
-      a statikus vizsgálat nem tartalmaz.
+    not_applicable: 'Ez az oldal még nem tud számított eredményeket mutatni: nem tudja
+      megkülönböztetni a számított mezőket az Ön által kitöltöttektől.'
     page_bounded: '{shown} sor látható egy nagyobb halmazból; a többi sor ebből az
       olvasásból nem érhető el.'
-    title: "Eredmények - {modelo} modelo\r"
+    title: Eredmények - {modelo} modelo
   modelo_workspace_verification:
     axis:
       binding_ready: Kötések készek
@@ -247,23 +249,23 @@ flows:
       profile_ready: Profil kész
       ready: Kész (előállítói verdikt)
       registry_ready: Nyilvántartás kész
-    capability_line: 'Ellenőrzési készenlét: {glyph} {disposition} (forrás: {producer})'
+    capability_line: 'Ellenőrzés: {disposition}'
     column:
       axis: Tengely
       casilla: Casilla
       kind: Típus
+      message: Megállapítás
       severity: Súlyosság
       value: Érték
-    evidence_not_carried: Egyetlen előállító sem ad bizonyítékot vagy helyreállítási
-      műveletet ezekhez a rekordokhoz. Ez nem állítja, hogy nincsenek.
+    evidence_not_carried: Ez az oldal még nem mutat alátámasztó bizonylatokat vagy
+      javasolt következő lépéseket.
     findings_none: A munkafelülvizsgálat nem rögzített megállapítást.
-    findings_unmeasured: Ebben az olvasásban nem mértünk megállapítást. Ez az admisszió
-      nem tartalmaz munkafelülvizsgálatot.
-    readiness_unmeasured: A készenlétet ebben az olvasásban nem mértük.
+    findings_unmeasured: Ez az oldal még nem mutatja az ellenőrzés megállapításait.
+    readiness_unmeasured: Ez az oldal még nem mutatja, hogy a bevallás kész-e.
     section:
       findings: Megállapítások
       readiness: Készenléti tengelyek
-    title: "Ellenőrzés - {modelo} modelo\r"
+    title: Ellenőrzés - {modelo} modelo
     value:
       unmeasured: nincs mérve
   passphrase:
@@ -314,6 +316,8 @@ flows:
       skip_button: Kihagyás most
     refusal:
       confirmation_mismatch: A két jelszó nem egyezik.
+      profile_already_exists: Már létezik '%{profile}' nevű profil. Válassz másik
+        nevet, vagy lépj ki erről a képernyőről, és jelentkezz be abba a profilba.
       username_required: Adj meg egy nevet ennek a profilnak.
     section: Név és jelszó
     strength:

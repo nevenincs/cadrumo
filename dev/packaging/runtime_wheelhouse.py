@@ -33,6 +33,7 @@ from packaging.utils import canonicalize_name, parse_wheel_filename
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
+from dev.cache_root import dev_cache_dir
 
 from .hashing import sha256_path
 from .uv_constraints import export_runtime_constraints
@@ -513,7 +514,8 @@ def wheel_cache_dir() -> Path | None:
     """Return the runner-local wheel cache directory, or ``None`` when disabled.
 
     Follows the proof cache's convention: an explicit
-    ``CADRUMO_RUNTIME_WHEEL_CACHE_DIR`` wins, otherwise ``~/.cadrumo`` holds it.
+    ``CADRUMO_RUNTIME_WHEEL_CACHE_DIR`` wins, otherwise the checkout's own
+    ``.cache/runtime-wheel-cache`` holds it.
     Setting the variable to an empty value disables caching outright, which is
     what a run that must prove it fetched from the index sets.
 
@@ -525,7 +527,7 @@ def wheel_cache_dir() -> Path | None:
     override = os.environ.get(_CACHE_DIR_ENV)
     if override is not None:
         return Path(override) if override.strip() else None
-    return Path.home() / ".cadrumo" / "runtime-wheel-cache"
+    return dev_cache_dir("runtime-wheel-cache")
 
 
 def _cache_entry(cache: Path, wheel: LockedWheel) -> Path:

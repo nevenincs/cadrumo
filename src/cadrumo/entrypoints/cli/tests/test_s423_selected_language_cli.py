@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....tests.os_keychain_hook import require_os_credential_store
 from .subprocess_cli import run_subprocess_cli_harness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -231,34 +232,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     storage_root = tmp_path / language
     root = ["--language", language]
 
-    profile = _run_cli(
-        storage_root,
-        [
-            *root,
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Locale",
-            "--activity",
-            "design",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--activity-start-date",
-            "2026-01-01",
-        ],
-    )
-    assert profile.returncode == 0, _combined_output(profile)
-
+    # Parser refusals need no profile, so they are proven before the expensive setup.
     missing = _run_cli(
         storage_root,
         [*root, "app", "modelo", "work", "create", "--year", "2026", "--period", "1T"],
@@ -290,6 +264,37 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     assert invalid_value in invalid_output
     assert "Invalid value" not in invalid_output
     assert "is not a valid integer" not in invalid_output
+
+    # Every later invocation resumes the profile session from the OS credential
+    # store; refuse before paying for profile creation on a host that has none.
+    require_os_credential_store()
+    profile = _run_cli(
+        storage_root,
+        [
+            *root,
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Operator",
+            "--surnames",
+            "Locale",
+            "--activity",
+            "design",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--activity-start-date",
+            "2026-01-01",
+        ],
+    )
+    assert profile.returncode == 0, _combined_output(profile)
 
     created = _run_cli(
         storage_root,
@@ -364,6 +369,9 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
 
 def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_projection(tmp_path: Path) -> None:
     """One revision and actor retain their report identity across selected languages."""
+    # Every later invocation resumes the profile session from the OS credential
+    # store; refuse before paying for profile creation on a host that has none.
+    require_os_credential_store()
     storage_root = tmp_path / "cross-locale-identity"
     revision_id = _create_modelo_revision(
         storage_root,
@@ -438,6 +446,9 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
 
 def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tmp_path: Path) -> None:
     """A non-granted draft can be verified in both languages without history drift."""
+    # Every later invocation resumes the profile session from the OS credential
+    # store; refuse before paying for profile creation on a host that has none.
+    require_os_credential_store()
     storage_root = tmp_path / "cross-locale-non-granted"
     revision_id = _create_modelo_revision(
         storage_root,

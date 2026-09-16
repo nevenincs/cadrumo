@@ -10,12 +10,14 @@ from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.period import Period
-from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.justificante.schema import Justificante
+
+if TYPE_CHECKING:
+    from ...core.period import Period
+    from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.justificante.schema import Justificante
 
 
 class ReconciliationCasillaObservation(Protocol):

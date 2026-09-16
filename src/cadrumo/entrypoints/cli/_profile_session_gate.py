@@ -8,20 +8,26 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 import typer
 
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
-
+from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.profile_session import ProfileSessionRefusalReason
 from .command_spec import CommandSpec
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
+    from ...application.user_profile.login_session import ProfileLoginOutcome
+    from ...application.user_profile.session_admission import ProfileCredentialRequestV1
     from .common import RequestedCliLeaf
     from .config.secure_input import MachineSecretSelection, ProfileSecretSelection
 
 
 class RootAuthenticator(Protocol):
-    """Exact callback seam from the neutral session gate to root authentication."""
+    """Exact callback seam from the neutral session gate to root authentication.
+
+    Returns the login outcome it achieved so the shared admission door can
+    prove the session it reports, rather than each caller re-deriving that
+    proof from the substrate.
+    """
 
     def __call__(
         self,
@@ -30,7 +36,7 @@ class RootAuthenticator(Protocol):
         leaf_selection: MachineSecretSelection | None,
         spec: CommandSpec,
         arguments: Mapping[str, object],
-    ) -> None: ...
+    ) -> ProfileLoginOutcome: ...
 
 
 CliRefusedBoundaryError = import_module(".errors", __package__).CliRefusedBoundaryError
@@ -214,6 +220,33 @@ def activate_profile_session(
     clear_output_language_cache()
 
 
+def _root_secret_journey(
+    *,
+    root_selection: ProfileSecretSelection,
+    leaf_selection: MachineSecretSelection | None,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+    authenticate_root: RootAuthenticator,
+) -> Callable[[ProfileCredentialRequestV1], ProfileLoginOutcome | None]:
+    """Adapt the declared root secret channel to the shared credential journey.
+
+    A parsed invocation cannot decline: the channel either yields a payload or
+    refuses, so this journey never returns ``None``. The optional return in
+    the protocol exists for an interactive surface whose operator may abandon
+    a credential screen.
+    """
+
+    def journey(request: ProfileCredentialRequestV1) -> ProfileLoginOutcome | None:
+        if request.bucket_id is None:
+            # A parsed invocation always resolves its target before the gate
+            # runs; an unnamed one belongs to an interactive chooser, which
+            # this surface does not have.
+            raise InternalInvariantError("parsed dispatch reached root authentication with no resolved target")
+        return authenticate_root(request.bucket_id, root_selection, leaf_selection, spec, arguments)
+
+    return journey
+
+
 def _resume_or_authenticate(
     ctx: typer.Context,
     *,
@@ -228,25 +261,39 @@ def _resume_or_authenticate(
     requested_leaf: RequestedCliLeaf,
 ) -> None:
     from ...adapters.persistence.storage.errors import KeyringUnavailableError
-    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.profile_preconditions import profile_session_failure_verdict
-    from ...application.user_profile.login_session import bind_resumed_profile_session
+    from ...application.user_profile.session_admission import (
+        ProfileSessionAdmissionState,
+        admit_profile_session,
+    )
 
-    refusal = bind_resumed_profile_session(
+    admission = admit_profile_session(
         bucket_id=bucket_id,
         profile_decode_context=authority_operation(ctx).profile_decode_context(),
+        credentials=None
+        if root_selection is None
+        else _root_secret_journey(
+            root_selection=root_selection,
+            leaf_selection=leaf_selection,
+            spec=spec,
+            arguments=arguments,
+            authenticate_root=authenticate_root,
+        ),
     )
-    if refusal is None:
-        if not active_bucket_session_serves(bucket_id):
-            raise InternalInvariantError("resumed profile session does not serve the requested target")
+    if admission.state is ProfileSessionAdmissionState.AUTHENTICATED:
+        # The root fallback binds this invocation's storage route and stages
+        # its not-persisted notice itself, because both are consequences of
+        # having authenticated rather than of having a session.
+        return
+    if admission.admitted:
         if root_selection is not None:
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused")
         if bind_exact_target:
             bind_profile_target(ctx, bucket_id=bucket_id)
         return
-    if root_selection is not None:
-        authenticate_root(bucket_id, root_selection, leaf_selection, spec, arguments)
-        return
+    refusal = admission.resume_refusal
+    if refusal is None:
+        raise InternalInvariantError("a refused profile admission carries no typed reason")
     if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
         raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
     if _interactive_authentication(ctx, bucket_id=bucket_id):

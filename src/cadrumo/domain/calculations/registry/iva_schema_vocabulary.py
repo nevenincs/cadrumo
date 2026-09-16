@@ -6,8 +6,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from threading import Lock
 from types import MappingProxyType
 from typing import TypeVar
+from weakref import ReferenceType, ref
 
 from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
@@ -369,11 +371,87 @@ def _csv_refs(entries: Mapping[str, str], key: str, *, required: bool) -> tuple[
     return refs
 
 
-def _resolve_entries(
+@dataclass(frozen=True, slots=True)
+class _EntryProjections:
+    """The flattened entries of one resolved fact, and projections derived from them."""
+
+    owner: ReferenceType[ResolvedMappingFact]
+    entries: Mapping[str, str]
+    cash_accounting: list[IvaCashAccountingTreatmentCatalogue]
+
+
+#: Keyed by the identity of a resolved fact, which is frozen and which an
+#: authority hands back unchanged for a repeated query. Transaction validation
+#: asks for the same vocabulary per row, and re-flattening the whole mapping each
+#: time dominated bulk ledger writes. The weak owner check keeps a recycled id
+#: from reaching another fact's projections, and the finaliser drops an entry
+#: with the generation that produced it.
+_PROJECTIONS: dict[int, _EntryProjections] = {}
+_PROJECTIONS_LOCK = Lock()
+
+
+def _entry_projections(resolved: ResolvedMappingFact) -> _EntryProjections:
+    key = id(resolved)
+    with _PROJECTIONS_LOCK:
+        cached = _PROJECTIONS.get(key)
+        if cached is not None and cached.owner() is resolved:
+            return cached
+    entries = _mapping_entries(resolved)
+
+    def forget(dead: ReferenceType[ResolvedMappingFact]) -> None:
+        with _PROJECTIONS_LOCK:
+            current = _PROJECTIONS.get(key)
+            if current is not None and current.owner is dead:
+                del _PROJECTIONS[key]
+
+    projections = _EntryProjections(owner=ref(resolved, forget), entries=entries, cash_accounting=[])
+    with _PROJECTIONS_LOCK:
+        _PROJECTIONS[key] = projections
+    return projections
+
+
+#: A pinned authority resolves one query to one fact for its whole lifetime, the
+#: assumption ``cache_governed_projection`` already rests on, so the query
+#: itself -- a validated model built and hashed on every row -- is skipped for a
+#: repeated coordinate. The weak owner check keeps a recycled authority id from
+#: reaching another generation's vocabulary.
+_BY_AUTHORITY: dict[tuple[int, date], tuple[ReferenceType[GovernedFactSource], _EntryProjections]] = {}
+_BY_AUTHORITY_LIMIT = 1024
+
+
+def _resolve_projections(
     *,
     effective_date: date,
     authority: GovernedFactSource,
-) -> Mapping[str, str]:
+) -> _EntryProjections:
+    key = (id(authority), effective_date)
+    with _PROJECTIONS_LOCK:
+        cached = _BY_AUTHORITY.get(key)
+        if cached is not None and cached[0]() is authority:
+            return cached[1]
+    projections = _resolve_projections_uncached(effective_date=effective_date, authority=authority)
+
+    def forget(dead: ReferenceType[GovernedFactSource]) -> None:
+        with _PROJECTIONS_LOCK:
+            for stale in [held for held, (owner, _) in _BY_AUTHORITY.items() if owner is dead]:
+                del _BY_AUTHORITY[stale]
+
+    try:
+        owner = ref(authority, forget)
+    except TypeError:
+        return projections
+    with _PROJECTIONS_LOCK:
+        if len(_BY_AUTHORITY) >= _BY_AUTHORITY_LIMIT:
+            _BY_AUTHORITY.pop(next(iter(_BY_AUTHORITY)))
+        _BY_AUTHORITY[key] = (owner, projections)
+    return projections
+
+
+def _resolve_projections_uncached(
+    *,
+    effective_date: date,
+    authority: GovernedFactSource,
+) -> _EntryProjections:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_FACT_ID,
@@ -383,7 +461,7 @@ def _resolve_entries(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("IVA statutory schema vocabulary must resolve as a mapping fact")
-    return _mapping_entries(resolved)
+    return _entry_projections(resolved)
 
 
 @cache_governed_projection(maxsize=64)
@@ -392,16 +470,25 @@ def _bundled_entries(effective_date: date) -> Mapping[str, str]:
     raise RegistryValidationError("IVA schema vocabulary requires an explicit authority operation or scope")
 
 
+def _selected_projections(
+    *,
+    effective_date: date | None,
+    authority: GovernedFactSource | None,
+) -> _EntryProjections:
+    selected_date = effective_date or date.today()
+    selected = authority or governed_facts_in_scope()
+    if selected is None:
+        _bundled_entries(selected_date)
+        raise RegistryValidationError("IVA schema vocabulary requires an explicit authority operation or scope")
+    return _resolve_projections(effective_date=selected_date, authority=selected)
+
+
 def _selected_entries(
     *,
     effective_date: date | None,
     authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
-    selected_date = effective_date or date.today()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_entries(selected_date)
-    return _resolve_entries(effective_date=selected_date, authority=selected)
+    return _selected_projections(effective_date=effective_date, authority=authority).entries
 
 
 def resolve_iva_cash_accounting_catalogue(
@@ -410,7 +497,10 @@ def resolve_iva_cash_accounting_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IvaCashAccountingTreatmentCatalogue:
     """Resolve the dated IVA cash-accounting vocabulary from governed facts."""
-    entries = _selected_entries(effective_date=effective_date, authority=authority)
+    projections = _selected_projections(effective_date=effective_date, authority=authority)
+    if projections.cash_accounting:
+        return projections.cash_accounting[0]
+    entries = projections.entries
     definitions: list[IvaCashAccountingTreatmentDefinition] = []
     for raw_token in _csv_tokens(entries, _CASH_ORDER_KEY):
         token = IvaCashAccountingTreatment(raw_token)
@@ -433,6 +523,7 @@ def resolve_iva_cash_accounting_catalogue(
         raise RegistryValidationError("cash-accounting none token is not declared in the treatment order")
     if catalogue.supplier_regime_token not in catalogue.all_treatments:
         raise RegistryValidationError("cash-accounting supplier token is not declared in the treatment order")
+    projections.cash_accounting[:] = [catalogue]
     return catalogue
 
 

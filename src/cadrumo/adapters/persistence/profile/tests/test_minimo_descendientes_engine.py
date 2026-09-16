@@ -15,11 +15,11 @@ from functools import lru_cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.profile_binding import resolve_profile_sourced_bindings
@@ -51,7 +51,7 @@ _T0 = datetime(2026, 7, 2, 10, 0, tzinfo=UTC)
 
 @lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return published_authority_operation().snapshot("100", filing_year=year, period="0A")
 
 
 def _registry_tranches(snapshot: RegistrySnapshot, *, ccaa_infix: str | None = None) -> tuple[list[Decimal], Decimal]:

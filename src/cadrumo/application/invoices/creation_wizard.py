@@ -58,7 +58,11 @@ from ...domain.invoices.enums import resolve_iva_rate_slot
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
-from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
+from ...domain.iva.classification import (
+    InvoiceKind,
+    domestic_categories_by_rate_kind,
+    resolve_iva_classification_inputs,
+)
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
 from ...domain.iva.schema import IvaCategory, spanish_eu_member_state
@@ -364,9 +368,12 @@ def _derived_domestic_category(
             on_date,
             operation=operation,
         )
-    if len(tiers) != 1:
-        return None
-    return domestic_categories_by_rate_kind().get(tiers[0])
+        if len(tiers) != 1:
+            return None
+        # The tier-to-category table is registry data dated like the rate, so
+        # it is projected from the same lease rather than assumed.
+        mapping = resolve_iva_classification_inputs(effective_date=on_date, operation=operation).rate_categories
+    return domestic_categories_by_rate_kind(mapping).get(tiers[0])
 
 
 def _validate_wizard_fields(

@@ -124,16 +124,18 @@ def modelo_work_create_applicability_refusal(
 
     from ...application.user_profile.projections import projection_for_taxpayer
     from ...domain.calculations.registry.applicability import derive_modelo_applicability
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..workflow.persistence import workflow_state_repository
     from .profile_readiness_gate import BLOCKING_APPLICABILITY_VERDICTS
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
-    try:
-        profile = projection_for_taxpayer(record or {})
-    except ValidationError:
-        return None
-    applicability = derive_modelo_applicability(profile, modelo.strip())
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
+        except ValidationError:
+            return None
+        applicability = derive_modelo_applicability(profile, modelo.strip())
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return ModeloWorkCreateApplicabilityRefusal(modelo=modelo.strip(), reason=applicability.reason)

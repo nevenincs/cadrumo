@@ -51,7 +51,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from .confirmation_gate import ConfirmationBlocker, FindingResolution
-from .deterministic_findings import deterministic_check_names
 from .invoice_draft_records import FieldProvenance, InvoiceDraft
 
 __all__ = [
@@ -462,6 +461,10 @@ def build_confirmation_record(
     Returns:
         The assembled record, not yet persisted.
     """
+    # The finding readers pull in the registry authority; binding the repository
+    # port at host start must not pay for them.
+    from .deterministic_findings import deterministic_check_names
+
     assertions = field_assertions(draft=draft, overrides=overrides)
     by_id = {resolution.blocker_id: resolution for resolution in resolutions}
     resolved = tuple(

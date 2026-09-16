@@ -37,8 +37,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from .....application.aggregation.ledger_filing_snapshot import (
@@ -127,7 +127,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
 
 def _verified_revision(snapshot, tx_id: str, *, operation: PinnedAuthorityOperation) -> CalculationRevision:
     registry_snapshot_ref = (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot(
             "303",
             filing_year=_FILING_PERIOD.filing_year,

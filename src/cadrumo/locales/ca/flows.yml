@@ -44,6 +44,15 @@ flows:
       field: Camp
       state: Estat
       value: Valor
+    complete_setup:
+      button: Declarar la configuració completa ({key})
+      completed: La configuració és completa. Ja tens accés a les declaracions que
+        la necessitaven.
+      failed: No s'ha pogut completar la configuració.
+      incomplete: 'Encara no es pot completar la configuració. Falta: {fields}.'
+      incomplete_unnamed: 'Encara no es pot completar la configuració: falten respostes
+        obligatòries o no són coherents.'
+      running: Comprovant el perfil i completant la configuració…
     edit:
       cancel: Cancel·la
       clear: Esborra
@@ -164,16 +173,14 @@ flows:
     column:
       capability: Capacitat
       disposition: Disposició
-      producer: Productor
-      why: Motiu
     handoff: La presentació es fa fora d'aquesta aplicació. Construïu, verifiqueu
       i exporteu aquí, i presenteu vosaltres mateixos davant l'AEAT.
-    state_not_carried: Aquesta lectura no inclou l'estat ni l'historial de presentació.
-      Cap productor els aporta.
-    title: "Presentació - model {modelo}\r"
+    state_not_carried: Aquesta pàgina no mostra l'estat ni l'historial de presentació.
+    title: Presentació - model {modelo}
     why:
-      draft_structural: 'Sense mesurar de manera permanent: la construcció de l''esborrany
-        no desa estat, així que cap productor registra un veredicte que es pugui llegir.'
+      draft_structural: Cadrumo no pot saber per endavant si l'esborrany de presentació
+        es podrà generar; es comprova en generar-lo.
+    why_line: '{capability}: {why}'
   modelo_workspace_inputs:
     column:
       address: Adreça
@@ -186,17 +193,15 @@ flows:
       són accessibles des d'aquesta lectura.
     section:
       unsectioned: Sense secció
-    title: "Entrades - model {modelo}\r"
-    values_unmeasured: En aquesta lectura no s'ha mesurat cap valor. La inspecció
-      estàtica només llegeix l'esquema.
+    title: Entrades - model {modelo}
+    values_unmeasured: Aquesta pàgina només mostra l'estructura del formulari; encara
+      no mostra valors calculats.
   modelo_workspace_overview:
-    actions_not_carried: Cap productor aporta accions de recuperació per a aquesta
-      lectura. No afirma que no n'existeixin.
+    actions_not_carried: Aquesta pàgina encara no suggereix passos següents.
     column:
       capability: Capacitat
       disposition: Disposició
       field: Camp
-      producer: Productor
       value: Valor
     label:
       filing_year: Exercici
@@ -212,7 +217,7 @@ flows:
       address: Adreça
       capabilities: Capacitats
       revision: Coordenades de revisió
-    title: "Resum - model {modelo}\r"
+    title: Resum - model {modelo}
     value:
       no_work_unit: encara sense unitat de treball
   modelo_workspace_provenance:
@@ -221,11 +226,10 @@ flows:
       source_ref: Referència d'origen
       subject: Subjecte
     empty: Aquest càlcul no ha registrat fonts contribuents.
-    not_applicable: No aplicable a aquesta lectura. Aquesta admissió no inclou faceta
-      de procedència.
+    not_applicable: Aquesta pàgina encara no mostra d'on provenen els valors.
     page_bounded: Es mostren {shown} d'un conjunt més gran. Una font pot aportar moltes
       files, així que el nombre de files no indica completesa.
-    title: "Procedència - model {modelo}\r"
+    title: Procedència - model {modelo}
     value:
       unattributed: sense atribuir
   modelo_workspace_results:
@@ -234,12 +238,11 @@ flows:
       formula: Fórmula
       value: Valor
     empty: Aquest càlcul no ha produït cap casella calculada.
-    not_applicable: No aplicable a aquesta lectura. Separar els resultats calculats
-      de les entrades de l'operador requereix la revisió de treball, que una inspecció
-      estàtica no inclou.
+    not_applicable: 'Aquesta pàgina encara no pot mostrar resultats calculats: no
+      distingeix les caselles calculades de les que omples tu.'
     page_bounded: Es mostren {shown} files d'un conjunt més gran; les restants no
       són accessibles des d'aquesta lectura.
-    title: "Resultats - model {modelo}\r"
+    title: Resultats - model {modelo}
   modelo_workspace_verification:
     axis:
       binding_ready: Vincles preparats
@@ -247,23 +250,24 @@ flows:
       profile_ready: Perfil preparat
       ready: Preparat (veredicte del productor)
       registry_ready: Registre preparat
-    capability_line: 'Preparació de verificació: {glyph} {disposition} (de {producer})'
+    capability_line: 'Verificació: {disposition}'
     column:
       axis: Eix
       casilla: Casella
       kind: Tipus
+      message: Què s'ha trobat
       severity: Severitat
       value: Valor
-    evidence_not_carried: Cap productor aporta evidència ni accions de recuperació
-      en aquests registres. No afirma que no n'existeixin.
+    evidence_not_carried: Aquesta pàgina encara no mostra justificants ni passos següents
+      suggerits.
     findings_none: La revisió de treball no ha registrat cap troballa.
-    findings_unmeasured: En aquesta lectura no s'ha mesurat cap troballa. Aquesta
-      admissió no inclou revisió de treball.
-    readiness_unmeasured: La preparació no s'ha mesurat en aquesta lectura.
+    findings_unmeasured: Aquesta pàgina encara no mostra les troballes de la verificació.
+    readiness_unmeasured: Aquesta pàgina encara no mostra si la declaració està a
+      punt.
     section:
       findings: Troballes
       readiness: Eixos de preparació
-    title: "Verificació - model {modelo}\r"
+    title: Verificació - model {modelo}
     value:
       unmeasured: sense mesurar
   passphrase:
@@ -315,6 +319,8 @@ flows:
       skip_button: Omet per ara
     refusal:
       confirmation_mismatch: Les dues contrasenyes no coincideixen.
+      profile_already_exists: Ja existeix un perfil anomenat '%{profile}'. Tria un
+        altre nom, o surt d'aquesta pantalla i inicia la sessió en aquest perfil.
       username_required: Introdueix un nom per a aquest perfil.
     section: Nom i contrasenya
     strength:

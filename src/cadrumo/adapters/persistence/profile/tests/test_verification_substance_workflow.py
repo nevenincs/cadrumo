@@ -8,12 +8,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -157,7 +157,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     """
     wu_repo, _cr_repo, _vr_repo, bv_repo = repos
 
-    snap = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snap = published_authority_operation().snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next((c for c in snap.revision.casillas if c.id == _CASILLA_02), None)
     assert casilla_02 is not None, "M130 must have casilla 02 in registry"
     assert str(casilla_02.input_kind) == "bound", "M130 casilla 02 must be ledger-bound (H1 fix)"
@@ -575,7 +575,7 @@ def test_required_manual_checklist_carries_registry_provenance() -> None:
         bucket_id=None,
     )
     required = next(entry for entry in checklist.required_manual if entry.casilla_id == _CASILLA_00501)
-    snapshot = compiled_bundled_authority().snapshot("180", filing_year=2024, period="0A")
+    snapshot = published_authority_operation().snapshot("180", filing_year=2024, period="0A")
     casilla = next(c for c in snapshot.revision.casillas if c.id == _CASILLA_00501)
     expected_legal_refs = frozenset(str(r) for r in casilla.legal_refs)
     expected_source_refs = frozenset(str(r) for r in casilla.source_refs)

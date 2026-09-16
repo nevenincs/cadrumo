@@ -20,9 +20,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from cadrumo.application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
@@ -45,7 +45,7 @@ _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surf
 
 
 def _prior_revision_id(*, filing_year: int = _PRIOR_YEAR, period: str = _SETTLEMENT_PERIOD) -> str:
-    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
+    snapshot = published_authority_operation().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
     return str(snapshot.revision.id)
 
 

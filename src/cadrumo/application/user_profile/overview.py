@@ -57,7 +57,13 @@ from ...domain.user_profile.labels import profile_field_label, profile_section_t
 from ...domain.user_profile.schema import ProfileFieldType, derived_selector_for_path
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState
-from .completeness import missing_required_field_paths, profile_section_rows, profile_value_is_present
+from .completeness import (
+    conditional_profile_missing_required,
+    conditional_profile_required_paths,
+    missing_required_field_paths,
+    profile_section_rows,
+    profile_value_is_present,
+)
 from .projections import profile_schema_for_record, record_to_path_values
 
 if TYPE_CHECKING:
@@ -393,6 +399,7 @@ def _field_view(
     values: Mapping[str, str],
     label_suffix: str = "",
     row_index: str | None = None,
+    conditionally_required: frozenset[str] = frozenset(),
 ) -> ProfileFieldView:
     """Pair one path with the field declaring it and whatever the record holds there.
 
@@ -422,7 +429,7 @@ def _field_view(
         # is set here".
         value=MASKED_PLACEHOLDER if (masked and present) else raw,
         masked=masked,
-        required=field.required,
+        required=field.required or path in conditionally_required,
         field_type=field.type,
         choices=profile_field_choices(field, path=f"{section_key}.{field.key}"),
         row_index=row_index,
@@ -623,6 +630,7 @@ def _section_field_views(
     present: frozenset[str],
     schema: ProfileSchemaDefinition,
     derived_selectors: Iterable[ProfileDerivedSelectorDefinition] = (),
+    conditionally_required: frozenset[str] = frozenset(),
 ) -> list[ProfileFieldView]:
     """Every row one section contributes, expanding whatever repeats.
 
@@ -648,6 +656,7 @@ def _section_field_views(
                 section_key=section.key,
                 field=field,
                 values=values,
+                conditionally_required=conditionally_required,
             ),
         )
     return views
@@ -703,6 +712,13 @@ def build_profile_overview(
     # rows has no facts to strip; the rule that was missing is that an
     # absent row demands nothing.
     missing_required: list[str] = list(missing_required_field_paths(resolved_schema, values))
+    # Cross-field requirements come from the same completeness contract the
+    # taxpayer projection enforces, so the manager never lists fewer required
+    # fields than a filing or the workbench will demand.
+    conditionally_required = frozenset(conditional_profile_required_paths(values))
+    missing_required.extend(
+        path for path in conditional_profile_missing_required(values) if path not in missing_required
+    )
     # The same presence rule the completeness check reads, so the rows this
     # renders and the rows it reports missing fields for are one set.
     present = frozenset(path for path, value in values.items() if profile_value_is_present(value))
@@ -718,6 +734,7 @@ def build_profile_overview(
                         present,
                         resolved_schema,
                         resolved_schema.derived_selectors,
+                        conditionally_required,
                     ),
                 ),
             ),

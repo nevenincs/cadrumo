@@ -13,14 +13,16 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.json_contract import RegisteredSchema
 from ...core.type_guards import is_object_list_or_tuple
-from .manifest import CommandSchemaRef
+
+if TYPE_CHECKING:
+    from ...core.json_contract import RegisteredSchema
+    from .manifest import CommandSchemaRef
 
 _FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

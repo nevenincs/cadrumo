@@ -38,11 +38,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
@@ -74,11 +74,11 @@ _MID_YEAR_PERIOD = "1T"
 
 
 def _prior_m303_snapshot_ref():
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _revision():
-    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=_EJERCICIO, period="4T")
+    snapshot = published_authority_operation().snapshot(Modelo("303").value, filing_year=_EJERCICIO, period="4T")
     return snapshot.revision
 
 

@@ -17,7 +17,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -26,6 +25,7 @@ from cadrumo.adapters.persistence.profile.justificante import JustificanteReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
@@ -87,12 +87,12 @@ def _m303_compensation_header() -> tuple[ObservedHeaderFact, ...]:
 
 
 def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _SOURCE_PERIOD) -> str:
-    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period)
+    snapshot = published_authority_operation().snapshot(modelo, filing_year=year, period=period)
     return str(snapshot.revision.id)
 
 
 def _m390_first_quarter_requirements():
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period=_M390_PERIOD)
+    snapshot = published_authority_operation().snapshot("390", filing_year=_YEAR, period=_M390_PERIOD)
     return snapshot, tuple(
         requirement
         for requirement in cross_period_dependency_requirements(snapshot)
@@ -190,7 +190,7 @@ def _public_carry_outcomes(
                 mutate=mutate,
             )
 
-        binding_snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
+        binding_snapshot = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
         binding_report = resolve_bindings_from_local_store(
             binding_snapshot,
             repository=repository,

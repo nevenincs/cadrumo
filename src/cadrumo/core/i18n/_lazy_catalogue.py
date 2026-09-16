@@ -20,12 +20,19 @@ from .routing import route_key_to_shard
 
 _LOGGER = logging.getLogger(__name__)
 
+if not yaml.__with_libyaml__:
+    # The pure-Python scanner is roughly ten times slower on these catalogues;
+    # falling back to it silently would turn every rendered message into a
+    # multi-second stall with no signal pointing at the cause.
+    raise ImportError(
+        "PyYAML is installed without libyaml support; Cadrumo requires a PyYAML build "
+        "that provides yaml.CSafeLoader. Reinstall PyYAML from a platform wheel."
+    )
+
 
 def _load_yaml_handle(handle: IO[str]) -> object:
-    """Load YAML content using CSafeLoader if available, falling back to safe_load."""
-    if hasattr(yaml, "CSafeLoader"):
-        return yaml.load(handle, Loader=yaml.CSafeLoader) or {}
-    return yaml.safe_load(handle) or {}
+    """Load YAML content with libyaml's safe loader."""
+    return yaml.load(handle, Loader=yaml.CSafeLoader) or {}
 
 
 def _flatten_dict(value: object, prefix: str = "") -> dict[str, str | None]:

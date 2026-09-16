@@ -22,12 +22,11 @@ from typing import Any, TypedDict, Unpack, cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
-
+from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
+from ....entrypoints.adapter_composition import build_censal_fetch_port
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
@@ -530,6 +529,21 @@ def test_row_subclass_protected_fields_are_reconstructed_away() -> None:
     assert "12345678Z" not in repr(projection)
     assert b"12345678Z" not in pickle.dumps(projection)
     assert "nif" not in projection.census[0].__dict__
+
+
+def test_a_zone_whose_aeat_side_was_never_pulled_is_never_captured_not_stale() -> None:
+    """STALE claims a capture that aged; a never-synced AEAT side has none.
+
+    The local side is still measured, so the zone keeps that count while
+    saying the comparison partner was never captured.
+    """
+    key = (AeatSyncWorkspaceZone.FILED_DECLARATIONS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS)
+    observations = _observations(overrides={key: AeatSyncWorkspaceAvailability.NEVER_CAPTURED})
+    local_only = _filed(aeat=AeatSyncAeatObservationState.NOT_OBSERVED)
+    projection = _projection(zone_observations=observations, filed_declarations=(_fact(local_only),))
+    state = projection.zones[2]
+    assert state.availability is AeatSyncWorkspaceAvailability.NEVER_CAPTURED
+    assert state.item_count == 1
 
 
 def test_independent_source_axes_keep_known_empty_and_unknown_distinct() -> None:

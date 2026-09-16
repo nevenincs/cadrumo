@@ -1094,8 +1094,9 @@ tui:
       unresolved: Unresolved
     refusal:
       notification_handoff: Notification document retrieval is unavailable.
-      operation_handoff: Operation handoff is unavailable.
+      operation_handoff: AEAT operations can't be started from this session.
       source: This source is unavailable for viewing.
+      sources_missing: 'This area needs data that isn''t available yet: %{sources}.'
       unread_notification: Unread notifications cannot open documents.
     section:
       areas: Synchronisation areas
@@ -1120,6 +1121,8 @@ tui:
     sources:
       entry: '%{source}: %{availability}'
       joined: '%{entries}'
+    status:
+      items: 'Items: %{count}'
     value:
       none: '-'
       unobserved: Not observed
@@ -1187,6 +1190,10 @@ tui:
         cancel: Cancel
         confirm: Confirm
         failure: Recovery request could not be completed.
+        setup_incomplete: 'Declare the profile setup complete first: open Profile
+          (F4) and press F8.'
+        success: Created {address}. It is listed under Declarations once you return
+          there.
       scope:
         all: All
         evidence_unknown: Unknown AEAT evidence
@@ -1228,7 +1235,7 @@ tui:
       modelo_workspace: Open declaration workspace
       overview: Declarations
       revisions: Calculation revisions
-    empty: No measured records.
+    empty: Nothing recorded here yet.
     evidence:
       aeat_justificante_pdf: AEAT receipt PDF observed
       aeat_live_capture: AEAT live observation
@@ -1257,7 +1264,20 @@ tui:
       declarations: Declarations
       title: Declarations overview
     refusal:
-      handoff: This destination has not been supplied by the host.
+      handoff: This can't be opened from this session.
+      reason:
+        workbench:
+          calendar:
+            taxpayer_model_undeclared: The filing calendar needs to know what kind
+              of taxpayer this profile is and, for a natural person, their IRPF income
+              categories. Complete them in the profile (F4).
+          declarations:
+            lifecycle_reader_unavailable: The filing history can't be read in this
+              session.
+          home:
+            taxpayer_profile_incomplete: The filing calendar can't be worked out until
+              the profile's required answers are complete. Complete them in the Profile
+              section.
       source: This source is not currently available.
     revision_state:
       borrador: Draft
@@ -1306,9 +1326,30 @@ tui:
       available_empty: '%{label} - %{detail}'
       locked: Locked - unlock the selected profile to view this information
       never_captured: Not captured yet
+      reason:
+        workbench:
+          calendar:
+            aeat_reader_unavailable: Not captured yet - appears after the first AEAT
+              Sync
+            taxpayer_model_undeclared: Unavailable - the profile does not yet say
+              what kind of taxpayer this is
+          home:
+            actions_projector_unavailable: Unavailable - next actions appear once
+              every ledger area has been checked
+            agenda_projector_unavailable: Unavailable - the filing calendar could
+              not be worked out
+            declarations_resume_projector_unavailable: Unavailable - the declarations
+              to resume could not be read
+            messages_never_pulled: Not captured yet - AEAT messages appear after the
+              first AEAT Sync
+            taxpayer_profile_incomplete: Unavailable - the profile is missing required
+              answers; complete them in Profile
+          ledger:
+            snapshot_projector_unavailable: Unavailable - shown once every ledger
+              area has been checked
       stale: Stale - the last local snapshot needs refresh
       stale_observed: '%{label}; last observed %{observed_at}'
-      unavailable: Unavailable - this source cannot be read in the current session
+      unavailable: Unavailable - this information cannot be shown right now
     declaration_state:
       discarded: Discarded
       draft: Draft
@@ -1350,7 +1391,6 @@ tui:
       expired: Session expired
       locked: Profile locked
       no_profile: No profile selected
-    session_line: '%{label} · Status: %{status}'
     title: Home
   ledger:
     area:
@@ -1363,6 +1403,7 @@ tui:
       review: Review
     availability:
       available: Available
+      choose_entry: Choose an entry
       locked: Locked
       never_captured: Not captured yet
       stale: Out of date
@@ -1398,6 +1439,7 @@ tui:
     entries:
       empty: No entries are present in this snapshot.
       title: Ledger entries
+    entry_label: '{date} · {description}'
     evidence:
       column:
         status: Review
@@ -1446,6 +1488,7 @@ tui:
       failure: The link could not be saved.
       inconsistencies: Link inconsistencies
       invoice: Invoice
+      invoice_label: '{counterparty} · {total}'
       local_only: Local Ledger evidence only. AEAT Sync is a separate workspace.
       match_evidence: Canonical match evidence
       modelo: Form
@@ -1460,9 +1503,10 @@ tui:
     refusal:
       application_state: This area is unavailable in the current Ledger state.
       destination_pending: This area is not available in this version yet.
+      no_entries: There are no entries to classify yet.
       selection_required: Choose an entry first, then open this task for it.
-      submission_unavailable: This task is unavailable until a prepared operation
-        is supplied.
+      submission_unavailable: This task can't be carried out from this screen in this
+        session.
     review:
       empty: No entries currently need review.
       filter_all: 'Filter: all review statuses'
@@ -1480,6 +1524,62 @@ tui:
       unmeasured: Not measured
     unavailable:
       title: Ledger area unavailable
+  modelo:
+    assertion:
+      matched: Matches
+      mismatched: Does not match
+      not_present: None recorded
+    capability:
+      calculation_materialization: Calculated values
+      filing_draft_readiness: Filing draft
+      schema_inspection: Form layout
+      verification_readiness: Verification
+    destination:
+      column: Page
+      filing: Filing
+      heading: Pages of this declaration
+      inputs: Inputs
+      provenance: Provenance
+      results: Results
+      verification: Verification
+    disposition:
+      available: Available
+      not_applicable: Does not apply
+      refused: Refused
+      unmeasured: Not measured
+    finding_kind:
+      advisory: Advice
+      blocking_rule: Rule not met
+      cross_period_dependency_unclean: Earlier period needs attention
+      missing_required_casilla: Required box missing
+      reconciliation_mismatch: Totals do not agree
+    finding_severity:
+      blocking: Blocks filing
+      warning: Warning
+    input_kind:
+      bound: Filled from your records
+      computed: Calculated
+      informational: For information only
+      manual: You enter it
+      projection_only: Shown, not filed
+    record_family:
+      bindings: Values from your records
+      casillas: Boxes
+      formulas: Formulas
+      parameters: Parameters
+      relations: Links to other forms
+    review_status:
+      agent_reviewed: Reviewed automatically
+      operator_reviewed: Reviewed by a person
+      pending_review: Not reviewed yet
+    technical:
+      column:
+        field: Detail
+        value: Identifier
+      finding_refs: Legal references, finding {position}
+      producer_of: Source of "{capability}"
+      record_family: Section
+    technical_details: Technical details
   root:
     account:
       appearance: Appearance
@@ -1490,9 +1590,31 @@ tui:
       profile: Profile
       sign_out: Sign out
       unavailable: Account controls are unavailable for this session.
+    account_bar:
+      line: '{label} · {status}'
+      line_with_expiry: '{label} · {status} · until {expires_at}'
+    account_help:
+      appearance: Switch between the light and dark appearance
+      change_user: Sign in to another profile on this computer
+      language: Choose the language this profile's pages are written in
+      password: Change the password that protects this profile
+      profile: Review and edit this profile's details
+      sign_out: Close this profile's session and lock its data
+    account_key:
+      appearance: Theme
+      change_user: User
+      language: Language
+      password: Password
+      profile: Profile
+      sign_out: Sign out
     navigation:
       unavailable: The requested area cannot be opened in this session.
     no_areas: No area is available in this session yet.
+    palette:
+      placeholder: Search for areas, records and actions…
+    system:
+      quit: Quit
+      quit_help: Leave Cadrumo; the profile's session stays as it is
     title: Cadrumo terminal session
   search:
     action:
@@ -1514,6 +1636,12 @@ tui:
       ledger: Open Ledger
       profile: Open Profile
       unknown: Open workbench area
+    destination_help:
+      aeat_sync: What has been read from the AEAT and what can be read next
+      declarations: Declarations, calculation revisions, filing history and calendar
+      home: Next actions, declarations and deadlines at a glance
+      ledger: Entries, review, classification and supporting evidence
+      profile: This profile's details and the sources that fill them in
     refusal:
       not_composed: Not every workbench source could be read yet.
       refresh_failed: The last refresh could not rebuild the index.

@@ -14,12 +14,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -199,7 +199,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
-    snapshot = compiled_bundled_authority().snapshot("200", filing_year=2024, period="0A")
+    snapshot = published_authority_operation().snapshot("200", filing_year=2024, period="0A")
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="200",
@@ -275,7 +275,7 @@ def _calculate_m202(
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
     verification_repo = VerificationReportCatalogueRepository()
-    snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period="1P")
+    snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="202",
@@ -352,7 +352,7 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
         _seed_profile(bucket_id=_BUCKET_ID, incn=None)
         work_repo = WorkUnitCatalogueRepository()
         calc_repo = CalculationRevisionCatalogueRepository()
-        snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period="1P")
+        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="202",
@@ -401,7 +401,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         calc_repo = CalculationRevisionCatalogueRepository()
         filing_repo = ModeloRecordCatalogueRepository()
         verification_repo = VerificationReportCatalogueRepository()
-        snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period="1P")
+        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="202",
@@ -564,7 +564,7 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(
         _seed_prior_m200_evidence(bucket_id=_BUCKET_ID, operation=operation)
         work_repo = WorkUnitCatalogueRepository()
         CalculationRevisionCatalogueRepository()
-        snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period="1P")
+        snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="202",
