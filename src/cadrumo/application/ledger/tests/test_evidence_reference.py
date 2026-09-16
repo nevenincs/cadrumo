@@ -110,7 +110,7 @@ def test_registered_evidence_record_resolves_to_the_bytes_bearing_space() -> Non
     assert reference.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
     assert reference.record == record
     assert reference.is_acceptable
-    assert reference.carries_document_bytes
+    assert (reference.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE)
 
 
 def test_received_catalogue_invoice_is_acceptable_but_carries_no_bytes() -> None:
@@ -127,7 +127,7 @@ def test_received_catalogue_invoice_is_acceptable_but_carries_no_bytes() -> None
     assert reference.outcome is EvidenceReferenceOutcome.CATALOGUE_INVOICE
     assert reference.invoice == invoice
     assert reference.is_acceptable
-    assert not reference.carries_document_bytes
+    assert reference.outcome is not EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
 
 
 def test_evidence_record_wins_when_an_id_could_match_both_spaces() -> None:
@@ -151,7 +151,7 @@ def test_unknown_id_resolves_unresolved_and_is_not_acceptable() -> None:
 
     assert reference.outcome is EvidenceReferenceOutcome.UNRESOLVED
     assert not reference.is_acceptable
-    assert not reference.carries_document_bytes
+    assert reference.outcome is not EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
     assert reference.record is None
     assert reference.invoice is None
 

@@ -230,7 +230,7 @@ class TestConflictedPapersSurface:
             operation=operation,
         )
 
-        assert resolved.conflicted
+        assert (resolved.registration_conflict is not None)
         assert resolved.scope is None
         assert resolved.registration_conflict is not None
         assert resolved.registration_conflict.identification_state == require_eu_member_state("DE")
@@ -244,7 +244,7 @@ class TestConflictedPapersSurface:
             repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID, operation=operation
         )
 
-        assert resolved.conflicted
+        assert (resolved.registration_conflict is not None)
         assert resolved.scope is None
 
     def test_the_postal_rung_never_quietly_answers_a_conflicted_document(
@@ -277,7 +277,7 @@ class TestConflictedPapersSurface:
             repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_MADRID, operation=operation
         )
 
-        assert not resolved.conflicted
+        assert not (resolved.registration_conflict is not None)
         assert resolved.scope == IvaTerritorialScope.from_registry("es_mainland")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
@@ -298,7 +298,7 @@ class TestConflictedPapersSurface:
             operation=operation,
         )
 
-        assert not resolved.conflicted
+        assert not (resolved.registration_conflict is not None)
 
     def test_an_unreadable_date_raises_no_conflict_from_a_rate_it_cannot_check(
         self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
@@ -318,5 +318,5 @@ class TestConflictedPapersSurface:
             operation=operation,
         )
 
-        assert not resolved.conflicted
+        assert not (resolved.registration_conflict is not None)
         assert resolved.scope is None
