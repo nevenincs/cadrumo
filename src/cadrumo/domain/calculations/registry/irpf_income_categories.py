@@ -73,10 +73,6 @@ class IrpfIncomeCategoryCatalogue:
         token = self.require(value)
         return next(item for item in self.definitions if item.token == token)
 
-    def is_economic_activity(self, value: object) -> bool:
-        """Report whether a value is the declared economic-activity category."""
-        return self.require(value) == self.activity_token
-
 
 def _required(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)

@@ -15,7 +15,7 @@ from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
+    pass
 
 
 _FACT_ID = "iva-rate-schedule"
@@ -176,23 +176,9 @@ def resolve_iva_rate_role_catalogue(
     return _catalogue_from_entries(_resolve_entries(effective_date=coordinate, authority=selected))
 
 
-def require_iva_rate_role(
-    value: object | None = None,
-    *,
-    effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
-) -> IvaRateRole:
-    """Return a registry-declared role, defaulting through registry data."""
-    return resolve_iva_rate_role_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).require(value)
-
-
 __all__ = [
     "IvaRateRole",
     "IvaRateRoleCatalogue",
     "IvaRateRoleDefinition",
-    "require_iva_rate_role",
     "resolve_iva_rate_role_catalogue",
 ]
