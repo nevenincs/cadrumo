@@ -447,15 +447,6 @@ def graph_nodes(
     return tuple(sorted((node_type(path_for(spec), spec) for spec in specs), key=lambda node: node.path))
 
 
-def graph_by_path(
-    specs: tuple[CommandSpec, ...],
-    *,
-    node_type: type[Any],
-) -> MappingProxyType[tuple[str, ...], CommandSpec]:
-    """Return the exact derived operator-path index."""
-    return MappingProxyType({node.path: node.spec for node in graph_nodes(specs, node_type=node_type)})
-
-
 def graph_by_schema_identity(specs: tuple[CommandSpec, ...]) -> MappingProxyType[str, CommandSpec]:
     """Return the unique executable result-schema identity index."""
     target_specs = tuple(
@@ -471,7 +462,6 @@ def graph_by_schema_identity(specs: tuple[CommandSpec, ...]) -> MappingProxyType
 __all__ = [
     "derive_graph_paths",
     "graph_by_key",
-    "graph_by_path",
     "graph_by_schema_identity",
     "graph_nodes",
     "recovery_descriptor_parameters",
