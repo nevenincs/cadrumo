@@ -22,9 +22,10 @@ from .models import (
     LEDGER_DESTINATION_BY_AREA,
     LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
-    LedgerImportSubmitterV1,
+    LedgerEvidenceDoorV1,
+    LedgerImportDoorV1,
+    LedgerInvoiceAddDoorV1,
     LedgerLinkSubmitterV1,
-    LedgerPreparedImportV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
     declared_ledger_destination_ids,
@@ -32,7 +33,7 @@ from .models import (
 from .overview import LedgerOverviewScreen
 from .reconciliation import LedgerReconciliationScreen
 from .review import LedgerReviewScreen
-from .workspace_injection import LedgerWorkspaceInjection
+from .workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshDoorV1
 from .workspace_presentation import ledger_workspace_page
 
 type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
@@ -140,24 +141,28 @@ def ledger_screen_factory(
     review_action: ActionReference,
     classify_action: ActionReference | None = None,
     classification_submitter: LedgerClassificationSubmitterV1 | None = None,
-    prepared_imports: tuple[LedgerPreparedImportV1, ...] = (),
-    import_submitter: LedgerImportSubmitterV1 | None = None,
+    import_door: LedgerImportDoorV1 | None = None,
     evidence_action: ActionReference | None = None,
     evidence_items: tuple[AttachmentReviewItem, ...] | None = None,
     link_action: ActionReference | None = None,
     link_submitter: LedgerLinkSubmitterV1 | None = None,
+    invoice_add_door: LedgerInvoiceAddDoorV1 | None = None,
+    evidence_door: LedgerEvidenceDoorV1 | None = None,
+    refresh: LedgerWorkspaceRefreshDoorV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
     injection = LedgerWorkspaceInjection(
         review_action=review_action,
         classify_action=classify_action,
         classification_submitter=classification_submitter,
-        prepared_imports=prepared_imports,
-        import_submitter=import_submitter,
+        import_door=import_door,
         evidence_action=evidence_action,
         evidence_items=evidence_items,
         link_action=link_action,
         link_submitter=link_submitter,
+        invoice_add_door=invoice_add_door,
+        evidence_door=evidence_door,
+        refresh=refresh,
     )
 
     # Which area performs each injected action. Classification needs an entry

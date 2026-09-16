@@ -12,7 +12,6 @@ from textual.containers import VerticalScroll
 from textual.widgets import Button, DataTable, Static
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
-from .....application.ledger.models import LedgerSourceImportCommand
 from .....application.ledger.workspace import (
     LedgerAffectedDeclarationRefV1,
     LedgerInvoiceReconciliationRefV1,
@@ -29,7 +28,7 @@ from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
-from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1, LedgerPreparedImportV1
+from ..models import LedgerFlowState, LedgerLinkResultV1, LedgerLinkSubmissionV1
 from ..reconciliation import LedgerReconciliationScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
@@ -387,13 +386,6 @@ async def test_reconciliation_without_mutation_door_preserves_read_only_drift_an
 
 
 def _all_routes_controller() -> LedgerWorkspaceController:
-    command = LedgerSourceImportCommand(path=Path("C:/synthetic/input.csv"), provider="bank")
-    prepared = LedgerPreparedImportV1(
-        choice_id="synthetic-bank",
-        provider_label_key="tui.ledger.import.provider.bank",
-        source_label_key="tui.ledger.import.source.prepared",
-        command=command,
-    )
     projection = _reconciled_projection()
     return LedgerWorkspaceController(
         # Focused on the first entry: this exercise walks every route including
@@ -412,8 +404,7 @@ def _all_routes_controller() -> LedgerWorkspaceController:
             review_action=_review_action(),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
-            prepared_imports=(prepared,),
-            import_submitter=_ImportDoor(),
+            import_door=_ImportDoor(),
             evidence_action=_evidence_action(),
             evidence_items=(_evidence_item(),),
             link_action=_link_action(),

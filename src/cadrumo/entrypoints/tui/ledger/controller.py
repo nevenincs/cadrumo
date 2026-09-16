@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import ClassVar, Final, cast
 
 from textual.app import App
@@ -10,7 +11,6 @@ from textual.message import Message
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.models import (
-    LedgerSourceImportResult,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
@@ -36,10 +36,15 @@ from .models import (
     LEDGER_DESTINATION_BY_AREA,
     LedgerClassificationSubmissionV1,
     LedgerEntryRowV1,
+    LedgerEvidenceRecordRowV1,
     LedgerEvidenceRowV1,
+    LedgerImportOutcomeV1,
+    LedgerImportRequestV1,
+    LedgerInvoiceAddResultV1,
+    LedgerInvoiceEntryV1,
     LedgerLinkResultV1,
     LedgerLinkSubmissionV1,
-    LedgerPreparedImportV1,
+    LedgerReaderReadinessV1,
     LedgerReviewRowV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
@@ -148,8 +153,9 @@ class LedgerWorkspaceController:
         self.review_action = injection.review_action
         self.classify_action = injection.classify_action
         self.classification_submitter = injection.classification_submitter
-        self.prepared_imports = injection.prepared_imports
-        self.import_submitter = injection.import_submitter
+        self.import_door = injection.import_door
+        self.invoice_add_door = injection.invoice_add_door
+        self.evidence_door = injection.evidence_door
         self.evidence_action = injection.evidence_action
         self.evidence_items = injection.evidence_items
         self.link_action = injection.link_action
@@ -227,12 +233,19 @@ class LedgerWorkspaceController:
         )
 
     def _submission_door_is_missing(self, area: LedgerWorkspaceArea) -> bool:
-        """Return whether an area lacks the injected command it needs."""
-        if area is LedgerWorkspaceArea.CLASSIFICATION:
-            return self.classify_action is None or self.classification_submitter is None
-        if area is LedgerWorkspaceArea.IMPORT:
-            return not self.prepared_imports or self.import_submitter is None
-        return area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
+        """Return whether an area lacks the injected command it needs.
+
+        Each clause joins one area to exactly the fields it needs, which is the
+        shape the wholly-wired-doors gate reads the launcher's obligations from.
+        """
+        return (
+            (
+                area is LedgerWorkspaceArea.CLASSIFICATION
+                and (self.classify_action is None or self.classification_submitter is None)
+            )
+            or (area is LedgerWorkspaceArea.IMPORT and self.import_door is None)
+            or (area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None))
+        )
 
     def refusal_for(self, area: LedgerWorkspaceArea) -> LedgerRouteRefusalV1 | None:
         """Preserve application refusal separately from deferred screen availability."""
@@ -351,11 +364,70 @@ class LedgerWorkspaceController:
             raise ValueError("classification result transaction identity disagrees")
         return result
 
-    async def submit_import(self, prepared: LedgerPreparedImportV1) -> LedgerSourceImportResult:
-        """Pass an opaque pre-resolved command to the injected import door."""
-        if self.import_submitter is None or prepared not in self.prepared_imports:
+    async def preview_import(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
+        """Ask the injected import door what applying ``request`` would do."""
+        if self.import_door is None:
             raise InternalInvariantError("import submission is unavailable")
-        return await prepared.submit_with(self.import_submitter)
+        return await self.import_door.preview(request)
+
+    async def apply_import(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
+        """Write a previewed import through the injected door."""
+        if self.import_door is None:
+            raise InternalInvariantError("import submission is unavailable")
+        return await self.import_door.apply(request)
+
+    def can_add_invoices(self) -> bool:
+        """Report whether the invoice writer door is admitted in this session."""
+        return self.invoice_add_door is not None
+
+    async def add_invoice(self, entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
+        """Record one typed invoice through the injected catalogue writer."""
+        if self.invoice_add_door is None:
+            raise InternalInvariantError("invoice entry is unavailable")
+        return await self.invoice_add_door(entry)
+
+    def evidence_records(self) -> tuple[LedgerEvidenceRecordRowV1, ...] | None:
+        """Read the local evidence records, or ``None`` when no door reads them."""
+        return None if self.evidence_door is None else self.evidence_door.list_records()
+
+    async def add_evidence(self, source_path: str) -> LedgerEvidenceRecordRowV1:
+        """Register one document, as the operator typed its path, through the injected door."""
+        if self.evidence_door is None:
+            raise InternalInvariantError("evidence registration is unavailable")
+        return await self.evidence_door.add(source_path)
+
+    def reader_readiness(self) -> LedgerReaderReadinessV1 | None:
+        """Measure the local reader, or ``None`` when no door can measure it."""
+        return None if self.evidence_door is None else self.evidence_door.reader_readiness()
+
+    def can_refresh(self) -> bool:
+        """Report whether this workspace can re-read its state after a write."""
+        return self.injection.refresh is not None
+
+    def refreshed(self) -> LedgerWorkspaceController:
+        """Return this workspace re-read from the current profile state.
+
+        The focus is kept only while the entry it names is still visible; a
+        focus on a row the write removed would otherwise address nothing.
+        """
+        refresh = self.injection.refresh
+        if refresh is None:
+            return self
+        snapshot = refresh()
+        injection = replace(self.injection, evidence_items=snapshot.evidence_items)
+        focus = self.context.focus
+        if (
+            focus is not None
+            and focus.semantic_key == "ledger.transaction"
+            and all(row.transaction_id != focus.restore_token for row in snapshot.projection.entries)
+        ):
+            focus = None
+        context = TuiScreenContextV1(
+            destination=self.context.destination,
+            focus=focus,
+            action_candidate_id=self.context.action_candidate_id,
+        )
+        return LedgerWorkspaceController(context, snapshot.projection, injection)
 
     def evidence_rows(self) -> tuple[LedgerEvidenceRowV1, ...]:
         """Project only canonical review-safe metadata from the injected result."""
@@ -449,6 +521,10 @@ class LedgerEntrySelected(Message):
 
 class LedgerBackRequested(Message):
     """Request that the owning host return to the parent destination."""
+
+
+class LedgerInvoiceEntryRequested(Message):
+    """Request the invoice entry form as the workspace body."""
 
 
 class LedgerWorkspaceScreen(AccountChromeScreen):
@@ -549,6 +625,15 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
 
         replace_workspace_body(cast(App[object], self.app), resolve_ledger_screen(self.controller, event.target))
 
+    def on_ledger_invoice_entry_requested(self, _: LedgerInvoiceEntryRequested) -> None:
+        """Open the invoice entry form, or say why it cannot open in this session."""
+        from .invoice_entry import LedgerInvoiceEntryScreen
+
+        if not self.controller.can_add_invoices():
+            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            return
+        replace_workspace_body(cast(App[object], self.app), LedgerInvoiceEntryScreen(self.controller))
+
     def on_ledger_back_requested(self, _: LedgerBackRequested) -> None:
         """Return an area to the Ledger overview; leave the workspace only from the overview."""
         # An overview that cannot open would bounce Back straight back here.
@@ -581,6 +666,7 @@ __all__ = [
     "LedgerBackRequested",
     "LedgerEntrySelected",
     "LedgerEvidenceReviewRequested",
+    "LedgerInvoiceEntryRequested",
     "LedgerReviewRequested",
     "LedgerRouteRequested",
     "LedgerWorkspaceController",

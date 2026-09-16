@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from textual.screen import Screen
 
     from ...application.ledger.models import ManualLedgerTransactionResult
+    from ...application.ledger.workspace import LedgerWorkspaceProjectionV1
     from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
     from ...application.modelo.workspace_models import (
         ModeloWorkspaceProjectionV1,
@@ -116,30 +117,56 @@ def compose_secure_profile_workbench_generation_provider(
 
     account_session = live_account_session_reader(profile_id=profile_id, profile_label=profile_label)
     account_session()
-    ledger_action_ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=profile_id,
-        operation=operation,
-        profile_repository=ProfileRecordRepository.for_current_session(
-            profile_id,
-            profile_decode_context=operation.profile_decode_context(),
-        ),
-        work_unit_repository=ledger_action_ports.work_unit_repository,
-        calculation_repository=ledger_action_ports.calculation_repository,
-        filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),
-        clock=now,
-        account_session_reader=account_session,
-        transaction_repository=ledger_action_ports.transaction_repository,
-        invoice_repository=ledger_action_ports.invoice_repository,
-        bucket_event_repository=ledger_action_ports.bucket_event_repository,
-        ledger_action_ports=ledger_action_ports,
-        verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
-        notification_custody_reader=_notification_custody_reader(profile_id),
-        result_casilla_reader=_declaration_result_casilla_reader(operation),
-        operation_contracts=operation_contracts,
-        modelo_projection_reader=_modelo_projection_reader(operation),
-    )
-    return ApplicationGenerationProviderV1(door)
+
+    def capture() -> WorkbenchGenerationV1:
+        # The ledger ports are composed per capture, not once per session:
+        # they carry the evidence records as read at composition, so a bundle
+        # held across captures would keep reporting the evidence the session
+        # started with after the operator had added more.
+        return ApplicationGenerationProviderV1(read_door())()
+
+    def read_door() -> SecureProfileWorkbenchGenerationReadDoorV1:
+        ledger_action_ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
+        return SecureProfileWorkbenchGenerationReadDoorV1(
+            profile_id=profile_id,
+            operation=operation,
+            profile_repository=ProfileRecordRepository.for_current_session(
+                profile_id,
+                profile_decode_context=operation.profile_decode_context(),
+            ),
+            work_unit_repository=ledger_action_ports.work_unit_repository,
+            calculation_repository=ledger_action_ports.calculation_repository,
+            filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),
+            clock=now,
+            account_session_reader=account_session,
+            transaction_repository=ledger_action_ports.transaction_repository,
+            invoice_repository=ledger_action_ports.invoice_repository,
+            bucket_event_repository=ledger_action_ports.bucket_event_repository,
+            ledger_action_ports=ledger_action_ports,
+            verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
+            notification_custody_reader=_notification_custody_reader(profile_id),
+            result_casilla_reader=_declaration_result_casilla_reader(operation),
+            operation_contracts=operation_contracts,
+            modelo_projection_reader=_modelo_projection_reader(operation),
+        )
+
+    return capture
+
+
+def compose_local_reader_page(services: OperationComposedServices) -> Callable[[], Screen[None]]:
+    """Bind the document reader page to this session's operation platform.
+
+    Start, pull and verify are submitted into the same journal and leases the
+    rest of the session uses, so a pull running here is one ``config provision``
+    would see, not a second inventory's.
+    """
+
+    def open_page() -> Screen[None]:
+        from .profile.local_reader import LocalReaderScreen, OperationLocalReaderDoor
+
+        return LocalReaderScreen(OperationLocalReaderDoor(services))
+
+    return open_page
 
 
 def live_account_session_reader(*, profile_id: str, profile_label: str) -> Callable[[], HomeAccountSession]:
@@ -395,6 +422,7 @@ class InstalledWorkbenchAccountInputsV1:
             rotate_password=self.rotate_password,
             complete_setup=self.complete_setup,
             sign_out=compose_profile_sign_out_factory(services, profile_id=self.profile_id),
+            open_document_reader=compose_local_reader_page(services),
         )
 
 
@@ -482,6 +510,7 @@ def compose_installed_workbench_generation_provider(
                 current,
                 dependencies,
                 operation_runtime.authority_operation,
+                lambda: _required_projection(capture().ledger, "Ledger"),
             )
             if ledger_factory is not None:
                 factories["workbench.ledger"] = ledger_factory
@@ -626,7 +655,14 @@ def _ledger_generation_factory(
     current: list[WorkbenchGenerationV1],
     dependencies: InstalledWorkbenchFactoryDependenciesV1,
     operation: PinnedAuthorityOperation,
+    capture_ledger: Callable[[], LedgerWorkspaceProjectionV1],
 ) -> TuiScreenFactoryV1 | None:
+    """Bind the Ledger workspace to the current generation and its write doors.
+
+    ``capture_ledger`` takes a whole new generation, so a flow that wrote
+    something re-reads through the same door Home and search refresh from
+    rather than a Ledger-only reader that could disagree with them.
+    """
     if current[0].ledger.projection is None:
         return None
     from .ledger.routes import ledger_screen_factory
@@ -634,7 +670,14 @@ def _ledger_generation_factory(
     def create(context: TuiScreenContextV1) -> Screen[None]:
         from ...adapters.persistence.storage.attachment import AttachmentStore
         from ...application.ledger.attachment_review import list_attachment_review_queue
+        from .ledger_doors import (
+            LedgerEvidenceDoor,
+            LedgerImportDoor,
+            ledger_invoice_add_door,
+            ledger_workspace_refresh,
+        )
 
+        profile_id = dependencies.account.profile_id
         return ledger_screen_factory(
             _required_projection(current[0].ledger, "Ledger"),
             review_action=dependencies.ledger_review_action,
@@ -659,6 +702,13 @@ def _ledger_generation_factory(
             # the workspace focus.
             classify_action=dependencies.ledger_classify_action,
             classification_submitter=_ledger_classification_submitter(dependencies.account.profile_id, operation),
+            # Import, invoice entry and evidence each carry the operator's own
+            # input -- a path, a typed invoice, a document -- so the launcher
+            # gives only the door and the operator supplies the rest.
+            import_door=LedgerImportDoor(profile_id=profile_id, operation=operation),
+            invoice_add_door=ledger_invoice_add_door(profile_id, operation),
+            evidence_door=LedgerEvidenceDoor(profile_id=profile_id),
+            refresh=ledger_workspace_refresh(profile_id, capture_ledger),
         )(context)
 
     return create
@@ -713,13 +763,20 @@ def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarReco
     """
 
     def create(action: DeclaredNextAction, entry: DeclarationsCalendarEntryRefV1, /) -> None:
+        from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
         from ...application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
         from ...application.modelo.work_create_policy import guard_active_profile_foral_ccaa
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ..adapter_composition import build_work_lifecycle_ports
 
         if action.action.action_id != "operator.modelo.work.create":
             raise ValueError("the calendar handoff only creates declarations")
-        guard_active_profile_foral_ccaa()
+        with bundled_indexed_authority().operation() as operation:
+            profile = load_modelo_work_profile(
+                bucket_id=bucket_id,
+                profile_decode_context=operation.profile_decode_context(),
+            )
+        guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
         ports = build_work_lifecycle_ports(bucket_id=bucket_id)
         ensure_modelo_work_unit_for_active_target(
             bucket_id=bucket_id,
@@ -730,6 +787,7 @@ def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarReco
             actor=actor,
             catalogue=ports.work_unit_repository.load(),
             ports=ports,
+            profile=profile,
         )
 
     return create
@@ -1128,6 +1186,7 @@ __all__ = [
     "compose_installed_workbench_generation_provider",
     "compose_installed_workbench_root",
     "compose_installed_workbench_search",
+    "compose_local_reader_page",
     "compose_secure_profile_workbench_generation_provider",
     "live_account_session_reader",
     "main",

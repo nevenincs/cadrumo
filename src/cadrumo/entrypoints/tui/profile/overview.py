@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import ModalScreen
+from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
 from textual.worker import Worker, WorkerState
 
@@ -295,6 +295,9 @@ _SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
 }
 
 
+_DOCUMENT_READER_CARD_ID = "manager-document-reader"
+
+
 class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
     """Full-screen profile overview with in-place editing."""
 
@@ -340,10 +343,13 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         validate: Callable[[str, str], str | None] | None = None,
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
         credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
+        open_document_reader: Callable[[], Screen[None]] | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
         self.overview = overview
+        self._open_document_reader = open_document_reader
+        """Builds the document reader page, or ``None`` when this host offers none."""
         self._complete_setup = complete_setup
         """Declares setup complete and hands back the page as storage now holds it.
 
@@ -501,9 +507,13 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         if event.button.id == "manager-complete-setup":
             self.action_complete_setup()
             return
+        card = event.button.parent
+        if isinstance(card, SourceActionCard) and card.id == _DOCUMENT_READER_CARD_ID:
+            if self._open_document_reader is not None:
+                self.app.push_screen(self._open_document_reader())
+            return
         if self._launch_source is None:
             return
-        card = event.button.parent
         if not isinstance(card, SourceActionCard) or card.id is None or not card.id.startswith("source-"):
             return
         key = card.id.removeprefix("source-")
@@ -538,6 +548,17 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         sources = self.query_one("#manager-sources", Vertical)
         await sources.remove_children()
         await sources.mount_all(self._source_cards())
+        if self._open_document_reader is not None:
+            await sources.mount(
+                SourceActionCard(
+                    SourceActionDescriptor(
+                        title=tr("tui.local_reader.card.title"),
+                        description=tr("tui.local_reader.card.description"),
+                        action_label=tr("tui.local_reader.card.action"),
+                    ),
+                    id=_DOCUMENT_READER_CARD_ID,
+                )
+            )
         self._sync_source_actions()
         self._field_by_key.clear()
         self._table_by_section.clear()

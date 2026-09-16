@@ -6,9 +6,11 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import ClassVar, override
 
+from pydantic import ValidationError
 from textual.widgets import DataTable, Static
 
-from ....core.errors.hierarchy import InternalInvariantError
+from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
@@ -33,6 +35,13 @@ ALLOWED_FLOW_TRANSITIONS: dict[LedgerFlowState, frozenset[LedgerFlowState]] = {
     LedgerFlowState.CONFIRMING: frozenset({LedgerFlowState.SUBMITTING, LedgerFlowState.CANCELLED}),
     LedgerFlowState.SUBMITTING: frozenset({LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED}),
 }
+
+
+def door_refusal_text(error: CadrumoError | ValidationError) -> str:
+    """Render an application door's typed refusal in the operator's language."""
+    if isinstance(error, CadrumoError):
+        return resolve_error_message(error)
+    return "; ".join(str(item.get("msg", "")) for item in error.errors())
 
 
 @contextmanager
@@ -81,6 +90,19 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
     def _cancel_flow(self) -> None:
         raise NotImplementedError
 
+    def refresh_after_write(self) -> None:
+        """Re-read the workspace once this flow has written, so the next body shows it.
+
+        Only a settled write changes anything; a failed re-read keeps the
+        snapshot already shown and says so, rather than ending the workspace.
+        """
+        if self.flow_state is not LedgerFlowState.SUCCEEDED or not self.controller.can_refresh():
+            return
+        try:
+            self.controller = self.controller.refreshed()
+        except CadrumoError:
+            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.refresh_failed"))
+
     @override
     def action_back(self) -> None:
         """Refuse abandonment after submission; otherwise unwind confirmation."""
@@ -90,4 +112,5 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
         if self.flow_state is LedgerFlowState.CONFIRMING:
             self._cancel_flow()
             return
+        self.refresh_after_write()
         super().action_back()

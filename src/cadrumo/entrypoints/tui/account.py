@@ -27,6 +27,8 @@ from .secret.login import LoginScreen
 from .secret.passphrase import PassphraseChangeAttempt, PassphraseScreen
 
 if TYPE_CHECKING:
+    from textual.screen import Screen
+
     from ...application.operations.composition import OperationComposedServices
     from ...application.user_profile.acquisition_sources import (
         AcquisitionSourceCredentialPostureV1,
@@ -105,6 +107,7 @@ def compose_account_factories(
     credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
     appearance: AccountAppearanceFactoryV1 = toggle_appearance,
     complete_setup: Callable[[], ProfileOverview] | None = None,
+    open_document_reader: Callable[[], Screen[None]] | None = None,
 ) -> AccountFactoriesV1:
     """Bind already-composed account doors to their canonical TUI owners.
 
@@ -124,6 +127,7 @@ def compose_account_factories(
             validate=validate_profile_field,
             launch_source=launch_profile_source,
             credential_postures=credential_postures,
+            open_document_reader=open_document_reader,
         )
 
     def change_user() -> LoginScreen:

@@ -5,11 +5,12 @@ from __future__ import annotations
 from typing import ClassVar, cast, override
 
 from textual.app import ComposeResult
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
+    LedgerInvoiceEntryRequested,
     LedgerWorkspaceController,
     LedgerWorkspaceScreen,
     area_label,
@@ -40,6 +41,8 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
             yield ContentDataTable[str](id="ledger-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(ledger_copy("tui.ledger.overview.quality"), classes="cadrumo-heading", markup=False)
             yield ContentDataTable[str](id="ledger-quality", cursor_type="row", zebra_stripes=True)
+            if self.controller.can_add_invoices():
+                yield Button(ledger_copy("tui.ledger.invoice.open"), id="ledger-add-invoice")
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -70,6 +73,11 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route an Enter press on the one-stop destination table."""
         self.handle_navigation_selection(event)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Open the invoice entry form."""
+        if event.button.id == "ledger-add-invoice":
+            self.post_message(LedgerInvoiceEntryRequested())
 
 
 __all__ = ["LedgerOverviewScreen"]
