@@ -10,9 +10,9 @@ import pytest
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
-from ....core.i18n.render import tr
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home import HomeScreen
