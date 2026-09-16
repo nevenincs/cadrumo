@@ -13,18 +13,21 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core.config import override_settings
+from ...core.config import Settings, override_settings
 from ...core.model_catalogue import ModelRole, default_model_runtime_id
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
+from ...tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
 from ..local_reader import (
     EXTRACTION_READER_ROLES,
+    RoleFitnessOutcome,
     configured_role_model,
+    forget_role_fitness,
     probe_local_reader,
     read_local_reader_status,
     role_model_targets,
     runtime_model_names_match,
+    verify_role_target,
 )
-from ..provisioning_contracts import ProvisioningPreconditionCondition
+from ..provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
 from ..provisioning_runtime import InstalledModel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -52,6 +55,15 @@ class _Runtime(SilentLoopbackHandler):
             write_json_response(self, {"models": rows}, status=HTTPStatus.OK)
         else:
             self.send_error(HTTPStatus.NOT_FOUND)
+
+    @override
+    def do_POST(self) -> None:
+        # The readiness check's one-token generate; its content is irrelevant.
+        read_json_body(self)
+        if self.path != "/api/generate":
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        write_json_response(self, {"done": True}, status=HTTPStatus.OK)
 
 
 @contextmanager
@@ -178,3 +190,115 @@ def test_status_is_extraction_ready_only_when_both_reader_models_are_installed()
     assert rows[ModelRole.TEXT_EXTRACTION].resident is True
     assert rows[ModelRole.VISION_TRANSCRIPTION].resident is False
     assert rows[ModelRole.VISION_TRANSCRIPTION].installed is True
+
+
+class _Probe:
+    """An injected fitness port: records calls and answers a fixed verdict."""
+
+    def __init__(self, *, fit: bool, transport_failed: bool = False) -> None:
+        self.calls: list[str] = []
+        self._fit = fit
+        self._transport_failed = transport_failed
+
+    def __call__(self, model: str, settings: Settings) -> RoleFitnessOutcome:
+        del settings
+        self.calls.append(model)
+        if self._fit:
+            return RoleFitnessOutcome(
+                role=ModelRole.TEXT_EXTRACTION,
+                model=model,
+                fit=True,
+                answer_parseable=True,
+                grounded=True,
+                answer_budget_tokens=1024,
+                elapsed_ms=1,
+            )
+        condition = (
+            ProvisioningPreconditionCondition.MODEL_READY
+            if self._transport_failed
+            else ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE
+        )
+        facts = {"model": model, "answer_parseable": False}
+        return RoleFitnessOutcome(
+            role=ModelRole.TEXT_EXTRACTION,
+            model=model,
+            fit=False,
+            transport_failed=self._transport_failed,
+            answer_budget_tokens=1024,
+            elapsed_ms=1,
+            facts=facts,
+            precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
+        )
+
+
+@pytest.fixture(autouse=True)
+def _fresh_fitness_memory() -> None:
+    forget_role_fitness()
+
+
+def test_an_unfit_text_model_is_not_extraction_ready() -> None:
+    probe = _Probe(fit=False)
+    with _runtime(installed=[_TEXT, _VISION]):
+        status = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
+
+    rows = {row.role: row for row in status.roles}
+    assert status.extraction_ready is False
+    assert rows[ModelRole.TEXT_EXTRACTION].fit_for_role is False
+    assert rows[ModelRole.TEXT_EXTRACTION].ready is False
+    assert (
+        rows[ModelRole.TEXT_EXTRACTION].failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE
+    )
+    # Only the text role is probed; presence alone still decides the vision row.
+    assert rows[ModelRole.VISION_TRANSCRIPTION].fit_for_role is None
+    assert rows[ModelRole.VISION_TRANSCRIPTION].ready is True
+
+
+def test_a_fit_text_model_is_extraction_ready_and_probed_once() -> None:
+    probe = _Probe(fit=True)
+    with _runtime(installed=[_TEXT, _VISION]):
+        first = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
+        second = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
+
+    assert first.extraction_ready is True
+    assert second.extraction_ready is True
+    assert probe.calls == [_TEXT], "a settled verdict is remembered, not re-probed per read"
+
+
+def test_a_probe_that_got_no_answer_is_not_remembered() -> None:
+    probe = _Probe(fit=False, transport_failed=True)
+    with _runtime(installed=[_TEXT, _VISION]):
+        read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
+        read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
+
+    assert probe.calls == [_TEXT, _TEXT]
+
+
+def test_a_missing_model_is_never_probed() -> None:
+    probe = _Probe(fit=True)
+    with _runtime(installed=[_VISION]):
+        status = read_local_reader_status(roles=EXTRACTION_READER_ROLES, assess_load=False, text_probe=probe)
+
+    assert probe.calls == []
+    assert status.extraction_ready is False
+
+
+def test_verify_refuses_a_loaded_model_that_is_unfit_for_its_role() -> None:
+    probe = _Probe(fit=False)
+    with _runtime(installed=[_TEXT], residents=[_TEXT]):
+        (target,) = role_model_targets((ModelRole.TEXT_EXTRACTION,))
+        outcome = verify_role_target(target, text_probe=probe)
+
+    assert outcome.ready is False
+    assert outcome.answered is True, "the model answered the readiness prompt; fitness is what failed"
+    assert outcome.precondition_verdict is not None
+    assert outcome.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE
+
+
+def test_verify_passes_a_fit_model_and_skips_the_probe_for_unprobed_roles() -> None:
+    probe = _Probe(fit=False)
+    with _runtime(installed=[_VISION], residents=[_VISION]):
+        (target,) = role_model_targets((ModelRole.VISION_TRANSCRIPTION,))
+        outcome = verify_role_target(target, text_probe=probe)
+
+    assert outcome.ready is True
+    assert probe.calls == []
