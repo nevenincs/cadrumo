@@ -139,6 +139,7 @@ def _ledger() -> LedgerWorkspaceProjectionV1:
         invoices=InvoiceCatalogue(),
         revisions={},
         work_units=WorkUnitCatalogue(),
+        evidence_pending_review=0,
     )
 
 

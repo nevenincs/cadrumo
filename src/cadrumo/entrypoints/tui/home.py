@@ -33,7 +33,7 @@ from ...application.overview.home import (
     HomeTargetKind,
     HomeZoneState,
 )
-from ...core.i18n.render import tr
+from ...core.i18n.render import lookup_translation, output_language, tr
 from .components.theme import BASE_CSS, tokenised
 from .components.widgets import ContentDataTable, ContentScroll
 from .search import workbench_action_label
@@ -99,8 +99,28 @@ _AEAT_LOCALE_KEYS: Final = {
 }
 
 
+def _has_copy(translation_key: str) -> bool:
+    """Whether the active language authors this key.
+
+    :func:`tr` never reports a miss: it humanises the key's last segment, so
+    comparing its result with the key cannot tell an authored sentence from
+    an invented one.
+    """
+    return lookup_translation(translation_key, locale=output_language()) is not None
+
+
 def _state_copy(state: HomeZoneState, *, empty_key: str | None = None) -> str:
-    """Render one zone's availability as words, never as colour alone."""
+    """Render one zone's availability as words, never as colour alone.
+
+    A zone that is not showing its data says why, from the reason the
+    application attached, because the generic line can only guess at a cause
+    and an operator acts on the cause. The generic line remains for a reason
+    this page has no words for yet.
+    """
+    if state.reason_code is not None and state.availability is not HomeAvailability.STALE:
+        reason_key = f"tui.home.availability.reason.{state.reason_code}"
+        if _has_copy(reason_key):
+            return tr(reason_key)
     label = tr(_AVAILABILITY_LOCALE_KEYS[state.availability])
     if state.availability is HomeAvailability.STALE and state.observed_at is not None:
         return tr(
@@ -147,9 +167,7 @@ def _action_cells(item: HomeNextAction) -> tuple[str, str, str]:
     """
     label = workbench_action_label(str(item.action.action.action_id))
     reason_key = f"tui.home.reason.{item.reason_code}"
-    reason = tr(reason_key)
-    if reason == reason_key:
-        reason = tr("tui.home.action.reason")
+    reason = tr(reason_key) if _has_copy(reason_key) else tr("tui.home.action.reason")
     if item.period is None:
         context = tr("tui.home.action.context_across_records")
     elif item.modelo is None or item.filing_year is None:  # pragma: no cover - projection rejects this shape

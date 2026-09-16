@@ -397,17 +397,10 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         yield PinnedStatusBar(id="manager-status")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             yield Vertical(id="manager-context")
-            with Vertical(id="manager-sources", classes="cadrumo-panel"):
-                for source in known_profile_acquisition_sources():
-                    yield SourceActionCard(
-                        SourceActionDescriptor(
-                            title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
-                            description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
-                            action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
-                            credential_requirement=self._credential_requirement_badge(source.key),
-                        ),
-                        id=f"source-{source.key.value}",
-                    )
+            # Filled by :meth:`_redraw`, not here: a card's text is fixed when
+            # it is built, so cards composed once would keep the language the
+            # page opened in after the operator changes it.
+            yield Vertical(id="manager-sources", classes="cadrumo-panel")
             for section in self.overview.sections:
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
@@ -415,8 +408,22 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
     async def on_mount(self) -> None:
         """Install the presentation theme and render the supplied overview."""
         install_cadrumo_themes(self.app)
-        self._sync_source_actions()
         await self._redraw()
+
+    def _source_cards(self) -> list[SourceActionCard]:
+        """Build one card per known source, worded in the page's current language."""
+        return [
+            SourceActionCard(
+                SourceActionDescriptor(
+                    title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
+                    description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
+                    action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
+                    credential_requirement=self._credential_requirement_badge(source.key),
+                ),
+                id=f"source-{source.key.value}",
+            )
+            for source in known_profile_acquisition_sources()
+        ]
 
     def _credential_requirement_badge(self, key: ProfileAcquisitionSourceKey) -> CredentialRequirement | None:
         """Resolve one source's credential badge from its real posture, if supplied.
@@ -499,6 +506,10 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         self._render_chrome()
         self._clear_notice()
         await self._render_profile_context()
+        sources = self.query_one("#manager-sources", Vertical)
+        await sources.remove_children()
+        await sources.mount_all(self._source_cards())
+        self._sync_source_actions()
         self._field_by_key.clear()
         self._table_by_section.clear()
         self._columns_by_section.clear()
@@ -922,7 +933,9 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
 
         The tokens are shown as language names, because an operator whose
         page is in a language they do not read is exactly the one who
-        cannot be asked to recognise ``hu``.
+        cannot be asked to recognise ``hu``. Each name is written in its own
+        language for the same reason: that operator cannot read "Húngaro"
+        on a Spanish page either, but does read "Magyar".
         """
         field = self._language_field()
         if field is None:
@@ -940,7 +953,10 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
                 field,
                 prompt=tr("wizard.setup.profile.output-language.prompt"),
                 choice_labels={
-                    choice.value: tr(f"wizard.setup.profile.output-language.choices.{choice.value}.label")
+                    choice.value: tr(
+                        f"wizard.setup.profile.output-language.choices.{choice.value}.label",
+                        locale=choice.value,
+                    )
                     for choice in field.choices
                 },
                 validate=self._validator_for(field),

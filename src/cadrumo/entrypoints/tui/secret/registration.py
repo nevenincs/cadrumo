@@ -58,7 +58,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from ....core.i18n.render import output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
+from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialAttempt,
@@ -103,9 +103,7 @@ class RegistrationRefusal:
 #: exchanged for one a full-screen operator can act on, because a TUI offers no
 #: prompt at which to run the command the shared message recommends.
 _SURFACE_REFUSAL_KEYS: dict[str, str] = {
-    "application.user_profile.errors.profile_already_exists": (
-        "flows.registration.refusal.profile_already_exists"
-    ),
+    "application.user_profile.errors.profile_already_exists": ("flows.registration.refusal.profile_already_exists"),
 }
 
 #: Poll interval for the recovery code handoff. This paces the liveness check
@@ -159,14 +157,17 @@ class RecoveryEnrollmentAttempt:
     expected_refusal: RegistrationRefusal | None = None
 
 
-def _language_options(*, locale: str | None = None) -> list[tuple[str, str]]:
-    """The chooser's rows, named under whichever language is on screen.
+def _language_options() -> list[tuple[str, str]]:
+    """The chooser's rows, each language named in that language.
 
-    Resolved on each call rather than once at import, because this is the
-    one widget whose own rows have to follow the choice made in it.
+    An operator who cannot read the language the page opened in cannot read
+    that language's name for their own either, so "Húngaro" on a Spanish page
+    helps nobody who needs the chooser; "Magyar" does. The rows therefore do
+    not depend on the language on screen, and never need re-wording when it
+    changes. The profile manager's language picker follows the same rule.
     """
     return [
-        (tr(f"wizard.setup.profile.output-language.choices.{language}.label", locale=locale), language)
+        (tr(f"wizard.setup.profile.output-language.choices.{language}.label", locale=language), language)
         for language in SUPPORTED_OUTPUT_LANGUAGES
     ]
 
@@ -277,7 +278,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
             # The one widget that cannot be composed empty: a chooser that
             # refuses a blank selection also refuses an empty option set.
             yield Select[str](
-                _language_options(locale=self._active_language),
+                _language_options(),
                 value=self._active_language,
                 allow_blank=False,
                 id="field-output-language",
@@ -360,24 +361,11 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
             tr("wizard.setup.profile.output-language.prompt", locale=locale)
         )
         self.query_one("#btn-create", Button).label = tr("flows.registration.create_button", locale=locale)
-        self._render_language_choices()
         self._render_strength(
             self.query_one("#field-password", Input).value,
             assess=self._assess_profile_password,
             locale=locale,
         )
-
-    def _render_language_choices(self) -> None:
-        """Re-word the chooser's own rows, keeping the current selection.
-
-        Textual offers no way to re-word options in place, and replacing
-        them re-seeds the selection, so the selection is put back
-        afterwards — the echo that causes is what
-        :meth:`on_select_changed` guards against.
-        """
-        chooser = cast("Select[str]", self.query_one("#field-output-language", Select))
-        chooser.set_options(_language_options(locale=self._active_language))
-        chooser.value = self._active_language
 
     # ── live feedback ───────────────────────────────────────────────────
 
@@ -658,7 +646,10 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
 class RecoveryOfferScreen(Screen[None]):
     """Ask once whether to set up recovery, with the trade-off stated plainly."""
 
-    BINDINGS: ClassVar = [Binding("escape", "skip_recovery", "", show=False)]
+    BINDINGS: ClassVar = [
+        Binding("f3", "toggle_appearance", "", show=False),
+        Binding("escape", "skip_recovery", "", show=False),
+    ]
 
     DEFAULT_CSS = tokenised("""
     RecoveryOfferScreen {
@@ -723,6 +714,10 @@ class RecoveryOfferScreen(Screen[None]):
         """Escape declines the offer, which is what leaving it already means."""
         self._skip()
 
+    def action_toggle_appearance(self) -> None:
+        """Switch appearance here as on every other credential surface."""
+        toggle_appearance(self.app)
+
     def on_unmount(self) -> None:
         """Treat escape, shutdown, and every non-accept exit as a skip."""
         self._skip_once()
@@ -737,7 +732,10 @@ class RecoveryOfferScreen(Screen[None]):
 class RecoveryCodeScreen(Screen[None]):
     """Show the recovery code once and return masked exact re-entry proof."""
 
-    BINDINGS: ClassVar = [Binding("escape", "cancel_code", "", show=False)]
+    BINDINGS: ClassVar = [
+        Binding("f3", "toggle_appearance", "", show=False),
+        Binding("escape", "cancel_code", "", show=False),
+    ]
 
     DEFAULT_CSS = tokenised("""
     RecoveryCodeScreen {
@@ -829,6 +827,10 @@ class RecoveryCodeScreen(Screen[None]):
     def action_cancel_code(self) -> None:
         """Escape declines enrolment, so nothing is installed for this code."""
         self._cancel()
+
+    def action_toggle_appearance(self) -> None:
+        """Switch appearance here as on every other credential surface."""
+        toggle_appearance(self.app)
 
     def on_unmount(self) -> None:
         """Treat escape, shutdown, and every non-confirm exit as refusal."""
