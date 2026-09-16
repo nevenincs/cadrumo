@@ -46,7 +46,6 @@ def test_a_freshly_registered_profile_passes_the_deletion_preflight(tmp_path: Pa
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -73,7 +72,6 @@ def test_the_profile_the_operator_is_signed_into_can_be_deleted(tmp_path: Path) 
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,

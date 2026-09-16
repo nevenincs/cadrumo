@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
 from cadrumo.application.state_projection import (
     ModeloReadinessRequest,
     _registry_readiness_refusal,
     _registry_readiness_revision_mismatch_refusal,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_registry_readiness_refusals_have_no_authored_describe_command() -> None:

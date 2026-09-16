@@ -47,7 +47,7 @@ from cadrumo.core.credentials import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _OPERATOR_CREDENTIAL_INPUT = "operator-chosen-registration-secret"
 _WRONG_CREDENTIAL_INPUT = "not-the-operator-chosen-secret"
@@ -72,7 +72,6 @@ def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path: P
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Registration Subject",
             passphrase=_OPERATOR_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -108,7 +107,6 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Minimal Subject",
             passphrase=_OPERATOR_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -153,7 +151,6 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Legal Hold Subject",
             passphrase=_OPERATOR_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -178,7 +175,6 @@ def test_blank_label_is_refused_before_any_bucket_is_created(tmp_path: Path) -> 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="   ",
                 passphrase=_OPERATOR_CREDENTIAL_INPUT,
                 profile_create_context=_profile_create_context_for_test,
@@ -199,7 +195,6 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Too Short",
                 passphrase="a" * (PROFILE_PASSWORD_MIN_SCALARS - 1),
                 profile_create_context=_profile_create_context_for_test,
@@ -261,7 +256,6 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
         before = _storage_snapshot(storage_root)
         with pytest.raises(ProfileRegistrationError) as refused:
             register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Refused Candidate",
                 passphrase=candidate,
                 profile_create_context=_profile_create_context_for_test,
@@ -295,7 +289,6 @@ def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path,
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=f"Boundary {len(candidate)}",
             passphrase=candidate,
             profile_create_context=_profile_create_context_for_test,
@@ -313,7 +306,6 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         composed_profile = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Composed",
             passphrase=composed,
             profile_create_context=_profile_create_context_for_test,
@@ -321,7 +313,6 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
         )
         logout_active_profile()
         decomposed_profile = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Decomposed",
             passphrase=decomposed,
             profile_create_context=_profile_create_context_for_test,
@@ -344,7 +335,6 @@ def test_duplicate_label_is_refused(tmp_path: Path) -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Same Label",
             passphrase=_OPERATOR_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -352,7 +342,6 @@ def test_duplicate_label_is_refused(tmp_path: Path) -> None:
         )
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Same Label",
                 passphrase=_OPERATOR_CREDENTIAL_INPUT,
                 profile_create_context=_profile_create_context_for_test,

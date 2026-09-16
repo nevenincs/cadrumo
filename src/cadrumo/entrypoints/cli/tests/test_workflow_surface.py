@@ -74,7 +74,6 @@ def _isolated_user_cli(tmp_path: Path) -> Generator[Path]:
             cadrumo_clave_movil_dni_nie=None,
             cadrumo_clave_movil_dni_fecha=None,
             cadrumo_clave_movil_nie_soporte=None,
-            cadrumo_allow_unencrypted="",
         ),
     ):
         yield tmp_path
@@ -826,7 +825,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     show_result = _invoke(["--format", "json", "config", "profile", "view"])
     assert show_result.exit_code == 0, show_result.output
     show_envelope = json.loads(_json_output(show_result))
-    assert show_envelope["command"] == "config.profile.show"
+    assert show_envelope["command"] == "config.profile.view"
     show_payload = show_envelope["result"]
     facts = {row["path"]: row["value"] for row in show_payload["facts"]}
     assert facts["iva.does_intracomunitario"] == "true"

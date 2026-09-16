@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import threading
 import weakref
+from datetime import timedelta
 
 import pytest
 
@@ -29,18 +30,19 @@ from ..live_sessions import close_all_live_bucket_sessions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_KEK = b"K" * 32
 _DEK = b"D" * 32
 
 
 def _open_session(bucket_id: str) -> BucketSession:
     """Open a real session holding real key buffers."""
-    return BucketSession.open(
+    _opened_at = now()
+    return BucketSession.open_resumed(
         bucket_id=bucket_id,
-        kek=_KEK,
         dek=_DEK,
         idle_minutes=30,
-        opened_at=now(),
+        opened_at=_opened_at,
+        idle_deadline=_opened_at + timedelta(minutes=30),
+        absolute_deadline=_opened_at + timedelta(minutes=240),
     )
 
 

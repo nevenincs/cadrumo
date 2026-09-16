@@ -24,7 +24,7 @@ from ..oauth_flow import (
     _raise_local_server_error,
     credentials_to_records,
     require_interactive_terminal,
-    resolve_active_tax_id,
+    require_resolvable_profile_record,
     run_login_flow,
 )
 from ..records import REQUIRED_SCOPES, OAuthClient
@@ -105,20 +105,19 @@ def test_local_server_error_classifier_wraps_unclassified_failures() -> None:
     assert raised.value.context == {"error_type": "RuntimeError"}
 
 
-def test_resolve_active_tax_id_refuses_missing_profile_bucket(tmp_path: Path) -> None:
+def test_profile_record_guard_refuses_a_missing_profile_bucket_pointer(tmp_path: Path) -> None:
     with (
         override_settings(
             cadrumo_active_profile="missing-profile",
             cadrumo_local_storage_root=tmp_path,
-            cadrumo_secret_store_backend="unsecured",
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
-        resolve_active_tax_id("missing-profile")
+        require_resolvable_profile_record("missing-profile")
 
     assert raised.value.context == {
         "profile": "missing-profile",
-        "reason": "profile_bucket_manifest_missing",
+        "reason": "profile_bucket_pointer_missing",
     }
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.profile_state_unresolved"
     assert not hasattr(raised.value, "suggestion")
@@ -209,7 +208,6 @@ def test_login_flow_refuses_unavailable_profile_record_session_before_oauth_netw
         override_settings(
             cadrumo_local_storage_root=storage_root,
             cadrumo_active_profile=profile_id,
-            cadrumo_secret_store_backend="unsecured",
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
@@ -228,7 +226,6 @@ def test_login_flow_propagates_zero_row_profile_capsule_corruption_before_oauth_
     """Corrupt profile rows are integrity failures, never downgraded to an auth refusal."""
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1f54e86d-e8dd-4327-8651-cc6d9a44843c") as profile,
-        override_settings(cadrumo_secret_store_backend="unsecured"),
         pytest.raises(ProfileRecordIntegrityError) as raised,
     ):
         reset_secure_object_store(profile.repository)

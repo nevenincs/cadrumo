@@ -1218,6 +1218,10 @@ application:
       censal_read_identity_unset: 'Record your fiscal ID before pulling your census:
         this profile has none yet, so the pull cannot confirm the record AEAT returns
         is yours. Run aeat config profile edit to add it.'
+      custody_profile_already_present: This store already holds the profile the archive
+        contains. A capsule keeps its identity when restored, so a backup can only
+        be restored into a store that does not already hold it, or after the original
+        profile is deleted.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       no_active_profile_selected: No active profile selected.
@@ -1236,6 +1240,14 @@ application:
         {maximum_scalars} Unicode scalars; received {scalar_count}.
       profile_password_too_many_utf8_bytes: The profile password must use at most
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
+      recovery_already_enrolled: This profile already has a recovery code. Disable
+        it first to issue a new one.
+      recovery_code_rejected: The recovery code is not correct; the passphrase is
+        unchanged.
+      recovery_not_enrolled: This profile has no recovery code, so its passphrase
+        cannot be reset.
+      recovery_possession_mismatch: The recovery code was not confirmed correctly;
+        nothing was enrolled.
       registration_displaced_session_not_retired: The profile could not be created.
         The stored session of the profile it replaces could not be removed. Close
         any program using the profile store and try again.

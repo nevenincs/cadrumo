@@ -397,7 +397,7 @@ def consume_root_fallback(
 ) -> None:
     """Read all required payloads, authenticate exactly, and assert the session."""
     from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
-    from ...application.user_profile.login_session import login_profile
+    from ...application.user_profile.login_session import authenticate_profile_for_invocation
     from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
@@ -407,8 +407,10 @@ def consume_root_fallback(
         if not isinstance(payload, ProfileAuthenticationSecrets):
             raise TypeError("root profile-secret model resolved an unexpected payload type")
         passphrase = payload.profile_passphrase.get_secret_value()
+        # The target named here is scoped to THIS invocation, so it must not
+        # become the operator's selection. Only `config login NAME` selects.
         with bundled_indexed_authority().operation() as operation:
-            outcome = login_profile(
+            outcome = authenticate_profile_for_invocation(
                 name=bucket_id,
                 passphrase_callback=lambda: passphrase,
                 profile_decode_context=operation.profile_decode_context(),

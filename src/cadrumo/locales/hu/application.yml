@@ -1273,6 +1273,10 @@ application:
         a nyilvántartását: ennek a profilnak még nincs, ezért a lekérdezés nem tudja
         megerősíteni, hogy az AEAT által visszaadott rekord az Öné. Futtassa az aeat
         config profile edit parancsot a megadásához.'
+      custody_profile_already_present: Ez a tároló már tartalmazza az archívumban
+        lévő profilt. A kapszula visszaállításkor megtartja az azonosságát, ezért
+        a biztonsági mentés csak olyan tárolóba állítható vissza, amely még nem tartalmazza,
+        vagy az eredeti profil törlése után.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
       passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik
@@ -1289,6 +1293,13 @@ application:
         Unicode skalárértéket tartalmazhat; a kapott érték {scalar_count}.
       profile_password_too_many_utf8_bytes: A profiljelszó UTF-8 kódolása legfeljebb
         {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
+      recovery_already_enrolled: Ehhez a profilhoz már tartozik helyreállítási kód.
+        Új kiadásához először kapcsold ki.
+      recovery_code_rejected: A helyreállítási kód nem helyes; a jelszó változatlan.
+      recovery_not_enrolled: Ehhez a profilhoz nincs helyreállítási kód, ezért a jelszava
+        nem állítható vissza.
+      recovery_possession_mismatch: A helyreállítási kód megerősítése nem sikerült;
+        semmi sem lett rögzítve.
       registration_displaced_session_not_retired: A profilt nem sikerült létrehozni.
         Nem sikerült eltávolítani annak a profilnak a tárolt munkamenetét, amelyet
         felvált. Zárj be minden programot, amely a profiltárat használja, és próbáld

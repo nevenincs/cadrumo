@@ -10,7 +10,12 @@ from types import MappingProxyType
 from ...iva.schema import IvaRateKind
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .governed_fact_scope import (
+    GovernedFactSource,
+    cache_governed_projection,
+    governed_facts_in_scope,
+    validating_governed_facts,
+)
 from .schema_base import DateAxis
 
 _FACT_ID = "iva-rate-slot-catalogue"
@@ -117,31 +122,16 @@ def _resolve_entries(
     return _mapping_entries(resolved)
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("IVA rate-kind catalogue requires an explicit authority operation or scope")
+def _scoped_entries(effective_date: date) -> Mapping[str, str]:
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise RegistryValidationError("IVA rate-kind catalogue requires an explicit authority operation or scope")
+    return _resolve_entries(effective_date=effective_date, authority=authority)
 
 
-def _selected_entries(
-    *,
-    effective_date: date | None,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    coordinate = effective_date or date.today()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_entries(coordinate)
-    return _resolve_entries(effective_date=coordinate, authority=selected)
-
-
-def resolve_iva_rate_kind_catalogue(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> IvaRateKindCatalogue:
-    """Resolve the complete IVA rate-kind vocabulary through fact 0094."""
-    entries = _selected_entries(effective_date=effective_date, authority=authority)
+@cache_governed_projection(maxsize=512)
+def _scoped_catalogue(effective_date: date) -> IvaRateKindCatalogue:
+    entries = _scoped_entries(effective_date)
     definitions: list[IvaRateKindDefinition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
         prefix = f"{_PREFIX}{raw_token}"
@@ -170,6 +160,20 @@ def resolve_iva_rate_kind_catalogue(
     if catalogue.zero_token in catalogue.positive_kinds or catalogue.exempt_token in catalogue.positive_kinds:
         raise RegistryValidationError("IVA zero and exempt rate kinds cannot be positive tiers")
     return catalogue
+
+
+def resolve_iva_rate_kind_catalogue(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> IvaRateKindCatalogue:
+    """Resolve the complete IVA rate-kind vocabulary through fact 0094."""
+    coordinate = effective_date or date.today()
+    selected = authority or governed_facts_in_scope()
+    if selected is None:
+        raise RegistryValidationError("IVA rate-kind catalogue requires an explicit authority operation or scope")
+    with validating_governed_facts(selected):
+        return _scoped_catalogue(coordinate)
 
 
 def require_iva_rate_kind(

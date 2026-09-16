@@ -1,123 +1,136 @@
-"""Recovery-key material is held in buffers the zeroise primitive can reach.
-
-The substrate's wipe primitive only operates on a mutable ``bytearray``; it
-refuses anything else by design. Key material held as immutable ``bytes`` or
-``str`` is therefore permanently unreachable by any wipe, and survives in
-memory entirely at the garbage collector's discretion.
-
-That gap is structurally wider on the recovery surface than on the
-steady-state session path, because an enrollment holds a live plaintext key
-across the operator's
-*interactive* confirmation, which lasts as long as it takes a human to copy
-down 24 words.
-
-These tests pin the contract that closes it for the BIP-39 primitives: minted
-entropy is held in a buffer ``zeroise`` accepts, and the container that holds
-key material across an operation wipes on demand.
-The refusal test below is what gives the rest their teeth -- it proves
-``zeroise`` genuinely rejects the immutable shapes, so a regression back to
-``bytes`` or ``str`` fails these tests rather than passing them vacuously.
-"""
+"""The grouped recovery code: minting, cosmetic normalisation and wipeable custody."""
 
 from __future__ import annotations
 
 import pytest
 
-from ..custody.errors import WipeTypeError
-from ..custody.zeroise import zeroise
 from ..errors import StorageValidationError
 from ..recovery_key import (
+    RECOVERY_CODE_ALPHABET,
+    RECOVERY_CODE_GROUP_COUNT,
+    RECOVERY_CODE_GROUP_LENGTH,
+    RECOVERY_CODE_SEPARATOR,
+    RECOVERY_CODE_SYMBOL_COUNT,
     RecoveryKey,
-    encode_mnemonic,
+    canonical_recovery_code,
+    format_recovery_code,
     generate_recovery_key,
+    normalise_recovery_code,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-
-def test_zeroise_refuses_immutable_bytes_and_str() -> None:
-    """The wipe primitive cannot reach immutable material.
-
-    This is the anti-tautology proof for every other test in this module: it
-    establishes that "``zeroise`` accepted this buffer" is a real claim about
-    the value's type, not a vacuous one. If the recovery surface regressed to
-    handing back ``bytes``, the assertions below would raise rather than pass.
-    """
-    with pytest.raises(WipeTypeError):
-        zeroise(bytes(32))
-    with pytest.raises(WipeTypeError):
-        zeroise("abandon abandon abandon")
+_SYMBOLS = "ABCDEFGHJKLMNPQRSTUVWXYZ234567"
+_CANONICAL = "ABCDE-FGHJK-LMNPQ-RSTUV-WXYZ2-34567"
 
 
-def test_generated_recovery_key_entropy_is_reachable_by_zeroise() -> None:
-    """A freshly minted recovery key exposes wipeable entropy."""
-    recovery_key = generate_recovery_key()
-
-    assert isinstance(recovery_key.raw, bytearray)
-    zeroise(recovery_key.raw)
-    assert recovery_key.raw == bytearray(32)
+def test_the_alphabet_omits_every_symbol_people_misread() -> None:
+    assert len(RECOVERY_CODE_ALPHABET) == 32
+    assert len(set(RECOVERY_CODE_ALPHABET)) == 32
+    assert set("01IO") & set(RECOVERY_CODE_ALPHABET) == set()
+    assert RECOVERY_CODE_SYMBOL_COUNT == RECOVERY_CODE_GROUP_LENGTH * RECOVERY_CODE_GROUP_COUNT == 30
 
 
-def test_recovery_key_wipe_zeroes_both_entropy_and_mnemonic() -> None:
-    """Wiping clears the entropy and the words that encode it.
+def test_minted_codes_are_canonical_full_alphabet_and_distinct() -> None:
+    minted = [generate_recovery_key() for _ in range(64)]
+    codes = {key.code for key in minted}
 
-    The mnemonic is not merely a label for the entropy -- it *is* the entropy,
-    re-encoded. Zeroing one while leaving the other intact would wipe nothing
-    in substance, so both buffers must go.
-    """
-    recovery_key = generate_recovery_key()
-    original_words = recovery_key.mnemonic
-    assert len(original_words.split()) == 24
-
-    recovery_key.wipe()
-
-    assert recovery_key.raw == bytearray(32)
-    assert recovery_key.mnemonic != original_words
-    assert original_words.split()[0] not in recovery_key.mnemonic.split()
+    assert len(codes) == 64
+    for code in codes:
+        groups = code.split(RECOVERY_CODE_SEPARATOR)
+        assert len(groups) == RECOVERY_CODE_GROUP_COUNT
+        assert all(len(group) == RECOVERY_CODE_GROUP_LENGTH for group in groups)
+        assert set(code.replace(RECOVERY_CODE_SEPARATOR, "")) <= set(RECOVERY_CODE_ALPHABET)
+        assert canonical_recovery_code(code) == code
+    # Sixty-four independent draws of thirty symbols cover the alphabet; a
+    # generator stuck on a subset would betray itself here.
+    assert set("".join(codes).replace(RECOVERY_CODE_SEPARATOR, "")) == set(RECOVERY_CODE_ALPHABET)
 
 
-def test_recovery_key_wipe_is_idempotent() -> None:
-    """Wiping an already-wiped key is a no-op, not an error."""
-    recovery_key = generate_recovery_key()
-
-    recovery_key.wipe()
-    recovery_key.wipe()
-
-    assert recovery_key.raw == bytearray(32)
-
-
-def test_recovery_key_context_manager_wipes_on_exit() -> None:
-    """The context-manager form wipes even when the body raises."""
-    recovery_key = generate_recovery_key()
-
-    with pytest.raises(RuntimeError), recovery_key:
-        raise RuntimeError("enrollment cancelled")
-
-    assert recovery_key.raw == bytearray(32)
-
-
-def test_recovery_key_cannot_serialise_its_material() -> None:
-    """``RecoveryKey`` exposes no serialisation path."""
-    recovery_key = generate_recovery_key()
-
-    assert not hasattr(recovery_key, "model_dump_json")
-    assert not hasattr(recovery_key, "model_dump")
+@pytest.mark.parametrize(
+    "typed",
+    (
+        _CANONICAL,
+        _SYMBOLS,
+        _CANONICAL.lower(),
+        _SYMBOLS.lower(),
+        " abcde fghjk lmnpq rstuv wxyz2 34567 ",
+        "abcde_fghjk_lmnpq_rstuv_wxyz2_34567",
+        "ABC-DEF-GHJ-KLM-NPQ-RST-UVW-XYZ-234-567",
+        "ABCDE\tFGHJK\nLMNPQ\r\nRSTUV WXYZ2-34567",
+    ),
+)
+def test_case_separators_and_whitespace_are_cosmetic(typed: str) -> None:
+    assert normalise_recovery_code(typed) == _SYMBOLS
+    assert canonical_recovery_code(typed) == _CANONICAL
+    assert format_recovery_code(normalise_recovery_code(typed)) == _CANONICAL
 
 
-def test_recovery_key_refuses_wrong_sized_entropy() -> None:
-    """Length validation survives the move off pydantic."""
+@pytest.mark.parametrize(
+    "typed",
+    (
+        "",
+        _SYMBOLS[:-1],
+        _SYMBOLS + "A",
+        _CANONICAL + "-ABCDE",
+        _SYMBOLS[:-1] + "0",
+        _SYMBOLS[:-1] + "O",
+        _SYMBOLS[:-1] + "I",
+        _SYMBOLS[:-1] + "1",
+        _SYMBOLS[:-1] + "é",
+        _SYMBOLS[:-1] + ".",
+        "correct horse battery staple",
+    ),
+)
+def test_a_code_outside_the_alphabet_or_length_is_refused_before_any_proof(typed: str) -> None:
     with pytest.raises(StorageValidationError):
-        RecoveryKey(raw=bytes(16), mnemonic="abandon")
-
-
-def test_recovery_key_refuses_empty_mnemonic() -> None:
-    """Non-empty mnemonic validation survives the move off pydantic."""
+        normalise_recovery_code(typed)
     with pytest.raises(StorageValidationError):
-        RecoveryKey(raw=bytes(32), mnemonic="")
+        canonical_recovery_code(typed)
 
 
-def test_mnemonic_encoding_matches_the_canonical_zero_entropy_vector() -> None:
-    """The live one-way encoder matches BIP-39 rather than its own inverse."""
-    expected = " ".join([*("abandon" for _ in range(23)), "art"])
+@pytest.mark.parametrize("symbols", ("", _SYMBOLS[:-1], _SYMBOLS + "A", _SYMBOLS.lower(), _CANONICAL))
+def test_format_refuses_anything_but_a_complete_bare_symbol_run(symbols: str) -> None:
+    with pytest.raises(StorageValidationError):
+        format_recovery_code(symbols)
 
-    assert encode_mnemonic(bytes(32)) == expected
+
+@pytest.mark.parametrize("code", (_SYMBOLS, _CANONICAL.lower(), _CANONICAL + " "))
+def test_a_recovery_key_holds_only_the_canonical_grouped_form(code: str) -> None:
+    with pytest.raises(StorageValidationError):
+        RecoveryKey(code=code)
+
+
+def test_wipe_zeroes_the_buffer_in_place_and_is_idempotent() -> None:
+    key = RecoveryKey(code=_CANONICAL)
+    assert key.code == _CANONICAL
+
+    key.wipe()
+
+    wiped = key.code
+    assert len(wiped) == len(_CANONICAL)
+    assert set(wiped) == {"\x00"}
+    key.wipe()
+    assert key.code == wiped
+
+
+def test_the_context_manager_wipes_on_exit_even_when_the_body_raises() -> None:
+    key = generate_recovery_key()
+    with key as held:
+        assert held is key
+        assert canonical_recovery_code(held.code) == held.code
+    assert set(key.code) == {"\x00"}
+
+    raising = generate_recovery_key()
+    with pytest.raises(RuntimeError, match="handover failed"), raising:
+        raise RuntimeError("handover failed")
+    assert set(raising.code) == {"\x00"}
+
+
+def test_a_recovery_key_cannot_be_serialised_or_grow_new_attributes() -> None:
+    key = RecoveryKey(code=_CANONICAL)
+    assert not hasattr(key, "model_dump_json")
+    assert not hasattr(key, "__dict__")
+    with pytest.raises(AttributeError):
+        object.__setattr__(key, "extra", "value")
+    assert _CANONICAL not in repr(key)

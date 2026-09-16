@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -15,7 +15,6 @@ from ......core.config import override_settings
 from ......core.errors.error_codes import build_error_envelope, resolve_error_message
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.path_obstruction import obstructed_path
-from ...crypto.aead import KEY_SIZE
 from ...envelope.contract import Envelope
 from ...errors import (
     BlobIntegrityError,
@@ -27,7 +26,7 @@ from ...errors import (
 from ...master_key.active_session import NoActiveBucketSessionError, activate_session
 from ...master_key.bucket_session import BucketSession
 from ...storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -48,22 +47,20 @@ def _digest_hex(data: bytes) -> str:
 
 
 def bucket_session(*, dek: bytes) -> BucketSession:
-    return BucketSession.open(
+    return BucketSession.open_resumed(
         bucket_id="test-bucket",
-        kek=b"k" * KEY_SIZE,
         dek=dek,
         idle_minutes=15,
         opened_at=_SESSION_OPENED_AT,
+        idle_deadline=_SESSION_OPENED_AT + timedelta(minutes=15),
+        absolute_deadline=_SESSION_OPENED_AT + timedelta(minutes=240),
     )
 
 
 @pytest.fixture
 def store(tmp_path: Path, fixed_master_key: bytes) -> Iterator[EncryptedBlobStore]:
-    provider = EphemeralMasterKeyProvider(key=fixed_master_key)
-    yield EncryptedBlobStore(
-        root_dir=tmp_path / "blob-store",
-        master_key_provider=provider,
-    )
+    with EphemeralBucketSession(key=fixed_master_key):
+        yield EncryptedBlobStore(root_dir=tmp_path / "blob-store")
 
 
 # ``store.root_dir / "blobs" / ...`` below is the independent oracle for the
@@ -288,23 +285,17 @@ class TestMasterKeyIsolation:
     """A different master key cannot decrypt previously-stored ciphertext."""
 
     def test_different_master_key_cannot_decrypt(self, tmp_path: Path) -> None:
-        # Store under master key A
-        provider_a = EphemeralMasterKeyProvider()
-        store_a = EncryptedBlobStore(
-            root_dir=tmp_path / "store",
-            master_key_provider=provider_a,
-        )
-        ref = store_a.put(b"sensitive", classification=SensitivityClass.FINANCIAL)
-        assert store_a.get(ref) == b"sensitive"
+        # Store under data key A
+        with EphemeralBucketSession():
+            store_a = EncryptedBlobStore(root_dir=tmp_path / "store")
+            ref = store_a.put(b"sensitive", classification=SensitivityClass.FINANCIAL)
+            assert store_a.get(ref) == b"sensitive"
 
-        # Open the same store dir under master key B
-        provider_b = EphemeralMasterKeyProvider()
-        store_b = EncryptedBlobStore(
-            root_dir=tmp_path / "store",
-            master_key_provider=provider_b,
-        )
-        with pytest.raises(DecryptionError):
-            store_b.get(ref)
+        # Open the same store dir under data key B
+        with EphemeralBucketSession():
+            store_b = EncryptedBlobStore(root_dir=tmp_path / "store")
+            with pytest.raises(DecryptionError):
+                store_b.get(ref)
 
 
 class TestBlobDigestValidation:

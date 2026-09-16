@@ -16,7 +16,6 @@ from cadrumo.adapters.persistence.storage.custody.records import (
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -80,7 +79,6 @@ def _create_capsule(
         password_envelope=envelope,
         sentinel=sentinel,
         data_files={"state/payload.bin": b"x"},
-        recovery_envelope=mint_test_profile_recovery_envelope(_PROFILE_ID, dek=_DEK, dek_epoch=envelope.dek_epoch),
         initial_record=_create_profile_record_for_test(
             profile_id=str(_PROFILE_ID),
             setup_state=ProfileSetupState.INCOMPLETE,

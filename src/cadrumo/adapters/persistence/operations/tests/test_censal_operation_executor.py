@@ -95,7 +95,6 @@ def _subject(tmp_path: Path) -> Generator[tuple[str, SecureObjectRepository, Pro
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Censal operation executor",
             passphrase=_CREDENTIAL_INPUT,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),

@@ -40,7 +40,6 @@ from .registered_bucket import publish_registration_capsule
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2099, 5, 26, 12, 15, 0, tzinfo=UTC)
-_KEK = b"k" * 32
 _DEK = b"d" * 32
 _BUCKET_A_ID = "094d94e7-4474-407c-8971-d9c1a2476db0"
 _BUCKET_B_ID = "d9df0562-55c9-43c8-8486-b79d4016cfbc"
@@ -70,17 +69,15 @@ def _session(
     *,
     opened_at: datetime = _NOW,
     idle_minutes: int = 15,
-    unsecured_backend: bool = False,
-    kek: bytes = _KEK,
     dek: bytes = _DEK,
 ) -> BucketSession:
-    return BucketSession.open(
+    return BucketSession.open_resumed(
         bucket_id=bucket_id,
-        kek=kek,
         dek=dek,
         idle_minutes=idle_minutes,
         opened_at=opened_at,
-        unsecured_backend=unsecured_backend,
+        idle_deadline=opened_at + timedelta(minutes=idle_minutes),
+        absolute_deadline=opened_at + timedelta(minutes=240),
     )
 
 
@@ -150,11 +147,6 @@ def test_runtime_reports_unready_active_session_states(tmp_path: Path) -> None:
             StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,
             None,
         ),
-        (
-            _session(_BUCKET_A_ID, unsecured_backend=True),
-            StorageRuntimeReadinessCode.UNSECURED_BACKEND,
-            "unsecured_backend",
-        ),
     )
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
@@ -190,18 +182,6 @@ def test_runtime_repository_factory_refuses_route_and_session_bucket_mismatch(tm
             runtime.secure_object_repository()
 
     assert runtime.readiness.code is StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH
-    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
-
-
-def test_runtime_repository_factory_refuses_initial_unsecured_backend(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
-
-    with activate_session(_session(_BUCKET_A_ID, unsecured_backend=True)):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-        with pytest.raises(StorageValidationError) as raised:
-            runtime.secure_object_repository()
-
-    assert runtime.readiness.code is StorageRuntimeReadinessCode.UNSECURED_BACKEND
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
 
 
@@ -389,41 +369,6 @@ def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_cha
     assert raw_row_exists is False
 
 
-def test_runtime_bound_repository_refuses_write_after_session_becomes_unsecured(tmp_path: Path) -> None:
-    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
-    namespace = WORKFLOW_STATE_NAMESPACE.namespace
-    object_key = "unsecured-session-write"
-
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        activate_session(_session(_BUCKET_A_ID)),
-    ):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-        repo = runtime.secure_object_repository()
-        with activate_session(_session(_BUCKET_A_ID, unsecured_backend=True)):
-            with pytest.raises(StorageValidationError) as raised:
-                repo.save(
-                    namespace=namespace,
-                    object_key=object_key,
-                    classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
-                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
-                    written_at=_NOW,
-                    payload=b"unsecured-session-payload",
-                )
-            rendered = resolve_error_message(raised.value)
-
-        loaded = repo.load(
-            namespace,
-            object_key,
-            expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
-            max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
-        )
-
-    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
-    assert StorageRuntimeReadinessCode.UNSECURED_BACKEND.value in rendered
-    assert loaded is None
-
-
 def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_changes(tmp_path: Path) -> None:
     settings = _registered_settings(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
@@ -447,7 +392,7 @@ def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_change
             payload=b"quarantine-guard-payload",
         )
 
-        with activate_session(_session(_BUCKET_B_ID, kek=b"x" * 32, dek=b"y" * 32)):
+        with activate_session(_session(_BUCKET_B_ID, dek=b"y" * 32)):
             with pytest.raises(StorageValidationError) as raised:
                 repo.quarantine_unreadable_rows()
             rendered = resolve_error_message(raised.value)
@@ -488,7 +433,7 @@ def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_chang
             payload=b"diagnostic-guard-payload",
         )
 
-        with activate_session(_session(_BUCKET_B_ID, kek=b"x" * 32, dek=b"y" * 32)):
+        with activate_session(_session(_BUCKET_B_ID, dek=b"y" * 32)):
             diagnostic_calls = (
                 lambda: repo.exists(namespace, object_key),
                 lambda: tuple(repo.iter_all_records_raw()),
@@ -638,7 +583,6 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
             _session(_BUCKET_A_ID, opened_at=datetime(2000, 1, 1, tzinfo=UTC), idle_minutes=5),
             StorageRuntimeReadinessCode.SESSION_EXPIRED,
         ),
-        (_session(_BUCKET_A_ID, unsecured_backend=True), StorageRuntimeReadinessCode.UNSECURED_BACKEND),
     )
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 

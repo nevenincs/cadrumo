@@ -12,7 +12,7 @@ Real SQLite, a real master-key provider, a real bucket session. Nothing mocked.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -24,7 +24,7 @@ from ..master_key.bucket_session import BucketSession
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..runtime_repository import secure_object_repository_for_staged_bucket
 from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
-from .ephemeral_master_key import EphemeralMasterKeyProvider
+from .ephemeral_bucket_session import EphemeralBucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -32,17 +32,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NOW = datetime(2026, 8, 16, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "6b5f0a17-2c48-4d93-9a01-7e2d4c8b3f56"
 _OTHER_BUCKET_ID = "c47e9b02-15da-4f6e-8b73-9d0a5e1c2847"
-_KEK = b"k" * 32
 _DEK = b"d" * 32
 
 
 def _session(bucket_id: str) -> BucketSession:
-    return BucketSession.open(
+    _opened_at = datetime.now(UTC)
+    return BucketSession.open_resumed(
         bucket_id=bucket_id,
-        kek=_KEK,
         dek=_DEK,
         idle_minutes=15,
-        opened_at=datetime.now(UTC),
+        opened_at=_opened_at,
+        idle_deadline=_opened_at + timedelta(minutes=15),
+        absolute_deadline=_opened_at + timedelta(minutes=240),
     )
 
 
@@ -58,7 +59,7 @@ def test_staged_repository_round_trips_a_real_row_before_publication(tmp_path: P
     object_key = WORKFLOW_STATE_NAMESPACE.require_default_object_key()
 
     with (
-        EphemeralMasterKeyProvider(),
+        EphemeralBucketSession(),
         activate_session(_session(_BUCKET_ID)),
         secure_object_repository_for_staged_bucket(_BUCKET_ID, database_file=database_file) as repo,
     ):
@@ -106,7 +107,7 @@ def test_staged_repository_disposes_its_engine_on_exit(tmp_path: Path) -> None:
     database_file = _staging_database(tmp_path)
 
     with (
-        EphemeralMasterKeyProvider(),
+        EphemeralBucketSession(),
         activate_session(_session(_BUCKET_ID)),
         secure_object_repository_for_staged_bucket(_BUCKET_ID, database_file=database_file) as repo,
     ):
@@ -133,7 +134,7 @@ def test_staged_repository_refuses_a_session_serving_another_bucket(tmp_path: Pa
     database_file = _staging_database(tmp_path)
 
     with (
-        EphemeralMasterKeyProvider(),
+        EphemeralBucketSession(),
         activate_session(_session(_OTHER_BUCKET_ID)),
         secure_object_repository_for_staged_bucket(_BUCKET_ID, database_file=database_file) as repo,
         pytest.raises(StorageValidationError) as raised,
@@ -161,7 +162,7 @@ def test_staged_repository_refuses_a_path_inside_an_unpublished_bucket(tmp_path:
     database_file = tmp_path / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
 
     with (
-        EphemeralMasterKeyProvider(),
+        EphemeralBucketSession(),
         activate_session(_session(_BUCKET_ID)),
         pytest.raises(StorageError) as raised,
         secure_object_repository_for_staged_bucket(_BUCKET_ID, database_file=database_file),

@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 
 import pytest
+
+from ..core.toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -61,6 +62,6 @@ def test_cadrumo_package_imports_in_subprocess() -> None:
 
 def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
     """The product distribution ships exactly its canonical human CLI."""
-    pyproject = tomllib.loads((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    pyproject = parse_toml((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert pyproject["project"]["scripts"] == {"aeat": "cadrumo.entrypoints.cli.bootstrap:main"}

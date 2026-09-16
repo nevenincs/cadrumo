@@ -717,7 +717,6 @@ def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) 
     explicit_settings = Settings(
         cadrumo_local_storage_root=base_settings.cadrumo_local_storage_root,
         cadrumo_active_profile=base_settings.cadrumo_active_profile,
-        cadrumo_secret_store_backend=base_settings.cadrumo_secret_store_backend,
         cadrumo_secret_store_dir=base_settings.cadrumo_secret_store_dir,
         cadrumo_secret_passphrase=base_settings.cadrumo_secret_passphrase,
         cadrumo_certificate_path=cert_path,

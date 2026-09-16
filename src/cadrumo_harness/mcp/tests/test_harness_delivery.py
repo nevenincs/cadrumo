@@ -59,7 +59,7 @@ from ..harness_tools import (
     render_whoami_identity_text,
 )
 from ..tools import build_tool_descriptors
-from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
+from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS
 from ._support import composed_profile_persistence_ports, isolated_profile_storage_root
 from .session import connected_server_and_client_session as connect
 
@@ -291,7 +291,6 @@ def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> Non
         composed_profile_persistence_ports(),
     ):
         outcome = register_profile_with_credentials(
-            recovery_handover=verify_recovery_handover,
             label="Erika",
             passphrase=PROFILE_PASSPHRASE,
             facts=READY_PROFILE_FACTS,
@@ -380,7 +379,6 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
         composed_profile_persistence_ports(),
     ):
         outcome = register_profile_with_credentials(
-            recovery_handover=verify_recovery_handover,
             label="Erika",
             passphrase=PROFILE_PASSPHRASE,
             facts=READY_PROFILE_FACTS,
@@ -425,7 +423,6 @@ def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None
         composed_profile_persistence_ports(),
     ):
         outcome = register_profile_with_credentials(
-            recovery_handover=verify_recovery_handover,
             label="Erika",
             passphrase=PROFILE_PASSPHRASE,
             facts=READY_PROFILE_FACTS,

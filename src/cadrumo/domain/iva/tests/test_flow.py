@@ -21,7 +21,6 @@ See Also:
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Iterator
 
 import pytest
@@ -29,6 +28,7 @@ import pytest
 from cadrumo.domain.iva.flow import IvaSettlementSide
 
 from ....core.resources.bundled_data import bundled_path
+from ....core.toml import load_toml
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.binding_selector_utils import selector_as_dict
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
@@ -296,7 +296,7 @@ def test_iva_flow_legal_articles_present_in_registry_toml() -> None:
     """The three LIVA articles backing the flow taxonomy must be in the registry."""
     path = bundled_path("registry", "aeat", "legal", "iva-flow.toml")
     with path.open("rb") as handle:
-        data = tomllib.load(handle)
+        data = load_toml(handle)
     legal = data.get("legal", {})
     assert "ley-37-1992:art-84" in legal
     assert "ley-37-1992:art-88" in legal
@@ -309,7 +309,7 @@ def test_iva_flow_legal_articles_carry_required_text_quotes() -> None:
     on drift)."""
     path = bundled_path("registry", "aeat", "legal", "iva-flow.toml")
     with path.open("rb") as handle:
-        data = tomllib.load(handle)
+        data = load_toml(handle)
     legal = data["legal"]
     assert any("Sujetos pasivos" in entry for entry in legal["ley-37-1992:art-84"]["required_text"])
     assert any("Repercusión del impuesto" in entry for entry in legal["ley-37-1992:art-88"]["required_text"])

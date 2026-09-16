@@ -22,7 +22,6 @@ See Also:
 from __future__ import annotations
 
 import re
-import tomllib
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
@@ -31,6 +30,7 @@ import pytest
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
+from ....core.toml import load_toml
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.facts.resolution import ScalarFactQuery
 from ....domain.calculations.registry.schema_base import DateAxis
@@ -105,7 +105,7 @@ def test_the_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:
     entries: dict[str, object] = {}
     for path in scan_directory(legal_root, pattern="*.toml"):
         with path.open("rb") as handle:
-            payload = tomllib.load(handle)
+            payload = load_toml(handle)
         legal_table = payload.get("legal")
         if isinstance(legal_table, dict):
             entries.update(legal_table)

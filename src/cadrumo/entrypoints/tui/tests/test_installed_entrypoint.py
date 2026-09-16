@@ -21,9 +21,9 @@ _REPO_ROOT = Path(__file__).parents[5]
 
 def test_the_packaging_declares_one_console_entry_point_and_no_tui_alias() -> None:
     """The TUI has no separate console-script spelling."""
-    import tomllib
+    from ....core.toml import parse_toml
 
-    spec = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    spec = parse_toml((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     scripts = spec["project"]["scripts"]
 
     assert scripts.get(_SCRIPT_NAME) == "cadrumo.entrypoints.cli.bootstrap:main"

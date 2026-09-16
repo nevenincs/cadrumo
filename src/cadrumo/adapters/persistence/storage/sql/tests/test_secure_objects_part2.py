@@ -21,7 +21,7 @@ from ...secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
     StorageHierarchyRegistry,
 )
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectNamespaceIntegrity, SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
@@ -294,7 +294,7 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
     machine before key recovery completes).
     """
 
-    seed_provider = EphemeralMasterKeyProvider()
+    seed_provider = EphemeralBucketSession()
     db_path = tmp_path / "rotated.db"
     _seed_under_key(
         db_path=db_path,
@@ -320,7 +320,7 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
     that later sync and repair flows rely on.
     """
 
-    seed_provider = EphemeralMasterKeyProvider()
+    seed_provider = EphemeralBucketSession()
     db_path = tmp_path / "quarantine-metadata.db"
     namespace = "cadrumo.quarantine.metadata"
     _seed_under_key(

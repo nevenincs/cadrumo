@@ -504,6 +504,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile.recovery_custody.ProfileRecoveryError",
+        ErrorCode(
+            code="REFUSED_PROFILE_RECOVERY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_recovery",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile.login_session.ProfileLoginThrottledError",
         ErrorCode(
             code="REFUSED_PROFILE_LOGIN_THROTTLED",

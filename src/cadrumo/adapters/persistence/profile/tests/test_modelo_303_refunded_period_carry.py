@@ -24,6 +24,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -79,7 +80,11 @@ def _law_determined_revision_id(modelo_id: str, *, filing_year: int, period: str
     return str(select_revision(modelo, filing_year=filing_year, period=period).id)
 
 
-_REVISION = _law_determined_revision_id("303", filing_year=2025, period="4T")
+@cache
+def _revision() -> str:
+    # Resolved on first use, not at import: collection must stay cheap.
+    return _law_determined_revision_id("303", filing_year=2025, period="4T")
+
 
 _CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
@@ -224,7 +229,7 @@ def _year_n_4t_work_unit() -> WorkUnit:
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period=period,
-        revision_id=_REVISION,
+        revision_id=_revision(),
     )
     return WorkUnit(
         work_unit_id=work_unit_id,
@@ -232,7 +237,7 @@ def _year_n_4t_work_unit() -> WorkUnit:
         modelo=ModeloCode(_MODELO),
         filing_year=_YEAR_N,
         period=period,
-        revision_id=_REVISION,
+        revision_id=_revision(),
         name="m303-2025-4t",
         created_at=_CLOCK,
         updated_at=_CLOCK,

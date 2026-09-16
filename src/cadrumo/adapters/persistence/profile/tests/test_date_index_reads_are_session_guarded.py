@@ -30,6 +30,7 @@ still answering queries.
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
@@ -52,12 +53,14 @@ _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 
 def _foreign_session() -> BucketSession:
     """Open a real session serving a DIFFERENT bucket."""
-    return BucketSession.open(
+    _opened_at = _utc_now()
+    return BucketSession.open_resumed(
         bucket_id=str(uuid4()),
-        kek=b"k" * 32,
         dek=b"d" * 32,
         idle_minutes=30,
-        opened_at=_utc_now(),
+        opened_at=_opened_at,
+        idle_deadline=_opened_at + timedelta(minutes=30),
+        absolute_deadline=_opened_at + timedelta(minutes=240),
     )
 
 

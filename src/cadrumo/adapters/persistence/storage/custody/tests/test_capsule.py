@@ -15,21 +15,26 @@ import pytest
 
 from ......core.config import Settings
 from ......core.directory_scan import scan_directory
+from ......core.hashing import prefixed_digest
 from ......core.profile_publication import ProfilePublicationKind
 from ......core.storage_taxonomy import StorageCategory
 from ......tests.path_obstruction import obstructed_path
 from ..capsule import (
+    install_committed_profile_custody_recovery_envelope,
     list_current_profile_custody_capsule_ids,
     list_current_profile_custody_capsule_summary_witnesses,
     load_committed_profile_password_material,
+    load_committed_profile_recovery_material,
     publish_profile_custody_capsule,
     recognize_current_profile_capsule,
+    remove_committed_profile_custody_recovery_envelope,
 )
 from ..capsule_records import ProfileCustodyCapsuleLabel, ProfileCustodyCommit, parse_profile_custody_commit
 from ..envelope import create_profile_custody_password_envelope
 from ..errors import (
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryGuidance,
+    ProfileCustodyRecoverySecretError,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
 )
@@ -37,16 +42,12 @@ from ..kdf_supervision import unlock_profile_custody
 from ..paths import profile_custody_path
 from ..records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 from ..recovery import (
-    PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
+    PROFILE_CUSTODY_RECOVERY_FILENAME,
+    PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
     ProfileCustodyRecoveryEnvelope,
     create_profile_custody_recovery_envelope,
-)
-from ..recovery_artifact import (
-    ProfileCustodyRecoveryArtifact,
-    export_profile_custody_recovery_artifact,
-    import_profile_custody_recovery_artifact,
-    parse_profile_custody_recovery_artifact,
-    unlock_imported_profile_custody_recovery_artifact,
+    parse_profile_custody_recovery_envelope,
+    unlock_profile_custody_recovery_envelope,
 )
 from ..sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, create_profile_custody_sentinel
 from ..sentinel_contract import verify_profile_custody_sentinel
@@ -58,7 +59,8 @@ _PROFILE_ID = UUID("327b296d-8377-4be0-b13a-ca4d8f692e1d")
 _DEK = bytes(range(32))
 _EPOCH = base64.b64encode(b"e" * 16).decode("ascii")
 _PASSPHRASE = "profile " + "password" + " 123"
-_RECOVERY_SECRET = "profile " + "recovery" + " 123"
+_RECOVERY_SECRET = "-".join(("ABCDE", "FGHJK", "LMNPQ", "RSTUV", "WXYZ2", "34567"))
+_WRONG_RECOVERY_SECRET = "-".join(("ABCDE", "FGHJK", "LMNPQ", "RSTUV", "WXYZ2", "34568"))
 
 
 def _settings(tmp_path: Path) -> Settings:
@@ -105,13 +107,8 @@ def _recovery_envelope(*, profile_id: UUID = _PROFILE_ID, dek_epoch: str = _EPOC
     )
 
 
-def test_supervised_password_recovery_and_artifact_paths_prove_the_same_dek(tmp_path: Path) -> None:
-    # The storage root is a SUBDIRECTORY here so the exported artifact can land
-    # outside it. An artifact written inside the root is refused by design --
-    # it would share one directory tree, one backup and one theft with the
-    # ciphertext it unwraps -- and that refusal would fire before this test
-    # reached the DEK equivalence it exists to prove.
-    settings = _settings(tmp_path / "state")
+def _publish_supervised_capsule(settings: Settings) -> Path:
+    """Publish one committed capsule whose envelope is a real Argon2id wrapper."""
     envelope = create_profile_custody_password_envelope(
         profile_id=_PROFILE_ID,
         password=_PASSPHRASE,
@@ -120,129 +117,198 @@ def test_supervised_password_recovery_and_artifact_paths_prove_the_same_dek(tmp_
         kdf=_kdf(),
         settings=settings,
     )
-    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
-    recovery = create_profile_custody_recovery_envelope(
+    return publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={"state/current.bin": b"current encrypted payload"},
+        settings=settings,
+    )
+
+
+def _supervised_recovery_envelope(
+    settings: Settings,
+    *,
+    profile_id: UUID = _PROFILE_ID,
+    dek_epoch: str = _EPOCH,
+) -> ProfileCustodyRecoveryEnvelope:
+    """Wrap the shared DEK under the recovery code through the supervised KDF."""
+    return create_profile_custody_recovery_envelope(
+        profile_id=profile_id,
         recovery_secret=_RECOVERY_SECRET,
         dek=_DEK,
-        dek_epoch=_EPOCH,
+        dek_epoch=dek_epoch,
         kdf=_kdf(),
         settings=settings,
     )
-    artifact_path = tmp_path / "recovery-export.json"
-    receipt = export_profile_custody_recovery_artifact(
-        recovery,
-        current_password=_PASSPHRASE,
-        password_envelope=envelope,
-        sentinel=sentinel,
-        target=artifact_path,
+
+
+def test_installed_recovery_envelope_and_password_path_prove_the_same_dek(tmp_path: Path) -> None:
+    """The enrolment write, the recovery read set and the recovery proof agree with the password door."""
+    settings = _settings(tmp_path)
+    capsule = _publish_supervised_capsule(settings)
+    recovery = _supervised_recovery_envelope(settings)
+
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, recovery.canonical_json_bytes(), settings=settings)
+
+    assert (capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME).read_bytes() == recovery.canonical_json_bytes()
+    material = load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+    assert material.capsule_path == capsule
+    assert material.recovery_envelope == recovery
+    password_material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+    assert material.password_envelope == password_material.envelope
+    assert material.sentinel == password_material.sentinel
+
+    proved = unlock_profile_custody_recovery_envelope(
+        material.recovery_envelope,
+        _RECOVERY_SECRET,
+        sentinel=material.sentinel,
+        expected_profile_id=_PROFILE_ID,
+        expected_dek_epoch=material.password_envelope.dek_epoch,
         settings=settings,
     )
-    artifact = receipt.artifact
-
-    assert receipt.warnings
-    assert parse_profile_custody_recovery_artifact(artifact_path.read_bytes()) == artifact
+    assert proved.dek == _DEK
+    assert proved.recovery_digest == recovery.self_digest
     assert (
-        import_profile_custody_recovery_artifact(
-            artifact_path,
-            expected_profile_id=_PROFILE_ID,
-            expected_dek_epoch=_EPOCH,
-        )
-        == artifact
-    )
-    assert unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings).dek == _DEK
-    assert (
-        unlock_imported_profile_custody_recovery_artifact(
-            artifact,
-            _RECOVERY_SECRET,
-            sentinel=sentinel,
-            expected_profile_id=_PROFILE_ID,
-            expected_dek_epoch=_EPOCH,
+        unlock_profile_custody(
+            password_material.envelope,
+            _PASSPHRASE,
+            sentinel=password_material.sentinel,
             settings=settings,
         ).dek
-        == _DEK
+        == proved.dek
     )
-    with pytest.raises(ProfileCustodyRecordError, match="created exclusively"):
-        export_profile_custody_recovery_artifact(
-            recovery,
-            current_password=_PASSPHRASE,
-            password_envelope=envelope,
-            sentinel=sentinel,
-            target=artifact_path,
+    with pytest.raises(ProfileCustodyRecoverySecretError):
+        unlock_profile_custody_recovery_envelope(
+            material.recovery_envelope,
+            _WRONG_RECOVERY_SECRET,
+            sentinel=material.sentinel,
+            expected_profile_id=_PROFILE_ID,
+            expected_dek_epoch=material.password_envelope.dek_epoch,
             settings=settings,
         )
-    with pytest.raises(ProfileCustodyRecordError, match="UUID or DEK epoch"):
-        import_profile_custody_recovery_artifact(
-            artifact_path,
-            expected_profile_id=uuid4(),
-            expected_dek_epoch=_EPOCH,
+
+
+def test_recovery_proof_refuses_an_envelope_named_for_another_capsule_before_any_kdf_work(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    _publish_supervised_capsule(settings)
+    material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+    recovery = _supervised_recovery_envelope(settings)
+    other_epoch = base64.b64encode(b"x" * 16).decode("ascii")
+
+    for expected_profile_id, expected_dek_epoch in ((uuid4(), _EPOCH), (_PROFILE_ID, other_epoch)):
+        with pytest.raises(ProfileCustodyRecordError, match="UUID or DEK epoch"):
+            unlock_profile_custody_recovery_envelope(
+                recovery,
+                _RECOVERY_SECRET,
+                sentinel=material.sentinel,
+                expected_profile_id=expected_profile_id,
+                expected_dek_epoch=expected_dek_epoch,
+                settings=settings,
+            )
+
+
+def test_recovery_enrollment_is_exclusive_and_bound_to_the_committed_capsule(tmp_path: Path) -> None:
+    """Every refusal of the enrolment write leaves the capsule exactly as it was."""
+    settings = _settings(tmp_path)
+    with pytest.raises(ProfileCustodyRecordError, match="requires a committed capsule"):
+        install_committed_profile_custody_recovery_envelope(
+            _PROFILE_ID,
+            _recovery_envelope().canonical_json_bytes(),
+            settings=settings,
         )
 
+    capsule = _publish_supervised_capsule(settings)
+    recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
+    other_epoch = base64.b64encode(b"x" * 16).decode("ascii")
+    refusals = (
+        (b'{"not": "a recovery envelope"}', "not a valid envelope"),
+        (_recovery_envelope(profile_id=uuid4()).canonical_json_bytes(), "names a different profile"),
+        (_recovery_envelope(dek_epoch=other_epoch).canonical_json_bytes(), "does not wrap the committed DEK epoch"),
+    )
+    for payload, reason in refusals:
+        with pytest.raises(ProfileCustodyRecordError, match=reason):
+            install_committed_profile_custody_recovery_envelope(_PROFILE_ID, payload, settings=settings)
+        assert not os.path.lexists(recovery_path)
+    with pytest.raises(ProfileCustodyRecordError, match="not enrolled"):
+        load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
 
-def test_recovery_artifact_refuses_unknown_noncanonical_and_foreign_members() -> None:
-    artifact = ProfileCustodyRecoveryArtifact.from_recovery_envelope(_recovery_envelope())
-    canonical = artifact.canonical_json_bytes()
+    installed = _recovery_envelope().canonical_json_bytes()
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, installed, settings=settings)
+    with pytest.raises(ProfileCustodyRecordError, match="already enrolled"):
+        install_committed_profile_custody_recovery_envelope(
+            _PROFILE_ID,
+            _recovery_envelope().canonical_json_bytes(),
+            settings=settings,
+        )
+    assert recovery_path.read_bytes() == installed
+
+
+def test_recovery_revocation_is_a_compare_and_remove_on_the_enrolled_envelope(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    with pytest.raises(ProfileCustodyRecordError, match="requires a committed capsule"):
+        remove_committed_profile_custody_recovery_envelope(_PROFILE_ID, expected_sha256="sha256:0", settings=settings)
+
+    capsule = _publish_supervised_capsule(settings)
+    recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
+    with pytest.raises(ProfileCustodyRecordError, match="not enrolled"):
+        remove_committed_profile_custody_recovery_envelope(_PROFILE_ID, expected_sha256="sha256:0", settings=settings)
+
+    installed = _recovery_envelope().canonical_json_bytes()
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, installed, settings=settings)
+    stale_witness = prefixed_digest(installed[:-1])
+    with pytest.raises(ProfileCustodyRecordError, match="witness is stale"):
+        remove_committed_profile_custody_recovery_envelope(
+            _PROFILE_ID,
+            expected_sha256=stale_witness,
+            settings=settings,
+        )
+    assert recovery_path.read_bytes() == installed
+
+    remove_committed_profile_custody_recovery_envelope(
+        _PROFILE_ID,
+        expected_sha256=prefixed_digest(installed),
+        settings=settings,
+    )
+    assert not os.path.lexists(recovery_path)
+    assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) == capsule
+    with pytest.raises(ProfileCustodyRecordError, match="not enrolled"):
+        load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+
+
+def test_committed_recovery_read_set_refuses_a_wrapper_that_belongs_to_another_capsule(tmp_path: Path) -> None:
+    """A wrapper smuggled past the exclusive install is still refused at read time."""
+    settings = _settings(tmp_path)
+    capsule = _publish_supervised_capsule(settings)
+    recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
+    foreign = _recovery_envelope(profile_id=uuid4()).canonical_json_bytes()
+    recovery_path.write_bytes(foreign)
+
+    with pytest.raises(ProfileCustodyRecordError, match="does not belong to its committed capsule"):
+        load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+
+    recovery_path.write_bytes(b"not a recovery envelope")
+    with pytest.raises(ProfileCustodyRecordError, match="not a valid canonical record"):
+        load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+
+
+def test_recovery_envelope_parse_refuses_unknown_noncanonical_and_oversize_records() -> None:
+    envelope = _recovery_envelope()
+    canonical = envelope.canonical_json_bytes()
+    assert parse_profile_custody_recovery_envelope(canonical) == envelope
+
     unknown = canonical.replace(b"{", b'{"unexpected":true,', 1)
     reordered = json.dumps(dict(reversed(tuple(json.loads(canonical).items()))), separators=(",", ":")).encode("utf-8")
+    pretty = json.dumps(json.loads(canonical), indent=2).encode("utf-8")
+    duplicated = canonical.replace(b'"schema_version":1', b'"schema_version":1,"schema_version":1', 1)
+    forged_digest = canonical.replace(envelope.self_digest.encode("ascii"), b"sha256:" + b"0" * 64, 1)
+    oversize = canonical + b" " * PROFILE_CUSTODY_RECOVERY_MAX_BYTES
 
-    for value in (unknown, reordered):
+    for value in (unknown, reordered, pretty, duplicated, forged_digest, oversize, b"\xff"):
         with pytest.raises(ProfileCustodyRecordError):
-            parse_profile_custody_recovery_artifact(value)
-
-
-def test_recovery_artifact_import_refuses_real_parent_and_leaf_reparse_nonregular_and_oversize_paths(
-    tmp_path: Path,
-) -> None:
-    artifact = ProfileCustodyRecoveryArtifact.from_recovery_envelope(_recovery_envelope())
-    source_parent = tmp_path / "source"
-    source_parent.mkdir()
-    source = source_parent / "recovery.json"
-    source.write_bytes(artifact.canonical_json_bytes())
-
-    assert (
-        import_profile_custody_recovery_artifact(
-            source,
-            expected_profile_id=_PROFILE_ID,
-            expected_dek_epoch=_EPOCH,
-        )
-        == artifact
-    )
-
-    linked_parent = tmp_path / "linked-parent"
-    os.symlink(source_parent, linked_parent, target_is_directory=True)
-    with pytest.raises(ProfileCustodyRecordError, match=r"safe existing directory|unavailable|reparse"):
-        import_profile_custody_recovery_artifact(
-            linked_parent / source.name,
-            expected_profile_id=_PROFILE_ID,
-            expected_dek_epoch=_EPOCH,
-        )
-
-    linked_leaf = source_parent / "linked-leaf.json"
-    os.symlink(source, linked_leaf)
-    with pytest.raises(ProfileCustodyRecordError, match=r"unavailable|non-reparse"):
-        import_profile_custody_recovery_artifact(
-            linked_leaf,
-            expected_profile_id=_PROFILE_ID,
-            expected_dek_epoch=_EPOCH,
-        )
-
-    nonregular = source_parent / "directory.json"
-    nonregular.mkdir()
-    with pytest.raises(ProfileCustodyRecordError, match=r"unavailable|regular|non-reparse"):
-        import_profile_custody_recovery_artifact(
-            nonregular,
-            expected_profile_id=_PROFILE_ID,
-            expected_dek_epoch=_EPOCH,
-        )
-
-    oversize = source_parent / "oversize.json"
-    oversize.write_bytes(b"x" * (PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES + 1))
-    with pytest.raises(ProfileCustodyRecordError, match="bounded regular"):
-        import_profile_custody_recovery_artifact(
-            oversize,
-            expected_profile_id=_PROFILE_ID,
-            expected_dek_epoch=_EPOCH,
-        )
+            parse_profile_custody_recovery_envelope(value)
 
 
 def test_committed_capsule_is_published_once_with_immutable_marker_and_password_only_read_set(tmp_path: Path) -> None:
@@ -255,14 +321,7 @@ def test_committed_capsule_is_published_once_with_immutable_marker_and_password_
         kdf=_kdf(),
         settings=settings,
     )
-    recovery = create_profile_custody_recovery_envelope(
-        profile_id=_PROFILE_ID,
-        recovery_secret=_RECOVERY_SECRET,
-        dek=_DEK,
-        dek_epoch=_EPOCH,
-        kdf=_kdf(),
-        settings=settings,
-    )
+    recovery = _supervised_recovery_envelope(settings)
     sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
     published_at = datetime(2026, 8, 13, 12, 34, 56, 123456, tzinfo=UTC)
 
@@ -272,17 +331,18 @@ def test_committed_capsule_is_published_once_with_immutable_marker_and_password_
         publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
-        recovery_envelope=recovery,
         data_files={"state/current.bin": b"current encrypted payload"},
         settings=settings,
         published_at=published_at,
     )
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, recovery.canonical_json_bytes(), settings=settings)
 
     marker = parse_profile_custody_commit((capsule / "profile.commit.v1.json").read_bytes())
     assert marker.profile_id == _PROFILE_ID
     assert marker.published_at == "2026-08-13T12:34:56.123456Z"
     assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) == capsule
-    recovery_path = capsule / "custody" / "recovery.v1.json"
+    recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
+    assert recovery_path.read_bytes() == recovery.canonical_json_bytes()
     recovery_path.unlink()
     recovery_path.mkdir()
     recovery_accesses: list[str] = []
@@ -344,7 +404,6 @@ def test_capsule_summary_witness_observes_only_validated_commit_and_uuid_bound_l
         publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
-        recovery_envelope=None,
         data_files={"profile-label.v1.json": label.canonical_json_bytes()},
         settings=settings,
     )
@@ -376,7 +435,6 @@ def test_capsule_summary_witness_refuses_foreign_or_linked_label_provenance(tmp_
         publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=sentinel,
-        recovery_envelope=None,
         data_files={"profile-label.v1.json": label.canonical_json_bytes()},
         settings=settings,
     )
@@ -831,23 +889,11 @@ def test_crash_boundary_never_recognizes_a_marker_written_only_in_sibling_stagin
         load_committed_profile_password_material(_PROFILE_ID, settings=settings)
 
 
-def test_publication_refuses_epoch_mismatch_traversal_and_leaves_no_staging_capsule(tmp_path: Path) -> None:
+def test_publication_refuses_traversal_and_leaves_no_staging_capsule(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
     envelope = _password_envelope()
     sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
-    mismatched_recovery = _recovery_envelope(dek_epoch=base64.b64encode(b"x" * 16).decode("ascii"))
 
-    with pytest.raises(ProfileCustodyRecordError, match="recovery identity"):
-        publish_profile_custody_capsule(
-            profile_id=_PROFILE_ID,
-            transaction_id=uuid4(),
-            publication_kind=ProfilePublicationKind.ENROLL,
-            password_envelope=envelope,
-            sentinel=sentinel,
-            recovery_envelope=mismatched_recovery,
-            data_files={},
-            settings=settings,
-        )
     with pytest.raises(ProfileCustodyRecordError, match="escapes its staging root"):
         publish_profile_custody_capsule(
             profile_id=_PROFILE_ID,
@@ -866,28 +912,10 @@ def test_publication_refuses_epoch_mismatch_traversal_and_leaves_no_staging_caps
     assert not os.path.lexists(capsules_root / str(_PROFILE_ID))
 
 
-def test_publication_and_export_refuse_real_directory_reparse_points(tmp_path: Path) -> None:
-    # As above: the export half of this test needs a destination outside the
-    # storage root, or the store-separately refusal answers first and the
-    # reparse-point refusal this test names is never reached.
+def test_publication_refuses_a_real_directory_reparse_point_at_the_capsules_root(tmp_path: Path) -> None:
     settings = _settings(tmp_path / "state")
-    envelope = create_profile_custody_password_envelope(
-        profile_id=_PROFILE_ID,
-        password=_PASSPHRASE,
-        dek=_DEK,
-        dek_epoch=_EPOCH,
-        kdf=_kdf(),
-        settings=settings,
-    )
+    envelope = _password_envelope()
     sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
-    recovery = create_profile_custody_recovery_envelope(
-        profile_id=_PROFILE_ID,
-        recovery_secret=_RECOVERY_SECRET,
-        dek=_DEK,
-        dek_epoch=_EPOCH,
-        kdf=_kdf(),
-        settings=settings,
-    )
     capsules_root = profile_custody_path(
         _PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings
     ).parent.parent
@@ -906,18 +934,7 @@ def test_publication_and_export_refuse_real_directory_reparse_points(tmp_path: P
             data_files={},
             settings=settings,
         )
-
-    export_parent = tmp_path / "export-parent"
-    os.symlink(outside, export_parent, target_is_directory=True)
-    with pytest.raises(ProfileCustodyRecordError, match="target parent"):
-        export_profile_custody_recovery_artifact(
-            recovery,
-            current_password=_PASSPHRASE,
-            password_envelope=envelope,
-            sentinel=sentinel,
-            target=export_parent / "recovery.json",
-            settings=settings,
-        )
+    assert not (outside / "profile.commit.v1.json").exists()
 
 
 def test_publication_collision_refuses_replacement_and_safely_removes_own_stage(tmp_path: Path) -> None:

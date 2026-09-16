@@ -57,6 +57,7 @@ __all__ = [
     "ResolvedScalarFact",
     "ScalarFactQuery",
     "resolve_governed_fact",
+    "resolve_validated_governed_fact",
 ]
 
 
@@ -261,6 +262,26 @@ def resolve_governed_fact(
     fact = catalogue.facts.get(query.fact_id)
     if fact is None:
         raise RegistryValidationError(f"governed fact {query.fact_id!r} is not registered")
+    return resolve_validated_governed_fact(fact, query, authority_digest=authority_digest)
+
+
+def resolve_validated_governed_fact(
+    fact: GovernedFact,
+    query: GovernedFactQuery,
+    *,
+    authority_digest: str,
+) -> ResolvedGovernedFact:
+    """Resolve one query from an already validated immutable fact.
+
+    Published component readers validate a governed fact while decoding its
+    content-addressed component.  Runtime point reads must not wrap that model
+    in a new ``GovernedFactCatalogue`` and validate the same static graph again
+    for every temporal query.
+    """
+    if fact.fact_id != query.fact_id:
+        raise RegistryValidationError(
+            f"governed fact {query.fact_id!r} query was paired with {fact.fact_id!r}",
+        )
     if fact.family is not query.family:
         raise RegistryValidationError(
             f"governed fact {query.fact_id!r} has family {fact.family.value!r}, not {query.family.value!r}",

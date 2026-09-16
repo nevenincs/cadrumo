@@ -52,19 +52,11 @@ errors:
       no s'han pogut deserialitzar. Torneu a autenticar-vos per crear una sessió nova.
     auth_session_unavailable: No hi ha cap sessió activa verificada amb l'AEAT disponible.
       Autentica't abans de continuar.
-    auth_storage_bucket_recovery_verification: El codi de recuperació introduït no
-      és vàlid. Torna a escriure les 24 paraules exactament com apareixen a la còpia
-      de seguretat.
     auth_storage_keyring_unavailable: L'anell de claus del sistema operatiu no està
       disponible. O no hi ha cap magatzem de credencials registrat, o aquesta sessió
       d'inici no pot desar credencials, cosa habitual en sessions de xarxa o de servei.
       Inicia la sessió de manera interactiva o comprova que hi hagi un magatzem de
       credencials instal·lat i actiu.
-    auth_storage_master_key_material_missing: No existeix material de clau mestra.
-      L'emmagatzematge segur encara no està aprovisionat.
-    auth_storage_master_key_unavailable: Aquesta sessió de perfil s'ha reprès i només
-      conserva la seva clau de dades; el material de xifratge de claus està lligat
-      a l'inici de sessió. Executa `aeat config login` per tornar a autenticar-te.
     clave_movil_identity_checksum: L'identificador de Cl@ve Móvil té una forma vàlida
       però la seva lletra de control no coincideix amb els dígits. Revisa l'última
       lletra del document i torna-ho a provar.
@@ -516,8 +508,6 @@ errors:
     fail_storage: S'ha produït un error en l'emmagatzematge.
     fail_storage_blob_not_found: No s'ha trobat l'objecte sol·licitat al magatzem
       xifrat.
-    fail_storage_bucket_recovery_unavailable: No s'ha pogut carregar la còpia de recuperació
-      del bucket actiu. És possible que la recuperació no s'hagi configurat mai.
     fail_storage_persistence: S'ha produït un error de persistència en l'emmagatzematge
       segur.
     fail_storage_profile_custody: No s'ha pogut completar la custòdia del perfil.
@@ -856,8 +846,6 @@ errors:
     canonical_tui_module_argument: El mòdul TUI només admet els arguments compatibles.
     canonical_tui_navigation_contract: La petició de navegació del TUI infringeix
       el seu contracte.
-    canonical_tui_recovery_handover_abandoned: La transferència de recuperació s'ha
-      abandonat abans de completar la confirmació.
     canonical_tui_recovery_handover_cancelled: L'operador ha cancel·lat la transferència
       de recuperació.
     canonical_tui_unknown_design_token: El full d'estils del TUI fa referència a un
@@ -954,6 +942,7 @@ errors:
     profile_name_collision: El nom de perfil indicat ja s'està utilitzant. Tria un
       nom diferent.
     profile_passphrase_rotation: No s'ha pogut canviar la contrasenya del perfil.
+    profile_recovery: No s'ha pogut completar la sol·licitud de recuperació.
     profile_registration: No s'ha pogut registrar el perfil.
     reconciliation_declaration_source_unsupported: La conciliació a partir d'una declaració
       encara no està disponible.
@@ -1054,8 +1043,6 @@ errors:
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.
-    refused_google_unsecured_mode: No es pot autoritzar Google en mode d'emmagatzematge
-      no xifrat amb un perfil que porta un NIF real.
     refused_google_validation: Els paràmetres de Google indicats no han superat la
       validació.
     refused_inventory_actividad_conflict: Ja existeix un inventari per a aquesta activitat
@@ -1215,10 +1202,7 @@ errors:
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
       Comprova la sintaxi del filtre indicat.
     refused_source_mesh_invariant: 'Refusat: invariant de la malla de fonts incomplit.'
-    refused_storage_bucket_already_present: La importació col·lisiona amb un bucket
-      d'emmagatzematge que ja existeix.
-    refused_storage_bucket_no_active: No s'ha pogut determinar cap bucket actiu. Selecciona
-      un perfil i torna-ho a provar.
+    refused_storage_bucket_already_present: Ja existeix un bucket amb aquest identificador.
     refused_storage_master_key_no_active_session: El xifratge requereix una sessió
       activa. Executa `aeat config login NAME` i torna-ho a provar.
     refused_storage_profile_custody: Aquesta operació de custòdia del perfil està
@@ -1233,8 +1217,6 @@ errors:
       Fes servir l'opció de sobreescriptura si el vols reemplaçar.
     refused_storage_session_expired: La sessió activa ha caducat per inactivitat.
       Torna a activar-la amb aeat config login NAME.
-    refused_storage_unsecured_mode: L'emmagatzematge sense xifrar s'ha sol·licitat
-      sense l'habilitació necessària. No és segur per a dades reals.
     refused_tabular_source_unreadable: El fitxer tabular no s'ha pogut descodificar,
       o no conté cap taula amb fila de capçalera.
     refused_taxation_comparison: La comparació tributària conjunta/individual no es

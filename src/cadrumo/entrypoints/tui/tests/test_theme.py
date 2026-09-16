@@ -56,8 +56,6 @@ if TYPE_CHECKING:
 
     from textual.app import App
 
-    from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
-
 
 # ── WCAG 2.1 contrast, recomputed from the published formula ────────────────
 
@@ -207,7 +205,6 @@ def _registration_screen() -> RegistrationScreen:
         _label: str,
         _candidate_passphrase: str,
         _output_language: str,
-        _recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
     ) -> RegistrationAttempt:
         return RegistrationAttempt()
 

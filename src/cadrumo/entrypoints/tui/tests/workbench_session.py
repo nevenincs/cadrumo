@@ -63,7 +63,6 @@ async def installed_workbench_root(
             label=WORKBENCH_PROFILE_LABEL,
             passphrase=_WORKBENCH_CREDENTIAL_INPUT,
             facts=(() if tax_id is None else (UserProfileFact(path="identity.tax_id", value=tax_id),)),
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=profile_create_context,
             profile_decode_context=profile_decode_context,
         )

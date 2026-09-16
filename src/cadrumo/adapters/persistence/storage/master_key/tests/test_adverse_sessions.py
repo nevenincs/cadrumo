@@ -9,9 +9,7 @@ from pathlib import Path
 import pytest
 
 from ......core.config import Settings, override_settings
-from ......core.config_support import SecretStoreBackend
 from ...bucket.errors import BucketLockedError
-from ...errors import MasterKeyUnavailableError
 from ..active_session import (
     NoActiveBucketSessionError,
     activate_session,
@@ -23,7 +21,6 @@ from ._master_key_support import _publish_registration_capsule
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _OPENED_AT = datetime(2026, 6, 2, 8, 0, 0, tzinfo=UTC)
-_KEK = bytes(range(32))
 _DEK = bytes(range(32, 64))
 
 
@@ -36,34 +33,14 @@ def test_missing_bucket_session_raises_translated_storage_error() -> None:
     assert "aeat config login" not in str(exc_info.value)
 
 
-def test_resumed_session_kek_refusal_carries_only_the_observed_key_facts() -> None:
-    """A resumed session reports unavailable KEK material without a local action."""
+def test_locked_bucket_session_refuses_active_master_key_reads() -> None:
     session = BucketSession.open_resumed(
-        bucket_id="resumed",
+        bucket_id="locked",
         dek=_DEK,
         idle_minutes=15,
         opened_at=_OPENED_AT,
         idle_deadline=_OPENED_AT + timedelta(minutes=15),
-        absolute_deadline=_OPENED_AT + timedelta(hours=8),
-    )
-
-    with pytest.raises(MasterKeyUnavailableError) as exc_info:
-        _ = session.kek
-
-    assert exc_info.value.translated_message == "errors.auth.auth_storage_master_key_unavailable"
-    assert exc_info.value.context == {
-        "resumed_profile_session": True,
-        "resumed_session_kek_material_available": False,
-    }
-
-
-def test_locked_bucket_session_refuses_active_master_key_reads() -> None:
-    session = BucketSession.open(
-        bucket_id="locked",
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=_OPENED_AT,
+        absolute_deadline=_OPENED_AT + timedelta(minutes=240),
     )
     session.close()
 
@@ -75,12 +52,14 @@ def test_locked_bucket_session_refuses_active_master_key_reads() -> None:
 
 
 def test_expired_bucket_session_seals_before_refusing_active_master_key_reads() -> None:
-    session = BucketSession.open(
+    _opened_at = _OPENED_AT - timedelta(days=1)
+    session = BucketSession.open_resumed(
         bucket_id="expired",
-        kek=_KEK,
         dek=_DEK,
         idle_minutes=1,
-        opened_at=_OPENED_AT - timedelta(days=1),
+        opened_at=_opened_at,
+        idle_deadline=_opened_at + timedelta(minutes=1),
+        absolute_deadline=_opened_at + timedelta(minutes=240),
     )
 
     with activate_session(session), pytest.raises(BucketLockedError) as exc_info:
@@ -102,12 +81,13 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
     forces a broad fallback dispose; the close is a clean bucket-scoped
     disposal that seals the session and leaks no storage-root path.
     """
-    session = BucketSession.open(
+    session = BucketSession.open_resumed(
         bucket_id="explicit-route",
-        kek=_KEK,
         dek=_DEK,
         idle_minutes=15,
         opened_at=_OPENED_AT,
+        idle_deadline=_OPENED_AT + timedelta(minutes=15),
+        absolute_deadline=_OPENED_AT + timedelta(minutes=240),
     )
     explicit_db = tmp_path / "explicit.db"
 
@@ -128,7 +108,6 @@ def _settings_with_store(tmp_path: Path) -> Settings:
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "state",
         cadrumo_secret_store_dir=tmp_path / "fallback-store",
-        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
     ) as settings:
         return settings
 

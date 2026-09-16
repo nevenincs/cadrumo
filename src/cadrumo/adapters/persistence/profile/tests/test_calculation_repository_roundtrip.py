@@ -24,6 +24,7 @@ from __future__ import annotations
 import json as _json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -40,6 +41,7 @@ from .....domain.calculations.registry.formula_runtime import RegistryCalculatio
 from .....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from .....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from .....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
@@ -72,15 +74,30 @@ _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01
 _CASILLA_12: CasillaId = validated_casilla_id("casilla-12", surface="_CASILLA_12")
 _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="_DECL_PERIODO_CASILLA")
 _DECL_PERIODO_CODE = "1T"
-_REGISTRY_SNAPSHOT_REF = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
-_WORK_UNIT_PERIOD = Period.from_year_and_code(_REGISTRY_SNAPSHOT_REF.modelo_year, _REGISTRY_SNAPSHOT_REF.period)
-_WORK_UNIT_ID = derive_work_unit_id(
-    bucket_id=_BUCKET_ID,
-    modelo=_REGISTRY_SNAPSHOT_REF.modelo,
-    filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
-    period=_WORK_UNIT_PERIOD,
-    revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
-)
+
+
+@cache
+def _registry_snapshot_ref() -> RegistrySnapshotRef:
+    # Compiled on first use, not at import: collection must stay cheap.
+    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
+
+
+@cache
+def _work_unit_period() -> Period:
+    ref = _registry_snapshot_ref()
+    return Period.from_year_and_code(ref.modelo_year, ref.period)
+
+
+@cache
+def _work_unit_id() -> str:
+    ref = _registry_snapshot_ref()
+    return derive_work_unit_id(
+        bucket_id=_BUCKET_ID,
+        modelo=ref.modelo,
+        filing_year=ref.modelo_year,
+        period=_work_unit_period(),
+        revision_id=ref.revision_id,
+    )
 
 
 def _hex(seed: str) -> str:
@@ -92,12 +109,12 @@ def _hex(seed: str) -> str:
 
 def _parent_work_unit() -> WorkUnit:
     return WorkUnit(
-        work_unit_id=_WORK_UNIT_ID,
+        work_unit_id=_work_unit_id(),
         bucket_id=_BUCKET_ID,
-        modelo=_REGISTRY_SNAPSHOT_REF.modelo,
-        filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
-        period=_WORK_UNIT_PERIOD,
-        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        modelo=_registry_snapshot_ref().modelo,
+        filing_year=_registry_snapshot_ref().modelo_year,
+        period=_work_unit_period(),
+        revision_id=_registry_snapshot_ref().revision_id,
         name="303-2026-1T",
         created_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
         updated_at=datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC),
@@ -159,7 +176,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
     entries carrying real ``legal_refs`` / ``source_refs`` provenance.
     """
 
-    work_unit_id = _WORK_UNIT_ID
+    work_unit_id = _work_unit_id()
     created_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     verified_at = created_at + timedelta(hours=3)
 
@@ -228,7 +245,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+        registry_snapshot_ref=_registry_snapshot_ref(),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
@@ -449,7 +466,7 @@ def test_calculation_revision_catalogue_dropped_registry_snapshot_ref_refuses_at
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
         ((_revision_id, persisted_revision),) = envelope["payload"]["revisions"].items()
-        assert persisted_revision["registry_snapshot_ref"] == _REGISTRY_SNAPSHOT_REF.model_dump(mode="json")
+        assert persisted_revision["registry_snapshot_ref"] == _registry_snapshot_ref().model_dump(mode="json")
         del persisted_revision["registry_snapshot_ref"]
         profile.repository.save(
             namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
@@ -483,7 +500,7 @@ def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
         ((_revision_id, persisted_revision),) = envelope["payload"]["revisions"].items()
-        mismatched_ref = _REGISTRY_SNAPSHOT_REF.model_copy(update={"revision_id": "wrong-parent-revision"})
+        mismatched_ref = _registry_snapshot_ref().model_copy(update={"revision_id": "wrong-parent-revision"})
         persisted_revision["registry_snapshot_ref"] = mismatched_ref.model_dump(mode="json")
         profile.repository.save(
             namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
@@ -499,7 +516,7 @@ def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_
 
     assert raised.value.context == {
         "reason": "parent_registry_coordinate_mismatch",
-        "work_unit_id": _WORK_UNIT_ID,
+        "work_unit_id": _work_unit_id(),
     }
 
 

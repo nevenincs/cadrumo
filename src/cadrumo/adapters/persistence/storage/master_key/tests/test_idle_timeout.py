@@ -17,12 +17,13 @@ _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 
 
 def _open_session(idle_minutes: int = 15) -> BucketSession:
-    return BucketSession.open(
+    return BucketSession.open_resumed(
         bucket_id=_BUCKET_ID,
-        kek=bytes(range(32)),
         dek=bytes(range(32, 64)),
         idle_minutes=idle_minutes,
         opened_at=_NOW,
+        idle_deadline=_NOW + timedelta(minutes=idle_minutes),
+        absolute_deadline=_NOW + timedelta(minutes=240),
     )
 
 

@@ -296,17 +296,25 @@ def _build_workspace_summary(
     )
 
 
-def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
+def _taxpayer_profile_from_state(
+    state: WorkflowState,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> TaxpayerProfile:
     """Project the active profile record into an :class:`TaxpayerProfile`.
 
     Delegates to :func:`~cadrumo.application.user_profile.projection_for_taxpayer`,
     the single fact-to-taxpayer projection authority, so the deadline engine
-    receives exactly the profile shape every other surface computes.
+    receives exactly the profile shape every other surface computes. A live
+    record projects against the schema pinned by ``operation``; an absent one
+    projects an empty mapping, which carries no facts to decode.
     """
     from .user_profile.projections import projection_for_taxpayer
 
     record = state.active_profile_record()
-    return projection_for_taxpayer(record if record is not None else {})
+    if record is None:
+        return projection_for_taxpayer({})
+    return projection_for_taxpayer(record, schema=operation.profile_schema())
 
 
 def build_pending_obligations(
@@ -1301,7 +1309,7 @@ def _assemble_operator_state_projection(
 
     if has_active_profile and include_pending_obligations:
         pending_obligations = build_pending_obligations(
-            _taxpayer_profile_from_state(resolved_state),
+            _taxpayer_profile_from_state(resolved_state, operation=operation),
             today=reference_today,
         )
     else:

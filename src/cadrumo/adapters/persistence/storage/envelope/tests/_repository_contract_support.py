@@ -32,7 +32,7 @@ each check against a real SQLite-backed
 :class:`SecureObjectRepository` wired through the
 :class:`SecureBoundRepository` under test. Mocks are forbidden by the
 roundtrip discipline; the suite uses
-:class:`EphemeralMasterKeyProvider` and a real
+:class:`EphemeralBucketSession` and a real
 :func:`create_engine_from_settings` engine.
 
 The contract function returns the number of checks executed so the
@@ -59,7 +59,7 @@ from ......core.config import override_settings
 from ...errors import ClassificationError
 from ...sql.engine import create_engine_from_settings, dispose_engine
 from ...sql.orm import Base, SecureObjectRow
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..contract import Envelope
 from ..secure_bound_repository import SecureBoundRepository
 
@@ -350,7 +350,7 @@ def assert_secure_repository_contract[T: BaseModel](
          through ``override_settings`` to a fresh SQLite file under ``tmp_path``.
       3. Builds a real engine for that URL and materialises the ORM
          schema.
-      4. Activates a real :class:`EphemeralMasterKeyProvider`.
+      4. Activates a real :class:`EphemeralBucketSession`.
       5. Invokes the check, which constructs the repository via
          ``case.repository_factory``; the repository's internal
          :class:`SecureObjectRepository` lookup resolves to the
@@ -370,19 +370,19 @@ def assert_secure_repository_contract[T: BaseModel](
     erased = cast(SecureRepositoryContractCase[BaseModel], case)
     for index, (label, check) in enumerate(_PARAM_CHECKS):
         db_path = tmp_path / f"contract-{index:02d}-{label}.db"
-        provider = EphemeralMasterKeyProvider()
+        provider = EphemeralBucketSession()
         with provider, _activated_engine(db_path):
             check(erased)
         executed += 1
 
     db_path = tmp_path / "contract-encrypted-audit-data.db"
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _activated_engine(db_path):
         _database_payload_is_encrypted_audit_data(erased, db_path)
     executed += 1
 
     db_path = tmp_path / "contract-anti-tautology.db"
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _activated_engine(db_path) as engine:
         _boundary_catches_simulated_field_drop_via_corrupted_payload(
             erased,

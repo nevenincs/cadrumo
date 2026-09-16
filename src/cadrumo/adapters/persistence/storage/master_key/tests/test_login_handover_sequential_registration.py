@@ -57,7 +57,6 @@ def _register(label: str, password: str) -> str:
     """Create one profile through the production credential door."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     return register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=password,
         profile_create_context=_profile_create_context_for_test,

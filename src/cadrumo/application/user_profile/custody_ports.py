@@ -14,7 +14,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, Protocol, Self, cast, runtime_checkable
+from typing import TYPE_CHECKING, NoReturn, Protocol, Self, cast
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -32,7 +32,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import CarriedSecureObject
     from ...domain.user_profile.values import UserProfileSnapshot
-    from .recovery_contracts import ProfileCustodyRecoveryArtifactWarning
 
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
@@ -702,8 +701,8 @@ class ProfileRecoveryKeyPort(Protocol):
     """Wipeable recovery secret held across the enrollment handoff."""
 
     @property
-    def mnemonic(self) -> str:
-        """Return the exact 24-word recovery mnemonic."""
+    def code(self) -> str:
+        """Return the canonical grouped recovery code."""
         ...
 
     def wipe(self) -> None:
@@ -721,7 +720,7 @@ class ProfileRecoveryKeyPort(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class ProfileCustodyRecoveryEnrollmentMaterial:
-    """Creation-only recovery wrapper and the minted secret that opens it.
+    """A minted recovery wrapper and the secret that opens it.
 
     The secret is handed back in its wipeable container rather than as a
     ``str``, because the operator holds it across an interactive
@@ -753,11 +752,11 @@ class ProfileCustodyUnlockPort(Protocol):
 
 
 class ProfileCustodyRecoveryUnlockPort(Protocol):
-    """A DEK accepted through the explicit recovery-artifact door."""
+    """A DEK accepted through the explicit recovery-code door."""
 
     @property
     def profile_id(self) -> UUID:
-        """The profile whose recovery artifact produced this key."""
+        """The profile whose recovery wrapper produced this key."""
         ...
 
     @property
@@ -776,42 +775,27 @@ class ProfileCustodyRecoveryUnlockPort(Protocol):
         ...
 
 
-class ProfileCustodyRecoveryArtifactPort(Protocol):
-    """Non-secret artifact identity fields projected after export."""
+class ProfileCustodyRecoveryMaterialPort(Protocol):
+    """The committed password custody of one capsule beside its enrolled recovery wrapper."""
 
     @property
-    def profile_id(self) -> UUID:
-        """The profile named by the artifact."""
+    def capsule_path(self) -> Path:
+        """The committed capsule directory the material was read from."""
         ...
 
     @property
-    def dek_epoch(self) -> str:
-        """The DEK epoch named by the artifact."""
+    def password_envelope(self) -> ProfileCustodyEnvelopePort:
+        """The committed password envelope, whose DEK epoch the wrapper must share."""
         ...
 
     @property
-    def self_digest(self) -> str:
-        """The artifact's canonical self-digest."""
-        ...
-
-
-@runtime_checkable
-class ProfileCustodyRecoveryArtifactExportReceiptPort(Protocol):
-    """Durable artifact export result consumed by application policy."""
-
-    @property
-    def artifact(self) -> ProfileCustodyRecoveryArtifactPort:
-        """The exported artifact's non-secret identity."""
+    def sentinel(self) -> ProfileCustodySentinelPort:
+        """The committed DEK sentinel the recovery proof is checked against."""
         ...
 
     @property
-    def target(self) -> Path:
-        """The exact path durably created by the export."""
-        ...
-
-    @property
-    def warnings(self) -> tuple[ProfileCustodyRecoveryArtifactWarning, ...]:
-        """The mandatory operator warnings carried by every export."""
+    def recovery_envelope(self) -> ProfileCustodyRecoveryEnvelopePort:
+        """The enrolled recovery wrapper."""
         ...
 
 
@@ -1049,7 +1033,6 @@ class ProfileCustodyPort(Protocol):
         sentinel: ProfileCustodySentinelPort,
         data_files: Mapping[str, bytes],
         label_record: ProfileCustodyCapsuleLabelPort,
-        recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None,
         root: Path,
         published_at: datetime,
         stage_initializer: Callable[[Path], None] | None,
@@ -1180,28 +1163,42 @@ class ProfileCustodyPort(Protocol):
         """Mint a recovery wrapper and its wipeable secret."""
         ...
 
-    def export_recovery_artifact(
+    def install_recovery_envelope(
         self,
-        recovery_envelope: ProfileCustodyRecoveryEnvelopePort,
         *,
-        current_password: str,
-        password_envelope: ProfileCustodyEnvelopePort,
-        sentinel: ProfileCustodySentinelPort,
-        target: Path,
-    ) -> ProfileCustodyRecoveryArtifactExportReceiptPort:
-        """Prove and durably export one portable recovery artifact."""
+        profile_id: UUID,
+        envelope: ProfileCustodyRecoveryEnvelopePort,
+        root: Path,
+    ) -> None:
+        """Exclusively install one recovery wrapper into a committed capsule."""
         ...
 
-    def prove_recovery_artifact(
+    def remove_recovery_envelope(
         self,
-        source: Path,
+        *,
+        profile_id: UUID,
+        current: ProfileCustodyRecoveryEnvelopePort,
+        root: Path,
+    ) -> None:
+        """Compare-and-remove the enrolled recovery wrapper of a committed capsule."""
+        ...
+
+    def load_recovery_material(
+        self,
+        profile_id: UUID,
+        *,
+        root: Path | None = None,
+    ) -> ProfileCustodyRecoveryMaterialPort:
+        """Load the enrolled recovery wrapper beside its committed password custody."""
+        ...
+
+    def unlock_recovery(
+        self,
+        material: ProfileCustodyRecoveryMaterialPort,
         *,
         recovery_secret: str,
-        expected_profile_id: UUID,
-        expected_dek_epoch: str,
-        sentinel: ProfileCustodySentinelPort,
     ) -> ProfileCustodyRecoveryUnlockPort:
-        """Read and prove one named recovery artifact."""
+        """Prove one enrolled recovery wrapper and return the authenticated DEK."""
         ...
 
     def verify_dek_against_sentinel(
@@ -1259,10 +1256,6 @@ class ProfileCustodyPort(Protocol):
 
     def refuse_login_without_password_channel(self) -> NoReturn:
         """Raise the canonical refusal for an absent password channel."""
-        ...
-
-    def is_authentication_failure(self, error: BaseException) -> bool:
-        """Recognise a key-provider authentication failure."""
         ...
 
     def is_keyring_unavailable(self, error: BaseException) -> bool:
@@ -1384,13 +1377,6 @@ def create_profile_custody_registration_material(
     )
 
 
-"""Recovery-artifact warnings remain a closed value set for exhaustive rendering.
-
-Passing their defining type through the custody port prevents operator surfaces
-from flattening an exhaustively handled warning into an unchecked string.
-"""
-
-
 def create_profile_recovery_enrollment_material(
     *,
     profile_id: UUID,
@@ -1398,14 +1384,12 @@ def create_profile_recovery_enrollment_material(
     dek_epoch: str,
     salt: bytes,
 ) -> ProfileCustodyRecoveryEnrollmentMaterial:
-    """Mint the mandatory creation wrapper and its secret at the custody boundary.
+    """Mint a recovery wrapper and its code at the custody boundary.
 
-    The secret is a 24-word BIP-39 mnemonic over 256 bits of entropy rather
-    than an operator-typed string. That choice is what makes the wrapper
-    safe to export: an exported artifact's only remaining barrier is the KDF
-    cost applied to whatever entropy the secret carries, and a human-chosen
-    string does not survive offline guessing at any cost this machine can
-    afford to spend on every login.
+    The secret is a minted 150-bit recovery code rather than an operator-typed
+    string: the wrapper's only barrier once its bytes are read is the KDF cost
+    applied to the secret's entropy, and a human-chosen string does not
+    survive offline guessing at any cost a login can afford to spend.
 
     The recovery wrapper is calibrated against its OWN salt, independent of
     the password envelope's. The two wrappers cover the same DEK through
@@ -1420,56 +1404,47 @@ def create_profile_recovery_enrollment_material(
     )
 
 
-def export_profile_recovery_artifact(
-    recovery_envelope: ProfileCustodyRecoveryEnvelopePort,
+def install_profile_recovery_envelope(
     *,
-    current_password: str,
-    password_envelope: ProfileCustodyEnvelopePort,
-    sentinel: ProfileCustodySentinelPort,
-    target: Path,
-) -> ProfileCustodyRecoveryArtifactExportReceiptPort:
-    """Write one durable external recovery artifact through the custody owner.
-
-    The destination guard, the current-password proof, and the exclusive
-    create all live in the custody module that owns the artifact format;
-    this boundary only narrows the application's ports back to the
-    substrate records that module requires.
-    """
-    return profile_custody_port().export_recovery_artifact(
-        recovery_envelope,
-        current_password=current_password,
-        password_envelope=password_envelope,
-        sentinel=sentinel,
-        target=target,
-    )
+    profile_id: UUID,
+    envelope: ProfileCustodyRecoveryEnvelopePort,
+    root: Path,
+) -> None:
+    """Exclusively install a minted recovery wrapper into a committed capsule."""
+    profile_custody_port().install_recovery_envelope(profile_id=profile_id, envelope=envelope, root=root)
 
 
-def prove_profile_recovery_artifact(
-    source: Path,
+def remove_profile_recovery_envelope(
+    *,
+    profile_id: UUID,
+    current: ProfileCustodyRecoveryEnvelopePort,
+    root: Path,
+) -> None:
+    """Compare-and-remove the enrolled recovery wrapper through its owner."""
+    profile_custody_port().remove_recovery_envelope(profile_id=profile_id, current=current, root=root)
+
+
+def load_profile_custody_recovery_material(
+    profile_id: UUID,
+    *,
+    root: Path | None = None,
+) -> ProfileCustodyRecoveryMaterialPort:
+    """Load the enrolled recovery wrapper beside committed password custody."""
+    return profile_custody_port().load_recovery_material(profile_id, root=root)
+
+
+def unlock_profile_custody_recovery(
+    material: ProfileCustodyRecoveryMaterialPort,
     *,
     recovery_secret: str,
-    expected_profile_id: UUID,
-    expected_dek_epoch: str,
-    sentinel: ProfileCustodySentinelPort,
 ) -> ProfileCustodyRecoveryUnlockPort:
-    """Read one artifact and prove it against its named identity and sentinel.
+    """Prove the enrolled recovery wrapper against its committed sentinel.
 
-    Import and unlock are kept as one boundary call because a parsed but
-    unproven artifact is not a useful application value: it carries an
-    identity claim nothing has checked. Both halves refuse an artifact whose
-    UUID or DEK epoch differs from the target named here, so a substituted
-    artifact is refused twice before any key material exists.
-
-    This installs nothing. Proving an artifact does not enroll it, does not
-    overwrite committed recovery, and does not change any key schedule.
+    This installs nothing and changes no key schedule. It returns the DEK the
+    wrapper protects, proven against the capsule's own sentinel, for the one
+    door that consumes it: re-wrapping under a new passphrase.
     """
-    return profile_custody_port().prove_recovery_artifact(
-        source,
-        recovery_secret=recovery_secret,
-        expected_profile_id=expected_profile_id,
-        expected_dek_epoch=expected_dek_epoch,
-        sentinel=sentinel,
-    )
+    return profile_custody_port().unlock_recovery(material, recovery_secret=recovery_secret)
 
 
 def verify_profile_custody_dek_against_sentinel(
@@ -1493,7 +1468,7 @@ def verify_profile_custody_dek_against_sentinel(
 
 
 def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:
-    """Return where a creation-published capsule keeps its recovery wrapper."""
+    """Return where a committed capsule keeps its recovery wrapper when enrolled."""
     return profile_custody_port().recovery_envelope_path(capsule_path)
 
 
@@ -1624,10 +1599,9 @@ __all__ = [
     "ProfileCustodyPort",
     "ProfileCustodyRecordIntegrityError",
     "ProfileCustodyRecordSessionMaterial",
-    "ProfileCustodyRecoveryArtifactExportReceiptPort",
-    "ProfileCustodyRecoveryArtifactPort",
     "ProfileCustodyRecoveryEnrollmentMaterial",
     "ProfileCustodyRecoveryEnvelopePort",
+    "ProfileCustodyRecoveryMaterialPort",
     "ProfileCustodyRecoveryUnlockPort",
     "ProfileCustodyRegistrationMaterial",
     "ProfileCustodySecureObjectNamespace",
@@ -1656,7 +1630,8 @@ __all__ = [
     "default_profile_custody_local_record_store",
     "default_profile_record_crypto_port",
     "ensure_profile_custody_owner_root",
-    "export_profile_recovery_artifact",
+    "install_profile_recovery_envelope",
+    "load_profile_custody_recovery_material",
     "map_profile_authentication_proof_failure",
     "profile_custody_owner_root",
     "profile_custody_port",
@@ -1666,11 +1641,12 @@ __all__ = [
     "profile_custody_secure_object_repository",
     "profile_is_keyring_unavailable",
     "profile_is_persistence_failure",
-    "prove_profile_recovery_artifact",
     "read_profile_output_language_hint",
     "refuse_profile_login_without_password_channel",
+    "remove_profile_recovery_envelope",
     "replace_profile_custody_password_envelope",
     "unlock_profile_custody_password",
+    "unlock_profile_custody_recovery",
     "verify_profile_custody_dek_against_sentinel",
     "write_profile_output_language_hint",
 ]

@@ -24,7 +24,6 @@ so selector churn does not poison unrelated configuration reads.
 from __future__ import annotations
 
 import re
-import tomllib
 from enum import StrEnum
 from functools import cached_property, lru_cache
 from importlib.resources import files  # nosemgrep
@@ -35,6 +34,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .errors.hierarchy import CoreValidationError
 from .models import STRICT_FROZEN_CONFIG
+from .toml import load_toml, parse_toml
 from .type_guards import is_object_list
 
 #: ISO 4217 currency code for the Euro, used as the functional currency throughout AEAT.
@@ -533,7 +533,7 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
     """
     if path is not None:
         with path.open("rb") as handle:
-            payload = tomllib.load(handle)
+            payload = load_toml(handle)
     else:
-        payload = tomllib.loads(files(__package__).joinpath("external_constants.toml").read_text(encoding="utf-8"))
+        payload = parse_toml(files(__package__).joinpath("external_constants.toml").read_text(encoding="utf-8"))
     return ExternalConstants.model_validate(payload)

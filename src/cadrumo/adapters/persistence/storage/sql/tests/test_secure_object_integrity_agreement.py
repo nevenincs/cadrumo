@@ -3,7 +3,7 @@
 Quarantine, namespace counting, and per-row enumeration differ in what they DO
 with an undecryptable row -- move it, count it, describe it -- but must agree
 exactly on WHICH rows those are. These tests pin that agreement over a real
-SQLite database, a real ``EphemeralMasterKeyProvider``, real AEAD, and a
+SQLite database, a real ``EphemeralBucketSession``, real AEAD, and a
 genuinely undecryptable row produced by corrupting stored ciphertext.
 
 What these tests prove, stated honestly: they lock the three surfaces to ONE
@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ......core.classification.policies import SensitivityClass
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ._secure_objects_support import (
     _repo_at,
 )
@@ -108,7 +108,7 @@ def test_count_and_enumeration_surfaces_agree(tmp_path: Path) -> None:
 
     DISCRIMINATING: fails when the shared decryptability probe changes.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "agreement-count.db"
     with provider:
         _seed_mixed_namespace(db_path)
@@ -135,7 +135,7 @@ def test_quarantine_moves_exactly_the_rows_the_probes_flag(tmp_path: Path) -> No
     DISCRIMINATING: fails when the shared decryptability probe changes, and is
     the assertion that ties the MUTATING surface to the read-only ones.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "agreement-quarantine.db"
     with provider:
         _seed_mixed_namespace(db_path)
@@ -168,7 +168,7 @@ def test_quarantine_preserves_the_probed_bytes(tmp_path: Path) -> None:
     returned, so a normalisation change cannot make the archived ciphertext
     differ from the ciphertext whose decryption failed.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "agreement-bytes.db"
     with provider:
         _seed_mixed_namespace(db_path)
@@ -201,7 +201,7 @@ def test_all_rows_readable_reports_clean_across_surfaces(tmp_path: Path) -> None
     probe, because a broken decryptability decision turns these clean rows
     unreadable on every surface at once.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "agreement-clean.db"
     with provider:
         with _repo_at(db_path) as repo:

@@ -11,7 +11,7 @@ deletion from the on-disk envelope must surface as either a
 :class:`pydantic.ValidationError` or strict inequality.
 
 No mocks; the contract spins up a real SQLite engine via
-:class:`EphemeralMasterKeyProvider`, exactly as the production
+:class:`EphemeralBucketSession`, exactly as the production
 secure-storage roundtrip tests do.
 """
 

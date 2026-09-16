@@ -241,34 +241,6 @@ class Settings(CadrumoLlmSettings):
             "reads the computed value."
         ),
     )
-    cadrumo_secret_store_backend: _config_support.SecretStoreBackend = Field(
-        default=_config_support.SecretStoreBackend.AUTO,
-        description=(
-            "Whether at-rest material is protected by real custody. "
-            "auto = the profile's own password custody, which is the only "
-            "secured route and needs no further configuration. "
-            "unsecured = testing-only mode with a published deterministic "
-            "key; requires cadrumo_allow_unencrypted=true and refuses real NIFs."
-        ),
-    )
-    # Typed as ``str`` (not ``bool``) to preserve the strict-"1"-only
-    # kill-switch semantic. Pydantic's bool coercion would widen the
-    # opt-in surface to accept "true"/"yes"/"on" — a softer gate than
-    # the safety-critical "no confidentiality" surface allows. The
-    # consumer in master_key checks ``settings.cadrumo_allow_unencrypted
-    # == "1"`` rather than truth-testing.
-    cadrumo_allow_unencrypted: str = Field(
-        default="",
-        description=(
-            "Hostile-named opt-out gate for the unsecured backend. Must be "
-            "set to the literal '1' (env var: CADRUMO_ALLOW_UNENCRYPTED=1) to "
-            "use cadrumo_secret_store_backend=unsecured. The unsecured backend "
-            "is intended for testing / educational / throwaway scenarios "
-            "only and provides ZERO confidentiality. The substrate refuses "
-            "to load an operator profile that carries a real NIF/NIE/CIF "
-            "while running in unsecured mode."
-        ),
-    )
     cadrumo_secret_store_dir: Path = Field(
         default=Path("secrets"),
         description="Directory for the encrypted secret-store master-key file and ciphertext records",

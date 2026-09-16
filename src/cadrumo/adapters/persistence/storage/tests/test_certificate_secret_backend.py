@@ -2,7 +2,7 @@
 
 Exercises :mod:`~adapters.persistence.storage.certificate_secret_backend` against a
 real encrypted :class:`~adapters.persistence.storage.SecretStore` (an
-:class:`~cadrumo.adapters.persistence.storage.tests.ephemeral_master_key.EphemeralMasterKeyProvider`
+:class:`~cadrumo.adapters.persistence.storage.tests.ephemeral_bucket_session.EphemeralBucketSession`
 under a real :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
 — no mocks or fakes) and the operator verbs
 (:func:`~application.auth.set_operator_certificate_source_secret`,
@@ -59,7 +59,7 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _certificate_indexed_authority_for_test,
 )
 
-from .ephemeral_master_key import EphemeralMasterKeyProvider
+from .ephemeral_bucket_session import EphemeralBucketSession
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -100,10 +100,11 @@ Mirrors the sibling ``test_certificate_sources_check.py`` fixture.
 
 @pytest.fixture
 def secret_store(tmp_path: Path) -> Iterator[SecretStore]:
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "store-root", master_key_provider=provider)
-    store = SecretStore(store_dir=tmp_path / "fallback-store", blob_store=blob_store, master_key_provider=provider)
-    yield store
+    with EphemeralBucketSession():
+        yield SecretStore(
+            store_dir=tmp_path / "fallback-store",
+            blob_store=EncryptedBlobStore(root_dir=tmp_path / "store-root"),
+        )
 
 
 def test_secure_storage_backend_roundtrips_a_secret(secret_store: SecretStore) -> None:

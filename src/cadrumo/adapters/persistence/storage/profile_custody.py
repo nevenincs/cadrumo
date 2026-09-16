@@ -29,9 +29,9 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodyPasswordProofMaterialPort,
     ProfileCustodyPort,
     ProfileCustodyRecordIntegrityError,
-    ProfileCustodyRecoveryArtifactExportReceiptPort,
     ProfileCustodyRecoveryEnrollmentMaterial,
     ProfileCustodyRecoveryEnvelopePort,
+    ProfileCustodyRecoveryMaterialPort,
     ProfileCustodyRecoveryUnlockPort,
     ProfileCustodyRegistrationMaterial,
     ProfileCustodySecureObjectNamespace,
@@ -77,18 +77,22 @@ from .bucket.sealed_archive_reader import read_sealed_archive
 from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from .custody.capsule import (
+    ProfileCustodyRecoveryMaterial,
+    install_committed_profile_custody_recovery_envelope,
     inventory_committed_profile_custody_capsule,
     inventory_staged_profile_custody_capsule,
     list_current_profile_custody_capsule_ids,
     list_current_profile_custody_capsule_summary_witnesses,
     load_committed_profile_custody_label_record,
     load_committed_profile_password_material,
+    load_committed_profile_recovery_material,
     load_staged_profile_custody_label_record,
     profile_custody_deletion_path,
     profile_custody_staging_path,
     publish_profile_custody_capsule,
     publish_staged_profile_custody_capsule,
     recognize_current_profile_capsule,
+    remove_committed_profile_custody_recovery_envelope,
     remove_profile_custody_deletion_tombstone,
     rename_profile_custody_capsule_for_deletion,
     replace_committed_profile_custody_envelope,
@@ -124,11 +128,7 @@ from .custody.recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
     ProfileCustodyRecoveryEnvelope,
     create_profile_custody_recovery_envelope,
-)
-from .custody.recovery_artifact import (
-    export_profile_custody_recovery_artifact,
-    import_profile_custody_recovery_artifact,
-    unlock_imported_profile_custody_recovery_artifact,
+    unlock_profile_custody_recovery_envelope,
 )
 from .custody.sentinel import (
     PROFILE_CUSTODY_SENTINEL_FILENAME,
@@ -144,8 +144,8 @@ from .errors import (
     ClassificationError,
     EnvelopeVersionError,
     KeyringUnavailableError,
-    MasterKeyMaterialMissingError,
     PersistenceError,
+    StorageValidationError,
 )
 from .master_key.active_session import activate_session, current_active_bucket_session, session_serves_bucket
 from .master_key.bucket_session import BucketSession
@@ -160,7 +160,7 @@ from .master_key.kdf_params import (
     KdfParams,
 )
 from .master_key.master_key_derivation import derive_kek_with_params
-from .recovery_key import generate_recovery_key
+from .recovery_key import canonical_recovery_code, generate_recovery_key
 from .runtime_repository import (
     secure_object_repository_for_bucket,
     secure_object_repository_for_staged_bucket,
@@ -180,12 +180,6 @@ def _capsule_relative(category: StorageCategory) -> Path:
     still the taxonomy's to declare, not this module's to spell.
     """
     return storage_location(category).relative_path()
-
-
-def _recovery_artifact_receipt(value: object) -> ProfileCustodyRecoveryArtifactExportReceiptPort:
-    if not isinstance(value, ProfileCustodyRecoveryArtifactExportReceiptPort):
-        raise TypeError("recovery artifact receipt does not satisfy the application custody boundary")
-    return value
 
 
 def _substrate_handle[T](value: object, expected: type[T], subject: str) -> T:
@@ -641,7 +635,6 @@ class _PersistenceProfileCustody:
         sentinel: ProfileCustodySentinelPort,
         data_files: Mapping[str, bytes],
         label_record: ProfileCustodyCapsuleLabelPort,
-        recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None,
         root: Path,
         published_at: datetime,
         stage_initializer: Callable[[Path], None] | None,
@@ -660,15 +653,6 @@ class _PersistenceProfileCustody:
                 **data_files,
                 PROFILE_CUSTODY_LABEL_FILENAME: label_record.canonical_json_bytes(),
             },
-            recovery_envelope=(
-                None
-                if recovery_envelope is None
-                else _substrate_handle(
-                    recovery_envelope,
-                    ProfileCustodyRecoveryEnvelope,
-                    "recovery envelope",
-                )
-            ),
             root=root,
             published_at=published_at,
             stage_only=True,
@@ -851,7 +835,7 @@ class _PersistenceProfileCustody:
         try:
             envelope = create_profile_custody_recovery_envelope(
                 profile_id=profile_id,
-                recovery_secret=recovery_key.mnemonic,
+                recovery_secret=recovery_key.code,
                 dek=dek,
                 dek_epoch=dek_epoch,
                 kdf=calibration.parameters,
@@ -861,46 +845,61 @@ class _PersistenceProfileCustody:
             raise
         return ProfileCustodyRecoveryEnrollmentMaterial(envelope=envelope, recovery_key=recovery_key)
 
-    def export_recovery_artifact(
+    def install_recovery_envelope(
         self,
-        recovery_envelope: ProfileCustodyRecoveryEnvelopePort,
         *,
-        current_password: str,
-        password_envelope: ProfileCustodyEnvelopePort,
-        sentinel: ProfileCustodySentinelPort,
-        target: Path,
-    ) -> ProfileCustodyRecoveryArtifactExportReceiptPort:
-        return _recovery_artifact_receipt(
-            export_profile_custody_recovery_artifact(
-                _substrate_handle(recovery_envelope, ProfileCustodyRecoveryEnvelope, "recovery envelope"),
-                current_password=current_password,
-                password_envelope=_substrate_handle(password_envelope, ProfileCustodyEnvelope, "password envelope"),
-                sentinel=_substrate_handle(sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
-                target=target,
-            )
+        profile_id: UUID,
+        envelope: ProfileCustodyRecoveryEnvelopePort,
+        root: Path,
+    ) -> None:
+        install_committed_profile_custody_recovery_envelope(
+            profile_id,
+            _substrate_handle(envelope, ProfileCustodyRecoveryEnvelope, "recovery envelope").canonical_json_bytes(),
+            root=root,
         )
 
-    def prove_recovery_artifact(
+    def remove_recovery_envelope(
         self,
-        source: Path,
+        *,
+        profile_id: UUID,
+        current: ProfileCustodyRecoveryEnvelopePort,
+        root: Path,
+    ) -> None:
+        remove_committed_profile_custody_recovery_envelope(
+            profile_id,
+            expected_sha256=prefixed_digest(
+                _substrate_handle(current, ProfileCustodyRecoveryEnvelope, "recovery envelope").canonical_json_bytes()
+            ),
+            root=root,
+        )
+
+    def load_recovery_material(
+        self,
+        profile_id: UUID,
+        *,
+        root: Path | None = None,
+    ) -> ProfileCustodyRecoveryMaterialPort:
+        return load_committed_profile_recovery_material(profile_id, root=root)
+
+    def unlock_recovery(
+        self,
+        material: ProfileCustodyRecoveryMaterialPort,
         *,
         recovery_secret: str,
-        expected_profile_id: UUID,
-        expected_dek_epoch: str,
-        sentinel: ProfileCustodySentinelPort,
     ) -> ProfileCustodyRecoveryUnlockPort:
-        substrate_sentinel = _substrate_handle(sentinel, ProfileCustodySentinelRecord, "DEK sentinel")
-        artifact = import_profile_custody_recovery_artifact(
-            source,
-            expected_profile_id=expected_profile_id,
-            expected_dek_epoch=expected_dek_epoch,
-        )
-        return unlock_imported_profile_custody_recovery_artifact(
-            artifact,
-            recovery_secret,
-            sentinel=substrate_sentinel,
-            expected_profile_id=expected_profile_id,
-            expected_dek_epoch=expected_dek_epoch,
+        substrate = _substrate_handle(material, ProfileCustodyRecoveryMaterial, "recovery material")
+        try:
+            canonical = canonical_recovery_code(recovery_secret)
+        except StorageValidationError as exc:
+            # A value that cannot be a recovery code is the same refusal as a
+            # wrong one: the caller learns nothing about which it was.
+            raise ProfileCustodyRecoverySecretError("profile recovery code is not in a recognisable form") from exc
+        return unlock_profile_custody_recovery_envelope(
+            substrate.recovery_envelope,
+            canonical,
+            sentinel=substrate.sentinel,
+            expected_profile_id=substrate.password_envelope.profile_id,
+            expected_dek_epoch=substrate.password_envelope.dek_epoch,
         )
 
     def verify_dek_against_sentinel(
@@ -964,16 +963,13 @@ class _PersistenceProfileCustody:
     ) -> bool:
         expected = (
             ProfileCustodyRecoverySecretError
-            if operation is ProfilePasswordProofOperation.RECOVERY_RESTORE
+            if operation is ProfilePasswordProofOperation.RECOVERY_RESET
             else ProfileCustodyPasswordError
         )
         return isinstance(error, expected)
 
     def refuse_login_without_password_channel(self) -> NoReturn:
         raise ProfileCustodyPasswordError("profile login requires an explicit password channel")
-
-    def is_authentication_failure(self, error: BaseException) -> bool:
-        return isinstance(error, (KeyringUnavailableError, MasterKeyMaterialMissingError))
 
     def is_keyring_unavailable(self, error: BaseException) -> bool:
         return isinstance(error, KeyringUnavailableError)

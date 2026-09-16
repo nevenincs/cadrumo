@@ -122,7 +122,7 @@ def test_cadrumo_error_envelope_is_well_formed_in_json_mode() -> None:
     stderr_payload = result.stderr if hasattr(result, "stderr") else result.output
     document = json.loads(stderr_payload)
     error = document["error"]
-    assert document["command"] == "config.profile.show"
+    assert document["command"] == "config.profile.view"
     assert error["message"] == tr("cli.config.profile.unknown_profile", name="no-such-profile")
     assert "ValueError" not in error["message"]
     assert "suggestion" not in error
@@ -368,7 +368,7 @@ def test_error_envelope_carries_the_active_command_identifier() -> None:
     bad_show = json.loads(
         invoke_cached_cli(["--format", "json", "config", "profile", "view", "no-such-profile"]).stderr,
     )
-    assert bad_show["command"] == "config.profile.show"
+    assert bad_show["command"] == "config.profile.view"
 
 
 def test_pre_resolution_error_envelope_command_stays_null() -> None:

@@ -64,7 +64,6 @@ def test_bucket_created_through_the_sanctioned_door_can_read_records(tmp_path: P
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -103,7 +102,6 @@ def test_the_same_reads_refuse_before_authentication(tmp_path: Path) -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -130,7 +128,6 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,

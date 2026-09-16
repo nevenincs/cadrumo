@@ -318,16 +318,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.google.errors.GoogleAuthUnsecuredModeRefusedError",
-        ErrorCode(
-            code="REFUSED_GOOGLE_UNSECURED_MODE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_google_unsecured_mode",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.outbound.google.errors.GoogleAuthKeychainLockedError",
         ErrorCode(
             code="LOCKED_GOOGLE_KEYCHAIN",
@@ -508,16 +498,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.persistence.storage.bucket.errors.NoActiveBucketError",
-        ErrorCode(
-            code="REFUSED_STORAGE_BUCKET_NO_ACTIVE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_storage_bucket_no_active",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.persistence.storage.bucket.errors.BucketBusyError",
         ErrorCode(
             code="LOCKED_STORAGE_BUCKET_BUSY",
@@ -563,26 +543,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTEGRITY_STORAGE_BUCKET_VALIDATION",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_storage_bucket_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.persistence.storage.bucket.errors.RecoveryUnavailableError",
-        ErrorCode(
-            code="FAIL_STORAGE_BUCKET_RECOVERY_UNAVAILABLE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_storage_bucket_recovery_unavailable",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.persistence.storage.bucket.errors.RecoveryVerificationError",
-        ErrorCode(
-            code="AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_storage_bucket_recovery_verification",
             retryable=False,
             runbook_id=None,
         ),

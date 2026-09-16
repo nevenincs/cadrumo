@@ -12,7 +12,7 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_objects import SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -25,10 +25,10 @@ def _ephemeral_secure_repo_at(
     """Open ``db_path`` under a fresh, self-managed ephemeral key.
 
     This is intentionally distinct from :func:`_repo_at`: callers of the
-    latter already own an active :class:`EphemeralMasterKeyProvider`, while
+    latter already own an active :class:`EphemeralBucketSession`, while
     this helper owns the provider lifecycle for a fresh-key reopen.
     """
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         engine = bootstrap_sqlite_engine(db_path)
         try:
             yield engine, SecureObjectRepository(engine=engine)
@@ -64,7 +64,7 @@ def _repo_at(db_path: Path) -> Generator[SecureObjectRepository]:
 def _seed_under_key(
     *,
     db_path: Path,
-    provider: EphemeralMasterKeyProvider,
+    provider: EphemeralBucketSession,
     namespace: str,
     natural_key: str,
     payload: bytes,

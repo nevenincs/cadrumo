@@ -44,12 +44,12 @@ See Also:
 from __future__ import annotations
 
 import json
-import tomllib
 from pathlib import Path
 
 import pytest
 
 from ....core.resources.bundled_data import bundled_path
+from ....core.toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -75,7 +75,7 @@ def _facturae_codes() -> frozenset[str]:
 
 
 def _vocabulary() -> list[dict[str, object]]:
-    payload = tomllib.loads(Path(bundled_path("registry", "aeat", "iva", "country_names.toml")).read_text("utf-8"))
+    payload = parse_toml(Path(bundled_path("registry", "aeat", "iva", "country_names.toml")).read_text("utf-8"))
     raw_country = payload.get("country")
     assert isinstance(raw_country, list)
     rows: list[dict[str, object]] = []

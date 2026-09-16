@@ -119,14 +119,12 @@ class _ResumeProbeResult(TypedDict):
 def _register_two_profiles(storage_root: Path) -> tuple[str, str]:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     first = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label="Handover A",
         passphrase=_CREDENTIAL_A,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
     second = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label="Handover B",
         passphrase=_CREDENTIAL_B,
         profile_create_context=_profile_create_context_for_test,
@@ -1199,7 +1197,6 @@ def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tm
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Relogin",
             passphrase=_CREDENTIAL_A,
             profile_create_context=_profile_create_context_for_test,

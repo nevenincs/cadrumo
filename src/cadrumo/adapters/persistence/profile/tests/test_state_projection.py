@@ -67,7 +67,6 @@ from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.core.config import Settings, override_settings
-from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -123,7 +122,6 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
             override_settings(
                 cadrumo_local_storage_root=tmp_path,
                 cadrumo_active_profile=None,
-                cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
                 cadrumo_secret_passphrase=SecretStr(_OPERATOR_CREDENTIAL_INPUT),
             ),
         )
@@ -179,7 +177,6 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         profile_overrides.update(overrides)
 
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label="state projection operator",
         passphrase=_OPERATOR_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,

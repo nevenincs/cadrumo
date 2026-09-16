@@ -26,7 +26,6 @@ embedded digest is ever rewritten.
 from __future__ import annotations
 
 import json
-import secrets
 from pathlib import Path
 
 import pytest
@@ -34,9 +33,7 @@ import pytest
 from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......core.hashing import sha256_hex
-from ...crypto.aead import KEY_SIZE
 from ...errors import BlobIntegrityError
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..blob_store import BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -136,35 +133,6 @@ def test_a_substituted_embedded_digest_refuses_iteration(
 
     with pytest.raises(BlobIntegrityError):
         list(store.iter_manifests())
-
-
-@pytest.mark.parametrize("classification", _LAYOUTS)
-def test_rotation_refuses_the_substituted_manifest_without_rewriting(
-    store: EncryptedBlobStore,
-    classification: SensitivityClass,
-) -> None:
-    """Key rotation, which walks the same scan, refuses before rewriting.
-
-    Rotation re-writes every manifest it visits, so a substitution it did not
-    detect would be re-signed under the new key and made permanent.
-    """
-    reference_a, reference_b = _seed_two_blobs(store, classification)
-    _repoint_embedded_digest(
-        store,
-        at=reference_a.sha256_plaintext_hex,
-        to=reference_b.sha256_plaintext_hex,
-        size=len(_PAYLOAD_B),
-    )
-    path = _manifest_path(store, reference_a.sha256_plaintext_hex)
-    before = path.read_bytes()
-
-    with pytest.raises(BlobIntegrityError):
-        store.rotate_master_key(
-            old_master_key_provider=EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)),
-            new_master_key_provider=EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)),
-        )
-
-    assert path.read_bytes() == before
 
 
 def test_restoring_the_true_digest_restores_both_surfaces(store: EncryptedBlobStore) -> None:

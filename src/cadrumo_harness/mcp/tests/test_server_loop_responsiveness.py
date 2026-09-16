@@ -57,7 +57,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.application.user_profile.login_session import close_profile_session_artefacts
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
-from cadrumo.core.config_support import SecretStoreBackend
 
 from .._profile_secret_channel import clear_profile_secret, load_profile_secret_file
 from ..call_runtime import tier_for
@@ -66,7 +65,7 @@ from ..harness_tools import WHOAMI_TOOL
 from ..inprocess import tier_runs_in_process
 from ..server import build_server
 from ..tools import build_tool_descriptors
-from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
+from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS
 from ._support import composed_profile_persistence_ports, temporary_env
 from .session import connected_server_and_client_session as connect
 
@@ -202,7 +201,6 @@ def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
     with (
         temporary_env(
             CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
-            CADRUMO_SECRET_STORE_BACKEND=SecretStoreBackend.AUTO.value,
             CADRUMO_SECRET_STORE_DIR=str(tmp_path / "fallback-store"),
             CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
         ),
@@ -212,11 +210,9 @@ def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
             label="operator",
             passphrase=PROFILE_PASSPHRASE,
             facts=READY_PROFILE_FACTS,
-            recovery_handover=verify_recovery_handover,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        assert created.recovery_enrolled is True
         channel = tmp_path / "profile-secret.json"
         channel.write_text(
             json.dumps({"profile_passphrase": PROFILE_PASSPHRASE}),

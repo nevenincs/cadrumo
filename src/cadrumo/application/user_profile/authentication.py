@@ -12,8 +12,9 @@ class ProfilePasswordProofOperation(StrEnum):
 
     LOGIN = "login"
     RESTORE = "password_restore"
-    RECOVERY_EXPORT = "recovery_export"
-    RECOVERY_RESTORE = "recovery_restore"
+    RECOVERY_ENROLL = "recovery_enroll"
+    RECOVERY_REVOKE = "recovery_revoke"
+    RECOVERY_RESET = "recovery_reset"
     ROTATION = "password_rotation"
 
 

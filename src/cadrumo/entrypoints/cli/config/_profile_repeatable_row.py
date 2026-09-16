@@ -28,6 +28,24 @@ def _parse_values(tokens: list[str]) -> dict[str, str]:
     return values
 
 
+def _refuse_unknown_repeatable_section(section: str, *, schema: object) -> None:
+    """Name the sections this verb accepts when the requested one is not one.
+
+    ``section`` is a bare positional with no discoverable vocabulary: the
+    parser is import-light, so ``--help`` cannot render the schema's sections.
+    The refusal is therefore the only place an operator can learn them, and it
+    reads them from the schema the enclosing operation already pinned.
+    """
+    sections = getattr(schema, "sections", ())
+    repeatable = tuple(sorted(item.key for item in sections if item.repeatable))
+    if section in repeatable:
+        return
+    raise CliRefusedBoundaryError(
+        translated_message="cli.config.profile.add_row.unknown_section",
+        context={"section": section, "sections": ", ".join(repeatable)},
+    )
+
+
 def profile_add_row(
     ctx: typer.Context,
     section: str,
@@ -44,6 +62,7 @@ def profile_add_row(
     if pointer is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     profile_decode_context = authority_operation(ctx).profile_decode_context()
+    _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
     outcome = add_profile_repeatable_section_row(
         profile_id=pointer.bucket_id,
         section_key=section,

@@ -20,8 +20,8 @@ the profile, and no stronger claim is made for it.
 Three properties are enforced rather than documented.
 
 The member set is INVARIANT. The schema-v1 recovery slot remains constant-size
-but is required to carry the absent marker. Recovery artifacts are separate
-restore proofs and never normal backup cargo.
+but is required to carry the absent marker. A recovery wrapper is never backup
+cargo; a restored profile enrols recovery again explicitly.
 
 The label never enters the archive. It lives in the published capsule as a
 plaintext projection beside the ciphertext, so an archive built by copying the
@@ -233,8 +233,9 @@ def _encode_payload(source: ProfileCapsuleSource) -> bytes:
 def _encode_recovery_slot(source: ProfileCapsuleSource) -> bytes:
     """Return the permanently empty recovery slot.
 
-    The slot remains in schema v1 for layout stability, but portable recovery
-    is a separate restore proof and never travels inside a normal archive.
+    The slot remains in schema v1 for layout stability, but a recovery wrapper
+    never travels inside an archive: a restored profile enrols recovery again
+    explicitly if the operator wants it.
     """
     body = b""
     capacity = RECOVERY_SLOT_BYTES - _SLOT_LENGTH_PREFIX_BYTES

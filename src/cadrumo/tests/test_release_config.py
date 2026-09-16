@@ -35,12 +35,12 @@ from __future__ import annotations
 
 import json
 import re
-import tomllib
 
 import pytest
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..core.toml import parse_toml
 from .inventory import repo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -199,7 +199,7 @@ _VERSION_RE: re.Pattern[str] = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"
 
 
 def _read_pyproject_version() -> str:
-    data = tomllib.loads(PYPROJECT_PATH.read_text(encoding="utf-8"))
+    data = parse_toml(PYPROJECT_PATH.read_text(encoding="utf-8"))
     return str(data["project"]["version"])
 
 

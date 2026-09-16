@@ -62,17 +62,19 @@ def _observe_after_the_substrate_hook() -> None:
 atexit.register(_observe_after_the_substrate_hook)
 
 # Imported only now, so the substrate's hook is registered after the observer.
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from cadrumo.adapters.persistence.storage.master_key import active_session as _substrate
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 
-session = BucketSession.open(
+_opened_at = datetime.now(UTC)
+session = BucketSession.open_resumed(
     bucket_id="exit-hook-probe",
-    kek=b"k" * 32,
     dek=b"d" * 32,
     idle_minutes=5,
-    opened_at=datetime.now(UTC),
+    opened_at=_opened_at,
+    idle_deadline=_opened_at + timedelta(minutes=5),
+    absolute_deadline=_opened_at + timedelta(minutes=5),
 )
 observed["sealed_before_exit"] = session.sealed
 # Deliberately NOT closed: the exit hook is the subject.

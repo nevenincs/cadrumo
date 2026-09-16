@@ -133,7 +133,8 @@ def config_profile_view(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....application.user_profile.projections import record_to_path_values
-    from ....application.user_profile.validation import ProfileValidationService
+    from ....application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
+    from ....domain.user_profile.values import ProfileSetupState
 
     pointer = _resolve_show_pointer(name, ctx=ctx, resolve_active_profile_pointer=resolve_active_profile_pointer)
     record = _read_record_for_show(ctx, pointer)
@@ -144,7 +145,16 @@ def config_profile_view(
         profile_decode_context=authority_operation(ctx).profile_decode_context(),
     ).session
     report = ProfileValidationService(schema=profile_session.profile_decode_context.schema).validate_record(record)
-    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
+    # A record still being filled in reports its unset required fields as ERROR
+    # issues. Those are the completeness codes the write door defers until the
+    # operator asks to complete setup, so viewing an incomplete profile renders
+    # them without declaring the record invalid or failing the shell.
+    require_complete = record.setup_state is ProfileSetupState.COMPLETE
+    blocking = [
+        issue
+        for issue in report.issues
+        if issue.severity.value == "error" and (require_complete or issue.code not in COMPLETENESS_ISSUE_CODES)
+    ]
     values = record_to_path_values(record)
     result = ConfigProfileViewResult(
         profile_id=record.profile_id,
@@ -174,7 +184,7 @@ def config_profile_view(
 
     divergence_notice = censo_divergence_notice(record)
     notices = [divergence_notice] if divergence_notice is not None else []
-    emit_envelope(ctx, command="config.profile.show", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="config.profile.view", result=result, lines=lines, notices=notices)
     if blocking:
         raise typer.Exit(code=2)
 

@@ -214,7 +214,7 @@ class BucketEventType(StrEnum):
     # secret-store custody: passphrase rotation and the recovery-code lifecycle.
     # Generic custody vocabulary with no AEAT surface, so the stems stay English.
     # Payloads carry only non-secret witnesses (the recovery fingerprint, the
-    # store location); no passphrase, mnemonic, or key material is ever recorded.
+    # store location); no passphrase, recovery code, or key material is ever recorded.
     CUSTODY_PASSPHRASE_CHANGED = _CUSTODY_CHANGED_EVENT
     CUSTODY_RECOVERY_CODE_CREATED = "custody.recovery_code.created"
     CUSTODY_RECOVERY_CODE_ROTATED = "custody.recovery_code.rotated"

@@ -12,6 +12,7 @@ Shard taxonomy:
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 
 SHARD_TOP_DOMAINS: frozenset[str] = frozenset(
@@ -23,6 +24,7 @@ _MODELO_ROOT = "modelo"
 _SCHEMA_SEGMENT = "schema"
 
 
+@lru_cache(maxsize=65536)
 def route_key_to_shard(dotted_key: str) -> Path:
     """Return the relative shard path for a dotted translation key.
 

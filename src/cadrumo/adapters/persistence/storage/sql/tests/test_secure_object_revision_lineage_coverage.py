@@ -22,7 +22,7 @@ still authenticates the payload bytes throughout: what is at stake is the
 integrity of revision provenance and audit attribution, not payload
 confidentiality.
 
-Real behaviour throughout: real SQLite, a real ``EphemeralMasterKeyProvider``,
+Real behaviour throughout: real SQLite, a real ``EphemeralBucketSession``,
 real AEAD, real raw-SQL tampering of stored columns. Nothing is mocked.
 """
 
@@ -38,7 +38,7 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ...errors import SecureObjectUnreadableError
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_crypto import derive_revision_id
 from ._secure_objects_support import (
     _repo_at,
@@ -232,7 +232,7 @@ def test_untampered_row_reads_after_two_writes(tmp_path: Path) -> None:
     read at all.
     """
     db_path = tmp_path / "control.db"
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         _seed(db_path)
         assert _load(db_path) is not None
 
@@ -251,7 +251,7 @@ def test_untampered_row_reads_after_two_writes(tmp_path: Path) -> None:
 def test_tampering_a_derivation_input_is_refused(tmp_path: Path, column: str, forged: str) -> None:
     """Each covered column recomputes a different id, so the row is refused."""
     db_path = tmp_path / f"covered-{column}.db"
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         _seed(db_path)
         _tamper(db_path, column, forged)
         with pytest.raises(SecureObjectUnreadableError):
@@ -267,7 +267,7 @@ def test_tampering_a_stamped_non_input_is_admitted(tmp_path: Path, column: str, 
     without widening the digest fails here instead of passing unnoticed.
     """
     db_path = tmp_path / f"uncovered-{column}.db"
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         _seed(db_path)
         _tamper(db_path, column, forged)
         assert _load(db_path) is not None
@@ -284,7 +284,7 @@ def test_forged_ancestry_chain_survives_the_gate(tmp_path: Path) -> None:
     """
     forged_ancestor = "d" * 64
     db_path = tmp_path / "forged-ancestry.db"
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         _seed(db_path)
         with sqlite3.connect(db_path) as con:
             genuine = con.execute(

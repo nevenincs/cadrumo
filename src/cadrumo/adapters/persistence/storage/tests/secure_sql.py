@@ -38,7 +38,7 @@ from ..sql.orm import Base, SecureObjectRow
 from ..sql.secure_objects import SecureObjectRepository
 from ..sql.session import session_scope
 from ..storage_path_definitions import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
-from .ephemeral_master_key import EphemeralMasterKeyProvider
+from .ephemeral_bucket_session import EphemeralBucketSession
 from .profile_capsule_runtime import provision_test_profile_bucket_session
 
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
@@ -243,7 +243,7 @@ def isolated_ephemeral_secure_sql(
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
     ) as settings:
         dispose_engine(settings)
-        with EphemeralMasterKeyProvider():
+        with EphemeralBucketSession():
             try:
                 yield
             finally:
@@ -255,7 +255,7 @@ def isolated_sessionless_storage_root(*, tmp_path: Path) -> Generator[Path]:
     """Run tests against an empty storage root with no active bucket session.
 
     Unlike :func:`isolated_profile_storage_root`, this helper does not
-    start an :class:`EphemeralMasterKeyProvider` session. It is for tests
+    start an :class:`EphemeralBucketSession` session. It is for tests
     that assert ``has_active_bucket_session() is False`` — the bootstrap-
     exempt repair verbs, cold-start refusal tests, and fast-path surfaces
     that must all operate without an active session.
@@ -324,7 +324,6 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=None,
-        **{"cadrumo_secret_store_backend": "auto"},
         cadrumo_secret_passphrase=passphrase,
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations -- one child process per warmup and per sample. That is
@@ -403,7 +402,6 @@ def isolated_runtime_profile(
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=bucket_id,
-        **{"cadrumo_secret_store_backend": "auto"},
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations, one child process per warmup and per sample. See
         # `isolated_profile_storage_root` for the measured cost; the fixed
@@ -511,7 +509,6 @@ def isolated_two_bucket_runtime(
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=primary_bucket_id,
-        **{"cadrumo_secret_store_backend": "auto"},
         # Enrolment calibrates the KDF grid by MEASURING real supervised
         # derivations, one child process per warmup and per sample. See
         # `isolated_profile_storage_root` for the measured cost; the fixed

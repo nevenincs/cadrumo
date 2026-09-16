@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 
 import pytest
@@ -13,6 +12,7 @@ from ..product_identity import (
     ProductIdentity,
     normalise_product_identity_references,
 )
+from ..toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -48,7 +48,7 @@ def test_repository_metadata_consumes_the_owner_qualified_slug(
 ) -> None:
     """Root and companion metadata project the canonical repository slug."""
     repository_root = Path(__file__).resolve().parents[4]
-    pyproject = tomllib.loads((repository_root / relative_pyproject).read_text(encoding="utf-8"))
+    pyproject = parse_toml((repository_root / relative_pyproject).read_text(encoding="utf-8"))
     repository_url = f"https://github.com/{PRODUCT_IDENTITY.repository}"
 
     assert pyproject["project"]["urls"] == {

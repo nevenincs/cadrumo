@@ -53,8 +53,9 @@ from .facts.resolution import (
     ResolvedGovernedFact,
     ResolvedMappingFact,
     resolve_governed_fact,
+    resolve_validated_governed_fact,
 )
-from .facts.schema import GovernedFact, GovernedFactCatalogue
+from .facts.schema import GovernedFact
 from .governed_fact_scope import validating_governed_facts
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .provenance import NormativeCorpusProvenance
@@ -653,6 +654,10 @@ class PinnedAuthorityOperation:
 
     _reader: AuthorityComponentReader
     generation: AuthorityGenerationPin
+    _state_lock: RLock = field(default_factory=RLock, init=False, repr=False, compare=False)
+    _fact_resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     def pin(self) -> AuthorityGenerationPin:
         """Return this operation's already-leased generation pin."""
@@ -796,13 +801,21 @@ class PinnedAuthorityOperation:
         )
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
-        """Resolve one fact without hydrating the whole governed catalogue."""
-        value = self.governed_fact(str(query.fact_id))
-        return resolve_governed_fact(
-            GovernedFactCatalogue(facts={value.fact_id: value}),
-            query,
-            authority_digest=self.generation.logical_generation,
-        )
+        """Resolve one fact once per query without revalidating its static component."""
+        with self._state_lock:
+            cached = self._fact_resolutions.get(query)
+            if cached is not None:
+                return cached
+            value = self.governed_fact(str(query.fact_id))
+            resolved = resolve_validated_governed_fact(
+                value,
+                query,
+                authority_digest=self.generation.logical_generation,
+            )
+            if len(self._fact_resolutions) >= 1024:
+                self._fact_resolutions.pop(next(iter(self._fact_resolutions)))
+            self._fact_resolutions[query] = resolved
+            return resolved
 
     def runtime_catalogue(self, family: str) -> object:
         """Load one named runtime catalogue family."""
@@ -929,6 +942,7 @@ class IndexedRegistryAuthority:
         """Open one descriptor-selected generation without hydrating components."""
         self._descriptor_path = descriptor_path.resolve()
         self._reader = SQLiteAuthorityReader(self._descriptor_path)
+        self._operation = PinnedAuthorityOperation(self._reader, self._reader.pin())
         self._descriptor_digest = sha256_hex(self._descriptor_path.read_bytes())
         self._retired_readers: list[SQLiteAuthorityReader] = []
         self._reader_lock = RLock()
@@ -936,10 +950,11 @@ class IndexedRegistryAuthority:
     @contextmanager
     def operation(self) -> Generator[PinnedAuthorityOperation]:
         """Pin one reader incarnation for a complete application operation."""
-        reader = self._reader_for_operation()
+        reader, operation = self._authority_for_operation()
         try:
             with reader.lease() as generation:
-                operation = PinnedAuthorityOperation(reader, generation)
+                if generation != operation.generation:
+                    raise RegistrySnapshotError("authority operation generation disagrees with its reader lease")
                 with validating_governed_facts(operation):
                     yield operation
         finally:
@@ -953,17 +968,18 @@ class IndexedRegistryAuthority:
                 reader.close()
             self._retired_readers.clear()
 
-    def _reader_for_operation(self) -> SQLiteAuthorityReader:
-        """Admit a descriptor change for subsequent operations only."""
+    def _authority_for_operation(self) -> tuple[SQLiteAuthorityReader, PinnedAuthorityOperation]:
+        """Return the shared operation cache for the currently admitted reader generation."""
         with self._reader_lock:
             descriptor_digest = sha256_hex(self._descriptor_path.read_bytes())
             if descriptor_digest == self._descriptor_digest:
-                return self._reader
+                return self._reader, self._operation
             replacement = SQLiteAuthorityReader(self._descriptor_path)
             self._retired_readers.append(self._reader)
             self._reader = replacement
+            self._operation = PinnedAuthorityOperation(replacement, replacement.pin())
             self._descriptor_digest = descriptor_digest
-            return replacement
+            return replacement, self._operation
 
     def _close_retired_readers(self) -> None:
         """Close old generations once their last in-flight operation releases."""

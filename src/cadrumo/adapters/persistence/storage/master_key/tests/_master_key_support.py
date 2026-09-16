@@ -5,7 +5,6 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from ......core.config import Settings
-from ......core.config_support import SecretStoreBackend
 from ......core.profile_publication import ProfilePublicationKind
 from ...custody.capsule import publish_profile_custody_capsule
 from ...custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
@@ -58,14 +57,6 @@ def _publish_registration_capsule(root: Path, bucket_id: str) -> None:
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_CAPSULE_DEK),
         data_files={},
         settings=Settings(cadrumo_local_storage_root=root),
-    )
-
-
-def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Settings:
-    return Settings(
-        cadrumo_local_storage_root=tmp_path / "state",
-        cadrumo_secret_store_dir=tmp_path / "fallback-store",
-        cadrumo_secret_store_backend=backend,
     )
 
 

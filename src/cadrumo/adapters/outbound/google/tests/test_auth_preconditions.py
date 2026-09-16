@@ -28,10 +28,9 @@ from ..impersonation import GoogleAuthAdcUnavailableError, GoogleImpersonationCo
 from ..oauth_flow import (
     _decode_email_from_id_token,
     _raise_local_server_error,
-    check_unsecured_mode_safety,
     credentials_to_records,
     require_interactive_terminal,
-    resolve_active_tax_id,
+    require_resolvable_profile_record,
 )
 from ..records import REQUIRED_SCOPES
 
@@ -71,19 +70,13 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:check_unsecured_mode_safety:GoogleAuthUnsecuredModeRefusedError:google OAuth refused: secret store is unsecured and the active profile carries a real NIF": _contract(
-        GoogleAuthPreconditionCondition.CREDENTIAL_STORE_SECURED,
-        (("secret_store_secured", "False"), ("tax_id_present", "True")),
-        ActionEvidenceProvenance.APPLICATION_STATE,
-        NoRecoveryOutcome.SAFETY,
-    ),
-    "_oauth_flow:resolve_active_tax_id:GoogleAuthProfileUnboundError:google OAuth refused: active profile bucket manifest could not be resolved": _contract(
+    "_oauth_flow:require_resolvable_profile_record:GoogleAuthProfileUnboundError:google OAuth refused: active profile bucket pointer could not be resolved": _contract(
         GoogleAuthPreconditionCondition.PROFILE_IDENTITY_RESOLVED,
         (("profile_bucket_present", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_oauth_flow:resolve_active_tax_id:GoogleAuthProfileUnboundError:google OAuth refused: active profile record session is unavailable": _contract(
+    "_oauth_flow:require_resolvable_profile_record:GoogleAuthProfileUnboundError:google OAuth refused: active profile record session is unavailable": _contract(
         GoogleAuthPreconditionCondition.PROFILE_RECORD_SESSION_AVAILABLE,
         (("profile_record_session_available", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
@@ -356,11 +349,10 @@ def test_profile_record_session_refusal_has_an_exact_operator_decision_verdict(t
         override_settings(
             cadrumo_local_storage_root=storage_root,
             cadrumo_active_profile=profile_id,
-            cadrumo_secret_store_backend="unsecured",
         ),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
-        resolve_active_tax_id(profile_id)
+        require_resolvable_profile_record(profile_id)
 
     _assert_terminal_contract(
         raised.value,
@@ -368,22 +360,6 @@ def test_profile_record_session_refusal_has_an_exact_operator_decision_verdict(t
         facts={"profile_record_session_available": False},
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-    )
-
-
-def test_unsecured_real_tax_id_refusal_has_an_exact_safety_verdict() -> None:
-    with (
-        override_settings(cadrumo_secret_store_backend="unsecured"),
-        pytest.raises(GoogleAuthError) as raised,
-    ):
-        check_unsecured_mode_safety("any-profile", "12345678Z")
-
-    _assert_terminal_contract(
-        raised.value,
-        condition=GoogleAuthPreconditionCondition.CREDENTIAL_STORE_SECURED,
-        facts={"secret_store_secured": False, "tax_id_present": True},
-        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        outcome=NoRecoveryOutcome.SAFETY,
     )
 
 

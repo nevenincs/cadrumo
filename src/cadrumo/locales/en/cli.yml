@@ -1709,8 +1709,6 @@ cli:
         remove_help: Remove one trusted recipient by id from the active profile.
     custody:
       current_passphrase_prompt: 'Current profile passphrase: '
-      data_loss_warning: Record this recovery key now. AEAT does not store the plaintext
-        recovery key and cannot show it again.
       errors:
         echo_suppression_unavailable: This terminal cannot suppress echo, so the secret
           would be visible on screen; use --secrets-stdin or --secrets-fd instead.
@@ -1768,11 +1766,6 @@ cli:
         JSON object on an inherited readable descriptor after session resume fails.
       profile_secrets_stdin_help: Read the exact target profile passphrase from one
         bounded JSON object on standard input after session resume fails.
-      recovery_words_cancel: Cancel creation
-      recovery_words_confirm: I have written it down
-      recovery_words_heading: Write down this recovery phrase
-      recovery_words_warning: It is shown only once. Anyone with this phrase can open
-        the profile without the passphrase.
       secrets_fd_help: File descriptor to read machine secrets from.
       secrets_stdin_help: Read the secrets as one bounded JSON object from standard
         input instead of prompting.
@@ -1889,34 +1882,35 @@ cli:
         already_logged_out: No profile was logged in; nothing to close.
     passphrase:
       change_help: Change the passphrase without re-encrypting records or invalidating
-        a recovery phrase.
+        a recovery code.
       help: Manage the passphrase that protects the active profile.
       no_active_profile: No profile is active. Sign in with 'aeat config login NAME'
         before changing its passphrase.
+      reset_code_prompt: 'Recovery code: '
+      reset_help: Set a new passphrase for a profile by proving its recovery code;
+        use it when the passphrase is forgotten.
+      reset_name_help: Name of the profile whose passphrase is being reset.
     profile:
       add_row:
         duplicate_field: Field %{field} was supplied more than once; nothing was written.
         help: Add one row to a schema-declared repeatable profile section.
         invalid_value: Each --value must use FIELD=VALUE syntax; nothing was written.
         section_help: Repeatable profile section key.
+        unknown_section: '''{section}'' is not a repeatable profile section. Available
+          sections: {sections}.'
         value_help: Row field as FIELD=VALUE; repeat for each populated field.
       archive:
-        export_help: Write the named profile's capsule to a sealed archive at --to;
+        export_help: Write the named profile's capsule to a sealed archive at --output;
           the archive is encrypted under the profile password and carries no label.
         export_name_help: Profile to back up; defaults to active.
-        export_out_help: Destination path for the archive.
+        export_out_help: Destination path for the archive. The filename must end with
+          '.cadrumo-bucket.tar.gz'.
         help: Back up a profile to a sealed, AEAD-encrypted archive, or inspect one;
           restore it with 'aeat config profile archive import'.
-        import_artifact_help: Recovery artifact file; use it when the profile password
-          is lost.
         import_file_help: Path to the unpublished capsule directory to restore.
-        import_help: Republish a profile capsule from a directory; add --artifact
-          to recover with the 24-word phrase.
+        import_help: Republish a profile capsule from a directory or a sealed archive,
+          proving its passphrase.
         import_label_help: Display name for the restored profile.
-        import_password_unchanged: 'Your records are restored, but the profile password
-          is unchanged: this door recovers data, not the credential. Log in with the
-          original password, or change it as soon as you can.'
-        import_recovery_secret_prompt: 'Recovery phrase (24 words): '
         inspect_help: Show a sealed archive's header without decrypting or restoring
           it.
         inspect_path_help: Path to the sealed archive to inspect.
@@ -1939,6 +1933,9 @@ cli:
           any leftover cleartext staged file and recording owed audit events.
         reconcile_none_info: No interrupted profile-bundle export was found. Nothing
           was left behind by a previous run.
+        refusal:
+          export_suffix: The destination path must end with '{suffix}'. Re-run the
+            command with an --output using that ending; no profile was read.
       bundle_flow:
         export_section_title: Export profile bundle
         import_section_title: Import profile bundle
@@ -1999,8 +1996,14 @@ cli:
         help: Declare the active profile ready to file from.
         incomplete: 'The profile is still missing required data: {paths}'
       create_confirm_passphrase_prompt: 'Confirm new profile passphrase: '
-      create_help: Create an active profile with mandatory verified recovery. Recovery
-        cannot be added later and never participates in password login.
+      create_guidance_unavailable: The profile was created successfully, but the next-step
+        notices could not be prepared. Check 'config profile status' to see what remains.
+      create_help: Create a profile protected by a passphrase. At a terminal it then
+        offers an optional recovery code; skip it, or add it later with 'aeat config
+        profile recovery enable'.
+      create_login_required: Profile '{profile}' was created, but you do not have
+        a session open on it yet. Sign in with the command 'config login {profile}'
+        to unlock its data before continuing.
       create_name_required: A profile name is required. Run 'aeat config profile create
         NAME'.
       create_passphrase_channel_absent: No passphrase channel is available. Run this
@@ -2008,33 +2011,13 @@ cli:
       create_passphrase_mismatch: The passphrase and its confirmation do not match;
         no profile was created.
       create_passphrase_prompt: 'New profile passphrase: '
-      create_recovery_channel_absent: Recovery enrollment is mandatory. On a headless
-        host, provide both --recovery-handoff-fd and --recovery-verification-fd; no
-        profile was created.
-      create_recovery_descriptor_collision: The recovery handoff, recovery verification,
-        and passphrase payload must use distinct descriptors; no descriptor was read.
-      create_recovery_descriptor_pair_required: --recovery-handoff-fd and --recovery-verification-fd
-        must be supplied together.
-      create_recovery_descriptor_reserved: Recovery descriptors must be non-negative
-        and cannot be standard input, standard output, or standard error.
-      create_recovery_enrolled: Recovery was enrolled at creation after exact possession
-        verification. It cannot be added later; the phrase is an explicit restore
-        proof and password login remains independent.
-      create_recovery_handoff_fd_help: Write the one-time recovery phrase as one bounded
-        secret JSON object to this inherited writable descriptor.
-      create_recovery_handoff_too_large: The recovery handoff exceeded its 8192-byte
-        bound; no profile was created.
-      create_recovery_handoff_unwritable: The recovery handoff descriptor was not
-        an inherited writable channel; no profile was created.
-      create_recovery_verification_cancelled: Recovery confirmation was cancelled;
-        no profile was created.
-      create_recovery_verification_fd_help: Read the exact recovery phrase back as
-        one bounded secret JSON object from this inherited readable descriptor before
-        publication.
-      create_recovery_verification_mismatch: Recovery phrase possession could not
-        be verified; no profile was created.
-      create_recovery_verification_prompt: 'Re-enter the recovery phrase to verify
-        possession: '
+      create_recovery_enrolled: 'Recovery is set up. Keep the code apart from this
+        computer: it can reset a forgotten passphrase.'
+      create_recovery_offer_prompt: 'Set up a recovery code now? It lets you reset
+        a forgotten passphrase, and you can also add it later. [y/N] '
+      create_recovery_skipped: Recovery is not set up. Without it a forgotten passphrase
+        cannot be reset; enable it any time with the 'config profile recovery enable'
+        command.
       delete:
         help: Delete a profile and its local state; --yes confirms the deletion
         name_help: Name of the profile to delete
@@ -2093,6 +2076,40 @@ cli:
         it any time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
+      recovery:
+        channel_absent: A recovery code can only be shown on a terminal. On a headless
+          host, provide both --recovery-handoff-fd and --recovery-verification-fd;
+          nothing was enrolled.
+        code_heading: 'Your recovery code. Write it down and keep it apart from this
+          computer:'
+        code_warning: It is shown only once. Anyone holding this code can set a new
+          passphrase for the profile.
+        descriptor_collision: The recovery handoff, recovery verification, and passphrase
+          payload must use distinct descriptors; no descriptor was read.
+        descriptor_pair_required: --recovery-handoff-fd and --recovery-verification-fd
+          must be supplied together.
+        descriptor_reserved: Recovery descriptors must be non-negative and cannot
+          be standard input, standard output, or standard error.
+        disable_help: Remove the active profile's recovery code after proving its
+          passphrase.
+        enable_help: Enrol a recovery code for the active profile after proving its
+          passphrase; the code is shown once and must be typed back.
+        enabled_notice: Recovery is set up. If you forget the passphrase, run the
+          'config passphrase reset NAME' command with this code.
+        handoff_fd_help: Write the one-time recovery code as one bounded secret JSON
+          object to this inherited writable descriptor.
+        handoff_too_large: The recovery handoff exceeded its 8192-byte bound; nothing
+          was enrolled.
+        handoff_unwritable: The recovery handoff descriptor was not an inherited writable
+          channel; nothing was enrolled.
+        help: Manage the optional recovery code that can reset a forgotten passphrase.
+        no_active_profile: No profile is active. Sign in with 'aeat config login NAME'
+          before managing its recovery code.
+        status_help: Report whether the active profile has a recovery code enrolled.
+        verification_fd_help: Read the exact recovery code back as one bounded secret
+          JSON object from this inherited readable descriptor before anything is installed.
+        verification_mismatch: The code you typed does not match; nothing was enrolled.
+        verification_prompt: 'Type the recovery code back to confirm you have it: '
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not
           a real profile; every command runs against this isolated, discardable bucket.

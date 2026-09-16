@@ -76,7 +76,6 @@ def _register_in_separate_process_child(
     _ = settings
     try:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=label,
             passphrase=password,
             profile_create_context=_profile_create_context_for_test,
@@ -120,7 +119,6 @@ def _attempt_registration_in_separate_process_child(
     try:
         try:
             register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=label,
                 passphrase=password,
                 profile_create_context=_profile_create_context_for_test,

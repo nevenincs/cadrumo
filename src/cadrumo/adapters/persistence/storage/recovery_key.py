@@ -1,204 +1,153 @@
-"""Recovery-key minting and its canonical BIP-39 mnemonic encoder.
+"""Recovery-code minting and its canonical grouped-code encoder.
 
-A recovery secret is an opaque high-entropy string as far as every
-consumer is concerned; this module is the only thing in the substrate
-that can mint one strong enough to resist offline guessing once material
-derived from it has left the machine. A profile's recovery envelope wraps
-that profile's DEK under its own supervised Argon2id parameters against a
-generation-bound associated-data domain, and takes the minted mnemonic as
-its secret. The encoder itself is bound to no custody architecture, no file
-layout and no key schedule.
+A recovery code is an opaque high-entropy secret as far as every consumer
+is concerned; this module is the only thing in the substrate that can mint
+one strong enough to resist offline guessing. A profile's recovery envelope
+wraps that profile's DEK under its own supervised Argon2id parameters and
+takes the canonical code as its secret. The encoder is bound to no custody
+architecture, no file layout and no key schedule, and the substrate never
+persists the code.
 
-It sits directly beneath the storage package, sibling to both the custody
-package that consumes it and the shared-master ``master_key`` package it
-used to live in, so it survives that package's retirement rather than
-being swept away with the master-key wrapping half it happened to share a
-file with. The substrate never persists the mnemonic.
+**Shape.** Six groups of five symbols drawn from a 32-symbol alphabet that
+omits the characters people misread (``0/O``, ``1/I/L``), joined with
+hyphens: ``XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX``. Thirty symbols at five bits
+each carry 150 bits of entropy, which is more than the 128 bits behind the
+password envelope's own key. Operator input is normalised before proof:
+case, hyphens and whitespace are cosmetic, so a code typed in lowercase
+without separators proves possession exactly as the displayed form does.
 
-**Wipeable key material.** The recovery entropy and the mnemonic are held
-in ``bytearray`` buffers rather than immutable ``bytes`` / ``str``, so the
-substrate's :func:`zeroise` primitive can overwrite them in place. The
-recovery surface needs this more than the steady-state session path does:
-an enrollment holds live key material across the operator's interactive
-confirmation. The honest limit is unchanged from the one the session path
-already discloses -- passing a buffer to a ``bytes``-typed cryptographic
-primitive, or reading the mnemonic as a ``str``, materialises a transient
-immutable copy whose lifetime the garbage collector owns. Those copies are
-bounded by a single call; what this module does not do is hold the *only*
-copy of a secret in a form no wipe primitive can reach.
-
-The encoding follows BIP-39 (Bitcoin Improvement Proposal 0039) exactly --
-256-bit entropy, an 8-bit checksum, and 24 11-bit words drawn from the
-canonical English wordlist. The wordlist is bundled at
-:file:`_bip39_wordlist.txt` (2048 lines, public domain, identical to the
-Bitcoin Core source).
+**Wipeable key material.** The code is held in a ``bytearray`` rather than an
+immutable ``str``, so the substrate's :func:`zeroise` primitive can overwrite
+it in place once the operator has copied it down. The honest limit is the
+one the session path already discloses: reading :attr:`RecoveryKey.code`
+materialises a transient ``str`` copy whose lifetime the garbage collector
+owns. What this module does not do is hold the *only* copy of a secret in a
+form no wipe primitive can reach.
 """
 
 from __future__ import annotations
 
-import hashlib
 import secrets
-from collections.abc import Buffer
-from pathlib import Path
 from typing import Final, Self
 
 from ....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .custody.zeroise import zeroise as _zeroise
 from .errors import storage_validation_error as _storage_validation_error
 
-_RECOVERY_KEY_SIZE: Final[int] = 32
-_MNEMONIC_WORD_COUNT: Final[int] = 24
+RECOVERY_CODE_ALPHABET: Final[str] = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+RECOVERY_CODE_GROUP_LENGTH: Final[int] = 5
+RECOVERY_CODE_GROUP_COUNT: Final[int] = 6
+RECOVERY_CODE_SEPARATOR: Final[str] = "-"
+RECOVERY_CODE_SYMBOL_COUNT: Final[int] = RECOVERY_CODE_GROUP_LENGTH * RECOVERY_CODE_GROUP_COUNT
+
+_ALPHABET_SET: Final[frozenset[str]] = frozenset(RECOVERY_CODE_ALPHABET)
+_IGNORED_INPUT_CHARACTERS: Final[frozenset[str]] = frozenset({RECOVERY_CODE_SEPARATOR, " ", "\t", "\n", "\r", "_"})
 
 
 class RecoveryKey:
-    """Wipeable container for a 32-byte recovery key + its 24-word mnemonic.
-
-    The substrate never persists the raw entropy or the mnemonic. Both are
-    held in ``bytearray`` buffers rather than immutable ``bytes`` / ``str``
-    so :func:`zeroise` can overwrite them in place once the enrollment has
-    committed, instead of leaving them to the garbage collector.
-
-    This matters more here than on the steady-state session path: an
-    enrollment holds live key material across the operator's *interactive*
-    confirmation, which can last as long as it takes a human to copy down
-    24 words. Immutable material held across that window is unreachable by
-    any wipe primitive for its whole lifetime.
+    """Wipeable container for one canonical recovery code.
 
     Deliberately not a pydantic model. The sibling ``BucketSession`` sets
     the precedent for live key material: a slotted plain class keeps the
-    buffers mutable, and -- because there is no ``model_dump_json`` --
-    makes it structurally impossible to serialise the secret by accident.
-
-    Honest contract, identical in kind to the one ``BucketSession``
-    discloses: reading :attr:`mnemonic` materialises a transient ``str``
-    copy whose lifetime the garbage collector owns, and passing :attr:`raw`
-    to a ``bytes``-typed cryptographic primitive materialises a transient
-    ``bytes`` copy for the duration of that call. The buffers this object
-    *holds* are wipeable; those short-lived boundary copies are not.
+    buffer mutable, and -- because there is no ``model_dump_json`` -- makes
+    it structurally impossible to serialise the secret by accident.
     """
 
-    __slots__ = ("_mnemonic_buffer", "_raw_buffer")
+    __slots__ = ("_code_buffer",)
 
-    def __init__(self, *, raw: Buffer, mnemonic: str) -> None:
-        """Copy ``raw`` and ``mnemonic`` into the wipeable buffers this key owns.
+    def __init__(self, *, code: str) -> None:
+        """Copy ``code`` into the wipeable buffer this key owns.
 
         Args:
-            raw: The entropy, which must be exactly the recovery-key size.
-            mnemonic: The non-empty mnemonic encoding that entropy.
+            code: A canonical recovery code, exactly as :func:`format_recovery_code`
+                renders it.
 
         Raises:
-            StorageValidationError: If the entropy is the wrong length or the
-                mnemonic is empty.
+            StorageValidationError: If the code is not in canonical form.
         """
-        raw_buffer = bytearray(raw)
-        if len(raw_buffer) != _RECOVERY_KEY_SIZE:
-            raise _storage_validation_error(
-                f"recovery key must be exactly {_RECOVERY_KEY_SIZE} bytes; got {len(raw_buffer)}",
-            )
-        if not mnemonic:
-            raise _storage_validation_error("recovery key mnemonic must not be empty")
-        self._raw_buffer = raw_buffer
-        self._mnemonic_buffer = bytearray(mnemonic.encode(_UTF_8_ENCODING))
+        if code != format_recovery_code(normalise_recovery_code(code)):
+            raise _storage_validation_error("recovery code must be in canonical grouped form")
+        self._code_buffer = bytearray(code.encode(_UTF_8_ENCODING))
 
     @property
-    def raw(self) -> bytearray:
-        """Return the live 32-byte entropy buffer.
-
-        The buffer itself is returned, not a copy, so :meth:`wipe` reaches
-        every holder of this reference.
-        """
-        return self._raw_buffer
-
-    @property
-    def mnemonic(self) -> str:
-        """Return the 24-word mnemonic, decoded from its wipeable buffer."""
-        return self._mnemonic_buffer.decode(_UTF_8_ENCODING)
+    def code(self) -> str:
+        """Return the canonical grouped code, decoded from its wipeable buffer."""
+        return self._code_buffer.decode(_UTF_8_ENCODING)
 
     def wipe(self) -> None:
-        """Overwrite the entropy and mnemonic buffers with zero bytes.
+        """Overwrite the code buffer with zero bytes.
 
         Idempotent: wiping an already-wiped key is a no-op that leaves the
-        buffers zeroed and their lengths unchanged.
+        buffer zeroed and its length unchanged.
         """
-        _zeroise(self._raw_buffer)
-        _zeroise(self._mnemonic_buffer)
+        _zeroise(self._code_buffer)
 
     def __enter__(self) -> Self:
         """Return this key, so a ``with`` block bounds the secret's lifetime."""
         return self
 
     def __exit__(self, *_exc_info: object) -> None:
-        """Wipe the buffers on block exit, whether or not the body raised."""
+        """Wipe the buffer on block exit, whether or not the body raised."""
         self.wipe()
 
 
-def _load_wordlist() -> tuple[str, ...]:
-    """Load the bundled BIP-39 English wordlist.
+def normalise_recovery_code(text: str) -> str:
+    """Reduce operator input to the bare symbol run the code was minted from.
 
-    Read at import time so the per-call cost is the dict lookup, not
-    the file read. The wordlist is small (~13 KB) and immutable.
-    """
-    path = Path(__file__).with_name("_bip39_wordlist.txt")
-    text = path.read_text(encoding="ascii")
-    words = tuple(line.strip() for line in text.splitlines() if line.strip())
-    if len(words) != 2048:
-        raise _storage_validation_error(
-            f"BIP-39 wordlist must have exactly 2048 words; got {len(words)}",
-        )
-    return words
-
-
-_WORDLIST: Final[tuple[str, ...]] = _load_wordlist()
-
-
-def encode_mnemonic(entropy: Buffer) -> str:
-    """Encode 32 bytes of entropy as a 24-word BIP-39 English mnemonic.
-
-    Args:
-        entropy: Exactly 32 bytes of cryptographic entropy. Accepts any
-            buffer, so a wipeable ``bytearray`` can be encoded without
-            first being copied into immutable ``bytes``.
-
-    Returns:
-        A space-joined string of 24 lowercase English words.
+    Case, hyphens, underscores and whitespace are cosmetic and dropped. Any
+    other character, or a run that is not exactly the minted length, is
+    refused: a code that cannot be the minted one must not reach the KDF.
 
     Raises:
-        StorageValidationError: When ``entropy`` is not exactly 32 bytes.
+        StorageValidationError: When ``text`` cannot be a recovery code.
     """
-    entropy_view = memoryview(entropy)
-    if len(entropy_view) != _RECOVERY_KEY_SIZE:
+    symbols = "".join(character for character in text.upper() if character not in _IGNORED_INPUT_CHARACTERS)
+    if len(symbols) != RECOVERY_CODE_SYMBOL_COUNT:
         raise _storage_validation_error(
-            f"BIP-39 24-word encoding requires exactly {_RECOVERY_KEY_SIZE} bytes; got {len(entropy_view)}",
+            f"recovery code must contain exactly {RECOVERY_CODE_SYMBOL_COUNT} symbols; got {len(symbols)}",
         )
-    # ENT (256) + CS (8) = 264 bits -> 24 x 11-bit groups.
-    # CS = first 8 bits of SHA-256(entropy).
-    checksum = hashlib.sha256(entropy_view).digest()[0]
-    payload_int = int.from_bytes(entropy_view, "big") << 8 | checksum
-    indices: list[int] = []
-    for shift in range(_MNEMONIC_WORD_COUNT - 1, -1, -1):
-        indices.append((payload_int >> (shift * 11)) & 0x7FF)
-    return " ".join(_WORDLIST[i] for i in indices)
+    if any(character not in _ALPHABET_SET for character in symbols):
+        raise _storage_validation_error("recovery code contains a character outside its alphabet")
+    return symbols
+
+
+def format_recovery_code(symbols: str) -> str:
+    """Render a bare symbol run in the canonical hyphen-grouped form."""
+    if len(symbols) != RECOVERY_CODE_SYMBOL_COUNT or any(character not in _ALPHABET_SET for character in symbols):
+        raise _storage_validation_error("recovery code symbols are not a complete alphabet run")
+    groups = (
+        symbols[index : index + RECOVERY_CODE_GROUP_LENGTH]
+        for index in range(0, RECOVERY_CODE_SYMBOL_COUNT, RECOVERY_CODE_GROUP_LENGTH)
+    )
+    return RECOVERY_CODE_SEPARATOR.join(groups)
+
+
+def canonical_recovery_code(text: str) -> str:
+    """Return the canonical form of an operator-supplied code, or refuse it."""
+    return format_recovery_code(normalise_recovery_code(text))
 
 
 def generate_recovery_key() -> RecoveryKey:
-    """Mint a fresh :class:`RecoveryKey` with 32-byte entropy and its 24-word mnemonic.
+    """Mint a fresh :class:`RecoveryKey` from the process CSPRNG.
 
-    Uses :func:`secrets.token_bytes` for the entropy, which is copied into
-    the returned key's wipeable buffers and then zeroed, so the immutable
-    ``bytes`` the generator produced does not outlive this call. The
-    returned record is the only remaining in-memory copy; callers must
-    arrange for the operator to copy or print the mnemonic, then
-    :meth:`RecoveryKey.wipe` it.
+    Each symbol is drawn independently with :func:`secrets.choice`, so the
+    code carries the full five bits per symbol. The returned record is the
+    only in-memory copy; callers must arrange for the operator to copy the
+    code down, then :meth:`RecoveryKey.wipe` it.
     """
-    seed = bytearray(secrets.token_bytes(_RECOVERY_KEY_SIZE))
-    try:
-        return RecoveryKey(raw=seed, mnemonic=encode_mnemonic(seed))
-    finally:
-        _zeroise(seed)
+    symbols = "".join(secrets.choice(RECOVERY_CODE_ALPHABET) for _ in range(RECOVERY_CODE_SYMBOL_COUNT))
+    return RecoveryKey(code=format_recovery_code(symbols))
 
 
 __all__ = [
+    "RECOVERY_CODE_ALPHABET",
+    "RECOVERY_CODE_GROUP_COUNT",
+    "RECOVERY_CODE_GROUP_LENGTH",
+    "RECOVERY_CODE_SEPARATOR",
+    "RECOVERY_CODE_SYMBOL_COUNT",
     "RecoveryKey",
-    "encode_mnemonic",
+    "canonical_recovery_code",
+    "format_recovery_code",
     "generate_recovery_key",
+    "normalise_recovery_code",
 ]

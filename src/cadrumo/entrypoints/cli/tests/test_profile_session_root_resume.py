@@ -93,7 +93,6 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
 
     del tax_id  # Current registration creates the initial incomplete fact record.
     created = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,

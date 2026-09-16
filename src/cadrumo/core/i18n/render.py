@@ -196,8 +196,6 @@ def clear_output_language_cache_for_settings_override() -> None:
 _OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
     OUTPUT_LANGUAGE_ENV_VAR,
     "CADRUMO_DATABASE_URL",
-    "CADRUMO_SECRET_STORE_BACKEND",
-    "CADRUMO_ALLOW_UNENCRYPTED",
 )
 
 

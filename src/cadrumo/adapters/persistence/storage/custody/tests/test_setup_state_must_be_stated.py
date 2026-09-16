@@ -69,7 +69,6 @@ def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,

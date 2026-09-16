@@ -12,7 +12,7 @@ third-party return value is walked. Before this module the pattern was copied
 into five places under two different names.
 
 ``is_str_keyed_mapping`` is deliberately NOT here: the two copies in
-``domain/iva`` assert string keys because *their* input came from ``tomllib``,
+``domain/iva`` assert string keys because *their* input came from ``rtoml``,
 which is a caller-specific justification rather than a general narrowing.
 """
 
@@ -94,7 +94,7 @@ def is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
 
     Unlike :func:`is_str_keyed_dict` below, this asserts nothing about the keys
     at runtime. It is sound only where the provenance already guarantees them -
-    a table parsed by ``tomllib`` always has string keys - and it is unsound
+    a table parsed by ``rtoml`` always has string keys - and it is unsound
     anywhere else. Prefer :func:`is_str_keyed_dict` unless the caller can point
     at that guarantee.
     """

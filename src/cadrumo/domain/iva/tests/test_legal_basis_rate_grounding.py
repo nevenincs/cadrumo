@@ -26,7 +26,6 @@ audit trail from BOE → substrate → ledger → modelo is grep-able.
 from __future__ import annotations
 
 import re
-import tomllib
 from collections.abc import Iterator
 from datetime import date
 from datetime import date as _esp_date
@@ -44,6 +43,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
 
 from ....core.resources.bundled_data import bundled_path
+from ....core.toml import load_toml
 from ...calculations.registry.schema_base import ThresholdComparison
 from ...invoices.enums import iva_rate_kind, iva_rate_percentage
 from ..lookup import lookup_rate
@@ -88,7 +88,7 @@ def _read_corpus_excerpt(name: str) -> str:
 def _legal_entry(toml_relative: str, article_id: str) -> dict[str, str | list[str]]:
     path = bundled_path("registry", "aeat", "legal") / toml_relative
     with path.open("rb") as handle:
-        data = tomllib.load(handle)
+        data = load_toml(handle)
     return cast(dict[str, str | list[str]], data["legal"][article_id])
 
 

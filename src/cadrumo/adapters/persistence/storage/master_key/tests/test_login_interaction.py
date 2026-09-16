@@ -34,7 +34,6 @@ def _authority_contexts():
 def _register(label: str) -> str:
     create_context, decode_context = _authority_contexts()
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_CREDENTIAL_INPUT,
         profile_create_context=create_context,

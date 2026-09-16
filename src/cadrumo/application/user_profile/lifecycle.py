@@ -23,7 +23,6 @@ from .capsule_record import (
 from .custody_hold_models import ProfileCustodyRetentionOverride
 from .custody_ports import (
     ProfileCustodyEnvelopePort,
-    ProfileCustodyRecoveryEnvelopePort,
     ProfileCustodySentinelPort,
     verify_profile_custody_dek_against_sentinel,
 )
@@ -66,7 +65,6 @@ class ProfileCapsuleLifecycle:
         data_files: Mapping[str, bytes],
         initial_record: UserProfileRecord,
         record_session: ProfileRecordSession,
-        recovery_envelope: ProfileCustodyRecoveryEnvelopePort,
         profile_id: UUID | None = None,
     ) -> CommittedProfileView:
         """Create and publish a new profile capsule."""
@@ -82,7 +80,6 @@ class ProfileCapsuleLifecycle:
             sentinel=sentinel,
             data_files=data_files,
             label=label,
-            recovery_envelope=recovery_envelope,
             publication_kind=ProfilePublicationKind.ENROLL,
             stage_initializer=lambda stage_path: stage_initial_profile_record_database(
                 stage_path=stage_path,
@@ -106,13 +103,12 @@ class ProfileCapsuleLifecycle:
     ) -> CommittedProfileView:
         """Publish one restored capsule under a named, proven restore authority.
 
-        ``authority`` records which door proved the key: the profile's own
-        password, or a portable recovery artifact. It is required and has no
-        default, because the two are not interchangeable and a restore that
-        does not say which one it used cannot be audited afterwards. Both
-        doors prove the DEK before reaching here; neither mints, rotates, or
-        replaces a key schedule, so a recovery-proved restore republishes the
-        SAME password envelope and does not hand back password access.
+        ``authority`` records which door proved the key. It is required and
+        has no default so a restore that does not say what authorised it
+        cannot be audited afterwards. The door proves the DEK before reaching
+        here; it neither mints, rotates, nor replaces a key schedule, and it
+        never installs a recovery wrapper: a restored profile enrolls recovery
+        again explicitly if the operator wants it.
 
         The material agreement below is checked at the primitive rather than
         trusted from the door, and the reason is asymmetric cost. Publishing
@@ -148,7 +144,6 @@ class ProfileCapsuleLifecycle:
             sentinel=sentinel,
             data_files=data_files,
             label=label,
-            recovery_envelope=None,
             publication_kind=ProfilePublicationKind.RESTORE,
             stage_initializer=lambda stage_path: self._stage_and_validate_restore_database(
                 stage_path=stage_path,

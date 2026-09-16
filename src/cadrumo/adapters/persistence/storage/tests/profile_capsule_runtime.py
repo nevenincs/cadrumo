@@ -12,7 +12,7 @@ import contextlib
 from base64 import b64encode
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -20,14 +20,12 @@ from uuid import UUID
 
 from .....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from .....application.user_profile.capsule_record import ProfileRecordSession
-from .....application.user_profile.custody_ports import ProfileCustodyRecoveryEnvelopePort
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
     bound_profile_record_session,
     close_active_profile_record_session,
 )
-from .....application.user_profile.recovery_custody import mint_profile_creation_recovery
 from .....core.bucket_pointer import resolve_active_bucket_id
 from .....core.config import override_settings
 from .....core.identity.profile import canonical_profile_bucket_id
@@ -35,6 +33,7 @@ from .....core.paths import effective_storage_root
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.authority_artifact import ProfileSchemaComponentQuery
+from .....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from .....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from .....domain.calculations.registry.tests.published_authority import published_profile_schema
 from .....domain.user_profile.errors import ProfileSchemaValidationError
@@ -61,7 +60,17 @@ def derive_test_bucket_key(identity: str, *, purpose: str) -> bytes:
 
 
 def profile_authority_contexts() -> tuple[ProfileCreateContext, ProfileDecodeContext]:
-    """Return canonical schema contexts through one injected authority pin."""
+    """Return canonical schema contexts bound to the authority the test runs under.
+
+    Inside a leased authority operation (``authority_operation`` fixture or an
+    explicit ``bundled_indexed_authority().operation()`` block) the contexts
+    carry that lease's generation pin, so records built here agree with what
+    the code under test compares against. Outside any lease they come from
+    one injected fixture pin over the published profile schema.
+    """
+    leased = governed_facts_in_scope()
+    if isinstance(leased, PinnedAuthorityOperation):
+        return leased.profile_create_context(), leased.profile_decode_context()
     reader = FakeAuthorityComponentReader({ProfileSchemaComponentQuery(): published_profile_schema()})
     operation = PinnedAuthorityOperation(reader, reader.pin())
     return operation.profile_create_context(), operation.profile_decode_context()
@@ -92,21 +101,6 @@ def new_test_profile_custody_envelope(profile_id: UUID) -> ProfileCustodyEnvelop
     )
 
 
-@contextmanager
-def test_profile_recovery_envelope(
-    profile_id: UUID,
-    *,
-    dek: bytes,
-    dek_epoch: str,
-) -> Generator[ProfileCustodyRecoveryEnvelopePort]:
-    """Mint a production recovery wrapper and bound its secret lifetime."""
-    enrollment = mint_profile_creation_recovery(profile_id=profile_id, dek=dek, dek_epoch=dek_epoch)
-    try:
-        yield enrollment.envelope
-    finally:
-        enrollment.recovery_key.wipe()
-
-
 def publish_test_profile_capsule(
     profile_id: str | UUID,
     *,
@@ -130,21 +124,15 @@ def publish_test_profile_capsule(
         profile_decode_context=decode_context,
     )
     try:
-        with test_profile_recovery_envelope(
-            identity,
-            dek=dek,
-            dek_epoch=envelope.dek_epoch,
-        ) as recovery_envelope:
-            ProfileCapsuleLifecycle(root=storage_root).create(
-                label=label,
-                profile_id=identity,
-                password_envelope=envelope,
-                sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
-                data_files={},
-                initial_record=initial,
-                record_session=session,
-                recovery_envelope=recovery_envelope,
-            )
+        ProfileCapsuleLifecycle(root=storage_root).create(
+            label=label,
+            profile_id=identity,
+            password_envelope=envelope,
+            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
+            data_files={},
+            initial_record=initial,
+            record_session=session,
+        )
     finally:
         session.close()
     return initial
@@ -160,12 +148,13 @@ def provision_test_profile_bucket_session(
     """Publish a real encrypted test bucket and open its bound session."""
     publish_test_profile_capsule(bucket_id, label=label, root=storage_root)
     paths = bucket_paths(storage_root, bucket_id)
-    session = BucketSession.open(
+    session = BucketSession.open_resumed(
         bucket_id=bucket_id,
-        kek=derive_test_bucket_key(bucket_id, purpose="kek"),
         dek=derive_test_bucket_key(bucket_id, purpose="dek"),
         idle_minutes=15,
         opened_at=opened_at,
+        idle_deadline=opened_at + timedelta(minutes=15),
+        absolute_deadline=opened_at + timedelta(minutes=240),
         storage_root=storage_root,
     )
     return session, paths
@@ -192,29 +181,20 @@ def open_test_profile_session(profile_id: str | UUID) -> Generator[str]:
     close_active_profile_record_session()
     try:
         with override_settings(cadrumo_active_profile=identity):
-            session = BucketSession.open(
+            _opened_at = datetime.now(UTC)
+            session = BucketSession.open_resumed(
                 bucket_id=identity,
-                kek=derive_test_bucket_key(identity, purpose="kek"),
                 dek=derive_test_bucket_key(identity, purpose="dek"),
                 idle_minutes=15,
-                opened_at=datetime.now(UTC),
+                opened_at=_opened_at,
+                idle_deadline=_opened_at + timedelta(minutes=15),
+                absolute_deadline=_opened_at + timedelta(minutes=240),
                 storage_root=effective_storage_root(),
             )
             with activate_session(session):
                 yield identity
     finally:
         close_active_profile_record_session()
-
-
-def mint_test_profile_recovery_envelope(
-    profile_id: UUID,
-    *,
-    dek: bytes,
-    dek_epoch: str,
-) -> ProfileCustodyRecoveryEnvelopePort:
-    """Mint a creation wrapper while immediately wiping the fixture mnemonic."""
-    with test_profile_recovery_envelope(profile_id, dek=dek, dek_epoch=dek_epoch) as envelope:
-        return envelope
 
 
 def _record_session(profile_id: UUID, *, root: Path) -> ProfileRecordSession:
@@ -410,21 +390,15 @@ def seed_test_profile_record(
             previous_record_digest=None,
         )
         try:
-            with test_profile_recovery_envelope(
-                identity,
-                dek=dek,
-                dek_epoch=envelope.dek_epoch,
-            ) as recovery_envelope:
-                ProfileCapsuleLifecycle(root=storage_root).create(
-                    label=label,
-                    profile_id=identity,
-                    password_envelope=envelope,
-                    sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
-                    data_files={},
-                    initial_record=initial,
-                    record_session=session,
-                    recovery_envelope=recovery_envelope,
-                )
+            ProfileCapsuleLifecycle(root=storage_root).create(
+                label=label,
+                profile_id=identity,
+                password_envelope=envelope,
+                sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
+                data_files={},
+                initial_record=initial,
+                record_session=session,
+            )
         finally:
             session.close()
         return initial
@@ -439,7 +413,6 @@ __all__ = [
     "bound_test_profile_record",
     "derive_test_bucket_key",
     "load_test_profile_record",
-    "mint_test_profile_recovery_envelope",
     "new_test_profile_custody_envelope",
     "open_test_profile_session",
     "provision_test_profile_bucket_session",
@@ -447,6 +420,5 @@ __all__ = [
     "seed_modelo_ready_profile_record",
     "seed_test_profile_record",
     "set_active_test_profile_facts",
-    "test_profile_recovery_envelope",
     "upsert_test_profile_facts",
 ]

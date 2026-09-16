@@ -30,7 +30,7 @@ engine from raising before ``0596`` / ``0597`` resolve. (The pagos fold itself i
 proven by ``test_modelo_100_pagos_fraccionados_fold_in_live``.)
 
 Real-behaviour, real-adapter (real encrypted-SQLite observation store via
-:class:`SecureObjectRepository` + :class:`EphemeralMasterKeyProvider`, real
+:class:`SecureObjectRepository` + :class:`EphemeralBucketSession`, real
 registry authority, real calculation engine, real relation resolver, real source
 mesh — no mocks, stubs, skips, or xfail).
 

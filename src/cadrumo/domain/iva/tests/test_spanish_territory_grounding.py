@@ -42,7 +42,6 @@ See Also:
 
 from __future__ import annotations
 
-import tomllib
 from functools import lru_cache
 from typing import Final
 
@@ -50,6 +49,7 @@ import pytest
 
 from ....core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from ....core.resources.bundled_data import bundled_path
+from ....core.toml import parse_toml
 from ..classification import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -75,7 +75,7 @@ _WORDING_FROM_ANOTHER_ARTICLE: Final[str] = "El impuesto se exigirá al tipo del
 
 
 def _territory_records() -> list[dict[str, object]]:
-    payload = tomllib.loads(
+    payload = parse_toml(
         bundled_path("registry", "aeat", "iva", "territories.toml").read_text(encoding="utf-8"),
     )
     records = payload["territory"]
@@ -110,7 +110,7 @@ def _catalogue_entries() -> dict[str, dict[str, object]]:
     """
     merged: dict[str, dict[str, object]] = {}
     for name in _CATALOGUE_FILES:
-        payload = tomllib.loads((bundled_path() / name).read_text(encoding="utf-8"))
+        payload = parse_toml((bundled_path() / name).read_text(encoding="utf-8"))
         entries = payload.get("legal", {})
         assert isinstance(entries, dict), f"{name} carries no legal table"
         for key, entry in entries.items():

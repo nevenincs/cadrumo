@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -49,7 +49,7 @@ from ..runtime_repository import (
 from ..secure_object_namespaces import SECURE_OBJECT_WORKFLOW_STATE_KEY
 from ..sql.engine import dispose_engine
 from ..sql.secure_objects import SecureObjectRepository
-from .ephemeral_master_key import EphemeralMasterKeyProvider
+from .ephemeral_bucket_session import EphemeralBucketSession
 from .secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -153,12 +153,14 @@ def _save_probe_row(namespace: str, object_key: str, payload: bytes) -> None:
 
 
 def bucket_session(bucket_id: str) -> BucketSession:
-    return BucketSession.open(
+    _opened_at = datetime.now(UTC)
+    return BucketSession.open_resumed(
         bucket_id=bucket_id,
-        kek=b"k" * 32,
         dek=b"d" * 32,
         idle_minutes=15,
-        opened_at=datetime.now(UTC),
+        opened_at=_opened_at,
+        idle_deadline=_opened_at + timedelta(minutes=15),
+        absolute_deadline=_opened_at + timedelta(minutes=240),
     )
 
 
@@ -350,8 +352,8 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
     db_path = tmp_path / "rotated.db"
     dispose_engine()
 
-    key_old = EphemeralMasterKeyProvider()
-    key_new = EphemeralMasterKeyProvider()
+    key_old = EphemeralBucketSession()
+    key_new = EphemeralBucketSession()
     namespace = "cadrumo-test.repair.rotation"
 
     # Seed three rows under the OLD master key.
@@ -412,8 +414,8 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
     db_path = tmp_path / "agg.db"
     dispose_engine()
 
-    key_old = EphemeralMasterKeyProvider()
-    key_new = EphemeralMasterKeyProvider()
+    key_old = EphemeralBucketSession()
+    key_new = EphemeralBucketSession()
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (
@@ -574,8 +576,8 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
     db_path = tmp_path / "quar.db"
     dispose_engine()
 
-    key_old = EphemeralMasterKeyProvider()
-    key_new = EphemeralMasterKeyProvider()
+    key_old = EphemeralBucketSession()
+    key_new = EphemeralBucketSession()
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (
@@ -615,8 +617,8 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     db_path = tmp_path / "preview-quar.db"
     dispose_engine()
 
-    key_old = EphemeralMasterKeyProvider()
-    key_new = EphemeralMasterKeyProvider()
+    key_old = EphemeralBucketSession()
+    key_new = EphemeralBucketSession()
 
     with key_old, _explicit_database(db_path):
         for namespace, key, payload in (

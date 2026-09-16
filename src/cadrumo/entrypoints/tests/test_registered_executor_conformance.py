@@ -869,7 +869,6 @@ def _runtime(
             label="S45 registered executor subject",
             passphrase=_CREDENTIAL_INPUT,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )

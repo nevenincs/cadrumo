@@ -65,7 +65,6 @@ def _setup_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...]) -> Gen
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Promotion subject",
             passphrase=_CREDENTIAL_INPUT,
             facts=facts,

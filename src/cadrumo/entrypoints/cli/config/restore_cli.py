@@ -3,8 +3,9 @@
 The restore door an operator reaches after a disk failure, after copying a
 ``buckets/<profile-id>/`` directory out of a backup, after restoring a sealed
 archive written by ``config profile archive export``, or after a publication
-was interrupted part-way. It takes the capsule and a credential that proves the
-key, and publishes it back into the storage root as a usable profile.
+was interrupted part-way. It takes the capsule and the profile's passphrase,
+which proves the key, and publishes it back into the storage root as a usable
+profile.
 
 **One verb takes both source shapes**, a capsule DIRECTORY or a sealed ARCHIVE
 file, because the two differ only in how the material is READ. Both produce the
@@ -16,25 +17,14 @@ of two verbs restores their backup. The shapes are told apart by asking the
 filesystem, which is unambiguous, rather than by a flag the operator has to get
 right.
 
-Two credentials open it, and they are two ways of proving one key rather than
-two restore paths: the profile's own password, or a portable recovery artifact
-plus the 24-word phrase minted with it. Both converge on the same single
-restore authority, which is why this is one verb selected by ``--artifact``
-rather than a pair of sibling verbs that would each need their own argument
-surface and could drift apart.
-
-Recovering the DATA is not recovering the CREDENTIAL. The recovery door
-republishes the capsule under its EXISTING password envelope, so an operator
-who genuinely lost their password gets their records back and still cannot log
-in with a password they do not know. That is stated to the operator through the
-notices channel rather than left to be discovered at the next login prompt: a
-verb that reports plain success here would be telling a half-truth at exactly
-the moment the operator is deciding whether they are recovered.
+A restore never installs recovery. The restored profile reports
+``recovery_enrolled`` as false on every restore so the operator knows to run
+``config profile recovery enable`` again if they want a second door.
 
 The verb is bootstrap-exempt. Gating it behind an active session would be a
 deadlock in the literal sense --- the profile the operator would log in to is
 the one they are restoring --- and it grants nothing, because the caller must
-already hold both the capsule bytes and a credential that opens them.
+already hold both the capsule bytes and the passphrase that opens them.
 """
 
 from __future__ import annotations
@@ -47,7 +37,6 @@ from pydantic import SecretStr
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
-from ....core.json_contract import Notice, NoticeSeverity
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 from .secure_input import MachineSecretPayload, MachineSecretSelection
@@ -55,19 +44,11 @@ from .secure_input import MachineSecretPayload, MachineSecretSelection
 if TYPE_CHECKING:
     from ....application.user_profile.capsule_restore import ProfileCapsuleSource, ProfileRestoreOutcome
 
-_RECOVERY_LIMIT_NOTICE_CODE = "config.profile.archive.import.password_unchanged"
-
 
 class RestorePassphraseSecrets(MachineSecretPayload):
     """Strict machine-channel payload for the passphrase door."""
 
     passphrase: SecretStr
-
-
-class RestoreRecoverySecrets(MachineSecretPayload):
-    """Strict machine-channel payload for the recovery-artifact door."""
-
-    recovery_secret: SecretStr
 
 
 def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
@@ -80,18 +61,6 @@ def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
             selection=selection,
         ).passphrase.get_secret_value()
     return prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt"))
-
-
-def _collect_recovery_secret(*, selection: MachineSecretSelection | None) -> str:
-    """Resolve the 24-word recovery phrase from one explicit channel or a verified prompt."""
-    from .secure_input import prompt_secret_no_echo, read_machine_secret_payload
-
-    if selection is not None:
-        return read_machine_secret_payload(
-            RestoreRecoverySecrets,
-            selection=selection,
-        ).recovery_secret.get_secret_value()
-    return prompt_secret_no_echo(tr("cli.config.profile.archive.import_recovery_secret_prompt"))
 
 
 def _read_capsule_source(source: Path) -> ProfileCapsuleSource:
@@ -118,9 +87,8 @@ def _restore_lines(outcome: ProfileRestoreOutcome) -> tuple[str, ...]:
     """Render the non-secret facts of one completed restore.
 
     ``recovery_enrolled`` is stated on every restore, not only when it is
-    false. Recovery can be installed only at publication and a restore IS the
-    publication, so this is the operator's last chance to learn that the
-    profile they just recovered has no second door.
+    false, because a restore never carries recovery across: this is the
+    operator's cue to enrol again.
     """
     return (
         f"profile_id\t{outcome.profile_id}",
@@ -134,17 +102,13 @@ def profile_archive_import(
     ctx: typer.Context,
     label: str,
     file: Path,
-    artifact: Path | None = None,
     secrets_stdin: bool = False,
     secrets_fd: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Republish a capsule directory as a usable profile."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.capsule_restore import (
-        restore_profile_capsule_with_password,
-        restore_profile_capsule_with_recovery_artifact,
-    )
+    from ....application.user_profile.capsule_restore import restore_profile_capsule_with_password
     from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ..config_payloads import ConfigProfileArchiveImportResult
     from .secure_input import select_machine_secret_channel
@@ -160,33 +124,12 @@ def profile_archive_import(
     # a malformed source should not make an operator restage a secret.
     capsule = _read_capsule_source(file)
 
-    notices: list[Notice] = []
     with bundled_indexed_authority().operation() as operation:
-        profile_decode_context = operation.profile_decode_context()
-        if artifact is None:
-            outcome = restore_profile_capsule_with_password(
-                label=label,
-                capsule=capsule,
-                password=_collect_passphrase(selection=selection),
-                profile_decode_context=profile_decode_context,
-            )
-        else:
-            outcome = restore_profile_capsule_with_recovery_artifact(
-                label=label,
-                capsule=capsule,
-                artifact_source=artifact,
-                recovery_secret=_collect_recovery_secret(selection=selection),
-                profile_decode_context=profile_decode_context,
-            )
-        # The records are back; the credential is not. Saying so here is
-        # the difference between an operator who knows to rotate and one
-        # who finds out at the login prompt.
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code=_RECOVERY_LIMIT_NOTICE_CODE,
-                message=tr("cli.config.profile.archive.import_password_unchanged"),
-            ),
+        outcome = restore_profile_capsule_with_password(
+            label=label,
+            capsule=capsule,
+            password=_collect_passphrase(selection=selection),
+            profile_decode_context=operation.profile_decode_context(),
         )
 
     emit_envelope(
@@ -197,10 +140,8 @@ def profile_archive_import(
             label=outcome.label,
             authority=outcome.authority,
             recovery_enrolled=outcome.recovery_enrolled,
-            password_unchanged=artifact is not None,
         ),
         lines=list(_restore_lines(outcome)),
-        notices=notices,
     )
 
 

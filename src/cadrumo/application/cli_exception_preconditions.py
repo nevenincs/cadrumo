@@ -153,7 +153,6 @@ class CliExceptionPrecondition(StrEnum):
     LOGIN_COMPLETED = "cli.profile.login.completed"
     ACTIVE_BUCKET_SELECTED = "storage.active_bucket.selected"
     ACTIVE_BUCKET_SESSION_AVAILABLE = "storage.active_bucket.session_available"
-    RESUMED_SESSION_KEK_MATERIAL_AVAILABLE = "storage.resumed_session.kek_material_available"
     MASTER_KEY_MATERIAL_AVAILABLE = "storage.master_key.material_available"
     BUCKET_SESSION_UNLOCKED = "storage.bucket_session.unlocked"
     BUCKET_SESSION_FRESH = "storage.bucket_session.fresh"

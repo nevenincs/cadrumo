@@ -27,13 +27,14 @@ from cadrumo.application.user_profile.capsule_archive import (
 )
 from cadrumo.application.user_profile.capsule_restore import restore_profile_capsule_with_password
 from cadrumo.application.user_profile.custody_ports import profile_custody_recovery_envelope_path
+from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 _LABEL = "Archive Roundtrip Subject"
@@ -43,7 +44,7 @@ _NAME = "Genoveva"
 _SURNAMES = "Iriarte Zubizarreta"
 
 
-def _register(handed: list[str] | None = None) -> str:
+def _register() -> str:
     """Register the subject profile carrying identifying facts."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
@@ -54,14 +55,19 @@ def _register(handed: list[str] | None = None) -> str:
             UserProfileFact(path="identity.name", value=_NAME),
             UserProfileFact(path="identity.surnames", value=_SURNAMES),
         ),
-        recovery_handover=lambda enrollment: (
-            (handed.append(enrollment.recovery_key.mnemonic) if handed is not None else None)
-            or enrollment.recovery_key.mnemonic
-        ),
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
     return outcome.profile_id
+
+
+def _enroll_recovery(profile_id: str) -> None:
+    """Enrol recovery through the real door, discarding the code the fixture does not need."""
+    enroll_profile_recovery(
+        profile_id=UUID(profile_id),
+        current_passphrase=_CREDENTIAL_INPUT,
+        recovery_handover=lambda enrollment: enrollment.recovery_key.code,
+    )
 
 
 def test_a_profile_survives_an_archive_and_a_restore_on_a_fresh_root(tmp_path: Path) -> None:
@@ -111,31 +117,15 @@ def test_the_archive_leaks_no_identifying_field_outside_its_encrypted_members(tm
             assert secret.encode("utf-8") not in expanded, f"{secret!r} appears in the decompressed archive"
 
 
-def test_discarding_words_does_not_create_a_password_only_source_profile(tmp_path: Path) -> None:
-    """Not retaining words in a fixture cannot bypass creation enrollment."""
-    handed: list[str] = []
-
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        enrolled_id = _register(handed)
-        enrolled = load_committed_profile_password_material(UUID(enrolled_id))
-
-    with isolated_profile_storage_root(tmp_path=tmp_path / "second"):
-        unretained_id = _register()
-        unretained = load_committed_profile_password_material(UUID(unretained_id))
-
-    assert profile_custody_recovery_envelope_path(enrolled.capsule_path).exists()
-    assert profile_custody_recovery_envelope_path(unretained.capsule_path).exists()
-
-
 def test_the_recovery_wrapper_is_excluded_from_archive_and_import(tmp_path: Path) -> None:
     """Normal backup transport never carries or installs recovery material."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register(handed)
-        original_path = (
-            load_committed_profile_password_material(UUID(profile_id)).capsule_path / "custody" / "recovery.v1.json"
+        profile_id = _register()
+        _enroll_recovery(profile_id)
+        original_path = profile_custody_recovery_envelope_path(
+            load_committed_profile_password_material(UUID(profile_id)).capsule_path
         )
         assert original_path.exists()
         archive = tmp_path / "with-recovery.cadrumo-bucket.tar.gz"

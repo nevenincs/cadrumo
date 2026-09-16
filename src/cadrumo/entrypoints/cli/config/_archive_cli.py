@@ -65,23 +65,48 @@ def _inspect_lines(inspection: ProfileCapsuleArchiveInspection) -> tuple[str, ..
     )
 
 
+def _refuse_archive_target_without_the_sealed_suffix(target: Path) -> None:
+    """Refuse a destination the sealed-archive writer would reject anyway.
+
+    The writer enforces the suffix, but it is an adapter: its refusal arrives
+    untranslated and names an internal write operation rather than the flag the
+    operator has to change. Checking here means the operator learns the exact
+    required suffix in their own language, before any capsule is read.
+    """
+    from ....adapters.persistence.storage.bucket.sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX
+    from ..errors import CliRefusedBoundaryError
+
+    if target.name.endswith(CADRUMO_BUCKET_BUNDLE_SUFFIX):
+        return
+    raise CliRefusedBoundaryError(
+        translated_message="cli.config.profile.archive.refusal.export_suffix",
+        context={"suffix": CADRUMO_BUCKET_BUNDLE_SUFFIX},
+    )
+
+
 def archive_export(
     ctx: typer.Context,
-    name: str,
     output: Path,
+    name: str | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    from ._profile_support import resolve_profile_by_label
-
-    """Write a named profile's capsule to a sealed archive."""
+    """Write a profile's capsule to a sealed archive, defaulting to the active one."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile.capsule_archive import export_profile_capsule_archive
     from ..config_payloads import ConfigProfileArchiveExportResult
+    from ._profile_inspect import _resolve_show_pointer
+    from ._profile_support import resolve_active_profile_pointer
 
+    _refuse_archive_target_without_the_sealed_suffix(output)
     # The archive service takes a UUID and deliberately holds no opinion
     # about labels, so the label is resolved here through the one shared
-    # resolver rather than inside the service.
-    pointer = resolve_profile_by_label(name)
+    # resolver rather than inside the service. An omitted name means the
+    # active profile, resolved by the same helper the inspect verbs use.
+    pointer = _resolve_show_pointer(
+        name,
+        ctx=ctx,
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
+    )
     receipt = export_profile_capsule_archive(
         profile_id=UUID(str(pointer.bucket_id)),
         target=output,

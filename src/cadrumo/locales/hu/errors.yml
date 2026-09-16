@@ -51,18 +51,11 @@ errors:
       Hitelesítsen újra egy új munkamenet létrehozásához.
     auth_session_unavailable: Nincs elérhető ellenőrzött aktív AEAT-munkamenet. Hitelesítse
       magát a folytatás előtt.
-    auth_storage_bucket_recovery_verification: A megadott helyreállítási kód érvénytelen.
-      Pontosan írja be a 24 szót, ahogy a biztonsági másolatban szerepel.
     auth_storage_keyring_unavailable: Az operációs rendszer kulcstára nem elérhető.
       Vagy nincs regisztrálva hitelesítő tároló, vagy ez a bejelentkezési munkamenet
       nem tud hitelesítő adatokat tárolni, ami hálózati vagy szolgáltatásfiókos bejelentkezésnél
       gyakori. Jelentkezzen be interaktívan, vagy ellenőrizze, hogy telepítve és aktív-e
       egy hitelesítő tároló.
-    auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
-      még nincs kiosztva.
-    auth_storage_master_key_unavailable: Ez a profilmunkamenet folytatásból indult,
-      és csak az adatkulcsát őrzi; a kulcstitkosítási anyag a bejelentkezéshez kötött.
-      Futtasd az `aeat config login` parancsot az újbóli hitelesítéshez.
     clave_movil_identity_checksum: A Cl@ve Móvil azonosító alakja érvényes, de az
       ellenőrző betűje nem egyezik a számjegyekkel. Ellenőrizze az okmány utolsó betűjét,
       és próbálja újra.
@@ -474,8 +467,6 @@ errors:
     fail_snapshot_not_found: Nem létezik pillanatkép a kért azonosítóval.
     fail_storage: Tárolási hiba történt.
     fail_storage_blob_not_found: A kért objektum nem található a titkosított tárolóban.
-    fail_storage_bucket_recovery_unavailable: Az aktív bucket helyreállítási csomagja
-      nem tölthető be. Előfordulhat, hogy a helyreállítás sohasem volt regisztrálva.
     fail_storage_persistence: Perzisztenciahiba történt a biztonságos tárolóban.
     fail_storage_profile_custody: A profilőrzés nem fejezhető be.
     fail_storage_repository: Egy adattár-művelet meghiúsult.
@@ -795,8 +786,6 @@ errors:
     canonical_tui_module_argument: A TUI-modul csak a támogatott argumentumokat fogadja
       el.
     canonical_tui_navigation_contract: A TUI navigációs kérése megsérti a szerződését.
-    canonical_tui_recovery_handover_abandoned: A helyreállítási átadást a megerősítés
-      befejezése előtt elhagyták.
     canonical_tui_recovery_handover_cancelled: A helyreállítási átadást az operátor
       megszakította.
     canonical_tui_unknown_design_token: A TUI-stíluslap nem deklarált tervezési tokenre
@@ -890,6 +879,7 @@ errors:
     profile_name_collision: A megadott profilnév már használatban van. Válasszon más
       nevet.
     profile_passphrase_rotation: A profil jelszavát nem sikerült megváltoztatni.
+    profile_recovery: A helyreállítási kérést nem sikerült végrehajtani.
     profile_registration: A profil regisztrációja nem sikerült.
     reconciliation_declaration_source_unsupported: Bevallásból való egyeztetés még
       nem elérhető.
@@ -986,8 +976,6 @@ errors:
       és böngésző szükséges; futtassa interaktív shellből.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válasszon profilt, vagy
       használja a --profile kapcsolót.
-    refused_google_unsecured_mode: A Google nem engedélyezhető nem biztonságos tárolási
-      módban olyan profillal, amely valódi NIF-et tartalmaz.
     refused_google_validation: A megadott Google-paraméterek nem mentek át az érvényesítésen.
     refused_inventory_actividad_conflict: Már létezik készlet az adott tevékenységhez
       és évhez.
@@ -1138,10 +1126,7 @@ errors:
     refused_review_filter_parse: A  paramétert nem sikerült elemezni. Ellenőrizze
       a megadott szűrő szintaxisát.
     refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
-    refused_storage_bucket_already_present: Az importálás ütközik egy már létező tárolási
-      bucket-tel.
-    refused_storage_bucket_no_active: Nem oldható fel aktív bucket. Válasszon ki egy
-      profilt, és próbálja újra.
+    refused_storage_bucket_already_present: Már létezik ilyen azonosítójú bucket.
     refused_storage_master_key_no_active_session: A titkosításhoz aktív munkamenet
       szükséges. Futtassa az `aeat config login NÉV` parancsot, majd próbálja újra.
     refused_storage_profile_custody: Ez a profilőrzési művelet elutasítva.
@@ -1155,8 +1140,6 @@ errors:
       a felülírás lehetőséget a csere érdekében.
     refused_storage_session_expired: Az aktív munkamenet inaktivitás miatt lejárt.
       Aktiválja újra az aeat config login NÉV paranccsal.
-    refused_storage_unsecured_mode: A nem biztonságos tároló háttérrendszert az szükséges
-      engedélyezés nélkül kérték. Valós adatokhoz nem biztonságos.
     refused_tabular_source_unreadable: A táblázatos fájlt nem sikerült dekódolni,
       vagy nem tartalmaz fejlécsorral rendelkező táblázatot.
     refused_taxation_comparison: A közös-vs-egyéni adózás összehasonlítása nem végezhető

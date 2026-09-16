@@ -41,13 +41,13 @@ from __future__ import annotations
 
 import json
 import re
-import tomllib
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import TypeAdapter
 
 from ..core.resources.bundled_data import bundled_path
+from ..core.toml import parse_toml
 
 __all__ = [
     "an_uncatalogued_alpha2",
@@ -75,7 +75,7 @@ _STRING_LIST = TypeAdapter(list[str])
 
 @lru_cache(maxsize=1)
 def _vocabulary() -> tuple[frozenset[str], frozenset[str]]:
-    raw = tomllib.loads(Path(bundled_path(*_VOCABULARY)).read_text(encoding="utf-8"))
+    raw = parse_toml(Path(bundled_path(*_VOCABULARY)).read_text(encoding="utf-8"))
     payload = _COUNTRY_ROWS.validate_python(raw["country"])
     codes: set[str] = set()
     alpha3_codes: set[str] = set()

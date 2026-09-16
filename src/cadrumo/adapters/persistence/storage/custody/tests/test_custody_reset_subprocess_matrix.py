@@ -169,7 +169,6 @@ def _child_env(root: Path) -> dict[str, str]:
         **os.environ,
         "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
         "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
-        "CADRUMO_SECRET_STORE_BACKEND": settings.cadrumo_secret_store_backend,
         "CADRUMO_SECRET_PASSPHRASE": passphrase.get_secret_value(),
     }
 

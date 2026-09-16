@@ -26,11 +26,12 @@ claimed to cover, which is a deliberate authoring act with an author attached.
 from __future__ import annotations
 
 import json
-import tomllib
 from pathlib import Path
 from typing import cast
 
 import pytest
+
+from ....core.toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -75,7 +76,7 @@ def _asserted_through() -> int:
 def _master_supported_filing_years() -> tuple[int, ...]:
     """Return the years the one writable master declaration carries."""
     path = _DATA_ROOT / "registry" / "aeat" / "legal" / "supported-filing-years.toml"
-    payload = tomllib.loads(path.read_text(encoding="utf-8"))
+    payload = parse_toml(path.read_text(encoding="utf-8"))
     declaration = payload.get("supported_filing_years")
     assert isinstance(declaration, dict), (
         "the bundled registry declares no supported_filing_years catalogue; "

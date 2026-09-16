@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -36,6 +37,8 @@ from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfil
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -51,16 +54,37 @@ from ..relation_binding_join import bundled_relation_binding_join, bundled_relat
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "1d4f2a60-5c31-4b7e-8a2d-6e0f9c3b1a77"
-_SNAPSHOT = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
-_SNAPSHOT_REF = _SNAPSHOT.snapshot_ref
-_PERIOD = Period.from_year_and_code(_SNAPSHOT_REF.modelo_year, _SNAPSHOT_REF.period)
-_WORK_UNIT_ID = derive_work_unit_id(
-    bucket_id=_BUCKET_ID,
-    modelo=_SNAPSHOT_REF.modelo,
-    filing_year=_SNAPSHOT_REF.modelo_year,
-    period=_PERIOD,
-    revision_id=_SNAPSHOT_REF.revision_id,
-)
+
+
+@cache
+def _snapshot() -> RegistrySnapshot:
+    # Compiled on first use, not at import: collection must stay cheap.
+    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+
+
+@cache
+def _snapshot_ref() -> RegistrySnapshotRef:
+    return _snapshot().snapshot_ref
+
+
+@cache
+def _period() -> Period:
+    ref = _snapshot_ref()
+    return Period.from_year_and_code(ref.modelo_year, ref.period)
+
+
+@cache
+def _work_unit_id() -> str:
+    ref = _snapshot_ref()
+    return derive_work_unit_id(
+        bucket_id=_BUCKET_ID,
+        modelo=ref.modelo,
+        filing_year=ref.modelo_year,
+        period=_period(),
+        revision_id=ref.revision_id,
+    )
+
+
 _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
 _CREATED_AT = datetime(2026, 4, 2, 9, 0, 0, tzinfo=UTC)
 _OVERRIDE_VALUE = "125.00"
@@ -79,7 +103,7 @@ def _post_cut_binding_id() -> str:
     anything.
     """
     targets = bundled_relation_binding_join_targets()
-    declared = sorted(binding.id for binding in _SNAPSHOT.revision.bindings)
+    declared = sorted(binding.id for binding in _snapshot().revision.bindings)
     candidates = [binding_id for binding_id in declared if binding_id not in targets]
     assert candidates, "the active revision declares no binding outside the frozen join"
     return candidates[0]
@@ -89,7 +113,7 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     """Build one synthetic revision whose content address matches its contents."""
     casilla_values = {_CASILLA_01: Decimal("1000.00")}
     revision_id = derive_calculation_revision_id(
-        work_unit_id=_WORK_UNIT_ID,
+        work_unit_id=_work_unit_id(),
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
@@ -99,8 +123,8 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
-        work_unit_id=_WORK_UNIT_ID,
-        registry_snapshot_ref=_SNAPSHOT_REF,
+        work_unit_id=_work_unit_id(),
+        registry_snapshot_ref=_snapshot_ref(),
         state=CalculationRevisionState.BORRADOR,
         filing_instance_evidence=None,
         casilla_values=casilla_values,
@@ -132,12 +156,12 @@ def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
         WorkUnitCatalogue.from_work_units(
             (
                 WorkUnit(
-                    work_unit_id=_WORK_UNIT_ID,
+                    work_unit_id=_work_unit_id(),
                     bucket_id=_BUCKET_ID,
-                    modelo=_SNAPSHOT_REF.modelo,
-                    filing_year=_SNAPSHOT_REF.modelo_year,
-                    period=_PERIOD,
-                    revision_id=_SNAPSHOT_REF.revision_id,
+                    modelo=_snapshot_ref().modelo,
+                    filing_year=_snapshot_ref().modelo_year,
+                    period=_period(),
+                    revision_id=_snapshot_ref().revision_id,
                     name="303-2026-1T",
                     created_at=_CREATED_AT,
                     updated_at=_CREATED_AT,
@@ -184,11 +208,11 @@ def test_calculation_source_mesh_migrates_the_stored_catalogue(tmp_path: Path) -
         stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
         repository.save(_catalogue(stored))
 
-        work_unit = WorkUnitCatalogueRepository(objects=profile.repository).load().get(_WORK_UNIT_ID)
+        work_unit = WorkUnitCatalogueRepository(objects=profile.repository).load().get(_work_unit_id())
         assert work_unit is not None
         with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as _calculation_ports_192:
             resolve_bucket_source_mesh(
-                _SNAPSHOT,
+                _snapshot(),
                 work_unit,
                 ports=_calculation_ports_192,
                 foreign_asset_observations=(),

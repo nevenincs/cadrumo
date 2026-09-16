@@ -51,19 +51,11 @@ errors:
       no se pudieron deserializar. Vuelve a autenticarte para crear una sesión nueva.
     auth_session_unavailable: No hay ninguna sesión activa verificada con la AEAT
       disponible. Autentícate antes de continuar.
-    auth_storage_bucket_recovery_verification: El código de recuperación introducido
-      no es válido. Vuelve a escribir las 24 palabras exactamente como aparecen en
-      la copia de seguridad.
     auth_storage_keyring_unavailable: El llavero del sistema operativo no está disponible.
       O no hay ningún almacén de credenciales registrado, o esta sesión de inicio
       no puede guardar credenciales, algo habitual en sesiones de red o de servicio.
       Inicia sesión de forma interactiva o comprueba que haya un almacén de credenciales
       instalado y activo.
-    auth_storage_master_key_material_missing: No existe material de clave maestra.
-      El almacenamiento seguro aún no está aprovisionado.
-    auth_storage_master_key_unavailable: Esta sesión de perfil se reanudó y solo conserva
-      su clave de datos; el material de cifrado de claves está ligado al inicio de
-      sesión. Ejecuta `aeat config login` para volver a autenticarte.
     clave_movil_identity_checksum: El identificador de Cl@ve Móvil tiene una forma
       válida pero su letra de control no coincide con los dígitos. Revisa la última
       letra del documento e inténtalo de nuevo.
@@ -513,8 +505,6 @@ errors:
     fail_storage: Se produjo un error en el almacenamiento.
     fail_storage_blob_not_found: No se encontró el objeto solicitado en el almacén
       cifrado.
-    fail_storage_bucket_recovery_unavailable: No se pudo cargar la copia de recuperación
-      del bucket activo. Es posible que la recuperación no se haya configurado nunca.
     fail_storage_persistence: Se produjo un error de persistencia en el almacenamiento
       seguro.
     fail_storage_profile_custody: No se ha podido completar la custodia del perfil.
@@ -847,8 +837,6 @@ errors:
     canonical_tui_module_argument: El módulo TUI solo admite los argumentos compatibles.
     canonical_tui_navigation_contract: La petición de navegación del TUI infringe
       su contrato.
-    canonical_tui_recovery_handover_abandoned: La transferencia de recuperación se
-      abandonó antes de completar la confirmación.
     canonical_tui_recovery_handover_cancelled: El operador canceló la transferencia
       de recuperación.
     canonical_tui_unknown_design_token: La hoja de estilos del TUI hace referencia
@@ -947,6 +935,7 @@ errors:
     profile_name_collision: El nombre de perfil indicado ya está en uso. Elige un
       nombre distinto.
     profile_passphrase_rotation: No se ha podido cambiar la contraseña del perfil.
+    profile_recovery: No se pudo completar la solicitud de recuperación.
     profile_registration: No se ha podido registrar el perfil.
     reconciliation_declaration_source_unsupported: La conciliación a partir de una
       declaración todavía no está disponible.
@@ -1048,8 +1037,6 @@ errors:
       interactivo con navegador; ejecútalo desde una shell interactiva.
     refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona
       un perfil o usa --profile.
-    refused_google_unsecured_mode: No se puede autorizar Google en modo de almacenamiento
-      no cifrado con un perfil que lleva un NIF real.
     refused_google_validation: Los parámetros de Google indicados no superaron la
       validación.
     refused_inventory_actividad_conflict: Ya existe un inventario para esa actividad
@@ -1209,10 +1196,7 @@ errors:
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
       la sintaxis del filtro indicado.
     refused_source_mesh_invariant: 'Rechazado: invariante de la malla de fuentes incumplida.'
-    refused_storage_bucket_already_present: La importación colisiona con un bucket
-      de almacenamiento que ya existe.
-    refused_storage_bucket_no_active: No se pudo determinar ningún bucket activo.
-      Selecciona un perfil y vuelve a intentarlo.
+    refused_storage_bucket_already_present: Ya existe un bucket con ese identificador.
     refused_storage_master_key_no_active_session: El cifrado requiere una sesión activa.
       Ejecuta `aeat config login NAME` y vuelve a intentarlo.
     refused_storage_profile_custody: Esta operación de custodia del perfil está rechazada.
@@ -1226,8 +1210,6 @@ errors:
       la opción de sobrescritura si quieres reemplazarlo.
     refused_storage_session_expired: La sesión activa ha caducado por inactividad.
       Vuelve a activarla con aeat config login NAME.
-    refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
-      habilitación necesaria. No es seguro para datos reales.
     refused_tabular_source_unreadable: El archivo tabular no se pudo descodificar,
       o no contiene ninguna tabla con fila de encabezado.
     refused_taxation_comparison: La comparación tributaria conjunta/individual no

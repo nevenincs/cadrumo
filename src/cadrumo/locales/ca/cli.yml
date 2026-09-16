@@ -1824,8 +1824,6 @@ cli:
         remove_help: Elimina un destinatari de confiança pel seu id del perfil actiu.
     custody:
       current_passphrase_prompt: 'Contrasenya actual del perfil: '
-      data_loss_warning: Anota ara aquesta clau de recuperació. AEAT no desa la clau
-        de recuperació en clar i no la pot tornar a mostrar.
       errors:
         echo_suppression_unavailable: Aquest terminal no pot ocultar el que s'escriu,
           de manera que el secret quedaria visible a la pantalla; utilitzeu --secrets-stdin
@@ -1890,11 +1888,6 @@ cli:
       profile_secrets_stdin_help: Llegeix la contrasenya del perfil de destinació
         exacte des d'un objecte JSON acotat a l'entrada estàndard després que falli
         la represa de la sessió.
-      recovery_words_cancel: Cancel·la la creació
-      recovery_words_confirm: Ja l'he anotada
-      recovery_words_heading: Desa aquesta frase de recuperació
-      recovery_words_warning: Només es mostra una vegada. Qui tingui aquesta frase
-        pot obrir el perfil sense la contrasenya.
       secrets_fd_help: Descriptor de fitxer per llegir secrets de màquina.
       secrets_stdin_help: Llegeix els secrets com un únic objecte JSON limitat des
         de l'entrada estàndard en lloc de demanar-los.
@@ -2028,10 +2021,14 @@ cli:
         already_logged_out: Cap perfil tenia la sessió iniciada; no hi ha res a tancar.
     passphrase:
       change_help: Canvia la contrasenya sense tornar a xifrar els registres ni invalidar
-        una frase de recuperació.
+        un codi de recuperació.
       help: Gestiona la contrasenya que protegeix el perfil actiu.
       no_active_profile: No hi ha cap perfil actiu. Inicia la sessió amb 'aeat config
         login NOM' abans de canviar-ne la contrasenya.
+      reset_code_prompt: 'Codi de recuperació: '
+      reset_help: Estableix una contrasenya nova per a un perfil demostrant-ne el
+        codi de recuperació; fes-ho servir quan hagis oblidat la contrasenya.
+      reset_name_help: Nom del perfil la contrasenya del qual es restableix.
     profile:
       add_row:
         duplicate_field: El camp %{field} s'ha indicat més d'una vegada; no s'ha escrit
@@ -2040,24 +2037,20 @@ cli:
         invalid_value: Cada --value ha d'usar la sintaxi CAMP=VALOR; no s'ha escrit
           res.
         section_help: Clau de la secció repetible del perfil.
+        unknown_section: '''{section}'' no és una secció repetible del perfil. Seccions
+          disponibles: {sections}.'
         value_help: Camp de la fila com CAMP=VALOR; repetiu-lo per cada camp informat.
       archive:
-        export_help: Escriu la capsula del perfil indicat en un fitxer segellat a
-          --to; el fitxer es xifra amb la contrasenya del perfil i no inclou l'etiqueta.
+        export_help: Escriu la càpsula del perfil indicat en un fitxer segellat a
+          --output; el fitxer es xifra amb la contrasenya del perfil i no inclou l'etiqueta.
         export_name_help: Perfil a copiar; per defecte l'actiu.
-        export_out_help: Camí de destinació de l'arxiu.
+        export_out_help: Camí de destinació de l'arxiu. El nom ha d'acabar en '.cadrumo-bucket.tar.gz'.
         help: Copia de seguretat d'un perfil en un arxiu segellat i xifrat AEAD, o
           inspeccio d'un; restaura'l amb 'aeat config profile archive import'.
-        import_artifact_help: Fitxer d'artefacte de recuperacio; utilitza'l quan s'hagi
-          perdut la contrasenya del perfil.
         import_file_help: Cami al directori de la capsula sense publicar que es restaurara.
-        import_help: Torna a publicar una capsula de perfil des d'un directori; afegeix
-          --artifact per recuperar amb la frase de 24 paraules.
+        import_help: Torna a publicar una càpsula de perfil des d'un directori o un
+          arxiu segellat demostrant-ne la contrasenya.
         import_label_help: Nom visible del perfil restaurat.
-        import_password_unchanged: 'Els teus registres estan restaurats, pero la contrasenya
-          del perfil no ha canviat: aquesta via recupera les dades, no la credencial.
-          Inicia la sessio amb la contrasenya original o canvia-la quan puguis.'
-        import_recovery_secret_prompt: 'Frase de recuperacio (24 paraules): '
         inspect_help: Mostra la capçalera d'un arxiu segellat sense desxifrar-lo ni
           restaurar-lo.
         inspect_path_help: Cami al fitxer segellat que s'inspeccionara.
@@ -2081,6 +2074,10 @@ cli:
           els esdeveniments d'auditoria pendents.
         reconcile_none_info: No s'ha trobat cap exportació de perfil interrompuda.
           Cap execució anterior no ha deixat res pendent.
+        refusal:
+          export_suffix: El camí de destinació ha d'acabar en '{suffix}'. Torna a
+            executar l'ordre amb un --output que faci servir aquesta terminació; no
+            s'ha llegit cap perfil.
       bundle_flow:
         export_section_title: Exporta el paquet de perfil
         import_section_title: Importa el paquet de perfil
@@ -2143,9 +2140,15 @@ cli:
         help: Declara que el perfil actiu està a punt per presentar.
         incomplete: 'Falten dades obligatòries al perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
-      create_help: Crea un perfil actiu amb recuperació obligatòria i verificada.
-        La recuperació no es pot afegir després ni participa en l'inici de sessió
-        amb contrasenya.
+      create_guidance_unavailable: El perfil s'ha creat correctament, però no s'han
+        pogut preparar els avisos amb els passos següents. Consulta 'config profile
+        status' per veure què falta.
+      create_help: Crea un perfil protegit per una contrasenya. En un terminal ofereix
+        després un codi de recuperació opcional; pots ometre'l o afegir-lo més tard
+        amb 'aeat config profile recovery enable'.
+      create_login_required: El perfil '{profile}' s'ha creat, però encara no tens
+        cap sessió oberta. Inicia la sessió amb l'ordre 'config login {profile}' per
+        desbloquejar-ne les dades abans de continuar.
       create_name_required: Cal un nom de perfil. Executa 'aeat config profile create
         NOM'.
       create_passphrase_channel_absent: No hi ha cap canal de contrasenya disponible.
@@ -2153,33 +2156,13 @@ cli:
       create_passphrase_mismatch: La contrasenya i la seva confirmació no coincideixen;
         no s'ha creat cap perfil.
       create_passphrase_prompt: 'Contrasenya del nou perfil: '
-      create_recovery_channel_absent: La recuperació és obligatòria. En un host sense
-        terminal, proporcioneu --recovery-handoff-fd i --recovery-verification-fd;
-        no s'ha creat cap perfil.
-      create_recovery_descriptor_collision: El lliurament, la verificació i la contrasenya
-        han d'usar descriptors diferents; no s'ha llegit cap descriptor.
-      create_recovery_descriptor_pair_required: --recovery-handoff-fd i --recovery-verification-fd
-        s'han de proporcionar junts.
-      create_recovery_descriptor_reserved: Els descriptors de recuperació han de ser
-        no negatius i no poden ser l'entrada, la sortida ni l'error estàndard.
-      create_recovery_enrolled: La recuperació s'ha inscrit en crear el perfil després
-        de verificar-ne la possessió exacta. No es pot afegir després; la frase és
-        una prova explícita de restauració i l'inici de sessió amb contrasenya continua
-        sent independent.
-      create_recovery_handoff_fd_help: Escriu la frase de recuperació d'un sol ús
-        com un objecte JSON secret acotat en aquest descriptor heretat escrivible.
-      create_recovery_handoff_too_large: El lliurament de recuperació ha superat el
-        límit de 8192 bytes; no s'ha creat cap perfil.
-      create_recovery_handoff_unwritable: El descriptor de lliurament no era un canal
-        heretat escrivible; no s'ha creat cap perfil.
-      create_recovery_verification_cancelled: S'ha cancel·lat la confirmació de recuperació;
-        no s'ha creat cap perfil.
-      create_recovery_verification_fd_help: Llegeix la frase exacta com un objecte
-        JSON secret acotat des d'aquest descriptor heretat llegible abans de publicar.
-      create_recovery_verification_mismatch: No s'ha pogut verificar la possessió
-        de la frase de recuperació; no s'ha creat cap perfil.
-      create_recovery_verification_prompt: 'Torneu a introduir la frase de recuperació
-        per verificar-ne la possessió: '
+      create_recovery_enrolled: 'La recuperació està configurada. Desa el codi lluny
+        d''aquest equip: permet restablir una contrasenya oblidada.'
+      create_recovery_offer_prompt: 'Vols configurar ara un codi de recuperació? Permet
+        restablir una contrasenya oblidada i també pots afegir-lo més tard. [y/N] '
+      create_recovery_skipped: La recuperació no està configurada. Sense ella no es
+        pot restablir una contrasenya oblidada; activa-la quan vulguis amb l'ordre
+        'config profile recovery enable'.
       delete:
         help: Elimina un perfil i el seu estat local; --yes confirma l'eliminació
         name_help: Nom del perfil que vols eliminar
@@ -2240,6 +2223,45 @@ cli:
         amb models. Torna a obrir-lo quan vulguis amb 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
+      recovery:
+        channel_absent: Un codi de recuperació només es pot mostrar en un terminal.
+          En un host sense terminal, indica --recovery-handoff-fd i --recovery-verification-fd;
+          no s'ha registrat res.
+        code_heading: 'El teu codi de recuperació. Anota''l i desa''l lluny d''aquest
+          equip:'
+        code_warning: Es mostra una sola vegada. Qualsevol que tingui aquest codi
+          pot establir una contrasenya nova per al perfil.
+        descriptor_collision: El lliurament de recuperació, la verificació de recuperació
+          i la càrrega de la contrasenya han d'usar descriptors diferents; no s'ha
+          llegit cap descriptor.
+        descriptor_pair_required: --recovery-handoff-fd i --recovery-verification-fd
+          s'han d'indicar junts.
+        descriptor_reserved: Els descriptors de recuperació no poden ser negatius
+          ni l'entrada, la sortida o l'error estàndard.
+        disable_help: Elimina el codi de recuperació del perfil actiu després de demostrar-ne
+          la contrasenya.
+        enable_help: Registra un codi de recuperació per al perfil actiu després de
+          demostrar-ne la contrasenya; el codi es mostra una sola vegada i s'ha d'escriure
+          de tornada.
+        enabled_notice: La recuperació està configurada. Si oblides la contrasenya,
+          executa l'ordre 'config passphrase reset NOM' amb aquest codi.
+        handoff_fd_help: Escriu el codi de recuperació d'un sol ús com un objecte
+          JSON secret acotat en aquest descriptor heretat d'escriptura.
+        handoff_too_large: El lliurament de recuperació ha superat el límit de 8192
+          bytes; no s'ha registrat res.
+        handoff_unwritable: El descriptor de lliurament de recuperació no era un canal
+          heretat d'escriptura; no s'ha registrat res.
+        help: Gestiona el codi de recuperació opcional que permet restablir una contrasenya
+          oblidada.
+        no_active_profile: No hi ha cap perfil actiu. Inicia la sessió amb 'aeat config
+          login NOM' abans de gestionar-ne el codi de recuperació.
+        status_help: Indica si el perfil actiu té un codi de recuperació registrat.
+        verification_fd_help: Llegeix el codi de recuperació exacte com un objecte
+          JSON secret acotat des d'aquest descriptor heretat de lectura abans d'instal·lar
+          res.
+        verification_mismatch: El codi introduït no coincideix; no s'ha registrat
+          res.
+        verification_prompt: 'Escriu el codi de recuperació per confirmar que el tens: '
       sandbox:
         active_indicator_info: Estàs operant dins del sandbox %{label}, no en un perfil
           real; totes les ordres s'executen contra aquest bucket aïllat i descartable.

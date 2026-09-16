@@ -28,11 +28,14 @@ from __future__ import annotations
 
 import pytest
 
-from .....application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
+from .....application.ledger.invoice_extraction_authority import (
+    InvoiceExtractionAuthorityValues,
+    resolve_invoice_extraction_authority_values,
+)
 from .....core.config_support import LLMProvider
 from .....core.period import Period
 from .....core.time.clock import now
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.transactions.lineage_models import DecisionProvenance
 from ..cache import LLMCache
 from ..evidence_draft_text import TextInvoiceFieldExtractor
@@ -46,13 +49,16 @@ _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 _Q4_2024 = Period.from_year_and_code(2024, "4T")
 
 
-def _resolve_authority_values(period: Period):
-    with bundled_indexed_authority().operation() as operation:
-        return resolve_invoice_extraction_authority_values(period=period, operation=operation)
+@pytest.fixture(scope="session")
+def annual_2026_values(operation: PinnedAuthorityOperation) -> InvoiceExtractionAuthorityValues:
+    """Resolve the annual values during execution, never while pytest imports tests."""
+    return resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
 
 
-_ANNUAL_2026_VALUES = _resolve_authority_values(_ANNUAL_2026)
-_Q4_2024_VALUES = _resolve_authority_values(_Q4_2024)
+@pytest.fixture(scope="session")
+def q4_2024_values(operation: PinnedAuthorityOperation) -> InvoiceExtractionAuthorityValues:
+    """Resolve the comparison values once per run after collection completes."""
+    return resolve_invoice_extraction_authority_values(period=_Q4_2024, operation=operation)
 
 
 class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
@@ -129,42 +135,57 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
     """
 
     def test_the_text_stamp_carries_the_period_and_the_prompt_fingerprint(
-        self, *, operation: PinnedAuthorityOperation
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+        annual_2026_values: InvoiceExtractionAuthorityValues,
     ) -> None:
         extractor = TextInvoiceFieldExtractor(
             model="some-text-model",
             operation=operation,
-            authority_values=_ANNUAL_2026_VALUES,
+            authority_values=annual_2026_values,
         )
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
         assert extractor.decided_by == f"llm:local-text-extract:some-text-model:rates-{compiled.rate_provenance}"
         assert "2026-0A" in extractor.decided_by
 
-    def test_a_different_rate_period_produces_a_different_stamp(self, *, operation: PinnedAuthorityOperation) -> None:
+    def test_a_different_rate_period_produces_a_different_stamp(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+        annual_2026_values: InvoiceExtractionAuthorityValues,
+        q4_2024_values: InvoiceExtractionAuthorityValues,
+    ) -> None:
         """The discriminating control: the stamp moves when the rates move."""
-        annual = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=_ANNUAL_2026_VALUES)
-        q4 = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=_Q4_2024_VALUES)
+        annual = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=annual_2026_values)
+        q4 = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=q4_2024_values)
 
         assert annual.decided_by != q4.decided_by
 
     def test_the_transport_half_is_still_derived_from_the_provider(
-        self, *, operation: PinnedAuthorityOperation
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+        annual_2026_values: InvoiceExtractionAuthorityValues,
     ) -> None:
         """The pre-existing property survives the extension."""
-        local = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=_ANNUAL_2026_VALUES)
+        local = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=annual_2026_values)
         cloud = TextInvoiceFieldExtractor(
             model="m",
             provider=LLMProvider.ANTHROPIC,
             operation=operation,
-            authority_values=_ANNUAL_2026_VALUES,
+            authority_values=annual_2026_values,
         )
 
         assert local.decided_by.startswith("llm:local-text-extract:")
         assert not cloud.decided_by.startswith("llm:local-text-extract:")
 
     def test_the_extended_stamp_still_persists_as_a_decision_provenance(
-        self, *, operation: PinnedAuthorityOperation
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+        annual_2026_values: InvoiceExtractionAuthorityValues,
     ) -> None:
         """It must survive the persisted record's own validator and its 128-char bound.
 
@@ -176,7 +197,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
             model="claude-haiku-4-5-20251001",
             provider=LLMProvider.ANTHROPIC,
             operation=operation,
-            authority_values=_ANNUAL_2026_VALUES,
+            authority_values=annual_2026_values,
         )
 
         provenance = DecisionProvenance(decided_by=extractor.decided_by, decided_at=now())

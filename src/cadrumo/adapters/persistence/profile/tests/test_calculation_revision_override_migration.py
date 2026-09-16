@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -32,6 +33,7 @@ from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfil
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -52,15 +54,32 @@ from ..relation_binding_join import bundled_relation_binding_join
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "9a1c77e0-4b22-4c3e-9a0e-5f0b7c1d2e34"
-_REGISTRY_SNAPSHOT_REF = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
-_WORK_UNIT_PERIOD = Period.from_year_and_code(_REGISTRY_SNAPSHOT_REF.modelo_year, _REGISTRY_SNAPSHOT_REF.period)
-_WORK_UNIT_ID = derive_work_unit_id(
-    bucket_id=_BUCKET_ID,
-    modelo=_REGISTRY_SNAPSHOT_REF.modelo,
-    filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
-    period=_WORK_UNIT_PERIOD,
-    revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
-)
+
+
+@cache
+def _registry_snapshot_ref() -> RegistrySnapshotRef:
+    # Compiled on first use, not at import: collection must stay cheap.
+    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
+
+
+@cache
+def _work_unit_period() -> Period:
+    ref = _registry_snapshot_ref()
+    return Period.from_year_and_code(ref.modelo_year, ref.period)
+
+
+@cache
+def _work_unit_id() -> str:
+    ref = _registry_snapshot_ref()
+    return derive_work_unit_id(
+        bucket_id=_BUCKET_ID,
+        modelo=ref.modelo,
+        filing_year=ref.modelo_year,
+        period=_work_unit_period(),
+        revision_id=ref.revision_id,
+    )
+
+
 _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
 
 #: One retired relation id and the binding that absorbed it, read off the frozen
@@ -76,7 +95,7 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     """Build one synthetic revision whose content address matches its contents."""
     casilla_values = {_CASILLA_01: Decimal("1000.00")}
     revision_id = derive_calculation_revision_id(
-        work_unit_id=_WORK_UNIT_ID,
+        work_unit_id=_work_unit_id(),
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
@@ -86,8 +105,8 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
-        work_unit_id=_WORK_UNIT_ID,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+        work_unit_id=_work_unit_id(),
+        registry_snapshot_ref=_registry_snapshot_ref(),
         state=CalculationRevisionState.BORRADOR,
         filing_instance_evidence=None,
         casilla_values=casilla_values,
@@ -116,12 +135,12 @@ def _catalogue(revision: CalculationRevision) -> CalculationRevisionCatalogue:
 
 def _parent_work_unit() -> WorkUnit:
     return WorkUnit(
-        work_unit_id=_WORK_UNIT_ID,
+        work_unit_id=_work_unit_id(),
         bucket_id=_BUCKET_ID,
-        modelo=_REGISTRY_SNAPSHOT_REF.modelo,
-        filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
-        period=_WORK_UNIT_PERIOD,
-        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        modelo=_registry_snapshot_ref().modelo,
+        filing_year=_registry_snapshot_ref().modelo_year,
+        period=_work_unit_period(),
+        revision_id=_registry_snapshot_ref().revision_id,
         name="303-2026-1T",
         created_at=_CREATED_AT,
         updated_at=_CREATED_AT,
@@ -150,7 +169,7 @@ def test_pre_cut_relation_override_is_rekeyed_and_the_revision_id_recomputed() -
         (remap,) = result.rekeyed_revisions
         assert remap.previous_calculation_revision_id == stored.calculation_revision_id
         assert remap.calculation_revision_id != stored.calculation_revision_id
-        assert remap.work_unit_id == _WORK_UNIT_ID
+        assert remap.work_unit_id == _work_unit_id()
 
         migrated = result.catalogue.get(remap.calculation_revision_id)
         assert migrated is not None

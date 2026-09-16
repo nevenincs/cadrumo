@@ -12,13 +12,12 @@ was ever written.  Each test below therefore seeds ONE record and reads it
 twice, varying only whether a session serves it; the unlocked read is what
 makes the sealed read mean something.
 
-The branch was also broken where it was reached.  A capsule-published bucket
-carries no shared-master manifest, so resolving the provider against one raises
-``MasterKeyMaterialMissingError`` -- which the reader's ``ProfileNotFoundError``
-handler does not catch, so it propagated out of a function documented to
-degrade quietly to the settings surface.  The sealed read below is therefore
-also the regression test for that escape: an exception reaching the caller
-fails these assertions exactly as a leaked credential would.
+The branch was also broken where it was reached.  Resolving a reader against a
+bucket with no live session raised out of a function documented to degrade
+quietly to the settings surface, because the reader's ``ProfileNotFoundError``
+handler did not catch it.  The sealed read below is therefore also the
+regression test for that escape: an exception reaching the caller fails these
+assertions exactly as a leaked credential would.
 """
 
 from __future__ import annotations

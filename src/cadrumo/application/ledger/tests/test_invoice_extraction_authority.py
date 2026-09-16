@@ -24,6 +24,7 @@ cannot tell a wired call from an inert one -- together they cover both.
 from __future__ import annotations
 
 from decimal import Decimal
+from time import perf_counter
 
 import pytest
 
@@ -41,6 +42,7 @@ from ..invoice_extraction_authority import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
+_MUTATION_PERIOD = Period.from_year_and_code(2026, "02")
 
 # A percentage no Spanish IVA tier carries, so its appearance in a rendered
 # prompt can only have come through the argument under test.
@@ -83,7 +85,7 @@ class TestTheResolverFollowsTheRateAuthority:
             operation: PinnedAuthorityOperation,
         ):
             resolved = real_lookup_rate(member_state, kind, on_date, operation=operation)
-            if member_state is EUMemberState.from_registry("es") and kind is IvaRateKind("general"):
+            if member_state == EUMemberState.from_registry("es") and kind == IvaRateKind("general"):
                 return resolved.model_copy(update={"pct": _FABRICATED_PCT})
             return resolved
 
@@ -95,11 +97,28 @@ class TestTheResolverFollowsTheRateAuthority:
             "lookup_rate",
             _planted_lookup_rate,
         ):
-            after = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
+            # A pinned generation intentionally retains a result once resolved,
+            # so exercise an uncached coordinate for this detector mutation.
+            after = resolve_invoice_extraction_authority_values(period=_MUTATION_PERIOD, operation=operation)
 
         assert _FABRICATED_PCT in after.iva_rate_pcts, (
             "the resolver read a snapshot instead of the authority; a registry change would not reach a reader"
         )
+
+    def test_a_resolved_period_is_reused_with_sub_millisecond_average_latency(
+        self,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        resolved = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
+
+        started = perf_counter()
+        repeated = [
+            resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation) for _ in range(100)
+        ]
+        elapsed = perf_counter() - started
+
+        assert all(item is resolved for item in repeated)
+        assert elapsed < 0.1, f"100 cached authority resolutions took {elapsed:.6f}s"
 
     def test_a_narrower_period_resolves_a_narrower_enumeration(self, operation: PinnedAuthorityOperation) -> None:
         """A period is a span, and the enumeration is period-dependent.

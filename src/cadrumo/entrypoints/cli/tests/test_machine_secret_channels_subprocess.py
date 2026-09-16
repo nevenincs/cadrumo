@@ -12,6 +12,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.recovery_key import (
+    RECOVERY_CODE_ALPHABET,
+    RECOVERY_CODE_GROUP_COUNT,
+    RECOVERY_CODE_GROUP_LENGTH,
+    RECOVERY_CODE_SEPARATOR,
+)
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....tests.inventory import SRC_CADRUMO
@@ -41,6 +47,16 @@ def _cleanup_keychain(tmp_path: Path) -> None:
     cleanup_keychain(tmp_path)
 
 
+def _assert_recovery_code_shape(document: bytes | bytearray) -> None:
+    """The handed-over document is exactly one grouped recovery code and nothing else."""
+    parsed = json.loads(bytes(document))
+    assert set(parsed) == {"recovery_code"}
+    groups = parsed["recovery_code"].split(RECOVERY_CODE_SEPARATOR)
+    assert len(groups) == RECOVERY_CODE_GROUP_COUNT
+    assert all(len(group) == RECOVERY_CODE_GROUP_LENGTH for group in groups)
+    assert all(symbol in RECOVERY_CODE_ALPHABET for group in groups for symbol in group)
+
+
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
 def test_login_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
     root = tmp_path / "login"
@@ -58,7 +74,8 @@ def test_login_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) 
         assert "S13_DESCRIPTOR_CLOSED" in result.stderr
 
 
-def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str) -> subprocess.CompletedProcess[str]:
+def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> subprocess.CompletedProcess[str]:
+    """Drive ``config profile recovery enable`` headlessly over the real two-pipe handoff."""
     passphrase_reader = passphrase_writer = -1
     handoff_reader, handoff_writer = os.pipe()
     verification_reader, verification_writer = os.pipe()
@@ -77,7 +94,7 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
                 if not chunk:
                     break
                 handed.extend(chunk)
-            assert len(json.loads(handed)["recovery_mnemonic"].split()) == 24
+            _assert_recovery_code_shape(handed)
             os.write(verification_writer, handed)
         except BaseException as exc:
             supervisor_failure.append(exc)
@@ -88,7 +105,7 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
 
     supervisor = threading.Thread(target=supervise, daemon=True)
     supervisor.start()
-    command = ["--format", "json", "config", "profile", "create", f"created-{channel}", "--quiet"]
+    command = ["--format", "json", "config", "profile", "recovery", "enable"]
     env = subprocess_cli_env(
         strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
         extra={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring", "PYTHONPATH": _base_interpreter_pythonpath()},
@@ -162,13 +179,37 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
 def test_profile_create_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
+    """Creation needs only the passphrase payload; a machine caller is never asked about recovery."""
     root = tmp_path / f"create-{channel}"
     payload = json.dumps({"passphrase": _PROFILE_INPUT, "passphrase_confirmation": _PROFILE_INPUT})
-    result = _run_profile_create_with_recovery(root, channel=channel, payload=payload)
+    args = ["--format", "json", "config", "profile", "create", f"created-{channel}", "--quiet"]
+    result = (
+        _run(root, [*args, "--secrets-stdin"], stdin=payload)
+        if channel == "stdin"
+        else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
+    )
     document = _assert_success(result, root)
     assert document["result"]["status"] == "created"
+    assert [notice["code"] for notice in document["notices"]] == ["PROFILE_RECOVERY_NOT_ENROLLED"]
     if channel == "fd":
         assert "S13_DESCRIPTOR_CLOSED" in result.stderr
+
+
+@pytest.mark.parametrize("channel", ("stdin", "fd"))
+def test_profile_recovery_enable_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
+    """The optional recovery door enrols headlessly over the descriptor pair, after the profile exists."""
+    root = tmp_path / f"recovery-{channel}"
+    _register(root)
+    payload = json.dumps({"passphrase": _PROFILE_INPUT})
+    result = _run_profile_recovery_enable(root, channel=channel, payload=payload)
+    document = _assert_success(result, root)
+    assert document["command"] == "config.profile.recovery.enable"
+    assert document["result"]["enrolled"] is True
+    assert document["result"]["changed"] is True
+    assert [notice["code"] for notice in document["notices"]] == ["PROFILE_RECOVERY_ENABLED"]
+    assert "recovery_code" not in result.stdout
+    if os.name != "nt":
+        assert result.stderr.count("S13_DESCRIPTOR_CLOSED") == (2 if channel == "stdin" else 3)
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
@@ -193,10 +234,9 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
-@pytest.mark.parametrize("door", ("passphrase", "recovery"))
-def test_both_restore_doors_succeed_through_each_leaf_channel(tmp_path: Path, channel: str, door: str) -> None:
-    capsule, artifact, phrase = _restore_material(tmp_path / f"material-{channel}-{door}")
-    root = tmp_path / f"restore-{channel}-{door}"
+def test_restore_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
+    capsule = _restore_material(tmp_path / f"material-{channel}")
+    root = tmp_path / f"restore-{channel}"
     args = [
         "--format",
         "json",
@@ -204,27 +244,24 @@ def test_both_restore_doors_succeed_through_each_leaf_channel(tmp_path: Path, ch
         "profile",
         "archive",
         "import",
-        f"restored-{channel}-{door}",
+        f"restored-{channel}",
         "--file",
         str(capsule),
     ]
-    if door == "recovery":
-        args.extend(("--artifact", str(artifact)))
-        payload = json.dumps({"recovery_secret": phrase})
-    else:
-        payload = json.dumps({"passphrase": _PROFILE_INPUT})
+    payload = json.dumps({"passphrase": _PROFILE_INPUT})
     result = (
         _run(root, [*args, "--secrets-stdin"], stdin=payload)
         if channel == "stdin"
         else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
     )
-    document = _assert_success(result, root, extra_secrets=(phrase,))
-    assert document["result"]["authority"] == ("recovery_artifact" if door == "recovery" else "password")
+    document = _assert_success(result, root)
+    assert document["result"]["authority"] == "password"
+    assert document["result"]["recovery_enrolled"] is False
 
 
 def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
     root = tmp_path / "fd-zero"
-    outcome, _, _ = _register(root)
+    outcome = _register(root)
     result = _run(
         root,
         ["--format", "json", "config", "login", outcome.profile_id, "--secrets-fd", "0"],
@@ -333,7 +370,6 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
                 "PYTHONPATH": _base_interpreter_pythonpath(),
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
                 "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
-                "CADRUMO_SECRET_STORE_BACKEND": "auto",
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
             },
         )
@@ -372,11 +408,12 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
 
-def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: Path) -> None:
+def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: Path) -> None:
     """Writable handoff and readable proof HANDLEs survive a real process boundary."""
     import msvcrt
 
-    root = tmp_path / "windows-recovery-create"
+    root = tmp_path / "windows-recovery-enable"
+    _register(root, label="windows-recovery")
     handoff_reader, handoff_writer = os.pipe()
     verification_reader, verification_writer = os.pipe()
     handoff_handle = msvcrt.get_osfhandle(handoff_writer)
@@ -394,7 +431,6 @@ def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: P
             "PYTHONPATH": _base_interpreter_pythonpath(),
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
             "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
-            "CADRUMO_SECRET_STORE_BACKEND": "auto",
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         },
@@ -410,8 +446,7 @@ def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: P
             while chunk := os.read(handoff_reader, 8193 - len(handed)):
                 handed.extend(chunk)
             supervisor_state[0] = "handoff-read"
-            document = json.loads(handed)
-            assert len(document["recovery_mnemonic"].split()) == 24
+            _assert_recovery_code_shape(handed)
             os.write(verification_writer, bytes(handed))
             supervisor_state[0] = "verification-written"
         except BaseException as exc:
@@ -438,14 +473,13 @@ def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: P
                 "json",
                 "config",
                 "profile",
-                "create",
-                "windows-recovery",
-                "--quiet",
+                "recovery",
+                "enable",
                 "--secrets-stdin",
             ],
             cwd=SRC_CADRUMO,
             env=env,
-            input=json.dumps({"passphrase": _PROFILE_INPUT, "passphrase_confirmation": _PROFILE_INPUT}),
+            input=json.dumps({"passphrase": _PROFILE_INPUT}),
             text=True,
             encoding="utf-8",
             errors="replace",
@@ -463,12 +497,13 @@ def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: P
     assert not supervisor.is_alive()
     assert supervisor_failure == [], result.stderr
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)["result"]["profile_name"] == "windows-recovery"
+    assert json.loads(result.stdout)["result"]["enrolled"] is True
 
 
-def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path: Path) -> None:
+def _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path: Path) -> None:
     """Writable handoff and readable proof descriptors cross a real POSIX boundary."""
-    root = tmp_path / "posix-recovery-create"
+    root = tmp_path / "posix-recovery-enable"
+    _register(root, label="posix-recovery")
     handoff_reader, handoff_writer = os.pipe()
     verification_reader, verification_writer = os.pipe()
     supervisor_failure: list[BaseException] = []
@@ -481,8 +516,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path:
                 if not chunk:
                     break
                 handed.extend(chunk)
-            document = json.loads(handed)
-            assert len(document["recovery_mnemonic"].split()) == 24
+            _assert_recovery_code_shape(handed)
             os.write(verification_writer, bytes(handed))
         except BaseException as exc:
             supervisor_failure.append(exc)
@@ -499,7 +533,6 @@ def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path:
             "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
             "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
-            "CADRUMO_SECRET_STORE_BACKEND": "auto",
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         },
@@ -514,9 +547,8 @@ def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path:
                 "json",
                 "config",
                 "profile",
-                "create",
-                "posix-recovery",
-                "--quiet",
+                "recovery",
+                "enable",
                 "--secrets-stdin",
                 "--recovery-handoff-fd",
                 str(handoff_writer),
@@ -525,7 +557,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path:
             ],
             cwd=SRC_CADRUMO,
             env=env,
-            input=json.dumps({"passphrase": _PROFILE_INPUT, "passphrase_confirmation": _PROFILE_INPUT}),
+            input=json.dumps({"passphrase": _PROFILE_INPUT}),
             text=True,
             encoding="utf-8",
             capture_output=True,
@@ -540,15 +572,15 @@ def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path:
     assert not supervisor.is_alive()
     assert supervisor_failure == [], result.stderr
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)["result"]["profile_name"] == "posix-recovery"
+    assert json.loads(result.stdout)["result"]["enrolled"] is True
 
 
-def test_platform_recovery_descriptors_complete_real_headless_creation(tmp_path: Path) -> None:
+def test_platform_recovery_descriptors_complete_real_headless_enrolment(tmp_path: Path) -> None:
     """Run the native real-process recovery transport on every supported host."""
     if sys.platform == "win32":
-        _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path)
+        _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path)
         return
-    _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path)
+    _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path)
 
 
 def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_write(
@@ -606,7 +638,6 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
                 "PYTHONPATH": _base_interpreter_pythonpath(),
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
                 "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
-                "CADRUMO_SECRET_STORE_BACKEND": "auto",
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
             },
         )

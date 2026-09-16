@@ -5,7 +5,7 @@ conflict-before-read selection, bounded strict-JSON parsing, one-shot descriptor
 strict frozen payload base. It also owns the interactive no-echo prompt used
 after a command has established that no explicit channel was selected. No
 secret value is accepted as an ``argv`` option, so passphrases and recovery
-mnemonics do not appear in the process table or shell history.
+codes do not appear in the process table or shell history.
 
 Both machine channels read at most :data:`_MAX_SECRETS_BYTES` and validate the
 parsed object against a strict ``extra="forbid"`` pydantic model whose secret
@@ -481,11 +481,11 @@ def write_to_controlling_terminal(text: str) -> None:
     """Display ``text`` on the controlling terminal, bypassing ``stdout``.
 
     The counterpart to :func:`prompt_secret_no_echo`: that reads a secret the
-    operator holds, this shows one the application minted. A recovery mnemonic
+    operator holds, this shows one the application minted. A recovery code
     is the case it exists for, and it is the reason this cannot go through the
     ordinary render path. Everything the CLI prints normally is capturable --
     ``> file`` redirects it, ``--format json`` folds it into an envelope a
-    caller will persist, a supervisor tees it into a log. A 24-word mnemonic is
+    caller will persist, a supervisor tees it into a log. A recovery code is
     a BEARER credential over the taxpayer's whole encrypted store, so writing
     it anywhere durable is the exact defect the channel exists to prevent.
 
@@ -497,7 +497,7 @@ def write_to_controlling_terminal(text: str) -> None:
     a pipe, a CI job, a supervised child -- there is nowhere safe to show the
     secret, and falling back to ``stdout`` would write the bearer credential
     into precisely the captured stream this bypasses. A caller that cannot
-    display a mnemonic must refuse the operation that mints one, not proceed
+    display a code must refuse the operation that mints one, not proceed
     with the operator none the wiser.
 
     The precondition is :func:`terminal_can_prompt_for_secrets`, NOT whether
@@ -505,7 +505,7 @@ def write_to_controlling_terminal(text: str) -> None:
     Windows hands a detached process a freshly allocated console, so ``CONOUT$``
     opens and the write "succeeds" onto a surface nobody can see. That failure
     is worse than a refusal rather than milder -- the operator is told their
-    profile is enrolled for recovery while the only copy of the words went to a
+    profile is enrolled for recovery while the only copy of the code went to a
     phantom console -- so this reuses the same predicate that decides whether a
     secret may be PROMPTED for, instead of growing a second notion of what
     counts as an attached terminal.
@@ -531,6 +531,27 @@ def write_to_controlling_terminal(text: str) -> None:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.no_controlling_terminal_for_secret",
         ) from exc
+
+
+def prompt_confirmation_on_controlling_terminal(prompt: str) -> bool:
+    """Ask one yes/no question on the controlling terminal; anything but yes is no.
+
+    The sibling of :func:`write_to_controlling_terminal` for a question whose
+    answer is not secret but whose PLACEMENT still matters: it must not land in
+    the captured standard streams that carry the command's envelope. The
+    default is no, so a stray return, an empty line or end-of-file leaves the
+    operator exactly where they were.
+    """
+    if not terminal_can_prompt_for_secrets():
+        return False
+    write_to_controlling_terminal(prompt)
+    device = "CONIN$" if sys.platform == "win32" else "/dev/tty"
+    try:
+        with open(device, encoding=UTF_8_ENCODING, errors="replace") as terminal:
+            answer = terminal.readline()
+    except OSError:
+        return False
+    return answer.strip().lower() in {"y", "yes", "s", "si", "sí", "i", "igen"}
 
 
 def prompt_secret_no_echo(prompt: str) -> str:
@@ -596,6 +617,7 @@ __all__ = [
     "ProfileSecretChannel",
     "ProfileSecretSelection",
     "clear_staged_machine_secret_payloads",
+    "prompt_confirmation_on_controlling_terminal",
     "prompt_secret_no_echo",
     "read_machine_secret_payload",
     "read_profile_secret_payload",

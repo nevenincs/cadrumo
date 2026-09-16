@@ -20,7 +20,6 @@ from .custody_hold_models import ProfileCustodyRetentionOverride, hold_permits_l
 from .custody_ports import (
     ProfileCustodyEnvelopePort,
     ProfileCustodyPort,
-    ProfileCustodyRecoveryEnvelopePort,
     ProfileCustodySentinelPort,
     profile_custody_port,
 )
@@ -174,7 +173,6 @@ class ProfileCustodyTransactionService:
         password_envelope: ProfileCustodyEnvelopePort,
         sentinel: ProfileCustodySentinelPort,
         data_files: Mapping[str, bytes],
-        recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
         label: str,
         publication_kind: ProfilePublicationKindValue = ProfilePublicationKind.ENROLL,
         stage_initializer: Callable[[Path], None] | None = None,
@@ -189,8 +187,6 @@ class ProfileCustodyTransactionService:
         """
         if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
             raise ProfileCustodyTransactionRefusalError("create custody material does not bind its target profile")
-        if publication_kind == ProfilePublicationKind.ENROLL and recovery_envelope is None:
-            raise ProfileCustodyTransactionRefusalError("profile enrollment publication requires a recovery envelope")
         try:
             label_record = self._adapters.create_capsule_label(
                 profile_id=profile_id,
@@ -232,7 +228,6 @@ class ProfileCustodyTransactionService:
                 sentinel=sentinel,
                 data_files=data_files,
                 label_record=label_record,
-                recovery_envelope=recovery_envelope,
                 root=self._root,
                 published_at=instant,
                 stage_initializer=stage_initializer,
@@ -268,8 +263,11 @@ class ProfileCustodyTransactionService:
                 if allow_existing_profile:
                     continue
                 if transaction_id is None:
+                    # Reached when restoring an archive into a store that already
+                    # holds its capsule. Permanent rather than a stale witness, so
+                    # the operator is told what to do instead of retrying.
                     raise ProfileCustodyTransactionConflictError(
-                        "profile UUID already names a committed custody capsule"
+                        translated_message="application.user_profile.errors.custody_profile_already_present",
                     )
                 material = self._adapters.load_password_material(existing_profile_id, root=self._root)
                 if material.commit.transaction_id != transaction_id:

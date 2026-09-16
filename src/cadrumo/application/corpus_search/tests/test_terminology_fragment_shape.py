@@ -17,10 +17,10 @@ both sides of the shipping boundary.
 from __future__ import annotations
 
 import re
-import tomllib
 
 import pytest
 
+from ....core.toml import parse_toml
 from ..errors import CorpusSearchInputError
 from ..terminology import CONCEPT_ID_MAX_LENGTH, CONCEPT_ID_MIN_LENGTH, CONCEPT_ID_PATTERN, _project_concept
 
@@ -92,7 +92,7 @@ def test_a_fragment_with_no_language_section_is_refused() -> None:
     fell back to its own concept_id and whose text was entirely empty --
     real, demonstrated search-index pollution.
     """
-    payload = tomllib.loads(_MISSING_LANGUAGE_FRAGMENT)
+    payload = parse_toml(_MISSING_LANGUAGE_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as raised:
         _project_concept(payload, locale="es")
 
@@ -101,7 +101,7 @@ def test_a_fragment_with_no_language_section_is_refused() -> None:
 
 def test_a_malformed_concept_id_is_refused() -> None:
     """A concept_id outside the canonical kebab-case shape is refused."""
-    payload = tomllib.loads(_MALFORMED_CONCEPT_ID_FRAGMENT)
+    payload = parse_toml(_MALFORMED_CONCEPT_ID_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as excinfo:
         _project_concept(payload, locale="es")
     assert excinfo.value.context is not None
@@ -116,7 +116,7 @@ def test_the_audit_demonstrated_malformed_fragment_is_refused_not_fabricated() -
     despite the dev authoring compiler raising seven schema errors on the
     identical shape. It must now refuse rather than fabricate.
     """
-    payload = tomllib.loads(_AUDIT_DEMONSTRATED_MALFORMED_FRAGMENT)
+    payload = parse_toml(_AUDIT_DEMONSTRATED_MALFORMED_FRAGMENT)
 
     with pytest.raises(CorpusSearchInputError):
         _project_concept(payload, locale="es")
@@ -124,7 +124,7 @@ def test_the_audit_demonstrated_malformed_fragment_is_refused_not_fabricated() -
 
 def test_a_well_formed_fragment_still_projects_cleanly() -> None:
     """The tightened validation does not reject a genuinely well-formed concept."""
-    payload = tomllib.loads(_WELL_FORMED_FRAGMENT)
+    payload = parse_toml(_WELL_FORMED_FRAGMENT)
 
     projected = _project_concept(payload, locale="es")
 

@@ -148,7 +148,6 @@ def _runtime(
             label="Operation modal lifecycle subject",
             passphrase=_CREDENTIAL_INPUT,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=authority_operation.profile_create_context(),
             profile_decode_context=authority_operation.profile_decode_context(),
         )

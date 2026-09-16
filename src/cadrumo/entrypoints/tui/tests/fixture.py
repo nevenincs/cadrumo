@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
+    from ..secret.registration import RecoveryEnrollmentAttempt, RegistrationAttempt
 
 WORKSPACE_ENV_VAR = "CADRUMO_TUI_WORKSPACE"
 
@@ -111,7 +112,6 @@ def ensure_profile() -> str:
         label=PROFILE_LABEL,
         passphrase=passphrase(),
         facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"),),
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
@@ -123,8 +123,7 @@ def registration_attempt(
     label: str,
     candidate_passphrase: str,
     output_language: str,
-    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
-):
+) -> RegistrationAttempt:
     """Expose the production registration door under the devtool home.
 
     The adaptation itself belongs to the screen's own package, so the harness
@@ -133,12 +132,22 @@ def registration_attempt(
     """
     from ..secret.registration import build_profile_registration_attempt
 
-    return build_profile_registration_attempt(
-        label,
-        candidate_passphrase,
-        output_language,
-        recovery_handover,
-    )
+    return build_profile_registration_attempt(label, candidate_passphrase, output_language)
+
+
+def recovery_enrollment_attempt(
+    profile_id: str,
+    current_passphrase: str,
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+) -> RecoveryEnrollmentAttempt:
+    """Expose the production recovery-enrolment door under the devtool home.
+
+    Same reasoning as :func:`registration_attempt`: the optional offer that
+    follows creation is driven through the door the installed session drives.
+    """
+    from ..secret.registration import build_profile_recovery_enrollment_attempt
+
+    return build_profile_recovery_enrollment_attempt(profile_id, current_passphrase, recovery_handover)
 
 
 def ensure_session() -> str:
@@ -169,6 +178,7 @@ __all__ = [
     "ensure_session",
     "harness_storage",
     "passphrase",
+    "recovery_enrollment_attempt",
     "registration_attempt",
     "workspace",
 ]

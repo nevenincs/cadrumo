@@ -7,7 +7,7 @@ thread an explicit session reference through SQLAlchemy's
 SQLAlchemy's column machinery with a fixed ``(self, value, dialect)``
 shape). The substrate also forbids module-global mutable state that
 could survive a bucket switch — the :class:`BucketSession` instance is
-the only legitimate owner of unlocked KEK and DEK bytes.
+the only legitimate owner of unlocked DEK bytes.
 
 This module composes both constraints with a ``ContextVar`` (PEP 567)
 holding the active :class:`BucketSession`. The CLI entry point opens

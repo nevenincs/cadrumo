@@ -145,7 +145,6 @@ def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> N
             label="History Subject",
             passphrase=history_credential,
             facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="en"),),
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )

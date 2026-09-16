@@ -72,12 +72,12 @@ _INJECTION_KEYWORDS: frozenset[str] = frozenset(
 )
 
 
-def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -> None:
+def test_ephemeral_bucket_session_tests_isolate_default_secure_object_repository() -> None:
     """Ephemeral keys must not write through the process-default SQL repository."""
 
     violations: list[_Violation] = []
     for _path, relative_path, tree in _iter_test_module_trees():
-        if not _uses_ephemeral_master_key(tree):
+        if not _uses_ephemeral_bucket_session(tree):
             continue
         risky_calls = _default_sql_backed_constructor_calls(tree)
         if not risky_calls:
@@ -88,7 +88,7 @@ def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -
 
     assert not violations, "\n".join(
         (
-            "EphemeralMasterKeyProvider tests must isolate default SQL-backed secure-object writes "
+            "EphemeralBucketSession tests must isolate default SQL-backed secure-object writes "
             "with an autouse settings override plus engine disposal, or inject an explicit repository.",
             *tuple(f"{violation.path}:{violation.line} {violation.constructor}" for violation in violations),
         ),
@@ -140,9 +140,9 @@ def _iter_test_modules() -> tuple[Path, ...]:
     )
 
 
-def _uses_ephemeral_master_key(tree: ast.AST) -> bool:
+def _uses_ephemeral_bucket_session(tree: ast.AST) -> bool:
     return any(
-        isinstance(node, ast.Call) and leaf_name(node.func) == "EphemeralMasterKeyProvider" for node in ast.walk(tree)
+        isinstance(node, ast.Call) and leaf_name(node.func) == "EphemeralBucketSession" for node in ast.walk(tree)
     )
 
 

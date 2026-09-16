@@ -7,12 +7,12 @@ capability cannot drift between the enum, the schema, and the gates.
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 
 import pytest
 
 from ..capabilities import ServiceCapability
+from ..toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -21,7 +21,7 @@ def _capabilities_section():
     schema_path = (
         Path(__file__).resolve().parents[2] / "_data" / "registry" / "cadrumo" / "user_profile" / "schema.toml"
     )
-    payload = tomllib.loads(schema_path.read_text(encoding="utf-8"))
+    payload = parse_toml(schema_path.read_text(encoding="utf-8"))
     sections = payload.get("sections")
     assert isinstance(sections, list), "the profile schema must carry sections"
     section = next((candidate for candidate in sections if candidate.get("key") == "capabilities"), None)

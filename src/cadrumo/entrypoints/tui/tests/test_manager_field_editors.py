@@ -123,7 +123,6 @@ async def test_a_boolean_field_is_picked_from_two_options_not_typed_into(tmp_pat
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -156,7 +155,6 @@ async def test_picking_yes_stores_the_canonical_boolean(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -186,7 +184,6 @@ async def test_picking_no_stores_the_canonical_false(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -212,7 +209,6 @@ async def test_an_enum_field_keeps_its_choice_editor(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -239,7 +235,6 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -263,7 +258,6 @@ async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_p
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -290,7 +284,6 @@ async def test_a_date_box_says_which_layout_it_wants(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,

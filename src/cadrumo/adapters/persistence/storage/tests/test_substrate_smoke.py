@@ -25,7 +25,7 @@ from ..blob_store.blob_store import EncryptedBlobStore
 from ..envelope.contract import Envelope, load_envelope, save_envelope
 from ..path_safety import safe_repository_id
 from ..secret_store.store import SecretRecord, SecretStore
-from .ephemeral_master_key import EphemeralMasterKeyProvider
+from .ephemeral_bucket_session import EphemeralBucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -36,40 +36,36 @@ _ENVELOPE_WRITTEN_AT = datetime(2026, 5, 25, 14, 0, 0, tzinfo=UTC)
 
 def test_full_chain_secret_round_trip(tmp_path: Path) -> None:
     """End-to-end: secret-store record persists through the full crypto stack."""
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "store-root",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "fallback-store",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
+    with EphemeralBucketSession():
+        blob_store = EncryptedBlobStore(root_dir=tmp_path / "store-root")
+        secret_store = SecretStore(
+            store_dir=tmp_path / "fallback-store",
+            blob_store=blob_store,
+        )
 
-    record = SecretRecord(
-        key="aeat:smoke:google-oauth-token",
-        value=b"refresh-token-abc-xyz",
-        classification=SensitivityClass.SECRET,
-        metadata={"issued_by": "smoke"},
-        created_at=_SECRET_CREATED_AT,
-        expires_at=_SECRET_EXPIRES_AT,
-    )
-    secret_store.put(record)
-    loaded = secret_store.get(record.key)
-    assert loaded.value == record.value
-    assert loaded.metadata == record.metadata
+        record = SecretRecord(
+            key="aeat:smoke:google-oauth-token",
+            value=b"refresh-token-abc-xyz",
+            classification=SensitivityClass.SECRET,
+            metadata={"issued_by": "smoke"},
+            created_at=_SECRET_CREATED_AT,
+            expires_at=_SECRET_EXPIRES_AT,
+        )
+        secret_store.put(record)
+        loaded = secret_store.get(record.key)
+        assert loaded.value == record.value
+        assert loaded.metadata == record.metadata
 
-    # The plaintext key and the plaintext value must NOT appear anywhere
-    # under the store directory (encrypted-at-rest invariant).
-    for path in scan_directory(tmp_path / "store-root", recursive=True, select=DirectoryEntryKind.FILES):
-        data = path.read_bytes()
-        assert b"refresh-token-abc-xyz" not in data
-        assert b"aeat:smoke:google-oauth-token" not in data
-    index_path = tmp_path / "fallback-store" / "index.json"
-    contents = index_path.read_text(encoding="utf-8")
-    assert "google-oauth-token" not in contents
-    assert "refresh-token" not in contents
+        # The plaintext key and the plaintext value must NOT appear anywhere
+        # under the store directory (encrypted-at-rest invariant).
+        for path in scan_directory(tmp_path / "store-root", recursive=True, select=DirectoryEntryKind.FILES):
+            data = path.read_bytes()
+            assert b"refresh-token-abc-xyz" not in data
+            assert b"aeat:smoke:google-oauth-token" not in data
+        index_path = tmp_path / "fallback-store" / "index.json"
+        contents = index_path.read_text(encoding="utf-8")
+        assert "google-oauth-token" not in contents
+        assert "refresh-token" not in contents
 
 
 def test_envelope_round_trip(tmp_path: Path) -> None:

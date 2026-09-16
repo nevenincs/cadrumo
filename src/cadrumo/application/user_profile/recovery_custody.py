@@ -1,333 +1,343 @@
-"""Per-profile recovery custody: enrollment, portable artifact, restore doors.
+"""Optional per-profile recovery: enrol, revoke, inspect, and reset the passphrase.
 
-This module is the application's whole recovery surface, and it is
-deliberately narrow. A profile's data-encryption key may be wrapped a second
-time under a recovery secret; that second wrapper can be exported as a
-portable artifact; and a capsule can be republished under a named, proven
-authority. Nothing here mints, rotates, replaces, or re-derives a key
-schedule, and nothing here installs recovery onto a capsule that is already
-committed.
+Recovery is a second wrapper over the same data-encryption key, opened by a
+minted recovery code instead of the operator's passphrase. It is off by
+default. An operator who wants it enrols after the profile exists, proves the
+current passphrase to do so, and copies the code down once; the code is never
+persisted, never logged, and never enters a result envelope. The only thing
+the code is good for is :func:`reset_profile_passphrase_with_recovery`: it
+proves the enrolled wrapper against the capsule's own sentinel and re-wraps
+the key under a new passphrase, so a forgotten passphrase is replaced rather
+than the records lost.
 
-**A recovery artifact is a second door to the same records.** It leaves the
-encrypted store by design, so every decision about it is an exposure
-decision. Three properties carry that weight, and none of them is advisory.
+Every door here works on a COMMITTED capsule under its custody transaction
+lock. Nothing mints, rotates, or re-derives a key schedule; the DEK epoch is
+preserved throughout, which is what keeps an enrolled code valid across
+ordinary passphrase changes.
 
-The secret is a 24-word BIP-39 mnemonic over 256 bits of entropy, never an
-operator-typed string. Once an artifact is off the machine its only remaining
-barrier is the KDF cost applied to the secret's entropy, and a human-chosen
-string does not survive offline guessing at any cost a login can afford to
-spend. The mnemonic makes that attack infeasible; it also makes the secret a
-BEARER credential, which is why the export's store-separately and
-retained-copy warnings are mandatory rather than cosmetic.
-
-The destination is refused rather than warned about. An artifact written
-inside the Cadrumo storage root sits with the ciphertext it unwraps; a
-relative destination resolves against a directory the operator did not
-choose. Both are refused by the custody owner before any secret is spent.
-
-The artifact is identity-BOUND while being machine-PORTABLE. It carries the
-profile UUID and DEK epoch it was minted for, and every read of it checks
-both against the target it is being used against, so it moves to another
-machine for the same profile and refuses to become a different profile's
-authority.
-
-:class:`~cadrumo.application.user_profile.CommittedProfileView` is what a
-successful restore projects; :data:`ProfileRestoreAuthority` is the axis that
-records which door proved it.
+See Also:
+    :func:`~cadrumo.application.user_profile.passphrase_rotation.rotate_profile_passphrase`
+        The passphrase-proved sibling of the reset door; both share one
+        re-wrap primitive.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hmac import compare_digest
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel, Field
+
+from ...core.credentials import assess_profile_password
+from ...core.errors.hierarchy import CadrumoError
+from ...core.identity.profile import ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.paths import effective_storage_root
 from .authentication import ProfilePasswordProofOperation
-from .capsule_record import ProfileRecordSession
 from .custody_ports import (
     create_profile_recovery_enrollment_material,
+    install_profile_recovery_envelope,
+    load_profile_custody_password_material,
+    load_profile_custody_recovery_material,
     map_profile_authentication_proof_failure,
-    prove_profile_recovery_artifact,
+    profile_custody_recovery_envelope_path,
+    remove_profile_recovery_envelope,
     unlock_profile_custody_password,
+    unlock_profile_custody_recovery,
 )
-from .custody_ports import (
-    export_profile_recovery_artifact as _export_recovery_artifact,
-)
-from .lifecycle import ProfileCapsuleLifecycle
-from .recovery_contracts import ProfileCustodyRecoveryArtifactWarning
+from .custody_repository import profile_custody_transaction_lock
+from .passphrase_rotation import rewrap_profile_passphrase_under_lock
+from .prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
     from uuid import UUID
 
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
-    from .aggregate import CommittedProfileView, ProfileRestoreAuthority
     from .custody_ports import (
-        ProfileCustodyEnvelopePort,
+        ProfileCustodyPasswordMaterialPort,
         ProfileCustodyRecoveryEnvelopePort,
-        ProfileCustodySentinelPort,
+        ProfileCustodyUnlockPort,
         ProfileRecoveryKeyPort,
     )
 
 _RECOVERY_KDF_SALT_BYTES = 16
 
 
+class ProfileRecoveryError(CadrumoError):
+    """Raised when a recovery door cannot be honoured as supplied."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: dict[str, object] | None = None,
+        translated_message: str | None = None,
+        password_refusal: ProspectiveProfilePasswordRefusal | None = None,
+    ) -> None:
+        """Retain a typed prospective refusal without retaining any secret."""
+        super().__init__(message, context=context, translated_message=translated_message)
+        self._password_refusal = password_refusal
+
+    @property
+    def password_refusal(self) -> ProspectiveProfilePasswordRefusal | None:
+        """Retain the typed refusal for trusted in-process consumers only."""
+        return self._password_refusal
+
+
 @dataclass(frozen=True, slots=True)
 class ProfileRecoveryEnrollment:
-    """One creation-enrolled recovery wrapper and the secret that opens it.
+    """One minted recovery wrapper and the secret that opens it.
 
     The secret rides in its wipeable container rather than as a ``str``: the
     operator holds it across an interactive confirmation lasting as long as
-    it takes a human to copy down 24 words, and a string copy is unreachable
-    by any wipe primitive for its whole lifetime. The caller owns the wipe
-    and should take it as early as the flow allows.
+    it takes a human to copy a code down, and a string copy is unreachable
+    by any wipe primitive for its whole lifetime. The enrolment door owns the
+    wipe and takes it as soon as the handover returns.
     """
 
     envelope: ProfileCustodyRecoveryEnvelopePort
     recovery_key: ProfileRecoveryKeyPort
 
 
-@dataclass(frozen=True, slots=True)
-class ProfileRecoveryArtifactReceipt:
-    """Non-secret record of one durable artifact export.
+class ProfileRecoveryStatus(BaseModel):
+    """Whether one committed profile currently has recovery enrolled."""
 
-    Carries no key material -- the wrapped DEK is in the file, not here --
-    so this can be rendered, logged by an operator surface, or returned
-    across a command boundary without widening exposure.
+    model_config = STRICT_FROZEN_CONFIG
+
+    profile_id: ProfileId
+    enrolled: bool
+
+
+class ProfileRecoveryEnrollmentOutcome(BaseModel):
+    """Non-secret result of one completed enrolment or revocation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    profile_id: ProfileId
+    enrolled: bool
+    changed: bool
+
+
+class ProfilePassphraseResetOutcome(BaseModel):
+    """Non-secret result of one passphrase reset proved by the recovery code."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    profile_id: ProfileId
+    password_generation: int = Field(ge=2)
+    dek_epoch_preserved: bool
+    recovery_enrollment_retained: bool
+
+
+def profile_recovery_status(*, profile_id: UUID, root: Path | None = None) -> ProfileRecoveryStatus:
+    """Report whether ``profile_id`` has a recovery wrapper enrolled.
+
+    Reads only the committed capsule's layout; no secret is required and no
+    key material is touched.
     """
-
-    profile_id: UUID
-    dek_epoch: str
-    artifact_digest: str
-    target: Path
-    warnings: tuple[ProfileCustodyRecoveryArtifactWarning, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class _SuppliedPasswordMaterial:
-    """The envelope and sentinel of a capsule that is not committed yet.
-
-    The committed-capsule loader cannot serve a restore: the capsule being
-    restored is by definition not published, so its material arrives from
-    the caller and is proved here instead of being read from a path.
-    """
-
-    envelope: ProfileCustodyEnvelopePort
-    sentinel: ProfileCustodySentinelPort
+    material = load_profile_custody_password_material(profile_id, root=effective_storage_root(root))
+    return ProfileRecoveryStatus(
+        profile_id=str(profile_id),
+        enrolled=profile_custody_recovery_envelope_path(material.capsule_path).exists(),
+    )
 
 
-def mint_profile_creation_recovery(
+def enroll_profile_recovery(
     *,
     profile_id: UUID,
-    dek: bytes,
-    dek_epoch: str,
-) -> ProfileRecoveryEnrollment:
-    """Mint the mandatory recovery wrapper during profile creation.
+    current_passphrase: str,
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+    root: Path | None = None,
+) -> ProfileRecoveryEnrollmentOutcome:
+    """Mint a recovery code for a committed profile and install its wrapper.
 
-    Enrollment wraps the DEK the caller already holds; it does not generate,
-    replace, or re-derive one. That is what makes it additive rather than a
-    key-management action: the password path is untouched, so a failed or
-    abandoned enrollment can strand nothing.
+    The current passphrase is the authorisation: a second door onto the
+    records may only be opened by someone who already holds the first. The
+    code is delivered through ``recovery_handover`` and nowhere else, and the
+    callback must return the exact code it received as possession proof. The
+    wrapper is installed only after that proof matches, so an operator who
+    could not copy the code down is left exactly where they started rather
+    than enrolled under a secret nobody holds.
 
-    Call this only while creating a profile. A capsule that is already
-    committed has no in-place recovery installation path, and inventing one
-    would mean a second writer into a published capsule.
+    Args:
+        profile_id: The committed profile to enrol.
+        current_passphrase: Proof of the existing credential. Never logged.
+        recovery_handover: The one channel the code reaches the operator
+            through. It is invoked once, before anything is written, and the
+            key is wiped by the time this returns. Raising from the callback
+            aborts the enrolment.
+        root: Storage root override; the effective root when omitted.
+
+    Raises:
+        ProfileRecoveryError: When the profile is already enrolled, the
+            passphrase does not open the committed envelope, or the returned
+            proof differs from the minted code.
     """
-    material = create_profile_recovery_enrollment_material(
-        profile_id=profile_id,
-        dek=dek,
-        dek_epoch=dek_epoch,
-        salt=token_bytes(_RECOVERY_KDF_SALT_BYTES),
-    )
-    return ProfileRecoveryEnrollment(envelope=material.envelope, recovery_key=material.recovery_key)
-
-
-def export_profile_recovery_artifact(
-    enrollment: ProfileRecoveryEnrollment,
-    *,
-    current_password: str,
-    password_envelope: ProfileCustodyEnvelopePort,
-    sentinel: ProfileCustodySentinelPort,
-    target: Path,
-) -> ProfileRecoveryArtifactReceipt:
-    """Write the portable artifact after proving the operator's current password.
-
-    The password proof is the authorisation, not a formality: an artifact is
-    a durable second door, so producing one must require the door that
-    already exists. The write is exclusive -- an existing destination is
-    refused rather than replaced -- and the destination itself is refused
-    outright when it is relative, indirect, or inside the storage root.
-
-    The returned warnings are the artifact's own mandatory set and are not
-    optional to surface. They state what an operator cannot infer from a
-    successful write: that the file is offline-guessable material, that it
-    must not be stored with the data it unwraps, that a copy which has been
-    exported cannot be recalled, and that losing it does not lock them out
-    while they still have their password.
-    """
-    try:
-        receipt = _export_recovery_artifact(
-            enrollment.envelope,
-            current_password=current_password,
-            password_envelope=password_envelope,
-            sentinel=sentinel,
-            target=target,
+    storage_root = effective_storage_root(root)
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        material = load_profile_custody_password_material(profile_id, root=storage_root)
+        if profile_custody_recovery_envelope_path(material.capsule_path).exists():
+            raise ProfileRecoveryError(
+                translated_message="application.user_profile.errors.recovery_already_enrolled",
+            )
+        unlock = _unlock_with_passphrase(
+            material,
+            passphrase=current_passphrase,
+            operation=ProfilePasswordProofOperation.RECOVERY_ENROLL,
         )
-    except BaseException as exc:
-        refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.RECOVERY_EXPORT)
-        if refusal is None:
-            raise
-        raise refusal from exc
-    return ProfileRecoveryArtifactReceipt(
-        profile_id=receipt.artifact.profile_id,
-        dek_epoch=receipt.artifact.dek_epoch,
-        artifact_digest=receipt.artifact.self_digest,
-        target=receipt.target,
-        warnings=receipt.warnings,
-    )
+        minted = create_profile_recovery_enrollment_material(
+            profile_id=profile_id,
+            dek=unlock.dek,
+            dek_epoch=material.envelope.dek_epoch,
+            salt=token_bytes(_RECOVERY_KDF_SALT_BYTES),
+        )
+        enrollment = ProfileRecoveryEnrollment(envelope=minted.envelope, recovery_key=minted.recovery_key)
+        with enrollment.recovery_key:
+            supplied_proof = recovery_handover(enrollment)
+            try:
+                if not compare_digest(supplied_proof, enrollment.recovery_key.code):
+                    raise ProfileRecoveryError(
+                        translated_message="application.user_profile.errors.recovery_possession_mismatch",
+                    )
+            finally:
+                del supplied_proof
+        install_profile_recovery_envelope(profile_id=profile_id, envelope=enrollment.envelope, root=storage_root)
+    return ProfileRecoveryEnrollmentOutcome(profile_id=str(profile_id), enrolled=True, changed=True)
 
 
-def restore_profile_with_password(
+def revoke_profile_recovery(
     *,
-    label: str,
-    password: str,
-    password_envelope: ProfileCustodyEnvelopePort,
-    sentinel: ProfileCustodySentinelPort,
-    database_bytes: bytes,
+    profile_id: UUID,
+    current_passphrase: str,
+    root: Path | None = None,
+) -> ProfileRecoveryEnrollmentOutcome:
+    """Remove the enrolled recovery wrapper after proving the current passphrase.
+
+    Idempotent: a profile that is not enrolled is reported unchanged rather
+    than refused, because the operator's intent ("no recovery on this
+    profile") already holds. The passphrase is still proved first, so the
+    unchanged answer never discloses enrolment state to someone without it.
+    """
+    storage_root = effective_storage_root(root)
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        material = load_profile_custody_password_material(profile_id, root=storage_root)
+        _unlock_with_passphrase(
+            material,
+            passphrase=current_passphrase,
+            operation=ProfilePasswordProofOperation.RECOVERY_REVOKE,
+        )
+        if not profile_custody_recovery_envelope_path(material.capsule_path).exists():
+            return ProfileRecoveryEnrollmentOutcome(profile_id=str(profile_id), enrolled=False, changed=False)
+        recovery = load_profile_custody_recovery_material(profile_id, root=storage_root)
+        remove_profile_recovery_envelope(profile_id=profile_id, current=recovery.recovery_envelope, root=storage_root)
+    return ProfileRecoveryEnrollmentOutcome(profile_id=str(profile_id), enrolled=False, changed=True)
+
+
+def reset_profile_passphrase_with_recovery(
+    *,
+    profile_id: UUID,
+    recovery_code: str,
+    new_passphrase: str,
+    new_passphrase_confirmation: str,
     root: Path | None = None,
     profile_decode_context: ProfileDecodeContext,
-) -> CommittedProfileView:
-    """Republish one capsule proving nothing but the profile's own password.
+) -> ProfilePassphraseResetOutcome:
+    """Replace a forgotten passphrase by proving the enrolled recovery code.
 
-    Password-only is a structural claim, not a description of the usual
-    case: no shared master key, no ambient provider, no recovery secret and
-    no environment value participates. The password unwraps this capsule's
-    own envelope, the resulting key is proved against this capsule's own
-    committed sentinel, and only then is anything published.
+    The recovery code unwraps the DEK from the enrolled wrapper, the result
+    is proved against the capsule's own sentinel, and only then is the
+    password envelope re-minted under ``new_passphrase`` through the same
+    primitive an ordinary rotation uses. The DEK epoch is preserved, so the
+    recovery wrapper stays enrolled and the same code keeps working.
 
-    The session is closed in every exit path, including the failing ones, so
-    a refused restore leaves no live key material behind.
+    Fails closed at every step before the swap: a profile without recovery,
+    a wrong code, a new passphrase outside the profile-password contract, or
+    a mismatched confirmation all refuse with the committed envelope untouched.
+
+    Raises:
+        ProfileRecoveryError: When recovery is not enrolled, the confirmation
+            does not match, the new passphrase is invalid, or the code does
+            not open the enrolled wrapper.
     """
-    try:
-        unlock = unlock_profile_custody_password(
-            _SuppliedPasswordMaterial(envelope=password_envelope, sentinel=sentinel),
-            password=password,
+    if new_passphrase != new_passphrase_confirmation:
+        raise ProfileRecoveryError(
+            translated_message="application.user_profile.errors.passphrase_confirmation_mismatch",
         )
-    except BaseException as exc:
-        refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.RESTORE)
+    password_refusal = prospective_profile_password_refusal(assess_profile_password(new_passphrase))
+    if password_refusal is not None:
+        raise ProfileRecoveryError(
+            translated_message=password_refusal.translated_message,
+            context=dict(password_refusal.context),
+            password_refusal=password_refusal,
+        )
+
+    storage_root = effective_storage_root(root)
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        password = load_profile_custody_password_material(profile_id, root=storage_root)
+        if not profile_custody_recovery_envelope_path(password.capsule_path).exists():
+            raise ProfileRecoveryError(
+                translated_message="application.user_profile.errors.recovery_not_enrolled",
+            )
+        recovery = load_profile_custody_recovery_material(profile_id, root=storage_root)
+        try:
+            unlock = unlock_profile_custody_recovery(recovery, recovery_secret=recovery_code)
+        except CadrumoError as exc:
+            refusal = map_profile_authentication_proof_failure(
+                exc,
+                operation=ProfilePasswordProofOperation.RECOVERY_RESET,
+            )
+            if refusal is None:
+                raise
+            raise ProfileRecoveryError(
+                translated_message="application.user_profile.errors.recovery_code_rejected",
+            ) from refusal
+        current = recovery.password_envelope
+        rotated = rewrap_profile_passphrase_under_lock(
+            profile_id=profile_id,
+            dek=unlock.dek,
+            current=current,
+            new_passphrase=new_passphrase,
+            storage_root=storage_root,
+            profile_decode_context=profile_decode_context,
+        )
+    return ProfilePassphraseResetOutcome(
+        profile_id=str(profile_id),
+        password_generation=rotated.password_generation,
+        dek_epoch_preserved=rotated.dek_epoch == current.dek_epoch,
+        recovery_enrollment_retained=profile_custody_recovery_envelope_path(recovery.capsule_path).exists(),
+    )
+
+
+def _unlock_with_passphrase(
+    material: ProfileCustodyPasswordMaterialPort,
+    *,
+    passphrase: str,
+    operation: ProfilePasswordProofOperation,
+) -> ProfileCustodyUnlockPort:
+    """Prove the current passphrase, or refuse without disclosing why."""
+    try:
+        return unlock_profile_custody_password(material, password=passphrase)
+    except CadrumoError as exc:
+        refusal = map_profile_authentication_proof_failure(exc, operation=operation)
         if refusal is None:
             raise
-        raise refusal from exc
-    return _publish_restored_capsule(
-        label=label,
-        password_envelope=password_envelope,
-        sentinel=sentinel,
-        dek=unlock.dek,
-        database_bytes=database_bytes,
-        authority="password",
-        root=root,
-        profile_decode_context=profile_decode_context,
-    )
-
-
-def restore_profile_from_recovery_artifact(
-    *,
-    label: str,
-    artifact_source: Path,
-    recovery_secret: str,
-    password_envelope: ProfileCustodyEnvelopePort,
-    sentinel: ProfileCustodySentinelPort,
-    database_bytes: bytes,
-    root: Path | None = None,
-    profile_decode_context: ProfileDecodeContext,
-) -> CommittedProfileView:
-    """Republish one capsule proving a portable artifact instead of the password.
-
-    What this recovers and what it does not are both worth stating, because
-    the gap between them is where an operator would otherwise be misled.
-
-    It recovers the DATA path: the artifact's wrapped key is proved against
-    the capsule's own sentinel, so the republished capsule is known to be
-    openable by the key its database was encrypted under.
-
-    It does NOT recover password access. The capsule is republished under
-    its EXISTING password envelope, unchanged, because changing it would be
-    credential rotation -- a separate capability this build does not have.
-    An operator who has genuinely lost their password gets their records
-    back onto a valid capsule and still cannot log in with a password they
-    do not know.
-
-    The artifact is refused unless it names this exact profile and DEK
-    epoch, checked once on read and again on unlock, so an artifact minted
-    for another profile cannot become this one's authority.
-    """
-    try:
-        proof = prove_profile_recovery_artifact(
-            artifact_source,
-            recovery_secret=recovery_secret,
-            expected_profile_id=password_envelope.profile_id,
-            expected_dek_epoch=password_envelope.dek_epoch,
-            sentinel=sentinel,
-        )
-    except BaseException as exc:
-        refusal = map_profile_authentication_proof_failure(
-            exc, operation=ProfilePasswordProofOperation.RECOVERY_RESTORE
-        )
-        if refusal is None:
-            raise
-        raise refusal from exc
-    return _publish_restored_capsule(
-        label=label,
-        password_envelope=password_envelope,
-        sentinel=sentinel,
-        dek=proof.dek,
-        database_bytes=database_bytes,
-        authority="recovery_artifact",
-        root=root,
-        profile_decode_context=profile_decode_context,
-    )
-
-
-def _publish_restored_capsule(
-    *,
-    label: str,
-    password_envelope: ProfileCustodyEnvelopePort,
-    sentinel: ProfileCustodySentinelPort,
-    dek: bytes,
-    database_bytes: bytes,
-    authority: ProfileRestoreAuthority,
-    root: Path | None,
-    profile_decode_context: ProfileDecodeContext,
-) -> CommittedProfileView:
-    """Bind a proved key to one record session and publish exactly once.
-
-    Recovery proof authorizes only the explicit artifact door. Publication
-    never installs a source wrapper or artifact as enrolled recovery.
-    """
-    session = ProfileRecordSession.from_envelope(
-        envelope=password_envelope,
-        dek=dek,
-        profile_decode_context=profile_decode_context,
-    )
-    try:
-        return ProfileCapsuleLifecycle(root=root).restore(
-            label=label,
-            password_envelope=password_envelope,
-            sentinel=sentinel,
-            data_files={},
-            record_session=session,
-            database_bytes=database_bytes,
-            authority=authority,
-        )
-    finally:
-        session.close()
+        raise ProfileRecoveryError(
+            translated_message="application.user_profile.errors.passphrase_current_rejected",
+        ) from refusal
 
 
 __all__ = [
-    "ProfileRecoveryArtifactReceipt",
+    "ProfilePassphraseResetOutcome",
     "ProfileRecoveryEnrollment",
-    "export_profile_recovery_artifact",
-    "mint_profile_creation_recovery",
-    "restore_profile_from_recovery_artifact",
-    "restore_profile_with_password",
+    "ProfileRecoveryEnrollmentOutcome",
+    "ProfileRecoveryError",
+    "ProfileRecoveryStatus",
+    "enroll_profile_recovery",
+    "profile_recovery_status",
+    "reset_profile_passphrase_with_recovery",
+    "revoke_profile_recovery",
 ]

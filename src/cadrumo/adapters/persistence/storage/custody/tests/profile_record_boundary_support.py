@@ -29,7 +29,6 @@ from cadrumo.adapters.persistence.storage.custody.records import (
     ProfileCustodyWrappedDek,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -170,7 +169,6 @@ def publish_capsule(root: Path) -> UserProfileRecord:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
-            recovery_envelope=mint_test_profile_recovery_envelope(PROFILE_ID, dek=DEK, dek_epoch=envelope.dek_epoch),
             initial_record=record,
             record_session=session,
         )

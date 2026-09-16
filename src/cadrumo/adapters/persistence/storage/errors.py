@@ -145,43 +145,6 @@ class KeyringUnavailableError(SecretStoreError):
     """
 
 
-class MasterKeyUnavailableError(SecretStoreError):
-    """Raised when no master key can be acquired from any provider."""
-
-
-class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
-    """Raised when no key material this substrate can open a bucket with exists.
-
-    The shared process-wide key store this once described -- a keyring entry
-    and a passphrase-derived file fallback -- was deleted with its providers,
-    so the artefacts named here no longer exist to be absent. What survives is
-    the same distinction at the current custody boundary: a bucket's data key
-    lives in that profile's own password custody, so this class means no
-    unlocked custody is
-    available rather than a wrong passphrase, and it is raised without minting
-    anything.
-
-    Ordinary load paths fail closed with this class rather than provisioning
-    on demand, which is what keeps "not provisioned" and "authentication
-    failed" separable at the surface.
-    """
-
-
-class UnsecuredModeRefusedError(SecretStoreError):
-    """Raised when the unsecured backend is requested without proper gating.
-
-    Two refusal classes:
-
-    1. The unsecured backend was selected (``cadrumo_secret_store_backend=unsecured``)
-       but the operator did not set ``CADRUMO_ALLOW_UNENCRYPTED=1``. The hostile-
-       named env var is the legible-and-embarrassing opt-out gate.
-    2. The unsecured backend is active AND the operator profile carries a
-       real NIF/NIE/CIF (NIF-canary). Real tax data is incompatible with a
-       published deterministic master key; the substrate refuses to write
-       such records into the unsecured store.
-    """
-
-
 class ClassificationError(PersistenceError):
     """Raised when a record's declared sensitivity class is incompatible with its repository.
 

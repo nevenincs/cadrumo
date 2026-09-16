@@ -1109,10 +1109,6 @@ _STORAGE_SESSION_NO_ACTIONS: Final[Mapping[str, tuple[CliExceptionPrecondition, 
         CliExceptionPrecondition.ACTIVE_BUCKET_SELECTED,
         {"active_bucket_selected": False},
     ),
-    "AUTH_STORAGE_MASTER_KEY_UNAVAILABLE": (
-        CliExceptionPrecondition.RESUMED_SESSION_KEK_MATERIAL_AVAILABLE,
-        {"resumed_profile_session": True, "resumed_session_kek_material_available": False},
-    ),
     "AUTH_STORAGE_MASTER_KEY_MATERIAL_MISSING": (
         CliExceptionPrecondition.MASTER_KEY_MATERIAL_AVAILABLE,
         {"active_bucket_selected": True, "master_key_material_available": False},
@@ -1214,7 +1210,12 @@ def _project_unexpected(error: Exception, callback: Callable[..., object]) -> Ca
     wrapped = _unwrap_cadrumo_error(error)
     if wrapped is not None:
         return _project_cadrumo_error(wrapped, callback)
-    _log.error(
+    # DEBUG, not ERROR: the stderr handler is level-gated while the file handler
+    # stays at DEBUG, so this keeps the traceback in the diagnostic log the
+    # operator's envelope points them at, and off the console. Printing it
+    # ahead of the translated envelope leaked absolute source paths and made a
+    # handled refusal read as a crash the CLI had failed to catch.
+    _log.debug(
         "command_error_boundary: unexpected exception in %s",
         getattr(callback, "__name__", repr(callback)),
         exc_info=True,

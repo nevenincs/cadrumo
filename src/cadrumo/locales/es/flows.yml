@@ -299,6 +299,19 @@ flows:
       seguidas son más fáciles de recordar y más difíciles de adivinar que una sola
       palabra corta y complicada.
     password_label: Contraseña
+    recovery:
+      cancel_button: Cancelar
+      confirm_button: Ya lo he anotado
+      offer_consequence: 'Sin él, una contraseña olvidada significa que los datos
+        no pueden recuperarse. También puedes configurarlo más tarde con: aeat config
+        profile recovery enable'
+      offer_explanation: Un código de recuperación te permite establecer una nueva
+        contraseña si la olvidas. Se muestra una sola vez; anótalo y guárdalo lejos
+        de este equipo.
+      offer_heading: ¿Configurar un código de recuperación?
+      progress: Configurando la recuperación
+      setup_button: Configurar recuperación
+      skip_button: Omitir por ahora
     refusal:
       confirmation_mismatch: Las dos contraseñas no coinciden.
       username_required: Introduce un nombre para este perfil.
@@ -310,9 +323,10 @@ flows:
     title: Crea tu perfil
     username_hint: Cómo aparece este perfil en las listas. Puedes cambiarlo más adelante.
     username_label: Nombre del perfil
-    why_password: 'Tus datos fiscales se quedan en este ordenador y no se envían a
-      ningún sitio. La contraseña los cifra en el disco, de modo que no se pueden
-      leer sin ti. No se puede restablecer: si la pierdes, los datos son irrecuperables.'
+    why_password: Tus datos fiscales permanecen en este equipo y nunca se envían a
+      ningún sitio. La contraseña los cifra en disco, así que no pueden leerse sin
+      ti. Si la pierdes, los datos son irrecuperables salvo que configures un código
+      de recuperación, que se te ofrecerá a continuación.
   review:
     action_edit: Editar una respuesta
     action_prompt: ¿Qué quieres hacer?

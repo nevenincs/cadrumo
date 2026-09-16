@@ -17,7 +17,6 @@ from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -97,9 +96,6 @@ def publish_capsule_and_pointer(root: Path) -> None:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
-            recovery_envelope=mint_test_profile_recovery_envelope(
-                UUID(PROFILE_ID), dek=DEK, dek_epoch=envelope.dek_epoch
-            ),
             initial_record=_create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=PROFILE_ID,

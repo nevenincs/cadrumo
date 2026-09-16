@@ -48,7 +48,6 @@ CORE_STRUCTS: dict[str, str] = {
     # Security + classification
     "SensitivityClass": "cadrumo.core.classification",
     "Envelope": "cadrumo.adapters.persistence.storage.envelope.contract",
-    "MasterKeyProvider": "cadrumo.adapters.persistence.storage.master_key.master_key",
     # Portal registry
     "Portal": "cadrumo.domain.portals.codes",
     "PortalMetadata": "cadrumo.domain.portals.metadata",

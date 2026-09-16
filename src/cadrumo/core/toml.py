@@ -13,23 +13,27 @@ loader in :mod:`domain.calculations.registry._loader`.
 :func:`to_str_keyed_dict` is the narrow bridge from loosely typed
 parsed TOML mappings into strict schema models that require string keys.
 
-The parse is backed by the Python standard-library :mod:`tomllib` module,
-available throughout Cadrumo's supported Python range. It returns the native
-Python types defined by TOML for every value shape
-(str/int/float/bool/list/dict/date/datetime/time); it does not produce a
+The parse is backed by the Rust ``rtoml`` parser, which is several times
+faster than the standard-library parser on the registry tree and returns the
+same native Python types for every TOML value shape
+(str/int/float/bool/list/dict/date/datetime/time). It does not produce a
 :class:`decimal.Decimal` (TOML has no native decimal type), so registry money
 and rate values continue to arrive as plain TOML strings, coerced to
-``Decimal`` downstream by pydantic field validators exactly as before.
+``Decimal`` downstream by pydantic field validators. :func:`parse_toml` and
+:func:`load_toml` are the only places the parser is called; every other
+module reads TOML through them.
 """
 
 from __future__ import annotations
 
 import math
 import re
-import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from datetime import date, datetime, time
 from pathlib import Path
+from typing import Any, BinaryIO
+
+import rtoml
 
 from .type_guards import is_object_dict, is_object_list, is_object_list_or_tuple, is_object_mapping
 
@@ -39,6 +43,38 @@ type TomlTablePath = tuple[str | int, ...]
 
 _BARE_KEY = re.compile(r"^[A-Za-z0-9_-]+$")
 _STRING_ESCAPES = {'"': '\\"', "\\": "\\\\", "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\f", "\r": "\\r"}
+
+
+class TomlDecodeError(ValueError):
+    """A document is not valid TOML."""
+
+
+def parse_toml(text: str) -> dict[str, Any]:
+    """Parse TOML text into its top-level table.
+
+    The table is typed as the standard-library parser typed it, so callers
+    that index a document they authored keep doing so; :func:`read_toml` is
+    the strictly typed boundary for committed registry input.
+
+    Raises:
+        TomlDecodeError: The text is not valid TOML.
+    """
+    try:
+        return rtoml.loads(text)
+    except rtoml.TomlParsingError as exc:
+        raise TomlDecodeError(str(exc)) from exc
+
+
+def load_toml(source: Path | BinaryIO) -> dict[str, Any]:
+    """Parse a TOML document from a path or an open binary file.
+
+    Raises:
+        TomlDecodeError: The document is not valid TOML.
+        UnicodeDecodeError: The bytes are not UTF-8.
+        OSError: The path cannot be read.
+    """
+    raw = source.read_bytes() if isinstance(source, Path) else source.read()
+    return parse_toml(raw.decode("utf-8"))
 
 
 def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[str, object]:
@@ -56,15 +92,14 @@ def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[
     Raises:
         Exception: The exception built by ``error_factory`` when the file
             cannot be read (``OSError``) or contains invalid TOML
-            (``tomllib.TOMLDecodeError``).
+            (:class:`TomlDecodeError`).
     """
     try:
-        with path.open("rb") as handle:
-            loaded = tomllib.load(handle)
+        loaded = load_toml(path)
         if not isinstance(loaded, Mapping):
             raise error_factory(f"{path}: TOML root must be a mapping")
         return to_str_keyed_dict(loaded, error_factory=error_factory)
-    except tomllib.TOMLDecodeError as exc:
+    except TomlDecodeError as exc:
         raise error_factory(f"{path}: invalid TOML: {exc}") from exc
     except UnicodeDecodeError as exc:
         raise error_factory(f"{path}: invalid TOML: {exc}") from exc
@@ -133,7 +168,7 @@ def render_toml(document: Mapping[str, object], *, comments: Mapping[TomlTablePa
     :func:`freeze_toml` produces.
 
     Args:
-        document: The value to render, as :mod:`tomllib` would return it.
+        document: The value to render, as :func:`parse_toml` would return it.
         comments: Comment text written above the table at each path; the empty
             path is the document itself. Each line of the text becomes one
             ``#`` comment line, so a parser drops it.

@@ -10,11 +10,8 @@ Two policy gates fire before any network IO happens:
 
 1. The caller must pass a profile identity resolved by
    :func:`adapters.outbound.google.resolve_active_profile`.
-2. When :class:`core.config_support.SecretStoreBackend` is configured as
-   ``UNSECURED`` and that profile carries a real Spanish NIF / NIE / CIF,
-   :func:`adapters.outbound.google.oauth_flow.check_unsecured_mode_safety`
-   refuses with
-   :exc:`adapters.outbound.google.GoogleAuthUnsecuredModeRefusedError`.
+2. :func:`adapters.outbound.google.oauth_flow.require_resolvable_profile_record`
+   refuses a profile whose canonical record session cannot be opened.
 
 See Also:
     :func:`adapters.outbound.google.run_login_flow` executes the login
@@ -31,13 +28,10 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import NoReturn, Protocol, cast
 
-from ....core.config import load_settings
-from ....core.config_support import SecretStoreBackend
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.time.clock import now
 from ....core.tty import stdin_is_tty
 from ....domain.user_profile.errors import ProfileNotFoundError
-from ...persistence.storage.master_key.master_key_tax_id import looks_like_real_tax_id
 from .errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,
@@ -46,7 +40,6 @@ from .errors import (
     GoogleAuthPreconditionCondition,
     GoogleAuthProfileUnboundError,
     GoogleAuthScopeInsufficientError,
-    GoogleAuthUnsecuredModeRefusedError,
     google_auth_no_action_verdict,
 )
 from .records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
@@ -87,73 +80,33 @@ def require_interactive_terminal() -> None:
         )
 
 
-def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
-    """Refuse the OAuth flow when unsecured mode meets a real NIF.
-
-    The guard mirrors the storage substrate's NIF-canary rule: real taxpayer
-    identifiers must not enter OAuth token setup while
-    :class:`core.config_support.SecretStoreBackend` is running in unsecured mode.
-
-    Args:
-        profile: Active profile UUID resolved by
-            :func:`adapters.outbound.google.resolve_active_profile`.
-        tax_id: The active profile's ``identity.tax_id`` value. Empty string
-            when the profile has no stored tax identifier.
-
-    Raises:
-        :exc:`adapters.outbound.google.GoogleAuthUnsecuredModeRefusedError`:
-            When
-            ``cadrumo_secret_store_backend=unsecured`` and ``tax_id`` parses as a
-            real Spanish tax identifier per
-            :func:`adapters.persistence.storage.master_key.master_key_tax_id.looks_like_real_tax_id`.
-    """
-    settings = load_settings()
-    if settings.cadrumo_secret_store_backend is not SecretStoreBackend.UNSECURED:
-        return
-    cleaned = tax_id.strip()
-    if cleaned and looks_like_real_tax_id(cleaned):
-        raise GoogleAuthUnsecuredModeRefusedError(
-            "google OAuth refused: secret store is unsecured and the active profile carries a real NIF",
-            context={"profile": profile, "backend": "unsecured"},
-            translated_message="adapters.google.oauth_flow.errors.unsecured_mode_refused",
-            precondition_verdict=google_auth_no_action_verdict(
-                condition=GoogleAuthPreconditionCondition.CREDENTIAL_STORE_SECURED,
-                facts={"secret_store_secured": False, "tax_id_present": True},
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        )
-
-
-def resolve_active_tax_id(profile_id: str) -> str:
-    """Return the ``identity.tax_id`` value for the profile UUID.
+def require_resolvable_profile_record(profile_id: str) -> None:
+    """Refuse the consent flow when the active profile cannot be resolved.
 
     ``profile_id`` is the immutable profile identity returned by
-    :func:`adapters.outbound.google.resolve_active_profile`.
-    The resolver loads the profile bucket pointer through
-    :func:`application.workflow.read_profile_bucket_by_id`, opens the
-    canonical user-profile lifecycle service, and reads the tax-id fact used by
-    :func:`adapters.outbound.google.oauth_flow.check_unsecured_mode_safety`.
+    :func:`adapters.outbound.google.resolve_active_profile`. The guard reads the
+    profile bucket pointer through
+    :func:`application.workflow.read_profile_bucket_by_id` and opens the
+    canonical user-profile record through its lifecycle service, so a profile
+    that is committed but has no live record session is refused BEFORE any
+    network IO rather than midway through consent.
 
-    Returns:
-        The stored ``identity.tax_id`` value, or an empty string when the
-        profile record has no tax identifier.
+    Nothing is read out of the record: existence is the whole precondition.
 
     Raises:
         :exc:`adapters.outbound.google.GoogleAuthProfileUnboundError`:
-            When the profile bucket manifest or canonical profile-record
+            When the profile bucket pointer or the canonical profile-record
             session cannot be resolved.
     """
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ....application.user_profile.projections import record_to_path_values
     from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
     from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     pointer = read_profile_bucket_by_id(profile_id)
     if pointer is None:
         raise GoogleAuthProfileUnboundError(
-            "google OAuth refused: active profile bucket manifest could not be resolved",
-            context={"profile": profile_id, "reason": "profile_bucket_manifest_missing"},
+            "google OAuth refused: active profile bucket pointer could not be resolved",
+            context={"profile": profile_id, "reason": "profile_bucket_pointer_missing"},
             translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
             precondition_verdict=google_auth_no_action_verdict(
                 condition=GoogleAuthPreconditionCondition.PROFILE_IDENTITY_RESOLVED,
@@ -164,7 +117,7 @@ def resolve_active_tax_id(profile_id: str) -> str:
         )
     with bundled_indexed_authority().operation() as operation:
         try:
-            record = ProfileRecordRepository.for_current_session(
+            ProfileRecordRepository.for_current_session(
                 pointer.bucket_id,
                 profile_decode_context=operation.profile_decode_context(),
             ).load(profile_id)
@@ -184,7 +137,6 @@ def resolve_active_tax_id(profile_id: str) -> str:
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 ),
             ) from exc
-    return record_to_path_values(record).get("identity.tax_id") or ""
 
 
 def credentials_to_records(
@@ -257,9 +209,7 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
     Always runs the real
     ``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``
     against ``accounts.google.com``. The flow checks profile state with
-    :func:`adapters.outbound.google.oauth_flow.resolve_active_tax_id`,
-    applies
-    :func:`adapters.outbound.google.oauth_flow.check_unsecured_mode_safety`,
+    :func:`adapters.outbound.google.oauth_flow.require_resolvable_profile_record`,
     requires
     :func:`adapters.outbound.google.oauth_flow.require_interactive_terminal`,
     then maps the resulting credential fields through
@@ -280,11 +230,11 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
         :exc:`adapters.outbound.google.GoogleAuthError`: Any
             typed OAuth refusal with concrete remediation context.
     """
-    check_unsecured_mode_safety(profile, resolve_active_tax_id(profile))
+    require_resolvable_profile_record(profile)
     # Gate the blocking loopback consent receiver: refuse fast in a
     # non-interactive shell rather than hang forever waiting for a browser
-    # redirect no operator can complete. Placed after the profile / unsecured
-    # gates so their more-specific refusals take precedence, and immediately
+    # redirect no operator can complete. Placed after the profile gate so
+    # its more-specific refusal takes precedence, and immediately
     # before the only call that would block.
     require_interactive_terminal()
     refresh_token, token_uri, account_email, granted_scopes = _run_local_server(client)
@@ -514,9 +464,8 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
 
 
 __all__ = [
-    "check_unsecured_mode_safety",
     "credentials_to_records",
     "require_interactive_terminal",
-    "resolve_active_tax_id",
+    "require_resolvable_profile_record",
     "run_login_flow",
 ]

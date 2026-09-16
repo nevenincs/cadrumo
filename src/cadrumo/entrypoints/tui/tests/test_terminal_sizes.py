@@ -120,7 +120,6 @@ def _registered_profile(tmp_path: Path) -> Generator[tuple[Path, PinnedAuthority
         bundled_indexed_authority().operation() as authority_operation,
     ):
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=authority_operation.profile_create_context(),
@@ -189,7 +188,6 @@ def _operation_runtime(tmp_path: Path) -> Generator[tuple[OperationComposedServi
         bundled_indexed_authority().operation() as authority_operation,
     ):
         enrolled = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=authority_operation.profile_create_context(),

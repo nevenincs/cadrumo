@@ -1635,6 +1635,31 @@ _MODIFY_NO_RESUME_CODE = "config.profile.edit.modify_no_resume"
 _MODIFY_DESCENDANTS_DOOR_CODE = "config.profile.edit.descendants_via_door"
 
 
+def _selected_profile_label() -> str | None:
+    """Return the label of the profile the selection pointer names, if any.
+
+    A pointer naming a capsule whose label cannot be read leaves the spine
+    unset rather than guessing: the anchor exists to identify a profile, and a
+    wrong identity is worse than an absent one.
+    """
+    from ...core.logging import get_logger
+    from ..user_profile.profile_pointer import observe_active_profile_pointer
+    from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
+
+    # This runs after the record has been written, so it must not be able to
+    # fail the verb: the edit is already durable, and reporting a refusal for a
+    # committed change is worse than reporting it without the spine anchor.
+    try:
+        pointer = observe_active_profile_pointer()
+        if pointer.bucket_id is None:
+            return None
+        selected = read_profile_bucket_by_id(str(pointer.bucket_id))
+    except Exception:
+        get_logger(__name__).debug("active-profile label resolution failed for the wizard spine", exc_info=True)
+        return None
+    return None if selected is None else selected.label
+
+
 def _emit_wizard_success(
     mode: WizardPersistMode,
     profile_name: str,
@@ -1717,10 +1742,12 @@ def _emit_wizard_success(
     # Populate the envelope-spine active_profile identity anchor. The wizard
     # sits below the CLI transport's emit_envelope funnel (it cannot import
     # it — layering), so it must resolve the label itself. On create the
-    # newly-created profile IS the active one, so its name is the label; on
-    # edit the active profile is not necessarily the edited one, so the
-    # spine stays null (the label is not the wizard's to assert there).
-    active_profile = profile_name if mode == "create" else None
+    # newly-created profile IS the active one, so its name is the label. On
+    # edit the edited profile is not necessarily the active one, so the label
+    # is read from the selection pointer rather than assumed or left unset:
+    # every other command reports the active profile on this spine, and an
+    # unset one read as "no profile is active" while one plainly was.
+    active_profile = profile_name if mode == "create" else _selected_profile_label()
     result: ConfigProfileCreateResult | ConfigProfileEditResult = (
         ConfigProfileCreateResult(
             profile_name=profile_name,

@@ -1,9 +1,9 @@
 """Restore a profile from capsule material an operator can actually point at.
 
-The two restore doors take a password envelope, a DEK sentinel and the
-database bytes, and are right to: the capsule being restored is by definition
-not published, so nothing can load that material through the committed-capsule
-reader. But that also makes them uncallable from a command line, because a
+The restore door takes a password envelope, a DEK sentinel and the database
+bytes, and is right to: the capsule being restored is by definition not
+published, so nothing can load that material through the committed-capsule
+reader. But that also makes it uncallable from a command line, because a
 command line has a PATH and not three parsed custody records.
 
 This module is the missing half. It reads an unpublished capsule directory --
@@ -12,14 +12,9 @@ backup, or after a publication was interrupted -- and hands the parsed material
 to the door that proves the key.
 
 Recovery material is deliberately not publication cargo. A source directory
-may contain its local creation wrapper, while a restorative archive never
-does; neither normal password restore nor artifact restore installs that
-wrapper in the destination. The artifact is proof for the explicit recovery
-door only.
-
-The artifact stays identity-bound. It is proved against the envelope read from
-THIS source, so an artifact minted for another profile or another DEK epoch is
-refused by the existing checks rather than by a new copy of them here.
+may contain an enrolled recovery wrapper, while a restorative archive never
+does; a restore installs neither. The restored profile enrols recovery again
+explicitly if the operator wants it, which the restore outcome says out loud.
 """
 
 from __future__ import annotations
@@ -33,8 +28,14 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from .aggregate import ProfileRestoreAuthority
-from .custody_ports import read_profile_custody_capsule_source
-from .recovery_custody import restore_profile_from_recovery_artifact, restore_profile_with_password
+from .authentication import ProfilePasswordProofOperation
+from .capsule_record import ProfileRecordSession
+from .custody_ports import (
+    map_profile_authentication_proof_failure,
+    read_profile_custody_capsule_source,
+    unlock_profile_custody_password,
+)
+from .lifecycle import ProfileCapsuleLifecycle
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -73,7 +74,7 @@ class ProfileRestoreOutcome(BaseModel):
     label: str
     authority: ProfileRestoreAuthority
     recovery_enrolled: bool
-    """Always false: restore proofs never install recovery in the destination."""
+    """Always false: a restore never installs recovery in the destination."""
 
 
 def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
@@ -137,34 +138,6 @@ def restore_profile_capsule_with_password(
     return _outcome(view, material, authority="password")
 
 
-def restore_profile_capsule_with_recovery_artifact(
-    *,
-    label: str,
-    capsule: ProfileCapsuleSource,
-    artifact_source: Path,
-    recovery_secret: str,
-    root: Path | None = None,
-    profile_decode_context: ProfileDecodeContext,
-) -> ProfileRestoreOutcome:
-    """Publish already-read capsule material proving a portable artifact.
-
-    The recovery counterpart of :func:`restore_profile_capsule_with_password`,
-    and the same single publication authority for that door.
-    """
-    material = capsule
-    view = restore_profile_from_recovery_artifact(
-        label=label,
-        artifact_source=artifact_source,
-        recovery_secret=recovery_secret,
-        password_envelope=material.password_envelope,
-        sentinel=material.sentinel,
-        database_bytes=material.database_bytes,
-        root=root,
-        profile_decode_context=profile_decode_context,
-    )
-    return _outcome(view, material, authority="recovery_artifact")
-
-
 def _outcome(
     view: CommittedProfileView,
     material: ProfileCapsuleSource,
@@ -180,11 +153,74 @@ def _outcome(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _SuppliedPasswordMaterial:
+    """The envelope and sentinel of a capsule that is not committed yet.
+
+    The committed-capsule loader cannot serve a restore: the capsule being
+    restored is by definition not published, so its material arrives from
+    the caller and is proved here instead of being read from a path.
+    """
+
+    envelope: ProfileCustodyEnvelopePort
+    sentinel: ProfileCustodySentinelPort
+
+
+def restore_profile_with_password(
+    *,
+    label: str,
+    password: str,
+    password_envelope: ProfileCustodyEnvelopePort,
+    sentinel: ProfileCustodySentinelPort,
+    database_bytes: bytes,
+    root: Path | None = None,
+    profile_decode_context: ProfileDecodeContext,
+) -> CommittedProfileView:
+    """Republish one capsule proving nothing but the profile's own password.
+
+    Password-only is a structural claim, not a description of the usual
+    case: no shared master key, no ambient provider, no recovery secret and
+    no environment value participates. The password unwraps this capsule's
+    own envelope, the resulting key is proved against this capsule's own
+    committed sentinel, and only then is anything published.
+
+    The session is closed in every exit path, including the failing ones, so
+    a refused restore leaves no live key material behind.
+    """
+    try:
+        unlock = unlock_profile_custody_password(
+            _SuppliedPasswordMaterial(envelope=password_envelope, sentinel=sentinel),
+            password=password,
+        )
+    except BaseException as exc:
+        refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.RESTORE)
+        if refusal is None:
+            raise
+        raise refusal from exc
+    session = ProfileRecordSession.from_envelope(
+        envelope=password_envelope,
+        dek=unlock.dek,
+        profile_decode_context=profile_decode_context,
+    )
+    try:
+        return ProfileCapsuleLifecycle(root=root).restore(
+            label=label,
+            password_envelope=password_envelope,
+            sentinel=sentinel,
+            data_files={},
+            record_session=session,
+            database_bytes=database_bytes,
+            authority="password",
+        )
+    finally:
+        session.close()
+
+
 __all__ = [
     "ProfileCapsuleSource",
     "ProfileCapsuleSourceError",
     "ProfileRestoreOutcome",
     "read_profile_capsule_source",
     "restore_profile_capsule_with_password",
-    "restore_profile_capsule_with_recovery_artifact",
+    "restore_profile_with_password",
 ]

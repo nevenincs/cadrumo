@@ -65,7 +65,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 _PROFILE_ID = UUID("327b296d-8377-4be0-b13a-ca4d8f692e1d")
@@ -341,18 +341,12 @@ def _create_labeled_capsule_in_sibling(
     whenever their own KDF setup happens to finish, so the race is loose and
     the collision is decided by scheduling luck rather than by the lock.
     """
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
     from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 
     root = Path(root_text)
     profile_id = UUID(profile_id_text)
     envelope, sentinel, data_files = _create_capsule_input(profile_id=profile_id)
     with composed_profile_persistence_ports():
-        recovery_envelope = mint_test_profile_recovery_envelope(
-            profile_id,
-            dek=bytes(range(32)),
-            dek_epoch=envelope.dek_epoch,
-        )
         if barrier is not None:
             barrier.wait(60)
         try:
@@ -361,7 +355,6 @@ def _create_labeled_capsule_in_sibling(
                 password_envelope=envelope,
                 sentinel=sentinel,
                 data_files=data_files,
-                recovery_envelope=recovery_envelope,
                 label=label,
                 now=_INSTANT,
             )
@@ -737,13 +730,13 @@ def test_delete_owner_receipts_are_durable_and_idempotent(tmp_path: Path) -> Non
     _authorise_clear_hold(service)
     session_path = _persist_real_current_session_acceleration(tmp_path)
     assert session_path.is_file()
-    live_session = BucketSession.open(
+    live_session = BucketSession.open_resumed(
         bucket_id=str(_PROFILE_ID),
-        kek=b"k" * 32,
         dek=bytes(range(32)),
         idle_minutes=15,
-        absolute_minutes=240,
         opened_at=_INSTANT,
+        idle_deadline=_INSTANT + timedelta(minutes=15),
+        absolute_deadline=_INSTANT + timedelta(minutes=240),
         storage_root=tmp_path,
     )
     bind_active_bucket_session(live_session)

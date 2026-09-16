@@ -83,7 +83,6 @@ def _run(
     settings: dict[str, object] = {
         "cadrumo_local_storage_root": storage_root,
         "cadrumo_secret_store_dir": storage_root / "fallback-store",
-        "cadrumo_secret_store_backend": "auto",
         "cadrumo_output_language": "en",
     }
     if with_passphrase:
@@ -116,7 +115,6 @@ def _create_profile(storage_root: Path) -> str:
 
     with override_settings(cadrumo_local_storage_root=storage_root):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="session-operator",
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,

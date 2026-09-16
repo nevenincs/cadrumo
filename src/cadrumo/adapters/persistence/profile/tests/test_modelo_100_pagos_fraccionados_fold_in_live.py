@@ -21,7 +21,7 @@ module proves the wiring works end-to-end on the LIVE operator calculate path
 four prior M130 quarterly filings fold into the annual 0604.
 
 Real-behaviour, real-adapter (real encrypted-SQLite observation store via
-:class:`SecureObjectRepository` + :class:`EphemeralMasterKeyProvider`, real
+:class:`SecureObjectRepository` + :class:`EphemeralBucketSession`, real
 registry authority, real calculation engine, real relation resolver, real source
 mesh — no mocks, stubs, skips, or xfail).
 

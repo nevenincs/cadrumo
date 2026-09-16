@@ -112,8 +112,6 @@ class StorageRuntime(BaseModel):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_SEALED)
         if active.is_expired(now):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_EXPIRED)
-        if active.unsecured_backend:
-            raise runtime_not_ready_error(StorageRuntimeReadinessCode.UNSECURED_BACKEND)
         bucket_id = self.bucket_id
         if bucket_id is None:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET)
@@ -136,15 +134,12 @@ def _active_session_projection(
         idle_deadline=active.idle_deadline,
         sealed=active.sealed,
         expired=expired,
-        unsecured_backend=active.unsecured_backend,
     )
     issues: list[StorageRuntimeReadinessIssue] = []
     if active.sealed:
         issues.append(readiness_issue(code=StorageRuntimeReadinessCode.SESSION_SEALED))
     elif expired:
         issues.append(readiness_issue(code=StorageRuntimeReadinessCode.SESSION_EXPIRED))
-    elif active.unsecured_backend:
-        issues.append(readiness_issue(code=StorageRuntimeReadinessCode.UNSECURED_BACKEND))
     return session, issues
 
 

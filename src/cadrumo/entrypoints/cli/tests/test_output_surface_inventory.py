@@ -114,7 +114,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
     ("entrypoints/cli/config/secure_input.py", "write_to_controlling_terminal", "write"): (
         "Recovery-code display writes directly to the controlling terminal "
         "device (CONOUT$ / /dev/tty), deliberately BYPASSING stdout so the "
-        "candidate mnemonic can never land in a redirected stream, JSON "
+        "candidate code can never land in a redirected stream, JSON "
         "envelope, or log. Routing it through the envelope renderer would be "
         "the secret-serialization defect the channel exists to prevent."
     ),

@@ -11,7 +11,7 @@ keeps each module reviewable.
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 
 from ....core.casilla_id import CasillaId
@@ -77,6 +77,22 @@ def _group_casillas_by_id(
     return by_id
 
 
+type _LineageEvolutions = Mapping[str, tuple[CasillaContinuidadEvolutionDefinition, ...]]
+type _EvolutionsByLineage = Mapping[RevisionId, _LineageEvolutions]
+_NO_LINEAGE_EVOLUTIONS: _LineageEvolutions = dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]]()
+
+
+def _evolutions_by_lineage(modelo: ModeloDefinition) -> _EvolutionsByLineage:
+    """Group each revision's declared evolutions by lineage so a pair resolves by lookup."""
+    index: dict[RevisionId, dict[str, tuple[CasillaContinuidadEvolutionDefinition, ...]]] = {}
+    for revision_id, revision in modelo.revisions.items():
+        grouped: dict[str, list[CasillaContinuidadEvolutionDefinition]] = defaultdict(list)
+        for evolution in revision.casilla_continuidad_evolutions:
+            grouped[evolution.continuidad_id].append(evolution)
+        index[revision_id] = {lineage: tuple(items) for lineage, items in grouped.items()}
+    return index
+
+
 def _pair_field_divergences(
     modelo: ModeloDefinition,
     casilla_id: CasillaId,
@@ -86,6 +102,7 @@ def _pair_field_divergences(
     right_revision: ModeloRevision,
     right_casilla: CasillaDefinition,
     right_sig: tuple[object, ...],
+    evolutions: _EvolutionsByLineage,
 ) -> Iterator[CrossRevisionCasillaDivergence]:
     revisions_overlap = _revisions_overlap(left_revision, right_revision)
     for field, left_value, right_value in zip(
@@ -96,7 +113,7 @@ def _pair_field_divergences(
     ):
         if left_value == right_value:
             continue
-        evolution = _matching_evolution(left_revision, right_revision, left_casilla, right_casilla, field)
+        evolution = _matching_evolution(left_revision, right_revision, left_casilla, right_casilla, field, evolutions)
         yield CrossRevisionCasillaDivergence(
             modelo_id=modelo.id,
             casilla_id=casilla_id,
@@ -118,6 +135,7 @@ def _casilla_divergences_for_occurrences(
     modelo: ModeloDefinition,
     casilla_id: CasillaId,
     occurrences: list[tuple[ModeloRevision, CasillaDefinition]],
+    evolutions: _EvolutionsByLineage,
 ) -> Iterator[CrossRevisionCasillaDivergence]:
     for index, (left_revision, left_casilla) in enumerate(occurrences[:-1]):
         left_sig = _cross_revision_signature(left_casilla)
@@ -134,6 +152,7 @@ def _casilla_divergences_for_occurrences(
                 right_revision,
                 right_casilla,
                 right_sig,
+                evolutions,
             )
 
 
@@ -144,10 +163,11 @@ def iter_cross_revision_casilla_divergences(
     divergences: list[CrossRevisionCasillaDivergence] = []
     for modelo in modelos:
         by_id = _group_casillas_by_id(modelo)
+        evolutions = _evolutions_by_lineage(modelo)
         for casilla_id, occurrences in by_id.items():
             if len(occurrences) < 2:
                 continue
-            divergences.extend(_casilla_divergences_for_occurrences(modelo, casilla_id, occurrences))
+            divergences.extend(_casilla_divergences_for_occurrences(modelo, casilla_id, occurrences, evolutions))
     return tuple(divergences)
 
 
@@ -157,6 +177,7 @@ def _matching_evolution(
     left_casilla: CasillaDefinition,
     right_casilla: CasillaDefinition,
     field: str,
+    evolutions: _EvolutionsByLineage,
 ) -> CasillaContinuidadEvolutionDefinition | None:
     continuidad_ids = {left_casilla.continuidad_id, right_casilla.continuidad_id} - {None}
     if len(continuidad_ids) != 1:
@@ -164,9 +185,7 @@ def _matching_evolution(
     continuidad_id = next(iter(continuidad_ids))
     fallback = None
     for revision in (left_revision, right_revision):
-        for evolution in revision.casilla_continuidad_evolutions:
-            if evolution.continuidad_id != continuidad_id:
-                continue
+        for evolution in evolutions.get(revision.id, _NO_LINEAGE_EVOLUTIONS).get(continuidad_id, ()):
             if {evolution.from_revision, evolution.to_revision} == {left_revision.id, right_revision.id}:
                 if field in evolution.evolution_kind.covered_fields:
                     return evolution

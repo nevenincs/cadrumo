@@ -106,6 +106,46 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
     ),
     CommandSpec(
+        "config_passphrase_reset",
+        "config_passphrase",
+        "reset",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.passphrase.reset_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            ArgumentSpec(
+                name="name",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.config.passphrase.reset_name_help"),
+            ),
+            *_MACHINE_SECRET_OPTIONS,
+            _OUTPUT_LANGUAGE,
+        ),
+        policy=BOOTSTRAP_DESTRUCTIVE,
+        handler=LazyBinding.available(DeferredTarget(".passphrase", "passphrase_reset", __package__)),
+        result_schema=_schema("ConfigPassphraseResetResult", "config.passphrase.reset"),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "reset",
+                    (
+                        MachineSecretFieldSpec("recovery_code"),
+                        MachineSecretFieldSpec("new_passphrase"),
+                        MachineSecretFieldSpec("new_passphrase_confirmation"),
+                    ),
+                    DeferredTarget(
+                        ".passphrase",
+                        "PassphraseResetSecrets",
+                        __package__,
+                    ),
+                ),
+            )
+        ),
+        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
+    ),
+    CommandSpec(
         "config_login",
         "config",
         "login",

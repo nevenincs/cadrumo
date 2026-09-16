@@ -19,9 +19,6 @@ from ..errors import (
     BucketError,
     BucketLockedError,
     BucketValidationError,
-    NoActiveBucketError,
-    RecoveryUnavailableError,
-    RecoveryVerificationError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -33,12 +30,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _CLUSTER_INSTANCES: list[BucketError] = [
     BucketError(),
     BucketValidationError("salt must be exactly 16 bytes"),
-    NoActiveBucketError(detail="no pointer file found"),
     BucketBusyError(bucket_id="bucket-001", holding_pid=9999),
     BucketAlreadyPresentError(bucket_id="bucket-001"),
     BucketLockedError(bucket_id="bucket-001"),
-    RecoveryUnavailableError(bucket_id="bucket-001"),
-    RecoveryVerificationError(detail="wrong 24-word entry"),
 ]
 
 _CLUSTER_CLASSES: list[type[BucketError]] = [type(e) for e in _CLUSTER_INSTANCES]

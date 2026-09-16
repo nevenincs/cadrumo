@@ -1,24 +1,36 @@
-"""Independent creation-enrolled recovery envelopes and portable recovery artifacts."""
+"""Optional per-profile recovery envelopes: a second wrapper over the same DEK.
+
+A recovery envelope wraps a profile's data-encryption key under a minted
+recovery code instead of the operator's passphrase. It is installed into a
+committed capsule only when the operator opts in, removed when they opt out,
+and proved by the passphrase-reset door. It never participates in password
+login, and it is bound to the exact ``(profile_id, dek_epoch)`` it was minted
+against, so a passphrase rotation that preserves the epoch leaves it valid.
+"""
 
 from __future__ import annotations
 
 import base64
+import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
     canonical_json_digest,
+    reject_duplicate_json_members,
+    reject_json_constant,
     validate_prefixed_digest,
 )
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
-from .kdf_supervision import wrap_profile_custody_recovery_material
+from .kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
 from .records import (
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
     ProfileCustodyKdfParameters,
@@ -27,10 +39,10 @@ from .records import (
 
 if TYPE_CHECKING:
     from .....core.config import Settings
+    from .sentinel_contract import ProfileCustodySentinelRecord
 
 PROFILE_CUSTODY_RECOVERY_SCHEMA_VERSION: Final = 1
 PROFILE_CUSTODY_RECOVERY_MAX_BYTES: Final = 1024
-PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES: Final = 1024
 PROFILE_CUSTODY_RECOVERY_FILENAME: Final = "recovery.v1.json"
 
 
@@ -90,7 +102,7 @@ class _RecoveryPayload(BaseModel):
 
 
 class ProfileCustodyRecoveryEnvelope(_RecoveryPayload, CustodyDigestModel):
-    """One creation-enrolled, independently current-format recovery wrapper."""
+    """One enrolled, independently current-format recovery wrapper."""
 
     _digest_maximum_bytes: ClassVar[int] = PROFILE_CUSTODY_RECOVERY_MAX_BYTES
     _digest_subject: ClassVar[str] = "profile recovery envelope"
@@ -160,7 +172,7 @@ def create_profile_custody_recovery_envelope(
     previous_recovery_digest: str | None = None,
     settings: Settings | None = None,
 ) -> ProfileCustodyRecoveryEnvelope:
-    """Create the mandatory creation-time recovery wrapper through the supervised KDF owner."""
+    """Wrap ``dek`` under ``recovery_secret`` through the supervised KDF owner."""
     aad = profile_custody_recovery_aad_for(
         profile_id=profile_id,
         dek_epoch=dek_epoch,
@@ -193,6 +205,7 @@ def profile_custody_recovery_aad_for(
     kdf: ProfileCustodyKdfParameters,
     aad: ProfileCustodyRecoveryAad,
 ) -> bytes:
+    """Return the canonical associated data that binds a recovery wrapper to its capsule."""
     return bounded_canonical_json_bytes(
         {
             "aad": aad.model_dump(mode="json"),
@@ -221,6 +234,74 @@ class ProfileCustodyRecoveryUnlock:
     dek: bytes
 
 
+def parse_profile_custody_recovery_envelope(value: bytes) -> ProfileCustodyRecoveryEnvelope:
+    """Parse one canonical strict UTF-8 current-format recovery envelope."""
+    if len(value) > PROFILE_CUSTODY_RECOVERY_MAX_BYTES:
+        raise ProfileCustodyRecordError(
+            f"profile recovery envelope exceeds {PROFILE_CUSTODY_RECOVERY_MAX_BYTES}-byte canonical limit",
+        )
+    try:
+        text = value.decode(_UTF_8_ENCODING, errors="strict")
+        parsed = json.loads(
+            text,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
+        )
+        if not isinstance(parsed, dict):
+            raise ValueError("profile recovery envelope must be a JSON object")
+        envelope = ProfileCustodyRecoveryEnvelope.model_validate_json(
+            bounded_canonical_json_bytes(
+                parsed, maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES, subject="profile recovery envelope"
+            )
+        )
+    except (UnicodeDecodeError, ValidationError, ValueError, TypeError) as exc:
+        raise ProfileCustodyRecordError("profile recovery envelope is not a valid canonical record") from exc
+    if envelope.canonical_json_bytes() != value:
+        raise ProfileCustodyRecordError("profile recovery envelope bytes are not their own canonical form")
+    return envelope
+
+
+def unlock_profile_custody_recovery_envelope(
+    envelope: ProfileCustodyRecoveryEnvelope,
+    recovery_secret: str,
+    *,
+    sentinel: ProfileCustodySentinelRecord,
+    expected_profile_id: UUID,
+    expected_dek_epoch: str,
+    settings: Settings | None = None,
+) -> ProfileCustodyRecoveryUnlock:
+    """Prove a committed recovery envelope against its named identity and sentinel.
+
+    The envelope is refused before any KDF work when it does not name the
+    exact profile and DEK epoch of the capsule it sits in, so a wrapper copied
+    from another capsule cannot become this one's authority.
+    """
+    if envelope.profile_id != expected_profile_id or envelope.dek_epoch != expected_dek_epoch:
+        raise ProfileCustodyRecordError("recovery envelope UUID or DEK epoch does not match its capsule")
+    dek = unlock_profile_custody_recovery_material(
+        profile_id=envelope.profile_id,
+        dek_epoch=envelope.dek_epoch,
+        kdf=envelope.kdf,
+        wrapped_dek=envelope.wrapped_dek,
+        secret=recovery_secret,
+        associated_data=profile_custody_recovery_aad_for(
+            profile_id=envelope.profile_id,
+            dek_epoch=envelope.dek_epoch,
+            recovery_generation=envelope.recovery_generation,
+            kdf=envelope.kdf,
+            aad=envelope.aad,
+        ),
+        sentinel=sentinel,
+        settings=settings,
+    )
+    return ProfileCustodyRecoveryUnlock(
+        profile_id=envelope.profile_id,
+        dek_epoch=envelope.dek_epoch,
+        recovery_digest=envelope.self_digest,
+        dek=dek,
+    )
+
+
 __all__ = [
     "PROFILE_CUSTODY_RECOVERY_FILENAME",
     "PROFILE_CUSTODY_RECOVERY_MAX_BYTES",
@@ -229,4 +310,7 @@ __all__ = [
     "ProfileCustodyRecoveryEnvelope",
     "ProfileCustodyRecoveryUnlock",
     "create_profile_custody_recovery_envelope",
+    "parse_profile_custody_recovery_envelope",
+    "profile_custody_recovery_aad_for",
+    "unlock_profile_custody_recovery_envelope",
 ]

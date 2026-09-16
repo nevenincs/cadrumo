@@ -3,7 +3,7 @@
 Rotation re-mints the password envelope over the SAME data-encryption key.
 That distinction is the whole design: a re-key would have to re-encrypt every
 record the profile holds and would invalidate the committed sentinel and any
-recovery artifact the operator is keeping, while a re-wrap touches exactly one
+recovery code the operator is keeping, while a re-wrap touches exactly one
 file and leaves every other custody fact standing.
 
 Two invariants make that safe, and both are enforced rather than assumed.
@@ -11,7 +11,7 @@ Two invariants make that safe, and both are enforced rather than assumed.
 The DEK epoch is preserved. The committed sentinel and the recovery wrapper
 are bound to ``(profile_id, dek_epoch)`` and to neither the password
 envelope's digest nor its generation, so holding the epoch keeps an
-already-issued recovery phrase working. Minting a fresh epoch here would
+already-issued recovery code working. Minting a fresh epoch here would
 silently destroy the only second door a taxpayer holds, at the moment they
 change their password and with no error to show for it.
 
@@ -58,6 +58,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+    from .custody_ports import ProfileCustodyEnvelopePort
 
 _ENVELOPE_KDF_SALT_BYTES = 16
 
@@ -172,55 +173,14 @@ def rotate_profile_passphrase(
                 translated_message="application.user_profile.errors.passphrase_current_rejected",
             ) from refusal
 
-        rotated = create_profile_custody_registration_material(
+        rotated = rewrap_profile_passphrase_under_lock(
             profile_id=profile_id,
-            password=new_passphrase,
             dek=unlock.dek,
-            # Held, never re-minted. See the module docstring: a fresh epoch
-            # strands the committed sentinel and every outstanding recovery
-            # artifact, silently.
-            dek_epoch=current.dek_epoch,
-            salt=token_bytes(_ENVELOPE_KDF_SALT_BYTES),
-            password_generation=current.password_generation + 1,
-        ).envelope
-
-        # Re-head FIRST, then swap. A crash between the two steps must leave a
-        # profile that is still openable, and the ordering decides which way
-        # that falls: a re-headed row under the old envelope is unreadable
-        # until the swap completes, while a swapped envelope over an old row
-        # is unreadable until the re-head completes. Neither is worse than the
-        # other on its own -- but only one of them can be finished by a
-        # recovery that knows the operator's NEW password, and after the swap
-        # the old password no longer opens anything. So the step that needs
-        # the old credential goes first.
-        occurred_at = _now()
-        old_session = ProfileRecordSession.from_envelope(
-            envelope=current,
-            dek=unlock.dek,
+            current=current,
+            new_passphrase=new_passphrase,
+            storage_root=storage_root,
             profile_decode_context=profile_decode_context,
         )
-        new_session = ProfileRecordSession.from_envelope(
-            envelope=rotated,
-            dek=unlock.dek,
-            profile_decode_context=profile_decode_context,
-        )
-        try:
-            ProfileRecordStore(session=old_session, root=storage_root).rehead_under_rotated_envelope(
-                rotated=new_session,
-                event=ProfileRecordCommandEvent(
-                    event_type=BucketEventType.PROFILE_PASSPHRASE_ROTATED,
-                    occurred_at=occurred_at.isoformat(),
-                ),
-            )
-            replace_profile_custody_password_envelope(
-                profile_id=profile_id,
-                current=current,
-                rotated=rotated,
-                root=storage_root,
-            )
-        finally:
-            old_session.close()
-            new_session.close()
 
     return ProfilePassphraseRotationOutcome(
         profile_id=str(profile_id),
@@ -230,8 +190,81 @@ def rotate_profile_passphrase(
     )
 
 
+def rewrap_profile_passphrase_under_lock(
+    *,
+    profile_id: UUID,
+    dek: bytes,
+    current: ProfileCustodyEnvelopePort,
+    new_passphrase: str,
+    storage_root: Path,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileCustodyEnvelopePort:
+    """Re-head the record and swap the password envelope over an already-proven DEK.
+
+    The shared second half of every passphrase replacement. The caller holds
+    the custody transaction lock and has proven ``dek`` through whichever door
+    authorises the change: the current passphrase for a rotation, or the
+    enrolled recovery code for a reset. Nothing here re-proves anything, so
+    this must not be reachable from a surface that has not.
+
+    Returns:
+        The committed replacement envelope.
+    """
+    rotated = create_profile_custody_registration_material(
+        profile_id=profile_id,
+        password=new_passphrase,
+        dek=dek,
+        # Held, never re-minted. See the module docstring: a fresh epoch
+        # strands the committed sentinel and the enrolled recovery envelope,
+        # silently.
+        dek_epoch=current.dek_epoch,
+        salt=token_bytes(_ENVELOPE_KDF_SALT_BYTES),
+        password_generation=current.password_generation + 1,
+    ).envelope
+
+    # Re-head FIRST, then swap. A crash between the two steps must leave a
+    # profile that is still openable, and the ordering decides which way
+    # that falls: a re-headed row under the old envelope is unreadable
+    # until the swap completes, while a swapped envelope over an old row
+    # is unreadable until the re-head completes. Neither is worse than the
+    # other on its own -- but only one of them can be finished by a
+    # recovery that knows the operator's NEW password, and after the swap
+    # the old password no longer opens anything. So the step that needs
+    # the old credential goes first.
+    occurred_at = _now()
+    old_session = ProfileRecordSession.from_envelope(
+        envelope=current,
+        dek=dek,
+        profile_decode_context=profile_decode_context,
+    )
+    new_session = ProfileRecordSession.from_envelope(
+        envelope=rotated,
+        dek=dek,
+        profile_decode_context=profile_decode_context,
+    )
+    try:
+        ProfileRecordStore(session=old_session, root=storage_root).rehead_under_rotated_envelope(
+            rotated=new_session,
+            event=ProfileRecordCommandEvent(
+                event_type=BucketEventType.PROFILE_PASSPHRASE_ROTATED,
+                occurred_at=occurred_at.isoformat(),
+            ),
+        )
+        replace_profile_custody_password_envelope(
+            profile_id=profile_id,
+            current=current,
+            rotated=rotated,
+            root=storage_root,
+        )
+    finally:
+        old_session.close()
+        new_session.close()
+    return rotated
+
+
 __all__ = [
     "ProfilePassphraseRotationError",
     "ProfilePassphraseRotationOutcome",
+    "rewrap_profile_passphrase_under_lock",
     "rotate_profile_passphrase",
 ]

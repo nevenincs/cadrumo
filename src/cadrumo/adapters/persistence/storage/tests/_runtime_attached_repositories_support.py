@@ -6,7 +6,7 @@ import hashlib
 import json
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -98,12 +98,11 @@ from ..master_key.bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, LLM_USAGE_NAMESPACE
 from ..sql.engine import dispose_engine
-from .ephemeral_master_key import EphemeralMasterKeyProvider
+from .ephemeral_bucket_session import EphemeralBucketSession
 from .registered_bucket import ensure_registered_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_KEK = b"k" * 32
 
 _DEK = b"d" * 32
 
@@ -130,7 +129,7 @@ def _active_runtime(tmp_path: Path, bucket_id: str) -> Generator[None]:
     ensure_registered_bucket(tmp_path, bucket_id)
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=bucket_id) as settings:
         dispose_engine(settings)
-        with EphemeralMasterKeyProvider(key=_MASTER_KEY):
+        with EphemeralBucketSession(key=_MASTER_KEY):
             try:
                 yield
             finally:
@@ -138,12 +137,14 @@ def _active_runtime(tmp_path: Path, bucket_id: str) -> Generator[None]:
 
 
 def _session(bucket_id: str) -> BucketSession:
-    return BucketSession.open(
+    _opened_at = datetime.now(UTC)
+    return BucketSession.open_resumed(
         bucket_id=bucket_id,
-        kek=_KEK,
         dek=_DEK,
         idle_minutes=15,
-        opened_at=datetime.now(UTC),
+        opened_at=_opened_at,
+        idle_deadline=_opened_at + timedelta(minutes=15),
+        absolute_deadline=_opened_at + timedelta(minutes=240),
     )
 
 

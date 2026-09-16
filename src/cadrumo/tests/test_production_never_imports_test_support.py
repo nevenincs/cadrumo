@@ -6,7 +6,7 @@ fixtures that provision throwaway profiles, an ephemeral master-key provider,
 helpers full of bare ``assert`` statements. Each of those is safe in a test and
 wrong in a shipped path.
 
-The sharpest instance is not hypothetical. ``EphemeralMasterKeyProvider`` opens
+The sharpest instance is not hypothetical. ``EphemeralBucketSession`` opens
 its session with ``bucket_id="ephemeral"``, and ``"ephemeral"`` is a member of
 ``_SYNTHETIC_SESSION_BUCKET_IDS`` in
 :mod:`adapters.persistence.storage.runtime` -- the set whose whole function is
