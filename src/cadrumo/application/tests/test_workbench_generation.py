@@ -11,9 +11,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
-
+from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -26,6 +24,7 @@ from ...domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
+from ...entrypoints.adapter_composition import build_censal_fetch_port
 from .. import workbench_generation as generation_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
@@ -1050,3 +1049,140 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
     )
 
     assert _dependency_blocked_revisions(None) == frozenset()
+
+
+def _plain_generation_door(
+    operation: PinnedAuthorityOperation,
+    *,
+    profile: _Repository[UserProfileRecord],
+    work_units: _Repository[WorkUnitCatalogue] | None = None,
+    bucket_events: object | None = None,
+) -> SecureProfileWorkbenchGenerationReadDoorV1:
+    return SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        operation=operation,
+        profile_repository=cast(Any, profile),
+        work_unit_repository=cast(Any, work_units or _Repository(WorkUnitCatalogue())),
+        calculation_repository=cast(Any, _Repository(CalculationRevisionCatalogue())),
+        filing_repository=cast(Any, _Repository(ModeloRecordCatalogue())),
+        clock=lambda: _NOW,
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="Perfil local",
+            expires_at=_NOW,
+        ),
+        bucket_event_repository=cast(Any, bucket_events),
+    )
+
+
+def test_an_incomplete_profile_publishes_reasoned_zones_instead_of_failing(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A profile the taxpayer projection refuses must not stop the workbench.
+
+    Declaring one IVA fact claims the whole IVA block, and the projection then
+    refuses until the rest of that block is answered. The operator reached this
+    state by editing one field, so the generation serves every zone it can and
+    names the missing paths on the zones that need the projection.
+    """
+    record = _profile_record(
+        authority_operation,
+        facts=(UserProfileFact(path="iva.regime", value="GENERAL"),),
+    )
+
+    generation = InstalledWorkbenchGenerationProviderV1(
+        _plain_generation_door(authority_operation, profile=_Repository(record))
+    )()
+
+    assert generation.home.availability is WorkbenchGenerationAvailability.AVAILABLE
+    home = generation.home.projection
+    assert home is not None
+    assert home.agenda_state.availability is HomeAvailability.UNAVAILABLE
+    assert home.agenda_state.reason_code == "workbench.home.taxpayer_profile_incomplete"
+    assert "iva.m303_regime_composition" in home.agenda_state.missing_profile_paths
+    assert "iva.redeme_enrolled" in home.agenda_state.missing_profile_paths
+    calendar = generation.declarations_calendar.projection
+    assert calendar is not None
+    assert calendar.entries == ()
+    assert {source.reason_code for source in calendar.sources} == {"workbench.home.taxpayer_profile_incomplete"}
+    assert generation.declarations.projection is not None
+
+
+def test_an_undeclared_taxpayer_model_leaves_the_agenda_unavailable(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """No taxpayer model means no schedule, which is not the same as no dates."""
+    generation = InstalledWorkbenchGenerationProviderV1(
+        _plain_generation_door(authority_operation, profile=_Repository(_profile_record(authority_operation)))
+    )()
+
+    home = generation.home.projection
+    assert home is not None
+    assert home.agenda_state.availability is HomeAvailability.UNAVAILABLE
+    assert home.agenda_state.reason_code == "workbench.calendar.taxpayer_model_undeclared"
+    assert home.agenda == ()
+
+
+def test_the_filing_history_reads_the_bucket_event_log(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A bound event log makes the filing history observable, not permanently unavailable."""
+    from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
+    from ...domain.buckets.event_repository import build_bucket_event
+    from ..modelo.declarations_workspace import DeclarationsLifecycleKind, DeclarationsWorkspaceZone
+
+    period = Period.from_year_and_code(2026, "1T")
+    revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
+    unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_PROFILE_ID,
+        modelo="130",
+        filing_year=2026,
+        period=period,
+        revision_id=revision_id,
+        name="declaration",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    created = build_bucket_event(
+        bucket_id=_PROFILE_ID,
+        event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,
+        occurred_at=_NOW,
+        actor="operator",
+        object_type=BucketEventObjectType.WORK_UNIT,
+        object_id=unit.work_unit_id,
+        payload={"modelo": "130", "filing_year": "2026", "period": "1T"},
+        payload_version=1,
+    )
+    unrelated = build_bucket_event(
+        bucket_id=_PROFILE_ID,
+        event_type=BucketEventType.MODELO_EXPORTED,
+        occurred_at=_NOW,
+        actor="operator",
+        object_type=BucketEventObjectType.WORK_UNIT,
+        object_id=unit.work_unit_id,
+        payload={"modelo": "130"},
+        payload_version=1,
+    )
+    events = BucketEventHistoryCatalogue(events={created.event_id: created, unrelated.event_id: unrelated})
+
+    generation = InstalledWorkbenchGenerationProviderV1(
+        _plain_generation_door(
+            authority_operation,
+            profile=_Repository(_profile_record(authority_operation)),
+            work_units=_Repository(WorkUnitCatalogue(work_units={unit.work_unit_id: unit})),
+            bucket_events=_Repository(events),
+        )
+    )()
+
+    declarations = generation.declarations.projection
+    assert declarations is not None
+    history = next(zone for zone in declarations.zones if zone.zone is DeclarationsWorkspaceZone.FILING_HISTORY)
+    assert history.reason_code is None
+    assert [row.kind for row in declarations.lifecycle] == [DeclarationsLifecycleKind.CREATED]

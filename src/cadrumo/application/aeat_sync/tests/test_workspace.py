@@ -22,12 +22,11 @@ from typing import Any, TypedDict, Unpack, cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
-
+from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
+from ....entrypoints.adapter_composition import build_censal_fetch_port
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry

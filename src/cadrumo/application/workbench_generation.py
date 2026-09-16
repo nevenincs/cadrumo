@@ -823,7 +823,7 @@ class _WorkbenchCalendarInputs:
     """
 
     agenda_evidence_state: HomeZoneState
-    declarations_calendar: DeclarationsCalendarProjectionV1 | None
+    declarations_calendar: DeclarationsCalendarProjectionV1
     agenda: OverviewAgenda | None
     agenda_refusal: HomeZoneState | None
     refusal: HomeZoneState | None
@@ -880,7 +880,7 @@ def _read_workbench_calendar_inputs(
         refusal = _taxpayer_profile_refusal(raw_values, operation=operation)
         return _WorkbenchCalendarInputs(
             agenda_evidence_state=refusal,
-            declarations_calendar=None,
+            declarations_calendar=_refused_declarations_calendar(refusal, as_of=as_of, observed_at=observed_at),
             agenda=None,
             agenda_refusal=refusal,
             refusal=refusal,
@@ -917,6 +917,52 @@ def _read_workbench_calendar_inputs(
     )
 
 
+def _refused_declarations_calendar(
+    refusal: HomeZoneState,
+    *,
+    as_of: date,
+    observed_at: UtcInstant,
+) -> DeclarationsCalendarProjectionV1:
+    """Publish a Declarations calendar that states why it has no schedule.
+
+    Declarations stays admitted when only the calendar is refused, and an
+    admitted Declarations destination always carries a calendar. The honest
+    calendar here is an empty one whose every source says why it is empty.
+    """
+    reason_code = refusal.reason_code
+    if reason_code is None:
+        raise InternalInvariantError("a refused Declarations calendar requires a reason")
+    unavailable = HomeZoneState(availability=HomeAvailability.UNAVAILABLE, reason_code=reason_code)
+    evidence = build_calendar_evidence_projection(
+        local=CalendarEvidenceReadOutcome[LocalCalendarEvidenceSources](state=unavailable),
+        aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](state=unavailable),
+    )
+    calendar = OverviewCalendar(
+        range=_calendar_query_range(as_of),
+        entries=(),
+        generated_at=observed_at,
+        taxpayer_model_declared=False,
+    )
+    return project_declarations_calendar(
+        calendar=calendar,
+        evidence=evidence,
+        as_of=as_of,
+        schedule_observation=DeclarationsCalendarSourceObservationV1(
+            source=DeclarationsCalendarSource.SCHEDULE,
+            availability=HomeAvailability.UNAVAILABLE,
+            reason_code=reason_code,
+        ),
+    )
+
+
+def _calendar_query_range(as_of: date) -> OverviewCalendarRange:
+    """The calendar year the workbench schedules, containing ``as_of``."""
+    return OverviewCalendarRange(
+        from_date=date(as_of.year, 1, 1),
+        to_date=date(as_of.year, 12, 31),
+    )
+
+
 def _build_workbench_calendar_inputs(
     *,
     taxpayer: TaxpayerProfile,
@@ -927,10 +973,7 @@ def _build_workbench_calendar_inputs(
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda, bool]:
-    query_range = OverviewCalendarRange(
-        from_date=date(as_of.year, 1, 1),
-        to_date=date(as_of.year, 12, 31),
-    )
+    query_range = _calendar_query_range(as_of)
     schedule_calendar = build_overview_calendar(
         taxpayer,
         query_range,
@@ -1336,10 +1379,9 @@ def _build_workbench_generation_inputs(
             observed_at=observed_at,
             refusal="workbench.declarations.snapshot_projector_unavailable",
         ),
-        declarations_calendar=_source_result(
+        declarations_calendar=WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1].available(
             calendar_inputs.declarations_calendar,
             observed_at=observed_at,
-            refusal=_TAXPAYER_PROFILE_INCOMPLETE,
         ),
         aeat_sync=_source_result(aeat_sync, observed_at=observed_at, refusal=aeat_sync_refusal),
         modelo=_source_result(
