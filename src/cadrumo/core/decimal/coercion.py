@@ -149,9 +149,39 @@ def coerce_finite_european_decimal(value: object) -> Decimal | None:
     if isinstance(value, str):
         if european_thousands_reading_is_ambiguous(value.strip()):
             return None
+        if "," in value and "." in value:
+            # A token carrying both marks states its own convention: the
+            # rightmost is the decimal mark, so ``1.440,00`` and ``1,440.00``
+            # are the same figure.
+            return _parse_doubly_marked_decimal(value.strip())
         value = normalize_decimal_separators(value, strip_thousands="," in value)
     parsed = coerce_decimal(value)
     return parsed if parsed is not None and parsed.is_finite() else None
+
+
+def _parse_doubly_marked_decimal(text: str) -> Decimal | None:
+    """Parse a token printing both a thousands and a decimal mark, or ``None``.
+
+    The rightmost mark is the decimal one; the other must group the integer
+    part in runs of exactly three digits after the lead, or the token is not a
+    grouped number and nothing is read from it.
+    """
+    sign = ""
+    if text[:1] in "+-":
+        sign, text = text[:1], text[1:]
+    decimal_mark = "," if text.rfind(",") > text.rfind(".") else "."
+    group_mark = "." if decimal_mark == "," else ","
+    whole, _, fraction = text.rpartition(decimal_mark)
+    groups = whole.split(group_mark)
+    if decimal_mark in whole or not fraction.isdigit() or not all(group.isdigit() for group in groups):
+        return None
+    if not 1 <= len(groups[0]) <= _GROUP_WIDTH or any(len(group) != _GROUP_WIDTH for group in groups[1:]):
+        return None
+    parsed = coerce_decimal(f"{sign}{''.join(groups)}.{fraction}")
+    return parsed if parsed is not None and parsed.is_finite() else None
+
+
+_GROUP_WIDTH = 3
 
 
 def normalize_decimal_separators(text: str, *, strip_thousands: bool) -> str:
