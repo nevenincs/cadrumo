@@ -306,7 +306,7 @@ def preflight_parsed_leaf(
     arguments: Mapping[str, object],
 ) -> None:
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
-    node = next(node for node in graph.nodes() if node.spec.key == spec.key)
+    node = graph.node(spec.key)
     posture = profile_authentication_posture(node)
     root, leaf = _select_preflight_channels(ctx, spec=spec, arguments=arguments)
     if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:

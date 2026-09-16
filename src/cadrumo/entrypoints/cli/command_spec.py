@@ -643,7 +643,7 @@ class CommandSpecGraph:
 
     ``declared`` holds the specs available up front; ``families`` supply the
     rest on demand. Subtree queries (:meth:`children`, :meth:`resolve_path`,
-    :meth:`spec`, :meth:`root`) load only the families they reach. Every
+    :meth:`spec`, :meth:`node`, :meth:`root`) load only the families they reach. Every
     whole-graph query (:attr:`specs`, :meth:`by_key`, :meth:`nodes`,
     :meth:`by_path`, :meth:`by_schema_identity`) loads all families first.
     Each load revalidates the specs loaded so far; the full load validates the
@@ -719,6 +719,17 @@ class CommandSpecGraph:
         if found is None:
             raise LookupError(f"unknown command spec key: {key!r}")
         return found
+
+    def node(self, key: str) -> CommandSpecNode:
+        """Return ``key``'s spec with its operator path, derived from its loaded ancestors."""
+        spec = self.spec(key)
+        tokens = [spec.token]
+        parent_key = spec.parent_key
+        while parent_key is not None:
+            parent = self.spec(parent_key)
+            tokens.append(parent.token)
+            parent_key = parent.parent_key
+        return CommandSpecNode(tuple(reversed(tokens)), spec)
 
     def by_key(self) -> MappingProxyType[str, CommandSpec]:
         """Return every command spec indexed by its key."""
