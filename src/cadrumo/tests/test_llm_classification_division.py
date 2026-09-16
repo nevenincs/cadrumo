@@ -145,11 +145,10 @@ def test_every_model_talking_class_lives_in_the_inference_package() -> None:
 def test_the_review_workflow_does_not_import_across_the_boundary_inward() -> None:
     """The workflow settles on the ledger side of the division.
 
-    It consumes the interchange DTOs from the owning package and the apply and
-    reject functions from its own package. What it must NOT do is reach into the
-    inference package for anything that performs a write, or become a second
-    caller of a model -- either would put review-loop behaviour behind an
-    optional install.
+    It consumes the interchange DTOs from the application-owned port module and
+    the apply and reject functions from its own package. It must NOT import the
+    inference package at all: a reader, a client, a store or even a DTO taken
+    from there would put review-loop behaviour behind an optional install.
 
     Asserted on what the module imports rather than on what it happens to call,
     because the dependency is acquired at import time and that is when it would
@@ -161,29 +160,26 @@ def test_the_review_workflow_does_not_import_across_the_boundary_inward() -> Non
     tree = ast_for_path(workflow)
     assert tree is not None, f"{repo_relative(workflow)} must be parseable"
 
-    # Relative imports are resolved before matching, because the interesting
-    # names arrive as ``from ...llm.suggestions import`` -- a submodule, so a
-    # suffix test on the written module misses them -- while the ledger's own
-    # ``from .llm_classification import`` would match such a test on spelling
-    # alone despite belonging to this package, not the inference one.
+    # Relative imports are resolved before matching, so a written spelling such
+    # as ``from .llm_classification import`` is judged by the package it names.
     workflow_package = ("cadrumo", "application", "ledger")
-    from_llm: list[str] = []
+    resolved_modules: list[str] = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.ImportFrom):
             continue
         if node.level:
             base = workflow_package[: len(workflow_package) - (node.level - 1)]
-            resolved = ".".join([*base, node.module]) if node.module else ".".join(base)
+            resolved_modules.append(".".join([*base, node.module]) if node.module else ".".join(base))
         else:
-            resolved = node.module or ""
-        if resolved == "cadrumo.adapters.outbound.llm" or resolved.startswith("cadrumo.adapters.outbound.llm."):
-            from_llm.extend(alias.name for alias in node.names)
+            resolved_modules.append(node.module or "")
 
-    assert from_llm, "the workflow does consume the interchange DTOs; this assertion must not pass vacuously"
-    # Every name it takes from the package is a DTO. A reader, a client or a
-    # store would mean the review loop had acquired an inference dependency.
-    forbidden = [name for name in from_llm if name.endswith(("Classifier", "Client", "Recorder", "Cache"))]
-    assert forbidden == [], (
-        f"the review workflow imports {forbidden} from the inference package; it may consume the "
-        "interchange contracts but must not acquire a model transport or a store"
+    from_llm = [
+        module
+        for module in resolved_modules
+        if module == "cadrumo.adapters.outbound.llm" or module.startswith("cadrumo.adapters.outbound.llm.")
+    ]
+    assert "cadrumo.application.ledger.llm_classification_ports" in resolved_modules, (
+        "the workflow consumes the interchange DTOs from the application port module; "
+        "without that import this assertion passes over nothing"
     )
+    assert from_llm == [], f"the review workflow imports the inference package: {from_llm}"
