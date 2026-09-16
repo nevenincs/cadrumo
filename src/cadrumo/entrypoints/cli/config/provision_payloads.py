@@ -17,6 +17,7 @@ from collections.abc import Mapping
 
 from pydantic import Field, NonNegativeInt
 
+from ....application.local_reader import LocalReaderDocumentReadiness, RoleFitnessState
 from ....core.hardware import ContentionCause
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ....core.text_bounds import NonEmptyStr
@@ -143,8 +144,11 @@ class ProvisionRoleStatusPayload(OutputSchema):
     """One reader role's model and what the runtime reports about it.
 
     ``installed``, ``resident`` and ``load_admitted`` are null when they could
-    not be measured, which is distinct from false. ``fit_for_role`` is null for
-    a role without a fitness probe, or when the model was not ready to probe.
+    not be measured, which is distinct from false. ``fitness`` is null for a
+    role without a fitness probe or a model not ready to probe; otherwise it is
+    ``fit``, ``unfit``, ``timed_out`` or ``not_verified`` -- the last meaning no
+    verdict is recorded for the model's current weights, which is not unfitness.
+    ``fit_for_role`` is null unless a verdict exists.
     """
 
     role: NonEmptyStr
@@ -153,6 +157,7 @@ class ProvisionRoleStatusPayload(OutputSchema):
     resident: bool | None = None
     load_admitted: bool | None = None
     contention_causes: list[ContentionCause] = []
+    fitness: RoleFitnessState | None = None
     fit_for_role: bool | None = None
     ready: bool
     failed_condition_id: str | None = None
@@ -169,12 +174,19 @@ class ProvisionLastPullPayload(OutputSchema):
 
 
 class ProvisionStatusResult(OutputSchema):
-    """JSON envelope for ``aeat config provision status``. Reads only."""
+    """JSON envelope for ``aeat config provision status``. Reads only.
+
+    ``probed`` says whether the text model's fitness was checked now
+    (``--probe``) rather than read from the verdict ``verify`` recorded.
+    """
 
     runtime: ProvisionRuntimePayload
     roles: list[ProvisionRoleStatusPayload] = []
     last_pull: ProvisionLastPullPayload | None = None
     extraction_ready: bool
+    document_readiness: LocalReaderDocumentReadiness
+    text_layer_model_fill_available: bool
+    probed: bool
 
 
 class ProvisionInstallResult(OutputSchema):
@@ -281,7 +293,8 @@ class ProvisionSetupResult(OutputSchema):
     precondition_action: ResolvedPreconditionAction | None = None
 
 
-__all__ = [    "ProvisionContentionPayload",
+__all__ = [
+    "ProvisionContentionPayload",
     "ProvisionInstallResult",
     "ProvisionLastPullPayload",
     "ProvisionLoadItemPayload",

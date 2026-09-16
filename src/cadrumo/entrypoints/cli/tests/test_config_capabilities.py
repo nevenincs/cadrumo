@@ -115,7 +115,7 @@ def test_config_check_reports_capabilities_and_dependencies() -> None:
     assert payload["ok"] is True
     assert payload["issues"] == []
     caps = {c["capability"]: c for c in payload["capabilities"]}
-    assert set(caps) == {"llm_vision", "google_export"}
+    assert set(caps) == {capability.value for capability in ServiceCapability}
     assert caps["llm_vision"]["enabled"] is False
     services = {d["service"] for d in payload["dependencies"]}
     # One row per invoice-reading role, from the probe the status surface uses.
@@ -149,12 +149,12 @@ def test_config_check_flags_opted_in_capability_with_missing_dependency() -> Non
 @pytest.mark.parametrize(
     "argv",
     [
-        ["config", "google", "sync", "calc", "export", "--modelo", "303", "--period", "1T", "--year", "2025"],
-        ["config", "google", "sync", "calc", "verify", "--modelo", "303", "--period", "1T", "--year", "2025"],
-        ["config", "google", "sync", "push"],
-        ["config", "google", "sync", "probe", "--no-read-only"],
+        ["app", "modelo", "spreadsheet", "push", "--modelo", "303", "--period", "1T", "--year", "2025"],
+        ["app", "modelo", "spreadsheet", "verify", "--modelo", "303", "--period", "1T", "--year", "2025"],
+        ["config", "profile", "archive", "push"],
+        ["config", "google", "probe", "--no-read-only"],
     ],
-    ids=["calc-export", "calc-verify", "push", "probe-write"],
+    ids=["spreadsheet-push", "spreadsheet-verify", "archive-push", "probe-write"],
 )
 def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[str]) -> None:
     """Every Google-write CLI leaf is gated on google_export, not just `export`.

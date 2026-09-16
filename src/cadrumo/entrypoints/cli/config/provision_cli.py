@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....application.provisioning_contracts import ProvisioningPreconditionCondition
 from ....core.json_contract import ResolvedPreconditionAction
 from ....core.model_catalogue import ModelRole
 from ..common import emit_envelope, resolve_cli_precondition_action
@@ -60,7 +61,7 @@ from .provision_payloads import (
 from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.local_reader import RoleModelTarget
+    from ....application.local_reader import LocalReaderRoleStatus, RoleModelTarget
     from ....application.local_reader_operation import (
         LocalReaderModelOutcomeV1,
         LocalReaderProvisionPublicResultV1,
@@ -134,9 +135,9 @@ def _selection_refusal(target: RoleModelTarget) -> PreconditionVerdict:
     return target.selection_verdict
 
 
-def provision_status(ctx: typer.Context) -> None:
-    """Report whether the local runtime is installed and answering, and each reader role's model."""
-    _emit_provision_status(ctx)
+def provision_status(ctx: typer.Context, probe: bool = False) -> None:
+    """Report the local runtime and each reader role's model; ``--probe`` checks text-model fitness now."""
+    _emit_provision_status(ctx, probe=probe)
 
 
 def provision_install(ctx: typer.Context, confirm: bool = False) -> None:
@@ -264,7 +265,11 @@ def _roles(item: LocalReaderModelOutcomeV1) -> list[str]:
 
 def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
     """Load every resolved model and emit the envelope, exiting 2 unless all are loaded."""
-    from ....application.local_reader_operation import build_local_reader_load_request
+    from ....application.local_reader_operation import (
+        build_local_reader_load_request,
+        local_reader_fact_mapping,
+        local_reader_public_verdict,
+    )
 
     outcome = _run_reader_operation(build_local_reader_load_request(role, model))
     items = [
@@ -274,8 +279,8 @@ def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRo
             loaded=item.succeeded,
             already_loaded=item.already_satisfied,
             elapsed_ms=item.elapsed_ms,
-            facts=item.facts,
-            precondition_action=_action(item.precondition_verdict),
+            facts=local_reader_fact_mapping(item.facts),
+            precondition_action=_action(local_reader_public_verdict(item.verdict_condition_id, item.verdict_facts)),
         )
         for item in outcome.models
     ]
@@ -287,7 +292,11 @@ def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRo
 
 def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
     """Run the one-shot setup and emit its per-step envelope, exiting 2 when a step stopped it."""
-    from ....application.local_reader_operation import build_local_reader_setup_request
+    from ....application.local_reader_operation import (
+        build_local_reader_setup_request,
+        local_reader_fact_mapping,
+        local_reader_public_verdict,
+    )
 
     outcome = _run_reader_operation(build_local_reader_setup_request(consent=confirm))
     result = ProvisionSetupResult(
@@ -312,14 +321,14 @@ def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
                 already_satisfied=item.already_satisfied,
                 bytes_fetched=item.bytes_fetched,
                 elapsed_ms=item.elapsed_ms,
-                facts=item.facts,
-                precondition_action=_action(item.precondition_verdict),
+                facts=local_reader_fact_mapping(item.facts),
+                precondition_action=_action(local_reader_public_verdict(item.verdict_condition_id, item.verdict_facts)),
             )
             for item in outcome.models
             if item.step is not None
         ],
-        facts=outcome.facts,
-        precondition_action=_action(outcome.precondition_verdict),
+        facts=local_reader_fact_mapping(outcome.facts),
+        precondition_action=_action(local_reader_public_verdict(outcome.verdict_condition_id, outcome.verdict_facts)),
     )
     emit_envelope(ctx, command="config.provision.setup", result=result, lines=_provision_result_lines(result))
     if not result.succeeded:
@@ -513,12 +522,21 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
         raise typer.Exit(code=2)
 
 
-def _emit_provision_status(ctx: typer.Context) -> None:
-    """Measure the local reader and emit its status envelope. Reads only."""
-    from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
+def _emit_provision_status(ctx: typer.Context, *, probe: bool) -> None:
+    """Measure the local reader and emit its status envelope. Records nothing.
+
+    Text-model fitness is the verdict ``verify`` recorded for the model's
+    current weights, so a status read never spends a model load. ``--probe``
+    runs the check now and reports it without recording it.
+    """
     from ....application.local_reader import read_local_reader_status
 
-    status = read_local_reader_status(text_probe=probe_text_extraction_fitness)
+    if probe:
+        from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
+
+        status = read_local_reader_status(text_probe=probe_text_extraction_fitness)
+    else:
+        status = read_local_reader_status()
     host = status.host
     last = status.last_pull
     result = ProvisionStatusResult(
@@ -541,6 +559,7 @@ def _emit_provision_status(ctx: typer.Context) -> None:
                 resident=row.resident,
                 load_admitted=row.load_admitted,
                 contention_causes=list(row.contention_causes),
+                fitness=row.fitness,
                 fit_for_role=row.fit_for_role,
                 ready=row.ready,
                 failed_condition_id=row.failed_condition_id,
@@ -559,13 +578,45 @@ def _emit_provision_status(ctx: typer.Context) -> None:
             )
         ),
         extraction_ready=status.extraction_ready,
+        document_readiness=status.document_readiness,
+        text_layer_model_fill_available=status.text_layer_model_fill_available,
+        probed=probe,
     )
-    emit_envelope(ctx, command="config.provision.status", result=result, lines=_provision_result_lines(result))
+    lines = (*_provision_result_lines(result), *_fitness_condition_lines(status.roles))
+    emit_envelope(ctx, command="config.provision.status", result=result, lines=lines)
+
+
+#: The fitness conditions a status row can fail on, with the sentence that says
+#: what each means. "Not verified" and "timed out" must never read as "unfit".
+_FITNESS_CONDITION_TEXT_KEYS: dict[str, str] = {
+    ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_VERIFIED.value: (
+        "provisioning.condition.role_model_fitness_verified"
+    ),
+    ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_WITHIN_TIMEOUT.value: (
+        "provisioning.condition.role_model_fitness_within_timeout"
+    ),
+    ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE.value: "provisioning.condition.role_model_fit_for_role",
+}
+
+
+def _fitness_condition_lines(rows: tuple[LocalReaderRoleStatus, ...]) -> tuple[str, ...]:
+    """Render each role's failed fitness condition as its localized explanation."""
+    from ....core.i18n.render import tr
+
+    return tuple(
+        f"{row.role.value}\t{tr(_FITNESS_CONDITION_TEXT_KEYS[row.failed_condition_id], model=row.model or '-')}"
+        for row in rows
+        if row.failed_condition_id in _FITNESS_CONDITION_TEXT_KEYS
+    )
 
 
 def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
     """Install the runtime when consented and emit the envelope, exiting 2 unless installed."""
-    from ....application.local_reader_operation import build_local_reader_install_request
+    from ....application.local_reader_operation import (
+        build_local_reader_install_request,
+        local_reader_fact_mapping,
+        local_reader_public_verdict,
+    )
 
     outcome = _run_reader_operation(build_local_reader_install_request(consent=confirm))
     install = outcome.install
@@ -577,8 +628,8 @@ def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
         installer=install.installer.value,
         consented=install.consented,
         installer_exit_code=install.installer_exit_code,
-        facts=outcome.facts,
-        precondition_action=_action(outcome.precondition_verdict),
+        facts=local_reader_fact_mapping(outcome.facts),
+        precondition_action=_action(local_reader_public_verdict(outcome.verdict_condition_id, outcome.verdict_facts)),
     )
     emit_envelope(ctx, command="config.provision.install", result=result, lines=_provision_result_lines(result))
     if not install.installed:
@@ -605,7 +656,11 @@ def _emit_provision_start(ctx: typer.Context) -> None:
 
 def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
     """Remove the resolved model and emit the envelope, exiting 2 unless every removal was confirmed."""
-    from ....application.local_reader_operation import build_local_reader_remove_request
+    from ....application.local_reader_operation import (
+        build_local_reader_remove_request,
+        local_reader_fact_mapping,
+        local_reader_public_verdict,
+    )
 
     if model is None and role is None:
         raise typer.BadParameter("--model or --role is required", param_hint="--model/--role")
@@ -617,8 +672,8 @@ def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: Model
             removed=item.succeeded,
             was_installed=item.was_installed,
             freed_bytes=item.freed_bytes,
-            facts=item.facts,
-            precondition_action=_action(item.precondition_verdict),
+            facts=local_reader_fact_mapping(item.facts),
+            precondition_action=_action(local_reader_public_verdict(item.verdict_condition_id, item.verdict_facts)),
         )
         for item in outcome.models
     ]

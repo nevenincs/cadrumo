@@ -136,3 +136,47 @@ def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str
 
     assert isinstance(parameter.type, StringParamType)
     assert parameter.type.convert(token, parameter, context) == token
+
+
+@pytest.mark.parametrize(
+    ("token", "parameters", "identity"),
+    [
+        ("load", ("model", "role"), "config.provision.load"),
+        ("setup", ("confirm",), "config.provision.setup"),
+    ],
+)
+def test_provision_load_and_setup_extend_the_provision_cluster(
+    token: str, parameters: tuple[str, ...], identity: str
+) -> None:
+    from .._provision_command_specs import CONFIG_PROVISION_COMMAND_SPECS
+    from .._spec_policies import NETWORK_WRITE
+
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
+    (node,) = (node for node in graph.nodes() if node.path == ("aeat", "config", "provision", token))
+    spec = node.spec
+
+    assert spec in CONFIG_PROVISION_COMMAND_SPECS
+    assert spec.parent_key == "config_provision"
+    assert tuple(parameter.name for parameter in spec.parameters) == parameters
+    assert spec.policy == NETWORK_WRITE
+    assert spec.result_schema.identity == identity
+    assert not any(path[:3] == ("aeat", "config", "llm") for path in (n.path for n in graph.nodes()))
+
+
+def test_setup_installs_only_with_an_explicit_confirm_flag() -> None:
+    from typer._click.core import Context
+
+    from ...tests.cli_runner import cadrumo_click_command
+
+    command: Any = cadrumo_click_command()
+    context = Context(command)
+    for name in ("config", "provision", "setup"):
+        child = command.get_command(context, name)
+        assert child is not None, name
+        context = Context(child, parent=context, info_name=name)
+        command = child
+    confirm = next(parameter for parameter in command.params if parameter.name == "confirm")
+
+    assert confirm.is_flag
+    assert confirm.default is False
+    assert confirm.opts == ["--confirm"]
