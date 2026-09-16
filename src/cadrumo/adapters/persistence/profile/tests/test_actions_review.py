@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_lifecycle import stash_manual_transaction
+from cadrumo.application.ledger.actions_lifecycle import mark_transaction_reviewed_excluded, stash_manual_transaction
 from cadrumo.application.ledger.actions_manual import (
     create_manual_transaction,
     get_manual_transaction,
@@ -176,3 +176,63 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
     assert report.checked_transaction_count == 1
     assert report.readiness_issue_count == 0
     assert report.ready is True
+
+
+def test_summarize_manual_transactions_counts_an_excluded_row_without_failing(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects, bucket_id=_BUCKET_ID)
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        excluded = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 4),
+                amount=Decimal("40.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="excluded row",
+                idempotency_key="excluded-status",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 8, 0, tzinfo=UTC),
+        )
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 5),
+                amount=Decimal("15.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="pending row",
+                idempotency_key="pending-beside-excluded",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 5, 8, 0, tzinfo=UTC),
+        )
+        mark_transaction_reviewed_excluded(
+            bucket_id=_BUCKET_ID,
+            transaction_id=excluded.ref.transaction_id,
+            actor="operator-A",
+            reason="private purchase",
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            work_unit_repository=ports.work_unit_repository,
+            calculation_repository=ports.calculation_repository,
+            occurred_at=datetime(2026, 5, 6, 8, 0, tzinfo=UTC),
+        )
+
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        report = summarize_manual_transactions(bucket_id=_BUCKET_ID, ports=ports)
+
+    assert report.active_count == 2
+    assert report.pending_review_count == 1
+    assert report.reviewed_count == 0
+    assert report.skipped_count == 0
