@@ -9,7 +9,7 @@ from typing import Literal, cast
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import (
     M303Exonerado390OperacionesTercerosProjectionRef,
@@ -18,6 +18,7 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoCohort,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
+    filing_projection_ref_casilla_id,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings

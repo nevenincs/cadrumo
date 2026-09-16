@@ -21,7 +21,10 @@ from cadrumo.domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta
 from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
 from cadrumo.domain.calculations.registry.revision_order import revision_windows_intersect
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedule_period_kind_mismatches
+from cadrumo.domain.calculations.registry.schema_deadlines import (
+    ModeloScheduleDefinition,
+    filing_schedule_period_kind_mismatches,
+)
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 

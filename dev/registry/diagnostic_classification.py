@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -20,6 +21,7 @@ from cadrumo.domain.calculations.registry.snapshot import build_validated_snapsh
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
+    StaticGeneratedArtifactSource,
 )
 
 from .compiler.authority_state import source_root_for

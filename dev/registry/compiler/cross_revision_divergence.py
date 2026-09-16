@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
+    CasillaEvolutionKind,
 )
 
 _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
@@ -33,21 +34,7 @@ _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
 )
 _UNRESOLVED_LOCALIZATION = "<unresolved-localization>"
 
-def covered_fields(kind: CasillaEvolutionKind) -> frozenset[str]:
-    """Return the exact divergence axes an attestation of ``kind`` may explain."""
-    return {
-        CasillaEvolutionKind.UNCHANGED: frozenset[str](),
-        CasillaEvolutionKind.LABEL_EVOLVED: frozenset({"label"}),
-        CasillaEvolutionKind.SECTION_EVOLVED: frozenset({"section"}),
-        CasillaEvolutionKind.REPRESENTATION_EVOLVED: frozenset({"data_type"}),
-        CasillaEvolutionKind.LEGAL_REFS_EVOLVED: frozenset({"legal_refs"}),
-        CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED: frozenset({"label", "legal_refs"}),
-        CasillaEvolutionKind.REPURPOSED: frozenset({"label", "section", "data_type", "semantic_role", "legal_refs"}),
-        CasillaEvolutionKind.RETIRED: frozenset[str](),
-    }[kind]
-
-
-__all__ = ("CrossRevisionCasillaDivergence", "iter_cross_revision_casilla_divergences")
+__all__ = ("CrossRevisionCasillaDivergence", "covered_fields", "iter_cross_revision_casilla_divergences")
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,3 +195,17 @@ def _matching_evolution(
                     return evolution
                 fallback = evolution
     return fallback
+
+
+def covered_fields(kind: CasillaEvolutionKind) -> frozenset[str]:
+    """Return the exact divergence axes an attestation of ``kind`` may explain."""
+    return {
+        CasillaEvolutionKind.UNCHANGED: frozenset[str](),
+        CasillaEvolutionKind.LABEL_EVOLVED: frozenset({"label"}),
+        CasillaEvolutionKind.SECTION_EVOLVED: frozenset({"section"}),
+        CasillaEvolutionKind.REPRESENTATION_EVOLVED: frozenset({"data_type"}),
+        CasillaEvolutionKind.LEGAL_REFS_EVOLVED: frozenset({"legal_refs"}),
+        CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED: frozenset({"label", "legal_refs"}),
+        CasillaEvolutionKind.REPURPOSED: frozenset({"label", "section", "data_type", "semantic_role", "legal_refs"}),
+        CasillaEvolutionKind.RETIRED: frozenset[str](),
+    }[kind]

@@ -70,6 +70,7 @@ from ..compiler.source_evidence_fingerprint import (
 _PUBLICATION_LOCK_TIMEOUT: Final = 30.0
 _PUBLICATION_LOCK_RETRY_BACKOFF: Final = 0.05
 
+
 def require_evidence_closure(artifact: AuthorityArtifact) -> None:
     """Require every runtime evidence projection to agree with its catalogue."""
     legal_ids = {item.legal_reference_id for item in artifact.evidence.legal}

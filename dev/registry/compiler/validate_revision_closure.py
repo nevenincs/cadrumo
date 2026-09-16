@@ -26,7 +26,7 @@ from collections.abc import Mapping
 
 from cadrumo.domain.calculations.registry.casilla_structural_succession import endpoint_source_context_failures
 from cadrumo.domain.calculations.registry.orden_applicability import orden_aplicabilidad_hard_failures
-from cadrumo.domain.calculations.registry.revision_context import RevisionValidationContext
+from cadrumo.domain.calculations.registry.revision_context import ConstructMemberObject, RevisionValidationContext
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.temporal import revision_endpoint_source_ids
