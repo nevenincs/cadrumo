@@ -6,13 +6,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .profile import IvaDeductibilityHint
+
+_ENTRY_SUBJECT: Final = "IVA deductibility hint mapping"
 
 _FACT_ID = "categories.profile"
 _SCOPE_SELECTOR = FactSelector(name="scope", value="iva_deductibility_hint")
@@ -59,15 +62,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IVA deductibility hint mapping is missing {key!r}")
-    return value.strip()
-
-
 def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    tokens = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not tokens or len(set(tokens)) != len(tokens):
         raise RegistryValidationError(f"IVA deductibility hint mapping {key!r} must declare unique tokens")
     return tokens
@@ -96,7 +96,9 @@ def resolve_iva_deductibility_hint_catalogue(
         raise RegistryValidationError("categories.profile IVA hint vocabulary must resolve as a mapping fact")
     entries = _mapping_entries(resolved)
     values = tuple(IvaDeductibilityHint(token) for token in _csv_tokens(entries, _ORDER_KEY))
-    return IvaDeductibilityHintCatalogue(values=values, semantics=_required(entries, _SEMANTICS_KEY))
+    return IvaDeductibilityHintCatalogue(
+        values=values, semantics=required_mapping_entry(entries, _SEMANTICS_KEY, subject=_ENTRY_SUBJECT)
+    )
 
 
 def require_iva_deductibility_hint(

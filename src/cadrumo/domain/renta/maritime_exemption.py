@@ -42,8 +42,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from enum import StrEnum
-from typing import TypeGuard
 
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
@@ -102,42 +100,6 @@ class ProfileCompletenessError(RentaError):
 
 # Registry-owned vessel categories are resolved externally; Python carries
 # only the schema-derived input vocabulary and no eligible-membership set.
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-
-
-def _is_str_enum_type(value: object) -> TypeGuard[type[StrEnum]]:
-    """Narrow a dynamically built enum class after checking its bases."""
-    return isinstance(value, type) and issubclass(value, StrEnum)
 
 
 @dataclass(frozen=True, slots=True)

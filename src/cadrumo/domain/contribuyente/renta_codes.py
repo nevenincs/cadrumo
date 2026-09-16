@@ -18,12 +18,8 @@ from collections.abc import Mapping
 from enum import StrEnum
 from functools import cache
 from types import MappingProxyType
-from typing import Self
 
-from pydantic import GetCoreSchemaHandler
-from pydantic_core import CoreSchema, core_schema
-
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.registry_token import StrictRegistryToken
 from .ccaa import CCAA
 
 
@@ -176,7 +172,7 @@ class RentaDisabilityGrade(StrEnum):
     ASSISTANCE_OR_REDUCED_MOBILITY = "4"
 
 
-class FiscalResidency(str):
+class FiscalResidency(StrictRegistryToken):
     """Opaque fiscal-residency token projected from the facts registry.
 
     The registry owns residency membership and its downstream regime meaning.
@@ -186,51 +182,10 @@ class FiscalResidency(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Construct only tokens already validated by registry hydration."""
-        if not _registry_validated:
-            raise TypeError("FiscalResidency tokens must be projected from the registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("FiscalResidency token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Project a token at a validated registry hydration boundary."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("FiscalResidency must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: type[object],
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Accept only an already projected token and serialize it as text."""
-        del source_type, handler
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical token for serialization."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical token for diagnostics."""
-        return str(self)
+    _projection_source = "registry"
 
 
-class SituacionFamiliar(str):
+class SituacionFamiliar(StrictRegistryToken):
     """Opaque Art. 82 family-situation token projected from the facts registry.
 
     The registry owns the five-token vocabulary and the joint-taxation
@@ -240,50 +195,8 @@ class SituacionFamiliar(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Construct only tokens already validated by registry hydration."""
-        if not _registry_validated:
-            raise TypeError("SituacionFamiliar tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("SituacionFamiliar token must be a non-empty string")
-        return str.__new__(cls, value)
 
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("SituacionFamiliar must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Register strict projected-token validation with Pydantic."""
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the persisted registry token."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the persisted token for diagnostics."""
-        return str(self)
-
-
-class SituacionFamiliarM145(str):
+class SituacionFamiliarM145(StrictRegistryToken):
     """Opaque Modelo 145 family-situation token projected from the facts registry.
 
     Fact 0142 owns the three form values, their legal descriptions, and the
@@ -293,48 +206,6 @@ class SituacionFamiliarM145(str):
     """
 
     __slots__ = ()
-
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Construct only tokens already validated by registry hydration."""
-        if not _registry_validated:
-            raise TypeError("SituacionFamiliarM145 tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("SituacionFamiliarM145 token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("SituacionFamiliarM145 must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Register strict projected-token validation with Pydantic."""
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the persisted registry token."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the persisted token for diagnostics."""
-        return str(self)
 
 
 __all__ = [
