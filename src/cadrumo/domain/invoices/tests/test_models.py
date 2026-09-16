@@ -10,11 +10,12 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.identity.documents import IdentityError
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
-from ...iva.schema import EUMemberState, IvaRateKind
+from ...iva.schema import IvaRateKind
 from ..enums import (
     IvaRate,
     PaymentStatus,
@@ -23,7 +24,6 @@ from ..enums import (
 from ..errors import InvoiceValidationError
 from ..models import (
     Invoice,
-    InvoiceCatalogue,
     InvoiceLine,
     derive_invoice_id,
 )
@@ -534,14 +534,14 @@ def test_catalogue_rejects_duplicate_invoice_ids_on_construction() -> None:
     """Duplicate logical IDs must be rejected when building a catalogue."""
     invoice = _valid_invoice()
     with pytest.raises(ValidationError, match=r"duplicate invoice_id"):
-        InvoiceCatalogue.from_invoices([invoice, invoice])
+        build_invoice_catalogue([invoice, invoice])
 
 
 def test_catalogue_iteration_yields_invoices() -> None:
     """Iteration yields invoices, not model fields."""
     first = _valid_invoice(invoice_number="INV-001")
     second = _valid_invoice(invoice_number="INV-002")
-    catalogue = InvoiceCatalogue.from_invoices([first, second])
+    catalogue = build_invoice_catalogue([first, second])
     assert [invoice.invoice_id for invoice in catalogue] == [first.invoice_id, second.invoice_id]
     assert first.invoice_id in catalogue
     assert len(catalogue) == 2

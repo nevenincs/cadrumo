@@ -9,6 +9,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....core.aggregation import IntracomOperationType
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...iva.classification import InvoiceKind, TransactionKind
@@ -188,7 +190,7 @@ def test_persistence_round_trip_preserves_catalogue() -> None:
     Carries the maximally-populated and the fx-stamped records alongside the
     plain ones, so no optional field crosses the JSON boundary at its default.
     """
-    catalogue = InvoiceCatalogue.from_invoices(
+    catalogue = build_invoice_catalogue(
         [
             _valid_invoice(invoice_number="INV-001"),
             _valid_invoice(invoice_number="INV-002", kind=InvoiceKind.RECEIVED),
@@ -232,14 +234,14 @@ def test_load_raises_typed_error_for_invalid_json() -> None:
 
 def test_catalogue_get_returns_none_for_missing_id() -> None:
     """Missing IDs return None rather than raising."""
-    catalogue = InvoiceCatalogue.from_invoices([_valid_invoice()])
+    catalogue = build_invoice_catalogue([_valid_invoice()])
     assert catalogue.get("missing") is None
 
 
 def test_link_transaction_appends_id_and_returns_new_catalogue() -> None:
     """link_transaction must return a fresh catalogue with the transaction appended."""
     invoice = _valid_invoice()
-    catalogue = InvoiceCatalogue.from_invoices([invoice])
+    catalogue = build_invoice_catalogue([invoice])
     hex_a = "a" * 64
 
     updated = link_transaction(catalogue, invoice.invoice_id, hex_a)
@@ -254,7 +256,7 @@ def test_link_transaction_is_idempotent_on_duplicate() -> None:
     """Re-linking an already-present transaction returns a value-equal catalogue."""
     hex_a = "a" * 64
     invoice = _valid_invoice(linked_transaction_ids=(hex_a,))
-    catalogue = InvoiceCatalogue.from_invoices([invoice])
+    catalogue = build_invoice_catalogue([invoice])
     updated = link_transaction(catalogue, invoice.invoice_id, hex_a)
     assert updated == catalogue
 
@@ -268,7 +270,7 @@ def test_link_transaction_rejects_invalid_request() -> None:
         ("nonexistent", "a" * 64, InvoiceNotFoundError),
     )
     invoice = _valid_invoice()
-    catalogue = InvoiceCatalogue.from_invoices([invoice])
+    catalogue = build_invoice_catalogue([invoice])
 
     for invoice_id_override, transaction_id, expected_error in cases:
         invoice_id = invoice.invoice_id if invoice_id_override is None else invoice_id_override
@@ -325,7 +327,7 @@ def test_from_invoices_keys_the_catalogue_by_invoice_id() -> None:
     first = _valid_invoice(invoice_number="INV-001")
     second = _valid_invoice(invoice_number="INV-002", kind=InvoiceKind.RECEIVED)
 
-    catalogue = InvoiceCatalogue.from_invoices([first, second])
+    catalogue = build_invoice_catalogue([first, second])
 
     assert set(catalogue.invoices) == {first.invoice_id, second.invoice_id}
     assert catalogue.get(first.invoice_id) == first
@@ -336,7 +338,7 @@ def test_from_invoices_refuses_a_duplicate_invoice_id() -> None:
     invoice = _valid_invoice()
 
     with pytest.raises(ValidationError, match=r"duplicate invoice_id"):
-        InvoiceCatalogue.from_invoices([invoice, invoice])
+        build_invoice_catalogue([invoice, invoice])
 
 
 def test_catalogue_error_hierarchy_reachable() -> None:
