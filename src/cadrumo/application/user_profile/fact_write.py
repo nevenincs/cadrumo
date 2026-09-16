@@ -136,10 +136,10 @@ def apply_profile_fact_changes(
         event_payload={"changed_fact_count": str(len(changes)), "door": door.value},
     )
     if PROFILE_OUTPUT_LANGUAGE_PATH in changed_paths:
-        from ...core.i18n.render import clear_output_language_cache
+        from .language_resolver import refresh_active_profile_output_language
 
-        clear_output_language_cache()
         _mirror_output_language_hint(published)
+        refresh_active_profile_output_language()
     return published
 
 

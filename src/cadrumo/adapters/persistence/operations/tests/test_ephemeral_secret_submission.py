@@ -20,6 +20,7 @@ from .....application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from .....application.operations.errors import OperationUnsettledError
 from .....application.operations.models import (
     CredentialFreeOperationRequest,
     OperationRequest,
@@ -54,6 +55,7 @@ from .....core.operations import (
 from ...storage.errors import RepositoryError
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository
+from .supervision_support import run_to_settlement
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -134,8 +136,11 @@ class BlockingExecutor:
         async with context.ephemeral_secret.consume() as secret:
             assert secret.tobytes() == _SECRET
             self.entered.set()
-            await self.release.wait()
-            self.active_buffer_zeroized = not any(secret)
+            try:
+                await self.release.wait()
+            finally:
+                # Observed however the wait ends, including a cancellation.
+                self.active_buffer_zeroized = not any(secret)
         return "secret-operation:complete"
 
 
@@ -333,7 +338,7 @@ def test_exact_one_shot_submission_executes_once_and_never_reaches_filesystem(tm
         asyncio.run(supervisor.submit_ephemeral_secret(requirement, duplicate))
     assert duplicate == bytearray(len(_SECRET))
 
-    terminal = asyncio.run(supervisor.start(operation_id))
+    terminal = asyncio.run(run_to_settlement(supervisor, operation_id))
     assert terminal.lifecycle is OperationLifecycle.TERMINAL
     assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
     assert terminal.executor_entered_at == _NOW
@@ -385,7 +390,7 @@ def test_expiry_cancellation_and_shutdown_clear_pre_entry_secret_waits(tmp_path:
     expiry_buffer = bytearray(_SECRET)
     asyncio.run(supervisor.submit_ephemeral_secret(expiry_requirement, expiry_buffer))
     clock[0] = expiry_requirement.expires_at
-    expired = asyncio.run(supervisor.start(expiry_id))
+    expired = asyncio.run(run_to_settlement(supervisor, expiry_id))
     assert expired.terminal_condition is OperationTerminalCondition.INTERRUPTED
     assert expired.effect is OperationEffect.NONE
     assert expired.executor_entered_at is None
@@ -412,7 +417,7 @@ def test_expiry_cancellation_and_shutdown_clear_pre_entry_secret_waits(tmp_path:
         asyncio.run(supervisor.submit_ephemeral_secret(shutdown_requirement, post_shutdown_buffer))
     assert post_shutdown_buffer == bytearray(len(_SECRET))
     with pytest.raises(ValueError, match="no exact live submission"):
-        asyncio.run(supervisor.start(shutdown_id))
+        asyncio.run(run_to_settlement(supervisor, shutdown_id))
     _assert_no_secret_or_derivative(tmp_path)
 
 
@@ -501,14 +506,17 @@ def test_shutdown_zeroizes_secret_during_active_consumption(tmp_path: Path) -> N
         assert requirement is not None
         submitted = bytearray(_SECRET)
         await supervisor.submit_ephemeral_secret(requirement, submitted)
-        execution = asyncio.create_task(supervisor.start(operation_id))
+        execution = asyncio.create_task(run_to_settlement(supervisor, operation_id))
         await entered.wait()
 
+        # Closing the host stops the detachable operation mid-consumption; the
+        # secret it held must be gone all the same, and nothing is settled.
         await supervisor.shutdown()
         release.set()
-        terminal = await execution
+        with pytest.raises(OperationUnsettledError) as unsettled:
+            await execution
 
-        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        assert unsettled.value.snapshot.terminal_condition is None
         assert executor.active_buffer_zeroized
         assert submitted == bytearray(len(_SECRET))
         _assert_no_secret_or_derivative(tmp_path)
@@ -540,7 +548,7 @@ def test_restart_before_entry_is_none_and_after_entry_is_unknown_without_reexecu
         requirement = (await replacement.inspect(after_id)).secret_requirement
         assert requirement is not None
         await replacement.submit_ephemeral_secret(requirement, bytearray(_SECRET))
-        start_task = asyncio.create_task(replacement.start(after_id))
+        start_task = asyncio.create_task(run_to_settlement(replacement, after_id))
         await entered.wait()
         running = await replacement.inspect(after_id)
         assert running.lifecycle is OperationLifecycle.RUNNING

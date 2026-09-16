@@ -34,7 +34,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture
@@ -74,7 +74,7 @@ def test_declare_especial_transition_persists_typed_option(
     persisted = loaded.entry_for(2026)
     assert persisted is not None
     assert persisted.especial_transition is not None
-    assert persisted.especial_transition.kind is ProrrataEspecialTransitionKind.from_registry("opcion")
+    assert persisted.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
     assert persisted.especial_transition.evidence_reference == "modelo-303-2026-prorrata-opcion"
 
 
@@ -108,45 +108,8 @@ def test_record_aeat_autorizada_persists_authorised_override(
     assert len(loaded.entries) == 1
     entry = loaded.entry_for(2026)
     assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime.from_registry("general")
+    assert entry.regime == ProrrataRegisterRegime.from_registry("general")
     assert entry.provisional_percentage == Decimal("63.5")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert entry.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
     assert entry.authorisation_reference == "AEAT-AUTH-2026-0007"
-    assert entry.source_observation_ref is None
-
-
-def test_record_inicio_actividad_persists_proposed_override(
-    tmp_path: Path,
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        repository = ProrrataRegisterRepository(objects=profile.repository)
-        service = ProrrataRegisterService(repository=repository, operation=authority_operation)
-        service.declare(
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                provisional_percentage=Decimal("80"),
-                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-                source_observation_ref="303:2025:4T",
-                source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
-            ),
-        )
-
-        updated = service.record_inicio_actividad(
-            ejercicio=2026,
-            provisional_percentage=Decimal("55"),
-            proposal_reference="INICIO-036-2026-0003",
-        )
-        loaded = repository.load()
-
-    assert updated == loaded
-    assert len(loaded.entries) == 1
-    entry = loaded.entry_for(2026)
-    assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime.from_registry("general")
-    assert entry.provisional_percentage == Decimal("55")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("inicio_actividad")
-    assert entry.authorisation_reference == "INICIO-036-2026-0003"
     assert entry.source_observation_ref is None

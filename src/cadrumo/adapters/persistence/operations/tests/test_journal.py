@@ -12,6 +12,7 @@ from multiprocessing.queues import Queue
 from multiprocessing.synchronize import Event
 from pathlib import Path
 from queue import Empty
+from typing import override
 
 import pytest
 
@@ -54,6 +55,7 @@ from .....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from .....tests.thread_file_io_probe import recording_file_io
 from ...storage.errors import RepositoryError
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
@@ -641,3 +643,53 @@ def test_operation_journal_refuses_raw_history_corruption(tmp_path: Path, corrup
 
     with pytest.raises(RepositoryError, match="invalid operation journal"):
         asyncio.run(repository.load(snapshots[-1].operation_id))
+
+
+class _JournalOnTheLoop(OperationJournalRepository):
+    """The defect the gate below must catch: substrate I/O on the awaiting thread."""
+
+    @override
+    async def load(self, operation_id: str) -> OperationPersistedSnapshot:
+        return self._repository.load(operation_id).snapshot
+
+
+async def _exercise_operation_ports(journal: OperationJournalRepository, storage_root: Path) -> list[str]:
+    """Drive every journal and lease port call once and return the loop thread's file access."""
+    leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
+    lease = _lease()
+    scope_ref = lease.scope_ref
+    first = _snapshot(revision=0, sequence=1)
+    second = _snapshot(revision=1, sequence=2)
+    loop_thread = threading.get_ident()
+    with recording_file_io(loop_thread) as loop_io:
+        assert (await leases.acquire(lease, observed_at=_STARTED)).disposition is OperationLeaseDisposition.ACQUIRED
+        await leases.inspect(scope_ref, lease.operation_id, observed_at=_STARTED)
+        await journal.create(first, lease=lease)
+        await journal.commit(second, expected_revision=0, lease=lease)
+        assert (await journal.load(first.operation_id)) == second
+        await journal.read_after(first.operation_id, 0, limit=10)
+        await journal.read_observation(first.operation_id, 0, limit=10)
+        renewed = lease.model_copy(update={"expires_at": lease.expires_at + timedelta(minutes=1)})
+        await leases.compare_and_swap(lease, renewed, observed_at=_STARTED)
+        await leases.release(renewed, observed_at=_STARTED)
+    return list(loop_io)
+
+
+def test_operation_ports_do_no_file_io_on_the_awaiting_event_loop(tmp_path: Path) -> None:
+    """A frontend loop awaiting the journal and lease ports never touches a file itself."""
+    storage_root = tmp_path / "state"
+    loop_io = asyncio.run(
+        _exercise_operation_ports(OperationJournalRepository(storage_root=storage_root), storage_root)
+    )
+
+    assert loop_io == []
+    # The work did happen -- on worker threads.
+    assert (storage_root / "operation-journals" / f"{'a' * 64}.json").is_file()
+
+
+def test_the_event_loop_file_io_gate_detects_a_port_that_reads_on_the_loop(tmp_path: Path) -> None:
+    """Detector teeth: the same drive over an inline load is caught by name."""
+    storage_root = tmp_path / "state"
+    loop_io = asyncio.run(_exercise_operation_ports(_JournalOnTheLoop(storage_root=storage_root), storage_root))
+
+    assert any(access.startswith("open:") and access.endswith(f"{'a' * 64}.json") for access in loop_io), loop_io

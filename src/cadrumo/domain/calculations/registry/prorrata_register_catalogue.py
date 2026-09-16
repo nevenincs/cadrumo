@@ -15,7 +15,7 @@ from ....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -280,17 +280,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"prorrata register mapping {key!r} must contain unique tokens")
-    return values
-
-
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
@@ -325,7 +314,10 @@ def resolve_prorrata_register_catalogue(
         raise RegistryValidationError("prorrata register catalogue requires an explicit authority operation or scope")
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
 
-    regime_tokens = (*_csv(entries, _REGIME_ORDER_KEY), *_csv(entries, _REGISTER_REGIME_ADDITIONS_KEY))
+    regime_tokens = (
+        *unique_mapping_tokens(entries, _REGIME_ORDER_KEY, subject=_ENTRY_SUBJECT),
+        *unique_mapping_tokens(entries, _REGISTER_REGIME_ADDITIONS_KEY, subject=_ENTRY_SUBJECT),
+    )
     regimes: list[ProrrataRegisterRegimeDefinition] = []
     for raw_token in regime_tokens:
         prefix = f"{_REGIME_PREFIX}{raw_token}"
@@ -344,7 +336,7 @@ def resolve_prorrata_register_catalogue(
         )
 
     transition_kinds: list[ProrrataTransitionDefinition] = []
-    for raw_token in _csv(entries, _TRANSITION_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _TRANSITION_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_TRANSITION_PREFIX}{raw_token}"
         token = ProrrataEspecialTransitionKind.from_registry(
             required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
@@ -360,7 +352,7 @@ def resolve_prorrata_register_catalogue(
         )
 
     provenances: list[ProrrataProvenanceDefinition] = []
-    for raw_token in _csv(entries, _PROVENANCE_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _PROVENANCE_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_PROVENANCE_PREFIX}{raw_token}"
         token = ProrrataProvisionalProvenance.from_registry(
             required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
@@ -378,7 +370,7 @@ def resolve_prorrata_register_catalogue(
         )
 
     sector_letters: list[SectorDiferenciadoLetraDefinition] = []
-    for raw_token in _csv(entries, _SECTOR_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _SECTOR_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_SECTOR_PREFIX}{raw_token}"
         token = SectorDiferenciadoLetra.from_registry(
             required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)

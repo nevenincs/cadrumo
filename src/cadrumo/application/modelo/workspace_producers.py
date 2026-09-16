@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal, Protocol, Self, TypedDict, runtime_checkable
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol, Self, TypedDict
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -568,17 +568,6 @@ def _contributing_projection[ProjectionT: BaseModel](
             generation=generation,
         ),
     )
-
-
-@runtime_checkable
-class _NativeCurrentCoordinate(Protocol):
-    """The comparison-domain/generation shape every native coordinate shares."""
-
-    @property
-    def comparison_domain(self) -> str: ...
-
-    @property
-    def generation(self) -> int: ...
 
 
 __all__ = [

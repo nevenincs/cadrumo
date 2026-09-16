@@ -13,6 +13,7 @@ provider, real engine) — no mocks.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -20,6 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from .....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
@@ -30,7 +32,7 @@ from .....application.invoices.catalogue_lifecycle import (
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
-from .....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
+from .....domain.invoices.enums import PaymentStatus, resolve_iva_rate_slot
 from .....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
@@ -43,6 +45,14 @@ from ..catalogue_creation import (
 from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Build and read invoices under the generation-pinned authority production uses."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _BUCKET_ID = "20202020-2020-4202-8202-202020202020"
 _COUNTERPARTY_CIF = "A58818501"
@@ -240,7 +250,7 @@ def _linked_invoice(bucket_id: str):
                 quantity=Decimal("1"),
                 unit_price=Decimal("100.00"),
                 subtotal=Decimal("100.00"),
-                iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+                iva_rate=resolve_iva_rate_slot(Decimal("21"), date.today()),
                 iva_amount=Decimal("21.00"),
             ),
         ),

@@ -10,6 +10,8 @@ from __future__ import annotations
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
+from .producer_inventory import producer_inventory
+
 
 def validate_producer_inventory(prefix: str, revision: ModeloRevision) -> list[str]:
     """Return producer-closure failures for one revision.
@@ -20,7 +22,7 @@ def validate_producer_inventory(prefix: str, revision: ModeloRevision) -> list[s
     otherwise bypass schema-time input-kind checks: a computed casilla without
     a formula and a non-computed casilla carrying a formula declaration.
     """
-    inventory = revision.producer_inventory()
+    inventory = producer_inventory(revision)
     casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
     failures: list[str] = []
     for casilla_id, formula_ids in sorted(inventory.formula_ids_by_casilla.items()):

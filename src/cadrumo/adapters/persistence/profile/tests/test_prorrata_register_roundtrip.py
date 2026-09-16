@@ -145,26 +145,26 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
 
         assert loaded == original
         carried = loaded.entries[0]
-        assert carried.regime is ProrrataRegisterRegime.from_registry("general")
+        assert carried.regime == ProrrataRegisterRegime.from_registry("general")
         assert carried.provisional_percentage == Decimal("80")
-        assert carried.provisional_provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
+        assert carried.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
         assert carried.source_observation_ref == "303:2023:4T"
         assert carried.source_registry_snapshot_refs == (_m303_snapshot_ref(2023),)
         assert carried.definitive_percentage == Decimal("77")
         assert carried.definitive_volume_con_derecho == Decimal("154000.00")
         assert carried.definitive_volume_sin_derecho == Decimal("46000.00")
         authorised = loaded.entries[1]
-        assert authorised.regime is ProrrataRegisterRegime.from_registry("especial")
+        assert authorised.regime == ProrrataRegisterRegime.from_registry("especial")
         assert authorised.sector_id == "arrendamiento"
-        assert authorised.provisional_provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+        assert authorised.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
         assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
         assert authorised.especial_transition is not None
-        assert authorised.especial_transition.kind is ProrrataEspecialTransitionKind.from_registry("opcion")
+        assert authorised.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
         assert authorised.especial_transition.evidence_reference == "modelo-303-2024-prorrata-opcion"
         assert loaded.is_sectorized is True
         sector_definition = loaded.sector_definition_for("arrendamiento")
         assert sector_definition is not None
-        assert sector_definition.letra is SectorDiferenciadoLetra.from_registry("a")
+        assert sector_definition.letra == SectorDiferenciadoLetra.from_registry("a")
         assert sector_definition.member_activity_codes == ("6820",)
         # The art. 105.Cinco interrupted (sin operaciones) marker crosses the
         # encrypted boundary: an inactive ejercicio carries no percentage/volume.

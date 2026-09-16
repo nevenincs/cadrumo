@@ -60,6 +60,7 @@ __all__ = [
     "required_mapping_entry",
     "resolve_governed_fact",
     "resolve_validated_governed_fact",
+    "unique_mapping_tokens",
 ]
 
 
@@ -267,6 +268,30 @@ def required_mapping_entry(entries: Mapping[str, str], key: str, *, subject: str
     if value is None or not value.strip():
         raise RegistryValidationError(f"{subject} is missing {key!r}")
     return value.strip()
+
+
+def unique_mapping_tokens(
+    entries: Mapping[str, str],
+    key: str,
+    *,
+    subject: str,
+    requirement: str = "must contain unique tokens",
+) -> tuple[str, ...]:
+    """Return the stripped, non-empty comma-separated tokens of one required entry.
+
+    ``subject`` and ``requirement`` word the refusal, so each consumer keeps its
+    own diagnostic.
+
+    Raises:
+        RegistryValidationError: When the entry is absent or blank, yields no
+            token, or repeats a token.
+    """
+    tokens = tuple(
+        token.strip() for token in required_mapping_entry(entries, key, subject=subject).split(",") if token.strip()
+    )
+    if not tokens or len(tokens) != len(set(tokens)):
+        raise RegistryValidationError(f"{subject} {key!r} {requirement}")
+    return tokens
 
 
 def resolve_governed_fact(

@@ -66,7 +66,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState
-from cadrumo.core.config import Settings, override_settings
+from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -182,7 +182,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
-    storage_root = Settings().cadrumo_local_storage_root
+    storage_root = load_settings().cadrumo_local_storage_root
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
     unlocked = unlock_profile_custody(material.envelope, _OPERATOR_CREDENTIAL_INPUT, sentinel=material.sentinel)
     instant = datetime.now(UTC)
@@ -878,7 +878,7 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
 
     with (
-        caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"),
+        caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection_auth"),
         bundled_indexed_authority().operation() as operation,
     ):
         projection = build_operator_state_projection(

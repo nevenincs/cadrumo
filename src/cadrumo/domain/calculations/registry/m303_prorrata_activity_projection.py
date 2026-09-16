@@ -41,10 +41,6 @@ class M303ProrrataActivityRowProjection(BaseModel):
     slot: int = Field(ge=1, le=5)
     endpoints: tuple[M303ProrrataActivityEndpointValue, ...] = Field(min_length=5, max_length=5)
 
-    def endpoint_values(self) -> tuple[M303ProrrataActivityEndpointValue, ...]:
-        """Return the row's endpoint values in the official field order."""
-        return self.endpoints
-
 
 def project_m303_prorrata_activity_rows(
     *,

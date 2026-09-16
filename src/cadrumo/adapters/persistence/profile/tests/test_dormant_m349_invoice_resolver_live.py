@@ -31,7 +31,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
+from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_slot
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -107,7 +107,7 @@ def _intra_community_invoice(
                 quantity=Decimal("1"),
                 unit_price=base_total,
                 subtotal=base_total,
-                iva_rate=resolve_iva_rate_token("rate_0", date.today()),
+                iva_rate=resolve_iva_rate_slot(Decimal("0"), date.today()),
                 iva_amount=Decimal("0"),
             ),
         ),

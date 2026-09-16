@@ -20,7 +20,6 @@ from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, Secure
 from ...core.time.clock import now as utc_now
 from ...domain.buckets.event import BucketEvent
 from ...domain.buckets.event_repository import append_bucket_event
-from .storage.crypto.encrypted_columns import secure_object_key_digest
 from .storage.envelope.contract import Envelope
 from .storage.errors import (
     ClassificationError,
@@ -240,6 +239,8 @@ class _PersistenceWorkflow:
         return envelope.payload
 
     def list_runs(self, store: WorkflowSecureObjectStorePort) -> tuple[WorkflowResult, ...]:
+        from .storage.crypto.encrypted_columns import secure_object_key_digest
+
         runs: list[WorkflowResult] = []
         for record in store.list_records(
             _RUN_NAMESPACE,

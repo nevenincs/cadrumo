@@ -114,17 +114,17 @@ def test_command_json_roundtrip_preserves_strict_equality() -> None:
 def test_command_preserves_art_104_tres_exclusion_through_json() -> None:
     """The operator-declared art-104.Tres exclusion tag survives the command wire contract."""
     original = _populated_command()
-    assert original.art_104_tres_exclusion is Art104TresExclusion("non_habitual_real_estate_or_financial")
+    assert original.art_104_tres_exclusion == Art104TresExclusion("non_habitual_real_estate_or_financial")
     roundtripped = ManualLedgerTransactionCommand.model_validate_json(original.model_dump_json())
-    assert roundtripped.art_104_tres_exclusion is Art104TresExclusion("non_habitual_real_estate_or_financial")
+    assert roundtripped.art_104_tres_exclusion == Art104TresExclusion("non_habitual_real_estate_or_financial")
 
 
 def test_command_preserves_input_classification_through_json() -> None:
     """The operator-declared LIVA art. 106 input_classification survives the command wire contract."""
     original = _populated_command()
-    assert original.input_classification is InputClassification.from_registry("common")
+    assert original.input_classification == InputClassification.from_registry("common")
     roundtripped = ManualLedgerTransactionCommand.model_validate_json(original.model_dump_json())
-    assert roundtripped.input_classification is InputClassification.from_registry("common")
+    assert roundtripped.input_classification == InputClassification.from_registry("common")
 
 
 def test_command_json_roundtrip_preserves_decimal_precision() -> None:

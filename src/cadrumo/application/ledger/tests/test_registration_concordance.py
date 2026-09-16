@@ -230,7 +230,7 @@ class TestConflictedPapersSurface:
             operation=operation,
         )
 
-        assert (resolved.registration_conflict is not None)
+        assert resolved.registration_conflict is not None
         assert resolved.scope is None
         assert resolved.registration_conflict is not None
         assert resolved.registration_conflict.identification_state == require_eu_member_state("DE")
@@ -244,7 +244,7 @@ class TestConflictedPapersSurface:
             repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID, operation=operation
         )
 
-        assert (resolved.registration_conflict is not None)
+        assert resolved.registration_conflict is not None
         assert resolved.scope is None
 
     def test_the_postal_rung_never_quietly_answers_a_conflicted_document(

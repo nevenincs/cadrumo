@@ -5,9 +5,10 @@ from collections.abc import Callable, Iterator
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.ids import RevisionId
 from .....domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from .....tests.authority_lease_support import private_authority_lease, scoped_when_requested
 from ..schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
@@ -18,9 +19,19 @@ from .registry_tree import bundled_registry_tree
 
 @pytest.fixture(scope="session")
 def registry_authority() -> Iterator[PinnedAuthorityOperation]:
-    """Expose the published authority operation lease to registry-owned tests."""
-    with bundled_indexed_authority().operation() as operation:
+    """Expose the published authority operation lease to registry-owned tests.
+
+    The lease scopes governed facts only for the tests that depend on it; see
+    :func:`~cadrumo.tests.authority_lease_support.private_authority_lease`.
+    """
+    with private_authority_lease() as operation:
         yield operation
+
+
+@pytest.fixture(autouse=True)
+def _scope_tests_that_request_the_registry_authority(request: pytest.FixtureRequest) -> Iterator[None]:
+    with scoped_when_requested(request, "registry_authority"):
+        yield
 
 
 @pytest.fixture(scope="session")

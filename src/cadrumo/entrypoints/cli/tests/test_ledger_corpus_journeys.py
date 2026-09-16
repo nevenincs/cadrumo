@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -312,7 +313,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: Pinn
         derive_calculation_revision_id,
     )
     from ....domain.modelos.codes import ModeloCode
-    from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+    from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
     rows = _list_rows()
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
@@ -341,7 +342,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: Pinn
     )
     now = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
     WorkUnitCatalogueRepository().save(
-        WorkUnitCatalogue.from_work_units(
+        build_work_unit_catalogue(
             (
                 WorkUnit(
                     work_unit_id=work_unit_id,

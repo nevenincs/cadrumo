@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
 
 from ..analysis.revision_selection_probe import declared_period_codes, probe_modelo
-from ..compiler.authority import compiled_bundled_authority
+from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -143,18 +143,20 @@ def test_the_registry_still_refuses_a_genuinely_ambiguous_coordinate(
     # `Exception` accepted any error at all - a TypeError from a changed
     # signature would have satisfied it while the ambiguity check never ran.
     with pytest.raises(AmbiguousRevisionSelectionError, match=r"[Aa]mbiguous"):
-        authority.admitted_revision_id(
-            "308", filing_year=2011, period="AD-HOC", grade=RegistryAuthorityGrade.APPLICABILITY
+        admitted_revision_id(
+            authority, "308", filing_year=2011, period="AD-HOC", grade=RegistryAuthorityGrade.APPLICABILITY
         )
 
-    before = authority.admitted_revision_id(
+    before = admitted_revision_id(
+        authority,
         "308",
         filing_year=2011,
         period="AD-HOC",
         on=datetime.date(2011, 3, 1),
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
-    after = authority.admitted_revision_id(
+    after = admitted_revision_id(
+        authority,
         "308",
         filing_year=2011,
         period="AD-HOC",

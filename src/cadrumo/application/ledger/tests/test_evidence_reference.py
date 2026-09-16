@@ -110,7 +110,7 @@ def test_registered_evidence_record_resolves_to_the_bytes_bearing_space() -> Non
     assert reference.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
     assert reference.record == record
     assert reference.is_acceptable
-    assert (reference.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE)
+    assert reference.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
 
 
 def test_received_catalogue_invoice_is_acceptable_but_carries_no_bytes() -> None:

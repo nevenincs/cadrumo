@@ -45,6 +45,8 @@ from cadrumo.core.operations import (
     OperationEffect,
 )
 
+from .supervision_support import run_to_settlement
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 14, 17, tzinfo=UTC)
@@ -159,7 +161,7 @@ def test_supervisor_replay_reads_idempotent_bounded_pages_from_the_durable_event
                 operation_id="3" * 64,
             )
         )
-        asyncio.run(supervisor.start(operation_id))
+        asyncio.run(run_to_settlement(supervisor, operation_id))
         observer = _supervisor(
             journal=OperationJournalRepository(storage_root=tmp_path / "durable-state"),
             leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "durable-state"),

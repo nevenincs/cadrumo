@@ -393,5 +393,3 @@ class TestCotizacionesCeilingIsDisclosedNotComputed:
     younger has no single bounding month, and AEAT states no apportionment rule.
     Computing one would invent the number this whole rule exists to stop us inventing.
     """
-
-

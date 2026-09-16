@@ -58,6 +58,7 @@ from .launcher import (
     TuiOperationCompositionV1,
     compose_installed_workbench_generation_provider,
     compose_secure_profile_workbench_generation_provider,
+    read_attachment_review_queue,
     run_authenticated_workbench_sessions,
 )
 
@@ -206,6 +207,7 @@ def compose_authenticated_root_inputs_provider(
             declarations_work_action=action(_DECLARATIONS_WORK_ACTION),
             declarations_revisions_action=action(_DECLARATIONS_REVISIONS_ACTION),
             declarations_filing_action=action(_DECLARATIONS_FILING_ACTION),
+            attachment_review_queue=lambda: read_attachment_review_queue(profile_id),
         )
         return compose_installed_workbench_generation_provider(
             compose_secure_profile_workbench_generation_provider(

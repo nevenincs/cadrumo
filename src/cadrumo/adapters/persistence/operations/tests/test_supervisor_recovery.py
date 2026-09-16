@@ -34,6 +34,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .supervision_support import run_to_settlement
 from .test_supervisor import (
     _NOW,
     DeadlineAcknowledgingExecutor,
@@ -64,7 +65,7 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
-        waiting = asyncio.run(supervisor.start(operation_id))
+        waiting = asyncio.run(run_to_settlement(supervisor, operation_id))
         initial_replay = asyncio.run(supervisor.replay(operation_id, 0, limit=20))
         saved_cursor = initial_replay.next_cursor
         detached = asyncio.run(supervisor.detach(operation_id))
@@ -112,7 +113,7 @@ def test_duplicate_response_is_refused_after_detach_and_same_owner_supervisor_re
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
         operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
-        waiting = asyncio.run(owner.start(operation_id))
+        waiting = asyncio.run(run_to_settlement(owner, operation_id))
         assert waiting.pending_interaction is not None
         assert asyncio.run(owner.detach(operation_id)) == waiting
         response = _response(intent="reject", operation_id=operation_id, revision=waiting.revision)
@@ -166,7 +167,7 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
             lease_duration=timedelta(minutes=1),
         )
         operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
-        checkpoint = asyncio.run(owner.start(operation_id))
+        checkpoint = asyncio.run(run_to_settlement(owner, operation_id))
         recovered_at = _NOW + timedelta(minutes=2)
         recovery = _supervisor(
             registry=registry,
@@ -224,7 +225,7 @@ def test_expired_running_operation_reconciles_to_unknown_interruption_without_fa
             lease_duration=timedelta(minutes=1),
         )
         operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
-        asyncio.run(owner.start(operation_id))
+        asyncio.run(run_to_settlement(owner, operation_id))
         recovered_at = _NOW + timedelta(minutes=2)
         recovery = _supervisor(
             registry=registry,
@@ -289,7 +290,7 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
             OperationPersistedSnapshot,
         ]:
             operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
-            start_task = asyncio.create_task(supervisor.start(operation_id))
+            start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)
             cancellation_task = asyncio.create_task(supervisor.request_cancel(operation_id))
@@ -362,7 +363,7 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
             OperationPersistedSnapshot,
         ]:
             operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
-            start_task = asyncio.create_task(supervisor.start(operation_id))
+            start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)
             # The start door settles an executor that acknowledged the

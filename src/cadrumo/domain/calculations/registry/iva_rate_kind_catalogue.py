@@ -10,7 +10,7 @@ from typing import Final
 
 from ...iva.schema import IvaRateKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import (
     GovernedFactSource,
     cache_governed_projection,
@@ -94,17 +94,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"IVA rate-kind catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _resolve_entries(
     *,
     effective_date: date,
@@ -133,7 +122,7 @@ def _scoped_entries(effective_date: date) -> Mapping[str, str]:
 def _scoped_catalogue(effective_date: date) -> IvaRateKindCatalogue:
     entries = _scoped_entries(effective_date)
     definitions: list[IvaRateKindDefinition] = []
-    for raw_token in _csv(entries, _ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_PREFIX}{raw_token}"
         token = IvaRateKind(raw_token)
         if required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT) != raw_token:
@@ -147,7 +136,9 @@ def _scoped_catalogue(effective_date: date) -> IvaRateKindCatalogue:
         )
     catalogue = IvaRateKindCatalogue(
         definitions=tuple(definitions),
-        positive_kinds=tuple(IvaRateKind(token) for token in _csv(entries, _POSITIVE_ORDER_KEY)),
+        positive_kinds=tuple(
+            IvaRateKind(token) for token in unique_mapping_tokens(entries, _POSITIVE_ORDER_KEY, subject=_ENTRY_SUBJECT)
+        ),
         zero_token=IvaRateKind(required_mapping_entry(entries, _ZERO_KEY, subject=_ENTRY_SUBJECT)),
         exempt_token=IvaRateKind(required_mapping_entry(entries, _EXEMPT_KEY, subject=_ENTRY_SUBJECT)),
         non_rate_token=required_mapping_entry(entries, _NON_RATE_KEY, subject=_ENTRY_SUBJECT),

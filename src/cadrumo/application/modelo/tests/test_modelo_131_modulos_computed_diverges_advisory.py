@@ -28,7 +28,7 @@ from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _EXPRESSION = 'advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])'
 _CASILLA_01: CasillaId = validated_casilla_id("01", surface="m131 modulos advisory test")

@@ -43,7 +43,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
 
-from ..compiler.authority import compiled_bundled_authority
+from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
 
 __all__ = [
     "SelectionProbe",
@@ -116,7 +116,7 @@ def probe_modelo(
             for grade in _GRADES:
                 try:
                     resolved = str(
-                        authority.admitted_revision_id(modelo_id, filing_year=year, period=code, grade=grade)
+                        admitted_revision_id(authority, modelo_id, filing_year=year, period=code, grade=grade)
                     )
                     break
                 except AmbiguousRevisionSelectionError:
@@ -134,7 +134,8 @@ def probe_modelo(
                 for grade in _GRADES:
                     try:
                         resolved = str(
-                            authority.admitted_revision_id(
+                            admitted_revision_id(
+                                authority,
                                 modelo_id,
                                 filing_year=year,
                                 period=code,

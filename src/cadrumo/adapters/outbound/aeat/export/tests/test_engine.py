@@ -12,7 +12,6 @@ from ......adapters.persistence.profile.submission import SubmissionRepository
 from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.config import Settings
 from ......domain.submission.engine import SubmissionEngine
-from ......domain.submission.errors import SubmissionError
 from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 
@@ -71,5 +70,3 @@ def test_engine_exposes_no_remote_write_methods(tmp_path: Path) -> None:
     assert not hasattr(engine, "submit_draft")
     assert not hasattr(engine, "submit_amendment")
     assert not (tmp_path / "submissions").exists()
-
-

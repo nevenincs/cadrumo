@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -20,6 +21,7 @@ from cadrumo.domain.calculations.registry.snapshot import build_validated_snapsh
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
+    StaticGeneratedArtifactSource,
 )
 
 from .compiler.authority_state import source_root_for
@@ -118,7 +120,7 @@ def _derive_filing_revision_classifications(
                     sources=catalogues.sources,
                     legal_ref_ids=frozenset(catalogues.legal),
                 )
-                static_inspection = StaticGeneratedArtifactInspection.from_inspection(inspection)
+                static_inspection = _static_generated_artifact_inspection(inspection)
             except ValueError as error:
                 classified.append(
                     RegistryDiagnosticFilingRevision(
@@ -270,4 +272,23 @@ def load_registry_diagnostic_classification(
             authority.catalogues,
             source_root=resolved_source_root,
         ),
+    )
+
+
+def _static_generated_artifact_inspection(inspection: RegistryRevisionInspection) -> StaticGeneratedArtifactInspection:
+    """Copy only the fields the shared generated-artifact verifier reads."""
+    return StaticGeneratedArtifactInspection(
+        modelo_id=inspection.modelo_id,
+        revision_id=inspection.revision_id,
+        revision_source_refs=tuple(inspection.revision_source_refs),
+        sources=MappingProxyType(
+            {
+                source_ref: StaticGeneratedArtifactSource.from_source(source)
+                for source_ref, source in inspection.sources.items()
+            }
+        ),
+        legal_ref_ids=frozenset(inspection.legal_ref_ids),
+        casilla_ids=frozenset(inspection.casilla_ids),
+        binding_ids=frozenset(inspection.binding_ids),
+        projection_endpoints=tuple(endpoint.model_copy(deep=True) for endpoint in inspection.projection_endpoints),
     )

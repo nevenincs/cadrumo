@@ -21,7 +21,10 @@ from cadrumo.domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta
 from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
 from cadrumo.domain.calculations.registry.revision_order import revision_windows_intersect
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedule_period_kind_mismatches
+from cadrumo.domain.calculations.registry.schema_deadlines import (
+    ModeloScheduleDefinition,
+    filing_schedule_period_kind_mismatches,
+)
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
@@ -183,7 +186,7 @@ def _periodic_schedule_periods(modelo: ModeloDefinition) -> list[str]:
             period
             for revision in modelo.revisions.values()
             for schedule in revision.filing_schedules
-            if schedule.is_periodic
+            if _is_periodic(schedule)
             for period in schedule.periods
         },
     )
@@ -212,7 +215,7 @@ def _selected_revision_has_periodic_schedule(
     revision: ModeloRevision,
     period: str,
 ) -> bool:
-    return any(schedule.is_periodic and period in schedule.periods for schedule in revision.filing_schedules)
+    return any(_is_periodic(schedule) and period in schedule.periods for schedule in revision.filing_schedules)
 
 
 def _selected_revision_has_deadline_window(
@@ -318,3 +321,8 @@ def validate_reconciliation_total_closure(scope: str, revision: ModeloRevision) 
                 )
             declared[total_kind] = casilla_id
     return failures
+
+
+def _is_periodic(schedule: ModeloScheduleDefinition) -> bool:
+    """Whether a schedule requires complete recurring deadline coverage."""
+    return schedule.period_kind in ("monthly", "quarterly")

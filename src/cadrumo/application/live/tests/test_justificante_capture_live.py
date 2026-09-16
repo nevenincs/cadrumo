@@ -114,6 +114,14 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
 
     # The persisted snapshot is retrievable as the ACTIVE capture for the period.
     service = build_justificante_capture_service(bucket_id)
-    latest = service.latest_for_work_unit(modelo=_LIVE_MODELO, filing_year=year, period=period)
+    latest = max(
+        (
+            snapshot
+            for snapshot in service.list_snapshots(filing_year=year)
+            if snapshot.modelo == _LIVE_MODELO and snapshot.period == period
+        ),
+        key=lambda snapshot: snapshot.captured_at,
+        default=None,
+    )
     assert latest is not None
     assert latest.snapshot_id == persisted.snapshot_id

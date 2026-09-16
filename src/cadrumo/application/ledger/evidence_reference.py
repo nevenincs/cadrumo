@@ -113,15 +113,6 @@ class EvidenceReference(BaseModel):
         """Whether the reference is usable as purchase evidence for its bucket."""
         return self.outcome in ACCEPTABLE_EVIDENCE_REFERENCE_OUTCOMES
 
-    @property
-    def carries_document_bytes(self) -> bool:
-        """Whether the reference can supply document bytes to an on-host reader.
-
-        Only the evidence-record space stores bytes; a catalogue invoice is a fiscal
-        record with no document behind it.
-        """
-        return self.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
-
 
 def _matching_evidence_record(
     evidence_id: str,

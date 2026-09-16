@@ -23,6 +23,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, Ma
 from cadrumo.application.ledger.review_projection import ledger_transaction_review_status
 from cadrumo.application.review.filter import LedgerReviewStatus
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
@@ -75,6 +76,27 @@ def _archive_manual_transaction(secure_objects: SecureObjectRepository, **kwargs
         return archive_manual_transaction(ports=ports, **kwargs)
 
 
+def _load_transactions(transaction_repository: Any) -> Any:
+    """Read the stored catalogue back under the pinned authority stored rows decode against."""
+    with bundled_indexed_authority().operation():
+        return transaction_repository.load()
+
+
+def _mark_reviewed_excluded(secure_objects: SecureObjectRepository, **kwargs: Any) -> Any:
+    """Exclude through the real action, with the finalized-modelo guard's ports wired."""
+    with ledger_ports_for_test(
+        bucket_id=kwargs["bucket_id"],
+        objects=secure_objects,
+        transaction_repository=kwargs["transaction_repository"],
+        bucket_event_repository=kwargs["bucket_event_repository"],
+    ) as ports:
+        return mark_transaction_reviewed_excluded(
+            work_unit_repository=ports.work_unit_repository,
+            calculation_repository=ports.calculation_repository,
+            **kwargs,
+        )
+
+
 def _create_business_row(
     secure_objects: SecureObjectRepository,
     *,
@@ -107,7 +129,8 @@ def test_mark_reviewed_excluded_persists_state_quintet_and_event(
 ) -> None:
     transaction_repository, event_repository, created = _create_business_row(secure_objects)
 
-    result = mark_transaction_reviewed_excluded(
+    result = _mark_reviewed_excluded(
+        secure_objects,
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
@@ -125,7 +148,7 @@ def test_mark_reviewed_excluded_persists_state_quintet_and_event(
     assert ledger_transaction_review_status(result.transaction) is LedgerReviewStatus.EXCLUDED
 
     # Persisted across the encrypted boundary (roundtrip).
-    persisted = transaction_repository.load().get(created.ref.transaction_id)
+    persisted = _load_transactions(transaction_repository).get(created.ref.transaction_id)
     assert persisted is not None
     assert persisted.business_classification is BusinessClassification.REVIEWED_EXCLUDED
     assert persisted.classified_by == "manual"
@@ -159,7 +182,8 @@ def test_mark_reviewed_excluded_clears_business_pct_and_survives_roundtrip(
         business_pct=Decimal("0.40"),
     )
 
-    mark_transaction_reviewed_excluded(
+    _mark_reviewed_excluded(
+        secure_objects,
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
@@ -168,7 +192,7 @@ def test_mark_reviewed_excluded_clears_business_pct_and_survives_roundtrip(
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
-    persisted = transaction_repository.load().get(created.ref.transaction_id)
+    persisted = _load_transactions(transaction_repository).get(created.ref.transaction_id)
     assert persisted is not None
     assert persisted.business_classification is BusinessClassification.REVIEWED_EXCLUDED
     assert persisted.business_pct is None
@@ -181,7 +205,8 @@ def test_mark_reviewed_excluded_is_reversible_by_reclassify(
         secure_objects,
         idempotency_key="exclude-reversible-row",
     )
-    mark_transaction_reviewed_excluded(
+    _mark_reviewed_excluded(
+        secure_objects,
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
@@ -212,7 +237,8 @@ def test_mark_reviewed_excluded_refuses_already_excluded(
         secure_objects,
         idempotency_key="exclude-idempotent-row",
     )
-    mark_transaction_reviewed_excluded(
+    _mark_reviewed_excluded(
+        secure_objects,
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
@@ -222,7 +248,8 @@ def test_mark_reviewed_excluded_refuses_already_excluded(
     )
 
     with pytest.raises(TransactionValidationError, match="already reviewed-excluded"):
-        mark_transaction_reviewed_excluded(
+        _mark_reviewed_excluded(
+            secure_objects,
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
@@ -250,7 +277,8 @@ def test_mark_reviewed_excluded_refuses_non_active_row(
     )
 
     with pytest.raises(TransactionValidationError, match="only active ledger transactions"):
-        mark_transaction_reviewed_excluded(
+        _mark_reviewed_excluded(
+            secure_objects,
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",

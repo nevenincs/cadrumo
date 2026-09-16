@@ -10,7 +10,7 @@ from typing import Final
 
 from ...contribuyente.renta_codes import SituacionFamiliarM145
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -77,19 +77,6 @@ class SituacionFamiliarM145Catalogue:
         """Return the complete legal definition for one declared token."""
         token = self.require(value)
         return next(item for item in self.definitions if item.token == token)
-
-
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(
-            f"Modelo 145 family-situation vocabulary {key!r} must contain unique tokens",
-        )
-    return values
 
 
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
@@ -172,7 +159,7 @@ def resolve_situacion_familiar_m145_catalogue(
     """Resolve the dated Modelo 145 vocabulary through the facts authority."""
     entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
     definitions: list[SituacionFamiliarM145Definition] = []
-    for raw_token in _csv(entries, _ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         try:
             token = SituacionFamiliarM145.from_registry(raw_token)
         except (TypeError, ValueError) as exc:

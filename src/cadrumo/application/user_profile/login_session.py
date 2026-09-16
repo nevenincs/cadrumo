@@ -75,6 +75,7 @@ from .custody_ports import (
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
 )
+from .language_resolver import refresh_active_profile_output_language
 from .login_handover import HandoverPhase, ProfileLoginHandoverJournal
 from .login_session_port import (
     ProfileBucketSessionPort,
@@ -424,6 +425,7 @@ def logout_active_profile() -> str | None:
         for bucket_id in target_ids:
             close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
         pointer_transaction.clear()
+    refresh_active_profile_output_language()
     return live_bucket_id or selected_bucket_id
 
 
@@ -562,6 +564,7 @@ def bind_resumed_profile_session(
     # in-memory session is sealed; its bucket's persisted receipt is untouched.
     if previous is not None and previous is not session:
         previous.close()
+    refresh_active_profile_output_language()
     return None
 
 
@@ -636,6 +639,7 @@ def publish_created_profile_session(
     except BaseException:
         session.close()
         raise
+    refresh_active_profile_output_language()
 
 
 def _activate_record_authority(
@@ -883,15 +887,17 @@ def login_profile(
             profile_decode_context=profile_decode_context,
         )
         if resumed is not None:
-            return _idempotent_login_outcome(target=attempt.target, resumed=resumed)
-
-        candidate = _authenticate_login_candidate(
-            attempt=attempt,
-            now=instant,
-            passphrase_callback=passphrase_callback,
-            profile_decode_context=profile_decode_context,
-        )
-        return _finish_candidate_login(attempt=attempt, candidate=candidate)
+            outcome = _idempotent_login_outcome(target=attempt.target, resumed=resumed)
+        else:
+            candidate = _authenticate_login_candidate(
+                attempt=attempt,
+                now=instant,
+                passphrase_callback=passphrase_callback,
+                profile_decode_context=profile_decode_context,
+            )
+            outcome = _finish_candidate_login(attempt=attempt, candidate=candidate)
+    refresh_active_profile_output_language()
+    return outcome
 
 
 def authenticate_profile_for_invocation(
@@ -950,6 +956,7 @@ def authenticate_profile_for_invocation(
     except BaseException:
         candidate.close()
         raise
+    refresh_active_profile_output_language()
     return ProfileLoginOutcome(
         bucket_id=candidate.bucket_id,
         label=target.label,

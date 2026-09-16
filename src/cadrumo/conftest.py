@@ -15,12 +15,10 @@ Marker-contract and live-import gating are owned by the repo-root
 from __future__ import annotations
 
 import ast
-import contextvars
 import os
 import sys
 import tempfile
 from collections.abc import Iterator, Mapping
-from contextlib import ExitStack
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -86,15 +84,10 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
     :func:`_scope_tests_that_request_the_operation`; a wider-scoped fixture
     that computes under it enters ``validating_governed_facts`` itself.
     """
-    from .domain.calculations.registry.authority import bundled_indexed_authority
+    from .tests.authority_lease_support import private_authority_lease
 
-    lease_context = contextvars.copy_context()
-    with ExitStack() as lease:
-        pinned = lease_context.run(lease.enter_context, bundled_indexed_authority().operation())
-        try:
-            yield pinned
-        finally:
-            lease_context.run(lease.close)
+    with private_authority_lease() as pinned:
+        yield pinned
 
 
 @pytest.fixture(autouse=True)
@@ -103,9 +96,9 @@ def _scope_tests_that_request_the_operation(request: pytest.FixtureRequest) -> I
     if "operation" not in request.fixturenames:
         yield
         return
-    from .domain.calculations.registry.governed_fact_scope import validating_governed_facts
+    from .tests.authority_lease_support import scoped_when_requested
 
-    with validating_governed_facts(request.getfixturevalue("operation")):
+    with scoped_when_requested(request, "operation"):
         yield
 
 

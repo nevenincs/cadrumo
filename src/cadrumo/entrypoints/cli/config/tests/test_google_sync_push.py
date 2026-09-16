@@ -10,6 +10,8 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import text
 
+from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
+
 from .....adapters.outbound.storage.errors import OutboundStorageNotFoundError, OutboundStorageValidationError
 from .....adapters.outbound.storage.local import LocalFileSystemProvider
 from .....adapters.outbound.storage.mirror_manifest import (
@@ -20,7 +22,6 @@ from .....adapters.outbound.storage.mirror_manifest import (
     remote_mirror_object_label,
 )
 from .....adapters.outbound.storage.records import ProviderKind, RemoteMirrorNamespaceManifest
-from .....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.i18n.render import tr
@@ -84,7 +85,7 @@ def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects
             "google_oauth_metadata": b"push-path-metadata-plaintext",
         }
         for namespace_key, plaintext in plaintext_by_key.items():
-            namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
+            namespace_definition = lookup_namespace_definition(namespace_key)
             repository.save(
                 namespace=namespace_definition.namespace,
                 object_key=f"natural-key-{namespace_key}",
@@ -136,7 +137,7 @@ def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects
 def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifest(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="91284810-5de7-4586-8555-673b5384139b") as profile:
         repository = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         repository.save(
             namespace=namespace,
@@ -178,7 +179,7 @@ def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifes
 def test_google_sync_push_reports_partial_download_before_repairing_remote_object(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="17252893-3010-4568-acfe-927ca590bc5b") as profile:
         repository = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         repository.save(
             namespace=namespace,
@@ -212,7 +213,7 @@ def test_google_sync_push_reports_partial_download_before_repairing_remote_objec
 def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="448f713f-d59d-4478-a993-738d4e6e1521") as profile:
         repository = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         repository.save(
             namespace=namespace,
@@ -267,7 +268,7 @@ def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_
 def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_object(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="884c2da3-26bb-4317-89fb-8e6ab3d539b8") as profile:
         repository = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         repository.save(
             namespace=namespace,
@@ -370,7 +371,7 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="24b3f89e-6752-49e1-b93b-b25e81e9294a") as profile:
         repository = profile.repository
-        tampered_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        tampered_definition = lookup_namespace_definition("google_oauth_metadata")
         tampered_namespace = tampered_definition.namespace
         repository.save(
             namespace=tampered_namespace,
@@ -380,7 +381,7 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
             written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
             payload=b"tampered-lineage-plaintext",
         )
-        clean_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_client")
+        clean_definition = lookup_namespace_definition("google_oauth_client")
         clean_namespace = clean_definition.namespace
         repository.save(
             namespace=clean_namespace,
@@ -440,7 +441,7 @@ def test_google_sync_push_dry_run_counts_every_row_as_skipped_without_writing(tm
             "google_oauth_metadata": b"dry-run-metadata-plaintext",
         }
         for namespace_key, plaintext in plaintext_by_key.items():
-            namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
+            namespace_definition = lookup_namespace_definition(namespace_key)
             repository.save(
                 namespace=namespace_definition.namespace,
                 object_key=f"natural-key-{namespace_key}",
@@ -482,7 +483,7 @@ def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path)
             "google_oauth_token": b"filter-refresh-token-plaintext",
         }
         for namespace_key, plaintext in plaintext_by_key.items():
-            namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
+            namespace_definition = lookup_namespace_definition(namespace_key)
             repository.save(
                 namespace=namespace_definition.namespace,
                 object_key=f"natural-key-{namespace_key}",
@@ -491,8 +492,8 @@ def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path)
                 written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
                 payload=plaintext,
             )
-        target_namespace = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_client").namespace
-        other_namespace = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_token").namespace
+        target_namespace = lookup_namespace_definition("google_oauth_client").namespace
+        other_namespace = lookup_namespace_definition("google_oauth_token").namespace
         provider = LocalFileSystemProvider(tmp_path / "mirror")
 
         result = _push_secure_object_mirror_rows(
@@ -527,7 +528,7 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="db940db3-b347-4518-861b-e67c8dee653b") as profile:
         repository = profile.repository
-        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
         for object_key, payload in (
             ("natural-key-first", b"first-row-plaintext"),

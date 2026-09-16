@@ -937,7 +937,7 @@ def _entries_and_suppressed_from_schedules(
     for schedule in schedules:
         for obligation in schedule.obligations:
             intersects_range = _entry_intersects_range(obligation, calendar_range)
-            applicability = _derive_modelo_applicability(profile, obligation.modelo)
+            applicability = _derive_modelo_applicability(profile, obligation.modelo, operation=operation)
             if applicability.verdict is not _ApplicabilityVerdict.APPLICABLE:
                 if show_suppressed and intersects_range:
                     suppressed.append(
@@ -1051,7 +1051,7 @@ def build_overview_calendar(
             taxpayer_model_declared=False,
             incomplete_reason=_tr("cli.overview.taxpayer_model_undeclared"),
             events=_calendar_events_with_filing_evidence(events, filing_evidence),
-            coverage=build_obligation_coverage(profile, frozenset(), today=today),
+            coverage=build_obligation_coverage(profile, frozenset(), today=today, operation=operation),
         )
 
     deadline_engine, schedules = _schedules_for_calendar_range(
@@ -1110,6 +1110,7 @@ def build_overview_calendar(
         profile,
         coverage_surface_modelos | {entry.modelo for entry in entries_tuple},
         today=today,
+        operation=operation,
     )
     return _OverviewCalendar(
         range=calendar_range,

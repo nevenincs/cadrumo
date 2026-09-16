@@ -397,10 +397,10 @@ def test_the_confirm_boundary_carries_the_writer_regime_axes(
     )
 
     invoice = result.invoice
-    assert invoice.invoice_class is InvoiceClass.from_registry("RECTIFICATIVA")
+    assert invoice.invoice_class == InvoiceClass.from_registry("RECTIFICATIVA")
     assert invoice.series == "R"
     assert invoice.rectifies_invoice_number == "F-2026-0044"
     assert invoice.retention_amount == Decimal("15.00")
-    assert invoice.iva_category is IvaCategory("domestic_general")
+    assert invoice.iva_category == IvaCategory("domestic_general")
     # The retención is settled OUTSIDE the invoice total; only the recargo is in it.
     assert invoice.grand_total == Decimal("126.20")

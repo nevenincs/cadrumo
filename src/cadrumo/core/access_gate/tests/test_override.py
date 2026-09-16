@@ -63,13 +63,6 @@ def test_live_write_is_permanently_forbidden_regardless_of_override() -> None:
         _build_gate().require_live_write()
 
 
-def test_snapshot_reflects_overridden_value() -> None:
-    """The audit-snapshot helper reads from the same Settings surface as the gate check."""
-    with override_settings(cadrumo_live_tests_enabled="diagnostic-marker"):
-        snapshot = _build_gate().snapshot_env(guarded_read_context=None)
-    assert snapshot.cadrumo_live_tests_enabled == "diagnostic-marker"
-
-
 def test_override_does_not_mutate_os_environ() -> None:
     """The ContextVar seam must not bleed into the actual environment."""
     import os

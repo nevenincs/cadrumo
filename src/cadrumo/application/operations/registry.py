@@ -58,9 +58,6 @@ from .interactions import OperationInteractionRequest
 from .models import (
     CredentialFreeOperationRequest,
     OperationDefinitionId,
-    OperationIdentity,
-    OperationRequest,
-    OperationSnapshot,
     OperationTerminalReceipt,
 )
 from .owner import OperationExecutor, OperationResumableExecutor
@@ -187,41 +184,6 @@ class OperationPublicContractSetV1(BaseModel):
         """Build the canonical sorted set and its deterministic digest."""
         canonical = tuple(sorted(definitions, key=lambda item: item.definition_id))
         return cls(definitions=canonical, contract_set_digest=_contract_set_digest(canonical))
-
-
-class _OperationRequestResolutionHeader(BaseModel):
-    """Minimal request identity used only to select its registered model."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    definition_id: OperationDefinitionId
-
-
-class _OperationSnapshotResolutionHeader(BaseModel):
-    """Minimal snapshot identity used only to select its registered model."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    identity: OperationIdentity
-
-
-def _specialize_request_model(request_type: type[BaseModel]) -> type[OperationRequest[BaseModel]]:
-    """Bind the runtime registry model while erasing only its payload subtype.
-
-    Pydantic's generic ``__class_getitem__`` is the runtime dispatch point for
-    a model class selected from the validated registry. Static typing cannot
-    express a type parameter supplied by a value at runtime, so this boundary
-    cast records the sound part of the contract: the returned class is an
-    ``OperationRequest`` whose payload is at least a ``BaseModel``.
-    """
-    specialized = OperationRequest.__class_getitem__(request_type)
-    return cast(type[OperationRequest[BaseModel]], specialized)
-
-
-def _specialize_snapshot_model(request_type: type[BaseModel]) -> type[OperationSnapshot[BaseModel]]:
-    """Bind the runtime registry model for one persisted snapshot."""
-    specialized = OperationSnapshot.__class_getitem__(request_type)
-    return cast(type[OperationSnapshot[BaseModel]], specialized)
 
 
 class OperationReconciliationPolicy(StrEnum):
@@ -655,22 +617,6 @@ class OperationRegistry(BaseModel):
             if definition.action_reference == action:
                 return definition
         raise KeyError(f"operator action is not mapped to an operation definition: {action.action_id!r}")
-
-    def resolve_request_json(self, raw: str | bytes) -> OperationRequest[BaseModel]:
-        """Hydrate one request through the concrete model registered for its definition."""
-        # The header selects the concrete model; that model below still validates
-        # the complete object, including every field ignored by this first pass.
-        header = _OperationRequestResolutionHeader.model_validate_json(raw, extra="ignore")
-        request_type = self.lookup(header.definition_id).request_type
-        return _specialize_request_model(request_type).model_validate_json(raw)
-
-    def resolve_snapshot_json(self, raw: str | bytes) -> OperationSnapshot[BaseModel]:
-        """Hydrate one snapshot through the concrete model registered for its definition."""
-        # The header selects the concrete model; that model below still validates
-        # the complete object, including every field ignored by this first pass.
-        header = _OperationSnapshotResolutionHeader.model_validate_json(raw, extra="ignore")
-        request_type = self.lookup(header.identity.definition_id).request_type
-        return _specialize_snapshot_model(request_type).model_validate_json(raw)
 
     def resolve_credential_free_payload(self, definition_id: str, raw: str | bytes) -> BaseModel:
         """Hydrate a journal-safe payload only for its exact registered definition."""

@@ -261,6 +261,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         self._executor_tasks.pop(operation_id, None)
         self._cleanup_tasks.pop(operation_id, None)
         self._continuation_tasks.pop(operation_id, None)
+        self._settlement_tasks.pop(operation_id, None)
         self._notify_durable_change(successor)
         return successor
 

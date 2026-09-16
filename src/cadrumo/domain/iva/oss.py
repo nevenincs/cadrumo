@@ -9,11 +9,17 @@ from types import MappingProxyType
 from typing import Final
 
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from ..calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    required_mapping_entry,
+    unique_mapping_tokens,
+)
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "OSS/IOSS regime mapping"
+_UNIQUE_TOKENS_REQUIREMENT: Final = "must declare unique tokens"
 
 _FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
 _ORDER_KEY = "regime.order"
@@ -114,17 +120,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not tokens or len(set(tokens)) != len(tokens):
-        raise RegistryValidationError(f"OSS/IOSS regime mapping {key!r} must declare unique tokens")
-    return tokens
-
-
 def resolve_oss_ioss_regime_catalogue(
     *,
     effective_date: date | None = None,
@@ -146,7 +141,9 @@ def resolve_oss_ioss_regime_catalogue(
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("Modelo 369 OSS/IOSS projection must resolve as a mapping fact")
     entries = _mapping_entries(resolved)
-    ordered_tokens = _csv_tokens(entries, _ORDER_KEY)
+    ordered_tokens = unique_mapping_tokens(
+        entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
     definitions: list[OssIossRegimeDefinition] = []
     for token in ordered_tokens:
         prefix = f"regime.{token}"
@@ -157,7 +154,12 @@ def resolve_oss_ioss_regime_catalogue(
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 articles=required_mapping_entry(entries, f"{prefix}.articles", subject=_ENTRY_SUBJECT),
                 filing_cadence=required_mapping_entry(entries, f"{prefix}.filing_cadence", subject=_ENTRY_SUBJECT),
-                transaction_kinds=_csv_tokens(entries, f"{prefix}.transaction_kinds"),
+                transaction_kinds=unique_mapping_tokens(
+                    entries,
+                    f"{prefix}.transaction_kinds",
+                    subject=_ENTRY_SUBJECT,
+                    requirement=_UNIQUE_TOKENS_REQUIREMENT,
+                ),
                 intrinsic_value_ceiling_eur=entries.get(ceiling_key),
             ),
         )

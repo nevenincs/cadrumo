@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from ...application.operator_surface.manifest import CommandSchemaRef
     from ...core.json_contract import RegisteredSchema
     from ._command_policy import CommandExecutionPolicy
-    from .command_spec import CommandSpec, CommandSpecNode, ParameterSpec, ProfileSecretSpec
+    from .command_spec import CommandSpec, CommandSpecNode, ParameterSpec
 
 
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
@@ -238,15 +238,17 @@ def _target_command_registration_metadata(
     )
 
 
-def _profile_authentication_contract(
-    root_profile_secret: ProfileSecretSpec,
-    *,
-    maximum_bytes: int,
-) -> ProfileAuthenticationContractMetadata:
+def profile_authentication_contract() -> ProfileAuthenticationContractMetadata:
     """Project the root profile-secret shape without exposing any secret value."""
+    from .command_specs import COMMAND_GRAPH
+    from .config.secure_input import MACHINE_SECRET_MAX_BYTES
+
+    root_profile_secret = COMMAND_GRAPH.root().profile_secret
+    if root_profile_secret is None:
+        raise InternalInvariantError("root command spec must declare profile-secret metadata authority")
     return ProfileAuthenticationContractMetadata(
         fields=tuple(MachineSecretFieldMetadata(field.name, field.json_type) for field in root_profile_secret.fields),
-        maximum_bytes=maximum_bytes,
+        maximum_bytes=MACHINE_SECRET_MAX_BYTES,
         same_scope_exclusive=True,
         stdin_exclusive_across_scopes=True,
         descriptors_must_differ_across_scopes=True,
@@ -258,12 +260,8 @@ def _profile_authentication_contract(
 @cache
 def _command_registration_projection(language: str) -> CommandRegistrationProjection:
     from .command_specs import COMMAND_GRAPH
-    from .config.secure_input import MACHINE_SECRET_MAX_BYTES
 
-    root_profile_secret = COMMAND_GRAPH.root().profile_secret
-    if root_profile_secret is None:
-        raise InternalInvariantError("root command spec must declare profile-secret metadata authority")
-
+    contract = profile_authentication_contract()
     commands: list[CommandRegistrationMetadata] = []
     nodes: list[LiveNodeRegistrationMetadata] = []
     for node in COMMAND_GRAPH.nodes():
@@ -291,10 +289,19 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
     return CommandRegistrationProjection(
         tuple(sorted(commands, key=lambda row: row.command)),
         tuple(nodes),
-        _profile_authentication_contract(
-            root_profile_secret,
-            maximum_bytes=MACHINE_SECRET_MAX_BYTES,
-        ),
+        contract,
+    )
+
+
+def command_registration_for_node(node: CommandSpecNode) -> CommandRegistrationMetadata | None:
+    """Project one graph node's command registration in the selected output language, if exposed."""
+    spec = node.spec
+    return _target_command_registration_metadata(
+        node,
+        language=output_language(),
+        path=_operator_path(node.path),
+        policy=_policy(spec),
+        owner=_handler_owner(spec),
     )
 
 
@@ -375,6 +382,7 @@ __all__ = [
     "MachineSecretPayloadMetadata",
     "MachineSecretVariantConditionMetadata",
     "ProfileAuthenticationContractMetadata",
+    "command_registration_for_node",
     "command_registration_metadata",
     "command_registration_policy",
     "command_registration_projection",
@@ -385,4 +393,5 @@ __all__ = [
     "machine_secret_payload_metadata",
     "operator_parameters",
     "parameter_is_required",
+    "profile_authentication_contract",
 ]

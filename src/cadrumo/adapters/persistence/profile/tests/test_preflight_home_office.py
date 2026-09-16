@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import sys
+from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from types import FrameType
 
 import pytest
 from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
@@ -16,6 +18,7 @@ from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios,
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
+from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censo_sync import bound_raw_afectacion_ratio
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
@@ -465,3 +468,74 @@ def test_preflight_stays_silent_for_a_non_home_office_category(
         )
 
     assert LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH not in [issue.reason for issue in report.issues]
+
+
+def _profile_record_reads(action: Callable[[], object]) -> int:
+    """Count decrypting reads of the encrypted profile record, observing without replacing the store."""
+    load_code = ProfileRecordStore.load.__code__
+    reads = 0
+    previous = sys.getprofile()
+
+    def observe(frame: FrameType, event: str, arg: object) -> None:
+        nonlocal reads
+        del arg
+        if event == "call" and frame.f_code is load_code:
+            reads += 1
+
+    sys.setprofile(observe)
+    try:
+        action()
+    finally:
+        sys.setprofile(previous)
+    return reads
+
+
+def test_preflight_with_home_office_rows_decrypts_the_profile_once(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Both home-office checks read the dwelling m2 from one decrypted record."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HOME_OFFICE_PROFILE_ID) as profile:
+        _apply_home_office_censo(profile.bucket_id, operation=operation)
+        category = SpendingCategory.from_registry("suministros_home_office_internet")
+        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        repository.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _transaction(
+                        "row-home-office-once",
+                        business_classification=BusinessClassification.MIXED,
+                        business_pct=Decimal("0.060"),
+                        category_id=category.value,
+                        usage_ratio_id=category.value,
+                    ),
+                ),
+            ),
+        )
+        reports: list[object] = []
+
+        reads = _profile_record_reads(
+            lambda: reports.append(
+                preflight_ledger_tax_readiness(
+                    bucket_id=profile.bucket_id,
+                    period=_Q2_2026,
+                    usage_ratio_profile_loader=load_usage_ratios,
+                    operation=operation,
+                    transaction_repository=repository,
+                )
+            )
+        )
+        # The counter sees every decrypting read: two direct lookups count two.
+        detector_reads = _profile_record_reads(
+            lambda: [
+                bound_raw_afectacion_ratio(
+                    bucket_id=profile.bucket_id, profile_id=profile.bucket_id, operation=operation
+                )
+                for _ in range(2)
+            ]
+        )
+
+    assert reads == 1
+    assert detector_reads == 2
+    (report,) = reports
+    assert getattr(report, "issues", None) == ()

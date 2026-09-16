@@ -8,6 +8,7 @@ from ...application.operator_surface.command_ports import (
     CommandRegistrationMetadata,
     JsonType,
     ParameterKind,
+    ProfileAuthenticationContractMetadata,
     RecoveryHandoffContract,
     ResolvedVerbLeaf,
     SchemaResolutionError,
@@ -18,7 +19,12 @@ from ...application.operator_surface.command_ports import (
     assert_schema_coverage,
     cli_argv_for,
 )
-from .command_schema import command_registration_metadata, command_registration_projection
+from .command_schema import (
+    command_registration_for_node,
+    command_registration_metadata,
+    command_registration_projection,
+    profile_authentication_contract,
+)
 
 if TYPE_CHECKING:
     from .command_spec import CommandSpec
@@ -86,41 +92,64 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
     for key in command_keys:
         row = rows.get(key)
         if row is None or row.cli_path is None:
-            failures.append(
-                VerbLeafResolutionFailure(
-                    subject_leaf_key=key, attempted_cli_path=(), reason="no CommandSpec result-schema identity"
-                )
-            )
+            failures.append(_unresolved_leaf(key))
             continue
-        parameters = next((values for _, values in row.parameters_by_language if values is not None), ())
-        spec = specs[key]
-        schemas[key] = VerbInputSchema(
-            command_key=key,
-            cli_path=row.cli_path,
-            parameters=tuple(
-                VerbParameter(
-                    name=p.name,
-                    kind=ParameterKind(p.kind),
-                    cli_flag=p.cli_flag,
-                    off_flag=p.off_flag,
-                    json_type=JsonType(p.json_type),
-                    required=p.required,
-                    is_flag=p.is_flag,
-                    multiple=p.multiple,
-                    choices=p.choices,
-                    default=list(p.default) if isinstance(p.default, tuple) else p.default,
-                    help=p.help,
-                )
-                for p in parameters
-            ),
-            machine_secret_payloads=row.machine_secret_payloads,
-            recovery_handoff_contract=project_recovery_handoff_contract(spec),
-            profile_authentication=row.profile_authentication,
-            profile_authentication_contract=profile_contract,
-            help=next((value for _, value in row.help_by_language), ""),
-        )
+        schemas[key] = _verb_input_schema(key, row.cli_path, row, specs[key], profile_contract)
     assert_schema_coverage(tuple(failures))
     return schemas
+
+
+def build_verb_input_schema(command_key: str) -> VerbInputSchema:
+    """Build one command's validated input schema, loading only the graph families searched."""
+    from .command_specs import COMMAND_GRAPH
+
+    node = COMMAND_GRAPH.find_schema_identity(command_key)
+    row = None if node is None else command_registration_for_node(node)
+    if node is None or row is None or row.cli_path is None:
+        raise SchemaResolutionError((_unresolved_leaf(command_key),))
+    return _verb_input_schema(command_key, row.cli_path, row, node.spec, profile_authentication_contract())
+
+
+def _unresolved_leaf(command_key: str) -> VerbLeafResolutionFailure:
+    return VerbLeafResolutionFailure(
+        subject_leaf_key=command_key, attempted_cli_path=(), reason="no CommandSpec result-schema identity"
+    )
+
+
+def _verb_input_schema(
+    command_key: str,
+    cli_path: tuple[str, ...],
+    row: CommandRegistrationMetadata,
+    spec: CommandSpec,
+    profile_contract: ProfileAuthenticationContractMetadata,
+) -> VerbInputSchema:
+    """Assemble one validated input schema from its registration row and declaration."""
+    parameters = next((values for _, values in row.parameters_by_language if values is not None), ())
+    return VerbInputSchema(
+        command_key=command_key,
+        cli_path=cli_path,
+        parameters=tuple(
+            VerbParameter(
+                name=p.name,
+                kind=ParameterKind(p.kind),
+                cli_flag=p.cli_flag,
+                off_flag=p.off_flag,
+                json_type=JsonType(p.json_type),
+                required=p.required,
+                is_flag=p.is_flag,
+                multiple=p.multiple,
+                choices=p.choices,
+                default=list(p.default) if isinstance(p.default, tuple) else p.default,
+                help=p.help,
+            )
+            for p in parameters
+        ),
+        machine_secret_payloads=row.machine_secret_payloads,
+        recovery_handoff_contract=project_recovery_handoff_contract(spec),
+        profile_authentication=row.profile_authentication,
+        profile_authentication_contract=profile_contract,
+        help=next((value for _, value in row.help_by_language), ""),
+    )
 
 
 __all__ = [
@@ -133,6 +162,7 @@ __all__ = [
     "VerbLeafResolutionFailure",
     "VerbParameter",
     "assert_schema_coverage",
+    "build_verb_input_schema",
     "build_verb_input_schemas",
     "cli_argv_for",
     "is_exposable_command",

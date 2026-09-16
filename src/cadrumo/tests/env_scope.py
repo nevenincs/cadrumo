@@ -355,8 +355,8 @@ def scoped_env_var(name: str, value: str | None) -> Generator[None]:
             absent.
 
     Examples:
-        >>> with scoped_env_var("PYTEST_CURRENT_TEST", None):
-        ...     snapshot = AeatAccessGate(settings).snapshot_env()
+        >>> with scoped_env_var("COLUMNS", "120"):
+        ...     width = os.environ["COLUMNS"]
     """
     prior = os.environ.get(name)
     if value is None:

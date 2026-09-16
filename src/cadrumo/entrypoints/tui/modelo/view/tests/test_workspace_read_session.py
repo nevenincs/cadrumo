@@ -58,7 +58,7 @@ def test_the_locale_axes_actually_move_across_a_language_switch(
     assert spanish.projection.locale.requested_language is OutputLanguage.ES
     assert semantic_identity(english) == spanish.identity
     assert english.locale != spanish.projection.locale
-    assert english.baseline.token != spanish.baseline_token
+    assert english.baseline.token != spanish.projection.baseline.token
 
     # The catalogue digest is deliberately NOT asserted to differ. This
     # revision key has no English entry, so the English read falls back to

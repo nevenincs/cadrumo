@@ -131,27 +131,6 @@ def test_record_aeat_autorizada_preserves_sector_and_regime(
     assert entry.authorisation_reference == "AEAT-AUTH-2026-SECTOR-02"
 
 
-def test_record_inicio_actividad_preserves_sector_and_regime(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    service = _service(authority_operation)
-
-    updated = service.record_inicio_actividad(
-        ejercicio=2026,
-        provisional_percentage=Decimal("52"),
-        proposal_reference="INICIO-036-2026-SECTOR-04",
-        sector_id="formacion",
-        regime=ProrrataRegisterRegime.from_registry("especial"),
-    )
-
-    entry = updated.entry_for(2026, sector_id="formacion")
-    assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime.from_registry("especial")
-    assert entry.provisional_percentage == Decimal("52")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("inicio_actividad")
-    assert entry.authorisation_reference == "INICIO-036-2026-SECTOR-04"
-
-
 def test_resolve_provisional_uses_ladder_for_authorised_candidate(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:

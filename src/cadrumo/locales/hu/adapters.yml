@@ -12,10 +12,10 @@ adapters:
           előtt.
         assertion_failed: Az AEAT hitelesítés nem hozott létre érvényes bejelentkezési
           állítást.
-        capture_requires_active_session: A capture_storage_state() az aktuálisan aktív
-          hitelesített munkamenetet igényli.
-        capture_requires_certificate: A capture_storage_state() aktív tanúsítványalapú
-          munkamenetet és védett erőforrás-metaadatokat igényel.
+        capture_requires_active_session: A böngésző-munkamenet mentéséhez az aktuálisan
+          aktív hitelesített munkamenet szükséges.
+        capture_requires_certificate: A böngésző-munkamenet mentéséhez aktív tanúsítványalapú
+          munkamenet és védett erőforrás-metaadatok szükségesek.
         metadata_parse_failed: A mentett metaadatok nem eredményeztek elemzett modellt.
         no_active_context: Nincs aktív böngészőkontextus; először hívja meg az authenticate()
           metódust.

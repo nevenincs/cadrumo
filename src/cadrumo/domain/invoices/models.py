@@ -1123,18 +1123,6 @@ class InvoiceCatalogue(BaseModel):
     def _serialize_invoices(self, value: Mapping[str, Invoice]) -> dict[str, Invoice]:
         return dict(value)
 
-    @classmethod
-    def from_invoices(cls, invoices: Iterable[Invoice | Mapping[str, object]]) -> Self:
-        """Build an immutable catalogue from an iterable of invoices.
-
-        Args:
-            invoices: Invoices or invoice payloads to load.
-
-        Returns:
-            A validated immutable invoice catalogue.
-        """
-        return cls.model_validate(tuple(invoices))
-
     @override
     def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields Invoice records, not BaseModel field-value tuples
         """Iterate over catalogue invoices."""

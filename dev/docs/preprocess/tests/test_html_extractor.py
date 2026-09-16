@@ -28,8 +28,8 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-from dev.docs.preprocess.orden_anual_sections import extract_lorca_reduction
 from dev._paths import REPO_ROOT
+from dev.docs.preprocess.orden_anual_sections import extract_lorca_reduction
 
 from ..normatives_html import (
     HTML_EXTRACTOR_ID,

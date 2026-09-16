@@ -7,19 +7,18 @@ import sys
 
 import pytest
 
+from cadrumo.application.operator_surface.contract import get_operator_surface_contract
+from cadrumo.application.operator_surface.models import RootSurfaceName
 from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_APP_FAMILIES = (
-    "diagnostics",
-    "ledger",
-    "live",
-    "modelo",
-    "overview",
-    "quickfile",
-    "registry",
-    "review",
+_APP_FAMILIES = tuple(
+    sorted(
+        family.child
+        for family in get_operator_surface_contract().command_families
+        if family.root is RootSurfaceName.APP
+    )
 )
 
 
@@ -30,10 +29,15 @@ import json
 import sys
 from typer.testing import CliRunner
 from cadrumo.entrypoints.cli.main import app
+from cadrumo.entrypoints.cli.command_spec import NON_LEAF_COMMAND_KINDS
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
 nodes = COMMAND_GRAPH.nodes()
-families = {{node.path[2] for node in nodes if len(node.path) == 3 and node.path[:2] == ("aeat", "app")}}
+families = {{
+    node.path[2]
+    for node in nodes
+    if len(node.path) == 3 and node.path[:2] == ("aeat", "app") and node.spec.kind in NON_LEAF_COMMAND_KINDS
+}}
 family = {family!r}
 family_path = ("aeat", "app", family)
 descendants = tuple(node for node in nodes if node.path[:3] == family_path)

@@ -57,6 +57,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .supervision_support import run_to_settlement
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 14, 16, tzinfo=UTC)
@@ -262,7 +264,7 @@ def test_supervisor_context_refuses_undeclared_event_claims_without_journal_muta
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
 
         with pytest.raises(ValueError, match="not declared"):
-            asyncio.run(supervisor.start(operation_id))
+            asyncio.run(run_to_settlement(supervisor, operation_id))
 
         after_refusal = asyncio.run(supervisor.inspect(operation_id))
         assert executor.snapshot_before_attempt is not None
@@ -290,7 +292,7 @@ def test_supervisor_context_refuses_undeclared_resource_ownership_without_journa
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
 
         with pytest.raises(ValueError, match="not declared"):
-            asyncio.run(supervisor.start(operation_id))
+            asyncio.run(run_to_settlement(supervisor, operation_id))
 
         after_refusal = asyncio.run(supervisor.inspect(operation_id))
         assert executor.snapshot_before_attempt is not None

@@ -10,7 +10,7 @@ from typing import Final
 
 from ....core.descendant_relacion import DescendantRelacion
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -68,17 +68,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"descendant relationship catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -106,15 +95,24 @@ def resolve_descendant_relacion_catalogue(
         )
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
     try:
-        relations = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _ORDER_KEY))
+        relations = tuple(
+            DescendantRelacion.from_registry(raw)
+            for raw in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
+        )
         default_token = DescendantRelacion.from_registry(
             required_mapping_entry(entries, _DEFAULT_KEY, subject=_ENTRY_SUBJECT)
         )
         adoption_token = DescendantRelacion.from_registry(
             required_mapping_entry(entries, _ADOPTION_KEY, subject=_ENTRY_SUBJECT)
         )
-        maternity_tokens = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _MATERNITY_KEY))
-        entitling_tokens = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _ENTITLING_KEY))
+        maternity_tokens = tuple(
+            DescendantRelacion.from_registry(raw)
+            for raw in unique_mapping_tokens(entries, _MATERNITY_KEY, subject=_ENTRY_SUBJECT)
+        )
+        entitling_tokens = tuple(
+            DescendantRelacion.from_registry(raw)
+            for raw in unique_mapping_tokens(entries, _ENTITLING_KEY, subject=_ENTRY_SUBJECT)
+        )
     except (TypeError, ValueError) as exc:
         raise RegistryValidationError("descendant relationship catalogue contains an invalid token") from exc
     catalogue = DescendantRelacionCatalogue(

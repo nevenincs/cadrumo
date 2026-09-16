@@ -91,10 +91,10 @@ def test_identification_state_survives_the_encrypted_roundtrip_intact(tmp_path: 
     assert loaded == original
 
     restored = next(iter(loaded.values()))
-    assert restored.counterparty_identification_state is EUMemberState.from_registry("fr")
+    assert restored.counterparty_identification_state == EUMemberState.from_registry("fr")
     # The proof that nothing re-derived it: the address still says Spain.
     assert restored.counterparty_country == "ES"
-    assert restored.counterparty_eu_member_state is EUMemberState.from_registry("es")
+    assert restored.counterparty_eu_member_state == EUMemberState.from_registry("es")
 
 
 def test_dropping_the_persisted_identification_surfaces_at_load(tmp_path: Path) -> None:
@@ -138,4 +138,4 @@ def test_dropping_the_persisted_identification_surfaces_at_load(tmp_path: Path) 
 
     assert reloaded != original, "a dropped identification re-defaulted silently: the boundary is tautological"
     survivor = next(iter(reloaded.values()))
-    assert survivor.counterparty_identification_state is not EUMemberState.from_registry("fr")
+    assert survivor.counterparty_identification_state != EUMemberState.from_registry("fr")

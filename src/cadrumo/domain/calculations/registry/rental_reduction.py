@@ -10,11 +10,12 @@ from typing import Final
 
 from ....domain.renta.rental_reduction import RentalReductionArt232Tier
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "rental reduction mapping"
+_UNIQUE_TOKENS_REQUIREMENT: Final = "must declare unique non-empty tokens"
 
 _FACT_ID = "renta-rental-reduccion-art-23-2-tier-catalogue"
 _ORDER_KEY = "tier_order"
@@ -71,17 +72,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not tokens or len(set(tokens)) != len(tokens):
-        raise RegistryValidationError(f"rental reduction mapping {key!r} must declare unique non-empty tokens")
-    return tokens
-
-
 def resolve_rental_reduction_art232_tier_catalogue(
     *,
     effective_date: date | None = None,
@@ -102,7 +92,9 @@ def resolve_rental_reduction_art232_tier_catalogue(
         raise RegistryValidationError("rental reduction tier fact must resolve as a mapping fact")
     entries = _mapping_entries(resolved)
     definitions: list[RentalReductionArt232TierDefinition] = []
-    for raw_token in _csv_tokens(entries, _ORDER_KEY):
+    for raw_token in unique_mapping_tokens(
+        entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    ):
         token = RentalReductionArt232Tier(raw_token)
         prefix = f"{_TIER_PREFIX}{raw_token}"
         declared_value = required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)

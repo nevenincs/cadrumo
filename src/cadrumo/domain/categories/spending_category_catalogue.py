@@ -9,7 +9,11 @@ from types import MappingProxyType
 from typing import Final
 
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from ..calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    unique_mapping_tokens,
+)
 from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
@@ -92,17 +96,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not tokens or len(tokens) != len(set(tokens)):
-        raise RegistryValidationError(f"spending category catalogue {key!r} must contain unique tokens")
-    return tokens
-
-
 def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -128,7 +121,7 @@ def resolve_spending_category_catalogue(
     if selected is None:
         raise RegistryValidationError("spending category catalogue requires an explicit authority operation or scope")
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
-    raw_categories = _csv(entries, _ORDER_KEY)
+    raw_categories = unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
     try:
         categories = tuple(SpendingCategory.from_registry(raw) for raw in raw_categories)
     except (TypeError, ValueError) as exc:
@@ -137,7 +130,7 @@ def resolve_spending_category_catalogue(
     family_members: dict[SpendingCategoryFamily, tuple[SpendingCategory, ...]] = {}
     seen: set[SpendingCategory] = set()
     for family in SpendingCategoryFamily:
-        raw_members = _csv(entries, f"{_FAMILY_PREFIX}{family.value}")
+        raw_members = unique_mapping_tokens(entries, f"{_FAMILY_PREFIX}{family.value}", subject=_ENTRY_SUBJECT)
         try:
             members = tuple(category_by_value[raw] for raw in raw_members)
         except KeyError as exc:

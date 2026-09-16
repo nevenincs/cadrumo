@@ -23,7 +23,7 @@ from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
 from .capabilities import OperationRequestStoragePolicy
-from .errors import OperationDeclarationError
+from .errors import OperationDeclarationError, OperationUnsettledError
 from .financial_operand import (
     OperationTransientFinancialOperandDelivery,
     OperationTransientFinancialOperandRequirement,
@@ -236,7 +236,14 @@ class SupervisorExecutionMixin(SupervisorHost):
 
     @override
     async def start(self: SupervisorHost, operation_id: OperationId) -> OperationPersistedSnapshot:
-        """Start one owned registered executor from its declared request storage."""
+        """Admit one owned registered executor and return its running snapshot.
+
+        Every refusal before executor entry is raised here, and admission -- the
+        lease held and the running state committed -- is durable before this
+        returns. Execution and settlement continue in one supervised task;
+        :meth:`settled` returns what it concluded, and observers follow its
+        events through the journal meanwhile.
+        """
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is not OperationLifecycle.CREATED:
             raise ValueError("only a created operation may be started")
@@ -290,11 +297,36 @@ class SupervisorExecutionMixin(SupervisorHost):
         )
         self._contexts[operation_id] = context
         executor = definition.executor_factory.create()
-        try:
-            result_ref = await self._execute_with_deadlines(
-                identity=running.identity,
+        settlement = asyncio.create_task(
+            self._execute_and_settle(
+                operation_id=operation_id,
                 context=context,
                 executor=executor.execute(request, executor_context),
+            ),
+            name=f"operation-settlement-{operation_id}",
+        )
+        self._settlement_tasks[operation_id] = settlement
+        settlement.add_done_callback(self._settlement_completed)
+        return running
+
+    @override
+    async def _execute_and_settle(
+        self: SupervisorHost,
+        *,
+        operation_id: OperationId,
+        context: DefinitionBoundContext,
+        executor: Coroutine[None, None, OperationReference | None],
+    ) -> OperationPersistedSnapshot:
+        """Run one admitted executor to its settlement; the body of the supervised task.
+
+        Operand custody is settled on every exit, including cancellation by a
+        closing host, so no decrypted operand outlives the task.
+        """
+        try:
+            result_ref = await self._execute_with_deadlines(
+                identity=context.snapshot.identity,
+                context=context,
+                executor=executor,
             )
         except OperationDeclarationError:
             raise
@@ -303,6 +335,31 @@ class SupervisorExecutionMixin(SupervisorHost):
         finally:
             await self._settle_financial_operand_custody(operation_id)
         return await self._settle_returned_result(context.snapshot, result_ref)
+
+    @override
+    async def settled(self: SupervisorHost, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Return what one started operation concluded once its supervised task ends.
+
+        A cancelled wait leaves the operation running. When the task stopped
+        without a commitable settlement, the journal's state is raised inside
+        :class:`OperationUnsettledError` with the stopping error as its cause.
+        Without a task in this process, the durable terminal state is awaited.
+        """
+        settlement = self._settlement_tasks.get(operation_id)
+        if settlement is None:
+            return await self.await_terminal(operation_id)
+        try:
+            return await asyncio.shield(settlement)
+        except asyncio.CancelledError:
+            if not settlement.cancelled():
+                raise
+            unsettled = OperationUnsettledError(await self.inspect(operation_id))
+            raise unsettled from None
+        except Exception as error:
+            raise OperationUnsettledError(await self.inspect(operation_id)) from error
+        finally:
+            if settlement.done() and self._settlement_tasks.get(operation_id) is settlement:
+                del self._settlement_tasks[operation_id]
 
     @override
     async def submit_transient_financial_operand(

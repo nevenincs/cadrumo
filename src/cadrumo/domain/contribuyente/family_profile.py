@@ -137,57 +137,6 @@ class RentaFamilyProfile(BaseModel):
         """
         return not (self.anualidades_alimentos_euros is not None and self.anualidades_alimentos_euros > 0)
 
-    def dependencia_assimilated_indices(
-        self,
-        filing_year: int,
-        *,
-        context: FamilyFactResolutionContext | None = None,
-    ) -> tuple[int, ...]:
-        """Indices of descendants reaching the mínimo ONLY through the dependency limb.
-
-        The disclosure surface for a judgement the operator most needs to see:
-        the allowance is being granted to a non-cohabiting filer on a declared
-        economic-dependency fact, which is an assertion rather than an
-        observation. Empty when the assimilation is unavailable or nothing
-        relies on it.
-
-        Applies the NON-INCOME conditions only, for the same reason
-        :meth:`DescendantInfo.meets_non_income_conditions` exists: the caller is
-        a calculate-path advisory that cannot resolve the registry ceilings.
-        The narrowing is safe in this direction - a descendant excluded by a
-        ceiling contributes nothing either way, so the worst case is one extra
-        disclosure rather than a missing one.
-        """
-        available = self.dependencia_assimilation_available
-        if context is None:
-            return ()
-        return tuple(
-            index
-            for index, descendant in enumerate(self.descendientes)
-            if descendant.assimilated_by_dependencia(dependencia_assimilation_available=available)
-            and descendant.meets_non_income_conditions(
-                filing_year,
-                context=context,
-                dependencia_assimilation_available=available,
-            )
-        )
-
-    def dependencia_suppressed_indices(self) -> tuple[int, ...]:
-        """Indices whose declared dependency is suppressed by the anualidades carve-out.
-
-        These descendants would be assimilated but for the filer's declared
-        anualidades, which this model cannot yet attribute per child. Reported
-        so the narrowing is visible to the filer it costs rather than silently
-        withheld.
-        """
-        if self.dependencia_assimilation_available:
-            return ()
-        return tuple(
-            index
-            for index, descendant in enumerate(self.descendientes)
-            if descendant.dependencia_economica is True and not descendant.convive_con_contribuyente
-        )
-
     def descendientes_menores_3_year_end(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
         return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year, context=context))

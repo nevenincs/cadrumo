@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import ClassVar, cast, override
 
 from textual.app import App, ComposeResult
@@ -31,7 +32,7 @@ from .controller import (
     natural_address,
     timestamp_label,
 )
-from .models import DeclarationsCalendarScopeV1
+from .models import CalendarRecoveryHandoffV1, DeclarationsCalendarScopeV1
 
 _TUI_REFUSAL_KEYS: dict[str, str] = {
     # The application's wording names the CLI command; here the same fix is a key away.
@@ -73,6 +74,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         self._hidden_restore_identity: str | None = None
         self._rows_by_identity: dict[str, DeclarationsCalendarEntryRefV1] = {}
         self._pending_recovery: tuple[DeclaredNextAction, DeclarationsCalendarEntryRefV1] | None = None
+        self._recovery_in_flight = False
 
     @override
     def compose(self) -> ComposeResult:
@@ -303,7 +305,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 self.query_one("#declarations-calendar-notice", Static).update(
                     declarations_copy("tui.declarations.refusal.handoff")
                 )
-            elif self._pending_recovery is None:
+            elif self._pending_recovery is None and not self._recovery_in_flight:
                 self._pending_recovery = (row.recovery_action, row)
                 app = cast("App[None]", self.app)
                 app.push_screen(
@@ -336,8 +338,21 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             )
             return
         notice = self.query_one("#declarations-calendar-notice", Static)
+        # The handoff reads the profile and writes the work unit, so it runs on
+        # a worker thread; another row pressed meanwhile waits for it.
+        self._recovery_in_flight = True
+        notice.update(declarations_copy("tui.declarations.calendar.recovery.progress"))
+        self.run_worker(self._submit_recovery(handoff, action, row), group="declarations-calendar-recovery")
+
+    async def _submit_recovery(
+        self,
+        handoff: CalendarRecoveryHandoffV1,
+        action: DeclaredNextAction,
+        row: DeclarationsCalendarEntryRefV1,
+    ) -> None:
+        notice = self.query_one("#declarations-calendar-notice", Static)
         try:
-            handoff(action, row)
+            await asyncio.to_thread(handoff, action, row)
         except CadrumoError as refusal:
             # The application's own reason -- setup not complete, the modelo
             # not applying -- tells the operator what to fix; a generic line
@@ -348,6 +363,8 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
         except Exception:
             notice.update(declarations_copy("tui.declarations.calendar.recovery.failure"))
             return
+        finally:
+            self._recovery_in_flight = False
         notice.update(
             declarations_copy(
                 "tui.declarations.calendar.recovery.success",

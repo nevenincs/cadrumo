@@ -94,7 +94,7 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
         assert loaded_a.linked_transaction_ids == ("a" * 64,)
         assert len(loaded_a.lines) == 1
         loaded_line = loaded_a.lines[0]
-        assert loaded_line.iva_rate is IvaRate.from_registry("RATE_21")
+        assert loaded_line.iva_rate == IvaRate.from_registry("RATE_21")
         assert loaded_line.quantity == Decimal("10")
         assert loaded_line.iva_amount == Decimal("210.00")
         assert loaded_line.spending_category_id == "consultoria"

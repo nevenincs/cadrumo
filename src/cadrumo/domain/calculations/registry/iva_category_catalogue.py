@@ -10,7 +10,7 @@ from typing import Final
 
 from ...iva.schema import IvaCategory
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -122,17 +122,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"IVA category catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _resolve_entries(
     *,
     effective_date: date,
@@ -170,7 +159,7 @@ def _selected_entries(
 
 def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
     definitions: list[IvaCategoryDefinition] = []
-    for raw_token in _csv(entries, _ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = IvaCategory(raw_token)
         if required_mapping_entry(entries, f"{_VALUE_PREFIX}{raw_token}.value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IVA category token {raw_token!r} declares a mismatched value")
@@ -188,7 +177,7 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
         if not key.startswith(_PROJECTION_PREFIX):
             continue
         name = key.removeprefix(_PROJECTION_PREFIX)
-        members = frozenset(IvaCategory(token) for token in _csv(entries, key))
+        members = frozenset(IvaCategory(token) for token in unique_mapping_tokens(entries, key, subject=_ENTRY_SUBJECT))
         if not members.issubset(declared):
             raise RegistryValidationError(f"IVA category projection {name!r} names an undeclared category")
         projections[name] = members

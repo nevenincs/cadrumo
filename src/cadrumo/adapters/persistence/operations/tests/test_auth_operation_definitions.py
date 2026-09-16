@@ -52,6 +52,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .supervision_support import run_to_settlement
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _CURRENT = "s39-current-profile-passphrase"
@@ -121,7 +123,7 @@ def _run_secret_operation(
     submission = bytearray(secret)
     asyncio.run(supervisor.submit_ephemeral_secret(created.secret_requirement, submission))
     assert submission == bytearray(len(secret))
-    return asyncio.run(supervisor.start(created_id))
+    return asyncio.run(run_to_settlement(supervisor, created_id))
 
 
 def test_profile_login_uses_a_requirement_bound_secret_without_durable_secret_bytes(tmp_path: Path) -> None:
@@ -250,7 +252,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 operation_id="6" * 64,
             )
         )
-        configured = asyncio.run(supervisor.start(configured_id))
+        configured = asyncio.run(run_to_settlement(supervisor, configured_id))
         assert configured.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert configured.effect is OperationEffect.UPDATED
         assert configured.terminal_receipt is not None
@@ -266,7 +268,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 operation_id="7" * 64,
             )
         )
-        acquired = asyncio.run(supervisor.start(acquired_id))
+        acquired = asyncio.run(run_to_settlement(supervisor, acquired_id))
         assert acquired.terminal_condition is OperationTerminalCondition.REFUSED
         assert acquired.effect is OperationEffect.UNKNOWN
 
@@ -280,7 +282,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 operation_id="8" * 64,
             )
         )
-        logged_out = asyncio.run(supervisor.start(logout_id))
+        logged_out = asyncio.run(run_to_settlement(supervisor, logout_id))
         assert logged_out.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert logged_out.effect is OperationEffect.NONE
         assert logged_out.terminal_receipt is not None
@@ -296,7 +298,7 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
                 operation_id="9" * 64,
             )
         )
-        reset = asyncio.run(supervisor.start(reset_id))
+        reset = asyncio.run(run_to_settlement(supervisor, reset_id))
         assert reset.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert reset.effect is OperationEffect.UPDATED
         assert reset.terminal_receipt is not None

@@ -7,6 +7,13 @@ from datetime import date
 from typing import Literal
 from urllib.parse import parse_qs, urlsplit
 
+from cadrumo.core.revision_review import RevisionReviewStatus
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import LegalRefId
+from cadrumo.domain.calculations.registry.lorca_reduction import resolve_lorca_reduction
+from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, PublishingAuthority
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, LegalReferenceKind, SourceReference
 from dev.docs.preprocess.orden_anual_html import (
     OrdenAnualIvaAgriculturalIndex,
     OrdenAnualIvaAgriculturalIngresoACuenta,
@@ -17,13 +24,6 @@ from dev.docs.preprocess.orden_anual_html import (
     OrdenAnualIvaSeasonalIndex,
     orden_anual_iva_authority_units,
 )
-from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import LegalRefId
-from cadrumo.domain.calculations.registry.lorca_reduction import resolve_lorca_reduction
-from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, PublishingAuthority
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, LegalReferenceKind, SourceReference
 
 from ._m303_orden_keys import (
     activity_legal_key,

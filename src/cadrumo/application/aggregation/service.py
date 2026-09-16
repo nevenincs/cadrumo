@@ -119,13 +119,6 @@ class PerModeloAggregationCommand(BaseModel):
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = Field(default_factory=tuple)
     withholding_observations: tuple[WithholdingObservation, ...] = Field(default_factory=tuple)
 
-    def provider_for_operation(
-        self,
-        operation: PinnedAuthorityOperation,
-    ) -> PerModeloAggregationContributor:
-        """Return the provider selected by this operation's registry generation."""
-        return provider_for_modelo(self.modelo, operation=operation)
-
 
 PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation
 

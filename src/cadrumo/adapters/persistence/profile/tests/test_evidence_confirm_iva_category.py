@@ -100,7 +100,7 @@ def test_the_reverse_charge_category_reaches_the_persisted_invoice(
     assert result.draft.iva_category == IvaCategory("domestic_reverse_charge").value, (
         f"the parser did not read the category off the document: {result.draft.iva_category!r}"
     )
-    assert result.invoice.iva_category is IvaCategory("domestic_reverse_charge"), (
+    assert result.invoice.iva_category == IvaCategory("domestic_reverse_charge"), (
         f"the category was read from the document but lost at the confirm boundary: {result.invoice.iva_category!r}"
     )
     # The amounts are asserted alongside so a future change cannot satisfy the
@@ -135,7 +135,7 @@ def test_an_operator_supplied_category_still_wins(
         **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
     )
 
-    assert result.invoice.iva_category is IvaCategory("domestic_exempt")
+    assert result.invoice.iva_category == IvaCategory("domestic_exempt")
 
 
 # UNTDID 5305 code G (export outside the Community, LIVA art. 21) on a 2.000,00
@@ -196,7 +196,7 @@ def test_an_export_claim_with_no_establishment_does_not_reach_the_record(
         "positive control: the reader must still be emitting the export code, or the "
         f"withholding below is attributable to the parser instead: {result.draft.iva_category!r}"
     )
-    assert result.invoice.iva_category is not IvaCategory("export_third_country_zero_rated"), (
+    assert result.invoice.iva_category != IvaCategory("export_third_country_zero_rated"), (
         "a zero-rated export reached the record for a counterparty whose establishment "
         "the classification recorded as a gap"
     )

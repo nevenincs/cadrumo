@@ -37,7 +37,11 @@ from .....domain.iva.classification import InvoiceKind
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..invoices import InvoiceCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_persistence_adapter,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
 _BUCKET_ID = "5c5c5c5c-5c5c-45c5-8c5c-5c5c5c5c5c5c"
 
@@ -57,7 +61,7 @@ def _invoice(invoice_number: str) -> Invoice:
             "quantity": Decimal("1"),
             "unit_price": Decimal("100.00"),
             "subtotal": Decimal("100.00"),
-            "iva_rate": resolve_iva_rate_token("rate_21", date.today()),
+            "iva_rate": resolve_iva_rate_token("RATE_21", date.today()),
             "iva_amount": Decimal("21.00"),
         },
     )

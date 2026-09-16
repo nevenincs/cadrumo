@@ -56,15 +56,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.classifier_input_source import ClassifierInputSource
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
-from ...domain.iva.classification import IvaTerritorialScope
+from ...domain.iva.classification import IvaTerritorialScope, require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState
 from .classification_assembly import DeclaredFact
 from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
@@ -200,6 +200,25 @@ class ConfirmedCounterpartyFacts(BaseModel):
     asserted_by: str = Field(min_length=1)
     asserted_at: datetime
     note: str = ""
+
+    @field_validator("territorial_scope", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _project_stored_territorial_scope(cls, value: object) -> object:
+        """Re-enter a persisted territorial scope through the 0083 vocabulary.
+
+        The encrypted store serialises the token as its text, so a reload
+        carries a bare string. It is projected through the registry vocabulary
+        in force when the confirmation is read, because that is when it answers,
+        so a token the vocabulary does not declare is refused at load instead of
+        answering as a confirmation.
+        """
+        if not isinstance(value, str) or isinstance(value, IvaTerritorialScope):
+            return value
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            return require_iva_territorial_scope(value, operation=operation)
 
     @model_validator(mode="after")
     def _only_an_operator_may_confirm(self) -> Self:
@@ -577,7 +596,7 @@ def resolve_confirmed_counterparty_facts(
     if (
         evidenced_scope is not None
         and stored.territorial_scope is not None
-        and evidenced_scope is not stored.territorial_scope
+        and evidenced_scope != stored.territorial_scope
     ):
         return ConfirmedCounterpartyResolution(
             contradiction=CounterpartyEstablishmentContradiction(

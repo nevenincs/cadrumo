@@ -47,7 +47,7 @@ from ..ledger_iva_bindings import (
 from ..schema import BindingDefinition, ModeloRevision
 from .published_authority import published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _axis_sequence(axes: Mapping[str, object], key: str) -> tuple[object, ...]:

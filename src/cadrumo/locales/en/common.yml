@@ -1197,6 +1197,7 @@ tui:
         cancel: Cancel
         confirm: Confirm
         failure: Recovery request could not be completed.
+        progress: Creating the declaration…
         setup_incomplete: 'Declare the profile setup complete first: open Profile
           (F4) and press F8.'
         success: Created {address}. It is listed under Declarations once you return
@@ -1473,6 +1474,7 @@ tui:
         unread: unread
       empty: No evidence awaits review.
       extract: Read document
+      loading: Reading the documents…
       path_placeholder: Type the path of the file
       pending: Pending
       printed_total_disagrees: The total printed on the document differs from the
@@ -1838,6 +1840,7 @@ tui:
     navigation:
       unavailable: The requested area cannot be opened in this session.
     no_areas: No area is available in this session yet.
+    opening: Opening your workbench…
     palette:
       placeholder: Search for areas, records and actions…
     system:

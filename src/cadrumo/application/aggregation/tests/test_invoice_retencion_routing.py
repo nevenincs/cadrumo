@@ -104,7 +104,7 @@ def test_received_invoice_routes_into_the_shared_observation_type() -> None:
     """The projection produces the store's own type, not a parallel one."""
     projection = project_received_invoice_retencion(_invoice(), scheme=_PROFESIONAL)
 
-    assert (projection.observation is not None)
+    assert projection.observation is not None
     assert projection.defects == ()
     observation = projection.observation
     assert isinstance(observation, RetencionObservation)

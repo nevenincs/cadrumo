@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, ValuesView
 from enum import StrEnum
-from typing import Annotated, cast, override
+from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
@@ -273,24 +273,6 @@ class WorkUnitCatalogue(BaseModel):
             if key != unit.work_unit_id:
                 raise ModeloValidationError(f"catalogue key {key!r} does not match work_unit_id {unit.work_unit_id!r}")
         return self
-
-    @classmethod
-    def from_work_units(cls, units: Mapping[str, WorkUnit] | tuple[WorkUnit, ...]) -> WorkUnitCatalogue:
-        """Build a :class:`WorkUnitCatalogue` from an iterable / mapping of work units."""
-        if isinstance(units, tuple):
-            mapping: dict[str, WorkUnit] = {}
-            # CAST-RATIONALE-WORK-UNIT-CATALOGUE-TUPLE-NARROW: the isinstance
-            # check above already narrows the union to tuple[WorkUnit, ...];
-            # ty narrows the tuple union conservatively, so the cast restates
-            # what pyright itself already knows.
-            # nosemgrep: no-cast-in-domain-application
-            units_tuple = cast(tuple[WorkUnit, ...], units)  # pyright: ignore[reportUnnecessaryCast]
-            for unit in units_tuple:
-                if unit.work_unit_id in mapping:
-                    raise ModeloValidationError(f"duplicate work_unit_id {unit.work_unit_id!r}")
-                mapping[unit.work_unit_id] = unit
-            return cls(work_units=mapping)
-        return cls(work_units={str(k): v for k, v in units.items()})
 
     @override
     def __iter__(self) -> Iterator[WorkUnit]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields WorkUnit records, not BaseModel field-value tuples

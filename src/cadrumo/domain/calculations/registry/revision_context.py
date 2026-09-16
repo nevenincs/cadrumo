@@ -7,7 +7,7 @@ across every per-section validator.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -115,25 +115,6 @@ class RevisionValidationContext:
     parameters: set[str]
     resolvable_values: set[BindingId | CasillaId | str]
     exported_casillas: set[CasillaId]
-
-    @property
-    def construct_member_objects(self) -> Mapping[str, Mapping[str, ConstructMemberObject]]:
-        """Return construct-member indexes grouped by schema kind."""
-        return {
-            "casilla": self.casilla_by_id,
-            "formula": self.formula_by_id,
-            "parameter": self.parameter_by_id,
-            "binding": self.binding_by_id,
-            "export layout": self.export_layout_by_id,
-            "extraction profile": self.extraction_profile_by_id,
-            "cross-reference": self.cross_reference_by_id,
-            "workbook parity reference": self.workbook_parity_by_id,
-            "verification expectation": self.verification_expectation_by_id,
-            "application link": self.application_link_by_id,
-            "deadline window": self.deadline_window_by_id,
-            "filing schedule": self.filing_schedule_by_id,
-            "dependency classification": self.dependency_classification_by_id,
-        }
 
 
 def build_revision_validation_context(revision: ModeloRevision) -> RevisionValidationContext:

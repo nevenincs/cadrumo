@@ -498,23 +498,6 @@ class JustificanteCaptureSnapshotService(
         """Execute this public contract operation."""
         return self.resolve_snapshot(snapshot_id)
 
-    def latest_for_work_unit(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-    ) -> JustificanteCaptureSnapshot | None:
-        """Execute this public contract operation."""
-        snapshots = [
-            snapshot
-            for snapshot in self.list_snapshots(filing_year=filing_year)
-            if snapshot.modelo == modelo and snapshot.period == period
-        ]
-        if not snapshots:
-            return None
-        return max(snapshots, key=lambda snapshot: snapshot.captured_at)
-
     # ---- SnapshotService hooks -------------------------------------------
 
     @override

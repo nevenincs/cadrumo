@@ -23,6 +23,7 @@ from click.testing import Result
 
 from ....domain.transactions.models import derive_transaction_id
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
+from ._ledger_corpus_support import load_active_catalogue
 from ._ledger_seeded_profile_fixture import _isolated_backend
 from .cli_runner import invoke_cached_cli
 
@@ -101,7 +102,7 @@ def test_update_changes_the_content_addressed_id() -> None:
     new_id = _update_description(old_id, "Material oficina (corregido)")
     assert new_id != old_id, "an id-affecting edit must re-derive the content-addressed id"
 
-    catalogue = _active_repo().load()
+    catalogue = load_active_catalogue()
     heir = catalogue.get(new_id)
     assert heir is not None
     # The new id is still the SHA-256 of the heir's raw row — the content
@@ -315,7 +316,7 @@ def test_merged_children_ids_still_resolve_after_merge() -> None:
     # unchanged) and is independently addressable.
     merged_view = _invoke(["--format", "json", "app", "ledger", "view", merged_id])
     assert merged_view.exit_code == 0, merged_view.output
-    catalogue = _active_repo().load()
+    catalogue = load_active_catalogue()
     merged_tx = catalogue.get(merged_id)
     assert merged_tx is not None
     assert derive_transaction_id(merged_tx.raw) == merged_id

@@ -29,6 +29,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
@@ -267,7 +269,6 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
     from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ....application.invoices.catalogue_creation import build_catalogue_invoice
-    from ....domain.invoices.models import InvoiceCatalogue
     from ....domain.invoices.service import link_transaction
     from ....domain.iva.classification import InvoiceKind
 
@@ -299,7 +300,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
         invoice_id=purchase_invoice.invoice_id,
     )
     invoice_catalogue = link_transaction(
-        InvoiceCatalogue.from_invoices((purchase_invoice,)),
+        build_invoice_catalogue((purchase_invoice,)),
         purchase_invoice.invoice_id,
         purchase.transaction_id,
     )

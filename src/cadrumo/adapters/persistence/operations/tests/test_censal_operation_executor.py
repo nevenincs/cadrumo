@@ -68,7 +68,10 @@ from cadrumo.core.operations import OperationEffect, OperationLifecycle, Operati
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+from .supervision_support import run_to_settlement
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -206,7 +209,7 @@ async def _wait_for_phase(supervisor: OperationSupervisor, operation_id: str, ph
 
 
 async def _start(supervisor: OperationSupervisor, operation_id: str):
-    return await supervisor.start(operation_id)
+    return await run_to_settlement(supervisor, operation_id)
 
 
 def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand(tmp_path: Path) -> None:

@@ -73,13 +73,13 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         movable = loaded.records[0]
         assert movable.cuota_soportada == Decimal("4200.00")
         assert movable.prorrata_inicial_pct == Decimal("80")
-        assert movable.kind is BienInversionKind.from_registry("mueble")
+        assert movable.kind == BienInversionKind.from_registry("mueble")
         assert movable.art108_elegible is True
         assert movable.disposal is not None
         assert movable.disposal.year == 2024
-        assert movable.disposal.regime is BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
+        assert movable.disposal.regime == BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
         real_estate = loaded.records[1]
-        assert real_estate.kind is BienInversionKind.from_registry("inmueble")
+        assert real_estate.kind == BienInversionKind.from_registry("inmueble")
         assert real_estate.art108_elegible is False
 
 

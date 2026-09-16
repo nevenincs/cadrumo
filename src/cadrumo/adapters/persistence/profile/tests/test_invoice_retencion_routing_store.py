@@ -25,7 +25,11 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_persistence_adapter,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
 _PROFESIONAL = RetencionScheme("actividades_profesionales")
 
@@ -39,14 +43,14 @@ def _invoice(
     retention_rate: str | None = "0.15",
 ) -> Invoice:
     subtotal = Decimal(base)
-    rate = iva_rate_percentage(resolve_iva_rate_token("rate_21", date.today()), date(2026, 1, 1))
+    rate = iva_rate_percentage(resolve_iva_rate_token("RATE_21", date.today()), date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
         quantity=Decimal("1"),
         unit_price=subtotal,
         subtotal=subtotal,
-        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+        iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
         iva_amount=subtotal * rate,
     )
     return Invoice.model_validate(
@@ -90,7 +94,7 @@ def test_routed_retencion_lands_in_the_existing_encrypted_store(tmp_path: Path) 
     assert stored[0].retencion_amount == Decimal("150.00")
     assert stored[0].taxable_base == Decimal("1000.00")
     assert stored[0].source_kind is BindingSourceKind.PAYABLE_INVOICE
-    assert stored[0].scheme is _PROFESIONAL
+    assert stored[0].scheme == _PROFESIONAL
 
 
 def test_an_excluded_invoice_leaves_the_store_empty(tmp_path: Path) -> None:

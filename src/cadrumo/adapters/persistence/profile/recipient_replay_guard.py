@@ -173,10 +173,6 @@ class RecipientReplayGuardRepository:
             ) from exc
         return ledger
 
-    def is_consumed(self, nonce_hex: str) -> bool:
-        """Return whether ``nonce_hex`` has already been recorded as consumed."""
-        return any(existing.nonce_hex == nonce_hex for existing in self.load().records)
-
     def mark_consumed(
         self,
         nonce_hex: str,

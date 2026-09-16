@@ -112,9 +112,9 @@ def test_one_answer_serves_every_later_read(repository: CounterpartyEstablishmen
     for _ in range(3):
         resolution = _resolve(repository)
         assert resolution.identification is not None
-        assert resolution.identification.value is EUMemberState.from_registry("de")
+        assert resolution.identification.value == EUMemberState.from_registry("de")
         assert resolution.fact is not None
-        assert resolution.fact.value is IvaTerritorialScope.from_registry("es_mainland")
+        assert resolution.fact.value == IvaTerritorialScope.from_registry("es_mainland")
 
 
 def test_an_unanswered_identification_resolves_to_nothing(
@@ -166,7 +166,7 @@ def test_answering_the_identification_later_is_an_addition_not_a_conflict(
         identification_state=EUMemberState.from_registry("de"),
     )
 
-    assert second.identification_state is EUMemberState.from_registry("de")
+    assert second.identification_state == EUMemberState.from_registry("de")
     # The original attribution survives: answering a further question is not a
     # fresh confirmation of the first one.
     assert second.asserted_at == first.asserted_at
@@ -187,7 +187,7 @@ def test_a_different_identification_refuses_and_names_both_values(
     # The stored answer is untouched by the refused call.
     resolved = _resolve(repository).identification
     assert resolved is not None
-    assert resolved.value is EUMemberState.from_registry("de")
+    assert resolved.value == EUMemberState.from_registry("de")
 
 
 def test_a_retry_omitting_the_identification_does_not_withdraw_it(
@@ -206,7 +206,7 @@ def test_a_retry_omitting_the_identification_does_not_withdraw_it(
 
     resolved = _resolve(repository).identification
     assert resolved is not None
-    assert resolved.value is EUMemberState.from_registry("de")
+    assert resolved.value == EUMemberState.from_registry("de")
 
 
 def test_withdrawing_removes_both_axes_together(

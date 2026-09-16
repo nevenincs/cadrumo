@@ -160,28 +160,6 @@ class StaticGeneratedArtifactInspection:
     binding_ids: frozenset[BindingId]
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...]
 
-    @classmethod
-    def from_inspection(
-        cls,
-        inspection: RegistryRevisionInspection,
-    ) -> StaticGeneratedArtifactInspection:
-        """Copy only the fields the shared generated-artifact verifier reads."""
-        return cls(
-            modelo_id=inspection.modelo_id,
-            revision_id=inspection.revision_id,
-            revision_source_refs=tuple(inspection.revision_source_refs),
-            sources=MappingProxyType(
-                {
-                    source_ref: StaticGeneratedArtifactSource.from_source(source)
-                    for source_ref, source in inspection.sources.items()
-                }
-            ),
-            legal_ref_ids=frozenset(inspection.legal_ref_ids),
-            casilla_ids=frozenset(inspection.casilla_ids),
-            binding_ids=frozenset(inspection.binding_ids),
-            projection_endpoints=tuple(endpoint.model_copy(deep=True) for endpoint in inspection.projection_endpoints),
-        )
-
 
 class RegistryRevisionInspection(RegistryModel):
     """The static admission facts for one explicit registry revision.

@@ -55,10 +55,6 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
     def extract_identifier(self, payload: Justificante) -> str:
         return payload.csv
 
-    def list_csvs(self) -> tuple[str, ...]:
-        """Return every justificante CSV persisted in this repository, in lexicographic order."""
-        return tuple(sorted(self.iter_ids()))
-
     def iter_justificantes(self) -> Iterator[Justificante]:
         """Yield every persisted justificante, in lexicographic CSV order.
 

@@ -72,6 +72,8 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .supervision_support import run_to_settlement
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 28, 13, tzinfo=UTC)
@@ -278,7 +280,7 @@ def run_until_killed(storage_root: str, operation_id: str, subject_ref: str, pol
 
     async def reach_checkpoint() -> None:
         await supervisor.submit(restart_request(subject_ref=subject_ref), operation_id=operation_id)
-        waiting = await supervisor.start(operation_id)
+        waiting = await run_to_settlement(supervisor, operation_id)
         print(json.dumps({"marker": _READY_MARKER, "lifecycle": waiting.lifecycle.value}), flush=True)
         await asyncio.Event().wait()
 

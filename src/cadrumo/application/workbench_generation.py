@@ -18,7 +18,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final, Literal, Protocol, Self
+from typing import TYPE_CHECKING, Final, Literal, Protocol, Self, runtime_checkable
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ValidationError, model_validator
@@ -121,6 +121,7 @@ from .search.installed_workbench import (
 )
 from .search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from .user_profile.projections import projection_for_taxpayer, record_to_path_values
+from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCalendarWork, WorkbenchCaptureMemory
 
 WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
 
@@ -511,6 +512,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
     ledger_action_ports: LedgerActionPorts | None = None
     """Outer-composed ledger ports for this profile, when the ledger is bound."""
+    capture_memory: WorkbenchCaptureMemory | None = None
+    """The session's reusable capture work; every capture recomputes everything without one."""
     """An absent reader below is a composition fact, not a data fact.
 
     A host that did not bind a ledger store or an operation contract set
@@ -560,7 +563,18 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             filings=filings,
             observed_at=observed_at,
             operation=self.operation,
+            memo=_CalendarMemo(
+                memory=self.capture_memory,
+                key=WorkbenchCalendarMemoKey(
+                    profile_content_digest=record.content_digest,
+                    work_units_revision=work_units_revision,
+                    filings_revision=filings_revision,
+                    as_of=as_of,
+                    generation=self.operation.generation,
+                ),
+            ),
         )
+        ledger_revision = self._ledger_revision()
         ledger_sources = self._load_ledger_sources()
         custody_count = self._load_custody_count()
         ledger_ports = self.ledger_action_ports
@@ -583,6 +597,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             work_units_revision=work_units_revision,
             calculations_revision=calculations_revision,
             filings_revision=filings_revision,
+            ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
             verification=verification,
             custody_count=custody_count,
@@ -608,6 +623,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         work_units_revision: str,
         calculations_revision: str,
         filings_revision: str,
+        ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
         verification: VerificationReportCatalogue | None,
         custody_count: int | None,
@@ -621,10 +637,38 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             and final_work_units_revision == work_units_revision
             and final_calculations_revision == calculations_revision
             and final_filings_revision == filings_revision
-            and self._load_ledger_sources() == ledger_sources
+            and self._ledger_is_unchanged(ledger_revision, ledger_sources)
             and self._load_verification_reports() == verification
             and self._load_custody_count() == custody_count
         )
+
+    def _ledger_revision(self) -> tuple[str, str] | None:
+        """State both ledger stores' revisions without decrypting them, when both can.
+
+        Read before the catalogues themselves, so a write landing between the
+        two reads shows up as a changed revision at the close of the capture.
+        ``None`` means a store cannot state one, and the close compares the
+        decoded catalogues instead.
+        """
+        ports = self.ledger_action_ports
+        if ports is None:
+            return None
+        transactions, invoices = ports.transaction_repository, ports.invoice_repository
+        if not isinstance(transactions, RevisionedCatalogueStore) or not isinstance(invoices, RevisionedCatalogueStore):
+            return None
+        transaction_revision, invoice_revision = transactions.load_revision(), invoices.load_revision()
+        if transaction_revision is None or invoice_revision is None:
+            return None
+        return transaction_revision, invoice_revision
+
+    def _ledger_is_unchanged(
+        self,
+        revision: tuple[str, str] | None,
+        sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+    ) -> bool:
+        if revision is not None:
+            return self._ledger_revision() == revision
+        return self._load_ledger_sources() == sources
 
     def _load_custody_count(self) -> int | None:
         """Count documents in local custody, or nothing when no reader is bound.
@@ -853,6 +897,30 @@ def _taxpayer_profile_refusal(
     )
 
 
+@runtime_checkable
+class RevisionedCatalogueStore(Protocol):
+    """A store that can state a revision of its whole catalogue without decrypting it.
+
+    The revision changes with every committed write; ``None`` means the store
+    cannot state one right now.
+    """
+
+    def load_revision(self) -> str | None:
+        """Return the current catalogue revision, or ``None`` when it cannot be stated."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class _CalendarMemo:
+    """Where one capture may reuse its calendar work, and under which input identity."""
+
+    memory: WorkbenchCaptureMemory | None
+    key: WorkbenchCalendarMemoKey
+
+    def reuse(self, build: Callable[[], WorkbenchCalendarWork]) -> WorkbenchCalendarWork:
+        return build() if self.memory is None else self.memory.calendar.reuse(self.key, build)
+
+
 def _read_workbench_calendar_inputs(
     *,
     record: UserProfileRecord,
@@ -862,6 +930,7 @@ def _read_workbench_calendar_inputs(
     filings: ModeloRecordCatalogue,
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
+    memo: _CalendarMemo,
 ) -> _WorkbenchCalendarInputs:
     """Project the taxpayer once and build every calendar-derived input from it.
 
@@ -893,6 +962,7 @@ def _read_workbench_calendar_inputs(
         filings=filings,
         observed_at=observed_at,
         operation=operation,
+        memo=memo,
     )
     if not model_declared:
         # The schedule observation already says why the calendar is empty; the
@@ -972,51 +1042,64 @@ def _build_workbench_calendar_inputs(
     filings: ModeloRecordCatalogue,
     observed_at: UtcInstant,
     operation: PinnedAuthorityOperation,
+    memo: _CalendarMemo,
 ) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda, bool]:
     query_range = _calendar_query_range(as_of)
-    schedule_calendar = build_overview_calendar(
-        taxpayer,
-        query_range,
-        today=as_of,
-        raw_values=raw_values,
-        work_units=tuple(work_units.values()),
-        operation=operation,
-    )
-    evidence = build_calendar_evidence_projection(
-        local=CalendarEvidenceReadOutcome(
-            state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
-            value=LocalCalendarEvidenceSources(
-                filing_records=_scope_filing_records(
-                    tuple(filings.records.values()),
-                    schedule_calendar,
+
+    def evidence_for(schedule_calendar: OverviewCalendar) -> CalendarEvidenceProjection:
+        return build_calendar_evidence_projection(
+            local=CalendarEvidenceReadOutcome(
+                state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
+                value=LocalCalendarEvidenceSources(
+                    filing_records=_scope_filing_records(
+                        tuple(filings.records.values()),
+                        schedule_calendar,
+                    ),
                 ),
             ),
-        ),
-        aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](
-            state=HomeZoneState(
-                availability=HomeAvailability.NEVER_CAPTURED,
-                reason_code="workbench.calendar.aeat_reader_unavailable",
+            aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](
+                state=HomeZoneState(
+                    availability=HomeAvailability.NEVER_CAPTURED,
+                    reason_code="workbench.calendar.aeat_reader_unavailable",
+                ),
             ),
-        ),
-        expected_tax_id=taxpayer.tax_id,
-    )
-    calendar = build_overview_calendar(
-        taxpayer,
-        query_range,
-        today=as_of,
-        raw_values=raw_values,
-        filing_evidence=evidence.evidence,
-        work_units=tuple(work_units.values()),
-        operation=operation,
-    )
+            expected_tax_id=taxpayer.tax_id,
+        )
+
+    def compute() -> WorkbenchCalendarWork:
+        schedule_calendar = build_overview_calendar(
+            taxpayer,
+            query_range,
+            today=as_of,
+            raw_values=raw_values,
+            work_units=tuple(work_units.values()),
+            operation=operation,
+        )
+        return WorkbenchCalendarWork(
+            schedule_calendar=schedule_calendar,
+            calendar=build_overview_calendar(
+                taxpayer,
+                query_range,
+                today=as_of,
+                raw_values=raw_values,
+                filing_evidence=evidence_for(schedule_calendar).evidence,
+                work_units=tuple(work_units.values()),
+                operation=operation,
+            ),
+            agenda=build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values, operation=operation),
+        )
+
+    work = memo.reuse(compute)
+    # The evidence rows depend only on the memo key's inputs; their observation
+    # state is this capture's own, so the projection is rebuilt every time.
+    evidence = evidence_for(work.schedule_calendar)
     declarations_calendar = project_declarations_calendar(
-        calendar=calendar,
+        calendar=work.calendar,
         evidence=evidence,
         as_of=as_of,
-        schedule_observation=_schedule_observation(calendar, observed_at),
+        schedule_observation=_schedule_observation(work.calendar, observed_at),
     )
-    agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values, operation=operation)
-    return evidence, declarations_calendar, agenda, calendar.taxpayer_model_declared
+    return evidence, declarations_calendar, work.agenda, work.calendar.taxpayer_model_declared
 
 
 def _secure_profile_home_input(

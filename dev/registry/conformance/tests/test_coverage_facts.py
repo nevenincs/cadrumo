@@ -19,7 +19,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
-from ..coverage import build_model_law_coverage_ledger
+from ..coverage import build_model_law_coverage_ledger, coverage_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,7 +36,7 @@ def authority():
 def test_it_carries_the_same_facts_the_snapshot_does(authority, modelo, filing_year, period) -> None:
     """Coordinate and all four evidence collections match the snapshot's, across unlike modelos."""
     snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
-    facts = authority.coverage_facts(modelo, filing_year=filing_year, period=period)
+    facts = coverage_facts(authority, modelo, filing_year=filing_year, period=period)
 
     assert (facts.modelo, facts.revision) == (snapshot.modelo.id, snapshot.revision.id)
     assert (facts.filing_year, facts.period) == (snapshot.filing_year, snapshot.period)
@@ -54,7 +54,7 @@ def test_a_ledger_built_from_either_projection_is_the_same_ledger(authority) -> 
     would silently alter published coverage findings rather than fail loudly.
     """
     snapshot = authority.snapshot("303", filing_year=2026, period="1T")
-    facts = authority.coverage_facts("303", filing_year=2026, period="1T")
+    facts = coverage_facts(authority, "303", filing_year=2026, period="1T")
 
     assert build_model_law_coverage_ledger(snapshot).model_dump_json() == (
         build_model_law_coverage_ledger(facts).model_dump_json()
@@ -71,7 +71,7 @@ def test_it_refuses_exactly_where_the_snapshot_boundary_refuses(authority) -> No
     with pytest.raises(RegistryValidationError) as snapshot_refusal:
         authority.snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING)
     with pytest.raises(RegistryValidationError) as facts_refusal:
-        authority.coverage_facts("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING)
+        coverage_facts(authority, "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING)
 
     assert str(facts_refusal.value) == str(snapshot_refusal.value)
 
@@ -84,7 +84,7 @@ def test_what_it_hands_out_is_a_copy_and_not_cached_registry_state(authority) ->
     that a deepcopy call is present, because the second proves the code was
     written and the first proves it works.
     """
-    first = authority.coverage_facts("303", filing_year=2026, period="1T")
+    first = coverage_facts(authority, "303", filing_year=2026, period="1T")
     assert first.sources, "the fixture coordinate must carry sources for this to prove anything"
     handed_out = first.sources
     assert isinstance(handed_out, dict), "the projection must hand out its own mapping to be mutable"
@@ -92,6 +92,6 @@ def test_what_it_hands_out_is_a_copy_and_not_cached_registry_state(authority) ->
     victim = next(iter(handed_out))
     del handed_out[victim]
 
-    second = authority.coverage_facts("303", filing_year=2026, period="1T")
+    second = coverage_facts(authority, "303", filing_year=2026, period="1T")
     assert victim in second.sources, "a deletion from one caller's facts reached the registry"
     assert second.sources is not handed_out

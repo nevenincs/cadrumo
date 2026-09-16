@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
 from ._ledger_corpus_support import (
     _find,
@@ -86,7 +87,9 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
     assert txn.business_classification is BusinessClassification.BUSINESS
     assert txn.iva_category == IvaCategory("intra_community_supply")
     assert txn.counterparty_country == "DE"
-    assert txn.counterparty_eu_member_state is EUMemberState.from_registry("de")
+    # The Member State is derived from registry data, so it is read under a lease.
+    with bundled_indexed_authority().operation():
+        assert txn.counterparty_eu_member_state == EUMemberState.from_registry("de")
 
 
 def test_allocate_records_business_proportion() -> None:

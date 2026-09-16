@@ -27,7 +27,10 @@ from __future__ import annotations
 import calendar
 from collections.abc import Mapping, Sequence
 from datetime import date
+from functools import cache
+from threading import Lock
 from typing import TYPE_CHECKING, TypeGuard
+from weakref import WeakKeyDictionary
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -40,17 +43,30 @@ if TYPE_CHECKING:
     from ..calculations.registry.runtime_catalogues import PublishedRecargoBand
 
 
-def _is_published_recargo_mapping(value: object) -> TypeGuard[Mapping[str, PublishedRecargoBand]]:
-    """Narrow one addressed runtime component to its typed band records."""
+@cache
+def _published_bands_adapter() -> TypeAdapter[dict[str, PublishedRecargoBand]]:
+    """Build the band-shape validator once; constructing it compiles a whole schema."""
     from ..calculations.registry.runtime_catalogues import PublishedRecargoBand
 
+    return TypeAdapter(dict[str, PublishedRecargoBand])
+
+
+def _is_published_recargo_mapping(value: object) -> TypeGuard[Mapping[str, PublishedRecargoBand]]:
+    """Narrow one addressed runtime component to its typed band records."""
     if not isinstance(value, Mapping):
         return False
     try:
-        TypeAdapter(dict[str, PublishedRecargoBand]).validate_python(value)
+        _published_bands_adapter().validate_python(value)
     except ValidationError:
         return False
     return True
+
+
+#: Adapted bands per pinned operation. An operation is one immutable authority
+#: generation, and a new generation arrives as a new operation, so the entry of
+#: a retired generation is dropped with its operation and never served again.
+_BANDS_BY_OPERATION: WeakKeyDictionary[PinnedAuthorityOperation, tuple[RecargoBand, ...]] = WeakKeyDictionary()
+_BANDS_LOCK = Lock()
 
 
 def load_recargo_bands(
@@ -59,11 +75,25 @@ def load_recargo_bands(
 ) -> tuple[RecargoBand, ...]:
     """Adapt recargo brackets from the caller's pinned published authority.
 
+    Adapted once per operation: every overdue obligation a schedule computes
+    asks for the same table, and the table cannot change within a generation.
+
     Returns:
         Tuple of :class:`RecargoBand` records ordered by
         ``min_completed_months`` ascending.
 
     """
+    with _BANDS_LOCK:
+        known = _BANDS_BY_OPERATION.get(operation)
+    if known is not None:
+        return known
+    bands = _adapt_recargo_bands(operation)
+    with _BANDS_LOCK:
+        _BANDS_BY_OPERATION[operation] = bands
+    return bands
+
+
+def _adapt_recargo_bands(operation: PinnedAuthorityOperation) -> tuple[RecargoBand, ...]:
     loaded = operation.runtime_catalogue("recargo_bands")
     if not _is_published_recargo_mapping(loaded):
         raise DeadlineValidationError("indexed authority recargo-band component has an invalid shape")

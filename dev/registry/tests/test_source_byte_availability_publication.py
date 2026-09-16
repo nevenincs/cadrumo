@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.source_byte_availability import source_bytes_are_embedded
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..pipeline.authority_publication import _project_evidence, _project_source_evidence
+from ..pipeline.authority_publication import _project_evidence, _project_source_evidence, require_evidence_closure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -63,7 +63,7 @@ def test_evidence_closure_accepts_the_publisher_projection_and_rejects_drift(
     compiled: ValidatedRegistryAuthority, projection: AuthorityEvidenceProjection
 ) -> None:
     sources = compiled.catalogues.sources
-    _artifact(compiled, projection).require_evidence_closure()
+    require_evidence_closure(_artifact(compiled, projection))
 
     dictionary_id = next(
         item.source_reference_id
@@ -75,7 +75,7 @@ def test_evidence_closure_accepts_the_publisher_projection_and_rejects_drift(
         sources=tuple(item for item in projection.sources if item.source_reference_id != dictionary_id),
     )
     with pytest.raises(ValueError, match="runtime source catalogue"):
-        _artifact(compiled, missing_dictionary).require_evidence_closure()
+        require_evidence_closure(_artifact(compiled, missing_dictionary))
 
     record_design = next(source for source in sources.values() if source.kind is RegistrySourceKind.RECORD_DESIGN)
     extra_record_design = AuthorityEvidenceProjection(
@@ -83,4 +83,4 @@ def test_evidence_closure_accepts_the_publisher_projection_and_rejects_drift(
         sources=(*projection.sources, _project_source_evidence(record_design, source_root=bundled_path())),
     )
     with pytest.raises(ValueError, match="runtime source catalogue"):
-        _artifact(compiled, extra_record_design).require_evidence_closure()
+        require_evidence_closure(_artifact(compiled, extra_record_design))

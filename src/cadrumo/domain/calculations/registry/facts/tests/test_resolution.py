@@ -16,6 +16,7 @@ from ..resolution import (
     ScalarFactQuery,
     required_mapping_entry,
     resolve_governed_fact,
+    unique_mapping_tokens,
 )
 from ..schema import (
     FactOwnership,
@@ -451,3 +452,25 @@ def test_an_absent_or_blank_mapping_entry_is_refused_in_the_subjects_words(entri
         required_mapping_entry(entries, "order", subject="demo catalogue")
 
     assert str(raised.value) == "demo catalogue is missing 'order'"
+
+
+def test_unique_mapping_tokens_are_split_stripped_and_ordered() -> None:
+    assert unique_mapping_tokens({"order": " a , b,,c "}, "order", subject="demo catalogue") == ("a", "b", "c")
+
+
+@pytest.mark.parametrize(
+    ("entries", "message"),
+    [
+        ({"order": "a,a"}, "demo catalogue 'order' must declare unique tokens"),
+        ({"order": " , "}, "demo catalogue 'order' must declare unique tokens"),
+        ({}, "demo catalogue is missing 'order'"),
+    ],
+)
+def test_repeated_empty_or_absent_tokens_are_refused_in_the_consumers_words(
+    entries: dict[str, str],
+    message: str,
+) -> None:
+    with pytest.raises(RegistryValidationError) as raised:
+        unique_mapping_tokens(entries, "order", subject="demo catalogue", requirement="must declare unique tokens")
+
+    assert str(raised.value) == message

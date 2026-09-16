@@ -14,7 +14,7 @@ from ....core.amendment_kind_regime import (
 )
 from ....core.period import Period
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -29,17 +29,6 @@ _PROCEDURE_ORDER_KEY = "procedure.order"
 _PRE_ORDER_KEY = "regime.pre_order"
 _POST_ORDER_KEY = "regime.post_order"
 _BOUNDARY_ORDER_KEY = "boundary.order"
-
-
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"amendment-regime-policy {key!r} must contain unique tokens")
-    return values
 
 
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
@@ -84,22 +73,22 @@ def _selected_mapping_entries(
 
 
 def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
-    procedure_order = _csv(entries, _PROCEDURE_ORDER_KEY)
+    procedure_order = unique_mapping_tokens(entries, _PROCEDURE_ORDER_KEY, subject=_ENTRY_SUBJECT)
     for token in procedure_order:
         if required_mapping_entry(entries, f"procedure.{token}.value", subject=_ENTRY_SUBJECT) != token:
             raise RegistryValidationError(
                 f"amendment-regime-policy procedure {token!r} declares a mismatched value",
             )
 
-    pre_order = _csv(entries, _PRE_ORDER_KEY)
-    post_order = _csv(entries, _POST_ORDER_KEY)
+    pre_order = unique_mapping_tokens(entries, _PRE_ORDER_KEY, subject=_ENTRY_SUBJECT)
+    post_order = unique_mapping_tokens(entries, _POST_ORDER_KEY, subject=_ENTRY_SUBJECT)
     declared_procedures = frozenset(procedure_order)
     if not set(pre_order).issubset(declared_procedures):
         raise RegistryValidationError("amendment-regime-policy pre-regime uses an undeclared procedure")
     if not set(post_order).issubset(declared_procedures):
         raise RegistryValidationError("amendment-regime-policy post-regime uses an undeclared procedure")
 
-    boundary_models = _csv(entries, _BOUNDARY_ORDER_KEY)
+    boundary_models = unique_mapping_tokens(entries, _BOUNDARY_ORDER_KEY, subject=_ENTRY_SUBJECT)
     boundaries: dict[str, date] = {}
     for modelo in boundary_models:
         try:

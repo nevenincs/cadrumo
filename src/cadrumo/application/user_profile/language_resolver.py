@@ -6,11 +6,19 @@ callback. Each executable host explicitly calls :func:`register_language_resolve
 when it composes profile persistence. That function registers
 :func:`resolve_active_profile_output_language` with
 :func:`cadrumo.core.i18n.register_profile_language_resolver`.
+
+Rendering never reads storage. The profile's language is read once into a
+process-wide snapshot by :func:`refresh_active_profile_output_language` -- when
+the host composes, and whenever a session is bound, closed, or the preference
+is written -- and the registered callback only returns that snapshot. A frontend
+event loop that renders text therefore never waits on the encrypted profile.
 """
 
 from __future__ import annotations
 
-from ...core.i18n.render import register_profile_language_resolver
+import threading
+
+from ...core.i18n.render import clear_output_language_cache, register_profile_language_resolver
 from ...core.logging import get_logger
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .custody_ports import (
@@ -23,7 +31,9 @@ from .login_session_port import profile_current_bucket_session
 _logger = get_logger(__name__)
 
 __all__ = [
+    "active_profile_output_language_from_storage",
     "mirror_profile_output_language_hint",
+    "refresh_active_profile_output_language",
     "register_language_resolver",
     "resolve_active_profile_output_language",
     "resolve_active_profile_output_language_hint",
@@ -31,8 +41,49 @@ __all__ = [
 ]
 
 
+class _ProfileLanguageSnapshot:
+    """The last language read from storage, shared by every thread of the process."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._language: str | None = None
+
+    def get(self) -> str | None:
+        with self._lock:
+            return self._language
+
+    def set(self, language: str | None) -> None:
+        with self._lock:
+            self._language = language
+
+
+_SNAPSHOT = _ProfileLanguageSnapshot()
+
+
 def resolve_active_profile_output_language() -> str | None:
-    """Return the active profile's ``preferences.output_language`` fact.
+    """Return the snapshotted ``preferences.output_language`` fact; never reads storage."""
+    return _SNAPSHOT.get()
+
+
+def refresh_active_profile_output_language() -> str | None:
+    """Re-read the active profile's language into the snapshot and invalidate rendering.
+
+    Called where storage is already being touched: host composition, session
+    binding and closing, and the preference write. Never raises; an unreadable
+    profile leaves no profile language, so rendering falls back to settings.
+    """
+    try:
+        language = active_profile_output_language_from_storage()
+    except Exception:
+        _logger.debug("profile output language could not be read; using settings", exc_info=True)
+        language = None
+    _SNAPSHOT.set(language)
+    clear_output_language_cache()
+    return language
+
+
+def active_profile_output_language_from_storage() -> str | None:
+    """Read the active profile's ``preferences.output_language`` fact from storage.
 
     Performs a pure read of workflow state — no mutation, no bucket
     events — and returns ``None`` when there is no active profile or no
@@ -89,6 +140,7 @@ def register_language_resolver() -> None:
     package-import side effect.
     """
     register_profile_language_resolver(resolve_active_profile_output_language)
+    refresh_active_profile_output_language()
 
 
 def mirror_profile_output_language_hint(bucket_id: str, language: str | None) -> None:

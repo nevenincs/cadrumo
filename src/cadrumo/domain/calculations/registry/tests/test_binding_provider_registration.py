@@ -307,7 +307,6 @@ def test_row_assembly_is_derived_from_the_canonical_grouping_correspondence() ->
     """A kind is grouped exactly when the row-assembly axis enrolls it; nothing restates it."""
     for kind, registration in BINDING_PROVIDER_REGISTRATIONS.items():
         enrolled = kind in ROW_SET_GROUPING_FOR_BINDING_SOURCE
-        assert registration.row_assembly == ("grouped" if enrolled else "provider_native")
         assert (registration.row_grouping is not None) == enrolled
 
 

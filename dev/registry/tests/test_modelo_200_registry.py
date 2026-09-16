@@ -181,7 +181,7 @@ def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     revision = modelo.revisions["2024"]
     legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
 
-    assert compiled_bundled_authority().legal_evidence_text(_M200_FORM_ORDER_REF)
+    assert compiled_bundled_authority().evidence.legal_text(_M200_FORM_ORDER_REF)
 
     assert _M200_FORM_ORDER_REF in modelo.legal_refs
     assert _M200_FORM_ORDER_REF in revision.legal_refs

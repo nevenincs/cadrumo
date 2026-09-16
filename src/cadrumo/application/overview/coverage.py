@@ -36,7 +36,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date
 from enum import StrEnum
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, model_validator
 
@@ -52,6 +52,9 @@ from ...domain.calculations.registry.modelo_obligation_scope import (
     UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS,
 )
 from ...domain.deadlines.models import TaxpayerProfile
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class CoverageAdviceReason(StrEnum):
@@ -177,6 +180,7 @@ def build_obligation_coverage(
     surfaced_modelos: Iterable[str],
     *,
     today: date,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> ObligationCoverageReport:
     """Reconcile surfaced obligations against the full registry modelo set.
 
@@ -196,19 +200,36 @@ def build_obligation_coverage(
             grounding gap.
         today: Reference date for applicability evaluation (the Modelo-720
             Beckham-window check is date-sensitive).
+        operation: The caller's generation-pinned authority operation. A
+            caller that already holds one passes it, so every modelo is
+            judged against that generation without leasing it again per
+            modelo; without one, the bundled authority is leased once.
 
     Returns:
         The :class:`ObligationCoverageReport` partition.
     """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    if operation is None:
+        with bundled_indexed_authority().operation() as leased:
+            return _build_obligation_coverage(profile, surfaced_modelos, today=today, operation=leased)
+    return _build_obligation_coverage(profile, surfaced_modelos, today=today, operation=operation)
+
+
+def _build_obligation_coverage(
+    profile: TaxpayerProfile,
+    surfaced_modelos: Iterable[str],
+    *,
+    today: date,
+    operation: PinnedAuthorityOperation,
+) -> ObligationCoverageReport:
     # Deferred to break a module-load cycle: application.modelo is a heavier
     # sibling package and importing it at module scope would couple overview's
     # import graph to it. The lookup itself is cheap (cached authority).
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..modelo.registry_discovery import registry_modelo_codes
 
     surfaced_set = frozenset(surfaced_modelos)
-    with bundled_indexed_authority().operation() as operation:
-        registry_codes = frozenset(registry_modelo_codes(operation=operation))
+    registry_codes = frozenset(registry_modelo_codes(operation=operation))
     unmodeled_codes = {str(code) for code in _UNMODELED_OBLIGATIONS}
     out_of_scope_codes = {str(code) for code in _OUT_OF_SCOPE_OBLIGATIONS}
     # The AEAT obligation universe is the registry directory plus every recognized
@@ -235,7 +256,7 @@ def build_obligation_coverage(
             # and no applicability rule exist, so it cannot be positively scoped.
             advised.append(AdvisedObligation(modelo=modelo, reason=CoverageAdviceReason.REGISTRY_UNMODELED))
             continue
-        verdict = derive_modelo_applicability(profile, modelo, today=today).verdict
+        verdict = derive_modelo_applicability(profile, modelo, today=today, operation=operation).verdict
         if verdict in _CONFIDENT_NEGATIVE_VERDICTS:
             confidently_excluded.append(modelo)
             continue

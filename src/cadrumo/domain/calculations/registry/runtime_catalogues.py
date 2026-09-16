@@ -192,24 +192,6 @@ class RuntimeRegistryCatalogues(RegistryModel):
             raise RegistryValidationError(f"runtime authority catalogues are incomplete: {missing}")
         return self
 
-    def legal_reference_ids(self) -> frozenset[str]:
-        """Return every legal identity carried by a published runtime table."""
-        return frozenset(
-            ref
-            for refs in (
-                (
-                    citation.legal_reference
-                    for regulation in self.iva_regulations.values()
-                    for citation in regulation.citations
-                ),
-                (ref for rule in self.iva_place_of_supply.values() for ref in rule.legal_references),
-                (ref for territory in self.spanish_postal_territories.values() for ref in territory.legal_refs),
-                (ref for carve_out in self.territory_carve_outs.values() for ref in carve_out.legal_refs),
-                (band.legal_ref for band in self.recargo_bands.values()),
-            )
-            for ref in refs
-        )
-
     @model_validator(mode="after")
     def _keys_match_records(self) -> Self:
         collections = (

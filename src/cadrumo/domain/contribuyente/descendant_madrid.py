@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ..calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
 from .descendant_record import DescendantRecordBase
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
@@ -24,65 +23,6 @@ class DescendantMadridMixin(DescendantRecordBase):
         and not the other, and :meth:`art_58_2_entry_date` for the state anchor.
         """
         return self._entry_date().year
-
-    def art_58_2_window_anchor_missing(
-        self,
-        filing_year: int,
-        *,
-        context: FamilyFactResolutionContext,
-        dependencia_assimilation_available: bool = False,
-    ) -> bool:
-        """True when an entitling relación has no entry date, so the limb cannot fire.
-
-        The recordable state the coherence validators deliberately allow: an
-        operator may declare an adoption or an entitling acogimiento before they
-        hold the inscription or resolución date. Art. 58.2's age-independent
-        increase then cannot be granted, because the window has nothing to
-        measure from — an UNDER-grant, which is the safe direction, but a silent
-        one unless something says so.
-
-        Reports only the state that changes an outcome, so the advisory it feeds
-        stays worth reading. A relación the statute excludes from the limb has
-        no anchor to be missing. A descendant who fails the Art. 58.1 non-income
-        conditions — not cohabiting, or over 25 with no discapacidad — carries no
-        mínimo for the increase to attach to, so a missing date costs them
-        nothing; a 30-year-old adopted descendant is the false positive this limb
-        exists to suppress. And a descendant already under three takes the
-        increase through the ordinary limb regardless.
-
-        What remains is the older cohabiting adopted or fostered child, who is
-        exactly the household the age-independent sentence was written for and
-        the one currently granted nothing.
-
-        The income ceilings are deliberately NOT applied. They need registry
-        figures this layer does not resolve, and an absent rentas figure is
-        non-excluding anyway, so the residual over-report is a descendant whose
-        declared rentas breach the ceiling — a narrow case that already carries
-        its own advisory.
-
-        *dependencia_assimilation_available* is forwarded to the household limb
-        for the same reason it exists there: a non-cohabiting descendant reaching
-        the mínimo through the economic-dependency assimilation carries a real
-        mínimo for the increase to attach to, so a missing anchor costs them
-        exactly what it costs a cohabiting one. Omitting it took the predicate's
-        ``False`` default and answered "no anchor missing" for that household —
-        an under-grant reported to nobody, which is the one thing this disclosure
-        exists to prevent.
-        """
-        if self.relacion not in descendant_relacion_entitling_tokens(
-            effective_date=context.filing_period,
-            authority=context.authority,
-        ):
-            return False
-        if not self.meets_non_income_conditions(
-            filing_year,
-            context=context,
-            dependencia_assimilation_available=dependencia_assimilation_available,
-        ):
-            return False
-        if self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-under-three-maximum-age"):
-            return False
-        return self.art_58_2_entry_date() is None
 
     def is_nacimiento_adopcion_eligible(
         self,

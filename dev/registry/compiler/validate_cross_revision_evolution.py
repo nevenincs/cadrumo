@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition
 
 from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
+from .cross_revision_divergence import covered_fields
 
 
 def strict_continuity_evolution_failures(modelo: ModeloDefinition) -> tuple[str, ...]:
@@ -67,9 +68,9 @@ def _continuity_evolution_duplicate_failures(
     failures: list[str] = []
     for (continuidad_id, from_revision, to_revision), evolutions in sorted(evolutions_by_boundary.items()):
         if any(
-            not left.evolution_kind.covered_fields
-            or not right.evolution_kind.covered_fields
-            or left.evolution_kind.covered_fields & right.evolution_kind.covered_fields
+            not covered_fields(left.evolution_kind)
+            or not covered_fields(right.evolution_kind)
+            or covered_fields(left.evolution_kind) & covered_fields(right.evolution_kind)
             for left, right in combinations(evolutions, 2)
         ):
             failures.append(

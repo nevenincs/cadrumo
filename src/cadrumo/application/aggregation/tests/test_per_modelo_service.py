@@ -169,7 +169,8 @@ def test_command_contract_is_strict_and_immutable() -> None:
 
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert (
-            provider_for_modelo(command.modelo, operation=_authority_operation_for_test) is PerModeloAggregationContributor.RETENCIONES
+            provider_for_modelo(command.modelo, operation=_authority_operation_for_test)
+            is PerModeloAggregationContributor.RETENCIONES
         )
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         PerModeloAggregationCommand.model_validate(

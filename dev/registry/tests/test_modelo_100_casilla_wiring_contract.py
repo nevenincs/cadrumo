@@ -7,6 +7,7 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
+from ..compiler.producer_inventory import producer_inventory
 from ._modelo_100_registry_support import _loaded_registry, _registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -40,7 +41,7 @@ def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible
 
     for modelo in modelos_by_id.values():
         for revision in modelo.revisions.values():
-            inventory = revision.producer_inventory()
+            inventory = producer_inventory(revision)
             declared_casilla_ids = {casilla.id for casilla in revision.casillas}
             assert set(inventory.producer_kind_by_casilla) == declared_casilla_ids
             assert set(inventory.producer_reason_by_casilla) == declared_casilla_ids
@@ -121,7 +122,7 @@ def test_revision_producer_inventory_keeps_relation_prefill_binding_provenance()
     for modelo in modelos_by_id.values():
         for revision in modelo.revisions.values():
             bindings_by_id = {binding.id: binding for binding in revision.bindings}
-            inventory = revision.producer_inventory()
+            inventory = producer_inventory(revision)
             for casilla in revision.casillas:
                 if casilla.binding is None:
                     continue

@@ -16,6 +16,7 @@ from cadrumo.domain.calculations.registry.relations import relation_prefill_bind
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
+from ..compiler.producer_inventory import producer_inventory
 from ._modelo_100_registry_support import _loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -43,8 +44,8 @@ def test_m100_2025_focus_rows_do_not_inherit_prior_revision_producers(
     prior_revision = modelo.revisions["2024"]
     current_revision = modelo.revisions["2025"]
 
-    prior_inventory = prior_revision.producer_inventory()
-    current_inventory = current_revision.producer_inventory()
+    prior_inventory = producer_inventory(prior_revision)
+    current_inventory = producer_inventory(current_revision)
     assert prior_inventory.producer_kind_by_casilla[casilla_id] == prior_producer_kind
     assert current_inventory.producer_kind_by_casilla[casilla_id] == "manual"
 

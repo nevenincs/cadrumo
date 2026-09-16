@@ -17,7 +17,7 @@ from typing import Final, overload
 
 from ....domain.iva.prorrata import InputClassification, ProrrataKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -165,17 +165,6 @@ def _optional(entries: Mapping[str, str], key: str) -> str | None:
     return trimmed or None
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"prorrata vocabulary {key!r} must contain unique tokens")
-    return values
-
-
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
@@ -224,7 +213,7 @@ def resolve_prorrata_kind_catalogue(
     """Resolve the dated prorrata lifecycle vocabulary from fact 0116."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[ProrrataKindDefinition] = []
-    for raw_token in _csv(entries, _KIND_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _KIND_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_KIND_PREFIX}{raw_token}"
         declared_value = required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
@@ -294,7 +283,7 @@ def resolve_input_classification_catalogue(
     """Resolve the dated art. 106 input vocabulary from fact 0116."""
     entries = _selected_entries(effective_date=effective_date, authority=authority)
     definitions: list[InputClassificationDefinition] = []
-    for raw_token in _csv(entries, _INPUT_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _INPUT_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_INPUT_PREFIX}{raw_token}"
         declared_value = required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:

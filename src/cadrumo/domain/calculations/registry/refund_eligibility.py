@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Final
 
 from ....core.period import Period, accepted_filing_period_codes, registry_period_kind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
@@ -49,17 +49,6 @@ class RefundEligibilityPolicy:
     def is_final_period(self, period: Period) -> bool:
         """Return whether ``period`` is declared final by this policy."""
         return period.registry_token in self.final_period_tokens
-
-
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"IVA refund eligibility policy {key!r} must contain unique tokens")
-    return values
 
 
 def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
@@ -117,7 +106,7 @@ def _selected_mapping_entries(
 def _policy(entries: Mapping[str, str]) -> RefundEligibilityPolicy:
     definitions: list[RefundFinalPeriodDefinition] = []
     accepted_periods = frozenset(accepted_filing_period_codes())
-    for raw_token in _csv(entries, _FINAL_PERIOD_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _FINAL_PERIOD_ORDER_KEY, subject=_ENTRY_SUBJECT):
         if raw_token not in accepted_periods:
             raise RegistryValidationError(
                 f"IVA refund eligibility period {raw_token!r} is not a valid filing-period token",

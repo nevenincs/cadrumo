@@ -168,10 +168,6 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
             expected_revision_id=expected_revision_id,
         )
 
-    def list_draft_ids(self) -> tuple[str, ...]:
-        """Return every draft id persisted in this repository, in lexicographic order."""
-        return tuple(sorted(self.iter_ids()))
-
     def iter_drafts(self) -> Iterator[ModeloDraft]:
         """Yield every persisted :class:`~domain.filing.ModeloDraft`, in lexicographic id order."""
         return iter(sorted(self.iter_records(), key=self.extract_identifier))

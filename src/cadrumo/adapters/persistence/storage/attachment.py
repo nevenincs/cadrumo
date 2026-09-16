@@ -24,10 +24,8 @@ from __future__ import annotations
 
 import hmac
 import json
-from collections.abc import Iterator, Sequence
-from io import BytesIO
+from collections.abc import Iterator
 from pathlib import Path
-from typing import BinaryIO
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -35,7 +33,6 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import HEX_ALPHABET, sha256_hex
 from ....core.identity.bucket import BucketId
 from ....core.logging import get_logger
-from ....core.secure_object_write import SecureObjectWrite
 from ....core.time.clock import now
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.attachments.errors import AttachmentNotFoundError, AttachmentPersistenceError, AttachmentValidationError
@@ -294,74 +291,6 @@ class AttachmentStore(BaseModel):
         _LOGGER.debug("stored attachment object %s (%d bytes)", digest, len(data))
         return digest
 
-    def put_many_bytes(self, payloads: Sequence[bytes]) -> tuple[str, ...]:
-        """Write every payload in one SQL unit of work; return digests in input order.
-
-        The bulk counterpart of :meth:`put_bytes`. Ingesting evidence one
-        record at a time opens one transaction per blob, which measured at
-        ~5.3 ms/record against ~1.8 ms through the batched path — roughly 106
-        seconds versus 35 at twenty thousand records, with encryption itself
-        accounting for well under a tenth of a millisecond of that. The cost
-        being removed is per-record session and transaction setup, not crypto.
-
-        Deduplicates twice, because a bulk import legitimately repeats a
-        document: once WITHIN the batch, so a digest repeated across rows is
-        written once, and once against what is already stored. Both are safe
-        precisely because the namespace is content-addressed — an identical
-        digest means identical bytes.
-
-        Atomicity differs from the per-record path, deliberately. The whole
-        batch commits or none of it does, where N separate ``put_bytes`` calls
-        leave the prefix that succeeded. For a content-addressed store
-        all-or-nothing is the better failure mode: a partially-ingested batch
-        cannot be told apart from a complete one without re-reading the source,
-        while a rolled-back batch is simply re-runnable.
-
-        Args:
-            payloads: Raw blob payloads to store, in caller order.
-
-        Returns:
-            The SHA-256 digest of each payload, positionally matching
-            ``payloads`` — including for entries that were already stored or
-            that repeat an earlier entry.
-        """
-        if not payloads:
-            return ()
-
-        digests = [sha256_hex(data) for data in payloads]
-        objects = self._objects_repo()
-
-        # Two distinct jobs, not two spellings of one. The mapping is keyed by
-        # digest, so it collapses the WRITE for a repeated payload; the batch
-        # existence read answers the stored-side membership question for every
-        # digest in one indexed query instead of one session per digest.
-        stored = objects.exists_many(_ATTACHMENT_BLOB_NAMESPACE, digests)
-        pending: dict[str, bytes] = {}
-        for digest, data in zip(digests, payloads, strict=True):
-            if digest in pending or digest in stored:
-                continue
-            pending[digest] = data
-
-        if pending:
-            objects.save_many(
-                tuple(
-                    SecureObjectWrite(
-                        namespace=_ATTACHMENT_BLOB_NAMESPACE,
-                        object_key=digest,
-                        # rationale: blob sensitivity is FINANCIAL regardless of
-                        # modelo; see module docstring.
-                        classification=_ATTACHMENT_BLOB_SENSITIVITY,
-                        schema_version=_ATTACHMENT_BLOB_VERSION,
-                        written_at=now(),
-                        payload=_wrap_blob_payload(data),
-                    )
-                    for digest, data in pending.items()
-                ),
-            )
-            _LOGGER.debug("stored %d attachment objects in one batch", len(pending))
-
-        return tuple(digests)
-
     def put_file(self, source: Path) -> tuple[str, int]:
         """Read ``source`` and store it via :meth:`put_bytes`, deduplicating by digest."""
         try:
@@ -385,10 +314,6 @@ class AttachmentStore(BaseModel):
         if record is None:
             raise _attachment_not_found_error("attachment blob not found", object_kind="blob")
         return unwrap_blob_payload(record.payload)
-
-    def open_bytes(self, sha256: str) -> BinaryIO:
-        """Open the blob for ``sha256`` as a streaming binary handle."""
-        return BytesIO(self.read_bytes(sha256))
 
     def verify_blob(self, attachment_id: str) -> None:
         """Re-hash the stored blob and verify it matches ``attachment_id``."""

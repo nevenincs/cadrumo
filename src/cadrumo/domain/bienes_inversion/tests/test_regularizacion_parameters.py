@@ -19,7 +19,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....tests.authority_lease_support import private_authority_lease, scoped_when_requested
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.schema_base import ThresholdComparison
 from ..regularizacion_parameters import (
     BienesInversionParameterResolutionError,
@@ -37,8 +38,14 @@ def registry_authority() -> Iterator[PinnedAuthorityOperation]:
     on this package's fixture path, and reaching across for it would couple
     two test packages through a file neither owns.
     """
-    with bundled_indexed_authority().operation() as operation:
+    with private_authority_lease() as operation:
         yield operation
+
+
+@pytest.fixture(autouse=True)
+def _scope_tests_that_request_the_registry_authority(request: pytest.FixtureRequest) -> Iterator[None]:
+    with scoped_when_requested(request, "registry_authority"):
+        yield
 
 
 #: Every modelo 303 revision, with a filing-period date inside its own window.

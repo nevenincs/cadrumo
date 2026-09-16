@@ -16,6 +16,7 @@ from .facts.resolution import (
     ResolvedEntitySetFact,
     ResolvedMappingFact,
     required_mapping_entry,
+    unique_mapping_tokens,
 )
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
@@ -82,17 +83,6 @@ class FiscalResidencyCatalogue:
         return next(item for item in self.definitions if item.token == token)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"fiscal-residency catalogue {key!r} must contain unique tokens")
-    return values
-
-
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     if value not in {"true", "false"}:
@@ -154,7 +144,7 @@ def resolve_fiscal_residency_catalogue(
     """Resolve the dated fiscal-residency vocabulary through fact 0122."""
     entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
     definitions: list[FiscalResidencyDefinition] = []
-    for raw_token in _csv(entries, _FISCAL_RESIDENCY_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _FISCAL_RESIDENCY_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_FISCAL_RESIDENCY_PREFIX}{raw_token}."
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"fiscal-residency token {raw_token!r} declares a mismatched value")

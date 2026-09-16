@@ -534,11 +534,12 @@ def test_tax_year_mismatch_is_rejected_before_observation_creation(
         build_renta_deductible_expense_observation(fact, result, tax_year=2024)
 
 
+@pytest.mark.usefixtures("operation")
 def test_category_normalization_accepts_closed_values_and_rejects_unknowns() -> None:
-    assert normalize_spending_category("gastos_bancarios") is SpendingCategory.from_registry("gastos_bancarios")
+    assert normalize_spending_category("gastos_bancarios") == SpendingCategory.from_registry("gastos_bancarios")
     assert normalize_spending_category(
         SpendingCategory.from_registry("gastos_bancarios")
-    ) is SpendingCategory.from_registry("gastos_bancarios")
+    ) == SpendingCategory.from_registry("gastos_bancarios")
     with pytest.raises(ValueError, match=r"SpendingCategory|not a valid|gastos_sin_catalogo"):
         normalize_spending_category("gastos_sin_catalogo")
 

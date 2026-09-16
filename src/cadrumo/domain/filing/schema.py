@@ -161,22 +161,6 @@ class ModeloBindingValue(BaseModel):
             raise FilingValidationError("binding row source identity must match the binding source kind")
         return self
 
-    def secure_row_source_identity_payload(self) -> dict[str, object] | None:
-        """Return the explicit encrypted-state projection for this row identity."""
-        identity = self.row_source_identity
-        if identity is None:
-            return None
-        row_index = self.row_index
-        if row_index is None:
-            raise FilingValidationError("binding row source identity requires a row index")
-        return {
-            "binding_id": self.binding_id,
-            "row_index": row_index,
-            "source_kind": identity.source_kind.value,
-            "source_row_identity": identity.source_row_identity,
-            "fingerprint": identity.fingerprint,
-        }
-
     @model_serializer(mode="wrap")
     def _redact_or_project_row_source_identity(
         self,

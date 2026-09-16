@@ -379,6 +379,34 @@ class TransactionCatalogueRepository:
         """Return whether this bucket holds any persisted transactions."""
         return bool(self._load_index_ids())
 
+    def load_revision(self) -> str | None:
+        """Return a digest that changes whenever this bucket's catalogue does, without decrypting rows.
+
+        The digest covers the membership index's revision and every listed
+        row's stored revision, so an added, removed or rewritten transaction
+        each changes it. ``None`` means no stable revision can be stated -- a
+        listed row is missing, or a row predates recorded revisions -- and a
+        caller must then treat the catalogue as changed.
+        """
+        index_key = transaction_index_object_key(self._bucket_id)
+        index_ids = self._load_index_ids()
+        row_keys = {
+            transaction_id: transaction_object_key(self._bucket_id, transaction_id) for transaction_id in index_ids
+        }
+        revisions = self._objects.peek_many_revision_ids(
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+            (index_key, *row_keys.values()),
+        )
+        if not index_ids and index_key not in revisions:
+            return sha256_hex(b"transaction-catalogue:absent")
+        stated = [revisions.get(index_key)]
+        stated.extend(revisions.get(key) for key in row_keys.values())
+        if any(revision is None for revision in stated):
+            return None
+        lines = [f"index\t{revisions[index_key]}"]
+        lines.extend(f"{transaction_id}\t{revisions[row_keys[transaction_id]]}" for transaction_id in sorted(row_keys))
+        return sha256_hex("\n".join(lines).encode(UTF_8_ENCODING))
+
     def load(self) -> TransactionCatalogue:
         """Return the persisted catalogue, assembled from this bucket's rows.
 

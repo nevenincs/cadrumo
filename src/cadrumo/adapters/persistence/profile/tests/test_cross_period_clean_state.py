@@ -829,9 +829,7 @@ def test_first_year_modalidad_cuota_suppresses_m202_dependency_through_evaluator
         for e in m202_dependencies
     )
     assert has_first_year_fractional_suppression(verdict) is True
-    suppressed_periods = {
-        e.requirement.period.registry_token for e in suppressed_first_year_fractional(verdict)
-    }
+    suppressed_periods = {e.requirement.period.registry_token for e in suppressed_first_year_fractional(verdict)}
     assert suppressed_periods
 
 
