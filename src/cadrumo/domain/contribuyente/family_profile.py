@@ -368,34 +368,6 @@ class RentaFamilyProfile(BaseModel):
             )
         )
 
-    def custodia_compartida_count(
-        self,
-        filing_year: int,
-        *,
-        thresholds: MinimoDescendientesThresholds,
-        context: FamilyFactResolutionContext,
-    ) -> int:
-        """Count of eligible descendientes with custodia_compartida=True.
-
-        Only eligible (Art. 58.1) descendants are counted; non-eligible ones
-        carry no mínimo, so the prorrata has no effect. This counts the
-        judicially-shared-custody trigger specifically, NOT every descendant
-        whose mínimo ends up prorated under Art. 61 norma 1ª — an explicit
-        ``prorrata_minimo`` answer or a derived second entitled filer prorates
-        without shared custody.
-        """
-        return sum(
-            1
-            for d in self.descendientes
-            if d.custodia_compartida
-            and d.is_eligible_ordinary(
-                filing_year,
-                thresholds=thresholds,
-                context=context,
-                dependencia_assimilation_available=self.dependencia_assimilation_available,
-            )
-        )
-
     def minimo_prorrata_factor(
         self,
         descendant: DescendantInfo,

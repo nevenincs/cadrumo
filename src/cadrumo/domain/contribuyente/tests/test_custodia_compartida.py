@@ -2,7 +2,6 @@
 
 Covers:
 - DescendantInfo.custodia_compartida field: default False, accepted True
-- RentaFamilyProfile.custodia_compartida_count derived property
 - RentaFamilyProfile.minimo_prorrata_factor per-descendant factor
 - DescendantInfo roundtrip via facts with custodia_compartida=True
 - parse_descendiente_flag CUSTODIA= key acceptance
@@ -90,17 +89,6 @@ _PARSE_CUSTODIA_CASES = (
 def test_custodia_compartida_field_cases() -> None:
     for case_id, descendant, expected in _custodia_field_cases():
         assert descendant.custodia_compartida is expected, case_id
-
-
-# ---------------------------------------------------------------------------
-# RentaFamilyProfile.custodia_compartida_count
-# ---------------------------------------------------------------------------
-
-
-def test_custodia_compartida_count_cases() -> None:
-    for case_id, descendants, expected in _custodia_count_cases():
-        p = RentaFamilyProfile(descendientes=descendants)
-        assert p.custodia_compartida_count(FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
