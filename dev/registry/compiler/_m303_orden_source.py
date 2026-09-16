@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.orden_anual_html import (
+from dev.docs.preprocess.orden_anual_html import (
     OrdenAnualIvaActivityTable,
     OrdenAnualIvaAgriculturalIndex,
     OrdenAnualIvaAgriculturalIngresoACuenta,
