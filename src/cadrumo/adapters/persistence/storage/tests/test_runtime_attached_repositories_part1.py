@@ -207,7 +207,7 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("invoices", lambda: InvoiceCatalogueRepository().load()),
     ("filing_drafts", lambda: ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load("d" * 64)),
     ("submission", lambda: SubmissionRepository().list_submission_ids()),
-    ("justificante", lambda: JustificanteRepository().list_csvs()),
+    ("justificante", lambda: tuple(sorted(JustificanteRepository().iter_ids()))),
     (
         "filing_history",
         lambda: ModeloHistoryRepository(
@@ -451,7 +451,7 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
         assert InvoiceCatalogueRepository().load().invoices == {}
         assert ModeloDraftRepository(bucket_id=_BUCKET_B_ID).load(draft_a.draft_id) is None
         assert SubmissionRepository().list_submission_ids() == ()
-        assert JustificanteRepository().list_csvs() == ()
+        assert tuple(sorted(JustificanteRepository().iter_ids())) == ()
         InvoiceCatalogueRepository().save(build_invoice_catalogue((_invoice(_BUCKET_B_ID),)))
         ModeloDraftRepository(bucket_id=_BUCKET_B_ID).save(draft_b)
         SubmissionRepository().save(submission_b)
@@ -462,7 +462,7 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
         loaded_draft_a = ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load(draft_a.draft_id)
         loaded_draft_b = ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load(draft_b.draft_id)
         submissions = SubmissionRepository().list_submission_ids()
-        csvs = JustificanteRepository().list_csvs()
+        csvs = tuple(sorted(JustificanteRepository().iter_ids()))
 
     assert tuple(invoice.invoice_number for invoice in invoices.values()) == (f"INV-{_BUCKET_A_ID.upper()}",)
     assert loaded_draft_a == draft_a
