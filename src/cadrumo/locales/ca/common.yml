@@ -1229,6 +1229,7 @@ tui:
         cancel: Cancel·la
         confirm: Confirma
         failure: No s'ha pogut completar la recuperació.
+        progress: S'està creant la declaració…
         setup_incomplete: 'Primer declara completa la configuració del perfil: obre
           Perfil (F4) i prem F8.'
         success: S'ha creat {address}. Apareixerà a Declaracions quan hi tornis.
@@ -1504,6 +1505,7 @@ tui:
         unread: sense llegir
       empty: No hi ha justificants pendents de revisió.
       extract: Llegeix el document
+      loading: S'estan llegint els documents…
       path_placeholder: Escriu el camí del fitxer
       pending: Pendent
       printed_total_disagrees: El total imprès al document no coincideix amb el registrat.
@@ -1873,6 +1875,7 @@ tui:
     navigation:
       unavailable: No es pot obrir l'àrea sol·licitada en aquesta sessió.
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
+    opening: S'està obrint la teva àrea de treball…
     palette:
       placeholder: Cerca àrees, registres i accions…
     system:

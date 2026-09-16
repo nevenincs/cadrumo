@@ -1240,6 +1240,7 @@ tui:
         cancel: Cancelar
         confirm: Confirmar
         failure: No se pudo completar la recuperación.
+        progress: Creando la declaración…
         setup_incomplete: 'Primero declara completa la configuración del perfil: abre
           Perfil (F4) y pulsa F8.'
         success: Se ha creado {address}. Aparecerá en Declaraciones cuando vuelvas
@@ -1516,6 +1517,7 @@ tui:
         unread: sin leer
       empty: No hay justificantes pendientes de revisión.
       extract: Leer documento
+      loading: Leyendo los documentos…
       path_placeholder: Escribe la ruta del archivo
       pending: Pendiente
       printed_total_disagrees: El total impreso en el documento no coincide con el
@@ -1887,6 +1889,7 @@ tui:
     navigation:
       unavailable: No se puede abrir el área solicitada en esta sesión.
     no_areas: Ninguna área está disponible todavía en esta sesión.
+    opening: Abriendo tu área de trabajo…
     palette:
       placeholder: Busca áreas, registros y acciones…
     system:

@@ -1220,6 +1220,7 @@ tui:
         cancel: Mégse
         confirm: Megerősítés
         failure: A helyreállítási kérelem nem fejezhető be.
+        progress: A bevallás létrehozása…
         setup_incomplete: 'Előbb fejezze be a profil beállítását: nyissa meg a Profilt
           (F4), és nyomja meg az F8-at.'
         success: '{address} létrejött. A Bevallások között jelenik meg, amikor visszatér
@@ -1494,6 +1495,7 @@ tui:
         unread: nem olvasható
       empty: Nincs ellenőrzésre váró bizonylat.
       extract: Dokumentum beolvasása
+      loading: A dokumentumok beolvasása…
       path_placeholder: Írd be a fájl elérési útját
       pending: Függőben
       printed_total_disagrees: A dokumentumon szereplő végösszeg eltér a rögzítettől.
@@ -1860,6 +1862,7 @@ tui:
     navigation:
       unavailable: A kért terület ebben a munkamenetben nem nyitható meg.
     no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
+    opening: A munkaterület megnyitása…
     palette:
       placeholder: Területek, bejegyzések és műveletek keresése…
     system:
