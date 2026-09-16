@@ -1411,7 +1411,6 @@ tui:
       expired: A munkamenet lejárt
       locked: A profil zárolva van
       no_profile: Nincs kiválasztott profil
-    session_line: '%{label} · Állapot: %{status}'
     title: Kezdőlap
   ledger:
     area:
@@ -1612,7 +1611,8 @@ tui:
       sign_out: Kijelentkezés
       unavailable: A fiókvezérlők ebben a munkamenetben nem érhetők el.
     account_bar:
-      with_expiry: '%{line} · A munkamenet vége: %{expires_at}'
+      line: '{label} · {status}'
+      line_with_expiry: '{label} · {status} · lejár: {expires_at}'
     account_help:
       appearance: Váltás a világos és a sötét megjelenés között
       change_user: Bejelentkezés egy másik profilba ezen a számítógépen

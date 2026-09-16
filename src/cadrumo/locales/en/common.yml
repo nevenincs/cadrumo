@@ -1391,7 +1391,6 @@ tui:
       expired: Session expired
       locked: Profile locked
       no_profile: No profile selected
-    session_line: '%{label} · Status: %{status}'
     title: Home
   ledger:
     area:
@@ -1592,7 +1591,8 @@ tui:
       sign_out: Sign out
       unavailable: Account controls are unavailable for this session.
     account_bar:
-      with_expiry: '%{line} · Session ends %{expires_at}'
+      line: '{label} · {status}'
+      line_with_expiry: '{label} · {status} · until {expires_at}'
     account_help:
       appearance: Switch between the light and dark appearance
       change_user: Sign in to another profile on this computer

@@ -1420,7 +1420,6 @@ tui:
       expired: Sessió caducada
       locked: Perfil blocat
       no_profile: Cap perfil seleccionat
-    session_line: '%{label} · Estat: %{status}'
     title: Inici
   ledger:
     area:
@@ -1623,7 +1622,8 @@ tui:
       sign_out: Tanca la sessió
       unavailable: Els controls del compte no estan disponibles en aquesta sessió.
     account_bar:
-      with_expiry: '%{line} · La sessió acaba a les %{expires_at}'
+      line: '{label} · {status}'
+      line_with_expiry: '{label} · {status} · fins a les {expires_at}'
     account_help:
       appearance: Canvia entre l'aparença clara i la fosca
       change_user: Inicia la sessió en un altre perfil d'aquest ordinador
