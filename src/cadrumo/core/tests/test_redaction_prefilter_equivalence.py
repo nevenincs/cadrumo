@@ -1,4 +1,4 @@
-"""Skipping a rule whose pattern cannot match never changes what ``redact`` returns."""
+"""Skipping an unmatchable rule, and reusing a redacted CLI string, never change the output."""
 
 from __future__ import annotations
 
@@ -10,7 +10,15 @@ import pytest
 
 from ..classification.policies import RedactionRule, SensitivityClass, default_policy_for
 from ..errors.hierarchy import RedactionError
-from ..redaction.rules import _apply_one, default_rules_for, default_rules_for_class, redact
+from ..redaction.rules import (
+    _CLI_STRING_CACHE_MAX_LENGTH,
+    _apply_one,
+    _redact_cli_string_uncached,
+    default_rules_for,
+    default_rules_for_class,
+    redact,
+    redact_for_cli_output,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -86,3 +94,34 @@ def test_the_cached_class_rules_are_the_policy_rules() -> None:
         except RedactionError:
             continue
         assert default_rules_for_class(sensitivity) == expected
+
+
+@pytest.mark.parametrize("reveal_identifiers", [False, True])
+def test_a_repeated_cli_string_redacts_as_a_fresh_one(reveal_identifiers: bool) -> None:
+    mismatches = [
+        value
+        for value in _corpus()
+        for _ in range(2)
+        if redact_for_cli_output(value, reveal_identifiers=reveal_identifiers)
+        != _redact_cli_string_uncached(value, reveal_identifiers)
+    ]
+
+    assert mismatches == []
+
+
+def test_the_reveal_flag_is_part_of_what_is_reused() -> None:
+    """STALE KEY: a string redacted under one reveal mode is not served to the other."""
+    profile_path = "buckets/1470176e-bf82-490d-a09d-1234567890ab"
+
+    hidden = redact_for_cli_output(profile_path)
+    revealed = redact_for_cli_output(profile_path, reveal_identifiers=True)
+
+    assert hidden != revealed
+    assert redact_for_cli_output(profile_path) == hidden
+
+
+def test_a_long_string_is_redacted_without_reuse() -> None:
+    long_text = "B12345674 " * (_CLI_STRING_CACHE_MAX_LENGTH // 5)
+    assert len(long_text) > _CLI_STRING_CACHE_MAX_LENGTH
+
+    assert redact_for_cli_output(long_text) == _redact_cli_string_uncached(long_text, False)
