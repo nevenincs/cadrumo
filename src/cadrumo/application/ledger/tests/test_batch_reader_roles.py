@@ -27,7 +27,7 @@ from ....core.config import load_settings, override_settings
 from ....core.model_catalogue import ModelRole
 from ....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ...local_reader import configured_role_model
-from ...provisioning_runtime import (
+from ...provisioning import (
     AcceleratorDevice,
     AcceleratorKind,
     AcceleratorReading,
@@ -36,6 +36,7 @@ from ...provisioning_runtime import (
     probe_hardware_profile,
 )
 from ..batch_ingest import _InferenceLaneState, _reader_role_for
+from ..evidence_input_ports import EvidenceDocumentShapeProbe
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -82,7 +83,8 @@ def _uncontended() -> HardwareProfile:
     )
 
 
-def _document_shape_probe():
+def _document_shape_probe() -> EvidenceDocumentShapeProbe:
+    """Return the one production shape probe the extraction ports carry."""
     from ....adapters.inbound.einvoice.shape import probe_document_shape
 
     return probe_document_shape
