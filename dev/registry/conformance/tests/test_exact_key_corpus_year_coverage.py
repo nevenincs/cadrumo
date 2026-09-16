@@ -44,9 +44,9 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.runtime_catalogues import (
     PublishedIvaPlaceOfSupplyRule,
 )
-from cadrumo.domain.iva.catalogue import resolve_catalogue
 from cadrumo.domain.iva.errors import IvaCatalogueError
 from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule
+from dev.registry.conformance.iva_regulation_catalogue import resolve_catalogue
 
 from ...compiler.loader import load_registry_tree
 from ...compiler.runtime_catalogues import (

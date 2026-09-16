@@ -23,5 +23,4 @@ Submodules
 
    cadrumo.core.resources._keys
    cadrumo.core.resources.bundled_data
-   cadrumo.core.resources.errors
    cadrumo.core.resources.registry

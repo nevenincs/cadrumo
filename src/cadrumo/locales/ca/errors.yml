@@ -138,8 +138,6 @@ errors:
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
     unknown_text_input_casillas: 'Identificadors de casella d''entrada de text desconeguts:
       %{casilla_ids}.'
-    unsupported_comparison_op: 'Operador de comparació no ames: %{op}.'
-    unsupported_op: 'Operador de fórmula no ames: %{op}.'
   censo:
     bucket_id_blank: El servei de sincronització censal requereix un bucket de perfil.
     certificado_extraction_unpinned: La lectura del certificat emès encara no està
@@ -252,12 +250,6 @@ errors:
     error_justificante: S'ha produït un error relacionat amb el justificant.
     error_justificante_csv_not_found: El PDF no conté un Codi Segur de Verificació.
     error_llm: S'ha produït un error en el model de llenguatge.
-    error_manuals_manual: S'ha produït un error relacionat amb els manuals.
-    error_manuals_manual_not_found: No s'ha trobat el manual, any o part sol·licitats.
-    error_manuals_manual_review_required: Un registre de manual no té metadades de
-      revisió.
-    error_manuals_rule_extraction: L'extracció de regles del manual no està disponible.
-    error_manuals_validation: Un registre de manual no ha superat la validació.
     error_modelo_aggregation_binding: Els bindings d'agregació derivats del bucket
       entren en conflicte amb les dades indicades.
     error_modelo_amendment_evidence_missing: No es pot complementar una declaració
@@ -320,12 +312,6 @@ errors:
       al règim especial de la Seguretat Social del mar han de presentar declaració
       de l''IRPF independentment del nivell d''ingressos (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: Un valor de la declaració de la Renda no és vàlid.
-    error_resources_backend: S'ha produït un error en llegir les dades incloses en
-      l'aplicació.
-    error_resources_load: No s'ha pogut carregar un recurs inclòs en l'aplicació.
-    error_resources_not_found: No s'ha trobat el recurs inclòs sol·licitat.
-    error_resources_validation: Un fitxer inclòs en l'aplicació no ha superat la validació
-      estricta.
     error_retention: No s'ha pogut avaluar la política de conservació de registres
       tributaris.
     error_review: S'ha produït un error en la revisió.
@@ -473,8 +459,6 @@ errors:
       per límit d'ús. Espera uns minuts i torna-ho a provar.
     fail_llm_transient_transport: La petició no ha arribat al motor del model de llenguatge
       i s'ha exhaurit el pressupost de reintents.
-    fail_manuals_manual_parse: Un registre de manual no ha superat la validació de
-      l'esquema.
     fail_modelo_calculation_revision_persistence: No s'ha pogut desar o llegir el
       catàleg de revisions de càlcul.
     fail_modelo_filing_record_persistence: No s'ha pogut desar o llegir el catàleg
@@ -610,8 +594,6 @@ errors:
       no ha superat la validació.
     canonical_modelo_workspace_absent_registry_projection: La captura del registre
       s'ha retornat sense la projecció promesa.
-    canonical_orden_anual_html_parse: L'HTML de l'ordre anual de l'IVA té una estructura
-      no vàlida o no compatible.
     canonical_relation_binding_join: No s'ha pogut llegir d'acord amb el que s'ha
       declarat la correspondència inclosa entre relacions i bindings.
     canonical_tampered_manifest_payload: El resum del manifest del corpus no coincideix
@@ -636,8 +618,6 @@ errors:
       ni CIF espanyol vàlid.
     integrity_justificante_verification: La verificació del justificant amb l'AEAT
       no s'ha pogut completar.
-    integrity_manuals_manifest: El manifest del manual no ha superat les comprovacions
-      d'esquema o de resum.
     integrity_observability_run_trace_validation: La traça d'execució desada no ha
       superat la validació estricta.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
@@ -736,8 +716,6 @@ errors:
       els seus textos de presentació.'
     internal_flow_validator_registry: 'Error intern: el registre de validadors del
       flux guiat ha rebutjat l''operació.'
-    internal_master_key_reentrant: 'Error intern: el proveïdor de la clau mestra s''ha
-      invocat de manera reentrant; tanca la sessió activa abans de tornar a entrar-hi.'
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
       un esdeveniment de telemetria fora d''un context d''execució actiu.'
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
@@ -750,10 +728,6 @@ errors:
     internal_profile_registration: 'Error intern: no s''ha pogut registrar el perfil.'
     internal_wipe_type: 'Error intern: l''operació d''esborrat segur ha rebut un valor
       que no pot sobreescriure.'
-    internal_wizard_catalogue_already_registered: 'Error intern: el catàleg de l''assistent
-      ja està registrat.'
-    internal_wizard_catalogue_not_registered: 'Error intern: el catàleg de l''assistent
-      no està registrat.'
     internal_workflow_abort_signal: 'Error intern: una etapa del flux de treball ha
       emès un senyal de cancel·lació.'
     internal_workflow_unhandled: 'Error intern: una etapa del flux de treball ha llançat
@@ -814,8 +788,6 @@ errors:
       un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
-    canonical_ledger_period_validation: El període del llibre no és un període AEAT
-      canònic vàlid.
     canonical_m036_declaration_ambiguous: El prefix de l'identificador de la declaració
       del Model 036 coincideix amb més d'un registre.
     canonical_m036_declaration_not_found: Cap declaració del Model 036 coincideix
@@ -1076,6 +1048,10 @@ errors:
       Comprova-ho amb `aeat config provision status`, arrenca'l amb `aeat config provision
       start` i descarrega'n els models amb `aeat config provision pull`, o tria un
       proveïdor extern per a aquesta lectura, i torna-ho a provar.
+    refused_ledger_evidence_reader_unreadable_answer: El lector de documents ha respost
+      en un format que aquesta ordre no ha pogut llegir, així que no s'ha pres res
+      del document. No s'ha desat res; torna a executar l'ordre i, si continua passant,
+      el que cal canviar és el model lector.
     refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
       del Model 100 amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients

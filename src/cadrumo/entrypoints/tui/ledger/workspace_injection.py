@@ -25,6 +25,7 @@ from .action_guards import require_canonical_ledger_actions
 from .models import (
     LedgerClassificationSubmitterV1,
     LedgerEvidenceDoorV1,
+    LedgerExclusionSubmitterV1,
     LedgerImportDoorV1,
     LedgerInvoiceAddDoorV1,
     LedgerLinkSubmitterV1,
@@ -60,6 +61,8 @@ class LedgerWorkspaceInjection:
     link_action: ActionReference | None = None
     link_submitter: LedgerLinkSubmitterV1 | None = None
     invoice_add_door: LedgerInvoiceAddDoorV1 | None = None
+    exclusion_submitter: LedgerExclusionSubmitterV1 | None = None
+    """Offered only beside ``classify_action``: excluding is a classification outcome."""
     evidence_door: LedgerEvidenceDoorV1 | None = None
     refresh: LedgerWorkspaceRefreshDoorV1 | None = None
     """Re-read the projection after a write; without it a flow shows its own result only."""

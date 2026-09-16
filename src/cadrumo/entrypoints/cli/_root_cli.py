@@ -54,10 +54,17 @@ def root_command(
         emit_root_help_and_exit(ctx)
     if ctx.invoked_subcommand is not None and is_introspection_only_invocation(ctx):
         return
-    from ..adapter_composition import profile_adapter_composition
+    requested = preserve_requested_cli_leaf(ctx)
+    if requested is not None and _requested_leaf_is_profile_free(requested.canonical_cli_path):
+        # A leaf that declares nothing a profile holds never reads a profile
+        # port, so composing them all would only cost the adapter imports.
+        from ..adapter_composition import profile_free_adapter_composition
 
-    state["adapter_composition"] = ctx.with_resource(profile_adapter_composition())
-    preserve_requested_cli_leaf(ctx)
+        ctx.with_resource(profile_free_adapter_composition())
+    else:
+        from ..adapter_composition import profile_adapter_composition
+
+        state["adapter_composition"] = ctx.with_resource(profile_adapter_composition())
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:
         if profile is not None:
@@ -71,6 +78,17 @@ def root_command(
         stdin=profile_secrets_stdin,
         descriptor=profile_secrets_fd,
     )
+
+
+def _requested_leaf_is_profile_free(path: tuple[str, ...]) -> bool:
+    from ._profile_authentication_contract import command_is_profile_free
+    from .command_specs import COMMAND_GRAPH
+
+    try:
+        spec = COMMAND_GRAPH.resolve_path((COMMAND_GRAPH.root().token, *path))
+    except LookupError:
+        return False
+    return command_is_profile_free(spec)
 
 
 def app_root(ctx: typer.Context, help_: bool = False) -> None:

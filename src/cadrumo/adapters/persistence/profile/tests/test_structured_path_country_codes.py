@@ -60,7 +60,7 @@ from cadrumo.domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from cadrumo.domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
-from cadrumo.entrypoints.cli.ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
+from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 
 from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, repository, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile

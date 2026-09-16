@@ -257,6 +257,7 @@ class StorageCategory(StrEnum):
     PROFILE_CUSTODY_HOLD_FILING_OWNER = "profile-custody-hold-evidence.filing-owner"
     PROFILE_CUSTODY_HOLD_DERIVED_EVIDENCE = "profile-custody-hold-evidence.derived"
     PROFILE_CUSTODY_LABEL_HEAD = "profile-custody-label-head"
+    LOCAL_READER_FITNESS_VERDICTS = "local-reader-fitness-verdicts"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"

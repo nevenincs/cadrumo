@@ -422,13 +422,19 @@ class CensoSyncService:
         is absent / non-decimal / zero.
         """
         from ...domain.user_profile.errors import ProfileNotFoundError
-        from .projections import record_to_path_values
 
         try:
             record = self._profiles.load(profile_id)
         except ProfileNotFoundError:
             return None
-        return _raw_afectacion_ratio(record_to_path_values(record))
+        return raw_afectacion_ratio_for_record(record)
+
+
+def raw_afectacion_ratio_for_record(record: UserProfileRecord) -> Decimal | None:
+    """Return ``office_m2 / total_m2`` from an already-loaded profile record, if declared."""
+    from .projections import record_to_path_values
+
+    return _raw_afectacion_ratio(record_to_path_values(record))
 
 
 def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:
@@ -508,5 +514,6 @@ __all__ = [
     "bound_raw_afectacion_ratio",
     "bound_raw_afectacion_ratio_for_bucket",
     "censal_facts_from_read",
+    "raw_afectacion_ratio_for_record",
     "reconcile_censal_read",
 ]

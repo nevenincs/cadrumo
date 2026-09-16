@@ -85,12 +85,14 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 
         try:
+            profile = context.profile
             with bundled_indexed_authority().operation() as operation:
                 usage_ratios = resolve_effective_usage_ratios(
                     bucket_id=context.bucket_id,
                     year=context.filing_year,
                     usage_ratio_profile_loader=self._usage_ratio_profile_loader,
                     operation=operation,
+                    profile_record=profile.record if profile is not None else None,
                 )
             aggregation = aggregate_renta_ledger_expenses_from_repositories(
                 bucket_id=context.bucket_id,
@@ -102,7 +104,9 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 profile_year=context.filing_year,
                 usage_ratios=usage_ratios,
                 modelo=context.modelo,
+                profile_record=profile.record if profile is not None else None,
                 prorrata_register_repository=self._prorrata_register_repository,
+                profile_decode_context=profile.profile_decode_context if profile is not None else None,
             )
         except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(

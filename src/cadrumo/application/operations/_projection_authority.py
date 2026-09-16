@@ -6,7 +6,7 @@ import secrets
 from collections.abc import Callable
 from datetime import datetime
 from threading import RLock
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol
 
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
@@ -23,7 +23,6 @@ from .secret_submission import zeroize_secret_buffer
 
 if TYPE_CHECKING:
     from .projection_services import (
-        BoundOperationSecureResponseAuthority,
         OperationResponseCapability,
     )
 
@@ -81,87 +80,6 @@ def response_authority_binding_matches(
         and pending.reviewed_proposal_digest == authority.reviewed_proposal_digest
         and pending.request.expires_at == authority.expires_at
     )
-
-
-class BoundOperationSecureResponseAuthorityMixin(_AuthorityHost):
-    """Implementation of a bearer bound to one exact pending REVIEW."""
-
-    @classmethod
-    def bind(
-        cls: type[BoundOperationSecureResponseAuthorityMixin],
-        *,
-        operation_id: OperationId,
-        interaction_id: OperationInteractionId,
-        revision: int,
-        reviewed_proposal_digest: ContentDigest,
-        actor_ref: OperationActorReference,
-        expires_at: datetime | None,
-        intents: frozenset[OperationResponseIntent],
-        response_token: OperationResponseToken,
-        clock: Callable[[], datetime],
-    ) -> BoundOperationSecureResponseAuthority:
-        """Bind one mutable bearer to an exact pending REVIEW decision."""
-        if not intents or not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
-            raise ValueError("secure response authority requires supported REVIEW intents")
-        authority_type: Any = cls
-        return cast(
-            "BoundOperationSecureResponseAuthority",
-            authority_type(
-                operation_id=operation_id,
-                interaction_id=interaction_id,
-                revision=revision,
-                reviewed_proposal_digest=reviewed_proposal_digest,
-                actor_ref=actor_ref,
-                expires_at=expires_at,
-                intents=intents,
-                clock=clock,
-                _token=bytearray(response_token, "ascii"),
-            ),
-        )
-
-    async def permitted_intents(
-        self,
-        request: OperationResponseControlRequestV1,
-        pending: OperationPendingInteraction,
-        /,
-    ) -> frozenset[OperationResponseIntent]:
-        """Validate the binding and return its still-permitted response intents."""
-        self._validate_binding(request, pending)
-        return self.intents
-
-    def _validate_binding(
-        self,
-        request: OperationResponseControlRequestV1,
-        pending: OperationPendingInteraction,
-    ) -> None:
-        """Enforce every runtime bearer check before exposing its intent set."""
-        if self._closed:
-            raise ValueError("secure response authority is closed")
-        if not response_authority_binding_matches(self, request, pending):
-            raise ValueError("secure response authority binding is stale")
-        if self.expires_at is not None and self.clock() > self.expires_at:
-            raise ValueError("secure response authority is expired")
-        token_digest = content_hash_hex(self._token.decode("ascii"))
-        if not secrets.compare_digest(token_digest, pending.response_token_digest):
-            raise ValueError("secure response authority bearer does not match the pending interaction")
-
-    async def response_token(
-        self,
-        request: OperationResponseControlRequestV1,
-        pending: OperationPendingInteraction,
-        intent: OperationResponseIntent,
-        /,
-    ) -> OperationResponseToken:
-        """Return the private token only after exact authority validation."""
-        intents = await self.permitted_intents(request, pending)
-        if intent not in intents:
-            raise ValueError("secure response authority does not permit the requested intent")
-        return self._token.decode("ascii")
-
-    def close(self) -> None:
-        """Zeroize the in-memory response bearer and prevent reuse."""
-        zeroize_secret_buffer(self._token)
-        object.__setattr__(self, "_closed", True)
 
 
 class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
@@ -269,7 +187,6 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
 
 
 __all__ = [
-    "BoundOperationSecureResponseAuthorityMixin",
     "OperationResponseAuthorityBrokerMixin",
     "response_authority_binding_matches",
 ]

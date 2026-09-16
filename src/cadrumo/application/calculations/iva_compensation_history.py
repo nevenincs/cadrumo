@@ -4,12 +4,6 @@ This module owns the application policy and typed state projections.  A required
 application capability persists the state; encrypted storage and its failure
 modes are bound outside this module.
 
-This module uses
-:class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualSummary`
-and
-:class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualCrossCheck`
-for Modelo 303-to-Modelo 390 annual cross-checking.
-
 See Also:
     :mod:`domain.iva_compensation.carry_forward`
         Pure FIFO lot projection and four-year review policy.
@@ -23,25 +17,16 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
-
-from pydantic import BaseModel, Field
-
-from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
+from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
-from ...core.casilla_value_kind import CasillaValueKind
 from ...core.decimal.constants import ZERO
-from ...core.filing_year import FilingYear
-from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
 )
@@ -63,67 +48,18 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
 )
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
-)
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M390_COMPENSATION_LAST_PERIOD_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
-)
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva_compensation.carry_forward import (
     IvaCompensationPeriodState,
 )
 from ...domain.iva_compensation.errors import (
-    IvaCompensationCasillaReferenceError,
-    IvaCompensationDecimalParseError,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
 from .errors import IvaCompensationModeloError
 from .iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
-from .ports import FiledDeclaracionObservationProtocol
 from .revision_carry_gate import revision_carry_outcome
-
-
-class IvaCompensationAnnualSummary(BaseModel):
-    """Filed Modelo 390 annual IVA compensation summary for cross-checking."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    taxpayer_nif: SubjectTaxId = Field(
-        description=(
-            "The filing subject, validated through the canonical Spanish "
-            "tax-identifier authority. The sibling "
-            "IvaCompensationPeriodState already types this identity, and both "
-            "are populated from the same authenticated_identity and compared "
-            "against each other by the annual cross-check, so a bounded plain "
-            "string here meant one side of that comparison ran the AEAT "
-            "checksum and the other did not."
-        ),
-    )
-    filing_year: FilingYear
-    expediente_id: AeatExpedienteId
-    status: str = Field(min_length=1, max_length=32)
-    presented_at: datetime
-    last_period_compensation_amount: Decimal = Field(ge=ZERO)
-    generated_not_in_last_period_amount: Decimal = Field(ge=ZERO)
-    total_pending_amount: Decimal = Field(ge=ZERO)
-    source_observation_key: str = Field(min_length=1, max_length=96)
-    source_artefact_sha256: ContentDigest | None = Field(
-        default=None,
-        description=(
-            "SHA-256 of the filed artefact this state was read from, typed "
-            "through the canonical content-digest authority. None is the "
-            "declared 'no artefact captured' case -- a registry-observation "
-            "or manually seeded state carries no submitted file. A value that "
-            "IS present identifies content-addressed evidence, so it must "
-            "carry the canonical lowercase hex-64 shape: a 64-character "
-            "non-digest would otherwise be persisted alongside valid "
-            "compensation history and later be resolved as if it addressed "
-            "the artefact."
-        ),
-    )
 
 
 def iva_compensation_period_key(period: Period) -> str:
@@ -382,127 +318,6 @@ def persist_observation_envelope_and_iva_history(
     return state
 
 
-def iva_compensation_annual_summary_from_filed_observation(
-    observation: FiledDeclaracionObservationProtocol,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> IvaCompensationAnnualSummary:
-    """Build an :class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualSummary`.
-
-    The source is a filed Modelo 390
-    :class:`~application.calculations.ports.FiledDeclaracionObservationProtocol`.
-
-    ``iva.anual.compensacion-ultimo-periodo-97`` carries the final-period amount
-    to compensate. ``iva.anual.compensacion-generada-ejercicio-no-97`` carries
-    generated pending compensation from the exercise that is not included in the
-    final-period annual carry id. The summary is evidence for cross-checking the
-    Modelo 303 carry-forward projection; it is not stored as a period state.
-    """
-    if observation.modelo != Modelo("390").value:
-        raise IvaCompensationModeloError(
-            translated_message="application.calculations.iva_compensation.errors.modelo_390_only",
-            context={"modelo": observation.modelo},
-        )
-    values = _decimal_casilla_values(observation, operation=operation)
-    last_period = _resolve_casilla_value(values, _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA) or ZERO
-    generated_not_in_last = (
-        _resolve_casilla_value(
-            values,
-            _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
-        )
-        or ZERO
-    )
-    source_artefact_sha256 = next(
-        (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
-        None,
-    )
-    return IvaCompensationAnnualSummary(
-        taxpayer_nif=observation.authenticated_identity,
-        filing_year=observation.ejercicio,
-        expediente_id=observation.expediente_id,
-        status=observation.status,
-        presented_at=observation.presented_at,
-        last_period_compensation_amount=last_period,
-        generated_not_in_last_period_amount=generated_not_in_last,
-        total_pending_amount=last_period + generated_not_in_last,
-        source_observation_key=f"390:{observation.ejercicio}:0A:{observation.expediente_id}",
-        source_artefact_sha256=source_artefact_sha256,
-    )
-
-
-def _decimal_casilla_values(
-    observation: FiledDeclaracionObservationProtocol,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> dict[CasillaId, Decimal]:
-    _validate_observed_casilla_ids(observation, operation=operation)
-    values: dict[CasillaId, Decimal] = {}
-    for casilla in observation.casillas:
-        if casilla.source_artefact_kind == "justificante_pdf":
-            continue
-        # Modelo 303 and Modelo 390 declare only money casillas today, so this
-        # refusal is unreachable on current registry data. It is not decoration:
-        # these values feed cross-period IVA carry-forward balances, so the day a
-        # revision adds a text casilla the refusal must already be here rather
-        # than a wrong balance carried silently between filings.
-        #
-        # The kind is read through the port instead of catching what the accessor
-        # raises, because that refusal is the adapter's exception type and this
-        # layer does not import it.
-        if casilla.value_kind is not CasillaValueKind.NUMERIC:
-            raise _iva_compensation_decimal_refusal(observation, casilla.casilla_id)
-        try:
-            values[casilla.casilla_id] = casilla.decimal_value()
-        except InvalidOperation as exc:
-            raise _iva_compensation_decimal_refusal(observation, casilla.casilla_id) from exc
-    return values
-
-
-def _iva_compensation_decimal_refusal(
-    observation: FiledDeclaracionObservationProtocol,
-    casilla_id: CasillaId,
-) -> IvaCompensationDecimalParseError:
-    """Build the refusal for a casilla the carry-forward reader cannot read as an amount.
-
-    Both Modelo 303 and Modelo 390 reach here, so the casilla id alone does not say
-    which filing refused. Never add the observed VALUE to this context: the carrier
-    holds the artefact's own token, and this context is rendered to the operator.
-    """
-    return IvaCompensationDecimalParseError(
-        translated_message="errors.refused.refused_iva_compensation_decimal_parse",
-        context={
-            "casilla_id": casilla_id,
-            "modelo": observation.modelo,
-            "filing_year": str(observation.ejercicio),
-            "period": observation.period.registry_token,
-        },
-    )
-
-
-def _validate_observed_casilla_ids(
-    observation: FiledDeclaracionObservationProtocol,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    revision = operation.revision_for_context(
-        observation.modelo,
-        filing_year=observation.ejercicio,
-        period=observation.period.registry_token,
-    )
-    invalid = undeclared_casilla_ids(revision, (casilla.casilla_id for casilla in observation.casillas))
-    if not invalid:
-        return
-    raise IvaCompensationCasillaReferenceError(
-        context={
-            "modelo": observation.modelo,
-            "revision": revision.id,
-            "period": observation.period.registry_token,
-            "casilla_ids": invalid,
-        },
-        translated_message="application.calculations.iva_compensation.errors.observed_casilla_ids_noncanonical",
-    )
-
-
 def _casilla_value(values: dict[CasillaId, Decimal], *casilla_ids: CasillaId) -> Decimal | None:
     for casilla_id in casilla_ids:
         value = values.get(casilla_id)
@@ -517,9 +332,7 @@ def _resolve_casilla_value(values: dict[CasillaId, Decimal], semantic_id: Casill
 
 
 __all__ = [
-    "IvaCompensationAnnualSummary",
     "correct_iva_compensation_period",
-    "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",
     "iva_compensation_state_from_observation_envelope",
     "persist_observation_envelope_and_iva_history",

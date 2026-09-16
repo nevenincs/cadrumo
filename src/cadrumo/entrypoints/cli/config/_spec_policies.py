@@ -89,7 +89,6 @@ GOOGLE_DESTRUCTIVE = _policy(
     destructive=True,
 )
 CALCULATION_READ = _policy(frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute")
-REGISTRY_READ = _policy(frozenset({"calculation"}), frozenset({"none"}), "compute")
 NETWORK_WRITE = _policy(frozenset({"network"}), frozenset({"network", "local-state"}), "external-io")
 NETWORK_DESTRUCTIVE = _policy(
     frozenset({"network"}),
@@ -123,7 +122,6 @@ __all__ = [
     "NETWORK_WRITE",
     "PROFILE_DESTRUCTIVE",
     "PROFILE_READ",
-    "REGISTRY_READ",
     "STATE_FREE",
 ]
 

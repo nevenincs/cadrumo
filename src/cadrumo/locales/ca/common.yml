@@ -29,7 +29,6 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
-      candidate_outside_period: La candidatura queda fora del període.
       differentiated_sector_inactive_for_filing_year: Un sector diferenciat està inactiu
         per a l'exercici.
       differentiated_sector_without_filing_year_entry: Un sector diferenciat no té
@@ -743,6 +742,16 @@ overview:
     sobre Societats (model 200/202); consulti'l directament a la seu electrònica de
     l'AEAT.
 provisioning:
+  condition:
+    role_model_fit_for_role: '%{model} ha respost al document de prova, però la seva
+      resposta no serveix per llegir una factura. Trieu un altre model de text.'
+    role_model_fitness_verified: 'No hi ha cap comprovació d''aptitud registrada per
+      als pesos actuals de %{model}. Això no vol dir que el model no sigui apte: executeu
+      `aeat config provision verify` per comprovar-ho.'
+    role_model_fitness_within_timeout: '%{model} no ha acabat la resposta de prova
+      abans que s''esgotés el temps límit. Pot ser massa lent per a aquest equip;
+      trieu un model més petit o augmenteu el temps d''espera de l''LLM i torneu a
+      executar `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El model %{model} està subjecte a la %{licence}, que
@@ -1470,31 +1479,159 @@ tui:
       title: Apunts del llibre comptable
     entry_label: '{date} · {description}'
     evidence:
+      add: Afegeix el document
+      add_failed: El document no s'ha afegit.
+      add_label: Afegeix un PDF o una imatge d'una factura
+      added: S'ha afegit {file}.
+      adding: S'està desant el document de manera segura…
+      already_confirmed: La factura {number} ja estava registrada (total {total} {currency});
+        no s'ha afegit res.
       column:
+        file: Fitxer
+        invoice: Factura
         status: Revisió
         type: Tipus
+      confirm: Confirma com a factura
+      confirm_failed: La factura no s'ha registrat.
+      confirmed: 'Factura {number} registrada: total {total} {currency}.'
+      confirming: S'està registrant la factura a partir del document…
       detail: 'Mida: {size} bytes · capturat {captured}'
+      draft:
+        amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        discrepancies: 'Comprovacions que no quadren amb el document: {count}'
+        identity: Factura {number} amb data {date}
+        supplier: 'Proveïdor: {name} · NIF {nif}'
+        unread: sense llegir
       empty: No hi ha justificants pendents de revisió.
+      extract: Llegeix el document
+      path_placeholder: Escriu el camí del fitxer
       pending: Pendent
+      printed_total_disagrees: El total imprès al document no coincideix amb el registrat.
+        Revisa la factura.
+      queue_heading: Adjunts pendents de revisió
+      read_done: Llegit. Revisa els valors i confirma la factura.
+      read_failed: No s'ha pogut llegir el document.
+      reader_not_ready: El lector de documents no està a punt ({condition}). Comprova-ho
+        amb `aeat config provision status`.
+      reader_ready: El lector de documents està a punt en aquest equip.
+      reading: S'està llegint el document en aquest equip…
+      reading_refused:
+        reader: Encara no es poden llegir documents en aquest equip ({condition}).
+          Inicia o instal·la el lector amb `aeat config provision` i torna-ho a provar.
+      record_detail: '{kind} · proveïdor {supplier} · afegit el {added} · {status}'
+      record_status:
+        awaiting: Pendent de confirmar
+        confirmed: Confirmat
+        declined: Descartat
+        unmeasured: Sense mesurar
+      records_empty: Encara no hi ha documents de factura registrats.
+      records_heading: Documents de factura en aquest equip
       reviewed: Revisat
       safe_metadata: Només metadades segures; el contingut del document continua protegit.
       title: Revisió de justificants
     flow:
       in_flight_refusal: Espera que acabi l'operació actual abans de sortir d'aquesta
         pantalla.
+      refresh_failed: El canvi s'ha desat, però aquesta vista no s'ha pogut tornar
+        a llegir. Torna a l'Inici per actualitzar-la.
+      refreshing: S'està actualitzant l'espai de treball…
     import:
+      again: Importa un altre fitxer
+      browse: Navega
       cancel: Cancel·la
+      cancelled: Importació cancel·lada. No s'ha desat res.
       confirm: Confirma la importació
-      confirming: Confirma la importació preparada.
+      confirming: Revisa la previsualització i confirma per desar-la.
+      country_label: País de la contrapart, dues lletres (s'usa si el fitxer no té
+        columna de país)
+      country_required: Indica el país de la contrapart amb dues lletres, per exemple
+        ES.
       failure: No s'ha pogut completar la importació.
+      kind:
+        bank_statement: Extracte bancari
+        invoices_issued: Factures emeses
+        invoices_received: Factures rebudes
+      kind_label: Què conté el fitxer
+      outcome:
+        diagnostic: 'Nota: {message}'
+        did_import: 'Importades: {count}'
+        did_skip: 'Omeses perquè ja estaven registrades: {count}'
+        files: 'Fitxers llegits: {count}'
+        likely_duplicates: 'Possibles duplicats: {count} (ja al llibre o abans en
+          aquest fitxer). S''importen; revisa''ls.'
+        not_measured: Les factures noves i les ja registrades només es compten en
+          aplicar la importació.
+        refused_file: 'No llegit: {file}: {reason}'
+        refused_row: 'Fila {row} rebutjada ({field}): {reason}'
+        rows: 'Files: {count}'
+        unmapped: 'Columnes no importades: {columns}'
+        would_import: 'S''importarien: {count}'
+        would_skip: 'S''ometrien perquè ja estan registrades: {count}'
+      path_label: Fitxer o carpeta
+      path_missing: No existeix res a {path}.
+      path_placeholder: Escriu un camí o fes servir Navega
+      path_required: Indica el camí d'un fitxer o carpeta.
+      preview: Previsualitza
+      previewing: Llegint el fitxer…
       progress: Importació en curs…
-      prompt: Tria una importació preparada.
+      prompt: Tria què conté el fitxer i on és, i previsualitza'l. No es desa res
+        fins que confirmis.
       provider:
-        bank: Exportació bancària
-      source:
-        prepared: Font preparada
+        auto: Detectar automàticament
+        csv: Fitxer CSV
+        ofx: Fitxer OFX o QFX
+        pdf_n26: Extracte PDF d'N26
+        xlsx: Llibre d'Excel
+      provider_label: Format de l'extracte
       success: 'Importats: {imported}; omesos: {skipped}.'
       title: Importar assentaments comptables
+    invoice:
+      again: Afegeix una altra factura
+      cancel: Cancel·la
+      cancelled: Cancel·lat. No s'ha registrat res.
+      class:
+        ordinaria: Ordinària (completa)
+        rectificativa: Rectificativa
+        simplificada: Simplificada
+      confirm: Registra la factura
+      confirming: Revisa la factura i registra-la.
+      failure: La factura no s'ha registrat.
+      field:
+        counterparty_name: Nom de la contrapart
+        counterparty_nif: NIF de la contrapart
+        country_code: País de la contrapart (dues lletres)
+        currency: Moneda
+        invoice_class: Classe de factura
+        invoice_date: Data de la factura (AAAA-MM-DD)
+        invoice_number: Número de factura
+        iva_rate: Tipus d'IVA (%)
+        kind: Tipus de factura
+        notes: Notes
+        retention_amount: Import de la retenció d'IRPF
+        retention_rate: Tipus de retenció d'IRPF (%)
+        series: Sèrie
+        taxable_base: Base imposable
+      kind:
+        issued: Emesa
+        received: Rebuda
+      open: Afegeix factura
+      optional: '{label} (opcional)'
+      problem:
+        amount: '{field} ha de ser un número com 1200.00.'
+        date: '{field} ha de ser una data amb el format AAAA-MM-DD.'
+        required: '{field} és obligatori.'
+      progress: S'està registrant la factura…
+      prompt: Introdueix la factura tal com està impresa. Es comprova i es registra
+        només després de revisar-la.
+      review: Revisa
+      success: 'Factura {number} registrada: base {base}, IVA {iva}, total {total}
+        {currency}.'
+      summary:
+        amounts: Base imposable {base} {currency} · tipus d'IVA {rate}
+        counterparty: 'Contrapart: {name} · NIF {nif} · {country}'
+        identity: Factura {kind} {number} amb data {date}
+        retention: 'Retenció d''IRPF: tipus {rate} · import {amount}'
+      title: Afegeix una factura
     overview:
       affected_declarations: Declaracions afectades
       areas: Àrees del llibre
@@ -1540,6 +1677,14 @@ tui:
         aquesta sessió.
     review:
       empty: Ara mateix no hi ha cap apunt per revisar.
+      exclude_cancel: Mantén l'assentament
+      exclude_confirm: Exclou l'assentament
+      exclude_failed: L'assentament no s'ha exclòs.
+      exclude_hint: Prem x per excloure de la declaració l'assentament ressaltat.
+      exclude_question: Excloure {entry} de la declaració? Continua al llibre i es
+        pot tornar a classificar més endavant.
+      excluded: '{entry} s''ha exclòs de la declaració.'
+      excluding: S'està excloent l'assentament…
       filter_all: 'Filtre: tots els estats de revisió'
       open: Obre la revisió
       title: Revisió del llibre comptable
@@ -1555,6 +1700,87 @@ tui:
       unmeasured: Sense mesurar
     unavailable:
       title: Àrea del llibre comptable no disponible
+  local_reader:
+    answer:
+      'no': 'no'
+      unmeasured: sense mesurar
+      'yes': sí
+    card:
+      action: Obre el lector de documents
+      description: Comprova si els documents de factura es poden llegir en aquest
+        equip i prepara el lector, el seu runtime i els seus models.
+      title: Lector de documents
+    checklist:
+      models_loaded: Models carregats
+      service_installed: Runtime instal·lat
+      service_running: Runtime en marxa
+      text_model_pulled: Model de text baixat
+      verified: Lector verificat
+      vision_model_pulled: Model d'escanejos baixat
+    choose_role: Tria una tasca de la taula per baixar, carregar, comprovar o eliminar-ne
+      el model.
+    column:
+      installed: Instal·lat
+      loaded: Carregat
+      model: Model
+      ready: A punt
+      role: Tasca
+      state: Estat
+      step: Pas
+    confirm:
+      cancel: Cancel·la
+      install_accept: Instal·la
+      install_message: La instal·lació executa {installer} per baixar i instal·lar
+        el runtime local de models en aquest equip. Vols continuar?
+      install_title: Vols instal·lar el runtime local?
+      remove_accept: Elimina
+      remove_message: Vols eliminar {model} d'aquest equip? Caldrà tornar-lo a baixar
+        abans de fer-lo servir.
+      remove_title: Vols eliminar aquest model?
+    extraction_not_ready: Encara no es poden llegir documents de factura en aquest
+      equip.
+    extraction_ready: Els documents de factura es poden llegir en aquest equip.
+    host: 'Runtime a {endpoint} · instal·lat: {installed} · respon: {reachable} ·
+      versió {version}'
+    install: Instal·la el runtime
+    install_cancelled: Instal·lació cancel·lada; no s'ha canviat res.
+    intro: El lector local llegeix els documents de factura en aquest equip. No s'envia
+      res enlloc.
+    last_pull: 'Darrera baixada en aquesta sessió: {model} · completada: {outcome}
+      · {size} bytes'
+    load: Carrega el model
+    measuring: S'està comprovant el lector…
+    no_installer: No hi ha cap instal·lador disponible en aquest sistema. Instal·la
+      tu mateix el runtime de models i torna a comprovar.
+    no_model: cap seleccionat
+    pull: Baixa el model
+    refresh: Torna a comprovar
+    refused: No s'ha pogut iniciar l'acció.
+    remove: Elimina el model
+    remove_cancelled: Eliminació cancel·lada; no s'ha canviat res.
+    role:
+      column_role_mapping: Columnes de fulls de càlcul
+      supply_nature_proposal: Proposta de béns o serveis
+      text_extraction: Documents amb text
+      vision_transcription: Documents escanejats
+    selected_role: 'Seleccionada: {role}'
+    setup: Prepara el lector
+    setup_done: El lector està preparat.
+    setup_step:
+      install: la instal·lació
+      load: la càrrega
+      pull: la baixada
+      start: l'arrencada
+      verify: la verificació
+    setup_stopped: 'La preparació s''ha aturat a {step}: {condition}.'
+    start: Inicia el runtime
+    state:
+      done: fet
+      missing: pendent
+    submitting: S'està iniciant…
+    title: Lector de documents
+    unreadable: No s'ha pogut llegir l'estat del lector.
+    verify: Comprova el model
   modelo:
     assertion:
       matched: Coincideix

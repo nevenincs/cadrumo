@@ -1,29 +1,41 @@
-"""Document reader: what the local reader reports, and the supervised start, pull and verify.
+"""Document reader: what the local reader reports, and the supervised setup and per-step actions.
 
 The page renders :class:`LocalReaderStatus` as measured and nothing more. An
 answer the reader could not measure stays "not measured"; it never becomes
-"not installed". Installing the runtime is not offered here: it runs a package
-manager and needs consent given at the command line.
+"not installed". Installing the runtime runs a package manager, so both the
+install button and a setup that would install ask for explicit confirmation
+first, the same consent ``--confirm`` gives at the command line.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import Horizontal
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Footer, Static
 
 from ....application.local_reader import LocalReaderRoleStatus, LocalReaderStatus
+from ....application.local_reader_operation import LocalReaderProvisionPublicResultV1, LocalReaderSetupStep
 from ....application.operations.composition import OperationComposedServices
+from ....application.operations.frontend_requests import (
+    OperationObservationSuccessV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
+)
+from ....application.provisioning_host import RuntimeInstaller
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.model_catalogue import ModelRole
-from ..components.theme import BASE_CSS
+from ....core.operations import OperationTerminalCondition
+from ..components.dialogs import ConfirmScreen
+from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal, OperationModalOutcomeV1
@@ -38,7 +50,33 @@ _ROLE_LOCALE_KEYS: Final[dict[ModelRole, str]] = {
     ModelRole.COLUMN_ROLE_MAPPING: "tui.local_reader.role.column_role_mapping",
     ModelRole.SUPPLY_NATURE_PROPOSAL: "tui.local_reader.role.supply_nature_proposal",
 }
+_SETUP_STEP_LOCALE_KEYS: Final[dict[LocalReaderSetupStep, str]] = {
+    LocalReaderSetupStep.INSTALL: "tui.local_reader.setup_step.install",
+    LocalReaderSetupStep.START: "tui.local_reader.setup_step.start",
+    LocalReaderSetupStep.PULL: "tui.local_reader.setup_step.pull",
+    LocalReaderSetupStep.LOAD: "tui.local_reader.setup_step.load",
+    LocalReaderSetupStep.VERIFY: "tui.local_reader.setup_step.verify",
+}
+_CHECKLIST_LOCALE_KEYS: Final = {
+    "service_installed": "tui.local_reader.checklist.service_installed",
+    "service_running": "tui.local_reader.checklist.service_running",
+    "text_model_pulled": "tui.local_reader.checklist.text_model_pulled",
+    "vision_model_pulled": "tui.local_reader.checklist.vision_model_pulled",
+    "models_loaded": "tui.local_reader.checklist.models_loaded",
+    "verified": "tui.local_reader.checklist.verified",
+}
 _ACTOR_REF: Final = "operator:tui-local-reader"
+_LOCAL_READER_CSS = tokenised("""
+.local-reader-actions { height: auto; margin: $cadrumo-space-0; }
+.local-reader-actions Button { margin: $cadrumo-space-0 $cadrumo-control-gap $cadrumo-space-0 $cadrumo-space-0; }
+#local-reader-checklist { height: auto; }
+""")
+_ROLE_ACTION_BUTTONS: Final = (
+    "#local-reader-pull",
+    "#local-reader-load",
+    "#local-reader-verify",
+    "#local-reader-remove",
+)
 
 
 def _answer(value: bool | None) -> str:
@@ -86,9 +124,65 @@ def local_reader_summary_lines(status: LocalReaderStatus) -> tuple[str, ...]:
         if status.extraction_ready
         else tr("tui.local_reader.extraction_not_ready")
     )
-    if not host.executable_located:
-        lines.append(tr("tui.local_reader.install_at_cli"))
     return tuple(lines)
+
+
+class LocalReaderChecklistItem(StrEnum):
+    """The rows of the setup checklist, in the order setup satisfies them."""
+
+    SERVICE_INSTALLED = "service_installed"
+    SERVICE_RUNNING = "service_running"
+    TEXT_MODEL_PULLED = "text_model_pulled"
+    VISION_MODEL_PULLED = "vision_model_pulled"
+    MODELS_LOADED = "models_loaded"
+    VERIFIED = "verified"
+
+
+def _all_of(values: tuple[bool | None, ...]) -> bool | None:
+    """Combine measured answers: any unmeasured stays unmeasured, otherwise all must hold."""
+    if any(value is None for value in values):
+        return None
+    return all(values)
+
+
+def local_reader_checklist(status: LocalReaderStatus) -> tuple[tuple[LocalReaderChecklistItem, bool | None], ...]:
+    """Derive each checklist row's measured state; ``None`` means not measured, never missing."""
+    host = status.host
+    rows = {row.role: row for row in status.roles}
+    text = rows.get(ModelRole.TEXT_EXTRACTION)
+    vision = rows.get(ModelRole.VISION_TRANSCRIPTION)
+    readers = tuple(row for row in (text, vision) if row is not None)
+    loaded = _all_of(tuple(row.resident for row in readers)) if readers else None
+    return (
+        # A runtime that answers is installed somewhere, even when no executable is on this path.
+        (LocalReaderChecklistItem.SERVICE_INSTALLED, host.executable_located or host.reachable),
+        (LocalReaderChecklistItem.SERVICE_RUNNING, host.reachable),
+        (LocalReaderChecklistItem.TEXT_MODEL_PULLED, None if text is None else text.installed),
+        (LocalReaderChecklistItem.VISION_MODEL_PULLED, None if vision is None else vision.installed),
+        (LocalReaderChecklistItem.MODELS_LOADED, loaded),
+        (LocalReaderChecklistItem.VERIFIED, status.extraction_ready if host.reachable else None),
+    )
+
+
+def local_reader_checklist_cells(item: LocalReaderChecklistItem, state: bool | None) -> tuple[str, str]:
+    """One checklist row's cells: the step and its done / missing / not measured state."""
+    if state is None:
+        rendered = tr("tui.local_reader.answer.unmeasured")
+    else:
+        rendered = tr("tui.local_reader.state.done") if state else tr("tui.local_reader.state.missing")
+    return tr(_CHECKLIST_LOCALE_KEYS[item.value]), rendered
+
+
+def local_reader_setup_notice(result: LocalReaderProvisionPublicResultV1) -> str:
+    """Say whether setup finished, or which step stopped it and on which condition."""
+    if result.succeeded or result.stopped_step is None:
+        return tr("tui.local_reader.setup_done")
+    failed = next((step for step in result.steps if step.step is result.stopped_step), None)
+    return tr(
+        "tui.local_reader.setup_stopped",
+        step=tr(_SETUP_STEP_LOCALE_KEYS[result.stopped_step]),
+        condition=(failed.failed_condition_id if failed is not None else None) or "-",
+    )
 
 
 class LocalReaderDoorV1(Protocol):
@@ -96,6 +190,14 @@ class LocalReaderDoorV1(Protocol):
 
     def read_status(self) -> LocalReaderStatus:
         """Measure the runtime and every role without starting or loading anything."""
+        ...
+
+    async def setup(self, *, consent: bool) -> OperationController:
+        """Submit and start the one-shot setup; ``consent`` permits an install."""
+        ...
+
+    async def install(self, *, consent: bool) -> OperationController:
+        """Submit and start the runtime install."""
         ...
 
     async def start(self) -> OperationController:
@@ -106,8 +208,20 @@ class LocalReaderDoorV1(Protocol):
         """Submit and start the fetch of ``role``'s model."""
         ...
 
+    async def load(self, role: ModelRole) -> OperationController:
+        """Submit and start the load of ``role``'s model into memory."""
+        ...
+
     async def verify(self, role: ModelRole) -> OperationController:
-        """Submit and start the load check of ``role``'s model."""
+        """Submit and start the readiness check of ``role``'s model."""
+        ...
+
+    async def remove(self, role: ModelRole) -> OperationController:
+        """Submit and start the removal of ``role``'s model from the runtime's store."""
+        ...
+
+    async def settled_result(self, controller: OperationController) -> LocalReaderProvisionPublicResultV1 | None:
+        """Return the settled public result of a finished operation, or ``None`` when it has none."""
         ...
 
 
@@ -129,6 +243,18 @@ class OperationLocalReaderDoor:
         await controller.start()
         return controller
 
+    async def setup(self, *, consent: bool) -> OperationController:
+        """Submit and start the one-shot setup."""
+        from ....application.local_reader_operation import build_local_reader_setup_request
+
+        return await self._run(build_local_reader_setup_request(consent=consent))
+
+    async def install(self, *, consent: bool) -> OperationController:
+        """Submit and start the runtime install."""
+        from ....application.local_reader_operation import build_local_reader_install_request
+
+        return await self._run(build_local_reader_install_request(consent=consent))
+
     async def start(self) -> OperationController:
         """Submit and start the runtime-start operation."""
         from ....application.local_reader_operation import build_local_reader_start_request
@@ -141,18 +267,57 @@ class OperationLocalReaderDoor:
 
         return await self._run(build_local_reader_pull_request(role))
 
+    async def load(self, role: ModelRole) -> OperationController:
+        """Submit and start the load of ``role``'s model."""
+        from ....application.local_reader_operation import build_local_reader_load_request
+
+        return await self._run(build_local_reader_load_request(role))
+
     async def verify(self, role: ModelRole) -> OperationController:
-        """Submit and start the load check of ``role``'s model."""
+        """Submit and start the readiness check of ``role``'s model."""
         from ....application.local_reader_operation import build_local_reader_verify_request
 
         return await self._run(build_local_reader_verify_request(role))
 
+    async def remove(self, role: ModelRole) -> OperationController:
+        """Submit and start the removal of ``role``'s model."""
+        from ....application.local_reader_operation import build_local_reader_remove_request
+
+        return await self._run(build_local_reader_remove_request(role))
+
+    async def settled_result(self, controller: OperationController) -> LocalReaderProvisionPublicResultV1 | None:
+        """Resolve the settled public result through the composed result door."""
+        observed = await controller.observe(0)
+        if not isinstance(observed, OperationObservationSuccessV1):
+            return None
+        projection = observed.projection
+        schema = projection.definition_contract.result_schema
+        if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED or schema is None:
+            return None
+        resolved = await self.services.result.resolve(
+            OperationResultProjectionRequestV1(
+                operation_id=projection.operation_id,
+                terminal_revision=projection.revision,
+                definition_contract_digest=projection.definition_contract.definition_contract_digest,
+                result_schema=schema,
+            )
+        )
+        if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
+            resolved.projection, LocalReaderProvisionPublicResultV1
+        ):
+            return None
+        return resolved.projection
+
 
 class LocalReaderScreen(Screen[None]):
-    """The document reader's measured state and its three supervised actions."""
+    """The document reader's setup checklist, its measured roles and its supervised actions."""
 
-    DEFAULT_CSS = BASE_CSS
-    BINDINGS: ClassVar = [Binding("escape", "close", "", show=False), Binding("r", "refresh_status", "", show=False)]
+    DEFAULT_CSS = BASE_CSS + _LOCAL_READER_CSS
+    BINDINGS: ClassVar = [
+        Binding("escape", "close", "", show=False),
+        Binding("r", "refresh_status", "", show=False),
+        Binding("s", "setup", "", show=False),
+    ]
 
     def __init__(self, door: LocalReaderDoorV1) -> None:
         """Hold the door; nothing is read until the page is mounted."""
@@ -167,17 +332,28 @@ class LocalReaderScreen(Screen[None]):
         with ContentScroll(id="local-reader-page", classes="cadrumo-scroll"):
             yield Static(tr("tui.local_reader.intro"), markup=False)
             yield Static("", id="local-reader-summary", markup=False)
+            yield ContentDataTable[str](id="local-reader-checklist", cursor_type="none", zebra_stripes=True)
+            with Horizontal(classes="local-reader-actions"):
+                yield Button(tr("tui.local_reader.setup"), id="local-reader-setup", variant="primary")
+                yield Button(tr("tui.local_reader.refresh"), id="local-reader-refresh")
+            with Horizontal(classes="local-reader-actions"):
+                yield Button(tr("tui.local_reader.install"), id="local-reader-install")
+                yield Button(tr("tui.local_reader.start"), id="local-reader-start")
             yield ContentDataTable[str](id="local-reader-roles", cursor_type="row", zebra_stripes=True)
             yield Static(tr("tui.local_reader.choose_role"), id="local-reader-selection", markup=False)
-            yield Button(tr("tui.local_reader.refresh"), id="local-reader-refresh")
-            yield Button(tr("tui.local_reader.start"), id="local-reader-start")
-            yield Button(tr("tui.local_reader.pull"), id="local-reader-pull", disabled=True)
-            yield Button(tr("tui.local_reader.verify"), id="local-reader-verify", disabled=True)
+            with Horizontal(classes="local-reader-actions"):
+                yield Button(tr("tui.local_reader.pull"), id="local-reader-pull", disabled=True)
+                yield Button(tr("tui.local_reader.load"), id="local-reader-load", disabled=True)
+                yield Button(tr("tui.local_reader.verify"), id="local-reader-verify", disabled=True)
+                yield Button(tr("tui.local_reader.remove"), id="local-reader-remove", disabled=True)
             yield Static("", id="local-reader-notice", markup=False)
         yield Footer()
 
     def on_mount(self) -> None:
-        """Lay out the role table and take the first measurement."""
+        """Lay out both tables and take the first measurement."""
+        checklist = cast("DataTable[str]", self.query_one("#local-reader-checklist", DataTable))
+        for key in ("tui.local_reader.column.step", "tui.local_reader.column.state"):
+            checklist.add_column(tr(key))
         table = cast("DataTable[str]", self.query_one("#local-reader-roles", DataTable))
         for key in (
             "tui.local_reader.column.role",
@@ -199,6 +375,14 @@ class LocalReaderScreen(Screen[None]):
         self.query_one("#local-reader-summary", Static).update(tr("tui.local_reader.measuring"))
         self.run_worker(self._measure(), group="local-reader-status", exclusive=True)
 
+    def action_setup(self) -> None:
+        """Run the one-shot setup, asking before it would install the runtime."""
+        status = self.status
+        if status is not None and not status.host.executable_located and not status.host.reachable:
+            self._confirm_install(lambda: self._door.setup(consent=True))
+            return
+        self._launch(lambda: self._door.setup(consent=False), setup=True)
+
     async def _measure(self) -> None:
         try:
             status = await asyncio.to_thread(self._door.read_status)
@@ -210,6 +394,10 @@ class LocalReaderScreen(Screen[None]):
 
     def _render_status(self, status: LocalReaderStatus) -> None:
         self.query_one("#local-reader-summary", Static).update("\n".join(local_reader_summary_lines(status)))
+        checklist = cast("DataTable[str]", self.query_one("#local-reader-checklist", DataTable))
+        checklist.clear()
+        for item, state in local_reader_checklist(status):
+            checklist.add_row(*local_reader_checklist_cells(item, state), key=item.value)
         table = cast("DataTable[str]", self.query_one("#local-reader-roles", DataTable))
         table.clear()
         for row in status.roles:
@@ -223,54 +411,120 @@ class LocalReaderScreen(Screen[None]):
                 table.move_cursor(row=index)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Choose the role a pull or verify acts on."""
-        if event.row_key.value is None:
+        """Choose the role a pull, load, verify or remove acts on."""
+        if event.data_table.id != "local-reader-roles" or event.row_key.value is None:
             return
         self.selected_role = ModelRole(str(event.row_key.value))
         self.query_one("#local-reader-selection", Static).update(
             tr("tui.local_reader.selected_role", role=tr(_ROLE_LOCALE_KEYS[self.selected_role]))
         )
-        self.query_one("#local-reader-pull", Button).disabled = False
-        self.query_one("#local-reader-verify", Button).disabled = False
+        for selector in _ROLE_ACTION_BUTTONS:
+            self.query_one(selector, Button).disabled = False
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Submit the pressed action through the operation platform."""
+        role = self.selected_role
         match event.button.id:
             case "local-reader-refresh":
                 self.action_refresh_status()
+            case "local-reader-setup":
+                self.action_setup()
+            case "local-reader-install":
+                self._confirm_install(lambda: self._door.install(consent=True))
             case "local-reader-start":
-                self.run_worker(self._submit(self._door.start()), group="local-reader-action", exclusive=True)
-            case "local-reader-pull" if self.selected_role is not None:
-                self.run_worker(
-                    self._submit(self._door.pull(self.selected_role)), group="local-reader-action", exclusive=True
-                )
-            case "local-reader-verify" if self.selected_role is not None:
-                self.run_worker(
-                    self._submit(self._door.verify(self.selected_role)), group="local-reader-action", exclusive=True
-                )
+                self._launch(self._door.start)
+            case "local-reader-pull" if role is not None:
+                self._launch(lambda: self._door.pull(role))
+            case "local-reader-load" if role is not None:
+                self._launch(lambda: self._door.load(role))
+            case "local-reader-verify" if role is not None:
+                self._launch(lambda: self._door.verify(role))
+            case "local-reader-remove" if role is not None:
+                self._confirm_remove(role)
             case _:
                 return
 
-    async def _submit(self, submitted: Awaitable[OperationController]) -> None:
-        notice = self.query_one("#local-reader-notice", Static)
-        notice.update(tr("tui.local_reader.submitting"))
+    def _notice(self, text: str) -> None:
+        self.query_one("#local-reader-notice", Static).update(text)
+
+    def _confirm_install(self, submit: Callable[[], Awaitable[OperationController]]) -> None:
+        installer = RuntimeInstaller.NONE if self.status is None else self.status.host.installer
+        if installer is RuntimeInstaller.NONE:
+            self._notice(tr("tui.local_reader.no_installer"))
+            return
+
+        def decided(confirmed: bool | None) -> None:
+            if confirmed:
+                self._launch(submit, setup=True)
+            else:
+                self._notice(tr("tui.local_reader.install_cancelled"))
+
+        self.app.push_screen(
+            ConfirmScreen(
+                title=tr("tui.local_reader.confirm.install_title"),
+                message=tr("tui.local_reader.confirm.install_message", installer=installer.value),
+                confirm_label=tr("tui.local_reader.confirm.install_accept"),
+                cancel_label=tr("tui.local_reader.confirm.cancel"),
+            ),
+            decided,
+        )
+
+    def _confirm_remove(self, role: ModelRole) -> None:
+        row = None if self.status is None else next((r for r in self.status.roles if r.role is role), None)
+        model = row.model if row is not None and row.model else tr("tui.local_reader.no_model")
+
+        def decided(confirmed: bool | None) -> None:
+            if confirmed:
+                self._launch(lambda: self._door.remove(role))
+            else:
+                self._notice(tr("tui.local_reader.remove_cancelled"))
+
+        self.app.push_screen(
+            ConfirmScreen(
+                title=tr("tui.local_reader.confirm.remove_title"),
+                message=tr("tui.local_reader.confirm.remove_message", model=model),
+                confirm_label=tr("tui.local_reader.confirm.remove_accept"),
+                cancel_label=tr("tui.local_reader.confirm.cancel"),
+            ),
+            decided,
+        )
+
+    def _launch(self, submit: Callable[[], Awaitable[OperationController]], *, setup: bool = False) -> None:
+        self.run_worker(self._submit(submit(), setup=setup), group="local-reader-action", exclusive=True)
+
+    async def _submit(self, submitted: Awaitable[OperationController], *, setup: bool) -> None:
+        self._notice(tr("tui.local_reader.submitting"))
         try:
             controller = await submitted
         except CadrumoError:
-            notice.update(tr("tui.local_reader.refused"))
+            self._notice(tr("tui.local_reader.refused"))
             return
-        notice.update("")
-        self.app.push_screen(OperationModal(controller), self._on_operation_closed)
+        self._notice("")
 
-    def _on_operation_closed(self, _: OperationModalOutcomeV1 | None) -> None:
-        """Measure again: the operation's own result is shown by the modal, the state here."""
-        self.action_refresh_status()
+        def closed(_: OperationModalOutcomeV1 | None) -> None:
+            if setup:
+                self.run_worker(self._report_setup(controller), group="local-reader-result", exclusive=True)
+            self.action_refresh_status()
+
+        self.app.push_screen(OperationModal(controller), closed)
+
+    async def _report_setup(self, controller: OperationController) -> None:
+        try:
+            result = await self._door.settled_result(controller)
+        except CadrumoError:
+            return
+        if result is not None and result.steps:
+            self._notice(local_reader_setup_notice(result))
 
 
 __all__ = [
+    "LocalReaderChecklistItem",
     "LocalReaderDoorV1",
     "LocalReaderScreen",
     "OperationLocalReaderDoor",
+    "local_reader_checklist",
+    "local_reader_checklist_cells",
     "local_reader_role_cells",
+    "local_reader_setup_notice",
     "local_reader_summary_lines",
 ]

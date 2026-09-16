@@ -73,10 +73,6 @@ class IrpfIncomeCategoryCatalogue:
         token = self.require(value)
         return next(item for item in self.definitions if item.token == token)
 
-    def is_economic_activity(self, value: object) -> bool:
-        """Report whether a value is the declared economic-activity category."""
-        return self.require(value) == self.activity_token
-
 
 def _required(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)
@@ -227,25 +223,11 @@ def irpf_income_category_actividad_economica_token(
     ).activity_token
 
 
-def irpf_income_category_is_economic_activity(
-    value: object,
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> bool:
-    """Report whether a value is the declared economic-activity category."""
-    return resolve_irpf_income_category_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).is_economic_activity(value)
-
-
 __all__ = [
     "IrpfIncomeCategoryCatalogue",
     "IrpfIncomeCategoryDefinition",
     "irpf_income_category_actividad_economica_token",
     "irpf_income_category_choices",
-    "irpf_income_category_is_economic_activity",
     "require_irpf_income_category",
     "resolve_irpf_income_category_catalogue",
 ]

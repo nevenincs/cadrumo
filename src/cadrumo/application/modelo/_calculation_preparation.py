@@ -52,6 +52,7 @@ from ..calculations.observations_repository import (
     IvaWalletDecisionRepositoryProtocol,
 )
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
+from ..user_profile.projections import record_to_path_values
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
@@ -67,16 +68,16 @@ from .calculation_resolution import resolve_calculation_binding_channels as _res
 from .iva_wallet_gate import (
     apply_iva_compensation_decision_binding,
     resolve_iva_compensation_decision_for_calculation,
-    taxpayer_nif_for_bucket,
+    taxpayer_nif_from_path_values,
 )
 from .preconditions import build_modelo_precondition_failure
+from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..live.borrador_100 import Borrador100SnapshotRepository
 
 _apply_iva_compensation_decision_binding = apply_iva_compensation_decision_binding
-_taxpayer_nif_for_bucket = taxpayer_nif_for_bucket
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +99,7 @@ class PreparedCalculation:
     work_units_revision_id: str
     work_unit: WorkUnit
     snapshot: RegistrySnapshot
+    profile: ModeloWorkProfile
     casilla_inputs: Mapping[CasillaId, Decimal]
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None
     period_date: date
@@ -124,6 +126,7 @@ def prepare_calculation(
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
+    profile: ModeloWorkProfile | None,
 ) -> PreparedCalculation:
     """Prepare validated inputs, source channels, and gates for calculation.
 
@@ -149,11 +152,13 @@ def prepare_calculation(
     )
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
-    require_profile_ready_for_work_unit(
+    checked_profile = require_profile_ready_for_work_unit(
         work_unit,
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
+        profile=profile,
     )
+    profile_values = record_to_path_values(checked_profile.record)
     # Calculate needs the amount-computing rung, not the filing rung: this
     # prepares an in-memory calculation and renders no fichero or export layout.
     snapshot = _resolve_registry_snapshot_for_work_unit(
@@ -170,6 +175,7 @@ def prepare_calculation(
         transaction_repository=ledger_preflight_transaction_repository,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
         operation=operation,
+        profile_values=profile_values,
     )
     _raise_if_m200_ledger_requires_accounting_result_input(
         work_unit=work_unit,
@@ -188,6 +194,7 @@ def prepare_calculation(
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
         operation=operation,
+        profile_values=profile_values,
     )
     period_date = filing_period_date or calculation_filing_date(work_unit.period)
     caller_binding_values = dict(binding_values or {})
@@ -199,7 +206,7 @@ def prepare_calculation(
         work_unit.period,
         bucket_id=work_unit.bucket_id,
         revision=snapshot.revision,
-        taxpayer_nif=_taxpayer_nif_for_bucket(work_unit.bucket_id),
+        taxpayer_nif=taxpayer_nif_from_path_values(profile_values),
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
         caller_binding_values=caller_binding_values,
@@ -216,12 +223,12 @@ def prepare_calculation(
         borrador_snapshot_id=borrador_snapshot_id,
         borrador_snapshot_repository=borrador_snapshot_repository,
         operation=operation,
+        profile=checked_profile,
     )
     required_profile_bindings = _resolved_required_profile_binding_values(
         work_unit=work_unit,
         registry_revision=snapshot.revision,
-        profile_decode_context=operation.profile_decode_context(),
-        operation=operation,
+        profile=checked_profile,
     )
     if required_profile_bindings:
         channels = _dataclass_replace(
@@ -245,6 +252,7 @@ def prepare_calculation(
         work_units_revision_id=work_units_revision_id,
         work_unit=work_unit,
         snapshot=snapshot,
+        profile=checked_profile,
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
         period_date=period_date,
@@ -271,19 +279,8 @@ def _resolved_binding_ids_for_required_binding_gate(
     return tuple(sorted(resolved.difference(unresolved_relation_targets).difference(unresolved_bindings)))
 
 
-def _iva_regime_for_bucket(bucket_id: str, *, operation: PinnedAuthorityOperation) -> IVARegime | None:
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
-    from ..user_profile.projections import record_to_path_values
-
-    try:
-        record = ProfileRecordRepository.for_current_session(
-            bucket_id,
-            profile_decode_context=operation.profile_decode_context(),
-        ).load(bucket_id)
-    except ProfileNotFoundError:
-        return None
-    value = record_to_path_values(record).get("iva.regime")
+def _iva_regime_from_path_values(profile_values: Mapping[str, str]) -> IVARegime | None:
+    value = profile_values.get("iva.regime")
     if value is None or not str(value).strip():
         return None
     return require_iva_regime(str(value).strip())
@@ -321,6 +318,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
     operation: PinnedAuthorityOperation,
+    profile_values: Mapping[str, str],
 ) -> None:
     """Refuse ledger-backed calculations whose period ledger readiness blocks."""
     ledger_preflight_sources = frozenset(
@@ -328,7 +326,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
     )
     if not ledger_preflight_sources:
         return
-    iva_regime = _iva_regime_for_bucket(work_unit.bucket_id, operation=operation)
+    iva_regime = _iva_regime_from_path_values(profile_values)
     if iva_regime is not None and iva_regime == iva_regime_simplificado_token():
         return
     from ..ledger.preflight import preflight_ledger_tax_readiness

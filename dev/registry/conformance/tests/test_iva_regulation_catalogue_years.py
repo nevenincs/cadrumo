@@ -7,9 +7,12 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-
-from ..catalogue import bundled_iva_catalogue, iva_catalogue_years, resolve_catalogue
-from ..errors import IvaCatalogueError
+from cadrumo.domain.iva.errors import IvaCatalogueError
+from dev.registry.conformance.iva_regulation_catalogue import (
+    bundled_iva_catalogue,
+    iva_catalogue_years,
+    resolve_catalogue,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

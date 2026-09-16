@@ -6,15 +6,18 @@ supply-nature proposal use their own roles. Each role reads the model its
 setting names, so provisioning, status and the reader itself must resolve the
 same identifier -- :func:`configured_role_model` is that single resolution.
 
-Everything here reads. Starting, installing and pulling live in
-:mod:`.provisioning_host` and :mod:`.provisioning_runtime`; this module turns
-their measurements into the projections a status surface renders and the
-per-role probe an ingestion lane consults before spending a document.
+Starting, installing and pulling live in :mod:`.provisioning_host` and
+:mod:`.provisioning_runtime`; this module turns their measurements into the
+projections a status surface renders and the per-role probe an ingestion lane
+consults before spending a document. Its one write is the fitness verdict
+:func:`verify_role_target` records in :mod:`.provisioning_fitness`; status
+reads that record and never probes unless asked.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -22,6 +25,7 @@ from ..core.config import Settings, load_settings
 from ..core.hardware import ContentionCause
 from ..core.model_catalogue import ModelRole, default_model_runtime_id, model_candidate
 from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.time.clock import now
 from .operator_actions.models import PreconditionVerdict
 from .provisioning import DependencyStatus, ModelSelection, select_model_for_role
 from .provisioning_contracts import (
@@ -30,6 +34,12 @@ from .provisioning_contracts import (
     ProvisioningPreconditionCondition,
     provisioning_no_recovery_verdict,
     require_provisioning_verdict,
+)
+from .provisioning_fitness import (
+    RecordedFitnessVerdict,
+    RoleFitnessVerdict,
+    read_fitness_verdict,
+    record_fitness_verdict,
 )
 from .provisioning_host import ExecutableLookup, RuntimeHostStatus, probe_runtime_host
 from .provisioning_runtime import (
@@ -41,25 +51,27 @@ from .provisioning_runtime import (
     last_runtime_pull,
     read_installed_models,
     read_runtime_residents,
+    runtime_model_names_match,
     verify_model_ready,
 )
 
 __all__ = [
     "EXTRACTION_READER_ROLES",
     "FITNESS_PROBED_ROLES",
+    "LocalReaderDocumentReadiness",
     "LocalReaderRoleStatus",
     "LocalReaderStatus",
     "RoleFitnessOutcome",
+    "RoleFitnessState",
     "RoleModelTarget",
     "TextExtractionFitnessProbe",
-    "assess_role_fitness",
     "configured_role_model",
-    "forget_role_fitness",
     "local_reader_service",
     "probe_local_reader",
+    "probe_role_fitness",
     "read_local_reader_status",
+    "recorded_role_fitness",
     "role_model_targets",
-    "runtime_model_names_match",
     "select_role_model",
     "verify_role_target",
 ]
@@ -81,9 +93,11 @@ class RoleFitnessOutcome(ProvisioningOutcome):
 
     ``fit`` is the decision. ``answer_parseable`` and ``grounded`` say which
     half failed: a reply the parser could not read at all, or a readable reply
-    whose values did not match the probe document. ``transport_failed`` marks a
-    probe that never got an answer, which says nothing about the model and is
-    therefore never remembered.
+    whose values did not match the probe document. ``timed_out`` marks a model
+    that did not finish its answer within the probe's bound -- a verdict about
+    the model on this host, recorded like any other. ``transport_failed`` marks
+    a probe that never got an answer for any other reason, which says nothing
+    about the model and is therefore never recorded.
     """
 
     role: ModelRole
@@ -91,6 +105,7 @@ class RoleFitnessOutcome(ProvisioningOutcome):
     fit: bool
     answer_parseable: bool = False
     grounded: bool = False
+    timed_out: bool = False
     transport_failed: bool = False
     output_tokens: int | None = Field(default=None, ge=0)
     answer_budget_tokens: int = Field(gt=0)
@@ -99,46 +114,119 @@ class RoleFitnessOutcome(ProvisioningOutcome):
     @model_validator(mode="after")
     def _require_fitness_outcome(self) -> RoleFitnessOutcome:
         require_provisioning_verdict(failed=not self.fit, verdict=self.precondition_verdict)
+        if self.fit and (self.timed_out or self.transport_failed):
+            raise ValueError("a fit outcome cannot have timed out or lost its transport")
+        if self.timed_out and self.transport_failed:
+            raise ValueError("a timed-out probe got a transport answer; it is not a transport failure")
         return self
+
+    @property
+    def settled(self) -> bool:
+        """Return whether this outcome is a verdict about the model rather than about the transport."""
+        return not self.transport_failed
+
+    @property
+    def verdict(self) -> RoleFitnessVerdict:
+        """Return the recorded verdict kind for a settled outcome."""
+        if self.fit:
+            return RoleFitnessVerdict.FIT
+        return RoleFitnessVerdict.TIMED_OUT if self.timed_out else RoleFitnessVerdict.UNFIT
 
 
 type TextExtractionFitnessProbe = Callable[[str, Settings], RoleFitnessOutcome]
 """Runs the text reader's real request shape and budget against a model; supplied by composition."""
 
-#: Settled verdicts by ``(endpoint, model)``. A model's fitness for a request
-#: shape does not change while it stays pulled, and the probe costs a model
-#: load plus a full answer budget, so a status surface refreshing often asks
-#: once. Transport failures are never stored.
-_FITNESS_VERDICTS: dict[tuple[str, str], RoleFitnessOutcome] = {}
+
+class RoleFitnessState(StrEnum):
+    """What a status surface knows about a probed role's fitness.
+
+    ``NOT_VERIFIED`` is its own state: no verdict is recorded for the model's
+    current weights, which is not evidence that the model is unfit.
+    """
+
+    FIT = "fit"
+    UNFIT = "unfit"
+    TIMED_OUT = "timed_out"
+    NOT_VERIFIED = "not_verified"
 
 
-def forget_role_fitness() -> None:
-    """Drop every remembered fitness verdict, after a pull or removal changes a model."""
-    _FITNESS_VERDICTS.clear()
+class LocalReaderDocumentReadiness(StrEnum):
+    """Which invoice documents this machine can turn into drafts.
+
+    Text-layer documents are read by label rules that need no runtime and no
+    model, so they are always readable; the model only fills fields the labels
+    do not print. Every document is readable only when :attr:`LocalReaderStatus.extraction_ready`.
+    """
+
+    ALL_DOCUMENTS = "all_documents"
+    TEXT_LAYER_ONLY = "text_layer_only"
 
 
-def assess_role_fitness(
+def _installed_digest(model: str, settings: Settings) -> str | None:
+    inventory = read_installed_models(settings)
+    if inventory is None:
+        return None
+    return next(
+        (entry.digest for entry in inventory if runtime_model_names_match(model, entry.name)),
+        None,
+    )
+
+
+def _record(outcome: RoleFitnessOutcome, *, digest: str, settings: Settings) -> None:
+    verdict = outcome.precondition_verdict
+    record_fitness_verdict(
+        RecordedFitnessVerdict(
+            endpoint=settings.cadrumo_llm_ollama_chat_url,
+            model=outcome.model,
+            digest=digest,
+            role=outcome.role,
+            verdict=outcome.verdict,
+            failed_condition_id=verdict.failed_condition_id if verdict is not None else None,
+            elapsed_ms=outcome.elapsed_ms,
+            recorded_at=now(),
+        ),
+        settings,
+    )
+
+
+def probe_role_fitness(
     role: ModelRole,
     model: str,
     settings: Settings,
     *,
     text_probe: TextExtractionFitnessProbe,
 ) -> RoleFitnessOutcome | None:
-    """Return ``model``'s fitness for ``role``, or ``None`` when the role is not probed.
+    """Run ``role``'s fitness probe against ``model`` now, or return ``None`` when the role is not probed.
 
-    Remembered per endpoint and model, so a repeated status read does not
-    re-run a probe whose answer cannot have changed.
+    Records nothing; :func:`verify_role_target` is the only writer of the
+    recorded verdict.
     """
     if role not in FITNESS_PROBED_ROLES:
         return None
-    key = (settings.cadrumo_llm_ollama_chat_url, model)
-    known = _FITNESS_VERDICTS.get(key)
-    if known is not None:
-        return known
-    outcome = text_probe(model, settings)
-    if not outcome.transport_failed:
-        _FITNESS_VERDICTS[key] = outcome
-    return outcome
+    return text_probe(model, settings)
+
+
+def recorded_role_fitness(
+    role: ModelRole,
+    model: str,
+    digest: str | None,
+    settings: Settings,
+) -> RoleFitnessState | None:
+    """Return the recorded fitness of ``model``'s current weights, or ``None`` when the role is not probed."""
+    if role not in FITNESS_PROBED_ROLES:
+        return None
+    if digest is None:
+        return RoleFitnessState.NOT_VERIFIED
+    recorded = read_fitness_verdict(
+        endpoint=settings.cadrumo_llm_ollama_chat_url,
+        model=model,
+        digest=digest,
+        role=role,
+        settings=settings,
+    )
+    if recorded is None:
+        return RoleFitnessState.NOT_VERIFIED
+    return RoleFitnessState(recorded.verdict.value)
 
 
 def verify_role_target(
@@ -151,9 +239,10 @@ def verify_role_target(
 
     Readiness first, through :func:`verify_model_ready`, then -- for a role in
     :data:`FITNESS_PROBED_ROLES` and when a probe is supplied -- the role's
-    real request shape. An unfit model is reported not ready with the
-    ``fit_for_role`` condition, so ``verify`` cannot pass a model the reader
-    will never get an answer from.
+    real request shape. An unfit or too-slow model is reported not ready with
+    its own condition, so ``verify`` cannot pass a model the reader will never
+    get an answer from. Every settled probe is recorded against the model's
+    current digest; status reads that record instead of probing.
 
     Raises:
         ValueError: When ``target`` carries no model (a refused selection).
@@ -164,9 +253,14 @@ def verify_role_target(
     ready = verify_model_ready(target.model, settings=resolved)
     if not ready.ready or text_probe is None:
         return ready
+    digest = _installed_digest(target.model, resolved)
     for role in target.roles:
-        fitness = assess_role_fitness(role, target.model, resolved, text_probe=text_probe)
-        if fitness is None or fitness.fit:
+        fitness = probe_role_fitness(role, target.model, resolved, text_probe=text_probe)
+        if fitness is None:
+            continue
+        if fitness.settled and digest is not None:
+            _record(fitness, digest=digest, settings=resolved)
+        if fitness.fit:
             continue
         facts = dict(fitness.facts)
         return ReadinessOutcome(
@@ -184,20 +278,6 @@ def verify_role_target(
 def local_reader_service(role: ModelRole) -> str:
     """Return the stable diagnostic row id for one role's local reader."""
     return f"local-reader:{role.value}"
-
-
-def runtime_model_names_match(left: str, right: str) -> bool:
-    """Return whether two runtime model names denote the same tagged model.
-
-    An untagged name means ``:latest`` to the runtime, so ``qwen3`` and
-    ``qwen3:latest`` match while ``qwen3:1.7b`` and ``qwen3:8b`` do not -- a
-    different size is a different download and a different memory claim.
-    """
-
-    def normalised(name: str) -> str:
-        return name if ":" in name else f"{name}:latest"
-
-    return normalised(left) == normalised(right)
 
 
 def configured_role_model(role: ModelRole, settings: Settings | None = None) -> str | None:
@@ -392,6 +472,7 @@ class LocalReaderRoleStatus(BaseModel):
     resident: bool | None = None
     load_admitted: bool | None = None
     contention_causes: tuple[ContentionCause, ...] = ()
+    fitness: RoleFitnessState | None = None
     fit_for_role: bool | None = None
     ready: bool
     failed_condition_id: str | None = None
@@ -400,9 +481,13 @@ class LocalReaderRoleStatus(BaseModel):
 class LocalReaderStatus(BaseModel):
     """The whole local reader at one moment, for a status area or doctor row.
 
-    ``extraction_ready`` is true only when the runtime answers and both
-    invoice-extraction roles have their models installed; it is the single
-    claim a surface may use to say documents can be read on this machine.
+    ``extraction_ready`` is true only when the runtime answers, both
+    invoice-extraction roles have their models installed and the text model's
+    current weights carry a recorded fit verdict; it is the single claim a
+    surface may use to say every document can be read on this machine.
+    ``document_readiness`` says which documents can be read either way, and
+    ``text_layer_model_fill_available`` whether text-layer fields the labels do
+    not print can be filled by the text model.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -411,6 +496,36 @@ class LocalReaderStatus(BaseModel):
     roles: tuple[LocalReaderRoleStatus, ...]
     last_pull: RuntimePullRecord | None = None
     extraction_ready: bool
+    document_readiness: LocalReaderDocumentReadiness
+    text_layer_model_fill_available: bool
+
+    @model_validator(mode="after")
+    def _readiness_agrees(self) -> LocalReaderStatus:
+        expected = (
+            LocalReaderDocumentReadiness.ALL_DOCUMENTS
+            if self.extraction_ready
+            else LocalReaderDocumentReadiness.TEXT_LAYER_ONLY
+        )
+        if self.document_readiness is not expected:
+            raise ValueError("document readiness must follow extraction readiness")
+        if self.extraction_ready and not self.text_layer_model_fill_available:
+            raise ValueError("an extraction-ready reader can fill text-layer fields")
+        return self
+
+
+_FITNESS_FAILURE: Mapping[RoleFitnessState, ProvisioningPreconditionCondition] = {
+    RoleFitnessState.NOT_VERIFIED: ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_VERIFIED,
+    RoleFitnessState.TIMED_OUT: ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_WITHIN_TIMEOUT,
+    RoleFitnessState.UNFIT: ProvisioningPreconditionCondition.ROLE_MODEL_FIT_FOR_ROLE,
+}
+
+
+def _fresh_fitness_state(outcome: RoleFitnessOutcome) -> tuple[RoleFitnessState, str | None]:
+    verdict = outcome.precondition_verdict
+    failed = verdict.failed_condition_id if verdict is not None else None
+    if not outcome.settled:
+        return RoleFitnessState.NOT_VERIFIED, failed
+    return RoleFitnessState(outcome.verdict.value), failed
 
 
 def _role_status(
@@ -446,14 +561,24 @@ def _role_status(
     elif probe is None:
         failed = ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
     ready = probe is not None and probe.available
-    fit: bool | None = None
-    if ready and model is not None and text_probe is not None:
-        fitness = assess_role_fitness(role, model, settings, text_probe=text_probe)
-        if fitness is not None:
-            fit = fitness.fit
-            if not fitness.fit and fitness.precondition_verdict is not None:
-                ready = False
-                failed = fitness.precondition_verdict.failed_condition_id
+    state: RoleFitnessState | None = None
+    if ready and model is not None and role in FITNESS_PROBED_ROLES:
+        if text_probe is not None:
+            outcome = probe_role_fitness(role, model, settings, text_probe=text_probe)
+            if outcome is not None:
+                state, fresh_failure = _fresh_fitness_state(outcome)
+                failed = fresh_failure
+        else:
+            digest = next(
+                (entry.digest for entry in inventory or () if runtime_model_names_match(model, entry.name)),
+                None,
+            )
+            state = recorded_role_fitness(role, model, digest, settings)
+            if state is not None and state is not RoleFitnessState.FIT:
+                failed = _FITNESS_FAILURE[state].value
+        if state is not None and state is not RoleFitnessState.FIT:
+            ready = False
+    fit = None if state is None or state is RoleFitnessState.NOT_VERIFIED else state is RoleFitnessState.FIT
     return LocalReaderRoleStatus(
         role=role,
         model=model,
@@ -461,6 +586,7 @@ def _role_status(
         resident=resident,
         load_admitted=admitted,
         contention_causes=causes,
+        fitness=state,
         fit_for_role=fit,
         ready=ready,
         failed_condition_id=failed,
@@ -481,9 +607,10 @@ def read_local_reader_status(
     Reads only: nothing is started, pulled or loaded. ``assess_load`` adds the
     admission check for installed models that are not yet resident, which
     reads hardware counters and can be skipped by a surface that refreshes
-    often. ``text_probe`` adds the text reader's fitness check to an installed
-    text model, so ``extraction_ready`` is false for a model that is present but
-    cannot answer the extraction request; its verdict is remembered per model.
+    often. Without ``text_probe`` the text model's fitness is the verdict
+    ``verify`` recorded for its current digest, and a model with no recorded
+    verdict is not verified rather than unfit. With ``text_probe`` the check runs
+    now and its answer is reported without being recorded.
     """
     resolved = settings if settings is not None else load_settings()
     host = probe_runtime_host(resolved) if which is None else probe_runtime_host(resolved, which=which)
@@ -502,11 +629,9 @@ def read_local_reader_status(
         for role in selected_roles
     )
     by_role = {row.role: row for row in role_rows}
-    extraction_ready = host.reachable and all(
-        (
-            by_role[role]
-            if role in by_role
-            else _role_status(
+    for role in EXTRACTION_READER_ROLES:
+        if role not in by_role:
+            by_role[role] = _role_status(
                 role,
                 settings=resolved,
                 inventory=inventory,
@@ -514,12 +639,17 @@ def read_local_reader_status(
                 assess_load=False,
                 text_probe=text_probe,
             )
-        ).ready
-        for role in EXTRACTION_READER_ROLES
-    )
+    extraction_ready = host.reachable and all(by_role[role].ready for role in EXTRACTION_READER_ROLES)
+    text_row = by_role[ModelRole.TEXT_EXTRACTION]
     return LocalReaderStatus(
         host=host,
         roles=role_rows,
         last_pull=pull_record(),
         extraction_ready=extraction_ready,
+        document_readiness=(
+            LocalReaderDocumentReadiness.ALL_DOCUMENTS
+            if extraction_ready
+            else LocalReaderDocumentReadiness.TEXT_LAYER_ONLY
+        ),
+        text_layer_model_fill_available=host.reachable and text_row.ready,
     )

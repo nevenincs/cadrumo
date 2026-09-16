@@ -10,22 +10,30 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from .....application.ledger.models import ManualLedgerTransactionResult
 from .....core.config import override_settings
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.classification import InvoiceKind
+from .....domain.transactions.models import BucketTransactionRef
 from ....tui.components.host import ScreenHostApp
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..models import (
+    LedgerEvidenceConfirmationV1,
+    LedgerEvidenceConfirmedV1,
+    LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
+    LedgerExclusionSubmissionV1,
     LedgerFlowState,
     LedgerInvoiceAddResultV1,
     LedgerInvoiceEntryV1,
     LedgerReaderReadinessV1,
 )
+from ..review import LedgerReviewScreen
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
+from .test_ledger_flows import _ClassificationDoor, _classify_action
 from .test_ledger_slice3 import _evidence_action
 from .test_ledger_workspace import _context, _projection, _review_action
 
@@ -153,6 +161,8 @@ class _EvidenceDoor:
         self.ready = ready
         self.records: list[LedgerEvidenceRecordRowV1] = []
         self.added: list[str] = []
+        self.extracted: list[str] = []
+        self.confirmed: list[LedgerEvidenceConfirmationV1] = []
 
     def list_records(self) -> tuple[LedgerEvidenceRecordRowV1, ...]:
         return tuple(self.records)
@@ -180,6 +190,34 @@ class _EvidenceDoor:
         if self.ready:
             return LedgerReaderReadinessV1(extraction_ready=True)
         return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="provisioning.runtime.reachable")
+
+    async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
+        self.extracted.append(evidence_id)
+        return LedgerEvidenceDraftV1(
+            evidence_id=evidence_id,
+            supplier_name="Hardware Profesional Sur SL",
+            supplier_tax_id="B92000090",
+            invoice_number="A-0003",
+            invoice_date="2026-03-27",
+            taxable_base=None,
+            iva_rate="21",
+            iva_amount=None,
+            grand_total=None,
+            currency="EUR",
+            suggested_kind=InvoiceKind.RECEIVED,
+            discrepancies=0,
+        )
+
+    async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
+        self.confirmed.append(confirmation)
+        return LedgerEvidenceConfirmedV1(
+            invoice_id="c" * 64,
+            invoice_number="A-0003",
+            grand_total=Decimal("1452.00"),
+            currency="EUR",
+            created=True,
+            printed_total_disagrees=False,
+        )
 
 
 def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenceScreen:
@@ -235,9 +273,96 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
             await pilot.pause()
             refusal = str(screen.query_one("#ledger-refusal", Static).render())
             assert "aeat config provision" in refusal
+            assert not door.extracted
             door.ready = True
             screen.query_one("#ledger-evidence-extract", Button).press()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
-            assert "evidence extract --evidence-id 8747cbf318cf0adb" in str(
-                screen.query_one("#ledger-refusal", Static).render()
-            )
+            assert door.extracted == ["8747cbf318cf0adb"]
+            draft = str(screen.query_one("#ledger-evidence-draft", Static).render())
+            # An amount the reader could not ground reads as unread, never as zero.
+            assert "Base unread" in draft
+            assert "0.00" not in draft
+            assert screen.query_one("#ledger-evidence-counterparty", Input).value == "Hardware Profesional Sur SL"
+            screen.query_one("#ledger-evidence-confirm", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert door.confirmed == [
+                LedgerEvidenceConfirmationV1(
+                    evidence_id="8747cbf318cf0adb",
+                    kind=InvoiceKind.RECEIVED,
+                    country_code="ES",
+                    counterparty_name="Hardware Profesional Sur SL",
+                )
+            ]
+            assert refreshes == [1, 1]
+
+
+class _ExclusionDoor:
+    def __init__(self) -> None:
+        self.calls: list[LedgerExclusionSubmissionV1] = []
+
+    async def __call__(self, submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
+        self.calls.append(submission)
+        return ManualLedgerTransactionResult.model_construct(
+            ref=BucketTransactionRef.model_construct(transaction_id=submission.transaction_id),
+        )
+
+
+@pytest.mark.asyncio
+async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_confirm() -> None:
+    projection = _projection()
+    door = _ExclusionDoor()
+    refreshes: list[int] = []
+
+    def refresh() -> LedgerWorkspaceRefreshV1:
+        refreshes.append(1)
+        return LedgerWorkspaceRefreshV1(projection=projection, evidence_items=None)
+
+    controller = LedgerWorkspaceController(
+        _context(),
+        projection,
+        LedgerWorkspaceInjection(
+            review_action=_review_action(),
+            classify_action=_classify_action(),
+            classification_submitter=_ClassificationDoor(),
+            exclusion_submitter=door,
+            refresh=refresh,
+        ),
+    )
+    screen = LedgerReviewScreen(controller)
+    first = projection.review_transaction_ids[0]
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            assert not screen.query_one("#ledger-exclusion-confirm", Button).display
+            review = screen.query_one("#ledger-review", DataTable)
+            review.focus()
+            review.move_cursor(row=0)
+            await pilot.press("x")
+            await pilot.pause()
+            question = str(screen.query_one("#ledger-exclusion-question", Static).render())
+            assert controller.entry_label(first) in question
+            assert screen.query_one("#ledger-exclusion-confirm", Button).display
+            await pilot.press("escape")
+            await pilot.pause()
+            assert screen.pending_exclusion is None
+            assert not screen.back_requested
+            assert not door.calls
+            await pilot.press("x")
+            await pilot.pause()
+            screen.query_one("#ledger-exclusion-confirm", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+    assert [call.transaction_id for call in door.calls] == [first]
+    assert door.calls[0].action == _classify_action()
+    assert refreshes == [1]
+
+
+def test_exclude_is_not_offered_without_the_classify_authority() -> None:
+    controller = LedgerWorkspaceController(
+        _context(),
+        _projection(),
+        LedgerWorkspaceInjection(review_action=_review_action(), exclusion_submitter=_ExclusionDoor()),
+    )
+    assert not controller.can_exclude()

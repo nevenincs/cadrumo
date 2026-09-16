@@ -294,10 +294,10 @@ def _resume_or_authenticate(
     refusal = admission.resume_refusal
     if refusal is None:
         raise InternalInvariantError("a refused profile admission carries no typed reason")
+    if _interactive_authentication(ctx, bucket_id=bucket_id, refusal=refusal):
+        return
     if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
         raise KeyringUnavailableError("OS keychain is unavailable for profile-session acceleration")
-    if _interactive_authentication(ctx, bucket_id=bucket_id):
-        return
     common = _common()
     verdict = profile_session_failure_verdict(
         refusal,
@@ -311,10 +311,30 @@ def _resume_or_authenticate(
     )
 
 
-def _interactive_authentication(ctx: typer.Context, *, bucket_id: str) -> bool:
-    """Keep a parsed CLI invocation non-interactive after a session refusal."""
-    del ctx, bucket_id
-    return False
+def _interactive_authentication(
+    ctx: typer.Context,
+    *,
+    bucket_id: str,
+    refusal: ProfileSessionRefusalReason,
+) -> bool:
+    """Prompt for the passphrase only where no session could ever be resumed.
+
+    A parsed invocation otherwise stays non-interactive: an absent or expired
+    session is answered with the login action. A host without a usable keychain
+    can never hold a resumable session, so refusing there would leave an
+    operator at a terminal no way forward short of piping the passphrase; the
+    prompt authenticates this invocation only, as the root secret channel does.
+    """
+    if refusal is not ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+        return False
+    from .config.secure_input import terminal_can_prompt_for_secrets
+
+    if not terminal_can_prompt_for_secrets():
+        return False
+    from ._profile_authentication_gate import prompt_root_authentication
+
+    prompt_root_authentication(ctx, bucket_id=bucket_id)
+    return True
 
 
 __all__ = [

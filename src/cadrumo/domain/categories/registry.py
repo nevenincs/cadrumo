@@ -39,8 +39,6 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 CATEGORY_PROFILE_FACT_ID = "categories.profile"
 CATEGORY_STATUTORY_CAP_FACT_ID = "categories.statutory-cap"
-CATEGORY_FACT_PROVIDER_ID = "category-profiles"
-CATEGORY_FACT_PROVIDER_DIRECTORY = "categories"
 _CAP_VARIANT_PREFIX = "statutory_cap_variant."
 _CAP_VARIANT_FIELDS = {"label": "label", "eur_per_day": "statutory_cap_eur_per_day", "eur": "statutory_cap_eur"}
 

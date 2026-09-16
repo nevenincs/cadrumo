@@ -7,9 +7,35 @@ import sys
 import pytest
 import typer
 
+from ....tests.audited_process import ensure_text_completed_process, run_audited_process
 from ..tui_launcher import TUI_ROOT_MODULE, launch_tui, tui_root_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def test_the_tui_root_module_is_the_absolute_tui_package() -> None:
+    """``python -m`` refuses relative module names, so the root must be spelled absolutely."""
+    assert TUI_ROOT_MODULE == "cadrumo.entrypoints.tui"
+
+
+def test_the_launched_command_resolves_the_tui_module() -> None:
+    """The built command reaches the TUI module, which refuses an unknown argument itself.
+
+    The refusal comes from the TUI's own argument check, so it proves the child
+    interpreter found and ran the module without needing a terminal.
+    """
+    completed = ensure_text_completed_process(
+        run_audited_process(
+            [*tui_root_command(), "--help"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+    )
+
+    assert completed.returncode != 0
+    assert "unrecognised TUI module arguments" in completed.stderr, completed.stderr
 
 
 def test_the_launcher_builds_only_the_fixed_tui_root_module_command() -> None:

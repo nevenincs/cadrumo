@@ -1349,6 +1349,7 @@ __all__ = [
     "build_verification_repository_bundle",
     "build_work_lifecycle_ports",
     "profile_adapter_composition",
+    "profile_free_adapter_composition",
 ]
 
 
@@ -1454,6 +1455,24 @@ def _resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | Non
     from ..adapters.outbound.llm.column_role_mapping import resolve_column_roles
 
     return resolve_column_roles(table)
+
+
+@contextmanager
+def profile_free_adapter_composition() -> Generator[None]:
+    """Bind only what a command that reads no profile still touches.
+
+    Every envelope names the selected profile from its plaintext summary, and
+    output follows its plaintext language hint, so the custody port and the
+    language resolver are bound; the persistence and outbound trees a
+    profile-bound command needs are not imported at all.
+    """
+    from ..adapters.persistence.storage.profile_custody import build_profile_custody_port
+    from ..application.user_profile.custody_ports import bind_profile_custody_port
+    from ..application.user_profile.language_resolver import register_language_resolver
+
+    with bind_profile_custody_port(build_profile_custody_port()):
+        register_language_resolver()
+        yield
 
 
 @contextmanager

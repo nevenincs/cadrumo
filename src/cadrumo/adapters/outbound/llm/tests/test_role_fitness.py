@@ -7,7 +7,9 @@ grounding are the production code.
 
 from __future__ import annotations
 
+import contextlib
 import json
+import threading
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from http import HTTPStatus
@@ -99,11 +101,47 @@ def test_a_readable_answer_with_the_wrong_values_is_unfit() -> None:
     assert outcome.facts["probe_values_grounded"] is False
 
 
+class _SlowChat(SilentLoopbackHandler):
+    released: ClassVar[threading.Event]
+
+    @override
+    def do_POST(self) -> None:
+        read_json_body(self)
+        # Holds the answer past the probe's bound, as a model too slow for this host does.
+        self.released.wait(timeout=10)
+        with contextlib.suppress(OSError):
+            write_json_response(self, ollama_chat_reply(_FIT_REPLY, eval_count=300), status=HTTPStatus.OK)
+
+
+def test_a_model_slower_than_the_probe_timeout_is_a_timeout_verdict_not_a_transport_failure() -> None:
+    _SlowChat.released = threading.Event()
+    with (
+        serving_loopback(_SlowChat, path="/api/chat") as endpoint,
+        override_settings(cadrumo_llm_ollama_chat_url=endpoint, cadrumo_llm_default_timeout_s=1),
+    ):
+        try:
+            outcome = probe_text_extraction_fitness("slow-model:1b", load_settings())
+        finally:
+            _SlowChat.released.set()
+
+    assert outcome.fit is False
+    assert outcome.timed_out is True
+    assert outcome.transport_failed is False
+    assert outcome.settled is True
+    assert outcome.facts["probe_timeout_s"] == 1
+    assert outcome.precondition_verdict is not None
+    assert (
+        outcome.precondition_verdict.failed_condition_id
+        == ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_WITHIN_TIMEOUT
+    )
+
+
 def test_an_unreachable_runtime_is_a_transport_failure_not_unfitness() -> None:
     with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat", cadrumo_llm_max_retries=0):
         outcome = probe_text_extraction_fitness("text-model:1b", load_settings())
 
     assert outcome.fit is False
     assert outcome.transport_failed is True
+    assert outcome.timed_out is False
     assert outcome.precondition_verdict is not None
     assert outcome.precondition_verdict.failed_condition_id == ProvisioningPreconditionCondition.MODEL_READY

@@ -391,11 +391,6 @@ def is_standard_issued_or_received_flow(flow: IvaFlowDirection) -> bool:
     return flow in {catalogue.issued_token, catalogue.received_token}
 
 
-def is_issued_flow_direction(flow: IvaFlowDirection) -> bool:
-    """Return whether ``flow`` is the ordinary issued-invoice direction."""
-    return flow == _flow_direction_catalogue().issued_token
-
-
 def issued_flow_direction() -> IvaFlowDirection:
     """Return the registry-declared flow for an issued invoice."""
     return _flow_direction_catalogue().issued_token
@@ -414,7 +409,6 @@ __all__ = [
     "is_deducible_flow",
     "is_devengada_flow",
     "is_inversion_sujeto_pasivo_flow",
-    "is_issued_flow_direction",
     "is_standard_issued_or_received_flow",
     "issued_flow_direction",
     "received_flow_direction",

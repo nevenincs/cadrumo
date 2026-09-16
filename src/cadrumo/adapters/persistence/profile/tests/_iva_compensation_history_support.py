@@ -67,13 +67,11 @@ _M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-dis
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
 _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
-_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97"
 )
 _M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id("69")
 _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("87")
-_M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("97")
 
 #: The ejercicio these fixtures summarise. Modelo 390 is annual, so the
 #: ejercicio must be one AEAT has published a design for; the annual instrument
@@ -247,51 +245,6 @@ def _filed_303_compensation_observation(
                 ),
             ),
         },
-    )
-
-
-def _filed_390_observation(
-    *,
-    last_period_compensation: Decimal,
-    generated_not_in_last_period: Decimal,
-) -> FiledDeclaracionObservation:
-    return FiledDeclaracionObservation(
-        modelo="390",
-        ejercicio=2025,
-        period=Period.from_year_and_code(2025, "0A"),
-        expediente_id="200039000000001Z",
-        status="filed",
-        presented_at=datetime(2026, 1, 30, 12, 0, tzinfo=UTC),
-        authenticated_identity=_TAXPAYER_REF,
-        artefacts=(
-            FiledDeclaracionArtefact(
-                kind="submitted_file",
-                source_url=AnyHttpUrl("https://example.test/390/submitted-file/test"),
-                content_type="text/plain",
-                byte_count=0,
-                sha256="b" * 64,
-                captured_at=datetime(2026, 1, 30, 12, 0, tzinfo=UTC),
-            ),
-        ),
-        registry_snapshot_ref=_modelo_390_annual_snapshot().snapshot_ref,
-        casillas=(
-            ObservedCasillaValue(
-                casilla_id=_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA,
-                value=str(last_period_compensation),
-                value_kind=CasillaValueKind.NUMERIC,
-                source_artefact_kind="submitted_file",
-                source_locator="submitted-file:390:97",
-                confidence=1.0,
-            ),
-            ObservedCasillaValue(
-                casilla_id=_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
-                value=str(generated_not_in_last_period),
-                value_kind=CasillaValueKind.NUMERIC,
-                source_artefact_kind="submitted_file",
-                source_locator="submitted-file:390:662",
-                confidence=1.0,
-            ),
-        ),
     )
 
 

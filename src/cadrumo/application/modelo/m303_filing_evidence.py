@@ -21,11 +21,13 @@ from .action_errors import M303FilingEvidenceError
 from .m303_regimen_simplificado_scope import (
     active_taxpayer_profile,
     m303_regimen_simplificado_scope_for_profile,
+    taxpayer_profile_for_work,
 )
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .work_profile import ModeloWorkProfile
 
 _EVIDENCE_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _EVIDENCE_SCENARIO_PREFIX = "modelo.work.calculate.m303_filing_evidence"
@@ -58,8 +60,13 @@ def validate_m303_filing_instance_evidence_for_revision(
     casilla_values: Mapping[CasillaId, Decimal],
     observations: Sequence[CasillaObservation],
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> FilingInstanceEvidence | None:
-    """Validate the complete revision evidence against every canonical owner."""
+    """Validate the complete revision evidence against every canonical owner.
+
+    ``profile`` is the work profile the calling command already loaded; when
+    omitted, this entry loads it for the simplified-regime check.
+    """
     if work_unit.modelo != Modelo("303"):
         if evidence is not None:
             raise M303FilingEvidenceError(
@@ -94,6 +101,7 @@ def validate_m303_filing_instance_evidence_for_revision(
         registry_snapshot=registry_snapshot,
         evidence=m303,
         operation=operation,
+        profile=profile,
     )
     _validate_m303_exonerado_filing_evidence(
         work_unit=work_unit,
@@ -111,6 +119,7 @@ def _validate_m303_simplified_filing_evidence(
     registry_snapshot: RegistrySnapshot,
     evidence: M303FilingInstanceEvidence,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
 ) -> None:
     """Validate the simplified-regime evidence against profile and rows."""
     regimen = evidence.regimen_simplificado
@@ -126,8 +135,8 @@ def _validate_m303_simplified_filing_evidence(
                 {"snapshot_matches_scope_decision": False},
             ),
         )
-    profile = active_taxpayer_profile(work_unit)
-    if regimen.scope_decision != m303_regimen_simplificado_scope_for_profile(profile):
+    taxpayer = active_taxpayer_profile(work_unit) if profile is None else taxpayer_profile_for_work(profile)
+    if regimen.scope_decision != m303_regimen_simplificado_scope_for_profile(taxpayer):
         raise M303FilingEvidenceError(
             precondition_failure=m303_filing_evidence_failure(
                 "regimen_scope_profile_divergence",
@@ -135,7 +144,7 @@ def _validate_m303_simplified_filing_evidence(
             ),
         )
     censo_iae_epigraphs: frozenset[str] = (
-        frozenset({profile.iae_epigraph}) if profile.iae_epigraph else frozenset[str]()
+        frozenset({taxpayer.iae_epigraph}) if taxpayer.iae_epigraph else frozenset[str]()
     )
     validate_regimen_simplificado_rows(
         regimen.rows,

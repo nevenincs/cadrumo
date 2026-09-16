@@ -2,23 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from datetime import datetime
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from pydantic import BaseModel
 
-from ...core.async_cleanup import AsyncCloseable
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
+from ._supervisor_host import SupervisorHost
 from .errors import OperationDeclarationError
 from .interactions import OperationConsumedInteraction, OperationPendingInteraction
 from .models import (
     OperationId,
-    OperationIdentity,
     OperationReconciliationOutcome,
-    OperationReference,
     OperationRequest,
     OperationTerminalReceipt,
 )
@@ -32,104 +29,11 @@ from .persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from .registry import OperationDefinition, OperationReconciliationPolicy, OperationRegistry
+from .registry import OperationDefinition, OperationReconciliationPolicy
 from .secret_submission import BoundEphemeralSecretAccess
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from .financial_operand_submission import BoundTransientFinancialOperandAccess
-    from .persistence.events import OperationEvent
-    from .persistence.journal import OperationLeaseRepository, OperationSecureReferenceStore
-    from .projection_services import OperationResponseAuthorityIssuer
-    from .secret_submission import EphemeralSecretBroker
-
-
-class SupervisorHost:
-    if TYPE_CHECKING:
-        registry: OperationRegistry
-        _authority_operation: PinnedAuthorityOperation
-        _leases: OperationLeaseRepository
-        _operands: OperationSecureReferenceStore | None
-        _clock: Callable[[], datetime]
-        _response_authority_issuer: OperationResponseAuthorityIssuer | None
-        _response_token_factory: Callable[[], str]
-        _leases_by_operation: dict[OperationId, OperationOwnerLease]
-        _contexts: dict[OperationId, DefinitionBoundContext]
-        _resources: dict[OperationId, list[AsyncCloseable]]
-        _ephemeral_secrets: EphemeralSecretBroker
-
-        async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
-
-        def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease: ...
-
-        def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition: ...
-
-        def _bound_financial_operand(
-            self,
-            identity: OperationIdentity,
-            definition: OperationDefinition,
-        ) -> BoundTransientFinancialOperandAccess: ...
-
-        async def _resolve_request_payload(
-            self,
-            snapshot: OperationPersistedSnapshot,
-            definition: OperationDefinition,
-        ) -> BaseModel: ...
-
-        async def _execute_with_deadlines(
-            self,
-            *,
-            identity: OperationIdentity,
-            context: DefinitionBoundContext,
-            executor: Coroutine[None, None, OperationReference | None],
-        ) -> OperationReference | None: ...
-
-        async def _settle_executor_failure(
-            self,
-            snapshot: OperationPersistedSnapshot,
-            error: Exception,
-        ) -> OperationPersistedSnapshot: ...
-
-        async def _settle_returned_result(
-            self,
-            snapshot: OperationPersistedSnapshot,
-            result_ref: OperationReference | None,
-        ) -> OperationPersistedSnapshot: ...
-
-        async def _advance(
-            self,
-            snapshot: OperationPersistedSnapshot,
-            *,
-            lifecycle: OperationLifecycle,
-            events: tuple[OperationEvent, ...] = (),
-            pending: OperationPendingInteraction | None = None,
-            consumed: tuple[OperationConsumedInteraction, ...] | None = None,
-            effect: OperationEffect | None = None,
-            execution_deadline: datetime | None = None,
-            cleanup_deadline: datetime | None = None,
-            cancellation_requested_at: datetime | None = None,
-            cancellation_acknowledged_at: datetime | None = None,
-            cancellation_deferred: bool | None = None,
-            executor_entered_at: datetime | None = None,
-            discard_ephemeral_secret: bool = False,
-        ) -> OperationPersistedSnapshot: ...
-
-        async def settle(
-            self,
-            operation_id: OperationId,
-            receipt: OperationTerminalReceipt,
-        ) -> OperationPersistedSnapshot: ...
-
-        async def _acknowledge_cancellation(
-            self,
-            context_snapshot: OperationPersistedSnapshot,
-        ) -> OperationPersistedSnapshot: ...
-
-        async def _set_cancellation_deferred(
-            self,
-            context_snapshot: OperationPersistedSnapshot,
-            deferred: bool,
-        ) -> OperationPersistedSnapshot: ...
+    pass
 
 
 class SupervisorReconciliationMixin(SupervisorHost):
@@ -299,6 +203,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
             and continuation.checkpoint.request.kind in definition.interaction_kinds
         )
 
+    @override
     async def _resume_from_checkpoint(
         self,
         snapshot: OperationPersistedSnapshot,
@@ -345,6 +250,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
             return await self._settle_executor_failure(context.snapshot, error)
         return await self._settle_returned_result(context.snapshot, result_ref)
 
+    @override
     def _build_context(self, snapshot: OperationPersistedSnapshot) -> DefinitionBoundContext:
         return DefinitionBoundContext(
             snapshot=snapshot,

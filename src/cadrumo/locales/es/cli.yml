@@ -199,6 +199,11 @@ cli:
         field_no_anchor: '{field}: el lector no ofreció nada en el documento a lo
           que señalar, así que no hay forma impresa con la que contrastar este valor.'
         group_help: Justificantes de facturas de compra en PDF o imagen
+        idempotency_key_help: Clave propia para este adjunto. Repetir el comando con
+          la misma clave devuelve el registro ya creado en lugar de añadir otro, y
+          lo rechaza si el documento asociado a la clave ha cambiado. Sin clave, el
+          comando añade un registro nuevo cada vez, porque un mismo archivo puede
+          adjuntarse dos veces legítimamente.
         invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
           p. ej. 2026-01-15.
         invoice_number_help: Número de factura del proveedor
@@ -2310,13 +2315,21 @@ cli:
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     provision:
       help: 'Gestiona el lector local de documentos: estado del runtime, instalación,
-        arranque, descarga, verificación y eliminación de modelos.'
+        arranque, descarga, carga, verificación y eliminación de modelos, o prepáralo
+        todo de una vez.'
       install:
         confirm_help: Acepta descargar y ejecutar la instalación del gestor de paquetes.
           Sin esta opción no se instala nada.
         help: Instala el runtime local con el gestor de paquetes de la plataforma
           (winget en Windows, Homebrew en macOS). No hace nada si ya está instalado;
           en Linux la instalación queda a cargo del operador.
+      load:
+        help: Carga modelos en la memoria del runtime local para que la primera lectura
+          no espere a un arranque en frío; el de cada función del lector salvo que
+          --role o --model lo acoten. Se niega antes de cargar si falta memoria; un
+          modelo ya cargado se deja como está.
+        model_help: Identificador en el runtime del modelo que se cargará. Debe estar
+          ya descargado. Por defecto, el modelo seleccionado para la función.
       pull:
         help: Descarga modelos al runtime local, el de cada función del lector salvo
           que --role o --model lo acoten. Rechaza antes de descargar si un modelo
@@ -2334,12 +2347,23 @@ cli:
       role_help: Función del modelo sobre la que actuar (transcripción de imágenes,
         extracción de texto, mapeo tabular, propuesta de naturaleza del suministro).
         Por defecto, todas.
+      setup:
+        confirm_help: Acepta descargar y ejecutar la instalación con el gestor de
+          paquetes si falta el runtime. Sin esta opción, la preparación se detiene
+          en el paso de instalación en lugar de instalar.
+        help: 'Prepara el lector local de una vez: instala el runtime (solo con --confirm),
+          lo arranca, descarga el modelo de cada función, los carga y los verifica.
+          Los pasos ya hechos se indican sin cambios; el primer paso que falla detiene
+          la ejecución.'
       start:
         help: Arranca el runtime local instalado cuando el endpoint local configurado
           no responde. No hace nada si ya responde.
       status:
         help: Informa de si el runtime local está instalado y responde, y de si el
           modelo de cada función del lector está instalado. Solo lee.
+        probe_help: Comprueba ahora la aptitud del modelo de texto en lugar de leer
+          el veredicto registrado por `aeat config provision verify`. Carga el modelo
+          y consume una respuesta completa; el resultado no se registra.
       verify:
         help: Verifica que los modelos cargan y responden a una consulta trivial dentro
           de un límite de tiempo, el de cada función del lector salvo que --role o

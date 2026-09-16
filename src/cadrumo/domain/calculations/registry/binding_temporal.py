@@ -60,7 +60,6 @@ __all__ = [
     "temporal_max_year_delta",
     "temporal_period_anchors",
     "temporal_selector_from_previous_modelo_fields",
-    "temporal_selector_from_relation_fields",
 ]
 
 
@@ -419,55 +418,6 @@ def temporal_selector_from_previous_modelo_fields(
     if not periods:
         return SameTargetContext()
     return SameFilingYearPeriods(source_periods=periods)
-
-
-def temporal_selector_from_relation_fields(
-    *,
-    filing_year_delta: int = 0,
-    source_periods: tuple[str, ...] = (),
-    source_period_offset_from_target: int | None = None,
-    alignment_mode: str | None = None,
-) -> SameTargetContext | SameFilingYearPeriods | FilingYearOffset | TargetPeriodOffset | PriorQuarterExpandingSpan:
-    """Map one relation's temporal axes onto the member that states the same intent.
-
-    The relation grammar spread the same source window across a revision
-    selector, a period-alignment record, an explicit period list, and a period
-    offset. Only three of those axes were ever runtime-effective -- the
-    selector's filing-year delta, the period list, and the offset -- so those
-    are what map, through the same semantics as
-    :func:`temporal_selector_from_previous_modelo_fields`. The alignment record
-    was descriptive except for its named modes, and
-    ``prior_pagos_cumulative`` is the expanding span named the old way.
-
-    An ABSOLUTE source year has no member and cannot be passed here: the caller
-    resolves it against the revision it is declared in and passes the resulting
-    delta, refusing the row if the two disagree.
-
-    Args:
-        filing_year_delta: Years between the target and source filing year.
-        source_periods: The source-period tokens the relation names.
-        source_period_offset_from_target: Period offset from the target period.
-        alignment_mode: The relation's named period-alignment mode, if any.
-
-    Returns:
-        The temporal member expressing the same source-window intent.
-
-    Raises:
-        RegistryValidationError: If the axes are contradictory or name a window
-            the union cannot express.
-    """
-    if alignment_mode == "prior_pagos_cumulative":
-        if filing_year_delta != 0:
-            raise RegistryValidationError(
-                "relation prior_pagos_cumulative alignment cannot carry a filing-year offset",
-                context={"filing_year_delta": filing_year_delta},
-            )
-        return PriorQuarterExpandingSpan()
-    return temporal_selector_from_previous_modelo_fields(
-        filing_year_delta=filing_year_delta,
-        source_periods=source_periods,
-        source_period_offset_from_target=source_period_offset_from_target,
-    )
 
 
 def _normalized_legacy_periods(*, period: str | None, source_periods: tuple[str, ...]) -> tuple[str, ...]:

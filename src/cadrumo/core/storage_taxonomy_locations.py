@@ -548,6 +548,19 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
+    _location(
+        # One small record per endpoint and model, replaced in place, so it
+        # cannot grow past the models the runtime serves. Excluded from the
+        # fingerprint: a verify run must not change a replay's digest.
+        StorageCategory.LOCAL_READER_FITNESS_VERDICTS,
+        "local-reader-fitness.json",
+        consumer_module="application/provisioning_fitness.py",
+        node_kind=StorageNodeKind.FILE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
 )
 
 

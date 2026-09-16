@@ -16,6 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from reportlab.pdfgen import canvas
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.purchase_invoice_evidence import (
@@ -57,6 +58,22 @@ _STRUCTURED = "facturae_32_series_and_parties_invoice.xml"
 #: contended machine must park rather than attempt.
 _SCAN = "scanned_invoice_from_commons_1.pdf"
 
+#: A text-layer invoice whose labels print every required field, so the label
+#: rules read it completely and no model is ever needed.
+_LABELLED_TEXT_LAYER = "labelled_text_layer_invoice.pdf"
+_LABELLED_LINES = (
+    "FACTURA",
+    "Proveedor: Hardware Profesional Sur SL",
+    "NIF: B92000090",
+    "Numero de factura: A-0003",
+    "Fecha de expedicion: 2026-03-27",
+    "Destinatario: Javier Ortega Llorens NIF: 12345678Z",
+    "Base imponible: 1200.00 EUR",
+    "Tipo IVA: 21%",
+    "Cuota IVA: 252.00 EUR",
+    "Total factura: 1452.00 EUR",
+)
+
 _GIB = 1024**3
 
 
@@ -71,6 +88,16 @@ def mixed_batch(tmp_path: Path) -> Path:
     for name in (_STRUCTURED, _SCAN):
         (folder / name).write_bytes((_CORPUS / name).read_bytes())
     return folder
+
+
+@pytest.fixture
+def labelled_batch(mixed_batch: Path) -> Path:
+    """The mixed folder plus one fully labelled text-layer invoice."""
+    page = canvas.Canvas(str(mixed_batch / _LABELLED_TEXT_LAYER))
+    for index, line in enumerate(_LABELLED_LINES):
+        page.drawString(50, 800 - 18 * index, line)
+    page.save()
+    return mixed_batch
 
 
 def _headroom(*, free_vram_bytes: int) -> HardwareProfile:
@@ -205,3 +232,17 @@ def test_the_deterministic_count_does_not_absorb_model_read_items(
         "the scan was counted as deterministic progress; the split that makes pacing observable is gone"
     )
     assert len(with_headroom.items) == 2
+
+
+def test_a_fully_labelled_text_layer_invoice_completes_while_the_lane_is_closed(
+    runtime_profile: TestRuntimeProfile,
+    labelled_batch: Path,
+) -> None:
+    """The label rules read it completely, so a closed inference lane does not park it."""
+    result = _run(runtime_profile, labelled_batch, free_vram_bytes=3 * _GIB, safety_margin_bytes=4 * _GIB)
+
+    by_name = {item.source_name: item for item in result.items}
+    assert by_name[_LABELLED_TEXT_LAYER].status in COMPLETED_BATCH_ITEM_STATUSES
+    assert by_name[_LABELLED_TEXT_LAYER].needed_inference is False
+    assert by_name[_SCAN].status == "paused"
+    assert result.deterministic_completed == 2

@@ -9,7 +9,6 @@ answers whether the table reaches a date at all; :func:`cite` renders
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -37,7 +36,6 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
 
-@dataclass(slots=True)
 def resolve_iva_rate(
     member_state: EUMemberState,
     kind: IvaRateKind,

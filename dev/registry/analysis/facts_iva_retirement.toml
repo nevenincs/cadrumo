@@ -14,7 +14,7 @@ row_count = 21
 classification = "needs_typed_schema_and_fact_migration"
 decision = "retain_until_lossless_replacement"
 reason = "Operative category rules carry per-citation quotation, grounding disposition, legal window, and exemption semantics. Existing scalar, mapping, and event facts cannot retain nested citation-level evidence or the unresolved domestic_zero refusal."
-direct_readers = ["src/cadrumo/domain/iva/catalogue.py:load_iva_catalogue", "src/cadrumo/core/resources/_repos/iva_catalogues.py"]
+direct_readers = ["src/cadrumo/core/resources/_repos/iva_catalogues.py"]
 safe_next_scope = "Introduce a typed regulation fact family with citation-level evidence and unresolved-grounding state; re-ground or explicitly split domestic_zero before any migration, then project the existing IvaCatalogue API from authority facts."
 
 [[remaining_structured_tables]]

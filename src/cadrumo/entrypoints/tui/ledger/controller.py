@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable
 from dataclasses import replace
 from typing import ClassVar, Final, cast
 
@@ -24,7 +26,7 @@ from ....application.ledger.workspace import (
 )
 from ....application.operator_actions.models import ActionReference
 from ....application.review.filter import LedgerReviewStatus
-from ....core.errors.hierarchy import InternalInvariantError
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import lookup_translation, output_language, tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
@@ -36,8 +38,12 @@ from .models import (
     LEDGER_DESTINATION_BY_AREA,
     LedgerClassificationSubmissionV1,
     LedgerEntryRowV1,
+    LedgerEvidenceConfirmationV1,
+    LedgerEvidenceConfirmedV1,
+    LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRowV1,
+    LedgerExclusionSubmissionV1,
     LedgerImportOutcomeV1,
     LedgerImportRequestV1,
     LedgerInvoiceAddResultV1,
@@ -155,6 +161,7 @@ class LedgerWorkspaceController:
         self.classification_submitter = injection.classification_submitter
         self.import_door = injection.import_door
         self.invoice_add_door = injection.invoice_add_door
+        self.exclusion_submitter = injection.exclusion_submitter
         self.evidence_door = injection.evidence_door
         self.evidence_action = injection.evidence_action
         self.evidence_items = injection.evidence_items
@@ -376,6 +383,23 @@ class LedgerWorkspaceController:
             raise InternalInvariantError("import submission is unavailable")
         return await self.import_door.apply(request)
 
+    def can_exclude(self) -> bool:
+        """Report whether excluding an entry is admitted: the classify authority and its writer."""
+        return self.classify_action is not None and self.exclusion_submitter is not None
+
+    async def submit_exclusion(self, transaction_id: TransactionId) -> ManualLedgerTransactionResult:
+        """Exclude one entry the operator can see in the review list."""
+        if self.classify_action is None or self.exclusion_submitter is None:
+            raise InternalInvariantError("exclusion is unavailable")
+        if transaction_id not in self.projection.review_transaction_ids:
+            raise ValueError("exclusion target is absent from the visible review list")
+        result = await self.exclusion_submitter(
+            LedgerExclusionSubmissionV1(action=self.classify_action, transaction_id=transaction_id)
+        )
+        if result.ref.transaction_id != transaction_id:
+            raise ValueError("exclusion result transaction identity disagrees")
+        return result
+
     def can_add_invoices(self) -> bool:
         """Report whether the invoice writer door is admitted in this session."""
         return self.invoice_add_door is not None
@@ -395,6 +419,18 @@ class LedgerWorkspaceController:
         if self.evidence_door is None:
             raise InternalInvariantError("evidence registration is unavailable")
         return await self.evidence_door.add(source_path)
+
+    async def extract_evidence(self, evidence_id: str) -> LedgerEvidenceDraftV1:
+        """Read one registered document through the injected evidence door."""
+        if self.evidence_door is None:
+            raise InternalInvariantError("evidence reading is unavailable")
+        return await self.evidence_door.extract(evidence_id)
+
+    async def confirm_evidence(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
+        """Record one read document as an invoice through the injected evidence door."""
+        if self.evidence_door is None:
+            raise InternalInvariantError("evidence confirmation is unavailable")
+        return await self.evidence_door.confirm(confirmation)
 
     def reader_readiness(self) -> LedgerReaderReadinessV1 | None:
         """Measure the local reader, or ``None`` when no door can measure it."""
@@ -549,6 +585,50 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         self.requested_target: LedgerRouteTargetV1 | None = None
         self.refusal: LedgerRouteRefusalV1 | None = None
         self.back_requested = False
+        self.refreshing = False
+        """Whether a re-read of the workspace is running off the event loop."""
+        self._after_refresh: Callable[[], object] | None = None
+        self.refresh_seconds: list[float] = []
+        """How long each completed re-read took, newest last."""
+
+    def refresh_then(self, then: Callable[[], object]) -> None:
+        """Re-read the workspace off the event loop, then continue with ``then``.
+
+        A capture reads every catalogue the workspace projects, which takes
+        seconds on a real ledger; on the loop that froze every key. A request
+        made while one is already running does not start a second read: it
+        replaces what happens when the running one lands, so the operator's
+        last intent wins and the store is read once.
+        """
+        if not self.controller.can_refresh():
+            then()
+            return
+        self._after_refresh = then
+        if self.refreshing:
+            return
+        self.refreshing = True
+        self._status_line().update(ledger_copy("tui.ledger.flow.refreshing"))
+        self.run_worker(self._refresh(), group="ledger-refresh")
+
+    async def _refresh(self) -> None:
+        started = asyncio.get_running_loop().time()
+        try:
+            self.controller = await asyncio.to_thread(self.controller.refreshed)
+        except CadrumoError:
+            self._status_line().update(ledger_copy("tui.ledger.flow.refresh_failed"))
+        else:
+            self._status_line().update("")
+        finally:
+            self.refreshing = False
+            self.refresh_seconds.append(asyncio.get_running_loop().time() - started)
+        then, self._after_refresh = self._after_refresh, None
+        if then is not None:
+            then()
+
+    def _status_line(self) -> Static:
+        """The body's flow status line, or its notice line when it has none."""
+        found = self.query("#ledger-flow-status")
+        return cast(Static, found.first()) if found else self.query_one("#ledger-refusal", Static)
 
     def populate_navigation(self) -> None:
         """Populate the complete seven-area catalogue in canonical order."""

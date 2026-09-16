@@ -350,46 +350,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.resources.errors.ResourceLoadError",
-        ErrorCode(
-            code="ERROR_RESOURCES_LOAD",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_resources_load",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.resources.errors.ResourceNotFoundError",
-        ErrorCode(
-            code="ERROR_RESOURCES_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_resources_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.resources.errors.ResourceValidationError",
-        ErrorCode(
-            code="ERROR_RESOURCES_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_resources_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.resources.errors.ResourceBackendError",
-        ErrorCode(
-            code="ERROR_RESOURCES_BACKEND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_resources_backend",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.errors.hierarchy.NoActiveProfileError",
         ErrorCode(
             code="REFUSED_NO_ACTIVE_PROFILE",

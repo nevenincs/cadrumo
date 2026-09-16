@@ -411,15 +411,6 @@ class SchemaResolutionError(CadrumoError):
         super().__init__("; ".join(f"{item.subject_leaf_key}: {item.reason}" for item in failures))
 
 
-@dataclass(frozen=True, slots=True)
-class CommandDispatchResult:
-    """Transport-neutral result of one outer command dispatch."""
-
-    stdout: str
-    stderr: str
-    returncode: int
-
-
 def cli_argv_for(schema: VerbInputSchema, arguments: Mapping[str, object]) -> list[str]:
     """Encode named schema arguments into the canonical command argv tail."""
     positional: list[str] = []
@@ -506,7 +497,6 @@ def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, .
 __all__ = [
     "Capability",
     "CommandCapabilityClass",
-    "CommandDispatchResult",
     "CommandExecutionPolicy",
     "CommandMetadataPort",
     "CommandNodeKind",

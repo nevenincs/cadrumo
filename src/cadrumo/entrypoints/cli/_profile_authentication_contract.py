@@ -6,11 +6,12 @@ from dataclasses import dataclass
 
 from pydantic import SecretStr
 
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
+from cadrumo.application.operator_surface.command_ports import Capability, ProfileAuthenticationPosture
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ._bootstrap_exempt import is_bootstrap_exempt
 from .command_spec import (
+    CommandSpec,
     CommandSpecNode,
     ProfileSecretSpec,
 )
@@ -57,13 +58,26 @@ def root_profile_secret_model() -> type[MachineSecretPayload]:
     return resolve_profile_secret_model(spec)
 
 
+#: Capabilities that reach nothing a profile holds. A leaf declaring only these
+#: runs without a profile session, so an active profile the host cannot unlock
+#: never stands between the operator and a command that does not read it.
+PROFILE_FREE_CAPABILITIES: frozenset[Capability] = frozenset({"state-free", "network"})
+
+
+def command_is_profile_free(spec: CommandSpec) -> bool:
+    """Return whether an executable leaf declares nothing a profile holds."""
+    return spec.kind == "leaf" and spec.policy.capabilities <= PROFILE_FREE_CAPABILITIES
+
+
 def profile_authentication_posture(node: CommandSpecNode) -> ProfileAuthenticationPosture:
-    """Derive one leaf's root-gate posture from graph and exemption authority."""
+    """Derive one leaf's root-gate posture from graph, capability and exemption authority."""
     spec = node.spec
     if spec.kind == "root" or (spec.kind != "leaf" and spec.invocation.terminal_behavior != "executable"):
         return ProfileAuthenticationPosture.NOT_APPLICABLE
     if spec.profile_authentication is ProfileAuthenticationPosture.SELF_AUTHENTICATING:
         return ProfileAuthenticationPosture.SELF_AUTHENTICATING
+    if command_is_profile_free(spec):
+        return ProfileAuthenticationPosture.NOT_APPLICABLE
     operator_path = " ".join(node.path[1:])
     if is_bootstrap_exempt(operator_path):
         return ProfileAuthenticationPosture.NOT_APPLICABLE
@@ -71,8 +85,10 @@ def profile_authentication_posture(node: CommandSpecNode) -> ProfileAuthenticati
 
 
 __all__ = [
+    "PROFILE_FREE_CAPABILITIES",
     "ProfileAuthenticationSecrets",
     "ProfileSecretSourceOptions",
+    "command_is_profile_free",
     "profile_authentication_posture",
     "resolve_profile_secret_model",
     "root_profile_secret_model",

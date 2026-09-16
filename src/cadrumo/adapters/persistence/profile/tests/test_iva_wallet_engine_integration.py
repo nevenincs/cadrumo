@@ -52,6 +52,7 @@ from cadrumo.application.modelo.iva_wallet_gate import (
     lazily_reconcile_local_iva_compensation_for_work_unit,
     resolve_iva_compensation_decision_for_calculation,
 )
+from cadrumo.application.user_profile.projections import profile_path_values_for_bucket
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
@@ -850,6 +851,7 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
                 backend_binding_values=None,
                 casilla_inputs=None,
                 backend_casilla_inputs=None,
+                profile_values=profile_path_values_for_bucket(target.bucket_id),
             )
 
     assert replayed is not None
@@ -902,6 +904,7 @@ def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(
                 backend_binding_values=None,
                 casilla_inputs=None,
                 backend_casilla_inputs=None,
+                profile_values=profile_path_values_for_bucket(target.bucket_id),
             )
 
         assert decision.selected_authority == "taxpayer_override"

@@ -177,6 +177,23 @@ class LedgerClassificationSubmitterV1(Protocol):
         ...
 
 
+class LedgerExclusionSubmissionV1(BaseModel):
+    """Catalogue-authorized request to exclude one reviewed entry from filing."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action: ActionReference
+    transaction_id: TransactionId
+
+
+class LedgerExclusionSubmitterV1(Protocol):
+    """Injected application door that marks one entry reviewed and excluded."""
+
+    async def __call__(self, submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
+        """Exclude one active entry through the canonical lifecycle writer."""
+        ...
+
+
 class LedgerImportSourceKind(StrEnum):
     """What an operator-chosen file holds, which decides the door that reads it."""
 
@@ -341,6 +358,53 @@ class LedgerReaderReadinessV1(BaseModel):
     failed_condition_id: str | None = None
 
 
+class LedgerEvidenceDraftV1(BaseModel):
+    """What the on-host reader found in one document, as display text.
+
+    ``None`` is a field the reader could not ground in the document; it is
+    shown as unread, never as zero.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    evidence_id: str
+    supplier_name: str | None
+    supplier_tax_id: str | None
+    invoice_number: str | None
+    invoice_date: str | None
+    taxable_base: str | None
+    iva_rate: str | None
+    iva_amount: str | None
+    grand_total: str | None
+    currency: str | None
+    suggested_kind: InvoiceKind | None
+    discrepancies: int
+
+
+class LedgerEvidenceConfirmationV1(BaseModel):
+    """The operator's answers that confirm one read document as an invoice."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    evidence_id: str
+    kind: InvoiceKind
+    country_code: str = Field(min_length=2, max_length=2)
+    counterparty_name: str | None = None
+
+
+class LedgerEvidenceConfirmedV1(BaseModel):
+    """The invoice a confirmation recorded, or found already recorded."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    invoice_id: InvoiceId
+    invoice_number: str
+    grand_total: Decimal
+    currency: str
+    created: bool
+    printed_total_disagrees: bool
+
+
 class LedgerEvidenceDoorV1(Protocol):
     """Injected application door over the operator's local invoice evidence."""
 
@@ -358,6 +422,14 @@ class LedgerEvidenceDoorV1(Protocol):
 
     def reader_readiness(self) -> LedgerReaderReadinessV1:
         """Measure the local document reader without starting or loading anything."""
+        ...
+
+    async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
+        """Read one stored document on this machine; nothing is recorded."""
+        ...
+
+    async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
+        """Re-read the document and record it as an invoice through the sole writer."""
         ...
 
 
@@ -425,10 +497,15 @@ __all__ = [
     "LedgerClassificationSubmitterV1",
     "LedgerDestinationIdV1",
     "LedgerEntryRowV1",
+    "LedgerEvidenceConfirmationV1",
+    "LedgerEvidenceConfirmedV1",
     "LedgerEvidenceDoorV1",
+    "LedgerEvidenceDraftV1",
     "LedgerEvidenceRecordRowV1",
     "LedgerEvidenceRecordStatus",
     "LedgerEvidenceRowV1",
+    "LedgerExclusionSubmissionV1",
+    "LedgerExclusionSubmitterV1",
     "LedgerFlowState",
     "LedgerImportDoorV1",
     "LedgerImportFileRefusalV1",

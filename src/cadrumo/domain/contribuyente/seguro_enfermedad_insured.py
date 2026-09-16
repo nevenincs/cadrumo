@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -33,10 +33,6 @@ __all__ = [
     "count_seguro_enfermedad_insured",
     "seguro_enfermedad_insured_counts_from_facts",
 ]
-
-#: Prefix the stored descendant facts share, matching the one the canonical
-#: descendant reconstruction reads.
-_DESCENDANT_FACT_PREFIX: Final[str] = "renta_family.descendiente."
 
 
 @dataclass(frozen=True, slots=True)

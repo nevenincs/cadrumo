@@ -1553,7 +1553,7 @@
       "contract": "adapters-do-not-reach-composition",
       "created_on": "2026-09-15",
       "expires_on": "2027-03-15",
-      "fingerprint": "8168bb5a6815d25a337378eeda837e068e48af96e8b085af22ced4f023fd17a3",
+      "fingerprint": "102c2d912e7a3e3532b66c1482c2144e4c5e78dfd5c423823b41834ae9196cb0",
       "import_form": "static",
       "imported_symbols": [
         "invoice_draft_extraction_ports"
@@ -1564,7 +1564,7 @@
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_structured_path_country_codes",
       "status": "active",
-      "target_module": "cadrumo.entrypoints.cli.ledger_evidence_extraction_wiring"
+      "target_module": "cadrumo.entrypoints.ledger_evidence_extraction_composition"
     },
     {
       "capability": "cross-layer-integration-test",

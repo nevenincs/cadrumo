@@ -184,7 +184,11 @@ async def test_selecting_a_review_row_reports_the_pending_state() -> None:
 
 @pytest.mark.asyncio
 async def test_escape_from_an_internal_area_returns_to_home() -> None:
-    """A replaced body keeps the destination's return journey, it does not nest."""
+    """Escape climbs one level at a time: area to overview, overview to Home.
+
+    A replaced body keeps the destination's return journey rather than
+    nesting, so the second Escape leaves the workspace in one step.
+    """
     app = _app()
     async with app.run_test() as pilot:
         app.navigate_to(_LEDGER_TARGET)
@@ -196,15 +200,21 @@ async def test_escape_from_an_internal_area_returns_to_home() -> None:
         await pilot.pause()
         assert isinstance(app.screen, LedgerEntriesScreen)
 
+        # Each return crosses several pumps (the binding posts, the body is
+        # swapped or dismissed, the root's deferred callback pushes), so this
+        # waits for the end state rather than the first observable step.
         await pilot.press("escape")
-        # The return crosses several pumps: the binding posts, the screen
-        # dismisses, and the root's deferred callback rebuilds and pushes Home.
-        # Settling once only reaches the dismissal, so this waits for the end
-        # state rather than the first observable step.
         for _ in range(4):
             await pilot.pause()
-
-        assert isinstance(app.screen, HomeScreen), (
+        assert isinstance(app.screen, LedgerOverviewScreen), (
             f"Escape from an internal Ledger area left the operator on {type(app.screen).__name__}"
+        )
+        assert len(app.screen_stack) == 2
+
+        await pilot.press("escape")
+        for _ in range(4):
+            await pilot.pause()
+        assert isinstance(app.screen, HomeScreen), (
+            f"Escape from the Ledger overview left the operator on {type(app.screen).__name__}"
         )
         assert len(app.screen_stack) == 2

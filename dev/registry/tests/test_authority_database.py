@@ -141,6 +141,40 @@ def test_publication_refuses_a_candidate_with_a_dangling_dependency(
     assert _publishes_nothing(tmp_path)
 
 
+def test_publication_foreign_key_check_refuses_an_unenforced_dangling_dependency(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The closure scan must catch a dangling edge that insert-time enforcement never saw."""
+
+    def disable_enforcement(connection: sqlite3.Connection) -> None:
+        connection.execute("PRAGMA foreign_keys = OFF")
+
+    def add_a_dangling_edge(connection: sqlite3.Connection) -> None:
+        component_kind, component_key = connection.execute(
+            "SELECT component_kind, component_key FROM dependencies LIMIT 1"
+        ).fetchone()
+        connection.execute(
+            "INSERT INTO dependencies(component_kind, component_key, ordinal, dependency_kind, dependency_key) "
+            "VALUES (?, ?, 999, 'governed_fact', 'no-such-fact')",
+            (component_kind, component_key),
+        )
+
+    monkeypatch.setattr(
+        authority_database_compiler,
+        "_create_schema",
+        _followed_by(authority_database_compiler._create_schema, disable_enforcement),
+    )
+    monkeypatch.setattr(
+        authority_database_compiler,
+        "_insert_dependencies",
+        _followed_by(authority_database_compiler._insert_dependencies, add_a_dangling_edge),
+    )
+
+    with pytest.raises(RegistryValidationError, match="foreign-key closure failed"):
+        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=lambda: None)
+    assert _publishes_nothing(tmp_path)
+
+
 def _artifact() -> AuthorityArtifact:
     build_identity = AuthorityBuildIdentity.from_inputs(sha256_hex(b"source"), sha256_hex(b"compiler"))
     profile_schema = capture_profile_schema(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"))[1]
@@ -234,6 +268,13 @@ def test_cached_loads_verify_database_identity_once_per_lease_not_per_load(
         assert all(repeat is first for repeat in repeats)
         # One for the lease's pin, one for the single database read.
         assert len(verifications) == 2
+
+        verifications.clear()
+        with reader.lease() as pin:
+            warm = [reader.load(ProfileSchemaComponentQuery(), pin=pin) for _ in range(50)]
+
+        assert all(value is first for value in warm)
+        assert len(verifications) == 1
     finally:
         reader.close()
 

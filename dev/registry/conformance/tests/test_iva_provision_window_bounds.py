@@ -25,12 +25,12 @@ from datetime import date
 
 import pytest
 
-from ....core.validity_window import ValidityWindow
-from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...calculations.registry.schema_references import LegalReference
-from ...calculations.registry.tests.published_authority import published_legal_references
-from ..catalogue import bundled_iva_catalogue
-from ..place_of_supply import load_place_of_supply_table
+from cadrumo.core.validity_window import ValidityWindow
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_references
+from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table
+from dev.registry.conformance.iva_regulation_catalogue import bundled_iva_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -65,7 +65,10 @@ def _violation(
     permitted_end: date | None,
 ) -> str:
     if window.valid_from < permitted_start:
-        return f"window opens {window.valid_from.isoformat()} before the provision took effect {permitted_start.isoformat()}"
+        return (
+            f"window opens {window.valid_from.isoformat()} "
+            f"before the provision took effect {permitted_start.isoformat()}"
+        )
     if permitted_end is not None and window.valid_to > permitted_end:
         return (
             f"window closes {window.valid_to.isoformat()} after the provision was repealed {permitted_end.isoformat()}"

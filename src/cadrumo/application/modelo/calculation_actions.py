@@ -94,6 +94,7 @@ from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDeta
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..user_profile.profile_read_ports import ProfileReadPorts
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
@@ -157,9 +158,13 @@ from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
-from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
+from .m303_regimen_simplificado_scope import (
+    m303_regimen_simplificado_annual_summary_applies_to_profile,
+    taxpayer_profile_for_work,
+)
 from .preconditions import build_modelo_precondition_failure
 from .revision_persistence import persist_calculation_revision
+from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -179,7 +184,8 @@ if TYPE_CHECKING:
 class BucketAggregationCalculationResult:
     """Calculation revision plus the non-blocking source diagnostics raised while resolving it.
 
-    ``revision`` is the persisted :class:`CalculationRevision`.
+    ``revision`` is the persisted :class:`CalculationRevision`; ``profile`` is
+    the work profile the calculation checked and read.
     ``source_diagnostics`` carries the
     :class:`~application.aggregation.CalculationSourceDiagnostic` rows the
     source mesh emitted during resolution, notably the unconsumed-declarable-IVA
@@ -190,6 +196,7 @@ class BucketAggregationCalculationResult:
     """
 
     revision: CalculationRevision
+    profile: ModeloWorkProfile
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
 
@@ -199,6 +206,7 @@ class _BucketAggregationPreparation:
 
     work_unit: WorkUnit
     snapshot: RegistrySnapshot
+    profile: ModeloWorkProfile
     casilla_inputs: Mapping[CasillaId, Decimal]
     source_casilla_inputs: Mapping[CasillaId, Decimal] | None
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None
@@ -304,6 +312,7 @@ def calculate_modelo_revision(
         filing_instance_evidence=filing_instance_evidence,
         source_issues=(),
         clock=clock,
+        profile=None,
     )
 
 
@@ -407,6 +416,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     additional_secure_object_writes_for_revision: (
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
+    profile: ModeloWorkProfile | None,
 ) -> CalculationRevision:
     """Calculate with source evidence produced by the in-module source mesh only.
 
@@ -419,6 +429,9 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
 
     ``ports`` is the required application-owned capability bundle.  It is
     passed unchanged to every repository-consuming step of the action.
+    ``profile`` is the record the source mesh already read, or ``None`` when
+    this run has loaded none; the preparation gate then loads it once and the
+    rest of the action reads that same record.
 
     Pipeline:
 
@@ -478,13 +491,14 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         borrador_snapshot_repository=ports.borrador_snapshot_repository,
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
+        profile=profile,
     )
     work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
     _require_m303_regimen_simplificado_annual_summary_handoff(
         revision=snapshot.revision,
-        work_unit=work_unit,
+        profile=prepared.profile,
         handoff=m303_regimen_simplificado_annual_summary_handoff,
     )
     _require_detail_rows_declared_for_their_owning_modelo(work_unit=work_unit, detail_rows=detail_rows)
@@ -555,6 +569,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         casilla_values=casilla_values,
         observations=typed_observations,
         operation=ports.operation,
+        profile=prepared.profile,
     )
 
     now = _trusted_calculation_clock(clock)
@@ -647,6 +662,7 @@ def resolve_bucket_source_mesh(
     date_binding_values: Mapping[BindingId, date] | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     filing_period_date: date | None = None,
+    profile: ModeloWorkProfile | None = None,
 ) -> CalculationSourceResolution:
     """Resolve the live source mesh for a bucket-aggregation calculation.
 
@@ -661,7 +677,23 @@ def resolve_bucket_source_mesh(
     :class:`MemoizedTransactionCatalogueRepository` so every enrolled ledger
     resolver shares one ``load()`` of the bucket's transaction catalogue
     instead of each resolver independently re-scanning and re-decrypting it.
+
+    ``profile`` is the work profile the calculation already checked; when
+    omitted, this entry loads it once. Every resolver reads that one record
+    from :attr:`~application.aggregation.CalculationSourceContext.profile`.
     """
+    if profile is None:
+        from .profile_readiness_gate import load_modelo_work_profile
+
+        profile = load_modelo_work_profile(
+            bucket_id=work_unit.bucket_id,
+            profile_decode_context=ports.operation.profile_decode_context(),
+        )
+    profile_read_ports = (
+        ports.profile_read_ports
+        if profile is None
+        else ProfileReadPorts(path_values=ModeloWorkProfilePathValues(profile=profile))
+    )
     resolved_transaction_repository = ports.transaction_repository
     memoized_transaction_repository = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
     prorrata_register_repository = ports.prorrata_register_repository
@@ -717,6 +749,7 @@ def resolve_bucket_source_mesh(
         revision=snapshot.revision,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
+        profile=profile,
     )
 
     def resolve_declared(
@@ -734,7 +767,9 @@ def resolve_bucket_source_mesh(
                 work_unit_repository=resolved_work_unit_repository,
                 calculation_repository=resolved_calculation_repository,
                 filing_repository=ports.filing_repository,
-                regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+                regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+                    taxpayer_profile_for_work(profile),
+                ),
                 operation=ports.operation,
             ),
             stage="conditional",
@@ -847,7 +882,7 @@ def resolve_bucket_source_mesh(
                     registry_snapshot=snapshot,
                     repository=ports.observation_repository,
                     iva_history_repository=ports.iva_compensation_history_repository,
-                    profile_read_ports=ports.profile_read_ports,
+                    profile_read_ports=profile_read_ports,
                     excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
                         modelo_id=str(snapshot.modelo.id),
                         revision_id=str(snapshot.revision.id),
@@ -869,7 +904,7 @@ def resolve_bucket_source_mesh(
                 RelationPrefillSourceResolver(
                     registry_snapshot=snapshot,
                     repository=ports.observation_repository,
-                    profile_read_ports=ports.profile_read_ports,
+                    profile_read_ports=profile_read_ports,
                     operation=ports.operation,
                 )
             ),
@@ -1162,11 +1197,13 @@ def _prepare_bucket_aggregation_calculation(
     relation_values: Mapping[RelationId, Decimal] | None,
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     detail_rows: tuple[ModeloDetailRow, ...],
+    profile: ModeloWorkProfile | None,
 ) -> _BucketAggregationPreparation:
     """Load, validate, and protect caller channels before source resolution."""
-    work_unit, snapshot = _load_bucket_aggregation_context(
+    work_unit, snapshot, checked_profile = _load_bucket_aggregation_context(
         work_unit_id,
         work_unit_repository=work_unit_repository,
+        profile=profile,
     )
     assert_no_novel_source_kinds(snapshot.revision)
     validated_casilla_inputs = _validated_bucket_casilla_inputs(snapshot, casilla_inputs)
@@ -1188,6 +1225,7 @@ def _prepare_bucket_aggregation_calculation(
     return _BucketAggregationPreparation(
         work_unit=work_unit,
         snapshot=snapshot,
+        profile=checked_profile,
         casilla_inputs=validated_casilla_inputs,
         source_casilla_inputs=casilla_inputs if casilla_inputs is None else validated_casilla_inputs,
         m210_gross_income_source_mode=resolved_m210_gross_income_source_mode,
@@ -1244,6 +1282,7 @@ def _resolve_bucket_aggregation_source_resolution(
         enum_binding_values=enum_binding_values,
         relation_values=preparation.source_relation_values,
         filing_period_date=filing_period_date,
+        profile=preparation.profile,
     )
     _reject_caller_overrides_of_source_bindings(
         revision=preparation.snapshot.revision,
@@ -1350,6 +1389,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     additional_secure_object_writes_for_revision: (
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
+    profile: ModeloWorkProfile | None = None,
 ) -> BucketAggregationCalculationResult:
     """Calculate a modelo revision and return it alongside the source diagnostics.
 
@@ -1365,6 +1405,10 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     contributing rows plus explicitly supplied foreign-asset observations,
     previous-filing, relation-prefill, withholding, retenciones, and detail-row
     sources into the backend channels that feed the revision.
+
+    ``profile`` is the work profile the calling command already loaded for
+    this bucket. When omitted, the readiness gate loads it once; either way
+    the profile the gate checked is the only one the calculation reads.
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     preparation = _prepare_bucket_aggregation_calculation(
@@ -1377,6 +1421,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         relation_values=relation_values,
         text_casilla_inputs=text_casilla_inputs,
         detail_rows=detail_rows,
+        profile=profile,
     )
     source_resolution = _resolve_bucket_aggregation_source_resolution(
         preparation=preparation,
@@ -1430,6 +1475,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         detail_rows=channels.detail_rows,
         clock=clock,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+        profile=preparation.profile,
     )
     advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         preparation.snapshot.revision,
@@ -1442,12 +1488,14 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         observation_repository=ports.observation_repository,
         prorrata_register_repository=ports.prorrata_register_repository,
         transaction_repository=ports.transaction_repository,
+        profile=preparation.profile,
     )
     source_diagnostics = (
         channels.reconciliation.source_diagnostics + channels.override_diagnostics + advisory_diagnostics
     )
     return BucketAggregationCalculationResult(
         revision=revision,
+        profile=preparation.profile,
         source_diagnostics=source_diagnostics,
     )
 
@@ -1677,7 +1725,7 @@ def _without_iva_wallet_sources(
 def _require_m303_regimen_simplificado_annual_summary_handoff(
     *,
     revision: ModeloRevision,
-    work_unit: WorkUnit,
+    profile: ModeloWorkProfile,
     handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
 ) -> None:
     """Keep the 303/4T annual handoff on its one mesh-owned arrival path.
@@ -1692,7 +1740,9 @@ def _require_m303_regimen_simplificado_annual_summary_handoff(
     declares_handoff = any(
         binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for binding in revision.bindings
     )
-    expects_handoff = declares_handoff and m303_regimen_simplificado_annual_summary_applies(work_unit)
+    expects_handoff = declares_handoff and m303_regimen_simplificado_annual_summary_applies_to_profile(
+        taxpayer_profile_for_work(profile),
+    )
     if expects_handoff == (handoff is not None):
         return
     raise ModeloAggregationBindingError(

@@ -104,3 +104,22 @@ def test_coerce_finite_european_decimal_preserves_amount_and_refuses_non_finite_
 
     for raw_value in ("not-a-number", "NaN", "Infinity", "-Infinity"):
         assert coerce_finite_european_decimal(raw_value) is None, raw_value
+
+
+@pytest.mark.parametrize(
+    ("printed", "expected"),
+    [
+        ("1.440,00", Decimal("1440.00")),
+        ("1,440.00", Decimal("1440.00")),
+        ("1.234.567,89", Decimal("1234567.89")),
+        ("1,234,567.89", Decimal("1234567.89")),
+        ("-1,440.00", Decimal("-1440.00")),
+    ],
+)
+def test_a_token_printing_both_marks_reads_the_rightmost_as_decimal(printed: str, expected: Decimal) -> None:
+    assert coerce_finite_european_decimal(printed) == expected
+
+
+@pytest.mark.parametrize("printed", ["1,44.00", "12,3456.00", "1.440,000,00", "1,440.0a"])
+def test_a_doubly_marked_token_with_malformed_groups_reads_nothing(printed: str) -> None:
+    assert coerce_finite_european_decimal(printed) is None

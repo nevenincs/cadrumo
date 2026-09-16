@@ -45,6 +45,7 @@ from ...core.type_guards import is_object_dict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.regime_legend import resolve_regime_legends
+from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 from .common import (
     bad,
@@ -57,7 +58,6 @@ from .common import (
     transaction_catalogue_repo,
 )
 from .config.status_rendering import precondition_action_lines
-from .ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
 from .state_projection_support import ledger_evidence_ports_factory
 
 if TYPE_CHECKING:

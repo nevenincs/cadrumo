@@ -194,6 +194,11 @@ cli:
         field_no_anchor: '{field}: az olvasó semmit nem jelölt meg a dokumentumban,
           így nincs nyomtatott alak, amelyhez ez az érték ellenőrizhető lenne.'
         group_help: Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.
+        idempotency_key_help: Saját kulcs ehhez a melléklethez. A parancs ugyanazzal
+          a kulccsal megismételve a már létrehozott rekordot adja vissza új helyett,
+          és elutasítja, ha a kulcshoz tartozó dokumentum megváltozott. Kulcs nélkül
+          a parancs minden alkalommal új rekordot hoz létre, mert ugyanaz a fájl jogosan
+          kétszer is csatolható.
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.
         invoice_number_help: Szállítói számlaszám.
@@ -2280,13 +2285,21 @@ cli:
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     provision:
       help: 'A helyi dokumentumolvasó kezelése: futtatókörnyezet állapota, telepítés,
-        indítás, modellletöltés, ellenőrzés és eltávolítás.'
+        indítás, modellletöltés, -betöltés, -ellenőrzés és -eltávolítás, vagy az egész
+        beállítása egy lépésben.'
       install:
         confirm_help: Hozzájárulás a csomagkezelős telepítés letöltéséhez és futtatásához.
           Enélkül semmi sem települ.
         help: A helyi futtatókörnyezet telepítése a platform csomagkezelőjével (Windowson
           winget, macOS-en Homebrew). Ha már telepítve van, nem tesz semmit; Linuxon
           a telepítés az operátor feladata.
+      load:
+        help: Modellek betöltése a helyi futtatókörnyezet memóriájába, hogy az első
+          beolvasásnak ne kelljen hidegindításra várnia; minden olvasói szerepkör
+          modelljét, hacsak a --role vagy a --model nem szűkíti. Betöltés előtt elutasítja,
+          ha kevés a memória; a már betöltött modellt nem módosítja.
+        model_help: A betöltendő modell azonosítója a futtatókörnyezetben. Már letöltöttnek
+          kell lennie. Alapértelmezés szerint a szerepkörhöz kiválasztott modell.
       pull:
         help: Modellek letöltése a helyi futtatókörnyezetbe, alapértelmezés szerint
           minden olvasószerepkör modelljéé, hacsak a --role vagy a --model nem szűkíti.
@@ -2303,6 +2316,14 @@ cli:
           betölthetőségről.
       role_help: 'A kezelendő modellszerepkör (képátírás, szövegkinyerés, táblázatos
         leképezés, teljesítés jellegére tett javaslat). Alapértelmezés: minden szerepkör.'
+      setup:
+        confirm_help: Hozzájárulás a csomagkezelős telepítés letöltéséhez és futtatásához,
+          ha hiányzik a futtatókörnyezet. Enélkül a beállítás a telepítési lépésnél
+          leáll, és nem telepít.
+        help: 'A helyi olvasó beállítása egy lépésben: a futtatókörnyezet telepítése
+          (csak --confirm esetén), indítása, minden szerepkör modelljének letöltése,
+          betöltése és ellenőrzése. A már elvégzett lépéseket változatlanként jelzi;
+          az első sikertelen lépés leállítja a futást.'
       start:
         help: Elindítja a telepített helyi futtatókörnyezetet, ha a beállított helyi
           végpont nem válaszol. Ha már válaszol, nem tesz semmit.
@@ -2310,6 +2331,9 @@ cli:
         help: Jelenti, hogy a helyi futtatókörnyezet telepítve van-e és válaszol-e,
           valamint hogy az egyes olvasószerepkörök modelljei telepítve vannak-e. Csak
           olvas.
+        probe_help: A szövegmodell alkalmasságát most ellenőrzi ahelyett, hogy az
+          `aeat config provision verify` által rögzített eredményt olvasná be. Betölti
+          a modellt és egy teljes választ felhasznál; az eredményt nem rögzíti.
       verify:
         help: Ellenőrzi, hogy a modellek betöltődnek és időkorláton belül válaszolnak
           egy egyszerű kérésre, alapértelmezés szerint minden olvasószerepkör modelljére,

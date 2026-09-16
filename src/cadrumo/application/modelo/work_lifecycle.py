@@ -69,7 +69,7 @@ from .revision_persistence import build_modelo_bucket_event as _build_bucket_eve
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 if TYPE_CHECKING:
-    from .profile_readiness_gate import ModeloWorkProfile
+    from .work_profile import ModeloWorkProfile
 
 
 class ActiveWorkUnitUse(StrEnum):

@@ -34,7 +34,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.validity_window import ValidityWindow
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from .errors import IvaValidationError
 
 
@@ -336,35 +336,6 @@ class IvaRateKind(str):
     def value(self) -> str:
         """Return the persisted registry token for serialization."""
         return str(self)
-
-
-_IVA_STATUTORY_SCHEMA_VOCABULARY_FACT_ID = "iva-statutory-schema-vocabulary"
-
-
-def iva_statutory_schema_vocabulary(
-    on_date: date | None = None,
-    *,
-    authority: GovernedFactSource | None = None,
-) -> Mapping[str, str]:
-    """Resolve statutory IVA schema vocabulary from the dated registry fact."""
-    from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-    from ..calculations.registry.schema_base import DateAxis
-
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise IvaValidationError(
-            "IVA statutory schema vocabulary requires an explicit authority operation or scope",
-        )
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_IVA_STATUTORY_SCHEMA_VOCABULARY_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=on_date or date.today(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise IvaValidationError("IVA statutory schema vocabulary must resolve as a mapping fact")
-    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
 def default_iva_cash_accounting_treatment(

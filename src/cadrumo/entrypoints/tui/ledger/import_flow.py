@@ -291,8 +291,9 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
 
     def _start_again(self) -> None:
         """Open a fresh import body over the state this one may have changed."""
-        self.refresh_after_write()
-        self.post_message(LedgerRouteRequested(self.controller.route_target(LedgerWorkspaceArea.IMPORT)))
+        self.refresh_after_write(
+            lambda: self.post_message(LedgerRouteRequested(self.controller.route_target(LedgerWorkspaceArea.IMPORT)))
+        )
 
     @override
     def _cancel_flow(self) -> None:

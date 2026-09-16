@@ -117,10 +117,12 @@ def test_the_text_model_default_sits_under_the_declared_hardware_floor() -> None
     the floor and had to be swept by hand; the property survives any default
     that still respects it.
     """
-    from .....core.config import load_settings
     from .....core.model_catalogue import ModelRole, model_candidate
+    from .....tests.env_scope import isolated_aeat_env, settings_without_env_file
 
-    settings = load_settings()
+    # The defaults are the subject, so no host override may stand in for them.
+    with isolated_aeat_env():
+        settings = settings_without_env_file()
     floor = settings.cadrumo_llm_model_runtime_memory_floor_bytes
 
     for configured, role in (

@@ -21,7 +21,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ..overview import build_profile_overview
 from ..validation import ProfileValidationService
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 REQUIRED_FIELD_MISSING = "required_field_missing"
 TAX_ID = "identity.tax_id"

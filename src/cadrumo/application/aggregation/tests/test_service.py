@@ -19,9 +19,7 @@ from ....core.errors.error_codes import build_error_envelope, get_registered_err
 from ....core.period import Period
 from ..errors import AggregationConfigError
 from ..service import (
-    PerModeloAggregationContract,
     PerModeloAggregationContributor,
-    PerModeloAggregationContributorContract,
     PerModeloAggregationLogFields,
     PerModeloAggregationResult,
 )
@@ -54,99 +52,6 @@ def test_aggregation_config_error_round_trips_through_build_error_envelope() -> 
 # ---------------------------------------------------------------------------
 # Composition-invariant raise sites (one test per replaced site)
 # ---------------------------------------------------------------------------
-
-
-def _retenciones_contract() -> PerModeloAggregationContributorContract:
-    return PerModeloAggregationContributorContract(
-        provider=PerModeloAggregationContributor.RETENCIONES,
-        modelos=("111", "115", "123", "180", "190", "193"),
-        service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-    )
-
-
-def _counterpart_contract() -> PerModeloAggregationContributorContract:
-    return PerModeloAggregationContributorContract(
-        provider=PerModeloAggregationContributor.COUNTERPART,
-        modelos=("347", "349"),
-        service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-    )
-
-
-def _foreign_assets_contract() -> PerModeloAggregationContributorContract:
-    return PerModeloAggregationContributorContract(
-        provider=PerModeloAggregationContributor.FOREIGN_ASSETS,
-        modelos=("720",),
-        service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-    )
-
-
-def test_site1_provider_contract_rejects_duplicate_modelos() -> None:
-    """PerModeloAggregationContributorContract._modelos_are_unique raises AggregationConfigError."""
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationContributorContract(
-            provider=PerModeloAggregationContributor.RETENCIONES,
-            modelos=("111", "111"),  # duplicate
-            service_owner="cadrumo.application.aggregation",
-            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-        )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes), (
-        "Expected AggregationConfigError inside ValidationError causes"
-    )
-
-
-def test_site2_contract_rejects_duplicate_providers() -> None:
-    """PerModeloAggregationContract._providers_are_unique raises AggregationConfigError."""
-    retenciones_dup = PerModeloAggregationContributorContract(
-        provider=PerModeloAggregationContributor.RETENCIONES,
-        modelos=("193",),
-        service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-    )
-    retenciones_base = _retenciones_contract()
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationContract(
-            providers=(retenciones_base, retenciones_dup),
-            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-            error_codes=("ERROR_FINANCIAL_AGGREGATION",),
-        )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes)
-
-
-def test_site3_contract_rejects_modelo_owned_by_multiple_providers() -> None:
-    """PerModeloAggregationContract._providers_are_unique raises AggregationConfigError for modelo collision."""
-    # Two distinct providers that claim the same modelo
-    counterpart_with_extra = PerModeloAggregationContributorContract(
-        provider=PerModeloAggregationContributor.COUNTERPART,
-        modelos=("347", "349", "111"),  # 111 also claimed by retenciones
-        service_owner="cadrumo.application.aggregation",
-        accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-    )
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationContract(
-            providers=(_retenciones_contract(), counterpart_with_extra, _foreign_assets_contract()),
-            accepted_source_kinds=COUNTERPART_SOURCE_KIND_ORDER,
-            error_codes=("ERROR_FINANCIAL_AGGREGATION",),
-        )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes)
-
-
-def test_site4_contract_rejects_wrong_source_kind_taxonomy() -> None:
-    """PerModeloAggregationContract._source_kinds_are_exact raises AggregationConfigError."""
-    wrong_kinds = (BindingSourceKind.LEDGER_TRANSACTION,)  # incomplete taxonomy
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationContract(
-            providers=(_retenciones_contract(), _counterpart_contract(), _foreign_assets_contract()),
-            accepted_source_kinds=wrong_kinds,
-            error_codes=("ERROR_FINANCIAL_AGGREGATION",),
-        )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 
 def test_site5_command_rejects_cross_family_observations() -> None:

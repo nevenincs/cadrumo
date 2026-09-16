@@ -37,7 +37,7 @@ from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 if TYPE_CHECKING:
     from pathlib import Path
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _LABEL = "Record Authority Retirement Subject"
 _CREDENTIAL_INPUT = "record-authority-retires-with-session-operator-secret"

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from typing import ClassVar, override
 
@@ -90,18 +90,16 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
     def _cancel_flow(self) -> None:
         raise NotImplementedError
 
-    def refresh_after_write(self) -> None:
-        """Re-read the workspace once this flow has written, so the next body shows it.
+    def refresh_after_write(self, then: Callable[[], object]) -> None:
+        """Continue with ``then`` over a re-read workspace once this flow has written.
 
-        Only a settled write changes anything; a failed re-read keeps the
-        snapshot already shown and says so, rather than ending the workspace.
+        Only a settled write changes anything, so any other state continues at
+        once over the snapshot already shown.
         """
-        if self.flow_state is not LedgerFlowState.SUCCEEDED or not self.controller.can_refresh():
-            return
-        try:
-            self.controller = self.controller.refreshed()
-        except CadrumoError:
-            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.refresh_failed"))
+        if self.flow_state is LedgerFlowState.SUCCEEDED:
+            self.refresh_then(then)
+        else:
+            then()
 
     @override
     def action_back(self) -> None:
@@ -112,5 +110,4 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
         if self.flow_state is LedgerFlowState.CONFIRMING:
             self._cancel_flow()
             return
-        self.refresh_after_write()
-        super().action_back()
+        self.refresh_after_write(super().action_back)

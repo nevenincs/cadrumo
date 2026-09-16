@@ -27,7 +27,6 @@ from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema_base import (
     CorpusTierField,
-    DateAxisField,
     DesignAuthority,
     EvidenceTier,
     EvidenceTierField,
@@ -51,7 +50,6 @@ __all__ = [
     "RegistryTemporalBounds",
     "RegistryValidityWindow",
     "SourceReference",
-    "TemporalApplicability",
     "TemporalProjectionDirection",
     "TemporalSupportEnvelope",
     "materialize_date_window_series",
@@ -379,13 +377,6 @@ class PeriodScopedValidityWindow(RegistryValidityWindow):
     """A validity window whose filing-year/period coordinate is mandatory."""
 
     period_selector: PeriodSelector
-
-
-class TemporalApplicability(RegistryValidityWindow):
-    """Describe the date axis and optional period selector for a valid window."""
-
-    date_axis: DateAxisField
-    period_selector: PeriodSelector | None = None
 
 
 class TemporalProjectionDirection(StrEnum):

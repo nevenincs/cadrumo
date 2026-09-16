@@ -245,8 +245,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 LedgerFlowState.FAILED,
                 LedgerFlowState.CANCELLED,
             }:
-                self.refresh_after_write()
-                self.post_message(LedgerInvoiceEntryRequested())
+                self.refresh_after_write(lambda: self.post_message(LedgerInvoiceEntryRequested()))
             case _:
                 return
 

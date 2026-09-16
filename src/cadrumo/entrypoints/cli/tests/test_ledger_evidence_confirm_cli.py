@@ -583,3 +583,39 @@ def test_saying_nothing_leaves_the_documents_own_class_standing(tmp_path: Path) 
 
     assert confirmed.exit_code == 0, confirmed.output
     assert json.loads(confirmed.output)["result"]["created"] is True
+
+
+def test_a_confirmed_document_shows_its_confirmed_figures_on_the_evidence_record(tmp_path: Path) -> None:
+    source = tmp_path / "factura.xml"
+    source.write_bytes(_STRUCTURED_INVOICE.read_bytes())
+    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(source)])
+    assert added.exit_code == 0, added.output
+    evidence_id = json.loads(added.output)["result"]["evidence_id"]
+    before = json.loads(_invoke(["--format", "json", "app", "ledger", "evidence", "view", evidence_id]).output)
+    assert before["result"]["invoice_number"] is None
+
+    confirm = [
+        "--format", "json", "app", "ledger", "evidence", "confirm",
+        "--country-code", "ES",
+        "--evidence-id", evidence_id,
+        "--kind", "received",
+    ]  # fmt: skip
+    assert _invoke(confirm).exit_code == 0
+    viewed = _invoke(["--format", "json", "app", "ledger", "evidence", "view", evidence_id])
+    assert viewed.exit_code == 0, viewed.output
+    record = json.loads(viewed.output)["result"]
+
+    assert record["supplier"] == _SUPPLIER_NAME
+    # Identity-shaped tokens leave the CLI through the redaction funnel.
+    assert record["invoice_number"] == _redacted(_INVOICE_NUMBER)
+    assert record["invoice_date"] == _ISSUE_DATE
+    assert record["taxable_base"] == _TAXABLE_BASE
+    assert record["iva_amount"] == "21.00"
+
+    listed = json.loads(_invoke(["--format", "json", "app", "ledger", "evidence", "list"]).output)
+    assert listed["result"]["rows"][0]["taxable_base"] == _TAXABLE_BASE
+
+    updated_at = record["updated_at"]
+    assert _invoke(confirm).exit_code == 0
+    again = json.loads(_invoke(["--format", "json", "app", "ledger", "evidence", "view", evidence_id]).output)
+    assert again["result"]["updated_at"] == updated_at, "a re-confirm must not rewrite an unchanged record"

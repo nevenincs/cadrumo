@@ -587,12 +587,11 @@ def _manual_transaction_snapshot(
 
 
 def _review_status_counts(transactions: tuple[Transaction, ...]) -> dict[LedgerReviewStatus, int]:
-    """Count review statuses for active transactions in one snapshot."""
-    status_counts: dict[LedgerReviewStatus, int] = {
-        LedgerReviewStatus.PENDING: 0,
-        LedgerReviewStatus.REVIEWED: 0,
-        LedgerReviewStatus.SKIPPED: 0,
-    }
+    """Count review statuses for active transactions in one snapshot.
+
+    Keyed from the enum itself, so every status a row can project to has a slot.
+    """
+    status_counts = dict.fromkeys(LedgerReviewStatus, 0)
     for transaction in transactions:
         if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE:
             status_counts[ledger_transaction_review_status(transaction)] += 1

@@ -104,9 +104,7 @@ class FiledDeclaracionObservationProtocol(Protocol):
     :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation`
     model, eliminating the application-to-adapter import edge. The surface is
     intentionally limited to the fields consumed by
-    :func:`~application.calculations.iva_compensation_history.iva_compensation_state_from_observation_envelope`
-    and
-    :func:`~application.calculations.iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`.
+    :func:`~application.calculations.iva_compensation_history.iva_compensation_state_from_observation_envelope`.
     """
 
     @property

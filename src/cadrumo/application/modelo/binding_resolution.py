@@ -54,6 +54,7 @@ from .calculation_route import require_calculation_route_resolver
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..live.borrador_100 import Borrador100SnapshotRepository
+    from .work_profile import ModeloWorkProfile
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 
@@ -112,6 +113,7 @@ def resolve_profile_source_tier(
     borrador_resolution: CalculationSourceResolution,
     backend_binding_values: Mapping[BindingId, Decimal],
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile,
 ) -> CalculationSourceResolution:
     """Resolve the profile precedence tier as a source-mesh resolution.
 
@@ -160,6 +162,7 @@ def resolve_profile_source_tier(
             filing_year=snapshot.filing_year,
             period=_Period.from_year_and_code(snapshot.filing_year, snapshot.period),
             revision=snapshot.revision,
+            profile=profile,
         ),
     )
 

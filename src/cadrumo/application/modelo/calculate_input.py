@@ -103,6 +103,7 @@ from .minimo_descendientes_advisory import MAX_NAMED_DESCENDANTS
 from .profile_binding import MaternidadMesesResolution
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 from .work_plazo import M210PlazoResolution
+from .work_profile import ModeloWorkProfile
 from .work_selection import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
@@ -112,6 +113,7 @@ from .work_selection import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.values import UserProfileRecord
 
 _MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
 _MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
@@ -335,6 +337,7 @@ def calculate_modelo_work_revision(
     actor: str,
     inputs: WorkCalculateInputBundle,
     ports: CalculationActionPorts,
+    profile: ModeloWorkProfile | None = None,
 ) -> ModeloWorkCalculationServiceResult:
     """Persist a draft calculation revision as a :class:`ModeloWorkCalculationServiceResult`.
 
@@ -342,7 +345,9 @@ def calculate_modelo_work_revision(
     into the bucket-aggregation calculation path, reloads the parent
     :class:`~WorkUnit`, and attaches any Modelo 202
     modality, authorization, or non-blocking source diagnostics needed by the
-    CLI payload.
+    CLI payload. ``profile`` is the work profile the command already loaded;
+    when omitted, the calculation loads it once. Every profile read below
+    uses the profile the calculation checked.
 
     See Also:
         :func:`cadrumo.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
@@ -366,6 +371,7 @@ def calculate_modelo_work_revision(
         relation_values=inputs.optional_relation_values(),
         detail_rows=inputs.detail_rows,
         filing_instance_evidence=inputs.filing_instance_evidence,
+        profile=profile,
     )
     revision = calculation.revision
     catalogue, bucket_id = _capture_work_catalogue(
@@ -379,20 +385,20 @@ def calculate_modelo_work_revision(
     )
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
     if work_unit.modelo == Modelo("210"):
-        from .m303_regimen_simplificado_scope import active_taxpayer_profile
+        from .m303_regimen_simplificado_scope import taxpayer_profile_for_work
         from .work_plazo import calculated_m210_plazo_resolution
 
         resolution = calculated_m210_plazo_resolution(
             work_unit=work_unit,
             revision=revision,
-            workflow_profile=active_taxpayer_profile(work_unit),
+            workflow_profile=taxpayer_profile_for_work(calculation.profile),
         )
         if resolution is not None:
             plazo_resolutions = (resolution,)
     return ModeloWorkCalculationServiceResult(
         revision=revision,
         work_unit=work_unit,
-        modality=modelo_202_modality_for_work_unit(work_unit),
+        modality=modelo_202_modality_for_record(work_unit, calculation.profile.record),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
         plazo_resolutions=plazo_resolutions,
     )
@@ -508,6 +514,7 @@ def build_work_calculate_input_bundle(
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from operator-supplied tokens.
 
@@ -534,6 +541,8 @@ def build_work_calculate_input_bundle(
     Detail rows are checked before engine dispatch, and shortcut flags are
     translated into semantic-role casilla values or backend-owned bindings by
     :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
+    ``profile`` is the work profile the command already loaded; when omitted,
+    it is loaded where a profile-backed shortcut first needs it.
     """
     catalogue, bucket_id = _capture_work_catalogue(work_unit_id, repository=ports.work_unit_repository)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
@@ -563,6 +572,7 @@ def build_work_calculate_input_bundle(
         sal_reserva_dotada=sal_reserva_dotada,
         sal_capital_social=sal_capital_social,
         autoconsumo_promotor_base=autoconsumo_promotor_base,
+        profile=profile,
     )
 
     relation_values = _resolve_relation_overrides(relation_overrides, revision)
@@ -835,14 +845,9 @@ def _resolved_maternidad_meses(
     work_unit: WorkUnit,
     *,
     operation: PinnedAuthorityOperation,
-) -> MaternidadMesesResolution | None:
-    """Resolve the Art. 81.1 maternidad months the active profile contributes.
-
-    Returns ``None`` when the bucket has no profile yet, mirroring the
-    silent-absent handling profile-sourced bindings already apply.
-    """
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    profile: ModeloWorkProfile,
+) -> MaternidadMesesResolution:
+    """Resolve the Art. 81.1 maternidad months the work profile contributes."""
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
     from .profile_binding import resolve_maternidad_meses
 
@@ -851,15 +856,7 @@ def _resolved_maternidad_meses(
         grade=RegistryAuthorityGrade.CALCULATION,
         operation=operation,
     )
-    try:
-        repository = ProfileRecordRepository.for_current_session(
-            work_unit.bucket_id,
-            profile_decode_context=operation.profile_decode_context(),
-        )
-        record = repository.load(work_unit.bucket_id)
-    except ProfileNotFoundError:
-        return None
-    return resolve_maternidad_meses(record, snapshot, operation=operation)
+    return resolve_maternidad_meses(profile.record, snapshot, operation=operation)
 
 
 def _maternidad_casilla_id(
@@ -956,10 +953,9 @@ def _maternidad_cotizaciones_ceiling_advisory(
 
 
 def _ambiguous_relacion_hijo_ids(
-    work_unit: WorkUnit,
     contributing_hijo_ids: frozenset[str],
     *,
-    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile,
 ) -> frozenset[str]:
     """*contributing_hijo_ids* whose stored ``relacion`` is the unstated default.
 
@@ -978,23 +974,11 @@ def _ambiguous_relacion_hijo_ids(
     that asks the same question, so a member added to the axis for either
     population would have had to reach two places that only agreed by hand.
 
-    Returns the empty set when *contributing_hijo_ids* is empty, without
-    loading the profile at all — this question only has cost for a filing that
-    already has months to lose.
+    Returns the empty set when *contributing_hijo_ids* is empty.
     """
     if not contributing_hijo_ids:
         return frozenset[str]()
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
-
-    try:
-        record = ProfileRecordRepository.for_current_session(
-            work_unit.bucket_id,
-            profile_decode_context=operation.profile_decode_context(),
-        ).load(work_unit.bucket_id)
-    except ProfileNotFoundError:
-        return frozenset[str]()
-    facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    facts = {fact.path: str(fact.value) for fact in profile.record.facts if fact.value is not None}
     descendientes = descendant_list_from_facts(facts)
     return frozenset(
         hijo_id
@@ -1182,13 +1166,23 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     if str(work_unit.modelo) != Modelo("202"):
         return None
 
+    from ..workflow.persistence import workflow_state_repository
+
+    return modelo_202_modality_for_record(work_unit, workflow_state_repository().load().active_profile_record())
+
+
+def modelo_202_modality_for_record(
+    work_unit: WorkUnit,
+    record: UserProfileRecord | None,
+) -> Modelo202ModalitySummary | None:
+    """Return the Modelo 202 modality summary for an already-loaded profile record."""
+    if str(work_unit.modelo) != Modelo("202"):
+        return None
+
     from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
     from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..user_profile.projections import projection_for_taxpayer
-    from ..workflow.persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
-    record = state.active_profile_record()
     with bundled_indexed_authority().operation() as operation:
         profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
         verdict = derive_modelo_202_modality(profile, effective_date=date(work_unit.filing_year, 12, 31))
@@ -1222,14 +1216,26 @@ def _maternidad_advisories(
     work_unit: WorkUnit,
     *,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
 ) -> list[CalculationSourceDiagnostic]:
-    """Raise the non-blocking advisories for the maternidad-deduction casilla."""
+    """Raise the non-blocking advisories for the maternidad-deduction casilla.
+
+    Returns nothing when the bucket has no profile yet, mirroring the
+    silent-absent handling profile-sourced bindings already apply.
+    """
     maternidad_casilla_id = _maternidad_casilla_id(work_unit, operation=operation)
     if maternidad_casilla_id is None:
         return []
-    maternidad = _resolved_maternidad_meses(work_unit, operation=operation)
-    if maternidad is None:
+    if profile is None:
+        from .profile_readiness_gate import load_modelo_work_profile
+
+        profile = load_modelo_work_profile(
+            bucket_id=work_unit.bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+    if profile is None:
         return []
+    maternidad = _resolved_maternidad_meses(work_unit, operation=operation, profile=profile)
     # The active profile's descendiente records are the SOLE authority for
     # casilla 0611: the calculate-time `--meses-trabajo-con-hijo-menor-3`
     # shortcut this block once reconciled against (a free-form hijo id no
@@ -1249,9 +1255,8 @@ def _maternidad_advisories(
         ),
         _maternidad_ambiguous_relacion_advisory(
             _ambiguous_relacion_hijo_ids(
-                work_unit,
                 frozenset(hijo_id for hijo_id, _ in maternidad.pairs),
-                operation=operation,
+                profile=profile,
             ),
             maternidad_casilla_id,
         ),
@@ -1378,6 +1383,7 @@ def apply_calculation_shortcut_inputs(
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[dict[CasillaId, Decimal], dict[BindingId, Decimal], tuple[CalculationSourceDiagnostic, ...]]:
     """Apply backend-owned tax shortcut inputs for a calculation command.
 
@@ -1427,7 +1433,7 @@ def apply_calculation_shortcut_inputs(
             )
         ] = prestacion_inss_exenta
 
-    advisories.extend(_maternidad_advisories(work_unit, operation=operation))
+    advisories.extend(_maternidad_advisories(work_unit, operation=operation, profile=profile))
 
     pension_casilla_values, pension_advisories = _pension_rescate_contributions(
         work_unit=work_unit,
