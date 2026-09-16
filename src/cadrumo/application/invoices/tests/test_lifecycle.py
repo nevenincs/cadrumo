@@ -12,8 +12,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
-from ....domain.invoices.models import Invoice, InvoiceCatalogue
+from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ..catalogue_creation import build_catalogue_invoice
@@ -44,7 +46,7 @@ def _build(invoice_number: str) -> Invoice:
 def test_resolve_catalogue_invoice_by_full_id_and_unambiguous_prefix() -> None:
     """An exact id wins, and a prefix matching exactly one invoice resolves."""
     invoice = _build("2026-0142")
-    catalogue = InvoiceCatalogue.from_invoices([invoice])
+    catalogue = build_invoice_catalogue([invoice])
 
     assert resolve_catalogue_invoice(catalogue, invoice.invoice_id) == invoice
     assert resolve_catalogue_invoice(catalogue, invoice.invoice_id[:8]) == invoice
@@ -52,7 +54,7 @@ def test_resolve_catalogue_invoice_by_full_id_and_unambiguous_prefix() -> None:
 
 def test_resolve_catalogue_invoice_blank_id_refused() -> None:
     """A blank id is refused with the typed required-id error, not a miss."""
-    catalogue = InvoiceCatalogue.from_invoices([_build("2026-0142")])
+    catalogue = build_invoice_catalogue([_build("2026-0142")])
     with pytest.raises(InvoiceNotFoundError) as exc:
         resolve_catalogue_invoice(catalogue, "   ")
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_id_required"
@@ -60,7 +62,7 @@ def test_resolve_catalogue_invoice_blank_id_refused() -> None:
 
 def test_resolve_catalogue_invoice_not_found_names_the_id() -> None:
     """An id matching no invoice raises the localized not-found error with context."""
-    catalogue = InvoiceCatalogue.from_invoices([_build("2026-0142")])
+    catalogue = build_invoice_catalogue([_build("2026-0142")])
     with pytest.raises(InvoiceNotFoundError) as exc:
         resolve_catalogue_invoice(catalogue, "deadbeefdeadbeef")
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_not_found"
@@ -83,7 +85,7 @@ def test_resolve_catalogue_invoice_ambiguous_prefix_names_candidates() -> None:
         raise AssertionError("could not generate two invoices sharing a leading hex character")
 
     with pytest.raises(InvoiceValidationError) as exc:
-        resolve_catalogue_invoice(InvoiceCatalogue.from_invoices(members), shared_char)
+        resolve_catalogue_invoice(build_invoice_catalogue(members), shared_char)
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.ambiguous_invoice_prefix"
     assert exc.value.context is not None
     candidates = exc.value.context["candidates"]
