@@ -1,58 +1,58 @@
-"""CLI composition for the invoice-draft extraction use case."""
+"""Entrypoint-neutral composition for the invoice-draft extraction use case."""
 
 from __future__ import annotations
 
 import httpx
 
-from ...adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
-from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
-from ...adapters.inbound.einvoice.shape import probe_document_shape
-from ...adapters.inbound.einvoice.xml import EInvoiceXmlParseError
-from ...adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
-from ...adapters.outbound.llm.consent import EvidenceConsentToken
-from ...adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
-from ...adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
-from ...adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
-from ...adapters.outbound.llm.models import MultimodalImageInput
-from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from ...adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...application.ledger.document_transcription import DocumentTranscription
-from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
-from ...application.ledger.evidence_input import (
+from ..adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
+from ..adapters.inbound.einvoice.parsers import parse_einvoice_document
+from ..adapters.inbound.einvoice.shape import probe_document_shape
+from ..adapters.inbound.einvoice.xml import EInvoiceXmlParseError
+from ..adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+from ..adapters.outbound.llm.consent import EvidenceConsentToken
+from ..adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
+from ..adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
+from ..adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
+from ..adapters.outbound.llm.models import MultimodalImageInput
+from ..adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from ..adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+from ..adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
+from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ..adapters.persistence.storage.attachment import AttachmentStore
+from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ..application.ledger.document_transcription import DocumentTranscription
+from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
+from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ..application.ledger.evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
-from ...application.ledger.evidence_input_ports import EvidenceInputPorts
-from ...application.ledger.evidence_ports import LedgerEvidencePorts
-from ...application.ledger.evidence_reference import (
+from ..application.ledger.evidence_input_ports import EvidenceInputPorts
+from ..application.ledger.evidence_ports import LedgerEvidencePorts
+from ..application.ledger.evidence_reference import (
     EvidenceReferenceOutcome,
     classify_evidence_reference,
     refuse_reference_without_document_bytes,
     refuse_unresolved_evidence_reference,
 )
-from ...application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from ...application.ledger.invoice_draft_extraction_ports import (
+from ..application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
+from ..application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
     VisionImage,
 )
-from ...application.ledger.invoice_draft_records import InvoiceDraft
-from ...application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
-from ...application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from ...application.ledger.structured_invoice_ports import StructuredInvoiceRecord
-from ...core.config import Settings
-from ...core.config_support import LLMProvider
-from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.optional_extras import MissingOptionalExtraError
-from ...domain.iva.supply_nature import SupplyNature
+from ..application.ledger.invoice_draft_records import InvoiceDraft
+from ..application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
+from ..application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from ..application.ledger.structured_invoice_ports import StructuredInvoiceRecord
+from ..core.config import Settings
+from ..core.config_support import LLMProvider
+from ..core.operator_action_enums import ActionEvidenceProvenance
+from ..core.optional_extras import MissingOptionalExtraError
+from ..domain.iva.supply_nature import SupplyNature
 
 
 def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
@@ -127,7 +127,7 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
         try:
             if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
                 raise TypeError("text reader requires resolved invoice extraction authority values")
-            from ...domain.calculations.registry.authority import bundled_indexed_authority
+            from ..domain.calculations.registry.authority import bundled_indexed_authority
 
             with bundled_indexed_authority().operation() as operation:
                 if provider is None:

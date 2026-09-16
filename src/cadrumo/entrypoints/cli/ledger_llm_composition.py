@@ -47,7 +47,7 @@ from ...domain.transactions.errors import LLMClassifierError, TransactionValidat
 from ...domain.transactions.llm import LLMClassificationResponse, LLMClassifier, PromptSpec
 from ...domain.transactions.models import Transaction
 from ..adapter_composition import build_ledger_evidence_ports
-from .ledger_evidence_extraction_wiring import evidence_text_layer_ports
+from ..ledger_evidence_extraction_composition import evidence_text_layer_ports
 
 
 class VisionReader:

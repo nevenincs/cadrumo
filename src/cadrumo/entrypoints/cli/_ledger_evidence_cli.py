@@ -40,6 +40,7 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ...domain.iva.supply_nature import SupplyNature
+from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from ._evidence_field_notices import field_degradation_notices
@@ -58,7 +59,6 @@ from .ledger_business_payloads import (
     EvidenceUpdateResult,
     EvidenceViewResult,
 )
-from .ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
 from .state_projection_support import (
     catalogue_creation_ports_factory,
     counterparty_establishment_repository_factory,
