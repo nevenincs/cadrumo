@@ -244,7 +244,7 @@ def attach_manual_transaction_evidence(
         source_command=trimmed_source_command,
         ports=ports,
         occurred_at=occurred_at,
-        _preloaded_catalogue=catalogue,
+        catalogue=catalogue,
         _evidence_authority=True,
     )
 
@@ -314,7 +314,7 @@ def detach_manual_transaction_attachments(
         source_command=trimmed_source_command,
         ports=ports,
         occurred_at=occurred_at,
-        _preloaded_catalogue=catalogue,
+        catalogue=catalogue,
         _evidence_authority=True,
     )
 
@@ -733,6 +733,7 @@ def update_manual_transaction(
     command: ManualLedgerTransactionCommand,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    catalogue: TransactionCatalogue | None = None,
     _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Replace one manual ledger transaction from a validated command payload.
@@ -748,6 +749,10 @@ def update_manual_transaction(
     ``purchase_invoice_evidence_id`` or ``attachment_ids``; evidence catalogue and
     provenance mutation are reserved for ``aeat app ledger attach``.
 
+    ``catalogue`` is the snapshot a caller in the same action has
+    already decrypted; nothing writes between that load and this replacement,
+    so decrypting the whole catalogue again would only repeat the read.
+
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
     """
     now = normalise_timestamp(occurred_at)
@@ -755,7 +760,8 @@ def update_manual_transaction(
     event_repository = resolve_bucket_event_repository(
         bucket_id=command.bucket_id, repository=ports.bucket_event_repository
     )
-    catalogue = repository.load()
+    if catalogue is None:
+        catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
@@ -962,7 +968,7 @@ def update_manual_transaction_fields(
     reaffirm: bool = False,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
-    _preloaded_catalogue: TransactionCatalogue | None = None,
+    catalogue: TransactionCatalogue | None = None,
     _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Apply a typed field patch to one active bucket-scoped ledger transaction.
@@ -978,12 +984,11 @@ def update_manual_transaction_fields(
     field-for-field identical to the stored transaction. This is the explicit
     operator-driven counterpart to the automatic silent no-op.
 
-    ``_preloaded_catalogue`` is an internal optimisation: a caller that has
-    already decrypted the bucket :class:`TransactionCatalogue` (e.g.
-    :func:`~cadrumo.application.ledger.actions_manual.attach_manual_transaction_evidence`) passes
-    it through so this function does not decrypt the whole catalogue a second
-    time. There is no write between the caller's load and this one, so the
-    preloaded view is current.
+    ``catalogue`` is the bucket :class:`TransactionCatalogue` a caller in the
+    same action has already decrypted (e.g. the CLI resolving an id prefix, or
+    :func:`~cadrumo.application.ledger.actions_manual.attach_manual_transaction_evidence`),
+    passed through so the whole catalogue is not decrypted a second time. The
+    caller must not write between its load and this call, so the view is current.
 
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
     reflecting the updated transaction state after the patch is applied.
@@ -998,7 +1003,8 @@ def update_manual_transaction_fields(
             },
         )
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
-    catalogue = _preloaded_catalogue if _preloaded_catalogue is not None else repository.load()
+    if catalogue is None:
+        catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     command = _command_from_patch(
         bucket_id=bucket_id,
@@ -1025,6 +1031,7 @@ def update_manual_transaction_fields(
         command=command,
         ports=ports,
         occurred_at=occurred_at,
+        catalogue=catalogue,
         _evidence_authority=_evidence_authority,
     )
 
