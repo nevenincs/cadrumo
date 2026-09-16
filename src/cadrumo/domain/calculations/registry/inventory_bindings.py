@@ -23,6 +23,7 @@ from pydantic import BaseModel, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model
 from .binding_temporal import BindingTemporalSelector, SameTargetContext
@@ -82,6 +83,7 @@ class InventoryProvider(BaseModel):
     target_casilla_id: CasillaId
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_operation_destination_identity(self) -> InventoryProvider:
         expected = _INVENTORY_DESTINATION_BY_OPERATION[self.row_field]
         if self.target_casilla_id != expected:

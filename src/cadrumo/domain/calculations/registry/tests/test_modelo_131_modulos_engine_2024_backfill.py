@@ -45,7 +45,7 @@ from ..temporal import select_revision
 from .published_authority import published_snapshot
 from .registry_tree import bundled_registry_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 # Rendimiento anual por unidad antes de amortización (Orden HFP/1359/2023
 # Anexo II, filing year 2024), independently transcribed from the 2024 Orden
