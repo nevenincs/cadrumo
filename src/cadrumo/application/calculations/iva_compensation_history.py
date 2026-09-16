@@ -126,31 +126,6 @@ class IvaCompensationAnnualSummary(BaseModel):
     )
 
 
-class IvaCompensationAnnualCrossCheck(BaseModel):
-    """Comparison between Modelo 303 carry-forward lots and a filed Modelo 390 summary.
-
-    Carries the expected Modelo 390 annual carry fields derived by
-    :func:`~domain.iva_compensation.carry_forward.derive_iva_compensation_year_end_carry_partition`
-    plus any mismatched
-    ``CasillaId`` values.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    filing_year: FilingYear
-    carry_forward_remaining_amount: Decimal = Field(ge=ZERO)
-    modelo_390_total_pending_amount: Decimal = Field(ge=ZERO)
-    expected_last_period_compensation_amount: Decimal = Field(ge=ZERO)
-    expected_generated_not_in_last_period_amount: Decimal = Field(ge=ZERO)
-    difference_amount: Decimal
-    last_period_difference_amount: Decimal
-    generated_not_in_last_period_difference_amount: Decimal
-    matches: bool
-    mismatched_casilla_ids: tuple[CasillaId, ...] = ()
-    expiry_review_states: tuple[str, ...] = ()
-    summary_source_observation_key: str = Field(min_length=1, max_length=96)
-
-
 def iva_compensation_period_key(period: Period) -> str:
     """Return the latest-state key for one Modelo 303 period."""
     filing_year = period.filing_year
@@ -542,7 +517,6 @@ def _resolve_casilla_value(values: dict[CasillaId, Decimal], semantic_id: Casill
 
 
 __all__ = [
-    "IvaCompensationAnnualCrossCheck",
     "IvaCompensationAnnualSummary",
     "correct_iva_compensation_period",
     "iva_compensation_annual_summary_from_filed_observation",
