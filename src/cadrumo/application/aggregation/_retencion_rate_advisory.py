@@ -280,7 +280,7 @@ def _load_profile_for_bucket(
     # The repository raises on every failure path and never returns None, so the
     # former ``else {}`` fallback was unreachable. Failures arrive through the
     # except clause above, which is where the degraded-read handling lives.
-    return projection_for_taxpayer(record)
+    return projection_for_taxpayer(record, schema=profile_decode_context.schema)
 
 
 def _declared_activity_hint(profile: TaxpayerProfile) -> bool | None:
