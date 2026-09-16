@@ -68,16 +68,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger.period_filter.LedgerPeriodValidationError",
-        ErrorCode(
-            code="REFUSED_LEDGER_PERIOD_VALIDATION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.canonical_ledger_period_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.ledger.persistence_ports.LedgerPersistenceConflictError",
         ErrorCode(
             code="LOCKED_LEDGER_PERSISTENCE_CONFLICT",
