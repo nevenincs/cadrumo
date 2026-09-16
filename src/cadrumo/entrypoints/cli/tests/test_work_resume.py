@@ -10,13 +10,11 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+from ....adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
     seed_test_profile_record,
 )
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.workflow_gate import workflow_period_for_work_unit
@@ -50,6 +48,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....entrypoints.adapter_composition import build_work_lifecycle_ports
 from .cli_runner import invoke_cached_cli
 

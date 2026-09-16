@@ -33,6 +33,7 @@ from ....domain.modelos.row_models import (
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
+from ....tests.os_keychain_hook import require_os_credential_store
 from .._modelo_cli_support import parse_row_spec as _parse_row_spec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -522,6 +523,9 @@ class TestRevisionViewSurfacesDetailRows:
 
     def test_m349_json_calculate_materialises_operador_detail_rows(self, tmp_path: Path) -> None:
         """M349 ``--row operador`` data reaches JSON calculate and revision payloads."""
+        # Every later invocation resumes the profile session from the OS credential
+        # store; refuse before paying for profile creation on a host that has none.
+        require_os_credential_store()
         setup = self._run_cli(
             tmp_path,
             [
@@ -645,6 +649,9 @@ class TestRevisionViewSurfacesDetailRows:
         they were persisted but invisible (only the empty ``tipo2.*`` template
         casillas showed).
         """
+        # Every later invocation resumes the profile session from the OS credential
+        # store; refuse before paying for profile creation on a host that has none.
+        require_os_credential_store()
         import re
 
         setup = self._run_cli(
@@ -717,6 +724,9 @@ class TestRevisionViewSurfacesDetailRows:
         them in the revision output, and populate the declarant summary totals
         that the M349 fixed-width record defines over the operator records.
         """
+        # Every later invocation resumes the profile session from the OS credential
+        # store; refuse before paying for profile creation on a host that has none.
+        require_os_credential_store()
         setup = self._run_cli(
             tmp_path,
             [
@@ -844,6 +854,9 @@ class TestRevisionViewSurfacesDetailRows:
 
     def test_m349_post_transition_gb_operador_row_fails_before_calculation(self, tmp_path: Path) -> None:
         """Ordinary post-transition GB rows are refused at the CLI calculation boundary."""
+        # Every later invocation resumes the profile session from the OS credential
+        # store; refuse before paying for profile creation on a host that has none.
+        require_os_credential_store()
         setup = self._run_cli(
             tmp_path,
             [

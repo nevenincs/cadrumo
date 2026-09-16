@@ -43,7 +43,9 @@ from ....tests.cli_envelope import require_schema_envelope as _json_result
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+# Stored invoices decode against registry facts, so the direct catalogue reads
+# these tests make hold the same authority lease a CLI invocation holds.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 __all__ = ["active_profile_isolated_backend"]
 
 

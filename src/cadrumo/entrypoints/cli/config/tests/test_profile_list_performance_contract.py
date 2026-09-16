@@ -10,6 +10,7 @@ writes, which storage functions it calls -- are invisible in-process.
 from __future__ import annotations
 
 import base64
+from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -27,6 +28,7 @@ from .....core.config import Settings
 from .....core.profile_publication import ProfilePublicationKind
 from ...tests.cli_performance import (
     CliPerformanceObservation,
+    CliPerformanceProfile,
     is_non_authoritative_artifact,
     profile_cli_path,
 )
@@ -110,13 +112,33 @@ def _forbidden_calls(observation: CliPerformanceObservation) -> list[str]:
     )
 
 
-@pytest.fixture
-def populated_root(tmp_path: Path) -> Path:
-    root = tmp_path / "populated"
+def _root_state(root: Path) -> list[str]:
+    return _storage_state(tuple(path.relative_to(root).as_posix() for path in root.rglob("*")))
+
+
+@dataclass(frozen=True, slots=True)
+class _PopulatedListing:
+    profile: CliPerformanceProfile
+    state_before: list[str]
+    state_after: list[str]
+
+
+@pytest.fixture(scope="module")
+def populated_listing(tmp_path_factory: pytest.TempPathFactory) -> _PopulatedListing:
+    """One cold profile of the listing over real capsules, shared by the read-only assertions.
+
+    Every consumer only inspects the observation, and each observation already
+    comes from its own fresh interpreter, so profiling the same argv against the
+    same starting store once per test repeated two child processes per test
+    without observing anything new.
+    """
+    root = tmp_path_factory.mktemp("profile-list") / "populated"
     root.mkdir()
     _publish(root, UUID("11111111-1111-4111-8111-111111111111"), "Alpha")
     _publish(root, UUID("22222222-2222-4222-8222-222222222222"), "Beta")
-    return root
+    state_before = _root_state(root)
+    profile = profile_cli_path(_LIST_PATH, storage_root=root)
+    return _PopulatedListing(profile=profile, state_before=state_before, state_after=_root_state(root))
 
 
 def test_listing_an_empty_store_creates_no_state_at_all(tmp_path: Path) -> None:
@@ -128,37 +150,39 @@ def test_listing_an_empty_store_creates_no_state_at_all(tmp_path: Path) -> None:
     assert "profiles\t<none>" in profile.invocation.stdout
 
 
-def test_listing_a_populated_store_reads_without_writing_anything(populated_root: Path) -> None:
+def test_listing_a_populated_store_reads_without_writing_anything(populated_listing: _PopulatedListing) -> None:
     """Listing real capsules must leave every byte of the store untouched."""
-    before = _storage_state(tuple(path.relative_to(populated_root).as_posix() for path in populated_root.rglob("*")))
-    profile = profile_cli_path(_LIST_PATH, storage_root=populated_root)
-    after = _storage_state(tuple(path.relative_to(populated_root).as_posix() for path in populated_root.rglob("*")))
+    profile = populated_listing.profile
 
     _assert_created_no_state(profile.invocation)
-    assert before == after
+    assert populated_listing.state_before == populated_listing.state_after
     assert "Alpha" in profile.invocation.stdout
     assert "Beta" in profile.invocation.stdout
 
 
-def test_listing_never_enters_custody_authentication_publication_or_repair(populated_root: Path) -> None:
+def test_listing_never_enters_custody_authentication_publication_or_repair(
+    populated_listing: _PopulatedListing,
+) -> None:
     """The listing must reach no unlock, key-derivation, session, or head-publish path."""
-    profile = profile_cli_path(_LIST_PATH, storage_root=populated_root)
+    profile = populated_listing.profile
 
     assert _forbidden_calls(profile.invocation) == []
     assert _forbidden_calls(profile.resolution) == []
 
 
-def test_resolving_the_listing_path_loads_no_registry_crypto_or_keyring_family(populated_root: Path) -> None:
+def test_resolving_the_listing_path_loads_no_registry_crypto_or_keyring_family(
+    populated_listing: _PopulatedListing,
+) -> None:
     """Merely resolving the leaf must not pay for capabilities it never uses."""
-    resolution = profile_cli_path(_LIST_PATH, storage_root=populated_root).resolution
+    resolution = populated_listing.profile.resolution
 
     for family in ("registry", "crypto", "keyring"):
         assert resolution.import_families[family] == (), (family, resolution.import_families[family])
 
 
-def test_listing_does_not_import_the_authenticated_profile_aggregate(populated_root: Path) -> None:
+def test_listing_does_not_import_the_authenticated_profile_aggregate(populated_listing: _PopulatedListing) -> None:
     """The heavy aggregate is the exact cost this leaf was rebuilt to stop paying."""
-    invocation = profile_cli_path(_LIST_PATH, storage_root=populated_root).invocation
+    invocation = populated_listing.profile.invocation
 
     aggregate_modules = sorted(
         module

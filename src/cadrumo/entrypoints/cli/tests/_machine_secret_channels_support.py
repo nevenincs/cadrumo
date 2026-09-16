@@ -622,3 +622,29 @@ def _restore_material(tmp_path: Path) -> Path:
     from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 
     return load_committed_profile_password_material(UUID(outcome.profile_id), root=source).capsule_path
+
+
+def _complete_registered_profile(storage_root: Path, *, flags: Sequence[str]) -> None:
+    """Answer every required question and promote the profile, each in its own process."""
+    authentication = json.dumps({"profile_passphrase": _PROFILE_INPUT})
+    for command in (("edit", "--quiet", *flags), ("complete-setup",)):
+        result = _run(
+            storage_root,
+            ["--format", "json", "--profile-secrets-stdin", "config", "profile", *command],
+            stdin=authentication,
+        )
+        assert result.returncode == 0, _combined(result)
+
+
+def _envelope(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+    """Return the one JSON envelope a ``--format json`` run printed, on either stream."""
+    with suppress(ValueError):
+        document = json.loads(result.stdout)
+        if isinstance(document, dict):
+            return document
+    for line in result.stderr.splitlines():
+        if line.startswith("{"):
+            document = json.loads(line)
+            if isinstance(document, dict):
+                return document
+    raise AssertionError(f"no JSON envelope in the output:\n{_combined(result)}")

@@ -7,8 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 import typer
 
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
-
+from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
 from ...core.errors.hierarchy import InternalInvariantError
 from ._profile_authentication_contract import (
     ProfileAuthenticationSecrets,

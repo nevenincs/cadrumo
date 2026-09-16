@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 import typer
 
-from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
-
+from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.profile_session import ProfileSessionRefusalReason
 from .command_spec import CommandSpec

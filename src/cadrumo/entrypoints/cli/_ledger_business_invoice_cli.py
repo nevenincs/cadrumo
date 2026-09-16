@@ -68,7 +68,11 @@ from .common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,
 )
 from .common import bad, emit_envelope
-from .state_projection_support import catalogue_creation_ports_factory, catalogue_lifecycle_ports_factory
+from .state_projection_support import (
+    authority_operation,
+    catalogue_creation_ports_factory,
+    catalogue_lifecycle_ports_factory,
+)
 
 # The invoice fields every operator surface renders, declared once. Both
 # projections below read this tuple, so a field added to one surface cannot go
@@ -355,6 +359,9 @@ def invoice_wizard(
     """
     from ...application.invoices.creation_wizard import create_invoice_via_wizard
 
+    # Field validation reads registry facts (the tax-ID format among them)
+    # before the write takes its own scope, so the invocation's lease comes first.
+    authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
     catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
     resolved_iva_category = iva_category or iva_category_for_operation_type(operation_type)

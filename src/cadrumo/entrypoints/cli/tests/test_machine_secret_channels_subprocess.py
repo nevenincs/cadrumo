@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import threading
+from collections.abc import Iterator
 from contextlib import suppress
 from pathlib import Path
 
@@ -21,6 +23,7 @@ from cadrumo.adapters.persistence.storage.recovery_key import (
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....tests.inventory import SRC_CADRUMO
+from ..config.tests.isolated_storage_fixture import COMPLETE_NATURAL_PERSON_FLAGS
 from ._machine_secret_channels_support import (
     _CERTIFICATE_INPUT,
     _HARNESS,
@@ -29,6 +32,9 @@ from ._machine_secret_channels_support import (
     _WINDOWS_HANDLE_HARNESS,
     _assert_success,
     _base_interpreter_pythonpath,
+    _combined,
+    _complete_registered_profile,
+    _envelope,
     _register,
     _register_certificate_source,
     _restore_material,
@@ -688,3 +694,148 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
     assert document["command"] == "config.auth.certificate.secret.set"
     assert document["result"]["has_secret"] is True
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
+
+
+_PROFILE_AUTHENTICATION = json.dumps({"profile_passphrase": _PROFILE_INPUT})
+_LOGIN_AUTHENTICATION = json.dumps({"passphrase": _PROFILE_INPUT})
+
+#: Every profile leaf, as (id, argv after ``--format json``, stdin). ``{archive}``
+#: names the sealed file the export leaf writes and the inspect leaf reads.
+_COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
+    ("status", ("--profile-secrets-stdin", "config", "profile", "status"), _PROFILE_AUTHENTICATION),
+    ("view", ("--profile-secrets-stdin", "config", "profile", "view"), _PROFILE_AUTHENTICATION),
+    ("validate", ("--profile-secrets-stdin", "config", "profile", "validate"), _PROFILE_AUTHENTICATION),
+    (
+        "edit",
+        ("--profile-secrets-stdin", "config", "profile", "edit", "--quiet", "--notes", "cold"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    ("complete-setup", ("--profile-secrets-stdin", "config", "profile", "complete-setup"), _PROFILE_AUTHENTICATION),
+    (
+        "add-row",
+        ("--profile-secrets-stdin", "config", "profile", "add-row", "activities", "--value", "description=Taller"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    (
+        "descendiente-list",
+        ("--profile-secrets-stdin", "config", "profile", "descendiente", "list"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    (
+        "descendiente-add",
+        (
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "descendiente",
+            "add",
+            "--descendiente",
+            "NACIMIENTO=2015-01-01",
+        ),
+        _PROFILE_AUTHENTICATION,
+    ),
+    (
+        "descendiente-remove",
+        ("--profile-secrets-stdin", "config", "profile", "descendiente", "remove", "0"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    (
+        "capabilities-view",
+        ("--profile-secrets-stdin", "config", "profile", "capabilities", "view"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    (
+        "capabilities-set",
+        ("--profile-secrets-stdin", "config", "profile", "capabilities", "set", "llm_vision", "off"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    ("history", ("--profile-secrets-stdin", "config", "profile", "history"), _PROFILE_AUTHENTICATION),
+    (
+        "archive-export",
+        ("--profile-secrets-stdin", "config", "profile", "archive", "export", "--output", "{archive}"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    ("archive-inspect", ("config", "profile", "archive", "inspect", "--file", "{archive}"), None),
+    ("delete-preflight", ("config", "profile", "delete", "s13-operator"), None),
+    ("list", ("config", "profile", "list"), None),
+    ("login", ("config", "login", "s13-operator", "--secrets-stdin"), _LOGIN_AUTHENTICATION),
+    ("logout", ("config", "logout"), None),
+)
+
+#: The leaves that refuse by contract rather than succeed, per setup state:
+#: an unfinished record cannot pass ``validate`` or be promoted, the profile
+#: has no descendant at index 0, and the selected profile cannot be deleted.
+_COLD_REFUSALS = {
+    "incomplete": {"validate", "complete-setup", "descendiente-remove", "delete-preflight"},
+    "complete": {"descendiente-remove", "delete-preflight"},
+}
+
+
+@pytest.fixture(scope="module")
+def _cold_profile_templates(tmp_path_factory: pytest.TempPathFactory) -> Iterator[dict[str, Path]]:
+    """One registered profile per setup state, each built by separate processes."""
+    base = tmp_path_factory.mktemp("cold-profile-templates")
+    incomplete = base / "incomplete"
+    complete = base / "complete"
+    _register(incomplete)
+    _register(complete)
+    _complete_registered_profile(complete, flags=COMPLETE_NATURAL_PERSON_FLAGS)
+    try:
+        yield {"incomplete": incomplete, "complete": complete}
+    finally:
+        cleanup_keychain(base)
+
+
+@pytest.mark.parametrize("state", ("incomplete", "complete"))
+@pytest.mark.parametrize(("leaf", "argv", "stdin"), _COLD_LEAVES, ids=[leaf for leaf, _, _ in _COLD_LEAVES])
+def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
+    tmp_path: Path,
+    _cold_profile_templates: dict[str, Path],
+    state: str,
+    leaf: str,
+    argv: tuple[str, ...],
+    stdin: str | None,
+) -> None:
+    """No profile leaf may depend on an earlier command having warmed the process.
+
+    Governed vocabularies (entity types, IRPF income categories, the retention
+    floor) resolve only inside a pinned authority operation. Reproduction:
+    ``config profile status`` on a completed profile, and before it the
+    overview projection and the retention floor, resolved one with no
+    operation open and failed with an internal error -- but only as the first
+    command of a process; in a process where a leased call had already run,
+    the same command succeeded. So every leaf runs here as the first command
+    of its own fresh process, against a record in each setup state.
+    """
+    root = tmp_path / "storage"
+    shutil.copytree(_cold_profile_templates[state], root)
+    archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
+    if leaf == "archive-inspect":
+        exported = _run(
+            root,
+            [
+                "--format",
+                "json",
+                "--profile-secrets-stdin",
+                "config",
+                "profile",
+                "archive",
+                "export",
+                "--output",
+                str(archive),
+            ],
+            stdin=_PROFILE_AUTHENTICATION,
+        )
+        assert exported.returncode == 0, _combined(exported)
+
+    result = _run(
+        root,
+        ["--format", "json", *(str(archive) if argument == "{archive}" else argument for argument in argv)],
+        stdin=stdin,
+    )
+
+    envelope = _envelope(result)
+    error_code = str((envelope.get("error") or {}).get("code", ""))
+    assert not error_code.startswith("INTERNAL"), _combined(result)
+    expected = 2 if leaf in _COLD_REFUSALS[state] else 0
+    assert result.returncode == expected, _combined(result)
