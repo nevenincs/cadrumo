@@ -338,9 +338,6 @@ class IvaRateKind(str):
         return str(self)
 
 
-_IVA_STATUTORY_SCHEMA_VOCABULARY_FACT_ID = "iva-statutory-schema-vocabulary"
-
-
 def default_iva_cash_accounting_treatment(
     on_date: date | None = None,
     *,
