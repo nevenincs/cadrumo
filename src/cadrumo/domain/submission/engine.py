@@ -28,11 +28,8 @@ from __future__ import annotations
 from datetime import date
 
 from ...core.config import Settings
-from ...core.logging import get_logger
 from .preflight import Preflight
 from .protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike, SubmissionRepositoryProtocol
-
-_logger = get_logger(__name__)
 
 
 class SubmissionEngine:
