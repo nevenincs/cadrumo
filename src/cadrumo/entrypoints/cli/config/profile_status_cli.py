@@ -84,7 +84,11 @@ def _emit_initial_profile_status(
             command="config.profile.status",
             result=result,
             lines=(
-                f"profile\t{active_profile}",
+                # A dangling pointer names a capsule that is gone, so there is no
+                # label to read. The sibling emitter below renders an absent label
+                # as an empty cell; formatting the Optional directly put a literal
+                # Python ``None`` in front of the operator.
+                f"profile\t{active_profile or ''}",
                 "readiness\tdangling_pointer",
                 "registered_profile\tmissing",
                 *precondition_action_lines(health_action),

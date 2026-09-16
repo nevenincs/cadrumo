@@ -251,6 +251,19 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         return tr("flows.passphrase.change_button")
 
     @override
+    def refuse(self, message: str) -> None:
+        """Show refusal and return the keyboard to the form.
+
+        The rotation door refuses while the fields are disabled, so re-enabling
+        them leaves nothing focused. The local checks focus the field they name
+        immediately after calling this; the current-password field is the
+        landing place for a refusal that named none, which in practice is the
+        door rejecting the current password.
+        """
+        super().refuse(message)
+        self.query_one("#field-current", Input).focus()
+
+    @override
     def set_busy(self, *, busy: bool) -> None:
         """Render change progress and freeze inputs while storage mutates."""
         super().set_busy(busy=busy)

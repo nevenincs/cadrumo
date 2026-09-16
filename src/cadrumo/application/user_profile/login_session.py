@@ -548,6 +548,79 @@ def bind_resumed_profile_session(
     return None
 
 
+def publish_created_profile_session(
+    *,
+    bucket_id: str,
+    dek: bytes,
+    now: datetime | None = None,
+    profile_decode_context: ProfileDecodeContext,
+) -> None:
+    """Publish a newly created profile's session exactly as a login would.
+
+    Registration already proves the operator's credential -- it CHOSE the
+    passphrase and the create span unlocked the bucket with it -- so requiring
+    that same passphrase again before the new profile can be used is asking a
+    question already answered. The session was simply never published: the
+    create span held its DEK locally and dropped it, so every surface that
+    asked afterwards was correctly told nobody was logged in.
+
+    This is deliberately the same publication login performs, and not a
+    second, weaker one: one live bucket session bound process-wide, and the
+    record authority derived beside it from the capsule's COMMITTED envelope
+    rather than from the in-memory one, so a fact read after registration
+    proves the same two things it proves after a login.
+
+    No acceleration receipt is minted. A receipt is what carries a session
+    into the NEXT process, which is a separate decision about how long a
+    credential should last, and creating a profile does not settle it. The
+    operator's next process therefore authenticates normally.
+
+    Args:
+        bucket_id: The newly created profile's UUID.
+        dek: The unlocked data-encryption key the create span established.
+            Copied into the session's own buffer; the caller keeps ownership
+            of the bytes it passed.
+        now: UTC evaluation instant; the canonical clock when omitted.
+        profile_decode_context: Decode context of the pinned authority
+            operation the registration ran under.
+    """
+    instant = _now() if now is None else now
+    storage_root = effective_storage_root()
+    idle_minutes, absolute_minutes = _bucket_session_windows()
+    absolute_deadline = instant + timedelta(minutes=absolute_minutes)
+    dek_buffer = bytearray(dek)
+    try:
+        session = _profile_login_sessions().open_resumed_session(
+            bucket_id=bucket_id,
+            dek=bytes(dek_buffer),
+            idle_minutes=idle_minutes,
+            opened_at=instant,
+            idle_deadline=min(instant + timedelta(minutes=idle_minutes), absolute_deadline),
+            absolute_deadline=absolute_deadline,
+            storage_root=storage_root,
+        )
+    finally:
+        _profile_login_sessions().zeroise_owned_buffer(dek_buffer)
+    # The create transaction has already displaced whichever profile the
+    # pointer named and voided its stored session, so a live session for a
+    # different bucket is the retired profile's and is closed here for the
+    # same reason login closes it: the process holds exactly one.
+    previous = _profile_login_sessions().current_session()
+    if previous is not None and previous.bucket_id != bucket_id:
+        previous.close()
+    try:
+        _profile_login_sessions().bind_session(session)
+        _activate_record_authority(
+            bucket_id=bucket_id,
+            dek=session.dek,
+            storage_root=storage_root,
+            profile_decode_context=profile_decode_context,
+        )
+    except BaseException:
+        session.close()
+        raise
+
+
 def _activate_record_authority(
     *,
     bucket_id: str,
@@ -1446,6 +1519,7 @@ __all__ = [
     "has_live_profile_session",
     "login_profile",
     "logout_active_profile",
+    "publish_created_profile_session",
     "remove_profile_session_acceleration_for_custody_delete",
     "revoke_live_profile_secret_for_custody_delete",
 ]
