@@ -525,7 +525,9 @@ def ledger_update(
     from ..ledger_action_composition import compose_ledger_action_ports
 
     ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
-    resolved_id = resolve_id(transaction_repository, transaction_id)
+    # One decrypted snapshot serves the id resolution and the update itself.
+    catalogue = transaction_repository.load()
+    resolved_id = resolve_id(transaction_repository, transaction_id, catalogue=catalogue)
     # A leaked `pydantic.ValidationError` (negative amount, illegal field
     # combination) would be swallowed by the generic CLI boundary into an
     # opaque "config repair" hint. Catch it here and surface the real
@@ -552,6 +554,7 @@ def ledger_update(
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger update",
             ports=ports,
+            catalogue=catalogue,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -779,7 +782,8 @@ def ledger_classify(
         reason=reason,
     )
     validated_category_id = validate_category_id(category_id)
-    resolved_id = resolve_id(transaction_repository, transaction_id)
+    catalogue = transaction_repository.load()
+    resolved_id = resolve_id(transaction_repository, transaction_id, catalogue=catalogue)
     m210_income_classification = m210_options.to_income_classification(
         transaction_repository=transaction_repository,
         transaction_id=resolved_id,
@@ -815,6 +819,7 @@ def ledger_classify(
             source_command="aeat app ledger classify",
             reaffirm=reaffirm,
             ports=ports,
+            catalogue=catalogue,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -849,7 +854,8 @@ def ledger_allocate(
 
     ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     validated_category_id = validate_category_id(category_id)
-    resolved_id = resolve_id(transaction_repository, transaction_id)
+    catalogue = transaction_repository.load()
+    resolved_id = resolve_id(transaction_repository, transaction_id, catalogue=catalogue)
     parsed_business_pct = parse_required_decimal(business_pct, label="business-pct")
     validate_business_pct_range(parsed_business_pct)
     # WHICH classification a proportion implies is the domain's answer, read
@@ -876,6 +882,7 @@ def ledger_allocate(
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger allocate",
             ports=ports,
+            catalogue=catalogue,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
