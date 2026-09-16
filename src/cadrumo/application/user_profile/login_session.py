@@ -531,20 +531,37 @@ def bind_resumed_profile_session(
     finally:
         _profile_login_sessions().zeroise_owned_buffer(dek)
 
-    session.touch(instant)
-    _profile_login_sessions().bind_session(session)
-    _activate_record_authority(
-        bucket_id=bucket_id,
-        dek=session.dek,
-        storage_root=storage_root,
-        profile_decode_context=profile_decode_context,
-    )
-    _persist_advanced_idle_deadline(
-        storage_root=storage_root,
-        profile_id=record.profile_id,
-        record=record,
-        new_idle_deadline=session.idle_deadline,
-    )
+    previous = _profile_login_sessions().current_session()
+    try:
+        session.touch(instant)
+        _profile_login_sessions().bind_session(session)
+        _activate_record_authority(
+            bucket_id=bucket_id,
+            dek=session.dek,
+            storage_root=storage_root,
+            profile_decode_context=profile_decode_context,
+        )
+        _persist_advanced_idle_deadline(
+            storage_root=storage_root,
+            profile_id=record.profile_id,
+            record=record,
+            new_idle_deadline=session.idle_deadline,
+        )
+    except BaseException:
+        # Record authority may already serve the resumed bucket, so restoring
+        # the displaced session could pair it with another profile's records.
+        # Fail closed: seal both sessions and leave nothing bound.
+        session.close()
+        if previous is not None:
+            previous.close()
+        _profile_login_sessions().close_active_session()
+        close_active_profile_record_session()
+        raise
+    # The process holds exactly one session, so the one this resume displaced
+    # is unreachable from here on and must not keep its key material. Only the
+    # in-memory session is sealed; its bucket's persisted receipt is untouched.
+    if previous is not None and previous is not session:
+        previous.close()
     return None
 
 
