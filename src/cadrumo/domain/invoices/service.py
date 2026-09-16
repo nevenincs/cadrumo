@@ -210,8 +210,13 @@ def _reconciliation_amount_matches(
     *,
     amount_tolerance: Decimal,
 ) -> bool:
-    """Return whether the transaction amount is within the requested tolerance."""
-    return abs(transaction.raw.amount - invoice.grand_total) <= amount_tolerance
+    """Return whether the transaction settles the invoice within the requested tolerance.
+
+    A retención is withheld at source, so the cash that moves is the total less
+    the withheld figure; the total itself never reaches the bank.
+    """
+    settlement = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
+    return abs(transaction.raw.amount - settlement) <= amount_tolerance
 
 
 def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:
