@@ -45,7 +45,6 @@ if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _OBSERVATION_LIMIT = 256
-_SETTLEMENT_POLLS = 500
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,14 +193,12 @@ async def _await_censal_settlement(
     *,
     apply: bool,
 ) -> None:
-    """Poll the bounded public observation surface until the operation settles."""
-    for _ in range(_SETTLEMENT_POLLS):
-        observed = await _observe(services, operation_id)
-        if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
-            _assert_censal_terminal_success(observed, apply=apply)
-            return
-        await asyncio.sleep(0)
-    raise InternalInvariantError("censal reviewed operation did not settle")
+    """Wait for the reviewed operation to settle, then check its public outcome."""
+    await services.submission.settled(operation_id)
+    observed = await _observe(services, operation_id)
+    if observed.projection.lifecycle is not OperationLifecycle.TERMINAL:
+        raise InternalInvariantError("censal reviewed operation did not settle")
+    _assert_censal_terminal_success(observed, apply=apply)
 
 
 async def _run(
@@ -226,6 +223,8 @@ async def _run(
         )
         operation_id = submitted.receipt.operation_id
         await composed.submission.start(operation_id)
+        # The executor stops at its review checkpoint; that is what settles first.
+        await composed.submission.settled(operation_id)
         waiting = await _observe(composed, operation_id)
         pending = _require_review_interaction(waiting)
         projection = await _resolve_censal_projection(composed, pending)
