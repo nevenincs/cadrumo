@@ -84,6 +84,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel
 
 from ...core.decimal.coercion import coerce_finite_european_decimal
+from ...core.decimal.printed_units import without_currency_unit
 from ...core.document_shape import DocumentShape
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
@@ -137,8 +138,8 @@ _NUMBER_CONTINUATION = frozenset("0123456789.,")
 _TRAILING_UNIT_MARKERS = ("%", "percent", "pct")
 
 
-def strip_printed_unit(anchor: str) -> str:
-    """Return *anchor* with exactly one trailing unit marker removed.
+def strip_printed_unit(anchor: str, currency_unit: str | None = None) -> str:
+    """Return *anchor* with exactly one printed unit marker removed.
 
     A percent sign is a UNIT, not a digit. A document prints ``IVA (21%)`` and a
     reader obeying "copy exactly as printed" cites ``21%`` as the anchor for the
@@ -154,18 +155,28 @@ def strip_printed_unit(anchor: str) -> str:
     verbatim printed form, so anchor and value stay explicitly distinct and a
     transcription error cannot be laundered into a computed figure.
 
+    The same holds for the currency a document prints beside an AMOUNT --
+    ``1200.00 EUR`` cited as the anchor for the value ``1200.00`` -- and for
+    the same reason, so the currency rule is
+    :func:`~core.decimal.printed_units.without_currency_unit`, shared with the
+    reader-side grounding rather than respelled here. A unit is removed only
+    when this rule can name it: a symbol, or the code the same document
+    reported, which is why ``currency_unit`` is threaded down from the draft.
+
     Args:
         anchor: The verbatim printed form.
+        currency_unit: The ISO-4217 code the document reported for itself, or
+            ``None`` when it reported none.
 
     Returns:
-        The anchor with one trailing unit marker removed, or unchanged.
+        The anchor with one unit marker removed, or unchanged.
     """
     text = anchor.strip()
     lowered = text.lower()
     for unit in _TRAILING_UNIT_MARKERS:
         if lowered.endswith(unit):
             return text[: -len(unit)].strip()
-    return text
+    return without_currency_unit(text, currency_unit)
 
 
 def _is_numeric_edge(character: str) -> bool:
@@ -390,6 +401,7 @@ def evaluate_anchor(
     value: Decimal | str,
     anchor: str,
     transcription: DocumentTranscription,
+    currency_unit: str | None = None,
 ) -> AnchorEvaluation:
     """Evaluate one candidate's anchor against the transcription it came from.
 
@@ -397,6 +409,9 @@ def evaluate_anchor(
         value: The typed value the reader proposes.
         anchor: The verbatim printed form the reader claims to have read it from.
         transcription: The acquisition-stage text, printed forms intact.
+        currency_unit: The currency the document reported, so an amount cited
+            beside its printed unit still parses. ``None`` for a document that
+            reported none.
 
     Returns:
         The evaluation. ``ANCHORED`` requires BOTH that the anchor occurs in the
@@ -405,7 +420,13 @@ def evaluate_anchor(
         to a different value is ``CONTRADICTED``, which is a stronger and more
         actionable statement than merely failing to ground.
     """
-    return _evaluate_anchor_against(value=value, anchor=anchor, source_text=transcription.text, source="transcription")
+    return _evaluate_anchor_against(
+        value=value,
+        anchor=anchor,
+        source_text=transcription.text,
+        source="transcription",
+        currency_unit=currency_unit,
+    )
 
 
 def _evaluate_anchor_against(
@@ -415,6 +436,7 @@ def _evaluate_anchor_against(
     source_text: str,
     source: str,
     derive: Callable[[str], str | None] | None = None,
+    currency_unit: str | None = None,
 ) -> AnchorEvaluation:
     """Run the anchor check against any source text, naming it in the detail.
 
@@ -435,6 +457,9 @@ def _evaluate_anchor_against(
             textual counterpart of the decimal coercion this function already
             applies, and required for the same reason: without it "the anchor
             occurs" is a fact about the anchor and says nothing about the value.
+        currency_unit: The currency the document reported, so an amount cited
+            beside its printed unit parses rather than reading as a
+            contradiction of the value it supports.
     """
     if not anchor.strip():
         return AnchorEvaluation(
@@ -490,7 +515,7 @@ def _evaluate_anchor_against(
             detail=f"anchored to {anchor!r}",
         )
 
-    parsed = coerce_finite_european_decimal(strip_printed_unit(anchor))
+    parsed = coerce_finite_european_decimal(strip_printed_unit(anchor, currency_unit))
     if parsed is None:
         return AnchorEvaluation(
             outcome=FieldGroundingOutcome.CONTRADICTED,

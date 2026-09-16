@@ -22,11 +22,24 @@ from .preconditions import LedgerPreconditionErrorMixin
 __all__ = [
     "PurchaseInvoiceEvidenceInputError",
     "PurchaseInvoiceEvidenceNotFoundError",
+    "PurchaseInvoiceEvidenceReaderError",
 ]
 
 
 class PurchaseInvoiceEvidenceInputError(LedgerPreconditionErrorMixin, CadrumoError):
     """Raised when a CLI-supplied evidence input violates the typed contract."""
+
+
+class PurchaseInvoiceEvidenceReaderError(PurchaseInvoiceEvidenceInputError):
+    """Raised when the reader, not the document, is why a read did not happen.
+
+    A subclass because every caller that catches an evidence-input refusal must
+    keep catching this one, and a distinct class because the two say opposite
+    things to an operator: an input refusal asks them to correct what they
+    supplied, while this one says the document was fine and the reader was
+    absent or answered unusably. It is RETRYABLE for the same reason -- the same
+    command run again against a reachable reader is the remedy.
+    """
 
 
 class PurchaseInvoiceEvidenceNotFoundError(LedgerPreconditionErrorMixin, CadrumoError):

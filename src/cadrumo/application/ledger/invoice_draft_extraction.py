@@ -16,8 +16,13 @@ stored MIME type:
   for that document rather than merely mitigated, and it is the only path that
   can recover the document's own line decomposition and per-rate breakdown.
 - A **text-native PDF** is transcribed by
-  :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`, read semantically by
-  :func:`~llm.extract_invoice_fields_from_text`, and then grounded against that
+  :func:`~application.ledger.evidence_textlayer.transcribe_text_layer` and read
+  first by the fixed label rules of
+  :func:`~application.ledger.invoice_label_reader.read_invoice_fields_by_labels`.
+  When those rules read every required field no model runs; otherwise the
+  fields they could not read come from
+  :func:`~llm.extract_invoice_fields_from_text`, and an unreachable model leaves
+  the rule reading standing. Either way the draft is grounded against that
   same transcription by
   :func:`~application.ledger.grounded_reading.ground_draft_against_transcription`. The
   transcription is produced by a DIFFERENT reader than the one that proposes
@@ -81,15 +86,17 @@ from ...core.config import load_settings as _load_settings
 from ...core.config_support import LLMProvider
 from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHAPES
 from ...core.external_constants import XML_MIME_TYPE
+from ...core.field_origin import FieldOrigin
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
+from ...core.model_catalogue import ModelRole
 from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.iva.supply_nature import SupplyNature
-from ..provisioning import probe_ollama_vision
+from ..local_reader import probe_local_reader
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
-from .evidence_errors import PurchaseInvoiceEvidenceInputError
+from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
 from .evidence_input import EvidenceInput
 from .evidence_textlayer import transcribe_text_layer
 from .invoice_draft_extraction_ports import (
@@ -105,6 +112,7 @@ from .invoice_draft_records import (
     InvoiceDraftRateBreakdown,
     facturae_invoice_class_findings,
 )
+from .invoice_label_reader import merge_label_reading_with_model_draft, read_invoice_fields_by_labels
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
@@ -361,7 +369,7 @@ def _refuse_with_unavailable_reader(exc: Exception, *, availability_fact: str) -
             availability_fact: False,
             "reader_error_type": exc.__class__.__name__,
         }
-    raise PurchaseInvoiceEvidenceInputError(
+    raise PurchaseInvoiceEvidenceReaderError(
         context=facts,
         translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
         precondition_verdict=ledger_no_recovery_verdict(
@@ -508,12 +516,32 @@ def _read_transcription_semantically(
     # under the same values, which a per-prompt resolution does not guarantee.
     authority_values = resolve_invoice_extraction_authority_values(period=authority_period, operation=operation)
 
-    try:
-        read = ports.read_text(transcription, settings, off_host_provider, consent_token, authority_values)
-    except InvoiceDraftReaderUnavailableError as exc:
-        # The reader is absent or unreachable. See the refusal's own docstring
-        # for why this does not fall through to vision.
-        _refuse_a_text_read_with_no_reader(exc.cause)
+    # The label rules read a text layer only. A vision transcription is itself a
+    # model's output, so rule-reading it would stamp model text as rule-read.
+    labels = (
+        read_invoice_fields_by_labels(transcription, operation=operation)
+        if transcription.transcriber.origin is FieldOrigin.TEXT_LAYER
+        else None
+    )
+    if labels is not None and labels.complete:
+        read = labels.draft
+    else:
+        try:
+            model_read = ports.read_text(transcription, settings, off_host_provider, consent_token, authority_values)
+        except InvoiceDraftReaderUnavailableError as exc:
+            if labels is None or not labels.read_fields:
+                # Nothing to stand on. See the refusal's own docstring for why
+                # this does not fall through to vision.
+                _refuse_a_text_read_with_no_reader(exc.cause)
+            # The rule reading stands; the fields it could not read stay empty
+            # and confirm asks the operator for them.
+            get_logger(__name__).info(
+                "semantic reader unavailable; label reading stands with %d field(s) unread",
+                len(labels.missing_required_fields),
+            )
+            read = labels.draft
+        else:
+            read = model_read if labels is None else merge_label_reading_with_model_draft(labels, model_read)
     grounded_input = read.model_copy(
         update={
             "transcription_sha256": transcription.source_content_sha256,
@@ -749,7 +777,7 @@ def _extract_invoice_fields_via_vision(
     opted out gets a typed refusal naming the capability toggle, never a silent
     empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
     PDF, is converted to the same instructive refusal the classification vision
-    path uses (:func:`~application.provisioning.probe_ollama_vision`). An absent
+    path uses (:func:`~application.local_reader.probe_local_reader`). An absent
     ``llm`` extra is reported separately as typed dependency facts, so a
     dependency gap is never mistaken for a daemon-reachability problem.
     """
@@ -799,9 +827,9 @@ def _extract_invoice_fields_via_vision(
         cause = exc.cause
         if isinstance(cause, MissingOptionalExtraError):
             _refuse_with_unavailable_reader(cause, availability_fact="vision_reader_available")
-        status = probe_ollama_vision(settings)
+        status = probe_local_reader(ModelRole.VISION_TRANSCRIPTION, settings)
         if status.precondition_verdict is not None:
-            raise PurchaseInvoiceEvidenceInputError(
+            raise PurchaseInvoiceEvidenceReaderError(
                 translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
                 precondition_verdict=status.precondition_verdict,
             ) from cause
@@ -810,7 +838,7 @@ def _extract_invoice_fields_via_vision(
             "vision_reader_probe_available": True,
             "vision_reader_error_type": cause.__class__.__name__,
         }
-        raise PurchaseInvoiceEvidenceInputError(
+        raise PurchaseInvoiceEvidenceReaderError(
             context=facts,
             translated_message="errors.refused.refused_ledger_evidence_reader_unavailable",
             precondition_verdict=ledger_no_recovery_verdict(

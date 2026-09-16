@@ -649,3 +649,33 @@ def test_only_one_trailing_unit_is_stripped() -> None:
     # Exactly one: the remainder must still satisfy the decimal authority alone.
     assert coerce_finite_european_decimal(strip_printed_unit("21%%")) is None
     assert coerce_finite_european_decimal(strip_printed_unit("2%1")) is None
+
+
+def test_an_amount_anchor_carrying_the_documents_currency_grounds() -> None:
+    """The printed unit beside an amount is not a contradiction of the value it supports."""
+    evaluation = evaluate_anchor(
+        value=Decimal("2420.00"),
+        anchor="2.420,00 EUR",
+        transcription=_transcription(_SPANISH_INVOICE_TEXT),
+        currency_unit="EUR",
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+    assert evaluation.parsed_anchor == Decimal("2420.00")
+
+
+def test_an_amount_anchor_carrying_an_uncorroborated_code_is_still_contradicted() -> None:
+    """Without the document's own currency, a trailing code is not recognised as a unit."""
+    evaluation = evaluate_anchor(
+        value=Decimal("2420.00"),
+        anchor="2.420,00 EUR",
+        transcription=_transcription(_SPANISH_INVOICE_TEXT),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.CONTRADICTED
+
+
+def test_the_unit_rule_leaves_other_trailing_text_for_the_decimal_authority_to_refuse() -> None:
+    assert strip_printed_unit("2.420,00 EUR", "EUR") == "2.420,00"
+    assert strip_printed_unit("21%", "EUR") == "21"
+    assert strip_printed_unit("2.420,00 IVA", "EUR") == "2.420,00 IVA"
