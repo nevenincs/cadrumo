@@ -13,6 +13,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.errors import RegistryValidationError
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (
     CategoryCitation,
@@ -23,6 +24,7 @@ from ...categories.proportionality import (
 from ...categories.proportionality_catalogue import require_proportionality_kind
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory, SpendingCategoryFamily
+from ..errors import RentaValidationError
 from ..ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibilityStatus,
@@ -462,7 +464,7 @@ def test_non_deductible_profiles_cannot_become_observations(operation: PinnedAut
     result = evaluate_renta_deductibility(fact, profile, _context())
 
     assert result.status is RentaDeductibilityStatus.INELIGIBLE
-    with pytest.raises(ValueError, match="ineligible deductibility result"):
+    with pytest.raises(RentaValidationError, match="ineligible deductibility result"):
         build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
 
@@ -530,7 +532,7 @@ def test_tax_year_mismatch_is_rejected_before_observation_creation(
         _context(),
     )
 
-    with pytest.raises(ValueError, match="outside the requested tax year"):
+    with pytest.raises(RentaValidationError, match="outside the requested tax year"):
         build_renta_deductible_expense_observation(fact, result, tax_year=2024)
 
 
@@ -540,7 +542,7 @@ def test_category_normalization_accepts_closed_values_and_rejects_unknowns() -> 
     assert normalize_spending_category(
         SpendingCategory.from_registry("gastos_bancarios")
     ) == SpendingCategory.from_registry("gastos_bancarios")
-    with pytest.raises(ValueError, match=r"SpendingCategory|not a valid|gastos_sin_catalogo"):
+    with pytest.raises(RegistryValidationError, match=r"SpendingCategory|not a valid|gastos_sin_catalogo"):
         normalize_spending_category("gastos_sin_catalogo")
 
 

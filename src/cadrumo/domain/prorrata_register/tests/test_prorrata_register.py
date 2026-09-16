@@ -45,7 +45,7 @@ from ..register import (
     resolve_provisional_percentage,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
