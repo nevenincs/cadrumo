@@ -29,7 +29,7 @@ from cadrumo.domain.prorrata_register.register import (
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..service import ProrrataRegisterService
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 class _InMemoryProrrataRegisterRepository:
