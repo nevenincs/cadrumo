@@ -8,7 +8,6 @@ from decimal import Decimal
 from functools import cache
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.casilla_value_kind import CasillaValueKind
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -35,45 +34,6 @@ class _WalletObservation:
     generation_year: int
 
 
-@dataclass(frozen=True)
-class _ObservedCasilla:
-    """Inward fake for one numeric filed-declaration observation."""
-
-    casilla_id: CasillaId
-    value: str
-    value_kind: CasillaValueKind
-    source_artefact_kind: str
-    source_locator: str
-    confidence: float
-
-    def decimal_value(self) -> Decimal:
-        return Decimal(self.value)
-
-
-@dataclass(frozen=True)
-class _FiledArtefact:
-    """Inward fake for the artefact metadata read by annual-summary policy."""
-
-    kind: str
-    sha256: str | None
-    storage_ref: str | None = None
-
-
-@dataclass(frozen=True)
-class _FiledObservation:
-    """Inward fake implementing the filed-observation calculation port."""
-
-    modelo: str
-    ejercicio: int
-    period: Period
-    expediente_id: str
-    status: str
-    presented_at: datetime
-    authenticated_identity: str
-    artefacts: tuple[_FiledArtefact, ...]
-    casillas: tuple[_ObservedCasilla, ...]
-
-
 @cache
 def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
     """Return the law-selected canonical coordinate used by a test fixture."""
@@ -84,7 +44,6 @@ def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapsho
     ).snapshot_ref
 
 
-_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97"
 )
@@ -125,44 +84,4 @@ def _wallet(amount: Decimal, *, generation_year: int = 2022) -> _WalletObservati
         source_url="https://example.test/iva-compensation-wallet",
         captured_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
         generation_year=generation_year,
-    )
-
-
-def _filed_390_observation(
-    *,
-    last_period_compensation: Decimal,
-    generated_not_in_last_period: Decimal,
-) -> _FiledObservation:
-    return _FiledObservation(
-        modelo="390",
-        ejercicio=2025,
-        period=Period.from_year_and_code(2025, "0A"),
-        expediente_id="200039000000001Z",
-        status="filed",
-        presented_at=datetime(2026, 1, 30, 12, 0, tzinfo=UTC),
-        authenticated_identity=_TAXPAYER_REF,
-        artefacts=(
-            _FiledArtefact(
-                kind="submitted_file",
-                sha256="b" * 64,
-            ),
-        ),
-        casillas=(
-            _ObservedCasilla(
-                casilla_id=_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA,
-                value=str(last_period_compensation),
-                value_kind=CasillaValueKind.NUMERIC,
-                source_artefact_kind="submitted_file",
-                source_locator="submitted-file:390:97",
-                confidence=1.0,
-            ),
-            _ObservedCasilla(
-                casilla_id=_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
-                value=str(generated_not_in_last_period),
-                value_kind=CasillaValueKind.NUMERIC,
-                source_artefact_kind="submitted_file",
-                source_locator="submitted-file:390:662",
-                confidence=1.0,
-            ),
-        ),
     )
