@@ -450,6 +450,29 @@ class TestParseDescendienteFlag:
         with pytest.raises(ProfileAnswerTypeError, match=key):
             parse_descendiente_flag(f"NACIMIENTO=2020-03-15,{key}=quizas")
 
+    @pytest.mark.parametrize(
+        "flag",
+        (
+            "NACIMIENTO=soon",
+            "NACIMIENTO=2020-03-15,INSCRIPCION=15/05/2024",
+            "NACIMIENTO=2020-03-15,ACOGIMIENTO=later",
+            "NACIMIENTO=2020-03-15,FALLECIMIENTO=2024-13-40",
+            "NACIMIENTO=2020-03-15,DISCAPACIDAD=high",
+            "NACIMIENTO=2020-03-15,ALTA_POSTERIOR_MES=may",
+            "NACIMIENTO=2020-03-15,GASTOS_GUARDERIA=--5",
+        ),
+    )
+    def test_an_unreadable_date_or_number_is_an_answer_error(self, flag: str) -> None:
+        """A mistyped value is the operator's to fix, never an internal failure.
+
+        Reproduction: ``config profile descendiente add --descendiente
+        NACIMIENTO=soon`` exited 6 with an internal error. The date and
+        whole-number keys were read with the bare parsers, whose ``ValueError``
+        the CLI boundary cannot tell from a defect.
+        """
+        with pytest.raises(ProfileAnswerTypeError):
+            parse_descendiente_flag(flag)
+
     def test_the_yes_no_refusal_lists_the_spellings_it_accepts(self) -> None:
         """The refusal has to teach the vocabulary, not just reject the word."""
         with pytest.raises(ProfileAnswerTypeError) as caught:

@@ -683,6 +683,7 @@ def _flag_bool(raw: str, *, key: str) -> bool:
             "and no as no, n, false, falso or 0. It is refused rather than assumed because both "
             "fields decide part of the mínimo por descendientes, and guessing would claim a "
             "deduction nobody asked for.",
+            context={"key": key},
         )
     return parsed
 
@@ -699,17 +700,45 @@ def _parse_flag_parts(raw: str) -> dict[str, str]:
     return parts
 
 
+def _flag_date(value: str, *, key: str) -> date:
+    """Read one ``YYYY-MM-DD`` flag value, refusing it as a typed answer error.
+
+    The date parser raises a bare ``ValueError`` on a malformed value, which the
+    CLI boundary cannot tell apart from a defect and reports as an internal
+    failure. The operator typed a bad date; they are told which key.
+    """
+    try:
+        parsed = parse_iso8601_date(value)
+    except ValueError as exc:
+        raise ProfileAnswerTypeError(
+            f"--descendiente {key} must be a date YYYY-MM-DD; got {value!r}",
+            context={"key": key},
+        ) from exc
+    if parsed is None:
+        raise ProfileAnswerTypeError(
+            f"--descendiente {key} carries no readable date; got {value!r}",
+            context={"key": key},
+        )
+    return parsed
+
+
+def _flag_integer(value: str, *, key: str) -> int:
+    """Read one whole-number flag value, keeping at most one leading sign for range checks."""
+    text = value.strip()
+    if not is_plain_whole_number(text.removeprefix("-")):
+        raise ProfileAnswerTypeError(
+            f"--descendiente {key} must be a whole number; got {value!r}",
+            context={"key": key},
+        )
+    return int(text)
+
+
 def _flag_birth_date(parts: dict[str, str], *, raw: str) -> date:
     """Read the required birth date from parsed descendant flag parts."""
     nacimiento_raw = parts.get("NACIMIENTO")
     if not nacimiento_raw:
         raise ProfileAnswerTypeError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
-    # parse_iso8601_date returns None only for absent/empty input (it raises on a
-    # malformed non-empty string); nacimiento_raw is non-empty here.
-    birth_date = parse_iso8601_date(nacimiento_raw)
-    if birth_date is None:
-        raise ProfileAnswerTypeError(f"--descendiente NACIMIENTO carries no readable date; got: {raw!r}")
-    return birth_date
+    return _flag_date(nacimiento_raw, key="NACIMIENTO")
 
 
 def parse_descendiente_flag(
@@ -818,15 +847,17 @@ def _flag_civil_fields(
     acogimiento_raw = parts.get("ACOGIMIENTO")
     fallecimiento_raw = parts.get("FALLECIMIENTO")
     disc_raw = parts.get("DISCAPACIDAD")
-    discapacidad_grado: int | None = int(disc_raw) if disc_raw is not None else None
+    discapacidad_grado = _flag_integer(disc_raw, key="DISCAPACIDAD") if disc_raw is not None else None
     if discapacidad_grado is not None and discapacidad_grado not in _accepted_disability_grades(authority=authority):
         raise ProfileAnswerTypeError(
             f"DISCAPACIDAD carries an unsupported governed grade: {discapacidad_grado!r}",
         )
     return {
-        "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None,
-        "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None,
-        "death_date": parse_iso8601_date(fallecimiento_raw) if fallecimiento_raw else None,
+        "inscripcion_registro_civil_date": (
+            _flag_date(inscripcion_raw, key="INSCRIPCION") if inscripcion_raw else None
+        ),
+        "acogimiento_resolucion_date": _flag_date(acogimiento_raw, key="ACOGIMIENTO") if acogimiento_raw else None,
+        "death_date": _flag_date(fallecimiento_raw, key="FALLECIMIENTO") if fallecimiento_raw else None,
         "discapacidad_grado": _discapacidad_grade(discapacidad_grado, authority=authority),
     }
 
@@ -854,11 +885,13 @@ def _flag_family_fields(parts: dict[str, str]) -> _FamilyFields:
 def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
     meses_raw = parts.get("MESES_TRABAJO")
     alta_posterior_raw = parts.get("ALTA_POSTERIOR_MES")
-    alta_posterior_nacimiento_mes = int(alta_posterior_raw) if alta_posterior_raw is not None else None
+    alta_posterior_nacimiento_mes = (
+        _flag_integer(alta_posterior_raw, key="ALTA_POSTERIOR_MES") if alta_posterior_raw is not None else None
+    )
     if alta_posterior_nacimiento_mes is not None and not is_calendar_month(alta_posterior_nacimiento_mes):
         raise ProfileAnswerTypeError(f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_nacimiento_mes!r}")
     gastos_raw = parts.get("GASTOS_GUARDERIA")
-    gastos_guarderia_euros = int(gastos_raw) if gastos_raw is not None else 0
+    gastos_guarderia_euros = _flag_integer(gastos_raw, key="GASTOS_GUARDERIA") if gastos_raw is not None else 0
     if gastos_guarderia_euros < 0:
         raise ProfileAnswerTypeError(f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_guarderia_euros!r}")
     gastos_guarderia_mensuales = parse_guarderia_mensual(
