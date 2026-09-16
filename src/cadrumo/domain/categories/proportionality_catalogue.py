@@ -9,7 +9,12 @@ from types import MappingProxyType
 from typing import Final
 
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
+from ..calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    required_mapping_entry,
+    unique_mapping_tokens,
+)
 from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
@@ -78,17 +83,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"proportionality vocabulary {key!r} must contain unique tokens")
-    return values
-
-
 def _bool(entries: Mapping[str, str], key: str) -> bool:
     value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
@@ -125,7 +119,7 @@ def resolve_proportionality_catalogue(
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
 
     kinds: list[ProportionalityKind] = []
-    for raw_token in _csv(entries, _KIND_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _KIND_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_KIND_PREFIX}{raw_token}."
         declared_value = required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
@@ -136,7 +130,7 @@ def resolve_proportionality_catalogue(
         kinds.append(ProportionalityKind.from_registry(raw_token, **roles))
 
     periods: list[StatutoryCapPeriod] = []
-    for raw_token in _csv(entries, _PERIOD_ORDER_KEY):
+    for raw_token in unique_mapping_tokens(entries, _PERIOD_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_PERIOD_PREFIX}{raw_token}."
         declared_value = required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
