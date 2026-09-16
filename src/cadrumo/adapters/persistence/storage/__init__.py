@@ -24,14 +24,14 @@ Where the contracts live:
 - Encryption substrate — ``envelope``, ``blob_store``, ``master_key``,
   ``secret_store`` and ``crypto``, defining :class:`Envelope`,
   :class:`EncryptedBlobStore`, :class:`SecretStore`,
-  :class:`MasterKeyProvider` and the column-level helpers
+  the active bucket session and the column-level helpers
   :class:`HashedLookup` and the secure-object row-bound AEAD helpers.
 - Runtime and custody boundary — ``runtime`` and ``runtime_readiness`` for
   :class:`StorageRuntime` and :class:`StorageRuntimeReadiness`,
   ``runtime_repository`` for the repository factories, ``custody`` for the
   per-profile custody operations, and ``profile_custody`` /
   ``profile_login_session`` for the concrete application-port adapters.
-- Recovery — ``recovery_key``, the low-level BIP-39 helpers. Recovery and
+- Recovery — ``recovery_key``, the recovery-code minting helpers. Recovery and
   passphrase rotation are both per-profile custody operations; the
   shared-master wrapping primitives and the cross-provider rotation sweep are
   gone.

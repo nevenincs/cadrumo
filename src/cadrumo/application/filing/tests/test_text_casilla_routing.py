@@ -5,7 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -56,7 +57,7 @@ _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface=
 
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
     )
 
 

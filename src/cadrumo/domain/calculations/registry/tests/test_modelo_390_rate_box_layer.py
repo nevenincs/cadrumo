@@ -34,7 +34,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel
 
 from cadrumo.domain.iva.flow import IvaFlowDirection
@@ -46,6 +45,7 @@ from ..ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ..schema import BindingDefinition, ModeloRevision
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -123,7 +123,7 @@ _UNRATED_BASE = Decimal("330.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return published_snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _observation(

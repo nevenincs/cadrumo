@@ -20,19 +20,15 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
+from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
@@ -71,13 +67,10 @@ def _register_profile(**overrides: str) -> None:
 
 
 @pytest.fixture(scope="module")
-def _profile_fact_operation() -> PinnedAuthorityOperation:
-    """Expose the authored tax-ID declaration through one pinned test reader."""
-    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()}
-    )
-    return PinnedAuthorityOperation(reader, reader.pin())
+def _profile_fact_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Expose the published tax-ID declaration through one pinned test reader."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 @pytest.fixture(autouse=True)
@@ -160,7 +153,7 @@ def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> Non
 
     expected_label = build_profile_preflight_requirement(
         "auth.clave_movil_route",
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     ).label
     assert expected_label != "auth.clave_movil_route"
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_route_missing"
@@ -247,7 +240,7 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
     # asserts the name is schema-sourced without pinning one wording.
     expected_label = build_profile_preflight_requirement(
         "auth.dni_nie",
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     ).label
     assert expected_label != "auth.dni_nie", "label collapsed to the path; the assertion would be vacuous"
     assert raised.value.context == {"provider": "clave_movil", "identity_field": expected_label}

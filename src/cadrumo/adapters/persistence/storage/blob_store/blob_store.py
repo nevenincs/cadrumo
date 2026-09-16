@@ -14,7 +14,7 @@ Two layouts are supported:
   the plaintext SHA-256. The manifest records ``encryption=None``.
 - **Ciphertext** (every other class): the substrate mints a 32-byte
   data-encryption key (DEK), encrypts the blob with AES-256-GCM keyed
-  by the DEK, wraps the DEK using the :class:`MasterKeyProvider` (also
+  by the DEK, wraps the DEK using the active bucket session's key (also
   AES-256-GCM), and writes the ciphertext under the plaintext digest path
   ``blobs/<hex[:2]>/<hex>.enc``. The manifest records the ciphertext
   SHA-256, the wrapped DEK, and the AEAD nonces; the master key never
@@ -56,13 +56,10 @@ from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
     ClassificationError,
-    DecryptionError,
-    EncryptionError,
     EnvelopeVersionError,
     StorageValidationError,
 )
 from ..master_key.active_session import get_active_master_key
-from ..master_key.master_key import MasterKeyProvider
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 
@@ -293,18 +290,14 @@ class EncryptedBlobStore:
         self,
         *,
         root_dir: Path,
-        master_key_provider: MasterKeyProvider | None = None,
     ) -> None:
-        """Bind the store to a root directory and a master-key provider.
+        """Bind the store to a root directory.
 
         Args:
             root_dir: Directory containing the ``blobs/`` subtree. The
                 directory is created on first write.
-            master_key_provider: Optional override. When ``None``, the
-                currently active bucket session's data-encryption key is used.
         """
         self._root_dir = Path(root_dir)
-        self._master_key_provider = master_key_provider
 
     @property
     def root_dir(self) -> Path:
@@ -312,8 +305,6 @@ class EncryptedBlobStore:
         return self._root_dir
 
     def _master_key(self) -> bytes:
-        if self._master_key_provider is not None:
-            return self._master_key_provider.get_master_key()
         return get_active_master_key()
 
     def _shard_dir_for(self, hex_digest: str) -> Path:
@@ -647,95 +638,6 @@ class EncryptedBlobStore:
                     expected_digest=_manifest_digest_from_path(manifest_path),
                 )
                 yield manifest_path, manifest
-
-    def rotate_master_key(
-        self,
-        *,
-        old_master_key_provider: MasterKeyProvider,
-        new_master_key_provider: MasterKeyProvider,
-    ) -> tuple[int, int, int]:
-        """Re-wrap every blob's per-record DEK under the new master key.
-
-        The blob store wraps each blob's DEK directly under the master
-        key (``encrypt_record(dek, key=master_key, associated_data=_DEK_AAD)``).
-        When the master key rotates, every wrapped DEK must be re-wrapped
-        under the new master key or the blob becomes unrecoverable.
-
-        Resume-idempotent: re-running on an already-rotated store
-        decrypts the wrapped DEK under the new master key first; on
-        success the manifest is skipped.
-
-        Args:
-            old_master_key_provider: :class:`MasterKeyProvider` returning
-                the master key that was in use when the blobs were last persisted.
-            new_master_key_provider: :class:`MasterKeyProvider` returning
-                the new master key.
-
-        Returns:
-            A ``(rotated, skipped, errors)`` triple.
-        """
-        rotated = 0
-        skipped = 0
-        errors = 0
-        old_master_key = old_master_key_provider.get_master_key()
-        new_master_key = new_master_key_provider.get_master_key()
-        for manifest_path, manifest in self._iter_manifests_with_paths():
-            if manifest.wrapped_dek is None:
-                # Plaintext-class blob (e.g. CORPUS); no wrapped DEK
-                # to rotate.
-                skipped += 1
-                continue
-            wrapped_blob = manifest.wrapped_dek.to_blob()
-            # Try the new key first — already-rotated manifests succeed
-            # here.
-            try:
-                decrypt_record(wrapped_blob, key=new_master_key, associated_data=_DEK_AAD)
-                skipped += 1
-                continue
-            except (DecryptionError, EncryptionError) as exc:
-                _log.debug(
-                    "blob_store rotate_master_key: new key cannot decrypt wrapped_dek for %s; "
-                    "falling back to old key (%s)",
-                    _path_log_marker(manifest_path),
-                    type(exc).__name__,
-                )
-            # Fall back to the old key.
-            try:
-                dek = decrypt_record(wrapped_blob, key=old_master_key, associated_data=_DEK_AAD)
-            except (DecryptionError, EncryptionError):
-                _log.warning(
-                    "blob_store rotate_master_key: cannot decrypt wrapped_dek path_marker=%s",
-                    _path_log_marker(manifest_path),
-                )
-                errors += 1
-                continue
-            new_wrapped = encrypt_record(dek, key=new_master_key, associated_data=_DEK_AAD)
-            new_meta = EncryptionMetadata.from_blob(new_wrapped, associated_data=_DEK_AAD)
-            new_manifest = manifest.model_copy(update={"wrapped_dek": new_meta})
-            new_envelope = Envelope[BlobManifest](
-                schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
-                written_at=now(),
-                classification=manifest.classification,
-                payload=new_manifest,
-            )
-            try:
-                save_envelope(new_envelope, manifest_path)
-            except OSError:
-                _log.warning(
-                    "blob_store rotate_master_key: failed to atomic-write path_marker=%s",
-                    _path_log_marker(manifest_path),
-                )
-                errors += 1
-                continue
-            rotated += 1
-        _log.info(
-            "blob_store rotate_master_key: rotated=%d skipped=%d errors=%d root_marker=%s",
-            rotated,
-            skipped,
-            errors,
-            _path_log_marker(self._root_dir),
-        )
-        return rotated, skipped, errors
 
     def _write_plaintext_blob(self, plaintext: bytes, sha_hex: str) -> None:
         target = self._plaintext_path_for(sha_hex)

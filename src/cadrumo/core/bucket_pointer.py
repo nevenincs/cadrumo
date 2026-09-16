@@ -13,7 +13,6 @@ import os
 import stat
 import sys
 import time
-import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
@@ -21,6 +20,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .identity.bucket import BucketId
 from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .toml import parse_toml
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -90,7 +90,7 @@ class BucketPointer(BaseModel):
     @classmethod
     def from_toml(cls, text: str) -> BucketPointer:
         """Strictly parse a current-format pointer record."""
-        return cls.model_validate(tomllib.loads(text))
+        return cls.model_validate(parse_toml(text))
 
 
 def pointer_path(root: Path) -> Path:

@@ -40,7 +40,6 @@ class StorageRuntimeReadinessCode(StrEnum):
     NO_ACTIVE_SESSION = "no_active_session"
     SESSION_SEALED = "session_sealed"
     SESSION_EXPIRED = "session_expired"
-    UNSECURED_BACKEND = "unsecured_backend"
     ROUTE_NOT_ACTIVE_BUCKET = "route_not_active_bucket"
     ROUTE_BUCKET_MISMATCH = "route_bucket_mismatch"
     SESSION_CHANGED = "session_changed"
@@ -63,7 +62,6 @@ class StorageRuntimeSession(BaseModel):
     idle_deadline: datetime
     sealed: bool
     expired: bool
-    unsecured_backend: bool
 
 
 class StorageRuntimeReadiness(BaseModel):

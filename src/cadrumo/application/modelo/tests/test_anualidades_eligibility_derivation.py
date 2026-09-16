@@ -15,11 +15,11 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..profile_binding import inject_derived_anualidades_eligibility_facts
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -33,7 +33,7 @@ def _snapshot(year: int) -> RegistrySnapshot:
     """Real Modelo 100 snapshot: the flag now shares the aggregates' eligibility
     predicate, which reads the Art. 58.1 / Art. 61 norma 2a ceilings from the
     revision's own registry parameters."""
-    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return published_snapshot("100", filing_year=year, period="0A")
 
 
 def test_default_eligible_when_no_descendants() -> None:

@@ -20,14 +20,16 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
 from ..profile_binding import (
     ProfileBindingResolutionError,
@@ -35,7 +37,7 @@ from ..profile_binding import (
     resolve_profile_sourced_bindings,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
@@ -124,7 +126,7 @@ def _profile_without_jurisdiction_scope() -> UserProfileRecord:
 def test_non_m303_profile_resolution_does_not_require_jurisdiction_scope(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_snapshot("100", filing_year=2025, period="0A")
 
     result = resolve_profile_sourced_bindings(
         snapshot,
@@ -140,7 +142,7 @@ def test_non_m303_profile_resolution_does_not_require_jurisdiction_scope(
 def test_m303_profile_resolution_refuses_missing_jurisdiction_scope(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     with pytest.raises(ProfileBindingResolutionError, match="jurisdiction_scope"):
         resolve_profile_sourced_bindings(
@@ -155,7 +157,7 @@ def test_303_state_attribution_binding_resolves_to_100_for_common_profile(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """End-to-end at the resolver boundary: the bound-casilla profile binding resolves to 100."""
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=2026, period="1T")
     result = resolve_profile_sourced_bindings(
         snapshot,
         bucket_id="state-attribution-test",

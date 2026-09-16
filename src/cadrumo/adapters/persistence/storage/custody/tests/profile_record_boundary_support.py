@@ -29,18 +29,14 @@ from cadrumo.adapters.persistence.storage.custody.records import (
     ProfileCustodyWrappedDek,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority_artifact import ProfileCreateContext
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-
-from ......domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
-)
 
 PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")
 DEK = bytes(range(100, 132))
@@ -136,8 +132,14 @@ def initial_record() -> UserProfileRecord:
         setup_state=ProfileSetupState.INCOMPLETE,
         created_at=CREATED_AT,
         updated_at=UPDATED_AT,
-        context=_profile_creation_context_for_test(),
+        context=_record_create_context(),
     )
+
+
+def _record_create_context() -> ProfileCreateContext:
+    """Return the create context paired with the decode context :func:`open_record_session` binds."""
+    create_context, _decode_context = _profile_contexts_for_test()
+    return create_context
 
 
 def open_record_session() -> ProfileRecordSession:
@@ -167,7 +169,6 @@ def publish_capsule(root: Path) -> UserProfileRecord:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
-            recovery_envelope=mint_test_profile_recovery_envelope(PROFILE_ID, dek=DEK, dek_epoch=envelope.dek_epoch),
             initial_record=record,
             record_session=session,
         )
@@ -192,7 +193,7 @@ def replacement_record(current: UserProfileRecord) -> UserProfileRecord:
         previous_record_digest=current.content_digest,
         created_at=CREATED_AT,
         updated_at=REPLACED_AT,
-        context=_profile_creation_context_for_test(),
+        context=_record_create_context(),
     )
 
 

@@ -9,7 +9,6 @@ only one lets a legacy tree participate in validation of its replacement.
 from __future__ import annotations
 
 import shutil
-import tomllib
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,6 +17,7 @@ from typing import Final, Literal
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
@@ -89,7 +89,7 @@ def generated_export_bootstrap_target(
     source_sha256: str,
 ) -> GeneratedExportBootstrapTarget | None:
     """Return the uniquely matching reviewed bootstrap declaration, if one exists."""
-    payload = tomllib.loads(_BOOTSTRAP_TARGETS_PATH.read_text("utf-8"))
+    payload = parse_toml(_BOOTSTRAP_TARGETS_PATH.read_text("utf-8"))
     matches = [
         row
         for row in payload.get("targets", [])
@@ -207,7 +207,7 @@ def _stage_complete_sibling(source_modelo_root: Path, metadata_modelo_root: Path
     that no longer name one would read as a forest with several key-less roots.
     """
     edition = materialise_edition(source_modelo_root, revision)
-    manifest = tomllib.loads((source_modelo_root / "revisions" / revision / "revision.toml").read_text("utf-8"))
+    manifest = parse_toml((source_modelo_root / "revisions" / revision / "revision.toml").read_text("utf-8"))
     manifest_members = frozenset(manifest.get("revisions", {}).get(revision, {}))
     manifest_table = {
         key: value
@@ -333,7 +333,7 @@ def write_complete_edition(revision_root: Path, edition: MaterialisedEdition) ->
     the rows the loader resolved is left untouched, so a target that restates
     its whole edition still stages as the plain copy it always was.
     """
-    manifest = tomllib.loads((revision_root / "revision.toml").read_text("utf-8"))
+    manifest = parse_toml((revision_root / "revision.toml").read_text("utf-8"))
     manifest_members = frozenset(manifest.get("revisions", {}).get(edition.revision_id, {}))
     revision_table = {
         key: value
@@ -368,7 +368,7 @@ def _staged_section_rows(section_root: Path, revision_id: str, member: str) -> o
         return None
     staged: list[object] = []
     for fragment in sorted(section_root.glob("*.toml")):
-        payload = tomllib.loads(fragment.read_text("utf-8"))
+        payload = parse_toml(fragment.read_text("utf-8"))
         declared = payload.get("revisions", {}).get(revision_id, {}).get(member)
         if isinstance(declared, list):
             staged.extend(declared)

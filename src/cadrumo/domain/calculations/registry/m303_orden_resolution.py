@@ -41,6 +41,7 @@ def resolve_m303_regimen_simplificado_snapshot(
     projection = _select_m303_annual_orden_projection(registry_snapshot)
     return M303RegimenSimplificadoSnapshot(
         filing_year=registry_snapshot.filing_year,
+        support=registry_snapshot.supported_filing_years,
         registry_revision_id=registry_snapshot.revision.id,
         scope_decision=scope_decision,
         orden=m303_annual_orden_snapshot_from_projection(projection),
@@ -72,7 +73,7 @@ def m303_annual_orden_snapshot_from_projection(
         non_agricultural_ingresos_a_cuenta=projection.non_agricultural_ingresos_a_cuenta,
         seasonal_indexes=projection.seasonal_indexes,
         difficult_justification=projection.difficult_justification,
-        lorca_2022_reduction=projection.lorca_2022_reduction,
+        lorca_reduction=projection.lorca_reduction,
     )
 
 
@@ -80,10 +81,18 @@ def _select_m303_annual_orden_projection(registry_snapshot: RegistrySnapshot) ->
     """Select the internal projection consumed only by the canonical resolver."""
     if registry_snapshot.modelo.id != Modelo("303"):
         raise RegistryValidationError("annual Orden projection selector requires a Modelo 303 registry snapshot")
+    support = registry_snapshot.supported_filing_years
+    source_year = (
+        registry_snapshot.authored_filing_year or registry_snapshot.filing_year
+        if support is None
+        else support.projection_coordinate(registry_snapshot.filing_year)
+    )
+    if source_year is None:
+        raise RegistryValidationError("annual Orden request is outside the registry support envelope")
     return registry_snapshot.supplementary_ordenes.get(
         Modelo("303"), M303AnnualOrdenAuthority.empty()
     ).require_projection(
-        ejercicio=registry_snapshot.filing_year,
+        ejercicio=source_year,
         registry_revision_id=registry_snapshot.revision.id,
     )
 

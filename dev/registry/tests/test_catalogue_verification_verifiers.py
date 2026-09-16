@@ -140,6 +140,7 @@ def test_verify_source_catalogue_checks_every_entry(tmp_path: Path) -> None:
     verify_source_catalogue(tmp_path, catalogue)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
     reference = _legal_reference(
         ref_id="ley-35-2006:art-103",
@@ -152,6 +153,7 @@ def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
         verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize(
     ("source", "article", "role_text"),
     [
@@ -179,6 +181,7 @@ def test_verify_legal_catalogue_rejects_known_bad_roles(
         verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
     reference = _legal_reference()
     blocked = find_known_bad("ley", "77", "cuota integra autonomica", effective_date=reference.effective_from)
@@ -187,6 +190,7 @@ def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
     assert blocked.role_substring == "cuota íntegra autonómica"
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_known_bad_citation_matching_allows_different_role_for_same_article() -> None:
     reference = _legal_reference()
     assert (
@@ -200,6 +204,7 @@ def test_known_bad_citation_matching_allows_different_role_for_same_article() ->
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_known_bad_citation_matching_preserves_non_decomposable_characters() -> None:
     """Diacritic folding no longer discards a character NFKD cannot decompose.
 
@@ -231,6 +236,7 @@ def test_verify_legal_catalogue_rejects_key_mismatch() -> None:
         verify_legal_catalogue({"other-id": reference}, source_root=bundled_path())
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_accepts_reviewed_reference() -> None:
     reference = _legal_reference()
 
@@ -275,6 +281,7 @@ def test_legal_reference_rejects_blank_reviewer() -> None:
         LegalReference.model_validate(payload)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
@@ -311,6 +318,7 @@ def test_verify_legal_catalogue_checks_required_text_when_article_is_absent(tmp_
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_checks_required_text_for_treaty_refs(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "convenio-es-gb-2013-art-6.html"
     corpus_path.parent.mkdir(parents=True)
@@ -331,6 +339,7 @@ def test_verify_legal_catalogue_checks_required_text_for_treaty_refs(tmp_path: P
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_refuses_a_corpus_file_with_no_extracted_sidecar(tmp_path: Path) -> None:
     """A raw corpus file is not evidence; the anchored extraction is.
 
@@ -360,6 +369,7 @@ def test_verify_legal_catalogue_refuses_a_corpus_file_with_no_extracted_sidecar(
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_refuses_sidecar_symlink_outside_corpus_root(tmp_path: Path) -> None:
     """A corpus-local sidecar name cannot make external evidence authoritative."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "symlinked-sidecar.html"
@@ -380,10 +390,14 @@ def test_verify_legal_catalogue_refuses_sidecar_symlink_outside_corpus_root(tmp_
 
     assert sidecar.is_file(), "the exploit must present an apparently valid sidecar file"
     assert sidecar.resolve() == external_sidecar.resolve()
-    with pytest.raises(RegistryValidationError, match="sidecar escapes repository root"):
+    assert not corpus_path.with_name(corpus_path.name + ".annotation.json").exists(), (
+        "the symlinked sidecar must be the only corpus metadata that can escape the root"
+    )
+    with pytest.raises(RegistryValidationError, match="corpus metadata escapes repository root"):
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
@@ -402,6 +416,7 @@ def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Pat
     assert result is None
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_refuses_an_anchor_that_would_widen_to_another_unit(tmp_path: Path) -> None:
     """Required text in a sibling unit cannot validate an absent cited anchor."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
@@ -429,6 +444,7 @@ def test_verify_legal_catalogue_refuses_an_anchor_that_would_widen_to_another_un
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_legal_corpus_text_cache_is_path_scoped_for_same_size_files(tmp_path: Path) -> None:
     """Same-name, same-size corpus files must not share cached legal text."""
     alpha_path = tmp_path / "corpus" / "normatives" / "alpha" / "same-size-cache-collision.html"
@@ -460,6 +476,7 @@ def test_legal_corpus_text_cache_is_path_scoped_for_same_size_files(tmp_path: Pa
     verify_legal_catalogue({bravo.id: bravo}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_legal_corpus_text_rereads_same_size_timestamp_restored_sidecar(tmp_path: Path) -> None:
     """A metadata-preserving sidecar replacement must not serve cached legal text.
 
@@ -492,6 +509,7 @@ def test_legal_corpus_text_rereads_same_size_timestamp_restored_sidecar(tmp_path
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_legal_corpus_text_accepts_valid_sidecar_after_metadata_preserving_rewrite(tmp_path: Path) -> None:
     """The digest refuses only changed content, not an unchanged re-write.
 
@@ -520,6 +538,7 @@ def test_legal_corpus_text_accepts_valid_sidecar_after_metadata_preserving_rewri
     assert verify_legal_catalogue({reference.id: reference}, source_root=tmp_path) is None
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_legal_corpus_text_cache_is_anchor_scoped_within_one_sidecar(tmp_path: Path) -> None:
     """Sibling anchors must never reuse the first selected extracted unit."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "two-articles.html"
@@ -665,6 +684,7 @@ def test_source_citation_fails_absent_binary_and_html_sources(tmp_path: Path) ->
     assert "cannot be read" in html_failures[0]
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp_path: Path) -> None:
     """Legal catalogue verification always enforces required_text against corpus."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
@@ -683,6 +703,7 @@ def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_rejects_forbidden_text_present_in_corpus(tmp_path: Path) -> None:
     """A forbidden-text clause refuses a corpus document that still carries the named phrase.
 
@@ -709,6 +730,7 @@ def test_verify_legal_catalogue_rejects_forbidden_text_present_in_corpus(tmp_pat
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_accepts_forbidden_text_genuinely_absent_from_corpus(tmp_path: Path) -> None:
     """A declared forbidden-text clause must not fire when the phrase is genuinely absent.
 
@@ -730,6 +752,7 @@ def test_verify_legal_catalogue_accepts_forbidden_text_genuinely_absent_from_cor
     assert verify_legal_catalogue({reference.id: reference}, source_root=tmp_path) is None
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_verify_legal_catalogue_distinguishes_missing_required_from_present_forbidden(tmp_path: Path) -> None:
     """A missing required phrase and a present forbidden phrase diagnose opposite defects.
 

@@ -65,7 +65,6 @@ def _build_overview() -> ProfileOverview:
         label="Acquisition serialisation subject",
         passphrase=_CREDENTIAL_INPUT,
         facts=(),
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )

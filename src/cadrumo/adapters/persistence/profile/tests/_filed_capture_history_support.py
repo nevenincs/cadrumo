@@ -33,9 +33,7 @@ from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
     ExternalEvidence,
@@ -89,21 +87,13 @@ _M303_DECLARATION_TYPE_I = ObservedHeaderFact(
 
 @cache
 def _registry_snapshot(modelo: str, filing_year: int, period: str):
-    """Build a real snapshot without the tree-wide ``ValidatedRegistryAuthority`` load.
+    """Build a real calculation-grade snapshot from the published generation.
 
-    ``load_registry_tree`` compiles the tree without validating it; ``build_snapshot``
-    then validates only the requested modelo's own revisions -- unlike
-    ``compiled_bundled_authority()``, whose ``.load()`` validates the entire registry
-    tree (including every OTHER modelo's export layouts) and currently refuses
-    unconditionally as a result. A modelo whose OWN revisions lack an export layout
-    still refuses here, honestly, on its own missing capability.
+    A modelo whose own revisions lack a required capability still refuses here,
+    honestly, on that missing capability.
     """
-    modelos, catalogues = bundled_registry_tree()
-    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
-    return build_snapshot(
-        modelo_definition,
-        catalogues,
-        source_root=bundled_path(),
+    return published_snapshot(
+        modelo,
         filing_year=filing_year,
         period=period,
         grade=RegistryAuthorityGrade.CALCULATION,

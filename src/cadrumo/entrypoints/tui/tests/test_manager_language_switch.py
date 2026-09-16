@@ -92,7 +92,6 @@ def _register_in(language: str) -> None:
     from ....domain.user_profile.values import UserProfileFact
 
     register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=_LABEL,
         passphrase=_CREDENTIAL_INPUT,
         facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),),

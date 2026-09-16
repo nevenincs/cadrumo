@@ -55,11 +55,11 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..binding_selector_utils import selector_as_dict
 from ..runtime_graph import expression_casilla_refs
 from ..schema import ModeloRevision
+from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -72,7 +72,7 @@ def _revisions() -> Iterator[tuple[str, ModeloRevision]]:
     epochs that do not exist yet, and keeps covering them if the partition is
     revised again.
     """
-    modelo = compiled_bundled_authority().modelo("390")
+    modelo = bundled_modelo_components("390")[0]
     yield from modelo.revisions.items()
 
 

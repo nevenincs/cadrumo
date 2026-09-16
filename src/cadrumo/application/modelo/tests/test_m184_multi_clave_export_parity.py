@@ -16,7 +16,6 @@ from decimal import Decimal
 from typing import TypedDict, Unpack
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId
@@ -27,6 +26,7 @@ from ....domain.calculations.registry.detail_record_bindings import (
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.modelos.row_models import Modelo184MemberRow
 from ...filing.record_renderer import record_render_rows
 from ...filing.record_types import RecordRenderRow
@@ -39,7 +39,7 @@ _REVISION = "2025-y-siguientes"
 
 
 def _revision():
-    return compiled_bundled_authority().modelo("184").revisions[_REVISION]
+    return published_revision("184", _REVISION)
 
 
 def _socio_record(revision) -> ExportRecordDefinition:

@@ -11,7 +11,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ..engine import build_export_plan
 from ..records import TabName
@@ -20,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m130_plan():
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     return build_export_plan(snapshot)
 
 

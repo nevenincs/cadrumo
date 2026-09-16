@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import load_toml
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
@@ -26,7 +26,7 @@ def _completeness_manifest_fragments(modelos_root: Path) -> tuple[tuple[Path, st
         if b"completeness_manifest" not in path.read_bytes():
             continue
         with path.open("rb") as handle:
-            data = tomllib.load(handle)
+            data = load_toml(handle)
         revisions = data.get("revisions")
         if not isinstance(revisions, Mapping):
             continue

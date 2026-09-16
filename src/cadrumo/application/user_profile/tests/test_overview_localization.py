@@ -23,14 +23,14 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ....core.config import override_settings
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import ProfileFieldType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import MASKED_PLACEHOLDER, build_profile_overview
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 

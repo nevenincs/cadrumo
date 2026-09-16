@@ -220,8 +220,7 @@ def test_scaffolded_toml_declares_only_fields_the_schema_knows(tmp_path: Path) -
     property directly instead, and derives the permitted set from the models so
     it cannot drift from them the way a hand-listed set would.
     """
-    import tomllib
-
+    from cadrumo.core.toml import parse_toml
     from cadrumo.domain.calculations.registry.schema import (
         ModeloDefinition,
         ModeloRevision,
@@ -231,7 +230,7 @@ def test_scaffolded_toml_declares_only_fields_the_schema_knows(tmp_path: Path) -
     _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
     modelo_root = tmp_path / _THROWAWAY_MODELO_ID
 
-    manifest = tomllib.loads((modelo_root / "manifest.toml").read_text(encoding="utf-8"))
+    manifest = parse_toml((modelo_root / "manifest.toml").read_text(encoding="utf-8"))
     declared_modelo = set(manifest["modelo"])
     unknown_modelo = sorted(declared_modelo - set(ModeloDefinition.model_fields))
     assert not unknown_modelo, (
@@ -240,7 +239,7 @@ def test_scaffolded_toml_declares_only_fields_the_schema_knows(tmp_path: Path) -
     )
 
     revision_path = modelo_root / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
-    revision_doc = tomllib.loads(revision_path.read_text(encoding="utf-8"))
+    revision_doc = parse_toml(revision_path.read_text(encoding="utf-8"))
     declared_revision = set(revision_doc["revisions"][_THROWAWAY_REVISION_ID])
     unknown_revision = sorted(declared_revision - set(ModeloRevision.model_fields))
     assert not unknown_revision, (
@@ -283,13 +282,13 @@ def test_a_first_edition_declares_no_predecessor_key_at_all(tmp_path: Path) -> N
     schema reads a missing key as exactly that. Emitting the key with an empty
     or TODO value instead would be a predecessor claim the scaffold cannot make.
     """
-    import tomllib
+    from cadrumo.core.toml import parse_toml
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
-    declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
+    declared = parse_toml(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
     assert "predecessor" not in declared
 
 
@@ -302,7 +301,7 @@ def test_a_successor_edition_uses_latest_edition_only_as_storage_baseline(tmp_pa
     the directory listing would hand a new edition the wrong predecessor, and
     the delta would then be measured against a form it does not succeed.
     """
-    import tomllib
+    from cadrumo.core.toml import parse_toml
 
     _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2024-hasta-08-y-2t", "2024-01-01")
     _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2024-desde-09-y-3t", "2024-09-01")
@@ -312,14 +311,14 @@ def test_a_successor_edition_uses_latest_edition_only_as_storage_baseline(tmp_pa
     _scaffold(manager, _THROWAWAY_MODELO_ID, "2025", existing_modelo=True)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / "2025" / "revision.toml"
-    declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"]["2025"]
+    declared = parse_toml(revision_path.read_text(encoding="utf-8"))["revisions"]["2025"]
     assert declared["casilla_storage_baseline"] == "2024-desde-09-y-3t"
     assert declared["family_storage_baseline"] == "2024-desde-09-y-3t"
     assert "predecessor" not in declared
 
 
 def test_a_backfilled_edition_does_not_reuse_a_later_storage_baseline(tmp_path: Path) -> None:
-    import tomllib
+    from cadrumo.core.toml import parse_toml
 
     _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2025", "2025-01-01")
     (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").write_text('[modelo]\nid = "987"\n', encoding="utf-8")
@@ -328,7 +327,7 @@ def test_a_backfilled_edition_does_not_reuse_a_later_storage_baseline(tmp_path: 
     _scaffold(manager, _THROWAWAY_MODELO_ID, "2024", existing_modelo=True)
 
     revision = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / "2024" / "revision.toml"
-    declared = tomllib.loads(revision.read_text(encoding="utf-8"))["revisions"]["2024"]
+    declared = parse_toml(revision.read_text(encoding="utf-8"))["revisions"]["2024"]
     assert "casilla_storage_baseline" not in declared
     assert "family_storage_baseline" not in declared
 
@@ -340,27 +339,27 @@ def test_a_rescaffolded_new_modelo_is_a_no_op(tmp_path: Path) -> None:
     did not exclude it would name it -- a self-edge the predecessor forest
     refuses, discovered only once the tree is loaded.
     """
-    import tomllib
+    from cadrumo.core.toml import parse_toml
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
     result = _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
-    declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
+    declared = parse_toml(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
     assert "predecessor" not in declared
     assert not result.written
 
 
 def test_the_revision_manifest_declares_the_editions_casilla_source_default(tmp_path: Path) -> None:
     """casilla_source_refs is declared once on the edition, so no row has to restate it."""
-    import tomllib
+    from cadrumo.core.toml import parse_toml
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
-    declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
+    declared = parse_toml(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
     assert "casilla_source_refs" in declared
 
 

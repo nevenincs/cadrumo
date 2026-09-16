@@ -25,7 +25,6 @@ class GoogleAuthPreconditionCondition(StrEnum):
 
     ACTIVE_PROFILE_RESOLVED = "google.auth.active_profile.resolved"
     INTERACTIVE_TERMINAL_AVAILABLE = "google.auth.interactive_terminal.available"
-    CREDENTIAL_STORE_SECURED = "google.auth.credential_store.secured"
     PROFILE_IDENTITY_RESOLVED = "google.auth.profile_identity.resolved"
     PROFILE_RECORD_SESSION_AVAILABLE = "google.auth.profile_record_session.available"
     REQUIRED_SCOPES_GRANTED = "google.auth.required_scopes.granted"
@@ -121,10 +120,6 @@ class GoogleAuthNonInteractiveError(GoogleAuthError):
     """
 
 
-class GoogleAuthUnsecuredModeRefusedError(GoogleAuthError):
-    """Raised on OAuth attempts under ``cadrumo_secret_store_backend=unsecured`` with a real NIF profile."""
-
-
 class GoogleAuthKeychainLockedError(GoogleAuthError):
     """Raised when the OS keychain backing the secret store is locked or unreachable."""
 
@@ -151,7 +146,6 @@ __all__ = [
     "GoogleAuthProfileUnboundError",
     "GoogleAuthRevokedError",
     "GoogleAuthScopeInsufficientError",
-    "GoogleAuthUnsecuredModeRefusedError",
     "GoogleAuthValidationError",
     "google_auth_no_action_verdict",
 ]

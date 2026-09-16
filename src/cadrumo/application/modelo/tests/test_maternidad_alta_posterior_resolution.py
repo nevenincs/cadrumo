@@ -26,22 +26,24 @@ from datetime import UTC, date, datetime
 from functools import lru_cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+)
 from ....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..profile_binding import resolve_maternidad_meses
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000611"
 _T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)
@@ -53,7 +55,7 @@ _MELLIZO_BIRTH = date(2023, 1, 15)
 
 @lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return published_snapshot("100", filing_year=year, period="0A")
 
 
 def _record(*descendientes: DescendantInfo) -> UserProfileRecord:

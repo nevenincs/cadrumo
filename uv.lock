@@ -229,6 +229,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "questionary" },
     { name = "rich" },
+    { name = "rtoml" },
     { name = "snowballstemmer" },
     { name = "sqlalchemy" },
     { name = "textual" },
@@ -312,7 +313,6 @@ dev = [
     { name = "pytest-xdist" },
     { name = "radon" },
     { name = "reportlab" },
-    { name = "rtoml" },
     { name = "ruff" },
     { name = "sphinx" },
     { name = "sphinx-autobuild" },
@@ -343,7 +343,6 @@ dev = [
 ]
 registry = [
     { name = "grimp" },
-    { name = "rtoml" },
 ]
 
 [package.metadata]
@@ -388,6 +387,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.3,<7" },
     { name = "questionary", specifier = ">=2.1.1,<3" },
     { name = "rich", specifier = ">=14.2.0,<16" },
+    { name = "rtoml", specifier = ">=0.13.0,<1" },
     { name = "snowballstemmer", specifier = ">=2.2,<4" },
     { name = "sqlalchemy", specifier = ">=2.0.36,<3" },
     { name = "textual", specifier = ">=8.2.8,<9" },
@@ -437,7 +437,6 @@ dev = [
     { name = "pytest-xdist", specifier = ">=3.6.0" },
     { name = "radon", specifier = ">=6.0.1" },
     { name = "reportlab", specifier = ">=4.4.10" },
-    { name = "rtoml", specifier = ">=0.13.0,<1" },
     { name = "ruff", specifier = ">=0.16.7" },
     { name = "sphinx", specifier = ">=8.1,<9" },
     { name = "sphinx-autobuild", specifier = ">=2024.10" },
@@ -466,10 +465,7 @@ dev = [
     { name = "vulture", specifier = ">=2.16" },
     { name = "yamllint", specifier = ">=1.38,<2" },
 ]
-registry = [
-    { name = "grimp", specifier = ">=3.15,<4" },
-    { name = "rtoml", specifier = ">=0.13.0,<1" },
-]
+registry = [{ name = "grimp", specifier = ">=3.15,<4" }]
 
 [[package]]
 name = "cadrumo-data-manuals"

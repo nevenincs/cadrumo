@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ....domain.filing.errors import ModeloBuilderError
 from ..runtime import build_runtime_schema_provider
@@ -13,9 +13,11 @@ from ..runtime import build_runtime_schema_provider
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
+def test_runtime_schema_provider_reads_modelo_130_registry_schema(operation: PinnedAuthorityOperation) -> None:
     period = Period.from_year_and_code(2026, "1T")
-    provider = build_runtime_schema_provider(filing_year=period.filing_year, period=period)
+    provider = build_runtime_schema_provider(
+        modelos=("130",), filing_year=period.filing_year, period=period, operation=operation
+    )
 
     collection = provider.get_collection("130")
 
@@ -24,7 +26,7 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
     assert casillas
     known_ids = {casilla.casilla_id for casilla in casillas}
     by_id = {casilla.casilla_id: casilla for casilla in casillas}
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
     formulas = {formula.id: formula for formula in snapshot.revision.formulas}
     formula_bound = {
         casilla.id: tuple(dict.fromkeys(expression_casilla_refs(formulas[casilla.formula].expression)))

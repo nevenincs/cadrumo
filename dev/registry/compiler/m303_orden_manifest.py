@@ -119,9 +119,7 @@ def _generated_source_from_census(
         seasonal_index_day_bands=tuple((item.minimum_days, item.maximum_days) for item in census.seasonal_indexes),
         seasonal_index_coefficients=tuple(item.coefficient for item in census.seasonal_indexes),
         difficult_justification_pct=census.difficult_justification.percentage,
-        lorca_2022_reduction_pct=(
-            None if census.lorca_2022_reduction is None else census.lorca_2022_reduction.percentage
-        ),
+        lorca_reduction_pct=(None if census.lorca_reduction is None else census.lorca_reduction.percentage),
     )
 
 
@@ -161,8 +159,8 @@ def render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> str
                 f'difficult_justification_pct = "{source.difficult_justification_pct}"',
                 *(
                     ()
-                    if source.lorca_2022_reduction_pct is None
-                    else (f'lorca_2022_reduction_pct = "{source.lorca_2022_reduction_pct}"',)
+                    if source.lorca_reduction_pct is None
+                    else (f'lorca_reduction_pct = "{source.lorca_reduction_pct}"',)
                 ),
                 "",
             ),
@@ -529,8 +527,8 @@ def _validate_generated_source_lorca_reduction(
     generated: M303AnnualOrdenGeneratedSource,
     census: M303AnnualOrdenSourceCensus,
 ) -> None:
-    actual_percentage = None if census.lorca_2022_reduction is None else census.lorca_2022_reduction.percentage
-    if generated.lorca_2022_reduction_pct != actual_percentage:
+    actual_percentage = None if census.lorca_reduction is None else census.lorca_reduction.percentage
+    if generated.lorca_reduction_pct != actual_percentage:
         raise RegistryValidationError(
             "annual Orden generated source Lorca 2022 reduction no longer matches the BOE HTML",
         )

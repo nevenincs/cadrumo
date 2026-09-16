@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.aeat_literal_fixtures import aeat_host
 from ..schema import ModeloDefinition, RegistryCatalogues
+from .registry_tree import bundled_registry_tree
 
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
@@ -103,5 +102,5 @@ for _revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
 
 
 def load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    authority = compiled_bundled_authority()
-    return authority.modelo("303"), authority.catalogues
+    modelos, catalogues = bundled_registry_tree()
+    return next(modelo for modelo in modelos if modelo.id == "303"), catalogues

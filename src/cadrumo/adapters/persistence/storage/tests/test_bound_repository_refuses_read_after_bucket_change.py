@@ -24,7 +24,7 @@ identifiable as a leak rather than inferred from an absence.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -51,12 +51,13 @@ _A_ONLY_PAYLOAD = b"payload-that-exists-only-in-bucket-a"
 
 def _session(bucket_id: str) -> BucketSession:
     """Open a real session for ``bucket_id``."""
-    return BucketSession.open(
+    return BucketSession.open_resumed(
         bucket_id=bucket_id,
-        kek=b"k" * 32,
         dek=b"d" * 32,
         idle_minutes=30,
         opened_at=_NOW,
+        idle_deadline=_NOW + timedelta(minutes=30),
+        absolute_deadline=_NOW + timedelta(minutes=240),
         storage_root=None,
     )
 

@@ -13,7 +13,8 @@ import inspect
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -26,8 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _computed_casillas() -> tuple[CasillaDefinition, ...]:
     """Return the real bundled Modelo 130 computed casillas used as the subject."""
-    modelo = next(definition for definition in compiled_bundled_authority().modelos if definition.id == "130")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = published_revision("130", "2019-y-siguientes")
     computed = tuple(casilla for casilla in revision.casillas if casilla.input_kind == InputKind.COMPUTED)
     assert computed, "subject revision declares no computed casilla; the tests would be vacuous"
     return computed

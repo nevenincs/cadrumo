@@ -8,23 +8,25 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_schema,
+    published_snapshot,
+)
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...user_profile.projections import profile_fact_index
 from ..profile_binding import resolve_profile_binding_value
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000366"
 _BUCKET_ID = _PROFILE_ID
@@ -99,7 +101,7 @@ _ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
 
 
 def _snapshot_2024() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A")
+    return published_snapshot("100", filing_year=2024, period="0A")
 
 
 def _full_profile() -> UserProfileRecord:
@@ -155,7 +157,7 @@ def test_modelo_100_2024_personal_family_construct_is_profile_backed() -> None:
 
 def test_modelo_100_2024_profile_binding_selectors_target_real_profile_schema() -> None:
     snapshot = _snapshot_2024()
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     schema_selectors = {f"{section.key}.{field.key}" for section in schema.sections for field in section.fields} | {
         selector for section in schema.sections for field in section.fields for selector in field.model_selectors
     }
@@ -170,7 +172,7 @@ def test_modelo_100_2024_profile_binding_selectors_target_real_profile_schema() 
 
 def test_modelo_100_2024_scalar_profile_values_resolve_from_real_profile_facts() -> None:
     snapshot = _snapshot_2024()
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     facts = profile_fact_index(_full_profile(), schema)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 

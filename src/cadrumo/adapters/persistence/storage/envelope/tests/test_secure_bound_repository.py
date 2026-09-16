@@ -2,7 +2,7 @@
 
 Exercises save -> load -> iter -> delete against a real SQLite-backed
 :class:`SecureObjectRepository` with a real
-:class:`EphemeralMasterKeyProvider`. No mocks; this is the
+:class:`EphemeralBucketSession`. No mocks; this is the
 anti-tautology, anti-regression gate for the new base class.
 
 A throwaway ``_RoundtripPayload`` Pydantic model and throwaway concrete
@@ -29,7 +29,7 @@ from ...sql.secure_object_records import SecureObjectRecord, SecureObjectUnreada
 from ...sql.secure_objects import SecureObjectRepository
 from ...sql.session import session_scope
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..contract import Envelope
 from ..secure_bound_repository import SecureBoundRepository
 
@@ -93,7 +93,7 @@ def test_secure_bound_repository_save_load_iter_delete_roundtrip(
 ) -> None:
     """Full CRUD cycle survives the encrypted SQL boundary intact."""
 
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _bound_repo_with_engine(tmp_path) as (repo, _engine):
         first = _RoundtripPayload(id="alpha", value=42)
         second = _RoundtripPayload(id="beta", value=99)
@@ -120,7 +120,7 @@ def test_secure_bound_repository_save_load_iter_delete_roundtrip(
 def test_secure_bound_repository_missing_returns_none(tmp_path: Path) -> None:
     """``load`` for an unknown identifier returns ``None``, never raises."""
 
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _bound_repo_with_engine(tmp_path) as (repo, _engine):
         assert repo.load("nonexistent") is None
 
@@ -160,7 +160,7 @@ def test_secure_bound_repository_rejects_future_schema_version(
     in the base class load path.
     """
 
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _bound_repo_with_engine(tmp_path) as (repo, _engine):
         future_payload = _RoundtripPayload(id="future", value=7)
         future_envelope = Envelope[_RoundtripPayload](
@@ -196,7 +196,7 @@ def test_secure_bound_repository_rejects_older_inner_envelope_version(
     loads and full-namespace enumeration.
     """
 
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _bound_repo_with_engine(tmp_path) as (base_repo, _engine):
         repo = _RoundtripV2Repository(objects=base_repo._objects)
         stale_payload = _RoundtripPayload(id="stale", value=7)
@@ -228,7 +228,7 @@ def test_secure_bound_repository_iter_ids_fails_closed_on_unreadable_row(
 ) -> None:
     """Bound repository enumeration must not return a readable subset."""
 
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _bound_repo_with_engine(tmp_path) as (repo, engine):
         repo.save(_RoundtripPayload(id="alpha", value=42))
         repo.save(_RoundtripPayload(id="beta", value=99))
@@ -252,7 +252,7 @@ def test_secure_bound_repository_underlying_iterator_still_reports_partial_failu
 ) -> None:
     """The explicit diagnostic iterator remains available for repair-style callers."""
 
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _bound_repo_with_engine(tmp_path) as (repo, engine):
         repo.save(_RoundtripPayload(id="alpha", value=42))
         repo.save(_RoundtripPayload(id="beta", value=99))
@@ -294,7 +294,7 @@ def test_envelope_payload_type_is_preserved_across_generic_boundary(
     that ``_envelope_cls()`` produces a validating ``Envelope[_RoundtripPayload]``
     and that the cast at the load boundary is genuinely safe.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider, _bound_repo_with_engine(tmp_path) as (repo, _engine):
         original = _RoundtripPayload(id="type-check", value=7)
         repo.save(original)

@@ -15,28 +15,60 @@ from ....core.type_guards import is_object_collection, is_object_mapping
 DEFAULT_AUTHORITY_CACHE_BUDGET = 64 * 1024 * 1024
 
 
-def retained_object_size(value: object) -> int:
-    """Estimate a decoded immutable graph without following types or callables."""
-    seen: set[int] = set()
+_SCALAR_LEAF_TYPES: frozenset[type] = frozenset({str, bytes, int, float, bool, complex, type(None)})
+_DATACLASS_FIELD_NAMES: dict[type, tuple[str, ...]] = {}
+_MODEL_FIELD_NAMES: dict[type, tuple[str, ...]] = {}
 
-    def measure(item: object) -> int:
+
+def _member_names(item_type: type, item: object) -> tuple[str, ...] | None:
+    """Return the attribute names a dataclass or Pydantic model contributes, cached per type."""
+    names = _DATACLASS_FIELD_NAMES.get(item_type)
+    if names is not None:
+        return names
+    names = _MODEL_FIELD_NAMES.get(item_type)
+    if names is not None:
+        return names
+    if is_dataclass(item):
+        names = tuple(field.name for field in fields(item))
+        _DATACLASS_FIELD_NAMES[item_type] = names
+        return names
+    model_fields = getattr(item_type, "model_fields", None)
+    if is_object_mapping(model_fields):
+        names = tuple(name for name in model_fields if isinstance(name, str))
+        _MODEL_FIELD_NAMES[item_type] = names
+        return names
+    return None
+
+
+def retained_object_size(value: object) -> int:
+    """Estimate a decoded immutable graph without following types or callables.
+
+    Every reachable object is counted once by identity; the walk is iterative
+    because a large revision component reaches millions of members.
+    """
+    seen: set[int] = set()
+    total = 0
+    stack: list[object] = [value]
+    while stack:
+        item = stack.pop()
         identity = id(item)
         if identity in seen:
-            return 0
+            continue
         seen.add(identity)
-        size = getsizeof(item)
+        total += getsizeof(item)
+        item_type = type(item)
+        if item_type in _SCALAR_LEAF_TYPES or isinstance(item, type):
+            continue
         if is_object_mapping(item):
-            return size + sum(measure(key) + measure(member) for key, member in item.items())
-        if is_object_collection(item):
-            return size + sum(measure(member) for member in item)
-        if is_dataclass(item) and not isinstance(item, type):
-            return size + sum(measure(getattr(item, field.name)) for field in fields(item))
-        model_fields = getattr(type(item), "model_fields", None)
-        if is_object_mapping(model_fields):
-            return size + sum(measure(getattr(item, name)) for name in model_fields if isinstance(name, str))
-        return size
-
-    return measure(value)
+            stack.extend(item.keys())
+            stack.extend(item.values())
+        elif is_object_collection(item):
+            stack.extend(item)
+        else:
+            names = _member_names(item_type, item)
+            if names is not None:
+                stack.extend(getattr(item, name) for name in names)
+    return total
 
 
 class AuthorityCacheCycleError(CadrumoError):
@@ -79,6 +111,9 @@ class AccountedAuthorityCache[K: Hashable, V]:
             raise ValueError("authority cache budget must be positive")
         self._budget = budget
         self._values: OrderedDict[K, RetainedAuthorityValue[V]] = OrderedDict()
+        self._exclusive_total = 0
+        self._shared_total = 0
+        self._shared_holders: dict[Hashable, tuple[int, int]] = {}
         self._in_flight: dict[K, Future[RetainedAuthorityValue[V]]] = {}
         self._owners: dict[K, int] = {}
         self._waiting_for: dict[int, K] = {}
@@ -120,8 +155,7 @@ class AccountedAuthorityCache[K: Hashable, V]:
             loaded = loader()
             with self._lock:
                 if self._entry_weight(loaded) <= self._budget:
-                    self._values[key] = loaded
-                    self._values.move_to_end(key)
+                    self._admit(key, loaded)
                     self._evict_to_budget()
                 future.set_result(loaded)
             return loaded.value
@@ -153,12 +187,17 @@ class AccountedAuthorityCache[K: Hashable, V]:
     def discard(self, key: K) -> None:
         """Stop retaining a key without affecting values already held by callers."""
         with self._lock:
-            self._values.pop(key, None)
+            released = self._values.pop(key, None)
+            if released is not None:
+                self._release(released)
 
     def clear(self) -> None:
         """Drop retained cache ownership; active loads and caller values remain valid."""
         with self._lock:
             self._values.clear()
+            self._exclusive_total = 0
+            self._shared_total = 0
+            self._shared_holders.clear()
 
     def telemetry(self) -> AuthorityCacheTelemetry:
         """Return retained-accounting telemetry without claiming a process RSS bound."""
@@ -174,16 +213,45 @@ class AccountedAuthorityCache[K: Hashable, V]:
     def _entry_weight(value: RetainedAuthorityValue[V]) -> int:
         return value.exclusive_weight + sum(weight for _, weight in value.shared_weights)
 
+    def _admit(self, key: K, loaded: RetainedAuthorityValue[V]) -> None:
+        """Retain ``loaded`` under ``key`` and account its weight incrementally.
+
+        Running totals make admission and eviction cost one dictionary update
+        per shared token rather than a walk over every retained entry. A shared
+        token is charged once however many entries hold it, and a contradictory
+        weight for a held token is refused before the entry is retained.
+        """
+        for token, weight in loaded.shared_weights:
+            held = self._shared_holders.get(token)
+            if held is not None and held[0] != weight:
+                raise InternalInvariantError(f"authority cache shared token {token!r} has contradictory weights")
+        previous = self._values.pop(key, None)
+        if previous is not None:
+            self._release(previous)
+        self._values[key] = loaded
+        self._exclusive_total += loaded.exclusive_weight
+        for token, weight in loaded.shared_weights:
+            held = self._shared_holders.get(token)
+            if held is None:
+                self._shared_holders[token] = (weight, 1)
+                self._shared_total += weight
+            else:
+                self._shared_holders[token] = (weight, held[1] + 1)
+
+    def _release(self, released: RetainedAuthorityValue[V]) -> None:
+        self._exclusive_total -= released.exclusive_weight
+        for token, weight in released.shared_weights:
+            _, holders = self._shared_holders[token]
+            if holders == 1:
+                del self._shared_holders[token]
+                self._shared_total -= weight
+            else:
+                self._shared_holders[token] = (weight, holders - 1)
+
     def _retained_weight(self) -> int:
-        exclusive = sum(item.exclusive_weight for item in self._values.values())
-        shared: dict[Hashable, int] = {}
-        for item in self._values.values():
-            for token, weight in item.shared_weights:
-                previous = shared.setdefault(token, weight)
-                if previous != weight:
-                    raise InternalInvariantError(f"authority cache shared token {token!r} has contradictory weights")
-        return exclusive + sum(shared.values())
+        return self._exclusive_total + self._shared_total
 
     def _evict_to_budget(self) -> None:
         while self._values and self._retained_weight() > self._budget:
-            self._values.popitem(last=False)
+            _, evicted = self._values.popitem(last=False)
+            self._release(evicted)

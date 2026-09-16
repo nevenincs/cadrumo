@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -216,12 +216,14 @@ def _control_session() -> BucketSession:
     wrote; a pair of arbitrary key literals would open a session that agrees
     with nothing else in the bucket.
     """
-    return BucketSession.open(
+    _opened_at = datetime.now(UTC)
+    return BucketSession.open_resumed(
         bucket_id=_CONTROL_BUCKET_ID,
-        kek=derive_test_bucket_key(_CONTROL_BUCKET_ID, purpose="kek"),
         dek=derive_test_bucket_key(_CONTROL_BUCKET_ID, purpose="dek"),
         idle_minutes=15,
-        opened_at=datetime.now(UTC),
+        opened_at=_opened_at,
+        idle_deadline=_opened_at + timedelta(minutes=15),
+        absolute_deadline=_opened_at + timedelta(minutes=240),
     )
 
 

@@ -17,7 +17,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -60,7 +61,7 @@ def _m200_snapshot() -> RegistrySnapshot:
     they exercise. Modelo 200 declares exactly that rung and deliberately
     withholds filing while its revision spans two AEAT layouts.
     """
-    return compiled_bundled_authority().snapshot(
+    return published_snapshot(
         "200",
         filing_year=2025,
         period="0A",

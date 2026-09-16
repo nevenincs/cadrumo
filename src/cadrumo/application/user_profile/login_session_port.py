@@ -53,11 +53,6 @@ class ProfileBucketSessionPort(Protocol):
         ...
 
     @property
-    def unsecured_backend(self) -> bool:
-        """Whether the session was opened over the explicitly unsecured backend."""
-        ...
-
-    @property
     def sealed(self) -> bool:
         """Whether this session has been closed and its key material zeroised."""
         ...

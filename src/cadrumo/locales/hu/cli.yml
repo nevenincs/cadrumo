@@ -1814,8 +1814,6 @@ cli:
         remove_help: Egy bizalmi címzett eltávolítása azonosító alapján az aktív profilból.
     custody:
       current_passphrase_prompt: 'A profil jelenlegi jelszava: '
-      data_loss_warning: Jegyezze fel most ezt a helyreállítási kulcsot. Az AEAT nem
-        tárolja a nyílt helyreállítási kulcsot, és nem tudja újra megjeleníteni.
       errors:
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
           így a titok láthatóvá válna a képernyőn; használja a --secrets-stdin vagy
@@ -1878,11 +1876,6 @@ cli:
       profile_secrets_stdin_help: A pontos célprofil jelmondatának beolvasása egy
         korlátozott JSON-objektumból a szabványos bemeneten, miután a munkamenet folytatása
         sikertelen.
-      recovery_words_cancel: Létrehozás megszakítása
-      recovery_words_confirm: Leírtam
-      recovery_words_heading: Írd le ezt a helyreállítási kifejezést
-      recovery_words_warning: Csak egyszer jelenik meg. Akinek megvan ez a kifejezés,
-        jelszó nélkül megnyithatja a profilt.
       secrets_fd_help: Fájlleíró a gépi titkok olvasásához.
       secrets_stdin_help: A titkokat egyetlen korlátozott JSON objektumként olvassa
         a szabványos bemenetről, kérdés helyett.
@@ -2015,11 +2008,15 @@ cli:
       notices:
         already_logged_out: Egyetlen profil sem volt bejelentkezve; nincs mit lezárni.
     passphrase:
-      change_help: Jelszó módosítása a rekordok újratitkosítása és a helyreállítási
-        kifejezés érvénytelenítése nélkül.
+      change_help: Megváltoztatja a jelszót a rekordok újratitkosítása és a helyreállítási
+        kód érvénytelenítése nélkül.
       help: Az aktív profilt védő jelszó kezelése.
       no_active_profile: Nincs aktív profil. Jelentkezzen be az 'aeat config login
         NÉV' paranccsal a jelszó módosítása előtt.
+      reset_code_prompt: 'Helyreállítási kód: '
+      reset_help: Új jelszót állít be egy profilhoz a helyreállítási kód igazolásával;
+        elfelejtett jelszó esetén használd.
+      reset_name_help: Annak a profilnak a neve, amelynek a jelszavát visszaállítod.
     profile:
       add_row:
         duplicate_field: A(z) %{field} mező többször szerepelt; nem történt írás.
@@ -2027,27 +2024,23 @@ cli:
         invalid_value: Minden --value kapcsolónak MEZŐ=ÉRTÉK alakúnak kell lennie;
           nem történt írás.
         section_help: Az ismételhető profilszakasz kulcsa.
+        unknown_section: 'A(z) ''{section}'' nem ismételhető profilszakasz. Elérhető
+          szakaszok: {sections}.'
         value_help: Sormező MEZŐ=ÉRTÉK alakban; minden kitöltött mezőhöz ismételje
           meg.
       archive:
-        export_help: A megadott profil kapszulajanak kiirasa lezart archivumba a --to
-          helyre; az archivum a profil jelszavaval titkositott, es nem tartalmazza
-          a cimket.
+        export_help: A megadott profil kapszulájának kiírása lezárt archívumba a --output
+          helyre; az archívum a profil jelszavával titkosított, és nem tartalmazza
+          a címkét.
         export_name_help: A mentendő profil; alapértelmezés szerint az aktív.
-        export_out_help: Az archívum célútvonala.
+        export_out_help: Az archívum célútvonala. A fájlnévnek '.cadrumo-bucket.tar.gz'
+          végződésűnek kell lennie.
         help: 'Profil biztonsagi mentese lezart, AEAD-titkositott archivumba, vagy
           egy archivum vizsgalata; visszaallitas: ''aeat config profile archive import''.'
-        import_artifact_help: Helyreallitasi elemfajl; akkor hasznalja, ha a profil
-          jelszava elveszett.
         import_file_help: A helyreallitando, meg kozze nem tett kapszulakonyvtar utvonala.
-        import_help: Profilkapszula ujrakozzetetele egy konyvtarbol; az --artifact
-          kapcsoloval a 24 szavas kifejezessel allithato helyre.
+        import_help: Újra közzétesz egy profilkapszulát könyvtárból vagy lezárt archívumból
+          a jelszó igazolásával.
         import_label_help: A helyreallitott profil megjeleno neve.
-        import_password_unchanged: 'A rekordjai helyreallitak, de a profil jelszava
-          valtozatlan: ez az utvonal az adatokat allitja helyre, nem a hitelesito
-          adatot. Jelentkezzen be az eredeti jelszoval, vagy valtoztassa meg, amint
-          tudja.'
-        import_recovery_secret_prompt: 'Helyreallitasi kifejezes (24 szo): '
         inspect_help: Megjeleníti egy lezárt archívum fejlécét visszafejtés vagy visszaállítás
           nélkül.
         inspect_path_help: A vizsgalando lezart archivum utvonala.
@@ -2072,6 +2065,10 @@ cli:
           az elmaradt naplóbejegyzéseket.
         reconcile_none_info: Nem található félbemaradt profilcsomag-export. Korábbi
           futás nem hagyott hátra semmit.
+        refusal:
+          export_suffix: A célútvonalnak '{suffix}' végződésűnek kell lennie. Futtasd
+            újra a parancsot ilyen végződésű --output értékkel; egyetlen profil sem
+            került beolvasásra.
       bundle_flow:
         export_section_title: Profilcsomag exportálása
         import_section_title: Profilcsomag importálása
@@ -2135,8 +2132,15 @@ cli:
         help: Nyilatkozat arról, hogy az aktív profil készen áll a beadásra.
         incomplete: 'A profilból még hiányoznak kötelező adatok: {paths}'
       create_confirm_passphrase_prompt: 'Erősítse meg az új profil jelszavát: '
-      create_help: Hozzon létre aktív profilt kötelező, ellenőrzött helyreállítással.
-        A helyreállítás később nem adható hozzá, és nem vesz részt a jelszavas bejelentkezésben.
+      create_guidance_unavailable: A profil sikeresen elkészült, de a következő lépésekről
+        szóló értesítéseket nem sikerült előállítani. A 'config profile status' megmutatja,
+        mi van még hátra.
+      create_help: Jelszóval védett profilt hoz létre. Terminálon ezután opcionális
+        helyreállítási kódot ajánl fel; kihagyható, vagy később hozzáadható az 'aeat
+        config profile recovery enable' paranccsal.
+      create_login_required: A(z) '{profile}' profil elkészült, de még nincs megnyitott
+        munkamenet hozzá. A folytatás előtt lépj be a 'config login {profile}' paranccsal
+        az adatok feloldásához.
       create_name_required: 'Profilnév szükséges. Futtassa: ''aeat config profile
         create NÉV''.'
       create_passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtassa ezt
@@ -2145,34 +2149,13 @@ cli:
       create_passphrase_mismatch: A jelszó és a megerősítése nem egyezik; nem jött
         létre profil.
       create_passphrase_prompt: 'Az új profil jelszava: '
-      create_recovery_channel_absent: A helyreállítás regisztrálása kötelező. Terminál
-        nélküli környezetben adja meg a --recovery-handoff-fd és --recovery-verification-fd
-        kapcsolót; profil nem jött létre.
-      create_recovery_descriptor_collision: A helyreállítás átadása, ellenőrzése és
-        a jelszó külön fájlleírókat igényel; egyiket sem olvastuk be.
-      create_recovery_descriptor_pair_required: A --recovery-handoff-fd és --recovery-verification-fd
-        kapcsolót együtt kell megadni.
-      create_recovery_descriptor_reserved: A helyreállítási fájlleírók nem lehetnek
-        negatívak, illetve nem lehetnek a szabványos bemenet, kimenet vagy hibakimenet.
-      create_recovery_enrolled: A helyreállítás a profil létrehozásakor, a pontos
-        birtoklás ellenőrzése után lett regisztrálva. Később nem adható hozzá; a kifejezés
-        kizárólag kifejezett visszaállítási bizonyíték, a jelszavas bejelentkezés
-        pedig független marad.
-      create_recovery_handoff_fd_help: Az egyszer megjelenő helyreállítási kifejezést
-        egy korlátozott titkos JSON-objektumként írja erre az örökölt írható fájlleíróra.
-      create_recovery_handoff_too_large: A helyreállítási átadás túllépte a 8192 bájtos
-        korlátot; profil nem jött létre.
-      create_recovery_handoff_unwritable: Az átadási fájlleíró nem örökölt írható
-        csatorna; profil nem jött létre.
-      create_recovery_verification_cancelled: A helyreállítás megerősítése megszakadt;
-        profil nem jött létre.
-      create_recovery_verification_fd_help: A pontos kifejezést korlátozott titkos
-        JSON-objektumként olvassa erről az örökölt olvasható fájlleíróról közzététel
-        előtt.
-      create_recovery_verification_mismatch: A helyreállítási kifejezés birtoklása
-        nem volt ellenőrizhető; profil nem jött létre.
-      create_recovery_verification_prompt: 'A birtoklás ellenőrzéséhez írja be újra
-        a helyreállítási kifejezést: '
+      create_recovery_enrolled: 'A helyreállítás be van állítva. A kódot ettől a géptől
+        külön őrizd: elfelejtett jelszót lehet vele visszaállítani.'
+      create_recovery_offer_prompt: 'Beállítasz most helyreállítási kódot? Elfelejtett
+        jelszó visszaállítására szolgál, és később is hozzáadható. [y/N] '
+      create_recovery_skipped: A helyreállítás nincs beállítva. Nélküle az elfelejtett
+        jelszó nem állítható vissza; bármikor bekapcsolható a 'config profile recovery
+        enable' paranccsal.
       delete:
         help: Töröl egy profilt és a helyi állapotát; a --yes megerősíti a törlést
         name_help: A törlendő profil neve
@@ -2237,6 +2220,44 @@ cli:
         paranccsal. Bármikor újranyithatod az 'aeat config profile edit' paranccsal.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
+      recovery:
+        channel_absent: A helyreállítási kód csak terminálon jeleníthető meg. Terminál
+          nélküli gépen add meg a --recovery-handoff-fd és --recovery-verification-fd
+          kapcsolókat is; semmi sem lett rögzítve.
+        code_heading: 'A helyreállítási kódod. Írd fel, és ettől a géptől külön őrizd:'
+        code_warning: Csak egyszer jelenik meg. Bárki, akinél ez a kód van, új jelszót
+          állíthat be a profilhoz.
+        descriptor_collision: A helyreállítási átadásnak, a helyreállítási ellenőrzésnek
+          és a jelszó-adatcsomagnak külön leírókat kell használnia; egyetlen leíró
+          sem lett beolvasva.
+        descriptor_pair_required: A --recovery-handoff-fd és a --recovery-verification-fd
+          kapcsolókat együtt kell megadni.
+        descriptor_reserved: A helyreállítási leírók nem lehetnek negatívak, és nem
+          lehetnek a szabványos bemenet, kimenet vagy hibakimenet.
+        disable_help: Eltávolítja az aktív profil helyreállítási kódját a jelszó igazolása
+          után.
+        enable_help: Helyreállítási kódot rögzít az aktív profilhoz a jelszó igazolása
+          után; a kód egyszer jelenik meg, és vissza kell gépelni.
+        enabled_notice: A helyreállítás be van állítva. Ha elfelejted a jelszót, futtasd
+          a 'config passphrase reset NÉV' parancsot ezzel a kóddal.
+        handoff_fd_help: Az egyszeri helyreállítási kódot egyetlen korlátozott méretű
+          titkos JSON-objektumként írja erre az örökölt, írható leíróra.
+        handoff_too_large: A helyreállítási átadás túllépte a 8192 bájtos korlátot;
+          semmi sem lett rögzítve.
+        handoff_unwritable: A helyreállítási átadás leírója nem örökölt, írható csatorna
+          volt; semmi sem lett rögzítve.
+        help: Az elfelejtett jelszó visszaállítására szolgáló opcionális helyreállítási
+          kód kezelése.
+        no_active_profile: Nincs aktív profil. Jelentkezz be az 'aeat config login
+          NÉV' paranccsal, mielőtt a helyreállítási kódját kezelnéd.
+        status_help: Megmutatja, hogy az aktív profilhoz van-e rögzítve helyreállítási
+          kód.
+        verification_fd_help: A pontos helyreállítási kódot egyetlen korlátozott méretű
+          titkos JSON-objektumként olvassa vissza erről az örökölt, olvasható leíróról,
+          mielőtt bármit telepítene.
+        verification_mismatch: A begépelt kód nem egyezik; semmi sem lett rögzítve.
+        verification_prompt: 'Gépeld vissza a helyreállítási kódot annak megerősítésére,
+          hogy megvan: '
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
           profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.

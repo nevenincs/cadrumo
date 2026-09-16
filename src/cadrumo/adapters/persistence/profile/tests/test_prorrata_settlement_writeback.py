@@ -159,8 +159,8 @@ def _seed_verified_m303_revision(
         updated_at=verified_at,
         current_calculation_revision_id=calculation_revision_id,
     )
-    calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
+    calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     return revision, work_unit
 
 

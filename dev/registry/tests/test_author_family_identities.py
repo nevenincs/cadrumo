@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_surfaces import validate_family_identity_uniqueness
 
@@ -180,14 +180,12 @@ def test_apply_writes_one_id_line_per_member_and_is_idempotent(tmp_path: Path) -
     assert "# An authored comment the pass must not discard." in written
     assert 'id = "m200-administrador:field-nif.slot-1"' in written
     assert 'id = "m200-administrador:field-nif.slot-2"' in written
-    endpoint_members = tomllib.loads(written)["revisions"]["2024"][PROJECTION_ENDPOINTS]
+    endpoint_members = parse_toml(written)["revisions"]["2024"][PROJECTION_ENDPOINTS]
     assert [member["id"] for member in endpoint_members] == [
         "m200-administrador:field-nif.slot-1",
         "m200-administrador:field-nif.slot-2",
     ]
-    predicate_members = tomllib.loads(predicates.read_text(encoding="utf-8"))["revisions"]["2025"][
-        VERIFICATION_PREDICATES
-    ]
+    predicate_members = parse_toml(predicates.read_text(encoding="utf-8"))["revisions"]["2025"][VERIFICATION_PREDICATES]
     assert [member["id"] for member in predicate_members] == ["cap-le-when-positive:c11-cap-by-c10"]
 
     after_first = endpoints.read_bytes()

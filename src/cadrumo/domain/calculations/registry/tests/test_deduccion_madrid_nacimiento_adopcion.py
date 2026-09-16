@@ -31,7 +31,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..authority import ValidatedRegistryAuthority
+from ..authority import PinnedAuthorityOperation
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -197,7 +197,7 @@ def test_1039_non_madrid_resident_yields_zero() -> None:
 
 
 def test_cuantia_parameter_is_721_70_grounded_in_the_madrid_law(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """The per-child cuantía is 721,70 € grounded to art-77 + Madrid DL 1/2010 art. 4.
 

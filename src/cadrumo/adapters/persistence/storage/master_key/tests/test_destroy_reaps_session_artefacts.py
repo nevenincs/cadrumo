@@ -26,7 +26,7 @@ receipts that make the whole reap replayable.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
@@ -90,20 +90,19 @@ def _register_with_a_live_process_secret(storage_root: Path) -> tuple[UUID, Buck
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=_LABEL,
         passphrase=_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
     profile_id = UUID(outcome.profile_id)
-    session = BucketSession.open(
+    session = BucketSession.open_resumed(
         bucket_id=outcome.profile_id,
-        kek=b"k" * 32,
         dek=bytes(range(32)),
         idle_minutes=15,
-        absolute_minutes=240,
         opened_at=_INSTANT,
+        idle_deadline=_INSTANT + timedelta(minutes=15),
+        absolute_deadline=_INSTANT + timedelta(minutes=240),
         storage_root=storage_root,
     )
     bind_active_bucket_session(session)
@@ -148,7 +147,6 @@ def test_destroying_a_profile_clears_its_durable_failed_login_backoff(tmp_path: 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             outcome = register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=_LABEL,
                 passphrase=_CREDENTIAL_INPUT,
                 profile_create_context=_profile_create_context_for_test,
@@ -242,13 +240,13 @@ def test_the_process_secret_revocation_spares_an_unrelated_live_session(tmp_path
     binding mid-command, with no signal beyond the next operation failing.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        unrelated = BucketSession.open(
+        unrelated = BucketSession.open_resumed(
             bucket_id=str(_UNRELATED_PROFILE_ID),
-            kek=b"k" * 32,
             dek=bytes(range(32)),
             idle_minutes=15,
-            absolute_minutes=240,
             opened_at=_INSTANT,
+            idle_deadline=_INSTANT + timedelta(minutes=15),
+            absolute_deadline=_INSTANT + timedelta(minutes=240),
             storage_root=storage_root,
         )
         bind_active_bucket_session(unrelated)

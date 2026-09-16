@@ -58,6 +58,7 @@ __all__ = (
 )
 
 type _OccurrenceKey = tuple[RevisionId, CasillaId]
+type _LineageCarriers = dict[str, tuple[CasillaDefinition, ...]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,11 +73,12 @@ def lineage_origin_continuity_failures(modelo: ModeloDefinition) -> tuple[str, .
     failures: list[str] = list(structural_succession_failures(modelo))
     for index, revision in enumerate(revisions):
         predecessor_revision = judging_predecessor(modelo, revisions, index)
+        carriers = _lineage_carriers(predecessor_revision)
         for casilla in revision.casillas:
             origin = casilla.continuidad_origin
             if origin is None or not origin.continues_a_chain:
                 continue
-            resolved = _resolve_predecessor(predecessor_revision, revision, casilla)
+            resolved = _resolve_predecessor(predecessor_revision, carriers, revision, casilla)
             if isinstance(resolved, str):
                 failures.append(_format_failure(modelo.id, revision.id, casilla, resolved))
                 continue
@@ -121,13 +123,14 @@ def role_exempt_occurrences(modelo: ModeloDefinition) -> frozenset[_OccurrenceKe
     ungrounded_successors: set[_OccurrenceKey] = set()
     for index, revision in enumerate(revisions):
         predecessor_revision = judging_predecessor(modelo, revisions, index)
+        carriers = _lineage_carriers(predecessor_revision)
         for casilla in revision.casillas:
             if casilla.continuidad_id is None:
                 continue
             key = (revision.id, casilla.id)
             if first_position[casilla.continuidad_id] < index:
                 has_incoming.add(key)
-            resolved = _resolve_predecessor(predecessor_revision, revision, casilla)
+            resolved = _resolve_predecessor(predecessor_revision, carriers, revision, casilla)
             if isinstance(resolved, str):
                 continue
             predecessor_key = (resolved.revision.id, resolved.casilla.id)
@@ -157,8 +160,20 @@ def _is_grounded_link(casilla: CasillaDefinition) -> bool:
     )
 
 
+def _lineage_carriers(revision: ModeloRevision | None) -> _LineageCarriers:
+    """Group an edition's rows by the lineage each carries, so every continuation resolves by one lookup."""
+    if revision is None:
+        return {}
+    grouped: dict[str, list[CasillaDefinition]] = {}
+    for candidate in revision.casillas:
+        if candidate.continuidad_id is not None:
+            grouped.setdefault(candidate.continuidad_id, []).append(candidate)
+    return {lineage: tuple(rows) for lineage, rows in grouped.items()}
+
+
 def _resolve_predecessor(
     predecessor_revision: ModeloRevision | None,
+    predecessor_carriers: _LineageCarriers,
     revision: ModeloRevision,
     casilla: CasillaDefinition,
 ) -> _ResolvedPredecessor | str:
@@ -169,11 +184,7 @@ def _resolve_predecessor(
             "the modelo, or a none-rooted edition whose validity overlaps the edition before it, which makes the "
             "two concurrent scheme variants rather than a succession"
         )
-    carriers = tuple(
-        candidate
-        for candidate in predecessor_revision.casillas
-        if candidate.continuidad_id is not None and candidate.continuidad_id == casilla.continuidad_id
-    )
+    carriers = () if casilla.continuidad_id is None else predecessor_carriers.get(casilla.continuidad_id, ())
     if not carriers:
         return (
             f"predecessor edition {predecessor_revision.id!r} does not carry continuidad_id {casilla.continuidad_id!r}"

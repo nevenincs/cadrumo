@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import validated_casilla_id
 from .....core.estado_casilla_oficial import EstadoCasillaOficial
 from .. import export as owner
-from ..errors import RegistryValidationError
 from ..export import clasificar_casillas_oficiales
+from .published_authority import published_snapshot
+from .registry_tree import bundled_modelo_components, bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -19,8 +19,7 @@ def test_classifier_is_the_public_registry_identity() -> None:
 
 
 def test_m720_binding_derived_design_distinguishes_declared_binding_representation() -> None:
-    authority = compiled_bundled_authority()
-    revision = authority.validate_modelo("720").revisions["2013-y-siguientes"]
+    revision = bundled_modelo_components("720")[0].revisions["2013-y-siguientes"]
 
     # M720 declares no inline CASILLA-bearing field: every box it addresses is
     # represented through a binding, which is what `clasificar_casillas_oficiales`
@@ -53,31 +52,8 @@ def test_m720_binding_derived_design_distinguishes_declared_binding_representati
     )
 
 
-def test_m100_2024_uses_the_official_xml_dictionary_and_requires_its_authority() -> None:
-    authority = compiled_bundled_authority()
-    revision = authority.snapshot("100", filing_year=2024, period="0A").revision
-
-    with pytest.raises(RegistryValidationError, match="requires published sources and source payloads"):
-        clasificar_casillas_oficiales(revision)
-
-    statuses = clasificar_casillas_oficiales(
-        revision,
-        sources=authority.catalogues.sources,
-        source_payloads={
-            str(source_id): authority.evidence.source_bytes(str(source_id))
-            for source_id in authority.catalogues.sources
-        },
-    )
-
-    assert statuses[validated_casilla_id("0001", surface="M100 official box 0001")] is EstadoCasillaOficial.ADDRESSED
-    assert statuses[validated_casilla_id("ANOASDLG", surface="M100 dictionary-only family field")] is (
-        EstadoCasillaOficial.UNDEFINED
-    )
-
-
 def test_m349_binding_derived_rows_address_casillas_without_export_refs() -> None:
-    authority = compiled_bundled_authority()
-    revision = authority.snapshot("349", filing_year=2026, period="1T").revision
+    revision = published_snapshot("349", filing_year=2026, period="1T").revision
 
     statuses = clasificar_casillas_oficiales(revision)
 
@@ -95,7 +71,7 @@ def _layoutless_revisions() -> list[tuple[str, str]]:
     """Every committed revision that declares no export layout at all."""
     return sorted(
         (str(modelo.id), revision_id)
-        for modelo in compiled_bundled_authority().modelos
+        for modelo in bundled_registry_tree()[0]
         for revision_id, revision in modelo.revisions.items()
         if not revision.export_layouts
     )
@@ -111,7 +87,7 @@ def test_layoutless_revision_is_explicitly_undefined(modelo_id: str, revision_id
     regression. The subject is now derived from the property it needs, so a
     revision leaves this gate exactly when it gains a layout.
     """
-    revision = compiled_bundled_authority().validate_modelo(modelo_id).revisions[revision_id]
+    revision = bundled_modelo_components(modelo_id)[0].revisions[revision_id]
 
     statuses = clasificar_casillas_oficiales(revision)
 
@@ -127,8 +103,7 @@ def test_revision_with_a_layout_addresses_at_least_one_casilla() -> None:
     other direction on a revision that HAS a layout, so classification stays
     covered no matter how far the authoring gets.
     """
-    authority = compiled_bundled_authority()
-    revision = authority.snapshot("130", filing_year=2026, period="1T").revision
+    revision = published_snapshot("130", filing_year=2026, period="1T").revision
 
     statuses = clasificar_casillas_oficiales(revision)
 

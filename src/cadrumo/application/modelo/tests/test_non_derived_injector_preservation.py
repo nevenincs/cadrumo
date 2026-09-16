@@ -202,11 +202,10 @@ def test_none_of_the_preserved_paths_is_declared_derived() -> None:
     was already stored there. This asserts the premise the tests above rest on
     rather than leaving it implicit.
     """
-    from dev.registry.tests.profile_schema_support import load_user_profile_schema
-
+    from ....domain.calculations.registry.tests.published_authority import published_profile_schema
     from ....domain.user_profile.schema import derived_selector_for_path
 
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     preserved_paths = (
         _MARRIAGE_FULL_YEAR,
         "renta_taxpayer.marriage_month_start",

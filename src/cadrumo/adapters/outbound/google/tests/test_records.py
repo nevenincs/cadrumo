@@ -28,7 +28,6 @@ from ..errors import (
     GoogleAuthProfileUnboundError,
     GoogleAuthRevokedError,
     GoogleAuthScopeInsufficientError,
-    GoogleAuthUnsecuredModeRefusedError,
     GoogleAuthValidationError,
 )
 from ..records import (
@@ -266,7 +265,6 @@ def test_google_auth_error_hierarchy_is_unified() -> None:
         GoogleAuthProfileUnboundError,
         GoogleAuthRevokedError,
         GoogleAuthScopeInsufficientError,
-        GoogleAuthUnsecuredModeRefusedError,
         GoogleAuthValidationError,
     ):
         assert issubclass(leaf, GoogleAuthError), leaf.__name__
@@ -292,7 +290,6 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
         GoogleAuthNetworkError,
         GoogleAuthLoopbackBindError,
         GoogleAuthBrowserOpenError,
-        GoogleAuthUnsecuredModeRefusedError,
         GoogleAuthKeychainLockedError,
         GoogleAuthProfileUnboundError,
     )

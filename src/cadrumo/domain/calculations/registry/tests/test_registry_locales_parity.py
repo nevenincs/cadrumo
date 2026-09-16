@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..schema import ModeloDefinition
+from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelos_by_id() -> dict[str, ModeloDefinition]:
-    return {modelo.id: modelo for modelo in compiled_bundled_authority().modelos}
+    return {modelo.id: modelo for modelo in bundled_registry_tree()[0]}
 
 
 def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:

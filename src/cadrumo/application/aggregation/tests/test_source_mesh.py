@@ -7,8 +7,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -1049,8 +1050,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
 
 
 def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> None:
-    modelo_303 = compiled_bundled_authority().modelo("303")
-    revision = modelo_303.revisions["2022"]
+    revision = published_revision("303", "2022")
 
     diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())
 

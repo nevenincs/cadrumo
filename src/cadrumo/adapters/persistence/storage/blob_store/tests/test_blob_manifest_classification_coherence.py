@@ -3,24 +3,18 @@
 The classification appears on the envelope that wraps the manifest and again
 on the payload inside, and the two steered different decisions. Retrieval
 routed the on-disk layout from the *payload* value, the envelope loader gated
-the *outer* value against the caller's expectation, and key rotation
-reconstructed the outer value from the nested one when it rewrote the file.
-Nothing compared them.
+the *outer* value against the caller's expectation. Nothing compared them.
 
 Editing the nested field alone therefore split the store's own view of one
-blob three ways: iteration reported a CORPUS blob that carried a wrapped DEK,
+blob two ways: iteration reported a CORPUS blob that carried a wrapped DEK, and
 ``get`` on a still-valid reference followed the plaintext layout and could not
-find the payload, and rotation counted the manifest as rotated while writing
-the tampered value outward -- after which the valid reference failed for a
-different reason again.
+find the payload.
 
-Routing all three surfaces through one coherence gate is what these tests pin.
-The rotation case is the reason the gate sits inside the shared iteration
-helper rather than in the read path: rotation never calls ``get``, and a check
-placed only there would have left the one surface that makes the corruption
-permanent unguarded.
+Routing both surfaces through one coherence gate is what these tests pin. The
+gate sits inside the shared iteration helper rather than in the read path, so a
+scan that never calls ``get`` is guarded on the same terms as a read.
 
-Real stores, real master keys, real AEAD. Only the single nested field is ever
+Real stores, real data keys, real AEAD. Only the single nested field is ever
 rewritten.
 """
 
@@ -37,7 +31,7 @@ from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...crypto.aead import KEY_SIZE
 from ...errors import BlobIntegrityError
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..blob_store import BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -48,8 +42,8 @@ _MASTER_KEY = secrets.token_bytes(KEY_SIZE)
 
 @pytest.fixture
 def store(tmp_path: Path) -> Iterator[EncryptedBlobStore]:
-    provider = EphemeralMasterKeyProvider(key=_MASTER_KEY)
-    yield EncryptedBlobStore(root_dir=tmp_path / "blob-store", master_key_provider=provider)
+    with EphemeralBucketSession(key=_MASTER_KEY):
+        yield EncryptedBlobStore(root_dir=tmp_path / "blob-store")
 
 
 def _manifest_path(store: EncryptedBlobStore, digest: str) -> Path:
@@ -79,7 +73,7 @@ def _seed(store: EncryptedBlobStore) -> BlobReference:
     return store.put(_PAYLOAD, classification=SensitivityClass.FINANCIAL)
 
 
-def test_a_coherent_manifest_reads_iterates_and_rotates(store: EncryptedBlobStore) -> None:
+def test_a_coherent_manifest_reads_and_iterates(store: EncryptedBlobStore) -> None:
     """Positive control across all three guarded surfaces.
 
     Each refusal below is only evidence against this baseline; without it a
@@ -89,11 +83,6 @@ def test_a_coherent_manifest_reads_iterates_and_rotates(store: EncryptedBlobStor
 
     assert store.get(reference) == _PAYLOAD
     assert [manifest.classification for manifest in store.iter_manifests()] == [SensitivityClass.FINANCIAL]
-    rotated, skipped, errors = store.rotate_master_key(
-        old_master_key_provider=EphemeralMasterKeyProvider(key=_MASTER_KEY),
-        new_master_key_provider=EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)),
-    )
-    assert (rotated, skipped, errors) == (1, 0, 0)
 
 
 def test_a_nested_retag_refuses_direct_retrieval(store: EncryptedBlobStore) -> None:
@@ -123,30 +112,6 @@ def test_a_nested_retag_refuses_iteration(store: EncryptedBlobStore) -> None:
 
     with pytest.raises(BlobIntegrityError):
         list(store.iter_manifests())
-
-
-def test_a_nested_retag_refuses_rotation_before_rewriting(store: EncryptedBlobStore) -> None:
-    """Rotation refuses, and leaves the manifest exactly as it found it.
-
-    The discriminating case for placing the gate in the shared iteration
-    helper. Rotation reconstructs the outer classification from the nested
-    value, so without the gate it reported ``(1, 0, 0)`` and propagated the
-    tampered value outward -- making a recoverable single-field edit permanent.
-    Asserting the bytes are untouched is what separates "refused" from
-    "refused after writing".
-    """
-    reference = _seed(store)
-    manifest_path = _manifest_path(store, reference.sha256_plaintext_hex)
-    _retag_nested_classification(manifest_path, SensitivityClass.CORPUS)
-    before = manifest_path.read_bytes()
-
-    with pytest.raises(BlobIntegrityError):
-        store.rotate_master_key(
-            old_master_key_provider=EphemeralMasterKeyProvider(key=_MASTER_KEY),
-            new_master_key_provider=EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)),
-        )
-
-    assert manifest_path.read_bytes() == before
 
 
 def test_an_outer_retag_is_refused_symmetrically(store: EncryptedBlobStore) -> None:

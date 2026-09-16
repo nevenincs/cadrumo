@@ -20,7 +20,7 @@ from ...errors import (
     StorageValidationError,
 )
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
@@ -604,8 +604,8 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
     diagnostic path for mixed readable/unreadable namespaces.
     """
     db_path = tmp_path / "rotated.db"
-    key_old = EphemeralMasterKeyProvider()
-    key_new = EphemeralMasterKeyProvider()
+    key_old = EphemeralBucketSession()
+    key_new = EphemeralBucketSession()
     namespace = "cadrumo-test.rotation"
 
     # Seed a row under the OLD key, leaving the ciphertext at rest.
@@ -719,8 +719,8 @@ def test_list_records_rejects_unreadable_row_before_readable_subset(
     """The exception surfaces even when a readable row was also stored."""
 
     db_path = tmp_path / "rotated-readable.db"
-    key_old = EphemeralMasterKeyProvider()
-    key_new = EphemeralMasterKeyProvider()
+    key_old = EphemeralBucketSession()
+    key_new = EphemeralBucketSession()
     namespace = "cadrumo-test.rotation.readable"
 
     _seed_under_key(
@@ -768,8 +768,8 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
     in stable storage order. No exception escapes.
     """
     db_path = tmp_path / "mixed.db"
-    key_old = EphemeralMasterKeyProvider()
-    key_new = EphemeralMasterKeyProvider()
+    key_old = EphemeralBucketSession()
+    key_new = EphemeralBucketSession()
     namespace = "cadrumo-test.mixed"
 
     for natural_key, payload in (

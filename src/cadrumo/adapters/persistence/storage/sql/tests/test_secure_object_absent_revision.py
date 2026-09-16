@@ -14,7 +14,7 @@ the ciphertext, so no such row was ever written by this application; under the
 pre-release compatibility regime it is corruption now, and the one authority on
 the question refuses it.
 
-Real behaviour throughout: real SQLite, a real ``EphemeralMasterKeyProvider``,
+Real behaviour throughout: real SQLite, a real ``EphemeralBucketSession``,
 real AEAD, real stored-metadata erasure. Nothing is mocked.
 """
 
@@ -28,7 +28,7 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ...errors import SecureObjectUnreadableError
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
@@ -100,7 +100,7 @@ def test_stamped_row_round_trips_through_both_read_surfaces(tmp_path: Path) -> N
     row and the refused ones, and that the gate did not over-refuse.
     """
     db_path = tmp_path / "stamped.db"
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         _seed(db_path)
         with _repo_at(db_path) as repo:
             record = _load(repo)
@@ -124,7 +124,7 @@ def test_row_without_revision_metadata_is_refused_on_single_load(tmp_path: Path)
     ``DecryptionError`` subclass, so asserting it also excludes that.
     """
     db_path = tmp_path / "absent-single.db"
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         _seed(db_path)
         _erase_revision_metadata(db_path)
         with _repo_at(db_path) as repo, pytest.raises(SecureObjectUnreadableError):
@@ -141,7 +141,7 @@ def test_row_without_revision_metadata_is_attributed_during_iteration(tmp_path: 
     assertion is on the reason.
     """
     db_path = tmp_path / "absent-batch.db"
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         _seed(db_path)
         _erase_revision_metadata(db_path)
         with _repo_at(db_path) as repo:

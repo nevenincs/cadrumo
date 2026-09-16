@@ -46,7 +46,6 @@ what counts as a mutating command (that closed set rides on the scenario).
 from __future__ import annotations
 
 import json
-import tomllib
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -55,6 +54,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument
+from cadrumo.core.toml import parse_toml
 from cadrumo_harness.resources import iter_skill_documents
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -87,7 +87,7 @@ def load_scenario(path: Path) -> GoldenScenario:
     TOML arrays parse as ``list``; the strict scenario model takes a ``tuple``, so
     the trajectory array is coerced before validation.
     """
-    payload = tomllib.loads(path.read_text(encoding=_UTF_8))
+    payload = parse_toml(path.read_text(encoding=_UTF_8))
     for key in ("expected_trajectory", "expected_computed_casillas"):
         value = payload.get(key)
         if isinstance(value, list):

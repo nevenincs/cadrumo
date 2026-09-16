@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import shutil
@@ -48,6 +49,10 @@ _CHECKER_ENV: Final[str] = "CADRUMO_IMPORT_GATE_CHECKER"
 _FORCE_CHECKER_EXCEPTION_ENV: Final[str] = "CADRUMO_IMPORT_GATE_FORCE_CHECKER_EXCEPTION"
 _CHECKER_PATH: Final[Path] = Path(__file__).with_name("import_checker.py").resolve()
 _LOAD_PROBE_MODULE: Final[str] = "dev.quality.import_load_probe"
+_LOAD_HARNESS_PACKAGES: Final[tuple[str, ...]] = ("dev", "cadrumo")
+# The probe bounds its isolated worker by the requested timeout; this margin lets
+# the probe report that worker timeout itself before the driver kills the probe.
+_LOAD_HARNESS_GRACE_SECONDS: Final[float] = 30.0
 
 
 @dataclass(frozen=True)
@@ -256,8 +261,15 @@ def run_loadability(
             "loadability", TOOL_BROKEN, f"[TOOL_BROKEN] {unavailable['operational_error']}"
         ), unavailable
 
+    harness_roots = _load_harness_import_roots()
+    if isinstance(harness_roots, str):
+        unavailable["operational_error"] = harness_roots
+        return ComponentResult("loadability", TOOL_BROKEN, f"[TOOL_BROKEN] {harness_roots}"), unavailable
+    # The harness is tool code and must resolve from the tool tree; the audited
+    # targets are imported by the probe's own isolated worker, so no audited
+    # source root belongs on this path.
     environment = os.environ.copy()
-    import_paths = [str(authority.repository), *(str(root.source_root) for root in authority.roots)]
+    import_paths = list(harness_roots)
     existing = environment.get("PYTHONPATH")
     if existing:
         import_paths.append(existing)
@@ -274,6 +286,7 @@ def run_loadability(
                 report_path = Path(temporary) / "import-loadability.json"
             command = (
                 sys.executable,
+                "-P",
                 "-m",
                 _LOAD_PROBE_MODULE,
                 "--root",
@@ -282,13 +295,15 @@ def run_loadability(
                 str(authority.config_path),
                 "--report",
                 str(report_path),
+                "--timeout",
+                f"{timeout}",
             )
             completed = run_command(
                 command,
                 cwd=authority.repository,
                 environment=environment,
                 errors="replace",
-                timeout_seconds=timeout,
+                timeout_seconds=timeout + _LOAD_HARNESS_GRACE_SECONDS,
             )
             decoded_payload: object = json.loads(report_path.read_text(encoding=UTF_8))
             if not isinstance(decoded_payload, dict):
@@ -321,6 +336,17 @@ def run_loadability(
     payload.setdefault("operational_error", f"loadability probe exited unexpectedly with {completed.returncode}")
     diagnostic = str(payload["operational_error"])
     return ComponentResult("loadability", TOOL_BROKEN, _combined_output(output, diagnostic)), payload
+
+
+def _load_harness_import_roots() -> tuple[str, ...] | str:
+    """Return the tool-tree directories providing the probe's own packages, or a refusal."""
+    roots: list[str] = []
+    for package in _LOAD_HARNESS_PACKAGES:
+        spec = importlib.util.find_spec(package)
+        if spec is None or spec.origin is None or not spec.submodule_search_locations:
+            return f"loadability harness package {package!r} is not a regular package in the tool environment"
+        roots.append(str(Path(spec.origin).resolve().parents[1]))
+    return tuple(dict.fromkeys(roots))
 
 
 def _read_checker_report(path: Path, authority: Authority) -> CheckResult:

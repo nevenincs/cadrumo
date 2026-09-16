@@ -300,6 +300,18 @@ flows:
       után könnyebben megjegyezhető és nehezebben kitalálható, mint egy rövid, bonyolult
       szó.
     password_label: Jelszó
+    recovery:
+      cancel_button: Mégse
+      confirm_button: Felírtam
+      offer_consequence: 'Nélküle az elfelejtett jelszó azt jelenti, hogy az adatok
+        nem állíthatók vissza. Később is beállíthatod: aeat config profile recovery
+        enable'
+      offer_explanation: A helyreállítási kóddal új jelszót állíthatsz be, ha elfelejtenéd.
+        Egyszer jelenik meg; írd fel, és ettől a géptől külön őrizd.
+      offer_heading: Beállítasz helyreállítási kódot?
+      progress: Helyreállítás beállítása folyamatban
+      setup_button: Helyreállítás beállítása
+      skip_button: Kihagyás most
     refusal:
       confirmation_mismatch: A két jelszó nem egyezik.
       username_required: Adj meg egy nevet ennek a profilnak.
@@ -312,9 +324,10 @@ flows:
     title: Profil létrehozása
     username_hint: Így jelenik meg a profil a listákban. Később megváltoztathatod.
     username_label: Profil neve
-    why_password: 'Az adóadataid ezen a számítógépen maradnak, és sehová nem kerülnek
-      elküldésre. A jelszó titkosítja őket a lemezen, így nélküled nem olvashatók.
-      Nem állítható vissza: ha elveszíted, az adatok helyreállíthatatlanok.'
+    why_password: Az adóadataid ezen a gépen maradnak, és soha nem kerülnek elküldésre
+      sehová. A jelszó titkosítja őket a lemezen, így nélküled nem olvashatók. Ha
+      elveszíted, az adatok visszaállíthatatlanok, hacsak nem állítasz be helyreállítási
+      kódot, amit a következő lépésben ajánlunk fel.
   review:
     action_edit: Válasz szerkesztése
     action_prompt: Mit szeretnél tenni?

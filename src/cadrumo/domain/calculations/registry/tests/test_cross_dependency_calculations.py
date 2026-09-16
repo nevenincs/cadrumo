@@ -25,9 +25,8 @@ worth having — it is what catches a broken fold, a dropped relation, a
 mis-declared binding selector, or a resolution that silently returns zero.
 
 WHERE A REAL ORACLE PLUGS IN: an AEAT-authoritative figure for these modelos
-belongs in the bundled oracle corpora (``corpus/manual_oracles/`` or, for the
-Renta WEB Open captures used by Modelo 100,
-``dev/registry/parity/parity_replays/renta_web_open/``) keyed by
+belongs in the bundled oracle corpora (``corpus/manual_oracles/``, or the Renta
+WEB Open parity replay captures for Modelo 100) keyed by
 ``expected_by_casilla_id``, with the casilla declared in the revision's
 ``externally_grounded_casilla_ids``. That route is cross-checked in both
 directions by ``test_external_oracle_grounding_enrolled.py``. No modelo
@@ -51,7 +50,6 @@ from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casi
 from .....core.period import Period
 from .....tests.inventory import FIXTURES_DIR
 from ....period import calculation_filing_date
-from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import resolve_previous_filing_binding_values
@@ -64,7 +62,7 @@ from ..relations import (
     resolve_relation_values_from_observations,
 )
 from ..runtime_graph import expression_binding_refs
-from ..schema import ModeloRevision, RegistrySnapshot
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
 from ._cross_dependency_calculation_support import (
     _casilla_inputs,
@@ -357,9 +355,10 @@ def _withholding_observation(
 
 
 def test_cross_model_relations_resolve_from_observations_for_revision_edge_years(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
-    for modelo in registry_authority.modelos:
+    modelos, _catalogues = registry_tree
+    for modelo in modelos:
         for revision in modelo.revisions.values():
             relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision)}
             if not relation_ids:

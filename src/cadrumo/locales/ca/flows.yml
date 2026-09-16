@@ -300,6 +300,19 @@ flows:
       seguides són més fàcils de recordar i més difícils d'endevinar que una sola
       paraula curta i complicada.
     password_label: Contrasenya
+    recovery:
+      cancel_button: Cancel·la
+      confirm_button: Ja l'he anotat
+      offer_consequence: 'Sense ell, una contrasenya oblidada vol dir que les dades
+        no es poden recuperar. També el pots configurar més tard amb: aeat config
+        profile recovery enable'
+      offer_explanation: Un codi de recuperació et permet establir una contrasenya
+        nova si l'oblides. Es mostra una sola vegada; anota'l i desa'l lluny d'aquest
+        equip.
+      offer_heading: Vols configurar un codi de recuperació?
+      progress: Configurant la recuperació
+      setup_button: Configura la recuperació
+      skip_button: Omet per ara
     refusal:
       confirmation_mismatch: Les dues contrasenyes no coincideixen.
       username_required: Introdueix un nom per a aquest perfil.
@@ -311,9 +324,10 @@ flows:
     title: Crea el teu perfil
     username_hint: Com apareix aquest perfil a les llistes. El pots canviar més endavant.
     username_label: Nom del perfil
-    why_password: 'Les teves dades fiscals es queden en aquest ordinador i no s''envien
-      enlloc. La contrasenya les xifra al disc, de manera que no es poden llegir sense
-      tu. No es pot restablir: si la perds, les dades són irrecuperables.'
+    why_password: Les teves dades fiscals es queden en aquest equip i no s'envien
+      mai enlloc. La contrasenya les xifra al disc, de manera que no es poden llegir
+      sense tu. Si la perds, les dades són irrecuperables tret que configuris un codi
+      de recuperació, que se t'oferirà tot seguit.
   review:
     action_edit: Edita una resposta
     action_prompt: Què vols fer?

@@ -1,6 +1,6 @@
 """In-memory zeroisation primitives for key material held by this process.
 
-The substrate holds the unlocked KEK and DEK in `bytearray` buffers
+The substrate holds the unlocked DEK in a `bytearray` buffer
 attached to a `BucketSession` instance. On `lock`
 the session calls into this module to overwrite each buffer with zero
 bytes before dropping the reference, so a memory-disclosure bug
@@ -9,10 +9,10 @@ the key bytes.
 
 Honest contract: zeroisation in Python is best-effort. The interpreter
 may have produced short-lived `bytes` copies of the buffer during
-property reads (`BucketSession.kek` materialises `bytes(self._kek_buffer)`
+property reads (`BucketSession.dek` materialises `bytes(self._dek_buffer)`
 on each access); the garbage collector owns the lifetime of those
 copies and there is no portable Python primitive that can reach them.
-The substrate confines KEK / DEK plaintext to `bytearray` containers
+The substrate confines DEK plaintext to `bytearray` containers
 and overwrites them at lock so the steady-state in-memory copy is
 zeroed; the transient `bytes` view lifetimes are bounded by GC.
 

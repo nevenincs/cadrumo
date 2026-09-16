@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import json
 import sys
-import tomllib
 from pathlib import Path
 from typing import cast
 
@@ -26,6 +25,7 @@ import pytest
 from pathspec import PathSpec
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
@@ -79,7 +79,7 @@ def _hook_emission(pattern: str) -> dict[str, object]:
 
 def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     """Every rule routes a corpus pattern through the hook adapter command."""
-    data = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))
+    data = parse_toml(_RULE_FILE.read_text(encoding="utf-8"))
     assert data["version"] == _RULE_SCHEMA_VERSION == 2
     rules = data["rule"]
     assert len(rules) == 8
@@ -126,7 +126,7 @@ def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
     actually dispatches. A family that cannot read its own suffix raises here
     rather than passing.
     """
-    rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    rules = parse_toml(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
     versions_by_family: dict[str, set[str]] = {}
     for rule in rules:
         pattern = cast(str, rule["pattern"])
@@ -158,7 +158,7 @@ def test_every_rule_pattern_matches_committed_sources() -> None:
     Deriving the enumeration from the population makes omitting a family
     impossible rather than merely unlikely.
     """
-    rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    rules = parse_toml(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
     patterns = sorted({cast(str, rule["pattern"]) for rule in rules})
     assert len(patterns) == len(rules) == 8, patterns
     for pattern in patterns:
@@ -173,7 +173,7 @@ def test_every_rule_pattern_matches_committed_sources() -> None:
 
 def test_properties_rule_is_limited_to_the_modelo_100_dictionary_directory() -> None:
     """No other corpus family is enrolled through the CP1252-only extractor."""
-    rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    rules = parse_toml(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
     properties_patterns = [
         cast(str, rule["pattern"]) for rule in rules if Path(cast(str, rule["pattern"])).suffix.lower() == ".properties"
     ]
@@ -206,7 +206,7 @@ def test_manual_runtime_sidecars_are_excluded_without_excluding_pdf_hook_sources
     assert ignore_spec.match_file(sidecar_path), sidecar_path
     assert not ignore_spec.match_file(source_path), source_path
 
-    rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    rules = parse_toml(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
     pdf_patterns = [cast(str, rule["pattern"]) for rule in rules if Path(cast(str, rule["pattern"])).suffix == ".pdf"]
     assert pdf_patterns == ["src/cadrumo/_data/corpus/**/*.pdf"]
     hook_spec = PathSpec.from_lines("gitignore", pdf_patterns)

@@ -41,23 +41,23 @@ def test_operational_failures_never_map_to_authentication_refusal(
     assert map_profile_authentication_proof_failure(fault, operation=operation) is None
 
 
-def test_only_recovery_restore_maps_recovery_secret_refusal() -> None:
+def test_only_recovery_reset_maps_recovery_secret_refusal() -> None:
     fault = ProfileCustodyRecoverySecretError("internal recovery diagnostic")
 
     for operation in ProfilePasswordProofOperation:
         mapped = map_profile_authentication_proof_failure(fault, operation=operation)
-        if operation is ProfilePasswordProofOperation.RECOVERY_RESTORE:
+        if operation is ProfilePasswordProofOperation.RECOVERY_RESET:
             assert isinstance(mapped, ProfileAuthenticationRefusedError)
             assert mapped.context is None
         else:
             assert mapped is None
 
 
-def test_recovery_restore_does_not_map_password_refusal() -> None:
+def test_recovery_reset_does_not_map_password_refusal() -> None:
     assert (
         map_profile_authentication_proof_failure(
             ProfileCustodyPasswordError("internal password diagnostic"),
-            operation=ProfilePasswordProofOperation.RECOVERY_RESTORE,
+            operation=ProfilePasswordProofOperation.RECOVERY_RESET,
         )
         is None
     )

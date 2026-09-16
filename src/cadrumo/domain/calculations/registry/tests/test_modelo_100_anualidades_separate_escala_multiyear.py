@@ -45,7 +45,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..authority import ValidatedRegistryAuthority
+from ..authority import PinnedAuthorityOperation
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 
@@ -140,13 +140,13 @@ def _run(
     return {_c(k): result.values[_c(k)] for k in ("0505", "0521", "0527", "0528", "0530", "0532", "0545")}
 
 
-def _snapshot(authority: ValidatedRegistryAuthority, year: int) -> RegistrySnapshot:
+def _snapshot(authority: PinnedAuthorityOperation, year: int) -> RegistrySnapshot:
     return authority.snapshot("100", filing_year=year, period="0A")
 
 
 @pytest.mark.parametrize("year", _SEPARATE_ESCALA_YEARS)
 def test_separate_escala_estatal_assembly_matches_lirpf_tramos(
-    registry_authority: ValidatedRegistryAuthority, year: int
+    registry_authority: PinnedAuthorityOperation, year: int
 ) -> None:
     """Casilla 0528/0530/0532 implement the art. 64 separate-escala assembly."""
     snapshot = _snapshot(registry_authority, year)
@@ -178,7 +178,7 @@ def test_separate_escala_estatal_assembly_matches_lirpf_tramos(
 
 @pytest.mark.parametrize("year", _SEPARATE_ESCALA_YEARS)
 def test_separate_escala_ordering_shortcut_below_separate_below_no_benefit(
-    registry_authority: ValidatedRegistryAuthority, year: int
+    registry_authority: PinnedAuthorityOperation, year: int
 ) -> None:
     """shortcut < separate < no-benefit for the anualidades filer."""
     snapshot = _snapshot(registry_authority, year)
@@ -208,7 +208,7 @@ def test_separate_escala_ordering_shortcut_below_separate_below_no_benefit(
 
 @pytest.mark.parametrize("year", _SEPARATE_ESCALA_YEARS)
 def test_regime_off_shared_custody_reduces_to_single_escala(
-    registry_authority: ValidatedRegistryAuthority, year: int
+    registry_authority: PinnedAuthorityOperation, year: int
 ) -> None:
     """Flag off (custodia compartida) collapses to the ordinary single escala."""
     snapshot = _snapshot(registry_authority, year)
@@ -226,7 +226,7 @@ def test_regime_off_shared_custody_reduces_to_single_escala(
 
 
 @pytest.mark.parametrize("year", _SEPARATE_ESCALA_YEARS)
-def test_regime_off_when_anualidades_reach_base(registry_authority: ValidatedRegistryAuthority, year: int) -> None:
+def test_regime_off_when_anualidades_reach_base(registry_authority: PinnedAuthorityOperation, year: int) -> None:
     """Anualidades >= base liquidable general → régimen off (art. 64 condition)."""
     snapshot = _snapshot(registry_authority, year)
     over = _run(snapshot, year, anualidades=_ANUALIDADES_ABOVE_BASE)
@@ -243,7 +243,7 @@ def test_regime_off_when_anualidades_reach_base(registry_authority: ValidatedReg
 
 
 def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """2021 regression: 0527 must not derive from the Anexo C pension fields.
 

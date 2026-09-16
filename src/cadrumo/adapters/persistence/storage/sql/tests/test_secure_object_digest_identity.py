@@ -14,7 +14,7 @@ rather than against a hand-copied constraint: the parity assertion compares the
 records' verdict with :data:`ContentDigest`'s own verdict on the same values, so
 a future widening of either side fails here rather than drifting apart
 silently. The valid round-trip runs over real SQLite, a real
-``EphemeralMasterKeyProvider``, and real AEAD -- the positive control that
+``EphemeralBucketSession``, and real AEAD -- the positive control that
 proves the refusals are a constraint on malformed input and not a broken
 fixture.
 """
@@ -29,7 +29,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ......core.classification.policies import SensitivityClass
 from ......core.identity.digest import ContentDigest
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectRawRow, SecureObjectRecord
 from ._secure_objects_support import (
     _repo_at,
@@ -156,7 +156,7 @@ def test_valid_encrypted_round_trip_still_yields_a_canonical_revision_id(tmp_pat
     actually writes.
     """
     db_path = tmp_path / "digest-identity.sqlite3"
-    with EphemeralMasterKeyProvider():
+    with EphemeralBucketSession():
         with _repo_at(db_path) as repo:
             repo.save(
                 namespace=_NAMESPACE,

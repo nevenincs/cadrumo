@@ -32,7 +32,7 @@ rejects the retired enumerated `years` key. The canonical runtime route is
 
 1. parses Python with `ast` and identifies literal year containers, literal `range`
    calls, policy-named assignments, and comparisons;
-2. parses TOML with `tomllib` and identifies support/coverage enumerations outside the
+2. parses TOML with `rtoml` and identifies support/coverage enumerations outside the
    authority file;
 3. limits candidates to values intersecting the authority's derived authored span;
 4. leaves classification to review because legal vintages, revision identities,

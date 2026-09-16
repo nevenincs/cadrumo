@@ -21,7 +21,7 @@ end-to-end on the LIVE operator calculate path
 four M303 quarterly filings fold into the M390/0A annual reconciliation casillas.
 
 Real-behaviour, real-adapter (real encrypted-SQLite observation store via
-:class:`SecureObjectRepository` + :class:`EphemeralMasterKeyProvider`, real
+:class:`SecureObjectRepository` + :class:`EphemeralBucketSession`, real
 registry authority, real calculation engine, real relation / annual-partition
 resolvers, real source mesh — no mocks, stubs, skips, or xfail).
 

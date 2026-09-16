@@ -164,8 +164,7 @@ class Rule(_ManualStrictFrozen):
     """A single extracted rule from the *Manual práctico*.
 
     Every persisted rule carries reviewer metadata populated by a real
-    human; the verify CLI rejects rules missing those fields when
-    ``CADRUMO_MANUALS_REVIEW_REQUIRED`` is true.
+    human; the verify CLI rejects rules missing those fields.
 
     Attributes:
         rule_id: Stable kebab-case identifier persisted in the corpus.

@@ -21,13 +21,12 @@ from __future__ import annotations
 from typing import Never
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.filing.errors import ModeloBuilderError
 from ..draft_construction import _load_registry_snapshot
-from ..runtime import schema_provider_from_authority
+from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -77,8 +76,7 @@ def test_named_non_filing_modelo_keeps_the_registry_grade_refusal() -> None:
     refusal names the modelo, the revision and both grades.
     """
     with pytest.raises(RegistryValidationError) as exc_info:
-        schema_provider_from_authority(
-            compiled_bundled_authority(),
+        build_runtime_schema_provider(
             modelos=(_MODELO,),
             filing_year=_PERIOD.filing_year,
             period=_PERIOD,
@@ -95,8 +93,7 @@ def test_named_non_filing_modelo_keeps_the_grade_refusal_when_period_scoped() ->
     for a mismatch the period had nothing to do with.
     """
     with pytest.raises(RegistryValidationError) as exc_info:
-        schema_provider_from_authority(
-            compiled_bundled_authority(),
+        build_runtime_schema_provider(
             modelos=(_MODELO,),
             filing_year=_PERIOD.filing_year,
             period=_PERIOD,

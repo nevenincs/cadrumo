@@ -17,11 +17,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -29,10 +24,17 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.schema import BindingDefinition
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_schema,
+    published_snapshot,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "d24bdc40-1623-4255-a9c3-a4b5c34dd9bb"  # was 'bucket-under-test'
 
@@ -66,7 +68,7 @@ def _record(facts: tuple[UserProfileFact, ...]) -> UserProfileRecord:
 
 def _export_bindings() -> tuple[BindingDefinition, ...]:
     """The real Modelo 100 2024 profile bindings that carry an export address."""
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         Modelo("100").value,
         filing_year=2024,
         period="0A",
@@ -85,7 +87,7 @@ def _resolve(*facts: UserProfileFact, operation: PinnedAuthorityOperation) -> di
             _export_bindings(),
             bucket_id=_BUCKET,
             profile_record=_record(facts),
-            schema=load_user_profile_schema(),
+            schema=published_profile_schema(),
             operation=operation,
         ),
     )

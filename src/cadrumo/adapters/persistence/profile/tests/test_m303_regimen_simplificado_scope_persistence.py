@@ -83,28 +83,16 @@ def _store_profile(*, composition: M303RegimeComposition) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ("composition", "expected_scope"),
-    (
-        (
-            M303RegimeComposition.from_registry("general"),
-            m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
-        ),
-        (
-            M303RegimeComposition.from_registry("simplified"),
-            m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
-        ),
-        (
-            M303RegimeComposition.from_registry("mixed"),
-            m303_regime_composition_simplified_scope("mixed", authority=compiled_bundled_authority()),
-        ),
-    ),
-)
+@pytest.mark.parametrize("composition_token", ("general", "simplified", "mixed"))
 def test_secure_profile_composition_derives_the_closed_m303_scope(
     tmp_path: Path,
-    composition: M303RegimeComposition,
-    expected_scope: M303RegimenSimplificadoScope,
+    composition_token: str,
 ) -> None:
+    composition = M303RegimeComposition.from_registry(composition_token)
+    # The authority compiles inside the test, not at collection.
+    expected_scope: M303RegimenSimplificadoScope = m303_regime_composition_simplified_scope(
+        composition_token, authority=compiled_bundled_authority()
+    )
     assert m303_regimen_simplificado_scope_for_composition(composition).scope == expected_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):

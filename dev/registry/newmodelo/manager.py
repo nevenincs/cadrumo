@@ -23,7 +23,6 @@ registry-validity or enrollment signal.
 from __future__ import annotations
 
 import re
-import tomllib
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -31,6 +30,7 @@ from typing import cast
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.modelo_localization import (
     modelo_locale_key,
     revision_locale_key,
@@ -298,8 +298,8 @@ def _declared_valid_from(revision_root: Path) -> date | None:
     if not manifest.is_file():
         return None
     try:
-        document = tomllib.loads(manifest.read_text(encoding=_UTF_8))
-    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        document = parse_toml(manifest.read_text(encoding=_UTF_8))
+    except (OSError, UnicodeDecodeError, TomlDecodeError):
         return None
     editions = _as_toml_table(document.get("revisions"))
     if editions is None:

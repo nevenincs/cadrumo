@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
+from .....core.hashing import prefixed_digest
 from .....core.link_safety import is_link_like
 from .....core.paths import effective_storage_root
 from .....core.profile_publication import ProfilePublicationKindValue
@@ -138,7 +139,9 @@ from .records import (
 )
 from .recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
+    PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
     ProfileCustodyRecoveryEnvelope,
+    parse_profile_custody_recovery_envelope,
 )
 from .sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, write_profile_custody_sentinel
 from .sentinel_contract import ProfileCustodySentinelRecord
@@ -429,7 +432,6 @@ def publish_profile_custody_capsule(
     password_envelope: ProfileCustodyEnvelope,
     sentinel: ProfileCustodySentinelRecord,
     data_files: Mapping[str, bytes],
-    recovery_envelope: ProfileCustodyRecoveryEnvelope | None = None,
     settings: Settings | None = None,
     root: Path | None = None,
     published_at: datetime | None = None,
@@ -446,7 +448,6 @@ def publish_profile_custody_capsule(
         profile_id=profile_id,
         password_envelope=password_envelope,
         sentinel=sentinel,
-        recovery_envelope=recovery_envelope,
     )
     _validate_data_file_inventory(data_files)
     destination = profile_custody_path(
@@ -464,7 +465,6 @@ def publish_profile_custody_capsule(
             password_envelope=password_envelope,
             sentinel=sentinel,
             data_files=data_files,
-            recovery_envelope=recovery_envelope,
             published_at=published_at,
             stage_only=stage_only,
             stage_initializer=stage_initializer,
@@ -498,10 +498,6 @@ def publish_profile_custody_capsule(
             _write_exclusive_fsynced(
                 custody_root / PROFILE_CUSTODY_ENVELOPE_FILENAME, password_envelope.canonical_json_bytes()
             )
-            if recovery_envelope is not None:
-                _write_exclusive_fsynced(
-                    custody_root / PROFILE_CUSTODY_RECOVERY_FILENAME, recovery_envelope.canonical_json_bytes()
-                )
             write_profile_custody_sentinel(data_root / PROFILE_CUSTODY_SENTINEL_FILENAME, sentinel)
             _write_data_files(data_root, data_files)
             if stage_initializer is not None:
@@ -558,7 +554,6 @@ def _publish_profile_custody_capsule_posix(
     password_envelope: ProfileCustodyEnvelope,
     sentinel: ProfileCustodySentinelRecord,
     data_files: Mapping[str, bytes],
-    recovery_envelope: ProfileCustodyRecoveryEnvelope | None,
     published_at: datetime | None,
     stage_only: bool,
     stage_initializer: Callable[[Path], None] | None,
@@ -583,12 +578,6 @@ def _publish_profile_custody_capsule_posix(
                 _write_exclusive_fsynced_fd(
                     custody_fd, PROFILE_CUSTODY_ENVELOPE_FILENAME, password_envelope.canonical_json_bytes()
                 )
-                if recovery_envelope is not None:
-                    _write_exclusive_fsynced_fd(
-                        custody_fd,
-                        PROFILE_CUSTODY_RECOVERY_FILENAME,
-                        recovery_envelope.canonical_json_bytes(),
-                    )
                 _write_exclusive_fsynced_fd(data_fd, PROFILE_CUSTODY_SENTINEL_FILENAME, sentinel.canonical_json_bytes())
                 _write_posix_data_files(data_fd, data_files)
                 if stage_initializer is not None:
@@ -861,14 +850,14 @@ def replace_committed_profile_custody_envelope(
 
     **The DEK sentinel is deliberately not touched.** Its associated data binds
     only ``(profile_id, dek_epoch)``, so an envelope that preserves the epoch
-    leaves the committed sentinel -- and every outstanding recovery artifact
-    minted against that epoch -- valid. Rewriting the sentinel here would
-    invalidate an operator's recovery mnemonic for a password change that never
-    touched the key it protects.
+    leaves the committed sentinel -- and an enrolled recovery envelope minted
+    against that epoch -- valid. Rewriting the sentinel here would invalidate
+    an operator's recovery code for a password change that never touched the
+    key it protects.
 
     That is why the epoch is enforced rather than trusted. A payload carrying a
     different ``dek_epoch`` describes a re-key, not a rotation: it would leave a
-    sentinel and recovery artifacts silently unopenable while every surface
+    sentinel and recovery envelope silently unopenable while every surface
     still reported success. It is refused here, at the write boundary, so the
     invariant cannot be lost by a caller that forgets it.
 
@@ -901,8 +890,8 @@ def replace_committed_profile_custody_envelope(
         if replacement.dek_epoch != committed.dek_epoch:
             raise ProfileCustodyRecordError(
                 "profile custody rotation envelope changes the DEK epoch; a rotation re-wraps the same "
-                "data key, and a new epoch would leave the committed sentinel and every recovery "
-                "artifact unopenable",
+                "data key, and a new epoch would leave the committed sentinel and an enrolled recovery "
+                "envelope unopenable",
             )
         _replace_capsule_file(
             custody_path,
@@ -911,6 +900,137 @@ def replace_committed_profile_custody_envelope(
             expected_sha256=expected_sha256,
             maximum_bytes=PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
         )
+
+
+def install_committed_profile_custody_recovery_envelope(
+    profile_id: UUID,
+    payload: bytes,
+    *,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> None:
+    """Install a recovery envelope into a committed capsule that has none.
+
+    The write a recovery enrollment makes. It is exclusive: an already-enrolled
+    capsule is refused rather than overwritten, so replacing a recovery code
+    is an explicit revoke followed by a fresh enrollment, and the caller holds
+    the custody transaction lock across both.
+
+    The envelope must name this capsule's profile and its CURRENT DEK epoch.
+    The epoch is enforced at the write boundary for the same reason the
+    rotation write enforces it: a wrapper over another epoch would report as
+    enrolled and never open anything.
+
+    Raises:
+        ProfileCustodyRecordError: When no committed capsule is recognized, the
+            payload is not a valid recovery envelope for this capsule, or
+            recovery is already enrolled.
+    """
+    capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
+    if capsule_path is None:
+        raise ProfileCustodyRecordError("profile recovery enrollment requires a committed capsule")
+    custody_path = capsule_path / "custody"
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, capsule_path)
+        _anchor_directory(anchors, custody_path)
+        committed = _read_password_envelope(custody_path / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=[])
+        try:
+            envelope = parse_profile_custody_recovery_envelope(payload)
+        except ProfileCustodyRecordError as exc:
+            raise ProfileCustodyRecordError("profile recovery enrollment payload is not a valid envelope") from exc
+        if envelope.profile_id != profile_id:
+            raise ProfileCustodyRecordError("profile recovery envelope names a different profile")
+        if envelope.dek_epoch != committed.dek_epoch:
+            raise ProfileCustodyRecordError("profile recovery envelope does not wrap the committed DEK epoch")
+        target = custody_path / PROFILE_CUSTODY_RECOVERY_FILENAME
+        if _lexists(target, trace=None):
+            raise ProfileCustodyRecordError("profile recovery is already enrolled")
+        _write_exclusive_fsynced(target, payload)
+        _fsync_directory(custody_path)
+
+
+def remove_committed_profile_custody_recovery_envelope(
+    profile_id: UUID,
+    *,
+    expected_sha256: str,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> None:
+    """Compare-and-remove the recovery envelope of a committed capsule.
+
+    The write a recovery revocation makes. ``expected_sha256`` is the digest
+    of the envelope the caller authenticated against; a stale witness refuses
+    rather than removing a wrapper a concurrent enrollment just installed.
+
+    Raises:
+        ProfileCustodyRecordError: When no committed capsule is recognized,
+            recovery is not enrolled, or the witness is stale.
+    """
+    capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
+    if capsule_path is None:
+        raise ProfileCustodyRecordError("profile recovery revocation requires a committed capsule")
+    custody_path = capsule_path / "custody"
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, capsule_path)
+        _anchor_directory(anchors, custody_path)
+        target = custody_path / PROFILE_CUSTODY_RECOVERY_FILENAME
+        if not _lexists(target, trace=None):
+            raise ProfileCustodyRecordError("profile recovery is not enrolled")
+        existing = _read_regular_file(target, maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES, trace=[])
+        if prefixed_digest(existing) != expected_sha256:
+            raise ProfileCustodyRecordError("profile recovery compare-and-remove witness is stale")
+        try:
+            os.unlink(target)
+        except OSError as exc:
+            raise ProfileCustodyRecordError("profile recovery envelope could not be removed") from exc
+        _fsync_directory(custody_path)
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCustodyRecoveryMaterial:
+    """The exact recovery-proof read set: password custody plus the enrolled wrapper."""
+
+    capsule_path: Path
+    password_envelope: ProfileCustodyEnvelope
+    sentinel: ProfileCustodySentinelRecord
+    recovery_envelope: ProfileCustodyRecoveryEnvelope
+
+
+def load_committed_profile_recovery_material(
+    profile_id: UUID,
+    *,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> ProfileCustodyRecoveryMaterial:
+    """Read the enrolled recovery envelope beside its committed password custody.
+
+    The password material is read first through its own authority, so a
+    capsule whose normal custody does not verify never reaches the recovery
+    proof. The recovery envelope must then name the same profile and DEK epoch.
+
+    Raises:
+        ProfileCustodyRecordError: When the capsule is not committed, recovery
+            is not enrolled, or the envelope does not belong to this capsule.
+    """
+    password = load_committed_profile_password_material(profile_id, settings=settings, root=root)
+    custody_path = password.capsule_path / "custody"
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, password.capsule_path)
+        _anchor_directory(anchors, custody_path)
+        target = custody_path / PROFILE_CUSTODY_RECOVERY_FILENAME
+        if not _lexists(target, trace=None):
+            raise ProfileCustodyRecordError("profile recovery is not enrolled")
+        envelope = parse_profile_custody_recovery_envelope(
+            _read_regular_file(target, maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES, trace=[])
+        )
+    if envelope.profile_id != profile_id or envelope.dek_epoch != password.envelope.dek_epoch:
+        raise ProfileCustodyRecordError("profile recovery envelope does not belong to its committed capsule")
+    return ProfileCustodyRecoveryMaterial(
+        capsule_path=password.capsule_path,
+        password_envelope=password.envelope,
+        sentinel=password.sentinel,
+        recovery_envelope=envelope,
+    )
 
 
 def load_staged_profile_custody_label_record(
@@ -1044,16 +1164,11 @@ def _validate_publication_identity(
     profile_id: UUID,
     password_envelope: ProfileCustodyEnvelope,
     sentinel: ProfileCustodySentinelRecord,
-    recovery_envelope: ProfileCustodyRecoveryEnvelope | None,
 ) -> None:
     if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
         raise ProfileCustodyRecordError("profile capsule custody identity does not match its immutable UUID")
     if sentinel.dek_epoch != password_envelope.dek_epoch:
         raise ProfileCustodyRecordError("profile capsule sentinel DEK epoch does not match password custody")
-    if recovery_envelope is not None and (
-        recovery_envelope.profile_id != profile_id or recovery_envelope.dek_epoch != password_envelope.dek_epoch
-    ):
-        raise ProfileCustodyRecordError("recovery identity does not match password custody")
 
 
 __all__ = [
@@ -1071,17 +1186,21 @@ __all__ = [
     "ProfileCustodyInventory",
     "ProfileCustodyInventoryEntry",
     "ProfileCustodyPasswordMaterial",
+    "ProfileCustodyRecoveryMaterial",
+    "install_committed_profile_custody_recovery_envelope",
     "inventory_committed_profile_custody_capsule",
     "list_current_profile_custody_capsule_ids",
     "list_current_profile_custody_capsule_summary_witnesses",
     "load_committed_profile_custody_label_record",
     "load_committed_profile_password_material",
+    "load_committed_profile_recovery_material",
     "load_staged_profile_custody_label_record",
     "parse_profile_custody_commit",
     "profile_custody_deletion_path",
     "profile_custody_staging_path",
     "publish_profile_custody_capsule",
     "recognize_current_profile_capsule",
+    "remove_committed_profile_custody_recovery_envelope",
     "remove_profile_custody_deletion_tombstone",
     "rename_profile_custody_capsule_for_deletion",
     "verify_profile_custody_deletion_marker",

@@ -7,7 +7,11 @@ from datetime import date as _prov_date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
 
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
@@ -160,7 +164,7 @@ def _required_iae_epigrafe(value: str | None) -> str:
 
 def _m303_2026_snapshot() -> RegistrySnapshot:
     """Load the real 2026 revision from the published authority artifact."""
-    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2026, period="1T")
+    return published_snapshot(Modelo("303").value, filing_year=2026, period="1T")
 
 
 #: Modelo 303 prints the shared envelope grammar in its thirteen-row spelling:
@@ -335,9 +339,9 @@ def _m303_filing_facts(
     reference = FilingEvidenceReference(reference="test:did-wire:m303-facts")
     scope = M303RegimenSimplificadoScopeDecision(
         scope=(
-            m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority())
+            m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource())
             if non_agricultural_activity_count
-            else m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority())
+            else m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource())
         ),
     )
     bienes_register = BienesInversionIvaRegister()
@@ -386,13 +390,13 @@ def _m303_filing_facts(
             scope_decision=scope,
             rows=regimen_rows,
             regimen_snapshot=regimen_snapshot,
-            dana_2024_eligibility=None,
+            dana_eligibility=None,
             calculation_result=calculate_m303_regimen_simplificado_result(
                 period=period,
                 scope_decision=scope,
                 rows=regimen_rows,
                 regimen_snapshot=regimen_snapshot,
-                dana_2024_eligibility=None,
+                dana_eligibility=None,
                 operation=operation,
             ),
         )

@@ -19,7 +19,7 @@ from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import ca
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, WorkUnitRevisionDivergenceError
+from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
@@ -51,7 +51,10 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_repository import (
+    CalculationRevisionPersistenceError,
+    upsert_calculation_revision,
+)
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -238,16 +241,21 @@ def test_revision_selector_refuses_a_persisted_divergent_registry_coordinate(
             ),
         },
     )
-    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), stale))
+    with pytest.raises(CalculationRevisionPersistenceError, match="disagrees with its parent WorkUnit"):
+        calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), stale))
 
-    with pytest.raises(WorkUnitRevisionDivergenceError):
+    # The divergent coordinate never reaches storage, so the selector still resolves the original stamp.
+    assert calculation_repo.load().get(revision.calculation_revision_id) == revision
+    assert (
         select_modelo_calculation_revision(
             work_unit,
             selector=ModeloCalculationRevisionSelector.EXPLICIT,
             calculation_revision_id=revision.calculation_revision_id,
             calculation_repository=calculation_repo,
             operation=operation,
-        )
+        ).calculation_revision_id
+        == revision.calculation_revision_id
+    )
 
 
 def test_selector_resolves_active_bucket_when_no_explicit_bucket(work_repo: WorkUnitCatalogueRepository) -> None:

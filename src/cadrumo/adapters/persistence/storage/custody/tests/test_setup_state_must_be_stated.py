@@ -37,13 +37,13 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRec
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ......domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _LABEL = "Setup State Statement Subject"
 _CREDENTIAL_INPUT = "setup-state-must-be-stated-operator-secret"
@@ -69,7 +69,6 @@ def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,

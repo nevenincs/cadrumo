@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import threading
-import tomllib
 from pathlib import Path
 
 import pytest
 
 from ..bucket_pointer import BucketPointer, read_pointer, write_pointer
+from ..toml import TomlDecodeError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -63,5 +63,5 @@ def test_an_absent_pointer_is_a_current_absent_coordinate(tmp_path: Path) -> Non
     assert read_pointer(tmp_path) == BucketPointer.absent(transition_revision=0)
 
     (tmp_path / "active-profile").write_text("this is not valid toml", encoding="utf-8")
-    with pytest.raises(tomllib.TOMLDecodeError):
+    with pytest.raises(TomlDecodeError):
         read_pointer(tmp_path)

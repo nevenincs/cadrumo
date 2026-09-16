@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from .....domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
 from .....domain.calculations.registry.schema_formula import FormulaExpression
@@ -17,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _modelo_130_revision() -> ModeloRevision:
-    return compiled_bundled_authority().modelo("130").revisions["2019-y-siguientes"]
+    return published_revision("130", "2019-y-siguientes")
 
 
 def test_missing_layout_address_raises_typed_error_without_raw_identifier() -> None:

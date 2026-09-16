@@ -99,9 +99,9 @@ _BASE_BINDINGS_2025 = {
 
 def test_0461_casilla_grounding_uses_art84_not_base_liquidable_art50() -> None:
     """Casilla 0461 itself is the Art. 84 joint-taxation reduction amount."""
-    from ._published_authority import artifact_components
+    from .registry_tree import bundled_modelo_components
 
-    modelo, catalogues = artifact_components("100")
+    modelo, catalogues = bundled_modelo_components("100")
     art_84 = catalogues.legal["ley-35-2006:art-84"]
     assert any("3.400 euros" in text for text in art_84.required_text)
     assert any("2.150 euros" in text for text in art_84.required_text)

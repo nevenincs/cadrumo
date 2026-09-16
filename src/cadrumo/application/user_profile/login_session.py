@@ -804,6 +804,74 @@ def login_profile(
         return _finish_candidate_login(attempt=attempt, candidate=candidate)
 
 
+def authenticate_profile_for_invocation(
+    *,
+    name: str,
+    now: datetime | None = None,
+    passphrase_callback: Callable[[], str] | None = None,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileLoginOutcome:
+    """Unlock one profile for the current process WITHOUT selecting it.
+
+    ``login_profile`` is a selection: it publishes the active-profile pointer,
+    journals a handover and retires the profile it displaces. That is correct
+    for ``config login NAME``, and wrong for every command that merely names a
+    target for this one invocation -- ``--profile X`` or a leaf's own profile
+    argument. Routing those through the selecting door meant that on a host
+    with no usable keychain, where each command must re-supply its passphrase,
+    reading one profile silently reselected it for every later command.
+
+    So this door authenticates and binds, and does nothing durable: no pointer
+    transaction is opened, no handover journal is written, no activation event
+    is recorded, no acceleration receipt is minted, and the previously selected
+    profile keeps its pointer entry and its receipt. A different live session
+    is closed in-process only, because the process holds exactly one.
+
+    The result is process-scoped by construction, so ``session_persisted`` is
+    always ``False``; the caller's existing not-persisted notice already tells
+    the operator the next process must authenticate again.
+    """
+    instant = _now() if now is None else now
+    storage_root = effective_storage_root()
+    target = resolve_login_target(name)
+
+    evaluation = _profile_login_sessions().evaluate_throttle(
+        storage_root=storage_root,
+        bucket_id=target.bucket_id,
+        now=instant,
+    )
+    if evaluation.throttled:
+        raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+
+    candidate = _authenticate_candidate_or_record_failure(
+        bucket_id=target.bucket_id,
+        storage_root=storage_root,
+        now=instant,
+        passphrase_callback=passphrase_callback,
+        profile_decode_context=profile_decode_context,
+    )
+    try:
+        _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=target.bucket_id)
+        previous_live = _profile_login_sessions().current_session()
+        if previous_live is not None and previous_live.bucket_id != candidate.bucket_id:
+            previous_live.close()
+        _profile_login_sessions().bind_session(candidate.session)
+        bind_active_profile_record_session(candidate.record_session)
+    except BaseException:
+        candidate.close()
+        raise
+    return ProfileLoginOutcome(
+        bucket_id=candidate.bucket_id,
+        label=target.label,
+        authenticated_at=candidate.session.opened_at,
+        idle_deadline=candidate.session.idle_deadline,
+        absolute_deadline=candidate.session.absolute_deadline,
+        session_persisted=False,
+        already_authenticated=False,
+        closed_previous_bucket_id=None,
+    )
+
+
 def _resume_for_idempotent_login(
     *,
     bucket_id: str,
@@ -1372,6 +1440,7 @@ __all__ = [
     "ProfileCustodySessionOwnerEffect",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
+    "authenticate_profile_for_invocation",
     "bind_resumed_profile_session",
     "close_profile_session_artefacts",
     "has_live_profile_session",

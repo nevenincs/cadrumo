@@ -30,8 +30,6 @@ if not __package__:
 
 _INSTALLED_WHEEL_BINDING = importlib.import_module("dev.packaging._installed_wheel_binding")
 installed_wheel_payload_sha256 = _INSTALLED_WHEEL_BINDING.installed_wheel_payload_sha256
-_RECOVERY_ENROLLMENT = importlib.import_module("dev.packaging._recovery_enrollment")
-enrolled_profile_creation = _RECOVERY_ENROLLMENT.enrolled_profile_creation
 _COMMAND_EXECUTION = importlib.import_module("dev.packaging.command_execution")
 CommandResult = _COMMAND_EXECUTION.CommandResult
 run_command = _COMMAND_EXECUTION.run_command
@@ -189,7 +187,6 @@ def isolated_product_environment(storage_root: Path) -> dict[str, str]:
             # Packaging oracles use an isolated disposable root and explicitly
             # select the non-keychain test posture. This avoids host keyring
             # prompts without reviving the retired file-backend contract.
-            "CADRUMO_SECRET_STORE_BACKEND": "unsecured",
             "PYTHONIOENCODING": _UTF_8,
         },
     )
@@ -391,29 +388,23 @@ def create_installed_profile(
     passphrase: str,
     timeout_seconds: float,
 ) -> CommandResult:
-    """Create the oracle's profile, completing the mandatory recovery enrollment.
+    """Create the oracle's profile through the bounded machine passphrase channel.
 
-    Creation refuses outright without a channel to hand the recovery phrase
-    over and read the exact phrase back, so the oracle plays the operator's
-    part rather than asking the product to skip a possession proof. Everything
-    the oracle asserts afterwards depends on this profile existing, so a
-    refusal here is raised, never carried forward.
+    A machine caller is never asked about recovery; the profile is born
+    passphrase-only, which is all the oracle needs. Everything the oracle
+    asserts afterwards depends on this profile existing, so a refusal here is
+    raised, never carried forward.
     """
-    with enrolled_profile_creation(
-        cli=cli,
-        arguments=(*_JSON_FORMAT, *profile_create_arguments(), "--secrets-stdin"),
-    ) as invocation:
-        return _run(
-            invocation.argv,
-            cwd=cwd,
-            env=environment,
-            timeout_seconds=timeout_seconds,
-            input_text=json.dumps(
-                {"passphrase": passphrase, "passphrase_confirmation": passphrase},
-                separators=(",", ":"),
-            ),
-            inherited_descriptors=invocation.inherited_descriptors,
-        )
+    return _run(
+        (str(cli), *_JSON_FORMAT, *profile_create_arguments(), "--secrets-stdin"),
+        cwd=cwd,
+        env=environment,
+        timeout_seconds=timeout_seconds,
+        input_text=json.dumps(
+            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
+            separators=(",", ":"),
+        ),
+    )
 
 
 def assert_grounded_observations(

@@ -16,11 +16,11 @@ import inspect
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .. import _edit_execution, revision_persistence
 from .. import edit_models as _edit_models
 from .. import edit_services as _edit_services
@@ -68,11 +68,7 @@ def test_stale_baseline_refusal_is_typed_and_never_a_domain_refusal_code() -> No
 
 def test_conformance_proof_reads_real_manual_scalar_and_binding_classification() -> None:
     """Conformance is derived from the loaded registry snapshot, never hand-listed."""
-    revision = (
-        compiled_bundled_authority()
-        .snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token)
-        .revision
-    )
+    revision = published_snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token).revision
     manual_scalars = [c for c in revision.casillas if getattr(c, "input_kind", None) is InputKind.MANUAL]
     manual_bindings = [b for b in revision.bindings if b.source is BindingSourceKind.MANUAL_INPUT]
     assert manual_scalars

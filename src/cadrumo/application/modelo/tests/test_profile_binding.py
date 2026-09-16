@@ -16,10 +16,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
@@ -29,6 +25,12 @@ from ....domain.calculations.registry.binding_terminal_origin import TerminalOri
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ....domain.calculations.registry.schema_formula import FormulaExpression
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ..profile_binding import (
@@ -36,7 +38,7 @@ from ..profile_binding import (
     resolve_profile_sourced_bindings,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
@@ -66,7 +68,7 @@ def _sourced_binding_ids(result: CalculationSourceResolution) -> set[BindingId]:
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return published_snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:

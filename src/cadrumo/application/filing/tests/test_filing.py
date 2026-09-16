@@ -7,7 +7,8 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
@@ -203,7 +204,7 @@ def test_build_draft_blocks_negative_modelo_130_retenciones() -> None:
 def test_binding_provenance_rejects_empty_registry_refs() -> None:
     """A bound filing value cannot be projected from an ungrounded binding definition."""
 
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_snapshot("130", filing_year=2026, period="1T")
     binding = next(item for item in snapshot.revision.bindings if item.legal_refs and item.source_refs)
     source, legal_refs, source_refs = binding_provenance(binding)
     assert source == binding.source
@@ -300,8 +301,8 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
     assert values[_M115_CASILLA_05].formula_trace_casilla_ids == _M115_CASILLA_05_TRACE
 
 
-def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
-    snapshot = compiled_bundled_authority().snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
+def test_build_draft_uses_registry_snapshot_for_modelo_123(operation: PinnedAuthorityOperation) -> None:
+    snapshot = operation.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
     draft = build_draft(
         modelo="123",
         period=_PERIOD,
@@ -317,7 +318,9 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
             _M123_CASILLA_11: Decimal("7.50"),
             _M123_CASILLA_13: Decimal("12.25"),
         },
-        schema_provider=_unscoped_schema_provider(),
+        schema_provider=build_runtime_schema_provider(
+            modelos=("123",), filing_year=_PERIOD.filing_year, period=_PERIOD, operation=operation
+        ),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -626,8 +629,10 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint(operation: Pi
 
 
 def test_approve_modelo_123_draft_uses_registry_schema_fingerprint(operation: PinnedAuthorityOperation) -> None:
-    snapshot = compiled_bundled_authority().snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
-    schema_provider = _unscoped_schema_provider()
+    snapshot = operation.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    schema_provider = build_runtime_schema_provider(
+        modelos=("123",), filing_year=_PERIOD.filing_year, period=_PERIOD, operation=operation
+    )
     draft = build_draft(
         modelo="123",
         period=_PERIOD,

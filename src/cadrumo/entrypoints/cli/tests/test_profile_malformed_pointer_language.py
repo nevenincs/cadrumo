@@ -31,14 +31,12 @@ def _profile_storage_env(*, storage_root: Path, tmp_path: Path) -> dict[str, str
         "CADRUMO_LOCAL_STORAGE_ROOT",
         "CADRUMO_OUTPUT_LANGUAGE",
         "CADRUMO_SECRET_PASSPHRASE",
-        "CADRUMO_SECRET_STORE_BACKEND",
         "CADRUMO_SECRET_STORE_DIR",
     ):
         env.pop(name, None)
     env.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_SECRET_STORE_BACKEND": "auto",
             "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "fallback-store"),
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         },

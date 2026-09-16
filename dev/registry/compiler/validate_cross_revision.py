@@ -9,8 +9,8 @@ policies operate over the casillas of each :class:`ModeloRevision`.
 
 from __future__ import annotations
 
-from collections import defaultdict
-from collections.abc import Iterable
+from collections import Counter, defaultdict
+from collections.abc import Iterable, Mapping
 from itertools import combinations
 
 from cadrumo.core.casilla_id import CasillaId
@@ -39,6 +39,7 @@ __all__ = [
 ]
 
 type _ContinuityOccurrence = tuple[ModeloRevision, CasillaDefinition]
+type _RoleCounts = Mapping[RevisionId, Counter[str]]
 type _CoverageNode = tuple[RevisionId, CasillaId]
 type _CoverageKey = tuple[str, str]
 
@@ -63,9 +64,20 @@ def declared_cross_revision_continuity_semantic_linkage_failures(
     failures: list[str] = []
     for modelo in modelos:
         grounded = role_exempt_occurrences(modelo)
+        role_counts = _semantic_role_counts(modelo)
         for continuidad_id, occurrences in sorted(_continuity_occurrences(modelo).items()):
-            failures.extend(_semantic_linkage_failures(modelo, continuidad_id, occurrences, grounded))
+            failures.extend(_semantic_linkage_failures(modelo, continuidad_id, occurrences, grounded, role_counts))
     return tuple(failures)
+
+
+def _semantic_role_counts(modelo: ModeloDefinition) -> _RoleCounts:
+    """Count each semantic role per revision once; every chain of the modelo reads the same counts."""
+    counts: dict[RevisionId, Counter[str]] = {}
+    for revision_id, revision in modelo.revisions.items():
+        counts[revision_id] = Counter(
+            casilla.semantic_role for casilla in revision.casillas if casilla.semantic_role is not None
+        )
+    return counts
 
 
 def _continuity_occurrences(modelo: ModeloDefinition) -> dict[str, list[_ContinuityOccurrence]]:
@@ -84,6 +96,7 @@ def _semantic_linkage_failures(
     continuidad_id: str,
     occurrences: list[_ContinuityOccurrence],
     grounded: frozenset[tuple[RevisionId, CasillaId]],
+    role_counts: _RoleCounts,
 ) -> tuple[str, ...]:
     """Return semantic-linkage failures for one declared continuity chain."""
     chain_revisions = _chain_revision_ids(occurrences)
@@ -95,7 +108,7 @@ def _semantic_linkage_failures(
         return missing_roles
 
     semantic_role = _unique_semantic_role(occurrences)
-    if semantic_role is None or not _role_is_unique_in_revisions(modelo, chain_revisions, semantic_role):
+    if semantic_role is None or not _role_is_unique_in_revisions(role_counts, chain_revisions, semantic_role):
         return ()
 
     expected_continuidad_id = semantic_role.lower().replace("_", "-")
@@ -151,15 +164,12 @@ def _unique_semantic_role(occurrences: Iterable[_ContinuityOccurrence]) -> str |
 
 
 def _role_is_unique_in_revisions(
-    modelo: ModeloDefinition,
+    role_counts: _RoleCounts,
     revision_ids: Iterable[RevisionId],
     semantic_role: str,
 ) -> bool:
     """Return whether a role occurs exactly once in every chain revision."""
-    return all(
-        sum(casilla.semantic_role == semantic_role for casilla in modelo.revisions[revision_id].casillas) == 1
-        for revision_id in revision_ids
-    )
+    return all(role_counts[revision_id][semantic_role] == 1 for revision_id in revision_ids)
 
 
 def cross_revision_casilla_consistency_failures(

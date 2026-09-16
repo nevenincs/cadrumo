@@ -33,7 +33,7 @@ from ....core.period import Period
 from ....core.time.clock import frozen_clock, now, today_madrid
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context,
+    leased_profile_create_context,
     published_supported_filing_years,
 )
 from ....domain.modelos.filing_record import ExternalEvidenceKind
@@ -56,7 +56,7 @@ from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_backend"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 # The pipe-joined choice set, bracket-agnostic: Typer renders a Choice
 # metavar as `<es|en|ca|hu>` (older Typer used square brackets). Asserting
@@ -930,7 +930,7 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
     assert PROVENANCE_SOURCE_MANUAL_CLI not in verified_sources
 
     record = create_user_profile_record(
-        context=published_profile_create_context(),
+        context=leased_profile_create_context(),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(

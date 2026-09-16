@@ -28,22 +28,24 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+)
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..profile_binding import ProfileBindingResolutionError, resolve_profile_sourced_bindings
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
@@ -64,7 +66,7 @@ _COUNT_BINDING = "renta-profile-descendientes-guarderia"
 
 @lru_cache
 def _snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
+    return published_snapshot("100", filing_year=_YEAR, period="0A")
 
 
 def _resolved(

@@ -17,7 +17,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context,
+    leased_profile_create_context,
     published_snapshot,
 )
 from ....domain.deadlines.models import M303RegimeComposition
@@ -27,7 +27,7 @@ from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "e3030000-0000-4000-8000-000000000060"
 _DECIDED_AT = datetime(2026, 4, 1, tzinfo=UTC)
@@ -65,7 +65,7 @@ def _store_current_profile(
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
-            context=published_profile_create_context(),
+            context=leased_profile_create_context(),
         ),
         root=runtime_profile.storage_root,
         label="M303 CLI scope profile",

@@ -48,7 +48,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -121,7 +122,7 @@ def _calculate_193(
     retencion_observations: tuple[RetencionObservation, ...],
 ):
     """Run the REAL 193 annual calculation from relations + the per-perceptor retención store."""
-    snapshot = compiled_bundled_authority().snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A")
+    snapshot = published_snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A")
     relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
     aggregation = aggregate_retenciones_193(
         retencion_observations,
@@ -232,12 +233,7 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     silently absorbed by this function's own default. A prior version of this
     default was a hardcoded cent that would have masked exactly this gap.
     """
-    published = (
-        compiled_bundled_authority()
-        .snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A")
-        .verification_policy()
-        .tolerance
-    )
+    published = published_snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A").verification_policy().tolerance
     assert published == Decimal("0"), "test precondition: modelo 193 2025 must publish exact equality"
 
     aggregation = aggregate_retenciones_193(

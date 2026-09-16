@@ -35,6 +35,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignSkippedSheet,
 )
 
+from .record_design_cache import load_cached_record_design, record_design_cache_key, store_cached_record_design
 from .record_design_pdf_orchestration import extract_record_design_pdf_cached
 from .record_design_sources import (
     load_corrections,
@@ -65,16 +66,23 @@ def _extract_record_design_cached(
     byte_count: int,
     modified_ns: int,
 ) -> RecordDesignExtraction:
-    del byte_count, modified_ns
     source_path = Path(path)
     suffix = source_path.suffix.lower()
     if suffix == _PDF_EXTENSION:
-        return extract_record_design_pdf(source_path)
-    if suffix in {_XLSX_EXTENSION, _XLSM_EXTENSION}:
-        return extract_record_design_workbook(source_path)
-    if suffix == _XLS_EXTENSION:
-        return extract_record_design_xls_workbook(source_path)
-    raise RegistryValidationError(f"unsupported record-design source extension: {source_path.suffix}")
+        extractor = extract_record_design_pdf
+    elif suffix in {_XLSX_EXTENSION, _XLSM_EXTENSION}:
+        extractor = extract_record_design_workbook
+    elif suffix == _XLS_EXTENSION:
+        extractor = extract_record_design_xls_workbook
+    else:
+        raise RegistryValidationError(f"unsupported record-design source extension: {source_path.suffix}")
+    cache_key = record_design_cache_key(source_path, (path, byte_count, modified_ns))
+    cached = load_cached_record_design(cache_key)
+    if cached is not None:
+        return cached
+    extraction = extractor(source_path)
+    store_cached_record_design(cache_key, extraction)
+    return extraction
 
 
 def _extraction(

@@ -27,7 +27,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.tests.env_scope import scoped_env_var
@@ -39,7 +38,7 @@ from ..compiler.identity import (
     compute_walked_tree_digest,
 )
 from ..compiler.loader import load_registry_tree
-from ..compiler.loader_cache import is_bundled_registry_root
+from ..compiler.loader_cache import REGISTRY_DISK_CACHE_DIR_ENV, is_bundled_registry_root
 from ..compiler.loader_fingerprints import (
     clear_fingerprint_cache,
     collect_registry_tree_fingerprints,
@@ -67,7 +66,6 @@ _CASILLA_NUMBER_SENTINEL = "@@CASILLA_NUMBER@@"
 _SUBPROCESS_TIMEOUT_SECONDS = 300
 _CHILD_REGISTRY_ROOT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_ROOT"
 _CHILD_EDITED_TEXT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"
-REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 
 # The child's coordinates ride the environment rather than argv so the spawned
 # command line stays a fixed literal.
@@ -195,7 +193,7 @@ def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cach
 
     with (
         scoped_env_var("CADRUMO_REGISTRY_VERDICT_CACHE_DIR", str(tmp_path / "verdict")),
-        override_settings(cadrumo_registry_disk_cache_dir=tmp_path / "registry-disk-cache"),
+        scoped_env_var("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(tmp_path / "registry-disk-cache")),
     ):
         before, _catalogues = load_registry_tree(registry_root)
         assert _casilla_number(before) == "01"
@@ -258,7 +256,7 @@ def test_a_mutable_tree_edit_is_seen_in_the_production_disk_cache_regime(tmp_pat
 
     env: dict[str, str] = {
         **os.environ,
-        REGISTRY_DISK_CACHE_DIR_ENV_VAR: str(isolated_cache_dir),
+        REGISTRY_DISK_CACHE_DIR_ENV: str(isolated_cache_dir),
         _CHILD_REGISTRY_ROOT_ENV_VAR: str(registry_root),
         _CHILD_EDITED_TEXT_ENV_VAR: str(edited_text_path),
     }

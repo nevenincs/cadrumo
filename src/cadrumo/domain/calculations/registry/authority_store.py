@@ -29,7 +29,6 @@ from .authority_cache import (
     AccountedAuthorityCache,
     AuthorityCacheTelemetry,
     RetainedAuthorityValue,
-    retained_object_size,
 )
 
 AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v1"
@@ -161,6 +160,7 @@ class SQLiteAuthorityReader:
         self._state_lock = RLock()
         self._active_leases = 0
         self._closed = False
+        self._component_queries: tuple[AuthorityComponentQuery, ...] | None = None
         for _ in range(max_connections):
             connection = self._open_connection()
             self._all_connections.append(connection)
@@ -202,11 +202,22 @@ class SQLiteAuthorityReader:
         return self._cache.telemetry()
 
     def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
-        """Iterate the complete component directory without hydrating payloads."""
+        """Iterate the complete component directory without hydrating payloads.
+
+        The directory is read once per admitted database: an admitted
+        generation is immutable, and identity verification still runs on every
+        call so a swapped file is refused rather than served from memory.
+        """
         self._verify_database_identity()
+        with self._state_lock:
+            if self._component_queries is not None:
+                return self._component_queries
         with self._checkout() as connection:
             rows = connection.execute("SELECT kind, key FROM components ORDER BY kind, key").fetchall()
-        return tuple(authority_query_from_identity(kind, key) for kind, key in rows)
+        queries = tuple(authority_query_from_identity(kind, key) for kind, key in rows)
+        with self._state_lock:
+            self._component_queries = queries
+        return queries
 
     @property
     def active_leases(self) -> int:
@@ -256,7 +267,9 @@ class SQLiteAuthorityReader:
             for dependency_kind, dependency_key in dependency_rows
         )
         decoded = decode_authority_component(query, payload, dependencies=dependencies)
-        return RetainedAuthorityValue(decoded, max(int(retained_weight), retained_object_size(decoded)))
+        # Publication measured the decoded graph once; re-walking millions of
+        # members on every load would repeat that work for every operation.
+        return RetainedAuthorityValue(decoded, int(retained_weight))
 
     def _open_connection(self) -> sqlite3.Connection:
         uri = self._database_path.resolve().as_uri() + "?mode=ro"

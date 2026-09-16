@@ -196,7 +196,10 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
             from ....core.errors.error_codes import resolve_error_message
 
             detail = resolve_error_message(error, locale=self.output_locale()).strip()
-        except (LookupError, TypeError, ValueError):
+        except (InternalInvariantError, LookupError, TypeError, ValueError):
+            # An unkeyed failure (a bare RuntimeError escaping the worker) has
+            # no registered error code; it keeps the internal classification
+            # below instead of crashing the screen.
             detail = ""
         guidance = tr("errors.internal.internal_cli_unexpected_boundary", locale=self.output_locale())
         return f"{detail} {guidance}".strip()

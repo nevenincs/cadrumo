@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import TypedDict
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -39,7 +40,7 @@ _DEFAULT_CASH_ACCOUNTING_TREATMENT = IvaCashAccountingTreatment("none")
 
 
 def _revision_303():
-    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
+    return published_snapshot("303", filing_year=2026, period="2T").revision
 
 
 def _raw(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
@@ -504,15 +505,11 @@ def _m390_repercutido_values(transaction: Transaction) -> dict[str, Decimal]:
     # aggregated for, never pinned: an id literal names one moment in the
     # registry and rots on the next span split, and pinning a different year's
     # id would compute this period under another year's norms.
-    revision = (
-        compiled_bundled_authority()
-        .snapshot(
-            "390",
-            filing_year=annual.filing_year,
-            period=annual.registry_token,
-        )
-        .revision
-    )
+    revision = published_snapshot(
+        "390",
+        filing_year=annual.filing_year,
+        period=annual.registry_token,
+    ).revision
     resolved = resolve_ledger_iva_aggregation_binding_values(
         revision,
         aggregation.observations,

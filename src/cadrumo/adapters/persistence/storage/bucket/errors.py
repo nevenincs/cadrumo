@@ -20,7 +20,7 @@ class BucketError(SecureStorageError):
 
 
 class BucketValidationError(BucketError):
-    """Raised when a bucket parameter or manifest field fails validation."""
+    """Raised when a bucket parameter fails validation."""
 
     def __init__(
         self,
@@ -33,24 +33,6 @@ class BucketValidationError(BucketError):
             message,
             context=context,
             translated_message="errors.integrity.integrity_storage_bucket_validation",
-        )
-
-
-class NoActiveBucketError(BucketError):
-    """Raised when no active bucket can be resolved.
-
-    The precedence chain is exhausted (no ``--profile`` flag and no
-    pointer file), and the process refuses to proceed. The adapter records
-    that selection fact only; a boundary with a verified public profile label
-    owns any action projection.
-    """
-
-    def __init__(self, detail: str | None = None) -> None:
-        """Build a no-active-bucket failure."""
-        del detail
-        super().__init__(
-            context={"active_bucket_selected": False},
-            translated_message="errors.refused.refused_storage_bucket_no_active",
         )
 
 
@@ -72,7 +54,7 @@ class BucketBusyError(BucketError):
 
 
 class BucketAlreadyPresentError(BucketError):
-    """Raised when an import would collide with an existing bucket id.
+    """Raised when provisioning would collide with an existing bucket id.
 
     Carries the conflicting bucket id.
     """
@@ -124,53 +106,6 @@ class BucketLockedError(BucketError):
         self.bucket_id = bucket_id
 
 
-class RecoveryUnavailableError(BucketError):
-    """The refusal reserved for a recovery wrap that cannot be loaded.
-
-    The prose that stood here was destroyed by an edit and is NOT reconstructed
-    below, because its meaning did not survive either. It distinguished
-    "recovery never enrolled" from a torn or tampered envelope by reading a
-    ``recovery_enrolled`` flag off the bucket manifest, and that field has since
-    been removed: the manifest now REFUSES a payload carrying it, which
-    ``test_rejects_the_removed_manifest_recovery_mirror`` pins. So the
-    distinction has no basis left in the record, and restoring the sentence
-    would reinstate a claim the tree contradicts.
-
-    What is established by measurement, and nothing beyond it: the class exists
-    and is exported, it carries the active bucket id in its typed payload, and
-    it has no raise sites anywhere in the tree. Whoever reinstates a recovery
-    lifecycle owns re-deciding what this refusal distinguishes, on whatever
-    signal the manifest carries then.
-    """
-
-    def __init__(self, *, bucket_id: str) -> None:
-        """Build a recovery-unavailable failure."""
-        super().__init__(
-            context={"bucket_id": bucket_id},
-            translated_message="errors.fail.fail_storage_bucket_recovery_unavailable",
-        )
-        self.bucket_id = bucket_id
-
-
-class RecoveryVerificationError(BucketError):
-    """The refusal reserved for an operator-typed recovery code that fails to decode.
-
-    Not raised anywhere. The command-line verb this once named no longer
-    resolves, and the citation is removed rather than repointed because there
-    is no replacement verb to point at: a dead operator instruction in a
-    docstring is worse than none, since a reader will try it.
-
-    The shape it describes is still the intended one -- a 24-word entry that
-    does not unwrap the bucket's recovery envelope -- but nothing today accepts
-    such an entry.
-    """
-
-    def __init__(self, detail: str | None = None) -> None:
-        """Build a recovery-verification failure."""
-        super().__init__(translated_message="errors.auth.auth_storage_bucket_recovery_verification")
-        self._detail = detail
-
-
 __all__ = [
     "BucketAlreadyPresentError",
     "BucketBusyError",
@@ -178,7 +113,4 @@ __all__ = [
     "BucketLockedError",
     "BucketPathTooLongError",
     "BucketValidationError",
-    "NoActiveBucketError",
-    "RecoveryUnavailableError",
-    "RecoveryVerificationError",
 ]

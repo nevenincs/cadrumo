@@ -64,7 +64,6 @@ def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tu
         barrier.wait()
         try:
             outcome = register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=_LABEL,
                 passphrase=_CREDENTIAL_INPUT,
                 profile_create_context=_profile_create_context_for_test,

@@ -34,7 +34,6 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from ....application.operator_surface.help import build_help_document
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import Settings, load_settings
-from ....core.config_support import SecretStoreBackend
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.package_version import PACKAGE_VERSION
@@ -75,7 +74,6 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
     setting_env = str.upper
     env.update(
         {
-            setting_env("cadrumo_secret_store_backend"): SecretStoreBackend.AUTO.value,
             setting_env("cadrumo_secret_passphrase"): (
                 base_settings.cadrumo_dev_test_database_password.get_secret_value()
             ),
@@ -449,11 +447,9 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
     from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
     from ....core.config import load_settings, override_settings
-    from ....core.config_support import SecretStoreBackend
 
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "storage",
-        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
         cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
         cadrumo_active_profile=None,
     ):

@@ -6,9 +6,9 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ..settlement_casilla import (
     DECLARATION_RESULT_SEMANTIC_ROLES,
@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _revision(modelo: str, year: int, period: str):
-    return compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period).revision
+    return published_snapshot(modelo, filing_year=year, period=period).revision
 
 
 def test_the_result_role_is_a_strict_subset_of_the_settlement_roles() -> None:

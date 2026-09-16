@@ -13,7 +13,7 @@ from ......adapters.persistence.storage.tests.secure_sql import isolated_profile
 from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
 from ...secret_store.store import SecretRecord
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ...tests.storage_path_grammar import assert_path_matches_grammar
 from ..blob_store import EncryptedBlobStore
 from ..materialisation import get_secret_store
@@ -110,10 +110,10 @@ def test_the_doubled_blobs_wiring_would_have_been_caught_positive_control(tmp_pa
     """
     storage_root = tmp_path / "storage"
     blob_store_dir = storage_root / "blobs"  # what cadrumo_blob_store_dir resolves to by default
-    provider = EphemeralMasterKeyProvider()
     # The prior bug: passing the already-suffixed blob_store_dir as root_dir.
-    buggy_store = EncryptedBlobStore(root_dir=blob_store_dir, master_key_provider=provider)
-    reference = buggy_store.put(b"positive-control-payload", classification=SensitivityClass.SECRET)
+    with EphemeralBucketSession():
+        buggy_store = EncryptedBlobStore(root_dir=blob_store_dir)
+        reference = buggy_store.put(b"positive-control-payload", classification=SensitivityClass.SECRET)
     doubled_path = (
         blob_store_dir / "blobs" / reference.sha256_plaintext_hex[:2] / f"{reference.sha256_plaintext_hex}.enc"
     )

@@ -22,7 +22,7 @@ from ....tests.cli_envelope import require_schema_envelope
 from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> None:

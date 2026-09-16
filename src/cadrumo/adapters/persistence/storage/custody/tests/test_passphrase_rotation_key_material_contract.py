@@ -5,10 +5,9 @@ tests pin the two substrate facts that decide whether it can be implemented
 safely, both of which were established by measurement rather than by reading,
 and both of which a future author could silently break.
 
-Neither test drives a rotation function, because none exists yet. They
-characterise the custody substrate the rotation will be built on, so the
-constraints are already enforced when it arrives rather than discovered
-afterwards by a taxpayer.
+Neither test drives the rotation door. They characterise the custody
+substrate the rotation is built on, so the constraints hold at the substrate
+whatever the door above it does.
 """
 
 from __future__ import annotations
@@ -22,11 +21,8 @@ from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_
 from cadrumo.adapters.persistence.storage.custody.envelope import create_profile_custody_password_envelope
 from cadrumo.adapters.persistence.storage.custody.recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
-    ProfileCustodyRecoveryEnvelope,
-)
-from cadrumo.adapters.persistence.storage.custody.recovery_artifact import (
-    ProfileCustodyRecoveryArtifact,
-    unlock_imported_profile_custody_recovery_artifact,
+    parse_profile_custody_recovery_envelope,
+    unlock_profile_custody_recovery_envelope,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
@@ -41,22 +37,22 @@ from cadrumo.application.user_profile.capsule_record import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _LABEL = "Rotation Contract Subject"
 _CREDENTIAL_INPUT = "rotation-contract-current-operator-secret"
 _NEW_CREDENTIAL_INPUT = "rotation-contract-replacement-operator-secret"
 
 
-def test_rotation_must_preserve_the_dek_epoch_so_an_outstanding_recovery_artifact_still_opens(
+def test_rotation_must_preserve_the_dek_epoch_so_an_enrolled_recovery_envelope_still_opens(
     tmp_path: Path,
 ) -> None:
-    """Minting a fresh DEK epoch during rotation would strand every recovery artifact.
+    """Minting a fresh DEK epoch during rotation would strand every enrolled recovery wrapper.
 
     The recovery wrapper and the committed sentinel are both bound to
     ``(profile_id, dek_epoch)`` and to neither the password envelope's digest
     nor its generation. So a re-wrap that keeps the epoch leaves an
-    already-issued recovery phrase working, and a re-wrap that mints a new one
+    already-issued recovery code working, and a re-wrap that mints a new one
     silently destroys the only second door a taxpayer holds — without any
     error, at the moment they change their password.
 
@@ -83,11 +79,11 @@ def test_rotation_must_preserve_the_dek_epoch_so_an_outstanding_recovery_artifac
         assert rotated.self_digest != material.envelope.self_digest
         assert rotated.dek_epoch == material.envelope.dek_epoch
 
-        recovery = ProfileCustodyRecoveryEnvelope.model_validate_json(
+        recovery = parse_profile_custody_recovery_envelope(
             (material.capsule_path / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME).read_bytes(),
         )
-        proved = unlock_imported_profile_custody_recovery_artifact(
-            ProfileCustodyRecoveryArtifact.from_recovery_envelope(recovery),
+        proved = unlock_profile_custody_recovery_envelope(
+            recovery,
             handed[0],
             sentinel=material.sentinel,
             expected_profile_id=profile_id,
@@ -153,19 +149,23 @@ def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envel
 
 
 def _register(tmp_path: Path, handed: list[str]):
-    """Register one profile with recovery enrolled, capturing its phrase."""
+    """Register one profile, then enrol recovery on it, capturing its code."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
     from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
-    return register_profile_with_credentials(
+    outcome = register_profile_with_credentials(
         label=f"{_LABEL} {tmp_path.name}",
         passphrase=_CREDENTIAL_INPUT,
-        recovery_handover=lambda enrollment: (
-            handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
-        ),
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
+    enroll_profile_recovery(
+        profile_id=UUID(outcome.profile_id),
+        current_passphrase=_CREDENTIAL_INPUT,
+        recovery_handover=lambda enrollment: handed.append(enrollment.recovery_key.code) or handed[-1],
+    )
+    return outcome
 
 
 def _unlock_dek(material) -> bytes:

@@ -2,19 +2,18 @@
 
 `BucketSession` replaces the module-global `ClassVar` caches that once
 survived a bucket switch on the shared-master providers, both since
-deleted. Each instance binds to exactly one
-`bucket_id`; the unlocked KEK and DEK are held in `bytearray` buffers
-so `close()` can overwrite the bytes in place before the references are
-dropped. The session is the only object that holds cleartext key
-material on the master-key surface; the substrate invariant
-forbids any module-global mutable state that could survive a bucket
-switch.
+deleted. Each instance binds to exactly one `bucket_id`; the unlocked
+DEK is held in a `bytearray` buffer so `close()` can overwrite the bytes
+in place before the reference is dropped. The session is the only object
+that holds cleartext key material on this surface; the substrate
+invariant forbids any module-global mutable state that could survive a
+bucket switch.
 
 The `bytearray` zeroisation is best-effort. Python may have produced
-short-lived `bytes` copies of the buffers when callers materialised the
-`kek` / `dek` properties; the garbage collector owns the lifetime of
-those copies. The contract is documented honestly so callers do not
-assume Python guarantees a deeper wipe than the language can deliver.
+short-lived `bytes` copies of the buffer when callers materialised the
+`dek` property; the garbage collector owns the lifetime of those
+copies. The contract is documented honestly so callers do not assume
+Python guarantees a deeper wipe than the language can deliver.
 
 """
 
@@ -42,8 +41,6 @@ if TYPE_CHECKING:
 
     from .....core.config import Settings
 
-_KEK_BYTES = 32
-DEFAULT_SESSION_ABSOLUTE_MINUTES = 240
 #: Entries kept by the per-session routed-settings memo. Measured need is two
 #: -- a profile write asks for the route once inside a settings override and
 #: once outside it, alternating -- so the bound is that pair with headroom,
@@ -73,40 +70,31 @@ class BucketSession:
         "_hmac_subkeys",
         "_idle_deadline",
         "_idle_window",
-        "_kek_available",
-        "_kek_buffer",
         "_opened_at",
         "_routed_settings",
         "_sealed",
         "_storage_root",
-        "_unsecured_backend",
     )
 
     def __init__(
         self,
         *,
         bucket_id: str,
-        kek_buffer: bytearray,
         dek_buffer: bytearray,
         idle_window: timedelta,
         idle_deadline: datetime,
         opened_at: datetime,
         absolute_deadline: datetime,
-        unsecured_backend: bool,
         storage_root: Path | None,
-        kek_available: bool = True,
     ) -> None:
-        """Initialize the session's key buffers, deadlines, and bucket identity."""
+        """Initialize the session's key buffer, deadlines, and bucket identity."""
         self._bucket_id = bucket_id
         self._storage_root = storage_root
-        self._kek_available = kek_available
-        self._kek_buffer = kek_buffer
         self._dek_buffer = dek_buffer
         self._idle_window = idle_window
         self._idle_deadline = idle_deadline
         self._opened_at = opened_at
         self._absolute_deadline = absolute_deadline
-        self._unsecured_backend = unsecured_backend
         self._sealed = False
         self._engine: Engine | None = None
         # Small bounded memo behind :meth:`routed_settings`; see that method
@@ -121,87 +109,11 @@ class BucketSession:
         # property: the cached values are immutable ``bytes`` the language
         # cannot wipe in place.
         self._hmac_subkeys: dict[bytes, bytes] = {}
-        # Registered at construction, not at binding: a session owns key buffers
+        # Registered at construction, not at binding: a session owns its key buffer
         # from this point on, and the emergency-zeroisation path must cover it
         # whether or not it is ever bound to a context (and whichever thread
         # binds it). Weak, so this never keeps the buffers alive.
         register_live_session(self)
-
-    @classmethod
-    def open(
-        cls,
-        *,
-        bucket_id: str,
-        kek: bytes,
-        dek: bytes,
-        idle_minutes: int,
-        opened_at: datetime,
-        absolute_minutes: int | None = None,
-        unsecured_backend: bool = False,
-        storage_root: Path | None = None,
-    ) -> BucketSession:
-        """Open a session for one bucket.
-
-        Args:
-            bucket_id: Non-empty identifier of the bucket being unlocked.
-            kek: 32-byte Argon2id-derived key-encryption key.
-            dek: 32-byte data-encryption key recovered by unwrapping the
-                bucket's wrapped DEK under the KEK.
-            idle_minutes: Idle-timeout window in minutes; must be a
-                strict positive integer.
-            opened_at: UTC timestamp at which the session opened.
-            absolute_minutes: Absolute session-lifetime cap in minutes,
-                fixed at open time as ``opened_at + absolute_minutes``. The
-                cap is immutable for the session's life: :meth:`touch`
-                clamps the sliding idle deadline to it, so a
-                continuously-touched session still seals once the cap is
-                reached. Must be a strict positive integer. ``None`` falls
-                back to :data:`DEFAULT_SESSION_ABSOLUTE_MINUTES`.
-            unsecured_backend: When ``True``, the session was opened
-                against an unsecured (non-OS-keychain) backend; callers
-                use this flag to emit appropriate warnings.
-            storage_root: Canonical local-storage root that supplied the
-                bucket key material. ``None`` is reserved for synthetic or
-                rootless sessions.
-
-        Returns:
-            A new :class:`BucketSession` with the provided credentials and TTL.
-
-        Raises:
-            StorageValidationError: When ``bucket_id`` is empty, ``idle_minutes`` or the
-                resolved ``absolute_minutes`` is not positive, ``kek`` is not 32 bytes, or
-                ``dek`` is not 32 bytes.
-        """
-        if not bucket_id:
-            raise _storage_validation_error("bucket_id must be non-empty")
-        if idle_minutes <= 0:
-            raise _storage_validation_error("idle_minutes must be a strict positive integer")
-        resolved_absolute_minutes = DEFAULT_SESSION_ABSOLUTE_MINUTES if absolute_minutes is None else absolute_minutes
-        if resolved_absolute_minutes <= 0:
-            raise _storage_validation_error("absolute_minutes must be a strict positive integer")
-        if len(kek) != _KEK_BYTES:
-            raise _storage_validation_error(f"kek must be exactly {_KEK_BYTES} bytes")
-        if len(dek) != KEY_SIZE:
-            raise _storage_validation_error(f"dek must be exactly {KEY_SIZE} bytes")
-
-        opened_at = validate_utc_aware(opened_at)
-        idle_window = timedelta(minutes=idle_minutes)
-        absolute_deadline = opened_at + timedelta(minutes=resolved_absolute_minutes)
-        # The idle deadline never outlives the absolute cap: clamp the initial
-        # window so a session whose idle window would reach past the cap is born
-        # already bounded by it.
-        idle_deadline = min(opened_at + idle_window, absolute_deadline)
-        return cls(
-            bucket_id=bucket_id,
-            kek_buffer=bytearray(kek),
-            dek_buffer=bytearray(dek),
-            idle_window=idle_window,
-            idle_deadline=idle_deadline,
-            opened_at=opened_at,
-            absolute_deadline=absolute_deadline,
-            unsecured_backend=unsecured_backend,
-            storage_root=(storage_root.expanduser().resolve(strict=False) if storage_root is not None else None),
-        )
 
     @classmethod
     def open_resumed(
@@ -217,13 +129,11 @@ class BucketSession:
     ) -> BucketSession:
         """Re-open a session from a resumed persisted profile session.
 
-        The persisted profile-session record session-wraps the DEK only: the
-        KEK stays profile-login-scoped and is never placed in the OS
-        keychain, so a resumed session legitimately has no KEK. Column
-        crypto reads the DEK, so the resumed session is fully functional;
-        :attr:`kek` refuses with
-        :class:`~adapters.persistence.storage.errors.MasterKeyUnavailableError`
-        rather than returning a placeholder.
+        The sole constructor. The persisted profile-session record
+        session-wraps the DEK only, and the key-encryption key that unwrapped
+        it stays profile-login-scoped and is never placed in the OS keychain,
+        so a session never holds one. Column crypto reads the DEK, which is
+        all this surface needs.
 
         Both deadlines come from the resumed record instead of being
         re-derived, so the cross-process session inherits the ORIGINAL
@@ -260,15 +170,12 @@ class BucketSession:
             raise _storage_validation_error("idle_deadline must not exceed absolute_deadline")
         return cls(
             bucket_id=bucket_id,
-            kek_buffer=bytearray(),
             dek_buffer=bytearray(dek),
             idle_window=timedelta(minutes=idle_minutes),
             idle_deadline=idle_deadline,
             opened_at=opened_at,
             absolute_deadline=absolute_deadline,
-            unsecured_backend=False,
             storage_root=(storage_root.expanduser().resolve(strict=False) if storage_root is not None else None),
-            kek_available=False,
         )
 
     @property
@@ -285,11 +192,6 @@ class BucketSession:
     def sealed(self) -> bool:
         """Return whether :meth:`close` has already sealed this session."""
         return self._sealed
-
-    @property
-    def unsecured_backend(self) -> bool:
-        """Return whether this session was opened against an unsecured backend."""
-        return self._unsecured_backend
 
     @property
     def idle_deadline(self) -> datetime:
@@ -309,30 +211,6 @@ class BucketSession:
         refreshed; :meth:`touch` clamps the sliding idle deadline to it.
         """
         return self._absolute_deadline
-
-    @property
-    def kek(self) -> bytes:
-        """Return an immutable view of the live KEK bytes.
-
-        Raises `BucketLockedError` after `close()` has sealed the
-        session, and
-        :class:`~adapters.persistence.storage.errors.MasterKeyUnavailableError`
-        on a session opened through :meth:`open_resumed`, whose persisted
-        record carries the DEK only (the KEK stays login-scoped).
-        """
-        if self._sealed:
-            raise BucketLockedError(bucket_id=self._bucket_id)
-        if not self._kek_available:
-            from ..errors import MasterKeyUnavailableError
-
-            raise MasterKeyUnavailableError(
-                context={
-                    "resumed_profile_session": True,
-                    "resumed_session_kek_material_available": False,
-                },
-                translated_message="errors.auth.auth_storage_master_key_unavailable",
-            )
-        return bytes(self._kek_buffer)
 
     @property
     def dek(self) -> bytes:
@@ -547,7 +425,6 @@ class BucketSession:
         """
         if self._sealed:
             return
-        _zeroise(self._kek_buffer)
         _zeroise(self._dek_buffer)
         self._sealed = True
         self._routed_settings.clear()
@@ -568,4 +445,4 @@ class BucketSession:
             _log.debug("bucket session engine disposal failed error_type=%s", type(exc).__name__)
 
 
-__all__ = ["DEFAULT_SESSION_ABSOLUTE_MINUTES", "BucketSession"]
+__all__ = ["BucketSession"]

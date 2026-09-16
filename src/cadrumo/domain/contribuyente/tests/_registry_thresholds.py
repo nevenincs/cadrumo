@@ -27,10 +27,9 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.formula_runtime_ops import resolve_parameter
-from ...calculations.registry.static_inspection import RegistryRevisionInspection
+from ...calculations.registry.schema import ModeloRevision
 from ..family_types import MinimoDescendientesThresholds
 
 __all__ = [
@@ -48,19 +47,21 @@ _BIRTH_ORDER_SUFFIXES = (
 
 
 @cache
-def _inspection(filing_year: int) -> RegistryRevisionInspection:
+def _revision(filing_year: int) -> ModeloRevision:
     """Non-filing static inspection of M100's *filing_year* revision.
 
-    Read the selected revision from the committed authority artifact. This is
-    a non-filing inspection, so use the authority's inspection projection rather
-    than reopening mutable registry sources or invoking the compiler.
+    Read the selected revision from the published generation. This is a
+    non-filing inspection, so use the canonical temporal selector against the
+    runtime reader rather than reopening mutable registry sources or invoking
+    the compiler.
     """
-    return compiled_bundled_authority().inspect_revision("100", filing_year=filing_year, period="0A")
+    with bundled_indexed_authority().operation() as operation:
+        return operation.revision_for_context("100", filing_year=filing_year, period="0A")
 
 
 def _parameter(filing_year: int, suffix: str) -> Decimal:
     """Resolve one ``minimo-descendientes`` parameter for *filing_year*."""
-    by_id = {parameter.id: parameter for parameter in _inspection(filing_year).parameters}
+    by_id = {parameter.id: parameter for parameter in _revision(filing_year).parameters}
     return resolve_parameter(
         by_id[f"renta-minimo-descendientes-{suffix}"],
         {"filing_period": date(filing_year, 12, 31)},

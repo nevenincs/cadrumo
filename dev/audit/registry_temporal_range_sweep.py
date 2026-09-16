@@ -11,9 +11,10 @@ from __future__ import annotations
 import argparse
 import ast
 import re
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 
 AUTHORITY = Path("src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml")
 DEFAULT_ROOTS = (Path("src"), Path("dev"), Path("tests"), Path("test"))
@@ -50,7 +51,7 @@ class Finding:
 
 
 def _canonical_bounds(repo: Path) -> tuple[int, int, int | None]:
-    payload = tomllib.loads((repo / AUTHORITY).read_text(encoding="utf-8"))
+    payload = parse_toml((repo / AUTHORITY).read_text(encoding="utf-8"))
     declaration = payload.get("supported_filing_years")
     if not isinstance(declaration, dict):
         raise ValueError("supported_filing_years authority must be a TOML table")
@@ -157,8 +158,8 @@ def _toml_findings(path: Path, repo: Path, canonical: set[int]) -> list[Finding]
         return []
     text = path.read_text(encoding="utf-8")
     try:
-        payload = tomllib.loads(text)
-    except tomllib.TOMLDecodeError:
+        payload = parse_toml(text)
+    except TomlDecodeError:
         return []
     findings: list[Finding] = []
     for keys, value in _walk_toml(payload):

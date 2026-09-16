@@ -29,7 +29,7 @@ observation-persistence API
 (:meth:`CalculationObservationRepository.save_observation`, the same write path
 the local-file carry flow uses), stamped with the non-official ``app_filing``
 source_kind, over a real encrypted-SQLite object store
-(:class:`SecureObjectRepository` + :class:`EphemeralMasterKeyProvider` via
+(:class:`SecureObjectRepository` + :class:`EphemeralBucketSession` via
 :func:`isolated_runtime_profile`). No mocks, stubs, skips, or xfail.
 
 The relation aggregation assertions (annual monetary casilla == sum of the four

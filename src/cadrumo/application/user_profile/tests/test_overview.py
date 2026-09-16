@@ -22,7 +22,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ....core.classification.policies import SensitivityClass
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
@@ -35,7 +35,7 @@ from ....domain.user_profile.schema import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import MASKED_PLACEHOLDER, build_profile_overview
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 _FIELD_VALUE = "a-distinctive-secret-value"

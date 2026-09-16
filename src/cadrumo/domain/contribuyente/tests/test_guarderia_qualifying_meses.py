@@ -21,7 +21,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
@@ -30,7 +31,7 @@ from ..guarderia_mensual import parse_guarderia_mensual
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _YEAR = 2024
-_CONTEXT = FamilyFactResolutionContext(compiled_bundled_authority(), date(_YEAR, 12, 31), date(_YEAR, 12, 31))
+_CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(_YEAR, 12, 31), date(_YEAR, 12, 31))
 
 
 def _child(birth: date, *, mensual: str = "", annual: int = 0, convive: bool = True) -> DescendantInfo:

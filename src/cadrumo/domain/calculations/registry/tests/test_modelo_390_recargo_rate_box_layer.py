@@ -38,7 +38,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel
 
 from ....invoices.enums import IvaRate
@@ -50,6 +49,7 @@ from ..ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ..schema import BindingDefinition, ModeloRevision
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -121,7 +121,7 @@ _M390_REVISION_IDS: tuple[str, ...] = ("2022", "2023", "2024", "2025")
 
 def _m390_revision(filing_year: str | int = 2024) -> ModeloRevision:
     """Resolve one filing year's revision through the law-determined selector."""
-    return compiled_bundled_authority().snapshot("390", filing_year=int(filing_year), period="0A").revision
+    return published_snapshot("390", filing_year=int(filing_year), period="0A").revision
 
 
 def _rated_rows() -> tuple[IvaLedgerObservation, ...]:

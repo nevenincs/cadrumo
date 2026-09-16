@@ -871,10 +871,17 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
         assert len(calculation_repository.load()) == 1
 
 
+@pytest.mark.parametrize(
+    "period_code",
+    (
+        pytest.param("2T", id="quarterly-first-active-quarter"),
+        pytest.param("05", id="monthly-first-active-month"),
+    ),
+)
 def test_first_active_m303_period_allows_create_and_calculate(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
+    tmp_path: Path, period_code: str, *, operation: PinnedAuthorityOperation
 ) -> None:
-    period = Period.from_year_and_code(2026, "2T")
+    period = Period.from_year_and_code(2026, period_code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)

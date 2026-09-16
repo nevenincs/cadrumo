@@ -272,8 +272,11 @@ def _assessed_filing_retention(
     generic retention requirement, because the two states have different
     remedies and an operator cannot act on "assessment required".
     """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
     try:
-        return FilingRetentionAuthority(root=root).assess(profile_id, now=now())
+        with bundled_indexed_authority().operation() as operation:
+            return FilingRetentionAuthority(root=root).assess(profile_id, now=now(), authority=operation)
     except FileNotFoundError as exc:
         raise _bucket_delete_refusal(
             BucketDeletionPreconditionCondition.RETENTION_SNAPSHOT_ASSESSABLE,

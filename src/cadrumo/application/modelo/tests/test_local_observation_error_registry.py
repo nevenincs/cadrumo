@@ -5,9 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..action_errors import ModeloLocalObservationError
 from ..local_observation_actions import _canonical_casilla_values
 
@@ -28,7 +28,7 @@ _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_i
 
 
 def test_local_observation_refuses_ambiguous_printed_number_with_canonical_candidates() -> None:
-    snapshot = compiled_bundled_authority().snapshot("200", filing_year=2025, period="0A")
+    snapshot = published_snapshot("200", filing_year=2025, period="0A")
 
     with pytest.raises(ModeloLocalObservationError) as exc_info:
         _canonical_casilla_values(

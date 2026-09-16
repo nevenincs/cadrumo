@@ -35,7 +35,7 @@ from sqlalchemy.engine import Engine
 
 from ......core.classification.policies import SensitivityClass
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..orm import Base
 from ..secure_object_records import SecureObjectRawRow
 from ..secure_objects import SecureObjectRepository
@@ -56,7 +56,7 @@ def test_archive_bundle_round_trips_three_rows(tmp_path: Path) -> None:
     enables the restore.
     """
 
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     with provider:
         db_path = tmp_path / "archive-bundle.db"
         engine = bootstrap_sqlite_engine(db_path)

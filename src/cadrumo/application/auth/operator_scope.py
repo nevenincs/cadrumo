@@ -36,7 +36,6 @@ if TYPE_CHECKING:
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
     "cadrumo_local_storage_root",
     "cadrumo_active_profile",
-    "cadrumo_secret_store_backend",
     "cadrumo_secret_store_dir",
     "cadrumo_blob_store_dir",
     "cadrumo_secret_passphrase",

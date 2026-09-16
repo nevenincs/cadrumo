@@ -19,11 +19,11 @@ walking; the registry is a TOML surface and shares no traversal machinery.
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from functools import cache
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.user_profile.labels import profile_field_label_key, profile_section_title_key
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 from dev.registry.compiler.profile_schema import capture_profile_schema
@@ -70,8 +70,8 @@ def scan_registry_keys() -> set[str]:
             f"cannot resolve category profile locale-key source: {type(exc).__name__}: {exc}",
         ) from exc
     try:
-        document = tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+        document = parse_toml(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, TomlDecodeError) as exc:
         raise LocaleRegistryEnumerationError(
             f"cannot enumerate category profile locale keys from {path}: {type(exc).__name__}: {exc}",
         ) from exc
@@ -250,8 +250,8 @@ def scan_detail_row_fields() -> tuple[str, ...]:
 
     for path in paths:
         try:
-            payload = tomllib.loads(path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            payload = parse_toml(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, TomlDecodeError) as exc:
             raise LocaleRegistryEnumerationError(
                 f"cannot enumerate registry row fields from {path}: {type(exc).__name__}: {exc}"
             ) from exc

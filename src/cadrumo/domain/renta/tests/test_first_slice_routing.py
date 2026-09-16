@@ -16,7 +16,6 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
@@ -24,6 +23,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     renta_first_slice_binding_target_casillas,
 )
+from ...calculations.registry.tests.registry_tree import full_published_modelo
 from ...categories.spending_category import SpendingCategory
 from ...categories.spending_category_catalogue import spending_category_tokens
 from .._first_slice_routing import (
@@ -104,7 +104,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry(operation: Pin
     :func:`_check_all_id_references`.
     """
 
-    modelo_100 = compiled_bundled_authority().modelo("100")
+    modelo_100 = full_published_modelo(operation, "100")
 
     all_casilla_ids: set[CasillaId] = set()
     for revision in modelo_100.revisions.values():
@@ -179,7 +179,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
     per-revision referential-integrity requirement.
     """
 
-    modelo_100 = compiled_bundled_authority().modelo("100")
+    modelo_100 = full_published_modelo(operation, "100")
 
     for year in ("2020", "2021", "2022"):
         revision = modelo_100.revisions[year]
@@ -192,7 +192,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
         assert "0195" in targets
 
 
-def test_modelo_100_snapshots_build_cleanly_across_every_revision() -> None:
+def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: PinnedAuthorityOperation) -> None:
     """Every Modelo 100 revision's snapshot passes referential integrity.
 
     This is the real end-to-end proof for the fix: building a snapshot
@@ -204,7 +204,6 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision() -> None:
     casilla set reproduces the exact defect this test guards against.
     """
 
-    authority = compiled_bundled_authority()
     for year in (2020, 2021, 2022, 2023, 2024, 2025):
-        snapshot = authority.snapshot(Modelo("100"), filing_year=year, period="0A")
+        snapshot = operation.snapshot(Modelo("100"), filing_year=year, period="0A")
         assert snapshot.revision.id == str(year)

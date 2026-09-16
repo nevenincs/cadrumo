@@ -8,7 +8,7 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.entrypoints.tui.__main__.TuiModuleArgumentError",
+        "cadrumo.entrypoints.tui.launcher.TuiModuleArgumentError",
         ErrorCode(
             code="REFUSED_TUI_MODULE_ARGUMENT",
             category=ErrorCategory.REFUSED,
@@ -128,17 +128,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.tui.secret.registration.RecoveryHandoverAbandonedError",
-        ErrorCode(
-            code="REFUSED_TUI_RECOVERY_HANDOVER_ABANDONED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.canonical_tui_recovery_handover_abandoned",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.entrypoints.tui.secret.registration.RecoveryHandoverCancelledError",
+        "cadrumo.entrypoints.tui.secret.registration.RecoveryHandoverDeclinedError",
         ErrorCode(
             code="REFUSED_TUI_RECOVERY_HANDOVER_CANCELLED",
             category=ErrorCategory.REFUSED,

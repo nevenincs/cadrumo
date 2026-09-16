@@ -558,7 +558,7 @@ def _select_runtime_modelos(
 
 
 def _runtime_snapshots_for_modelos(
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority | PinnedAuthorityOperation,
     modelos: Sequence[ModeloDefinition],
     *,
     filing_year: int,
@@ -720,7 +720,7 @@ def _is_below_filing_authority(exc: Exception) -> bool:
 
 
 def _snapshot_for_provider(
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority | PinnedAuthorityOperation,
     modelo: ModeloDefinition,
     *,
     filing_year: int,

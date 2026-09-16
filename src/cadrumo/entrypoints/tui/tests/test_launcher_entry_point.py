@@ -26,7 +26,6 @@ from ....application.search.workbench import (
     WorkbenchSearchService,
 )
 from ....core.i18n.render import tr
-from ..__main__ import run
 from ..account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..app import CadrumoTuiApp
 from ..launcher import (
@@ -34,6 +33,7 @@ from ..launcher import (
     compose_installed_workbench_root,
     main,
     run_authenticated_workbench_sessions,
+    run_module,
 )
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
@@ -273,6 +273,6 @@ def test_module_entry_composes_the_production_session_rather_than_refusing(
     from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        assert run(["--self-test"]) == 0
+        assert run_module(["--self-test"]) == 0
 
     assert "workbench.root.composition_required" not in capsys.readouterr().err

@@ -37,7 +37,6 @@ one in the adjudications file, and only then does the chain plan complete.
 from __future__ import annotations
 
 import re
-import tomllib
 import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -51,6 +50,7 @@ from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n.render import MissingTranslationError
 from cadrumo.core.identity.continuidad import ContinuidadId
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..compiler.loader import load_modelo_directory
@@ -948,8 +948,8 @@ def _locate_casilla_file(
             )
             continue
         try:
-            document = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
-        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as error:
+            document = parse_toml(path.read_text(encoding=UTF_8_ENCODING))
+        except (OSError, UnicodeError, TomlDecodeError) as error:
             _add_refusal(
                 refusals,
                 seen_refusals,
@@ -1327,8 +1327,8 @@ def prepare_apply(
             continue
         content = render_evolution_record(pair, casilla_id=casilla_id, modelo_id=modelo_id) + "\n"
         try:
-            parsed = tomllib.loads(content)
-        except tomllib.TOMLDecodeError as error:
+            parsed = parse_toml(content)
+        except TomlDecodeError as error:
             _add_refusal(refusals, seen_refusals, f"evolution {core!r} rendered invalid TOML: {error}")
             continue
         revision_table = parsed.get("revisions", {}).get(pair.to_revision, {})

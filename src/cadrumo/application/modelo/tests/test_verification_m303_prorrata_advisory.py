@@ -41,13 +41,14 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
@@ -67,8 +68,13 @@ _PROBE_FILING_YEARS: tuple[int, ...] = (2020, 2024)
 @lru_cache
 def _m303_revisions() -> tuple[tuple[str, ModeloRevision], ...]:
     """Every shipped M303 revision, discovered from the registry rather than listed."""
-    modelo = compiled_bundled_authority().validate_modelo("303")
-    return tuple(sorted(modelo.revisions.items()))
+    with bundled_indexed_authority().operation() as operation:
+        directory = operation.modelo_directory("303")
+        revisions = tuple(
+            (str(metadata.id), operation.revision_with_export_layouts("303", str(metadata.id)))
+            for metadata in directory.revisions
+        )
+    return tuple(sorted(revisions))
 
 
 def _prorrata_predicates(revision: ModeloRevision) -> tuple[VerificationPredicateDefinition, ...]:
@@ -103,7 +109,7 @@ def test_the_revision_serving_each_probe_filing_year_carries_the_advisory() -> N
     """
     reached: set[str] = set()
     for filing_year in _PROBE_FILING_YEARS:
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
+        snapshot = published_snapshot("303", filing_year=filing_year, period="4T")
         revision = snapshot.revision
         reached.add(revision.id)
         assert _prorrata_predicates(revision), f"{filing_year} resolves to unguarded revision {revision.id}"

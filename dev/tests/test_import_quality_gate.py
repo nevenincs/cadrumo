@@ -14,13 +14,13 @@ import os
 import shutil
 import subprocess
 import sys
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
+from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
 from dev.packaging.command_execution import run_command
 from dev.quality.import_checker import (
     Authority,
@@ -31,10 +31,12 @@ from dev.quality.import_checker import (
 )
 from dev.quality.import_gate import run_import_gate, run_import_linter, run_subordinate
 from dev.quality.import_health import build_import_health, module_is_test_scoped, render_import_health
+from dev.quality.import_load_probe import main
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _IMPORTLINTER_CONFIG = REPO_ROOT / ".importlinter"
+_INVENTORY_MODULE = REPO_ROOT / "src" / "cadrumo" / "tests" / "module_target_inventory.py"
 _ROOT_ENV = "CADRUMO_IMPORT_GATE_ROOT"
 _LINTER_ENV = "CADRUMO_IMPORT_GATE_LINT_IMPORTS"
 _CHECKER_ENV = "CADRUMO_IMPORT_GATE_CHECKER"
@@ -112,10 +114,35 @@ def _fixture_root(tmp_path: Path) -> Path:
                 prefix = expression.rstrip(".*")
                 if prefix and prefix.replace("_", "a").replace(".", "a").isalnum():
                     _write_package(tmp_path, prefix)
+
+    # The loadability worker reads its finite target set through the audited
+    # tree's own inventory loader, as the live repository provides it.
+    inventory = tmp_path / "src" / "cadrumo" / "tests" / _INVENTORY_MODULE.name
+    inventory.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(_INVENTORY_MODULE, inventory)
     return tmp_path
 
 
+def _compile_load_targets(root: Path) -> None:
+    """Regenerate the fixture's load-target metadata through the probe's owning generator.
+
+    An unreadable authority has no census to compile; those fixtures prove the
+    authority refusal itself.
+    """
+    read = read_authority(root)
+    if read.authority is None or read.findings:
+        return
+    assert main(["--root", str(root), "--compile-targets"]) == 0
+
+
 def _run_real_gate(root: Path, **updates: str) -> tuple[int, str]:
+    """Compile the fixture's load-target metadata, then run the real recipe."""
+    _compile_load_targets(root)
+    return _run_gate_recipe(root, **updates)
+
+
+def _run_gate_recipe(root: Path, **updates: str) -> tuple[int, str]:
+    """Run the real recipe against ``root`` exactly as the tree stands."""
     environment = os.environ.copy()
     environment[_ROOT_ENV] = str(root)
     environment.update(updates)
@@ -131,11 +158,84 @@ def _run_real_gate(root: Path, **updates: str) -> tuple[int, str]:
     return result.returncode, (result.stdout + result.stderr)
 
 
-def _assert_category(root: Path, category: str) -> str:
+def _section(payload: dict[str, object], key: str) -> dict[str, object]:
+    value = payload[key]
+    assert isinstance(value, dict), payload
+    return {str(name): item for name, item in value.items()}
+
+
+def _health_payload(output: str) -> dict[str, object]:
+    """Return the gate's machine-readable import_health payload."""
+    for line in reversed(output.splitlines()):
+        stripped = line.strip()
+        if not stripped.startswith("{"):
+            continue
+        try:
+            decoded = json.loads(stripped)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(decoded, dict) and decoded.get("event") == "import_health":
+            return {str(key): value for key, value in decoded.items()}
+    raise AssertionError(f"the gate emitted no import_health payload:\n{output}")
+
+
+def _component_block(output: str, label: str) -> str:
+    """Return one component's replayed evidence block from the gate output."""
+    start = output.find(f"[{label}] exit")
+    assert start >= 0, output
+    markers = ("[GRAPH_AUTHORITY] exit", "[LOADABILITY] exit", "[SUBORDINATE_CHECKER] exit", "VERDICT:")
+    ends = [index for marker in markers if (index := output.find(marker, start + 1)) > start]
+    return output[start : min(ends)] if ends else output[start:]
+
+
+def _assert_blocking_detection(returncode: int, output: str, payload: dict[str, object]) -> None:
+    """Require a blocking verdict produced by fully operational components.
+
+    A nonzero exit alone is not detection: a broken probe or setup failure also
+    exits nonzero while proving nothing about the planted defect.
+    """
+    assert returncode == FAILED, output
+    assert payload["classification"] == "blocking_findings", output
+    graph = _section(payload, "graph_authority")
+    assert graph["status"] == "authoritative", output
+    assert graph["operational_reasons"] == [], output
+    loadability = _section(payload, "loadability")
+    assert loadability["status"] in {"loaded", "failed"}, output
+    attempted = loadability["attempted"]
+    assert isinstance(attempted, int) and attempted > 0, output
+
+
+def _assert_graph_detection(root: Path, module: str) -> None:
     returncode, output = _run_real_gate(root)
-    assert returncode != 0, output
+    payload = _health_payload(output)
+    _assert_blocking_detection(returncode, output, payload)
+    broken = _section(payload, "graph_authority")["contracts_broken"]
+    assert isinstance(broken, int) and broken >= 1, output
+    assert f"{module} -> " in _component_block(output, "GRAPH_AUTHORITY"), output
+
+
+def _assert_subordinate_detection(root: Path, category: str) -> None:
+    returncode, output = _run_real_gate(root)
+    payload = _health_payload(output)
+    _assert_blocking_detection(returncode, output, payload)
+    by_code = _section(payload, "hard_findings")["by_code"]
+    assert isinstance(by_code, dict) and category in by_code, output
+    assert f"[{category}]" in _component_block(output, "SUBORDINATE_CHECKER"), output
+
+
+def _assert_operational_refusal(root: Path, category: str, reason: str) -> None:
+    """Require a fail-closed refusal whose operational reason names the specific cause."""
+    returncode, output = _run_real_gate(root)
+    payload = _health_payload(output)
+    assert returncode == TOOL_BROKEN, output
+    assert payload["classification"] == "tool_failure", output
     assert f"[{category}]" in output, output
-    return output
+    reasons = _section(payload, "graph_authority")["operational_reasons"]
+    assert isinstance(reasons, list) and any(reason in str(item) for item in reasons), output
+
+
+def _assert_authority_refusal(root: Path, category: str) -> None:
+    _assert_operational_refusal(root, category, f"[{category}]")
 
 
 def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
@@ -278,31 +378,31 @@ def test_graph_defect_fails_through_real_gate(
     for target in targets:
         _write_module(root, target, "VALUE = 1\n")
     _write_module(root, module, source)
-    _assert_category(root, "GRAPH_AUTHORITY")
+    _assert_graph_detection(root, module)
 
 
 def test_undeclared_source_root_fails_authority_preflight(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     _write_package(root, "undeclared_root")
-    _assert_category(root, "UNCLASSIFIED_ROOT")
+    _assert_authority_refusal(root, "UNCLASSIFIED_ROOT")
 
 
 def test_undeclared_source_module_fails_authority_preflight(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     (root / "src" / "stray.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
-    _assert_category(root, "UNCLASSIFIED_ROOT")
+    _assert_authority_refusal(root, "UNCLASSIFIED_ROOT")
 
 
 def test_declared_source_module_collision_fails_authority_preflight(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     (root / "src" / "cadrumo.py").write_text("VALUE = 1\n", encoding=UTF_8, newline="\n")
-    _assert_category(root, "AUTHORITY_CONFIG")
+    _assert_authority_refusal(root, "AUTHORITY_CONFIG")
 
 
 def test_undeclared_source_package_fails_authority_preflight(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     _write_package(root, "cadrumo.unclassified_package")
-    _assert_category(root, "UNCLASSIFIED_PACKAGE")
+    _assert_authority_refusal(root, "UNCLASSIFIED_PACKAGE")
 
 
 def test_authority_must_include_type_checking_edges(tmp_path: Path) -> None:
@@ -313,13 +413,13 @@ def test_authority_must_include_type_checking_edges(tmp_path: Path) -> None:
     with (root / ".importlinter").open("w", encoding=UTF_8, newline="\n") as stream:
         config.write(stream)
 
-    _assert_category(root, "AUTHORITY_CONFIG")
+    _assert_authority_refusal(root, "AUTHORITY_CONFIG")
 
 
 def test_invalid_authority_config_fails_closed(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     (root / ".importlinter").write_text("[importlinter\n", encoding=UTF_8, newline="\n")
-    _assert_category(root, "AUTHORITY_CONFIG")
+    _assert_authority_refusal(root, "AUTHORITY_CONFIG")
 
 
 @pytest.mark.parametrize(
@@ -483,7 +583,7 @@ def test_subordinate_defect_fails_through_real_gate(
         _write_package(root, "dev.quality", "from .module import VALUE\n")
         _write_module(root, "dev.quality.module", "VALUE = 1\n")
     _write_module(root, module, source)
-    _assert_category(root, category)
+    _assert_subordinate_detection(root, category)
 
 
 @pytest.mark.parametrize(
@@ -518,7 +618,7 @@ def test_finite_iterable_dynamic_target_is_resolved_by_the_subordinate_checker(t
     )
     _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
 
-    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
 
 
 def test_aliased_dynamic_loader_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
@@ -530,7 +630,7 @@ def test_aliased_dynamic_loader_is_resolved_by_the_subordinate_checker(tmp_path:
     )
     _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
 
-    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
 
 
 def test_module_alias_dynamic_loader_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
@@ -542,7 +642,7 @@ def test_module_alias_dynamic_loader_is_resolved_by_the_subordinate_checker(tmp_
     )
     _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
 
-    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
 
 
 def test_dotted_dynamic_loader_alias_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
@@ -554,7 +654,7 @@ def test_dotted_dynamic_loader_alias_is_resolved_by_the_subordinate_checker(tmp_
     )
     _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
 
-    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
 
 
 def test_relative_dynamic_target_uses_the_importing_package(tmp_path: Path) -> None:
@@ -588,7 +688,7 @@ def test_finite_object_module_projection_is_resolved_by_the_subordinate_checker(
     )
     _write_module(root, "cadrumo.domain._private", "VALUE = 1\n")
 
-    _assert_category(root, "PRIVATE_CROSS_PACKAGE")
+    _assert_subordinate_detection(root, "PRIVATE_CROSS_PACKAGE")
 
 
 def test_relative_object_module_projection_uses_its_explicit_package_anchor(tmp_path: Path) -> None:
@@ -623,7 +723,7 @@ def test_unknown_object_module_projection_fails_closed(tmp_path: Path) -> None:
         "import importlib\n\nclass Target: pass\ntarget = Target()\nimportlib.import_module(target.module)\n",
     )
 
-    _assert_category(root, "UNRESOLVED_DYNAMIC_TARGET")
+    _assert_subordinate_detection(root, "UNRESOLVED_DYNAMIC_TARGET")
 
 
 def test_harness_package_keeps_absolute_product_imports(tmp_path: Path) -> None:
@@ -645,13 +745,13 @@ def test_invalid_utf8_in_governed_file_fails_closed(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     path = root / "src" / "dev" / "quality" / "unreadable.py"
     path.write_bytes(b"\xff\xfe\xfd")
-    _assert_category(root, "READ_FAILURE")
+    _assert_operational_refusal(root, "READ_FAILURE", "cannot read governed file")
 
 
 def test_syntax_failure_in_governed_file_fails_closed(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     _write_module(root, "dev.quality.unparseable", "def broken(:\n")
-    _assert_category(root, "PARSE_FAILURE")
+    _assert_operational_refusal(root, "PARSE_FAILURE", "cannot parse governed file")
 
 
 def test_missing_import_linter_executable_is_nonzero_through_real_recipe(tmp_path: Path) -> None:
@@ -788,6 +888,57 @@ def test_clean_fixture_has_a_nonzero_governed_scan_and_passes_the_component(tmp_
     assert returncode == 0, output
     assert "check-import-boundaries: passed" in output
     assert "governed Python file" not in output
+    payload = _health_payload(output)
+    assert payload["verdict"] == "clean", output
+    loadability = _section(payload, "loadability")
+    attempted = loadability["attempted"]
+    assert isinstance(attempted, int) and attempted > 0, output
+    assert loadability["status"] == "loaded", output
+    assert loadability["loaded"] == attempted and loadability["failed"] == 0, output
+
+
+def test_the_isolated_worker_imports_the_audited_tree_rather_than_the_tool_tree(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    # The tool tree defines a module of the same name that loads cleanly; only
+    # the audited copy raises, so this failure proves which tree was imported.
+    _write_module(root, "cadrumo.core.config", "raise RuntimeError('planted import-time failure')\n")
+
+    returncode, output = _run_real_gate(root)
+    payload = _health_payload(output)
+
+    _assert_blocking_detection(returncode, output, payload)
+    loadability = _section(payload, "loadability")
+    assert loadability["status"] == "failed" and loadability["failed"] == 1, output
+    failures = loadability["failure_sample"]
+    assert isinstance(failures, list) and len(failures) == 1, output
+    failure = failures[0]
+    assert isinstance(failure, dict), output
+    assert failure["module"] == "cadrumo.core.config", output
+    assert failure["error"] == "RuntimeError", output
+    assert failure["message"] == "planted import-time failure", output
+
+
+@pytest.mark.parametrize("metadata", ("missing", "stale"))
+def test_a_loadability_setup_failure_is_not_detection_of_a_planted_defect(tmp_path: Path, metadata: str) -> None:
+    root = _fixture_root(tmp_path)
+    if metadata == "stale":
+        _compile_load_targets(root)
+    _write_module(root, "cadrumo.domain.module", "VALUE = 1\n")
+    _write_module(root, "cadrumo.core.bad", "from ..domain.module import VALUE\n")
+
+    returncode, output = _run_gate_recipe(root)
+    payload = _health_payload(output)
+
+    # The planted edge is still reported, so a nonzero-exit oracle would accept this run.
+    assert returncode != 0, output
+    assert "cadrumo.core.bad -> " in _component_block(output, "GRAPH_AUTHORITY"), output
+    assert returncode == TOOL_BROKEN, output
+    assert _section(payload, "loadability")["status"] == "unavailable", output
+    reasons = _section(payload, "graph_authority")["operational_reasons"]
+    expected = "cannot read metadata target inventory" if metadata == "missing" else "is stale"
+    assert isinstance(reasons, list) and any(expected in str(item) for item in reasons), output
+    with pytest.raises(AssertionError):
+        _assert_blocking_detection(returncode, output, payload)
 
 
 def _approve_occurrences(root: Path, *, target_roots: frozenset[str]) -> int:
@@ -849,6 +1000,89 @@ def _health_verdict(root: Path) -> tuple[int, str]:
         component_durations={},
     )
     return exit_status, render_import_health(payload) + "\n" + json.dumps(payload, sort_keys=True)
+
+
+def _ratchet_report(output: str) -> tuple[dict[str, object], dict[str, object]]:
+    """Return the ratchet counts and details from a ``_health_verdict`` rendering."""
+    payload = json.loads(output.rsplit("\n", 1)[1])
+    assert isinstance(payload, dict), output
+    ratchet = payload["ratchet"]
+    assert isinstance(ratchet, dict), output
+    counts = ratchet["counts"]
+    details = ratchet["details"]
+    assert isinstance(counts, dict) and isinstance(details, dict), output
+    return {str(key): value for key, value in counts.items()}, {str(key): value for key, value in details.items()}
+
+
+def _module_path(root: Path, dotted: str) -> Path:
+    parts = dotted.split(".")
+    return root / "src" / Path(*parts[:-1]) / f"{parts[-1]}.py"
+
+
+def _retire_as_source_removed(root: Path) -> None:
+    """Mark every fixture ratchet entry retired because its source module was deleted."""
+    ratchet = root / "dev" / "quality" / "metadata" / "import_boundary_ratchet.json"
+    document = json.loads(ratchet.read_text(encoding=UTF_8))
+    for entry in document["entries"]:
+        entry["status"] = "retired"
+        entry["retirement"] = {"kind": "source_module_removed", "verified_at": datetime.now(tz=UTC).isoformat()}
+    ratchet.write_text(json.dumps(document, indent=2) + "\n", encoding=UTF_8, newline="\n")
+
+
+def test_a_ratchet_entry_retires_without_composition_evidence_once_its_source_module_is_deleted(
+    tmp_path: Path,
+) -> None:
+    root = _fixture_root(tmp_path)
+    source = "cadrumo.domain.tests.test_layer_debt"
+    _write_module(root, "cadrumo.application.module", "VALUE = 1\n")
+    _write_module(root, source, "from ...application.module import VALUE\n")
+    assert _approve_occurrences(root, target_roots=frozenset({"cadrumo"})) == 1
+    _module_path(root, source).unlink()
+
+    exit_status, output = _health_verdict(root)
+    counts, details = _ratchet_report(output)
+    assert exit_status == 1, output
+    assert counts["retirement_candidates"] == 1, output
+    assert details["source_module_removed"] == details["retirement_candidates"], output
+
+    _retire_as_source_removed(root)
+    exit_status, output = _health_verdict(root)
+    counts, _ = _ratchet_report(output)
+    assert exit_status == 0, output
+    assert "VERDICT: clean" in output
+    assert "Retired with removed source module: 1 occurrence(s)" in output
+    assert counts["retired_source_removed"] == 1, output
+    assert counts["retired_verified"] == 0 and counts["malformed"] == 0, output
+
+
+def test_a_source_removed_retirement_cannot_hide_a_present_source_or_a_renamed_violation(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    source = "cadrumo.domain.tests.test_layer_debt"
+    _write_module(root, "cadrumo.application.module", "VALUE = 1\n")
+    _write_module(root, source, "from ...application.module import VALUE\n")
+    assert _approve_occurrences(root, target_roots=frozenset({"cadrumo"})) == 1
+    _retire_as_source_removed(root)
+
+    exit_status, output = _health_verdict(root)
+    counts, _ = _ratchet_report(output)
+    assert exit_status == 1, output
+    assert counts["regressed_retired"] == 1 and counts["retired_source_removed"] == 0, output
+
+    _write_module(root, source, "VALUE = 2\n")
+    exit_status, output = _health_verdict(root)
+    counts, details = _ratchet_report(output)
+    assert exit_status == 1, output
+    assert counts["malformed"] == 1 and counts["retired_source_removed"] == 0, output
+    malformed = details["malformed"]
+    assert isinstance(malformed, list), output
+    assert any(f"{source} was removed, but it still exists" in str(item) for item in malformed), output
+
+    _module_path(root, source).unlink()
+    _write_module(root, "cadrumo.domain.tests.test_layer_debt_renamed", "from ...application.module import VALUE\n")
+    exit_status, output = _health_verdict(root)
+    counts, _ = _ratchet_report(output)
+    assert exit_status == 1, output
+    assert counts["retired_source_removed"] == 1 and counts["new_unapproved"] == 1, output
 
 
 def test_a_ratchet_cannot_approve_a_shipped_test_module_reaching_a_repository_only_root(tmp_path: Path) -> None:

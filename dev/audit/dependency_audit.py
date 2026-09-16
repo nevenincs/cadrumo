@@ -60,11 +60,12 @@ import http.client
 import json
 import os
 import sys
-import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
+
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 
 #: See the module docstring: these mirror ``dev/exit_codes.py`` (lane L9).
 EXIT_OK = 0
@@ -163,7 +164,7 @@ def _iter_lockfiles(root: Path) -> list[Path]:
 
 def _read_uv_lock(path: Path) -> list[Coordinate]:
     """Return every ``(name, version)`` pinned by a ``uv.lock``."""
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    data = parse_toml(path.read_text(encoding="utf-8"))
     rel = path.relative_to(REPO_ROOT).as_posix()
     return [
         Coordinate("PyPI", pkg["name"], pkg["version"], rel)
@@ -202,7 +203,7 @@ def _read_package_lock(path: Path) -> list[Coordinate]:
 
 def _read_cargo_lock(path: Path) -> list[Coordinate]:
     """Return every crate version pinned by a ``Cargo.lock``."""
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    data = parse_toml(path.read_text(encoding="utf-8"))
     rel = path.relative_to(REPO_ROOT).as_posix()
     return [
         Coordinate("crates.io", pkg["name"], pkg["version"], rel)
@@ -221,7 +222,7 @@ def _read_binaries(path: Path) -> list[Coordinate]:
     """
     if not path.exists():
         return []
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    data = parse_toml(path.read_text(encoding="utf-8"))
     out: list[Coordinate] = []
     for entry in data.get("binary", ()):
         missing = [k for k in ("ecosystem", "name", "version") if not entry.get(k)]
@@ -250,7 +251,7 @@ def collect_coordinates(root: Path = REPO_ROOT) -> list[Coordinate]:
                 seen.add(coord)
         except AuditError:
             raise
-        except (OSError, ValueError, tomllib.TOMLDecodeError, KeyError) as error:
+        except (OSError, ValueError, TomlDecodeError, KeyError) as error:
             # An unreadable lockfile is a broken gate, never a clean tree.
             raise AuditError(f"cannot parse {lockfile}: {error}") from error
     seen.update(_read_binaries(BINARIES_PATH))
@@ -285,8 +286,8 @@ def load_suppressions(path: Path = ALLOWLIST_PATH) -> list[Suppression]:
     if not path.exists():
         return []
     try:
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
-    except tomllib.TOMLDecodeError as error:
+        data = parse_toml(path.read_text(encoding="utf-8"))
+    except TomlDecodeError as error:
         raise AuditError(f"{path.name} is not valid TOML: {error}") from error
 
     out: list[Suppression] = []

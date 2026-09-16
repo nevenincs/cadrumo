@@ -10,12 +10,12 @@ of them quietly widen the exception set.
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.casilla_legal_citation_period import (
     CasillaCitationKey,
     CitationPeriodRefusal,
@@ -54,7 +54,7 @@ class CitationException:
 
 def load_citation_exceptions(path: Path = LEDGER_PATH) -> Mapping[CasillaCitationKey, CitationException]:
     """Load every excepted citation keyed by the citation it names."""
-    document = tomllib.loads(path.read_text(encoding="utf-8"))
+    document = parse_toml(path.read_text(encoding="utf-8"))
     exceptions: dict[CasillaCitationKey, CitationException] = {}
     for index, entry in enumerate(document.get("exception", ())):
         blank = [name for name in _REQUIRED if not isinstance(entry.get(name), str) or not entry[name].strip()]

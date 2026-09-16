@@ -23,7 +23,6 @@ from decimal import Decimal
 from typing import TypedDict, get_type_hints
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
@@ -50,6 +49,7 @@ from ..bindings import (
 )
 from ..schema_references import RegistrySnapshotRef
 from ..schema_verification import LiveCrossReferenceDecision
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -540,15 +540,11 @@ def test_calculation_revision_carries_typed_observations() -> None:
         source_refs=("aeat-iva-2025",),
     )
     work_unit_id = "b" * 64
-    registry_snapshot_ref = (
-        compiled_bundled_authority()
-        .snapshot(
-            "303",
-            filing_year=2025,
-            period="1T",
-        )
-        .snapshot_ref
-    )
+    registry_snapshot_ref = published_snapshot(
+        "303",
+        filing_year=2025,
+        period="1T",
+    ).snapshot_ref
     casilla_values: dict[CasillaId, Decimal] = {_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("12345.67")}
     revision = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(

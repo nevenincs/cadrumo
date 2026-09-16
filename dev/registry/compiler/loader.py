@@ -8,11 +8,13 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from dataclasses import asdict
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.identity.documents import SpanishTaxIdFormat
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.governed_fact_scope import (
@@ -484,10 +486,13 @@ def load_registry_tree_cached(
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     """Load one fingerprinted tree, optionally under an explicit tax-ID format."""
     resolved = Path(root)
-    use_disk_cache = tax_id_format is None and registry_disk_cache_enabled(
-        is_bundled=is_bundled_registry_root(resolved)
+    use_disk_cache = registry_disk_cache_enabled(is_bundled=is_bundled_registry_root(resolved))
+    # The format shapes what the loader accepts, so a payload compiled under one
+    # format is keyed apart from a payload compiled under another.
+    cache_fingerprints = (
+        fingerprints if tax_id_format is None else (*fingerprints, _tax_id_format_fingerprint(tax_id_format))
     )
-    if use_disk_cache and (cached := load_compiled_registry_cache(resolved, fingerprints)) is not None:
+    if use_disk_cache and (cached := load_compiled_registry_cache(resolved, cache_fingerprints)) is not None:
         return cached
     modelos = tuple(
         load_modelo_source(source, tax_id_format=tax_id_format)
@@ -500,8 +505,13 @@ def load_registry_tree_cached(
         )
     result = (modelos, catalogues)
     if use_disk_cache:
-        store_compiled_registry_cache(resolved, fingerprints, result)
+        store_compiled_registry_cache(resolved, cache_fingerprints, result)
     return result
+
+
+def _tax_id_format_fingerprint(tax_id_format: SpanishTaxIdFormat) -> tuple[str, int, int, str]:
+    """Fingerprint an explicit loader format as one more compiled-cache key row."""
+    return ("<spanish-tax-id-format>", 0, 0, content_hash_hex(asdict(tax_id_format)))
 
 
 def clear_registry_tree_cache() -> None:

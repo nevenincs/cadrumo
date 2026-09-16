@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import re
-import tomllib
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 from dev.ci.python_runtime_matrix import load_runtime_inventory
 
@@ -25,8 +25,8 @@ def _minor(value: str) -> str:
 
 def test_live_toolchain_declarations_agree_on_the_supported_python_minor() -> None:
     expected = load_runtime_inventory().minimum_minor
-    project = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding=UTF_8))
-    lock = tomllib.loads((REPO_ROOT / "uv.lock").read_text(encoding=UTF_8))
+    project = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding=UTF_8))
+    lock = parse_toml((REPO_ROOT / "uv.lock").read_text(encoding=UTF_8))
 
     declared = {
         ".python-version": _minor((REPO_ROOT / ".python-version").read_text(encoding=UTF_8)),

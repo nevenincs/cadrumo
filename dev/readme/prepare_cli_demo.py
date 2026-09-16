@@ -53,7 +53,6 @@ def demo_environment() -> dict[str, str]:
             "CADRUMO_LOCAL_STORAGE_ROOT": str(DEMO_ROOT),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_SECRET_PASSPHRASE": DEMO_VALUE,
-            "CADRUMO_SECRET_STORE_BACKEND": "unsecured",
             "CADRUMO_SECRET_STORE_DIR": str(DEMO_ROOT / "secrets"),
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",

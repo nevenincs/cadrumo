@@ -57,7 +57,7 @@ def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
         "source_ref",
         "expected_digest",
         "expected_agricultural_axis_count",
-        "expects_lorca_2022_reduction",
+        "expects_lorca_reduction",
     ),
     (
         (
@@ -72,14 +72,14 @@ def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
             "boe-orden-hfp-1172-2022-iva-authority",
             "1cab2ef540868ec0d5344d8e801ac6c52b5ee27c1aefb794ca7c0330df693957",
             16,
-            False,
+            True,
         ),
         (
             2024,
             "boe-orden-hfp-1359-2023-iva-authority",
             "e403d33762cc7353ca3f752820df71244291217aeb35309d5e383f166cde49a5",
             16,
-            False,
+            True,
         ),
         (
             2025,
@@ -102,7 +102,7 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
     source_ref: str,
     expected_digest: str,
     expected_agricultural_axis_count: int,
-    expects_lorca_2022_reduction: bool,
+    expects_lorca_reduction: bool,
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
     """Each pinned BOE source supplies all 49 tables and 141 module rows."""
@@ -136,15 +136,15 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
         (121, 180, Decimal("1.25")),
     )
     assert census.difficult_justification.percentage == 1
-    if expects_lorca_2022_reduction:
-        assert census.lorca_2022_reduction is not None
-        assert census.lorca_2022_reduction.municipality == "Lorca"
-        assert census.lorca_2022_reduction.percentage == 20
-        assert "anexo II de esta Orden" in census.lorca_2022_reduction.required_text[1]
-        assert "cuota trimestral" in census.lorca_2022_reduction.required_text[2]
-        assert "cuota anual" in census.lorca_2022_reduction.required_text[2]
+    if expects_lorca_reduction:
+        assert census.lorca_reduction is not None
+        assert census.lorca_reduction.municipality == "Lorca"
+        assert census.lorca_reduction.percentage == 20
+        assert "anexo ii de esta orden" in census.lorca_reduction.required_text[1].casefold()
+        assert "cuota trimestral" in census.lorca_reduction.required_text[2]
+        assert "cuota anual" in census.lorca_reduction.required_text[2]
     else:
-        assert census.lorca_2022_reduction is None
+        assert census.lorca_reduction is None
     assert (
         sha256(
             json.dumps(
@@ -473,7 +473,7 @@ def test_2022_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_
     )
 
     assert resolved.record_design.id == "aeat-dr-303-2022"
-    reduction = resolved.orden.lorca_2022_reduction
+    reduction = resolved.orden.lorca_reduction
     assert reduction is not None
     assert reduction.percentage == Decimal("20")
     assert reduction.annex_scope == "ANEXO II"
@@ -504,8 +504,8 @@ def test_2022_snapshot_refuses_lorca_authority_with_a_drifted_source_reference()
         ),
     )
     payload = resolved.orden.model_dump(mode="python")
-    assert payload["lorca_2022_reduction"] is not None
-    payload["lorca_2022_reduction"]["source_refs"] = ("boe-orden-unrelated",)
+    assert payload["lorca_reduction"] is not None
+    payload["lorca_reduction"]["source_refs"] = ("boe-orden-unrelated",)
 
     with pytest.raises(ValidationError, match="exact HFP/1335 source reference"):
         type(resolved.orden).model_validate(payload)
@@ -521,7 +521,7 @@ def test_2022_snapshot_refuses_a_stripped_lorca_authority_from_the_real_envelope
         ),
     )
     payload = resolved.orden.model_dump(mode="python")
-    payload["lorca_2022_reduction"] = None
+    payload["lorca_reduction"] = None
 
     with pytest.raises(ValidationError, match="2022 snapshot lacks its Lorca reduction authority"):
         type(resolved.orden).model_validate(payload)
@@ -541,11 +541,11 @@ def test_2025_snapshot_refuses_an_injected_lorca_authority_from_the_real_2022_en
         scope_decision=scope_decision,
     )
     payload = resolved_2025.orden.model_dump(mode="python")
-    reduction = resolved_2022.orden.lorca_2022_reduction
+    reduction = resolved_2022.orden.lorca_reduction
     assert reduction is not None
-    payload["lorca_2022_reduction"] = reduction.model_dump(mode="python")
+    payload["lorca_reduction"] = reduction.model_dump(mode="python")
 
-    with pytest.raises(ValidationError, match="only the 2022 annual Orden snapshot may carry the Lorca reduction"):
+    with pytest.raises(ValidationError, match="exact year and source reference"):
         type(resolved_2025.orden).model_validate(payload)
 
 
@@ -561,12 +561,12 @@ def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift()
     payload = resolved.model_dump(mode="python")
     payload["orden"]["source_ref"] = "boe-orden-hfp-1172-2022-iva-authority"
     payload["orden"]["source_content_digest"] = "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb"
-    assert payload["orden"]["lorca_2022_reduction"] is not None
-    payload["orden"]["lorca_2022_reduction"]["legal_refs"] = (
+    assert payload["orden"]["lorca_reduction"] is not None
+    payload["orden"]["lorca_reduction"]["legal_refs"] = (
         "orden-hfp-1172-2022:da-4-lorca-2022-reduction:lorca-2022-reduction",
     )
-    payload["orden"]["lorca_2022_reduction"]["source_refs"] = ("boe-orden-hfp-1172-2022-iva-authority",)
-    payload["orden"]["lorca_2022_reduction"]["source_content_digest"] = (
+    payload["orden"]["lorca_reduction"]["source_refs"] = ("boe-orden-hfp-1172-2022-iva-authority",)
+    payload["orden"]["lorca_reduction"]["source_content_digest"] = (
         "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb"
     )
 
@@ -666,7 +666,7 @@ def test_generated_annual_orden_legal_ids_cover_every_compiled_source_axis(
                 *(item.legal_refs for item in projection.non_agricultural_ingresos_a_cuenta),
                 *(item.legal_refs for item in projection.seasonal_indexes),
                 projection.difficult_justification.legal_refs,
-                (() if projection.lorca_2022_reduction is None else projection.lorca_2022_reduction.legal_refs),
+                (() if projection.lorca_reduction is None else projection.lorca_reduction.legal_refs),
             )
             for legal_ref in legal_refs
         )

@@ -125,7 +125,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LIVE_STATE_IVA_WALLET,
         "live-state/iva-wallet",
-        consumer_module="application/live/iva_remote_state.py",
+        consumer_module="entrypoints/live_state_composition.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -217,31 +217,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
-        StorageCategory.CORPUS_TEXT_CACHE,
-        "cache/corpus-text",
-        consumer_module="domain/calculations/registry/_validate_evidence.py",
-        settings_field="cadrumo_corpus_text_cache_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        # Was the bare literal ``_CORPUS_TEXT_CACHE_FILENAME`` in
-        # ``_validate_evidence.py``. Same override caveat as the secret-store
-        # leaves: ``CORPUS_TEXT_CACHE`` is operator-overridable, so this member
-        # carries no ``settings_field`` -- the consumer keeps resolving through
-        # ``cadrumo_corpus_text_cache_dir`` and cross-references only the bare
-        # filename.
-        StorageCategory.CORPUS_TEXT_CACHE_FILE,
-        "cache/corpus-text/cadrumo_corpus_text_cache.json",
-        consumer_module="domain/calculations/registry/_validate_evidence.py",
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
         StorageCategory.CORPUS_SEARCH_CACHE,
         "cache/corpus-search",
         consumer_module="application/corpus_search/runtime.py",
@@ -261,38 +236,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.CACHE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
         override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.VALIDATION_VERDICT_CACHE,
-        "cache/registry-verdict",
-        consumer_module="dev/registry/compiler/verdict_cache.py",
-        settings_field="cadrumo_validation_verdict_cache_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        # The name is governed here; the field is deliberately NOT derived, so
-        # the resolver's pytest branch can keep selecting on its absence.
-        #
-        # Excluded from the digest, and this is a correction rather than a
-        # restatement. The compiled registry pickle lands here and is rewritten
-        # on every recompile, so it churned the digest and produced spurious
-        # replay refusals -- measured, with a positive control: a write into an
-        # excluded directory left the digest unchanged while a write here moved
-        # it. It was fingerprinted only because the old hardcoded exclusion list
-        # could not resolve a field defaulting to None. Digests will differ from
-        # their pre-correction value on any machine holding a compiled cache;
-        # that is the correction landing, and it must not be "fixed" by
-        # restoring parity with the old set.
-        StorageCategory.REGISTRY_DISK_CACHE,
-        "cache/registry",
-        consumer_module="domain/calculations/registry/loader_cache.py",
-        settings_field="cadrumo_registry_disk_cache_dir",
-        lifecycle=StorageLifecycle.RETENTION,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-        derives_settings_default=False,
     ),
     # ── Durable generated outputs ───────────────────────────────────────────
     _location(
@@ -520,7 +463,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # storage root.
         StorageCategory.ROOT_FALLBACK_DATABASE,
         _PRODUCT_DATABASE_FILENAME,
-        consumer_module="core/config.py",
+        consumer_module="core/config_storage_route.py",
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -626,7 +569,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # close.
         StorageCategory.BUCKET_DATABASE_FILE,
         f"{_BUCKET_DATABASE_DIRNAME}/{_PRODUCT_DATABASE_FILENAME}",
-        consumer_module="core/config.py",
+        consumer_module="core/_config_validation.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,

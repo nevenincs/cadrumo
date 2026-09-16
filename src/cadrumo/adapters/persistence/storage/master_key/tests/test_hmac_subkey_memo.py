@@ -11,7 +11,7 @@ refuses further reads and drops the cached material.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -23,7 +23,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "bafde89c-041e-4756-882b-933aaf16cad8"  # was '11111111-1111-1111-1111-111111111111'
 _OTHER_BUCKET_ID = "05d17100-b346-429d-a760-a0fdedcf8623"  # was '22222222-2222-2222-2222-222222222222'
-_KEK = b"k" * 32
 _DEK = b"d" * 32
 _OTHER_DEK = b"e" * 32
 _NOW = datetime(2026, 1, 1, tzinfo=UTC)
@@ -32,12 +31,13 @@ _OTHER_CONTEXT = b"cadrumo.tests.other_context.v1"
 
 
 def _session(bucket_id: str = _BUCKET_ID, dek: bytes = _DEK) -> BucketSession:
-    return BucketSession.open(
+    return BucketSession.open_resumed(
         bucket_id=bucket_id,
-        kek=_KEK,
         dek=dek,
         idle_minutes=30,
         opened_at=_NOW,
+        idle_deadline=_NOW + timedelta(minutes=30),
+        absolute_deadline=_NOW + timedelta(minutes=240),
     )
 
 

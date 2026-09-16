@@ -27,11 +27,11 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -45,7 +45,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ...modelo.profile_binding import resolve_profile_sourced_bindings
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
 
 
 def _snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    return published_snapshot("100", filing_year=2025, period="0A")
 
 
 def _profile_record() -> UserProfileRecord:

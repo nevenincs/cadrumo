@@ -27,7 +27,6 @@ legal authority behind it, not a test change.
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
@@ -37,6 +36,7 @@ import pytest
 from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -159,7 +159,7 @@ def _legal_entries() -> list[tuple[str, dict[str, object]]]:
     root = bundled_path("registry/aeat/legal")
     entries: list[tuple[str, dict[str, object]]] = []
     for toml_file in scan_directory(Path(root), pattern="*.toml"):
-        data = tomllib.loads(toml_file.read_text(encoding="utf-8"))
+        data = parse_toml(toml_file.read_text(encoding="utf-8"))
         for key, entry in (data.get("legal") or {}).items():
             if isinstance(entry, dict):
                 entries.append((key, entry))

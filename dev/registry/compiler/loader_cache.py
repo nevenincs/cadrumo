@@ -25,13 +25,13 @@ See Also:
 
 from __future__ import annotations
 
+import os
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from cadrumo.core.config import load_settings
 from cadrumo.core.directory_scan import (
     DirectoryEntryKind,
     iter_directory,
@@ -39,8 +39,6 @@ from cadrumo.core.directory_scan import (
 )
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.core.toml import read_toml
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
@@ -54,14 +52,13 @@ from ._toml_helpers import as_toml_table as _as_toml_table
 type TomlReader = Callable[..., dict[str, object]]
 """Parses one authored registry TOML file, refusing through ``error_factory``."""
 
-"""Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
+REGISTRY_DISK_CACHE_DIR_ENV = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
+"""Environment variable naming the compiled-registry pickle directory."""
 
-# The production branch's relative path, read off the taxonomy rather than an
-# untethered ``"cache" / "registry"`` literal -- the member's name is governed
-# there (see its declaration in ``core.storage_taxonomy``), while the field
-# itself stays deliberately un-derived so the pytest branch below can keep
-# selecting on it being unset.
-_REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_DISK_CACHE).relative_path()
+REGISTRY_DISK_CACHE_MAX_ENTRIES_ENV = "CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES"
+"""Environment variable bounding how many compiled-registry pickles one directory retains."""
+
+_DEFAULT_REGISTRY_DISK_CACHE_MAX_ENTRIES = 8
 
 BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS = 10.0
 
@@ -507,42 +504,36 @@ def registry_disk_cache_dir() -> Path:
 
     Resolution precedence:
 
-    1. An explicit :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`
-       (the ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` env var) always wins. A test
-       that needs to assert EXCLUSIVE state on the pickle (e.g. "exactly one
-       file exists", "the mtime is unchanged") sets this to a test-owned
-       directory, so its assertions are not confused by sibling pytest-xdist
-       workers touching the shared bundled-root pickle -- while still
-       exercising the real filesystem and read/write path. It rides the env
-       var (not a monkeypatch) so it also propagates to a subprocess a test
-       spawns via ``env=``.
-    2. Otherwise derive ``<cadrumo_local_storage_root>/cache/registry``. The
-       caller controls isolation through the ordinary storage-root or explicit
-       cache-directory configuration; package code never identifies its host.
+    1. An explicit ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` always wins. A test that
+       needs to assert EXCLUSIVE state on the pickle (e.g. "exactly one file
+       exists", "the mtime is unchanged") sets this to a test-owned directory,
+       so its assertions are not confused by sibling pytest-xdist workers
+       touching the shared bundled-root pickle -- while still exercising the
+       real filesystem and read/write path. Being an environment variable, it
+       also propagates to a subprocess a test spawns via ``env=``.
+    2. Otherwise ``~/.cadrumo/registry-disk-cache``: a runner-local development
+       store outside the application's storage root, following the other
+       development caches.
     """
-    settings = load_settings()
-    return _resolve_registry_disk_cache_dir(
-        override=settings.cadrumo_registry_disk_cache_dir,
-        storage_root=settings.cadrumo_local_storage_root,
-    )
-
-
-def _resolve_registry_disk_cache_dir(*, override: Path | None, storage_root: Path) -> Path:
-    """Pure resolution of the registry disk-cache directory.
-
-    Split from :func:`registry_disk_cache_dir` so both branches (explicit
-    override and storage-root derivation) are
-    exercised with real inputs rather than by manipulating the ambient process.
-    """
-    if override is not None:
-        return override
-    return storage_root / _REGISTRY_DISK_CACHE_RELATIVE_PATH
+    override = os.environ.get(REGISTRY_DISK_CACHE_DIR_ENV)
+    if override:
+        return Path(override)
+    return Path.home() / ".cadrumo" / "registry-disk-cache"
 
 
 def registry_disk_cache_max_entries() -> int:
     """Return the retained-pickle ceiling for registry disk-cache eviction.
 
-    Reads :attr:`~core.config.Settings.cadrumo_registry_disk_cache_max_entries`;
-    the loader prunes the oldest pickles beyond this count after each write.
+    Reads ``CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES`` (default 8); the loader
+    prunes the oldest pickles beyond this count after each write.
+
+    Raises:
+        ValueError: When the variable is set to anything other than a positive integer.
     """
-    return load_settings().cadrumo_registry_disk_cache_max_entries
+    raw = os.environ.get(REGISTRY_DISK_CACHE_MAX_ENTRIES_ENV)
+    if raw is None or not raw.strip():
+        return _DEFAULT_REGISTRY_DISK_CACHE_MAX_ENTRIES
+    value = int(raw)
+    if value < 1:
+        raise ValueError(f"{REGISTRY_DISK_CACHE_MAX_ENTRIES_ENV} must be a positive integer, got {raw!r}")
+    return value

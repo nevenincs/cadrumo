@@ -34,7 +34,7 @@ from ._m303_orden_keys import (
     agricultural_ingreso_legal_key,
     annual_orden_legal_keys,
     difficult_justification_legal_key,
-    lorca_2022_reduction_legal_key,
+    lorca_reduction_legal_key,
     non_agricultural_ingreso_legal_key,
     seasonal_index_legal_key,
 )
@@ -127,14 +127,14 @@ def compile_m303_annual_orden_projection(
             ),
             source_refs=(census.source_ref,),
         ),
-        lorca_2022_reduction=(
+        lorca_reduction=(
             None
-            if census.lorca_2022_reduction is None
+            if census.lorca_reduction is None
             else ReduccionLorcaOrdenAnual.from_registry_source(
                 ejercicio=census.ejercicio,
-                municipality=census.lorca_2022_reduction.municipality,
-                percentage=census.lorca_2022_reduction.percentage,
-                legal_ref=legal_refs[lorca_2022_reduction_legal_key()],
+                municipality=census.lorca_reduction.municipality,
+                percentage=census.lorca_reduction.percentage,
+                legal_ref=legal_refs[lorca_reduction_legal_key()],
                 source_ref=census.source_ref,
                 source_content_digest=census.source_content_digest,
             )

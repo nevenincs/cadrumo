@@ -21,11 +21,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.core.descendant_relacion import DescendantRelacion
 from cadrumo.core.errors.hierarchy import ProfileAnswerTypeError
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
@@ -47,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 FILING_YEAR = 2024
 _FACT_CONTEXT = FamilyFactResolutionContext(
-    compiled_bundled_authority(),
+    PublishedGovernedFactSource(),
     date(FILING_YEAR, 12, 31),
     date(FILING_YEAR, 12, 31),
 )

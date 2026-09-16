@@ -26,7 +26,7 @@ from .....application.ledger.preconditions import LedgerPreconditionCondition
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....core.config import Settings
 from .....core.image_media_type import ImageMediaType
-from .....domain.calculations.registry.tests.published_authority import published_profile_create_context
+from .....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from .....domain.transactions.llm import prompt_spec_with_saturation_fields
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
 from .....domain.user_profile.values import ProfileSetupState, create_user_profile_record
@@ -41,7 +41,7 @@ from .persistence_vision_evidence_support import (
     profile as profile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
@@ -128,7 +128,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     clock = datetime(2026, 1, 1, tzinfo=UTC)
     seed_test_profile_record(
         create_user_profile_record(
-            context=published_profile_create_context(),
+            context=leased_profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(

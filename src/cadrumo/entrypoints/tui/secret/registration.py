@@ -16,15 +16,21 @@ profile detail that follows, and is used there.
 The copy carries what an offline CLI tool owes the operator at this
 moment: what is being created, why a password is being asked for at all
 when nothing is going over a network, and what happens if it is lost.
-That last point is not decoration — the passphrase derives the
-key-encryption key, so there is no reset path, and saying so before the
-field rather than after a failure is the difference between an informed
-choice and a trap.
+
+Recovery is an explicit, skippable follow-up. Once the profile exists the
+screen asks whether to set up a recovery code, says plainly what it buys
+(a way to reset a forgotten passphrase) and what declining means, and
+defaults to declining. Choosing it shows the code once and asks for it
+back before anything is installed; cancelling at any point leaves the
+freshly created profile exactly as it was, with its passphrase as its only
+door.
 
 See Also:
     :func:`~cadrumo.application.user_profile.register_profile_with_credentials`
         The application door this screen drives; it creates the profile,
         provisions the key material, and leaves the session unlocked.
+    :func:`~cadrumo.application.user_profile.recovery_custody.enroll_profile_recovery`
+        The optional second door, driven from the offer that follows creation.
     :func:`~cadrumo.core.credentials.assess_profile_password`
         The canonical assessment behind validation and the live strength line.
     :class:`~cadrumo.entrypoints.tui.secret.login.LoginScreen`
@@ -44,6 +50,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Select, Static
+from textual.worker import Worker, WorkerState
 
 from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
 from ....core.errors.hierarchy import CadrumoError
@@ -66,12 +73,14 @@ if TYPE_CHECKING:
     from ....core.credentials import ProfilePasswordAssessment
 
 __all__ = [
-    "RecoveryHandoverAbandonedError",
-    "RecoveryHandoverCancelledError",
-    "RecoveryWordsScreen",
+    "RecoveryCodeScreen",
+    "RecoveryEnrollmentAttempt",
+    "RecoveryHandoverDeclinedError",
+    "RecoveryOfferScreen",
     "RegistrationAttempt",
     "RegistrationRefusal",
     "RegistrationScreen",
+    "build_profile_recovery_enrollment_attempt",
     "build_profile_registration_attempt",
 ]
 
@@ -88,25 +97,21 @@ class RegistrationRefusal:
         return tr(self.message_key, locale=locale, **dict(self.context))
 
 
-#: Poll interval for the pre-publication recovery handoff. This paces the
-#: liveness check only; it is never a deadline on the operator, who may take
-#: as long as copying down a mnemonic actually requires.
+#: Poll interval for the recovery code handoff. This paces the liveness check
+#: only; it is never a deadline on the operator, who may take as long as
+#: copying down a code actually requires.
 _RECOVERY_HANDOFF_POLL_SECONDS = 0.1
 
+_RECOVERY_ENROLLMENT_WORKER = "profile-recovery-enrollment"
 
-class RecoveryHandoverAbandonedError(CadrumoError):
-    """The screen that owed the recovery confirmation is no longer presentable.
 
-    Distinct from :class:`RecoveryHandoverCancelledError`, which reports a
-    deliberate operator choice. This reports that nobody CAN answer: the
-    words screen left the application's screen stack without releasing the
-    handoff, so the waiting worker would otherwise block for the lifetime of
-    the process with no error and no diagnostic.
+class RecoveryHandoverDeclinedError(CadrumoError):
+    """The operator did not confirm the code; raised inside the handover to abort enrolment.
+
+    The application treats any exception from the handover as "nothing was
+    installed", which is exactly the outcome a decline wants. The enrolment
+    door in this module catches it and reports a decline, not a refusal.
     """
-
-
-class RecoveryHandoverCancelledError(CadrumoError):
-    """The operator declined the one-time recovery possession gate."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,10 +122,6 @@ class RegistrationAttempt:
     has to recognise. That keeps refusal *classification* with the layer
     that owns the rules, and leaves the screen doing what a screen does:
     show the operator what happened.
-
-    Recovery material never rides this post-registration result. The screen's
-    blocking handoff runs inside the application callback, before publication,
-    and the application owns wiping the material on every exit.
     """
 
     outcome: ProfileRegistrationOutcome | None = None
@@ -130,6 +131,21 @@ class RegistrationAttempt:
     def refusal(self) -> str | None:
         """Render expected refusal data only at the presentation boundary."""
         return self.expected_refusal.render() if self.expected_refusal is not None else None
+
+
+@dataclass(frozen=True, slots=True)
+class RecoveryEnrollmentAttempt:
+    """The outcome of asking the application to enrol recovery after creation.
+
+    ``enrolled`` is true only when the wrapper was installed after the
+    operator confirmed the code. ``declined`` records a deliberate cancel,
+    which is not a refusal and shows nothing. Anything else is an expected
+    refusal carried as localized data.
+    """
+
+    enrolled: bool = False
+    declined: bool = False
+    expected_refusal: RegistrationRefusal | None = None
 
 
 def _language_options(*, locale: str | None = None) -> list[tuple[str, str]]:
@@ -174,13 +190,12 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         self,
         *,
         assess: Callable[[str], ProfilePasswordAssessment],
-        register: Callable[
-            [str, str, str, Callable[[ProfileRecoveryEnrollment], str]],
-            RegistrationAttempt,
-        ],
+        register: Callable[[str, str, str], RegistrationAttempt],
+        enroll_recovery: Callable[[str, str, Callable[[ProfileRecoveryEnrollment], str]], RecoveryEnrollmentAttempt]
+        | None = None,
         suggested_name: str | None = None,
     ) -> None:
-        """Bind the password assessment and registration presentation callbacks."""
+        """Bind the password assessment, registration and optional recovery doors."""
         super().__init__()
         self._assess_profile_password = assess
         """Passphrase banding, injected rather than imported.
@@ -193,6 +208,10 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         """Named to avoid ``App._register``, a Textual internal that
         silently swallowed the door and passed the app itself as the
         profile label."""
+        self._enroll_recovery = enroll_recovery
+        """The optional recovery door. ``None`` means the screen never offers
+        recovery and leaves as soon as the profile exists, which is what a
+        host without a way to enrol wants."""
         self._suggested_name = suggested_name or ""
         """Name carried in from the command line, prefilled into the field.
 
@@ -205,7 +224,15 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         recognise its own writes: rewriting its rows re-seeds its value
         and reports that back as a selection, and this is what tells the
         two apart."""
+        self._pending_passphrase: bytearray | None = None
+        """The passphrase kept only between creation and the recovery offer.
+
+        Enrolment proves the current passphrase, and asking the operator to
+        retype it seconds after choosing it would be a pointless hurdle. The
+        buffer is wiped the moment the offer is resolved either way."""
+        self._created_outcome: ProfileRegistrationOutcome | None = None
         self._pending_recovery_handoffs: set[Event] = set()
+        self._enrollment_worker: Worker[RecoveryEnrollmentAttempt] | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -387,7 +414,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
             self.query_one(f"#{order[order.index(current) + 1]}", Input).focus()
 
     def action_create(self) -> None:
-        """Validate the form locally, then create the profile and exit.
+        """Validate the form locally, then create the profile.
 
         Local checks cover only what the screen can see — a blank name, a
         mismatched confirmation, an invalid password. Everything else
@@ -396,7 +423,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         re-derived, so the screen never becomes a second authority on what
         a valid registration is.
         """
-        if self.attempt_in_flight:
+        if self.attempt_in_flight or self._created_outcome is not None:
             return
 
         username = self.query_one("#field-username", Input).value.strip()
@@ -419,19 +446,16 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
 
         selected_language = self.selected_output_language()
         registration_context = copy_context()
-        password_buffer = bytearray(password, UTF_8_ENCODING)
+        self._wipe_pending_passphrase()
+        self._pending_passphrase = bytearray(password, UTF_8_ENCODING)
 
         def _register() -> CredentialAttempt[ProfileRegistrationOutcome]:
-            try:
-                attempt = registration_context.run(
-                    self._create_profile,
-                    username,
-                    password_buffer.decode(UTF_8_ENCODING),
-                    selected_language,
-                    self._confirm_recovery_possession,
-                )
-            finally:
-                password_buffer[:] = b"\x00" * len(password_buffer)
+            attempt = registration_context.run(
+                self._create_profile,
+                username,
+                password,
+                selected_language,
+            )
             return cast("CredentialAttempt[ProfileRegistrationOutcome]", attempt)
 
         self.start_attempt(_register)
@@ -444,8 +468,100 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
     def progress_message(self) -> str:
         return tr("flows.registration.create_button", locale=self._active_language)
 
+    # ── recovery offer ──────────────────────────────────────────────────
+
+    @override
+    def leave(self, outcome: ProfileRegistrationOutcome | None) -> None:
+        """Offer recovery once the profile exists; leave immediately otherwise.
+
+        The base lifecycle calls this with the successful outcome. Instead of
+        closing straight away, the screen holds the outcome and puts the
+        one optional question to the operator. Declining, cancelling, and
+        finishing enrolment all end here again through
+        :meth:`_finish_registration`, which is the only path that closes.
+        """
+        if outcome is None or self._enroll_recovery is None:
+            self._wipe_pending_passphrase()
+            super().leave(outcome)
+            return
+        if self._created_outcome is not None:
+            super().leave(outcome)
+            return
+        self._created_outcome = outcome
+        self.app.push_screen(
+            RecoveryOfferScreen(
+                locale=self._active_language,
+                on_accept=self._start_recovery_enrollment,
+                on_skip=self._finish_registration,
+            )
+        )
+
+    def _start_recovery_enrollment(self) -> None:
+        """Run the enrolment door off the event loop with the retained passphrase."""
+        outcome = self._created_outcome
+        door = self._enroll_recovery
+        buffer = self._pending_passphrase
+        if outcome is None or door is None or buffer is None:
+            self._finish_registration()
+            return
+        self.set_busy(busy=True)
+        self.query_one(self.STATUS_ID, PinnedStatusBar).show_progress(
+            tr("flows.registration.recovery.progress", locale=self._active_language)
+        )
+        enrollment_context = copy_context()
+        passphrase = buffer.decode(UTF_8_ENCODING)
+        profile_id = outcome.profile_id
+        handover = self._confirm_recovery_possession
+
+        def _enroll() -> RecoveryEnrollmentAttempt:
+            return enrollment_context.run(door, profile_id, passphrase, handover)
+
+        self._enrollment_worker = self.run_worker(
+            _enroll,
+            name=_RECOVERY_ENROLLMENT_WORKER,
+            group=_RECOVERY_ENROLLMENT_WORKER,
+            exit_on_error=False,
+            exclusive=True,
+            thread=True,
+        )
+
+    @override
+    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """Settle the enrolment worker here; everything else is the base attempt."""
+        worker = self._enrollment_worker
+        if worker is None or event.worker is not worker:
+            super().on_worker_state_changed(event)
+            return
+        if event.state not in {WorkerState.SUCCESS, WorkerState.ERROR}:
+            return
+        self._enrollment_worker = None
+        attempt = worker.result if event.state is WorkerState.SUCCESS else None
+        if attempt is not None and attempt.expected_refusal is not None:
+            self.refuse(attempt.expected_refusal.render(locale=self._active_language))
+        elif event.state is WorkerState.ERROR:
+            self.refuse(self._resolved_worker_failure(worker.error or RuntimeError(_RECOVERY_ENROLLMENT_WORKER)))
+        self._finish_registration()
+
+    def _finish_registration(self) -> None:
+        """Wipe the retained passphrase and hand the created profile to the host."""
+        self._wipe_pending_passphrase()
+        outcome = self._created_outcome
+        self.outcome = outcome
+        super().leave(outcome)
+
+    def _wipe_pending_passphrase(self) -> None:
+        buffer = self._pending_passphrase
+        if buffer is not None:
+            buffer[:] = b"\x00" * len(buffer)
+        self._pending_passphrase = None
+
     def _confirm_recovery_possession(self, enrollment: ProfileRecoveryEnrollment) -> str:
-        """Show words, block for confirmation, and return exact proof."""
+        """Show the code, block for confirmation, and return exact proof.
+
+        Runs on the enrolment worker thread. The code screen is pushed on the
+        UI task and the worker waits on an event the screen resolves. A
+        decline raises so the application installs nothing.
+        """
         resolved = Event()
         self._pending_recovery_handoffs.add(resolved)
         supplied_proof: str | None = None
@@ -458,54 +574,47 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         def _refuse() -> None:
             resolved.set()
 
+        code_screen: RecoveryCodeScreen | None = None
+
         def _show() -> None:
-            nonlocal words_screen
-            words_screen = RecoveryWordsScreen(
+            nonlocal code_screen
+            code_screen = RecoveryCodeScreen(
                 enrollment=enrollment,
                 locale=self._active_language,
                 on_confirm=_accept,
                 on_cancel=_refuse,
             )
-            self.app.push_screen(words_screen)
-
-        words_screen: RecoveryWordsScreen | None = None
+            self.app.push_screen(code_screen)
 
         try:
             self.app.call_from_thread(_show)
-            # The operator is copying down a mnemonic, so elapsed time is not a
-            # failure condition and a wall-clock bound only races a slow machine.
-            # The one real failure is a message loop that stopped without
-            # releasing this handoff through ``on_unmount``, so wait on that
-            # condition instead: poll the event, and give up only once the app
-            # is no longer running.
+            # The operator is copying down a code, so elapsed time is not a
+            # failure condition. The one real failure is a message loop that
+            # stopped without releasing this handoff through ``on_unmount``,
+            # so wait on that condition instead: poll the event, and give up
+            # only once the app is no longer running or the screen left the
+            # stack without answering.
             unstacked_polls = 0
             while not resolved.wait(timeout=_RECOVERY_HANDOFF_POLL_SECONDS):
                 if not self.app.is_running:
                     break
-                # A pending handoff always has its screen on the stack:
-                # ``push_screen`` appends synchronously and ``call_from_thread``
-                # returns only after it has. So "unanswered AND unstacked" is a
-                # state a waiting operator cannot be in, which is what makes this
-                # safe to act on -- it can only mean the screen left without its
-                # ``on_unmount`` releasing us. Confirmed across two polls because
-                # this list is read from a worker thread and one torn read must
-                # not abandon a live registration.
-                if words_screen is not None and words_screen not in self.app.screen_stack:
+                if code_screen is not None and code_screen not in self.app.screen_stack:
                     unstacked_polls += 1
                     if unstacked_polls > 1:
-                        raise RecoveryHandoverAbandonedError
+                        break
                 else:
                     unstacked_polls = 0
             if supplied_proof is None:
-                raise RecoveryHandoverCancelledError
+                raise RecoveryHandoverDeclinedError
             return supplied_proof
         finally:
             self._pending_recovery_handoffs.discard(resolved)
 
     def on_unmount(self) -> None:
-        """Release every pre-publication handoff when the application stops."""
+        """Release every pending handoff and wipe the passphrase when the application stops."""
         for pending in tuple(self._pending_recovery_handoffs):
             pending.set()
+        self._wipe_pending_passphrase()
 
     @override
     def set_busy(self, *, busy: bool) -> None:
@@ -517,23 +626,96 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         self.query_one("#btn-create", Button).disabled = busy
 
 
-class RecoveryWordsScreen(Screen[None]):
-    """Show the mnemonic once and return masked exact re-entry proof."""
+class RecoveryOfferScreen(Screen[None]):
+    """Ask once whether to set up recovery, with the trade-off stated plainly."""
 
     DEFAULT_CSS = tokenised("""
-    RecoveryWordsScreen {
+    RecoveryOfferScreen {
         align: center middle;
     }
-    #words-panel {
+    #offer-panel {
         width: 100%;
         height: auto;
         border: $cadrumo-radius $primary;
         padding: $cadrumo-space-1 $cadrumo-gutter;
     }
-    #words-heading { text-style: bold; margin-bottom: $cadrumo-stack; }
-    #words-value { color: $warning; margin-bottom: $cadrumo-stack; }
-    #words-warning { color: $text-muted; margin-bottom: $cadrumo-stack; }
-    #words-actions { height: auto; align-horizontal: right; }
+    #offer-heading { text-style: bold; margin-bottom: $cadrumo-stack; }
+    #offer-explanation { margin-bottom: $cadrumo-stack; }
+    #offer-consequence { color: $text-muted; margin-bottom: $cadrumo-stack; }
+    #offer-actions { height: auto; align-horizontal: right; }
+    """)
+
+    def __init__(self, *, locale: str, on_accept: Callable[[], None], on_skip: Callable[[], None]) -> None:
+        """Bind the two terminal choices of the offer."""
+        super().__init__()
+        self._locale = locale
+        self._on_accept = on_accept
+        self._on_skip = on_skip
+        self._resolved = False
+
+    @override
+    def compose(self) -> ComposeResult:
+        with Container(id="offer-panel"):
+            yield Static(tr("flows.registration.recovery.offer_heading", locale=self._locale), id="offer-heading")
+            yield Static(
+                tr("flows.registration.recovery.offer_explanation", locale=self._locale), id="offer-explanation"
+            )
+            yield Static(
+                tr("flows.registration.recovery.offer_consequence", locale=self._locale), id="offer-consequence"
+            )
+            with Container(id="offer-actions"):
+                yield Button(tr("flows.registration.recovery.skip_button", locale=self._locale), id="btn-skip-recovery")
+                yield Button(
+                    tr("flows.registration.recovery.setup_button", locale=self._locale),
+                    id="btn-setup-recovery",
+                    classes="-primary",
+                )
+
+    def on_mount(self) -> None:
+        """Focus the skip choice: declining is the default and costs nothing."""
+        self.query_one("#btn-skip-recovery", Button).focus()
+
+    @on(Button.Pressed, "#btn-setup-recovery")
+    def _accept(self) -> None:
+        if self._resolved:
+            return
+        self._resolved = True
+        self.dismiss(None)
+        self._on_accept()
+
+    @on(Button.Pressed, "#btn-skip-recovery")
+    def _skip(self) -> None:
+        self._skip_once()
+        self.dismiss(None)
+
+    def on_unmount(self) -> None:
+        """Treat escape, shutdown, and every non-accept exit as a skip."""
+        self._skip_once()
+
+    def _skip_once(self) -> None:
+        if self._resolved:
+            return
+        self._resolved = True
+        self._on_skip()
+
+
+class RecoveryCodeScreen(Screen[None]):
+    """Show the recovery code once and return masked exact re-entry proof."""
+
+    DEFAULT_CSS = tokenised("""
+    RecoveryCodeScreen {
+        align: center middle;
+    }
+    #code-panel {
+        width: 100%;
+        height: auto;
+        border: $cadrumo-radius $primary;
+        padding: $cadrumo-space-1 $cadrumo-gutter;
+    }
+    #code-heading { text-style: bold; margin-bottom: $cadrumo-stack; }
+    #code-value { color: $warning; text-style: bold; margin-bottom: $cadrumo-stack; }
+    #code-warning { color: $text-muted; margin-bottom: $cadrumo-stack; }
+    #code-actions { height: auto; align-horizontal: right; }
     """)
 
     def __init__(
@@ -544,7 +726,7 @@ class RecoveryWordsScreen(Screen[None]):
         on_confirm: Callable[[str], None],
         on_cancel: Callable[[], None],
     ) -> None:
-        """Bind one ephemeral recovery enrollment and its terminal callbacks."""
+        """Bind one ephemeral recovery enrolment and its terminal callbacks."""
         super().__init__()
         self._enrollment = enrollment
         self._locale = locale
@@ -554,40 +736,49 @@ class RecoveryWordsScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
-        with Container(id="words-panel"):
-            yield Static(tr("cli.config.custody.recovery_words_heading", locale=self._locale), id="words-heading")
-            yield Static(self._enrollment.recovery_key.mnemonic, id="words-value")
-            yield Static(tr("cli.config.custody.recovery_words_warning", locale=self._locale), id="words-warning")
+        with Container(id="code-panel"):
+            yield Static(tr("cli.config.profile.recovery.code_heading", locale=self._locale), id="code-heading")
+            yield Static(self._enrollment.recovery_key.code, id="code-value")
+            yield Static(tr("cli.config.profile.recovery.code_warning", locale=self._locale), id="code-warning")
             yield Input(
-                password=True,
-                placeholder=tr("cli.config.profile.create_recovery_verification_prompt", locale=self._locale),
+                placeholder=tr("cli.config.profile.recovery.verification_prompt", locale=self._locale),
                 id="field-recovery-verification",
             )
-            with Container(id="words-actions"):
-                yield Button(tr("cli.config.custody.recovery_words_cancel", locale=self._locale), id="btn-cancel-words")
+            with Container(id="code-actions"):
+                yield Button(tr("flows.registration.recovery.cancel_button", locale=self._locale), id="btn-cancel-code")
                 yield Button(
-                    tr("cli.config.custody.recovery_words_confirm", locale=self._locale), id="btn-confirm-words"
+                    tr("flows.registration.recovery.confirm_button", locale=self._locale),
+                    id="btn-confirm-code",
+                    classes="-primary",
                 )
 
-    @on(Button.Pressed, "#btn-confirm-words")
+    @on(Button.Pressed, "#btn-confirm-code")
     def _confirm(self) -> None:
         if self._resolved:
             return
-        supplied = self.query_one("#field-recovery-verification", Input).value
-        expected = self._enrollment.recovery_key.mnemonic
+        field = self.query_one("#field-recovery-verification", Input)
+        supplied = field.value
+        expected = self._enrollment.recovery_key.code
         try:
-            if supplied != expected:
-                self._refuse_once()
-                self.dismiss(None)
+            if _bare_code(supplied) != _bare_code(expected):
+                field.value = ""
+                self.query_one("#code-warning", Static).update(
+                    tr("cli.config.profile.recovery.verification_mismatch", locale=self._locale)
+                )
+                field.focus()
                 return
         finally:
-            self.query_one("#field-recovery-verification", Input).value = ""
             del expected
+        field.value = ""
         self._resolved = True
         self.dismiss(None)
-        self._on_confirm(supplied)
+        self._on_confirm(self._enrollment.recovery_key.code)
 
-    @on(Button.Pressed, "#btn-cancel-words")
+    @on(Input.Submitted, "#field-recovery-verification")
+    def _submit(self) -> None:
+        self._confirm()
+
+    @on(Button.Pressed, "#btn-cancel-code")
     def _cancel(self) -> None:
         self._refuse_once()
         self.dismiss(None)
@@ -600,22 +791,25 @@ class RecoveryWordsScreen(Screen[None]):
         if self._resolved:
             return
         self._resolved = True
-        self._enrollment.recovery_key.wipe()
         self._on_cancel()
+
+
+def _bare_code(text: str) -> str:
+    """Reduce a typed code to its symbols so case and separators are cosmetic."""
+    return "".join(character for character in text.upper() if character.isalnum())
 
 
 def build_profile_registration_attempt(
     label: str,
     candidate_passphrase: str,
     output_language: str,
-    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
 ) -> RegistrationAttempt:
     """Adapt the public registration door into this screen's result contract.
 
     This is the production ``register`` door. It classifies nothing itself:
     the application owns which refusals are expected, and this only carries
-    the localized message key and its context forward as data. No passphrase,
-    recovery phrase, or enrollment record is retained beyond the call.
+    the localized message key and its context forward as data. No passphrase
+    is retained beyond the call.
     """
     from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
     from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -628,16 +822,9 @@ def build_profile_registration_attempt(
                 label=label,
                 passphrase=candidate_passphrase,
                 facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
-                recovery_handover=recovery_handover,
                 profile_create_context=operation.profile_create_context(),
                 profile_decode_context=operation.profile_decode_context(),
             )
-    except RecoveryHandoverCancelledError:
-        return RegistrationAttempt(
-            expected_refusal=RegistrationRefusal(
-                message_key="cli.config.profile.create_recovery_verification_cancelled",
-            )
-        )
     except ProfileRegistrationError as refusal:
         if refusal.translated_message is None:
             raise
@@ -648,3 +835,37 @@ def build_profile_registration_attempt(
             )
         )
     return RegistrationAttempt(outcome=outcome)
+
+
+def build_profile_recovery_enrollment_attempt(
+    profile_id: str,
+    current_passphrase: str,
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+) -> RecoveryEnrollmentAttempt:
+    """Adapt the public enrolment door into this screen's result contract.
+
+    A declined handover is not a refusal: the operator chose to keep the
+    profile passphrase-only, and the application installed nothing.
+    """
+    from uuid import UUID
+
+    from ....application.user_profile.recovery_custody import ProfileRecoveryError, enroll_profile_recovery
+
+    try:
+        enroll_profile_recovery(
+            profile_id=UUID(profile_id),
+            current_passphrase=current_passphrase,
+            recovery_handover=recovery_handover,
+        )
+    except RecoveryHandoverDeclinedError:
+        return RecoveryEnrollmentAttempt(declined=True)
+    except ProfileRecoveryError as refusal:
+        if refusal.translated_message is None:
+            raise
+        return RecoveryEnrollmentAttempt(
+            expected_refusal=RegistrationRefusal(
+                message_key=refusal.translated_message,
+                context=tuple((refusal.context or {}).items()),
+            )
+        )
+    return RecoveryEnrollmentAttempt(enrolled=True)

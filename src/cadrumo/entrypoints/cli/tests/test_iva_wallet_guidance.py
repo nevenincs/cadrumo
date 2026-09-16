@@ -15,7 +15,7 @@ from ._iva_wallet_inspector_support import (
 )
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 def _m303_revision_id(*, filing_year: int, period: str) -> str:

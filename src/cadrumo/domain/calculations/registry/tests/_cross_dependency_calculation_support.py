@@ -72,10 +72,9 @@ def _grounded_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Ground observations in the selected snapshot, scoped to ``modelo`` alone.
 
-    Built from the compile-only registry tree at calculation grade -- these
-    fixtures assert cross-model relation folding, never a filing claim --
-    rather than through ``compiled_bundled_authority()``, whose ``.load()``
-    validates every modelo in the bundled tree before returning anything.
+    Built from the published registry-tree view at calculation grade -- these
+    fixtures assert cross-model relation folding, never a filing claim -- so
+    only the requested modelo's own revisions are validated.
     """
     source = f"{modelo}/{filing_year}/{period}"
     try:

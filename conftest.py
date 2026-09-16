@@ -64,6 +64,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 import pytest
+from _pytest.unraisableexception import gc_collect_iterations_key
 from dev.test_runs import logging as _run_logging
 
 # Keep pytest scratch and collection-time storage outside the checkout. The
@@ -131,6 +132,12 @@ def pytest_configure(config: pytest.Config) -> None:
     """Create and announce this pytest invocation's durable run log."""
     marker_hook.reset_held_serials()
     fixture_resolution_hook.reset_refused_requests()
+    # The unraisable-exception plugin forces full gc passes at session end to
+    # flush __del__ errors. Over this suite's post-collection heap those passes
+    # cost seconds per process (per xdist worker); reference counting already
+    # runs finalisers promptly on CPython, so the sweep is skipped, as pytester
+    # itself does.
+    config.stash[gc_collect_iterations_key] = 0
     _run_logging.configure(config)
 
 
@@ -148,6 +155,12 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
 def pytest_collectreport(report: pytest.CollectReport) -> None:
     """Persist collection failures immediately."""
     _run_logging.log_collection_report(report)
+
+
+def pytest_internalerror(excrepr: object, excinfo: object) -> None:
+    """Persist pytest internal errors that have no test or collection report."""
+    del excinfo
+    _run_logging.log_internal_error(excrepr)
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:

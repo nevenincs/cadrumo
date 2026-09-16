@@ -3,7 +3,7 @@
 The tests run against a real in-memory SQLAlchemy session bound to
 a deliberately-isolated declarative base so we never touch the live
 ``cadrumo.adapters.persistence.storage._orm`` schema. The master key is supplied by an
-:class:`EphemeralMasterKeyProvider` whose ``__enter__`` activates a
+:class:`EphemeralBucketSession` whose ``__enter__`` activates a
 :class:`BucketSession` for the duration of the test.
 """
 
@@ -19,7 +19,7 @@ from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from ...errors import StorageValidationError
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..encrypted_columns import HashedLookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -45,7 +45,7 @@ class _CryptoRow(_TestBase):
 @pytest.fixture(autouse=True)
 def _patch_master_key(fixed_master_key: bytes) -> Iterator[None]:
     """Inject a deterministic master key for every test in this module."""
-    with EphemeralMasterKeyProvider(key=fixed_master_key):
+    with EphemeralBucketSession(key=fixed_master_key):
         yield
 
 
@@ -124,7 +124,7 @@ class TestHashedLookup:
     def test_digest_changes_with_master_key(self) -> None:
         digest_a = HashedLookup.compute("payload")
         # Switch to a different master key; the digest must change.
-        with EphemeralMasterKeyProvider():
+        with EphemeralBucketSession():
             digest_b = HashedLookup.compute("payload")
         assert digest_a != digest_b
 

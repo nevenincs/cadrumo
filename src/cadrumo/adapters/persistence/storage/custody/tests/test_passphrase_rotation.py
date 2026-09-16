@@ -17,20 +17,15 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
-from cadrumo.adapters.persistence.storage.custody.recovery import (
-    ProfileCustodyRecoveryEnvelope,
-)
-from cadrumo.adapters.persistence.storage.custody.recovery_artifact import (
-    ProfileCustodyRecoveryArtifact,
-    unlock_imported_profile_custody_recovery_artifact,
-)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import (
+    load_profile_custody_recovery_material,
     profile_custody_recovery_envelope_path,
     unlock_profile_custody_password,
+    unlock_profile_custody_recovery,
 )
 from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
 from cadrumo.application.user_profile.passphrase_rotation import (
@@ -38,6 +33,7 @@ from cadrumo.application.user_profile.passphrase_rotation import (
     rotate_profile_passphrase,
 )
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
@@ -49,7 +45,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 if TYPE_CHECKING:
     from pathlib import Path
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _LABEL = "Passphrase Rotation Subject"
 _CURRENT = "passphrase-rotation-current-operator-secret"
@@ -71,19 +67,26 @@ _REFUSAL_MESSAGES = {
 }
 
 
-def _register(handed: list[str] | None = None):
-    """Create the subject profile, optionally retaining its recovery words."""
+def _register():
+    """Create the subject profile; it is born without recovery."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     return register_profile_with_credentials(
         label=_LABEL,
         passphrase=_CURRENT,
-        recovery_handover=lambda enrollment: (
-            (handed.append(enrollment.recovery_key.mnemonic) if handed is not None else None)
-            or enrollment.recovery_key.mnemonic
-        ),
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
+
+
+def _enroll(profile_id: UUID) -> str:
+    """Enrol recovery through the real door and return the code it handed over."""
+    handed: list[str] = []
+    enroll_profile_recovery(
+        profile_id=profile_id,
+        current_passphrase=_CURRENT,
+        recovery_handover=lambda enrollment: handed.append(enrollment.recovery_key.code) or handed[-1],
+    )
+    return handed[0]
 
 
 def test_the_new_passphrase_opens_the_profile_and_the_old_one_no_longer_does(tmp_path: Path) -> None:
@@ -103,6 +106,7 @@ def test_the_new_passphrase_opens_the_profile_and_the_old_one_no_longer_does(tmp
 
         assert rotated.password_generation == 2
         assert rotated.dek_epoch_preserved is True
+        assert rotated.recovery_enrollment_retained is False
 
         material = load_committed_profile_password_material(profile_id)
         assert unlock_profile_custody_password(material, password=_REPLACEMENT).dek is not None
@@ -188,19 +192,23 @@ def test_the_rotation_is_recorded_in_the_profile_history(tmp_path: Path) -> None
         assert any(event.event_type is BucketEventType.PROFILE_PASSPHRASE_ROTATED for event in history)
 
 
-def test_an_outstanding_recovery_phrase_still_opens_the_profile_afterwards(tmp_path: Path) -> None:
+def test_an_outstanding_recovery_code_still_opens_the_profile_afterwards(tmp_path: Path) -> None:
     """Rotation must not strand the second door a taxpayer is keeping.
 
-    A recovery phrase written down before the password change has to keep
+    A recovery code written down before the password change has to keep
     working, or changing a password silently destroys the only route back
     into the records for someone who later forgets the new one.
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        outcome = _register(handed)
+        outcome = _register()
         profile_id = UUID(outcome.profile_id)
+        code = _enroll(profile_id)
+        wrapper_path = profile_custody_recovery_envelope_path(
+            load_committed_profile_password_material(profile_id).capsule_path
+        )
+        wrapper_before = wrapper_path.read_bytes()
 
         rotated = rotate_profile_passphrase(
             profile_id=profile_id,
@@ -211,17 +219,12 @@ def test_an_outstanding_recovery_phrase_still_opens_the_profile_afterwards(tmp_p
         )
 
         assert rotated.recovery_enrollment_retained is True
+        assert wrapper_path.read_bytes() == wrapper_before
 
         material = load_committed_profile_password_material(profile_id)
-        recovery = ProfileCustodyRecoveryEnvelope.model_validate_json(
-            profile_custody_recovery_envelope_path(material.capsule_path).read_bytes(),
-        )
-        proved = unlock_imported_profile_custody_recovery_artifact(
-            ProfileCustodyRecoveryArtifact.from_recovery_envelope(recovery),
-            handed[0],
-            sentinel=material.sentinel,
-            expected_profile_id=profile_id,
-            expected_dek_epoch=material.envelope.dek_epoch,
+        proved = unlock_profile_custody_recovery(
+            load_profile_custody_recovery_material(profile_id),
+            recovery_secret=code,
         )
 
         assert proved.dek == unlock_profile_custody_password(material, password=_REPLACEMENT).dek

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-import tomllib
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import cache
@@ -11,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from ..source_import_analysis import module_name_for, resolve_relative_import
@@ -44,7 +44,7 @@ class _RawIvaReadException:
 @cache
 def _temporary_raw_iva_readers() -> Mapping[str, frozenset[_RawIvaReadException]]:
     """Return the named S80 raw-legal-table exceptions from their retirement ledger."""
-    ledger = tomllib.loads(_IVA_RETIREMENT_LEDGER.read_text(encoding="utf-8"))
+    ledger = parse_toml(_IVA_RETIREMENT_LEDGER.read_text(encoding="utf-8"))
     exceptions: dict[str, set[_RawIvaReadException]] = {}
     for table in ledger["remaining_structured_tables"]:
         if (

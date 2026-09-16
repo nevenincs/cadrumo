@@ -41,7 +41,7 @@ from ..applicability_modelo202 import (
     resolve_modelo_202_art_40_3_incn_threshold,
 )
 from ..formula_runtime import calculate_registry_snapshot
-from ._published_authority import artifact_snapshot
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -84,7 +84,7 @@ _M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _snapshot():
-    return artifact_snapshot("200", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def _cuota_for(

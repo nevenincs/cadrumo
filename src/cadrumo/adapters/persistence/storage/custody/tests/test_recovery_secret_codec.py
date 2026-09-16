@@ -37,8 +37,7 @@ def test_recovery_secret_codec_refuses_malformed_transport() -> None:
 def test_recovery_paths_have_no_profile_password_policy_dependency() -> None:
     custody_root = Path(__file__).parents[1]
     recovery_sources = "\n".join(
-        (custody_root / name).read_text(encoding="utf-8")
-        for name in ("recovery.py", "recovery_artifact.py", "_recovery_secret_codec.py")
+        (custody_root / name).read_text(encoding="utf-8") for name in ("recovery.py", "_recovery_secret_codec.py")
     )
     supervision = (custody_root / "kdf_supervision.py").read_text(encoding="utf-8")
     recovery_supervision = supervision[supervision.index("def unlock_profile_custody_recovery_material") :]

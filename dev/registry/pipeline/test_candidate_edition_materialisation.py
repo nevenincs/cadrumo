@@ -10,7 +10,6 @@ the shape that a delta-only candidate loses.
 from __future__ import annotations
 
 import shutil
-import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -18,6 +17,7 @@ import pytest
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..compiler.edition_materialisation import materialise_edition
@@ -51,7 +51,7 @@ def test_inheriting_edition_is_staged_with_the_members_it_does_not_restate(tmp_p
     restated_ids = {
         row["id"]
         for fragment in (source_revision / "application_links").glob("*.toml")
-        for row in tomllib.loads(fragment.read_text("utf-8"))["revisions"][_INHERITING_REVISION]["application_links"]
+        for row in parse_toml(fragment.read_text("utf-8"))["revisions"][_INHERITING_REVISION]["application_links"]
     }
     assert _INHERITED_LINK not in restated_ids, (
         "the fixture rests on this id being inherited rather than restated; pick another id"
@@ -95,7 +95,7 @@ def test_storage_only_transitive_baselines_are_detached_as_complete_authority(tm
     )
     staged_revision_roots = tuple(path.name for path in (staged_root / "revisions").iterdir() if path.is_dir())
     assert staged_revision_roots == (_STORAGE_ONLY_REVISION,)
-    declared = tomllib.loads((staged_root / "revisions" / _STORAGE_ONLY_REVISION / "revision.toml").read_text("utf-8"))[
+    declared = parse_toml((staged_root / "revisions" / _STORAGE_ONLY_REVISION / "revision.toml").read_text("utf-8"))[
         "revisions"
     ][_STORAGE_ONLY_REVISION]
     assert not {"predecessor", "casilla_storage_baseline", "family_storage_baseline"}.intersection(declared)
@@ -124,7 +124,7 @@ def test_a_candidate_missing_an_inherited_member_is_refused(tmp_path: Path) -> N
     staged = _stage(tmp_path / "candidate", modelo=_INHERITED_MODELO, revision=_INHERITING_REVISION)
     links_root = staged / "revisions" / _INHERITING_REVISION / "application_links"
     fragment = next(links_root.glob("*.toml"))
-    payload = tomllib.loads(fragment.read_text("utf-8"))
+    payload = parse_toml(fragment.read_text("utf-8"))
     rows = payload["revisions"][_INHERITING_REVISION]["application_links"]
     kept = [row for row in rows if row["id"] != _INHERITED_LINK]
     assert len(kept) == len(rows) - 1

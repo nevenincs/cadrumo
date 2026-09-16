@@ -94,9 +94,18 @@ class _ProfileCustodyHoldEvidenceOwner:
                 from ..evidence.profile_legal_hold import LegalHoldCaseAuthority
 
                 return LegalHoldCaseAuthority(root=self._storage_root).project(profile_id, now=now)
+            from ...domain.calculations.registry.authority import bundled_indexed_authority
             from ..filing.retention import FilingRetentionAuthority
 
-            return FilingRetentionAuthority(root=self._storage_root).project(profile_id, now=now)
+            # The retention floor is a dated registry scalar, so projecting it
+            # needs the authority pinned for this read exactly as every other
+            # governed-fact consumer does.
+            with bundled_indexed_authority().operation() as operation:
+                return FilingRetentionAuthority(root=self._storage_root).project(
+                    profile_id,
+                    now=now,
+                    authority=operation,
+                )
         except FileNotFoundError as exc:
             raise ProfileCustodyTransactionRefusalError(f"canonical {self._owner} hold owner facts are absent") from exc
         except ProfileCustodyTransactionError:

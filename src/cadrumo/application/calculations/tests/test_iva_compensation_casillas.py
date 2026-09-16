@@ -11,6 +11,7 @@ compensation came from.
 from __future__ import annotations
 
 import ast
+from functools import cache
 from pathlib import Path
 from types import ModuleType
 
@@ -216,7 +217,11 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
     return tuple(discovered.values())
 
 
-_TOKEN_NAMING_MODULES = _discover_token_naming_modules()
+@cache
+def _token_naming_modules() -> tuple[ModuleType, ...]:
+    # Swept on first use, not at import: the AST sweep over two packages is not
+    # paid by collection.
+    return _discover_token_naming_modules()
 
 
 def test_the_sweep_finds_the_declaring_authority_itself() -> None:
@@ -228,11 +233,10 @@ def test_the_sweep_finds_the_declaring_authority_itself() -> None:
     identity check with no cases and the gate green over nine twins.
     """
     assert _authority_by_token(), "the authority exports no tokens, so every check below is vacuous"
-    assert _casilla_authority in _TOKEN_NAMING_MODULES
+    assert _casilla_authority in _token_naming_modules()
 
 
-@pytest.mark.parametrize("module", _TOKEN_NAMING_MODULES, ids=lambda module: module.__name__.rsplit(".", 1)[-1])
-def test_no_module_declares_a_second_object_for_an_authority_token(module: ModuleType) -> None:
+def test_no_module_declares_a_second_object_for_an_authority_token() -> None:
     """A module naming a compensation casilla holds the authority's object, not a twin.
 
     Identity, not equality: two independently declared constants comparing equal
@@ -261,16 +265,16 @@ def test_no_module_declares_a_second_object_for_an_authority_token(module: Modul
     such a module, and the identity verdict then cannot discriminate its twin.
     Only the dotted registry ids are covered.
     """
-    authority = _authority_by_token()
-    named = _named_tokens(module, authority=authority)
+    for module in _token_naming_modules():
+        authority = _authority_by_token()
+        named = _named_tokens(module, authority=authority)
 
-    assert named, "the module names no compensation casilla, so this parametrisation is vacuous"
-    twins = _twin_declarations(module, authority=authority)
-    assert not twins, f"{module.__name__} declares a second object for: {twins}"
+        assert named, f"{module.__name__} names no compensation casilla, so this sweep case is vacuous"
+        twins = _twin_declarations(module, authority=authority)
+        assert not twins, f"{module.__name__} declares a second object for: {twins}"
 
 
-@pytest.mark.parametrize("module", _TOKEN_NAMING_MODULES, ids=lambda module: module.__name__.rsplit(".", 1)[-1])
-def test_the_verdict_catches_a_twin_restored_at_this_real_site(module: ModuleType) -> None:
+def test_the_verdict_catches_a_twin_restored_at_this_real_site() -> None:
     """Restore the actual defect at a real site and confirm the verdict names it.
 
     A detector can be right on shaped input while missing the site that matters.
@@ -290,23 +294,24 @@ def test_the_verdict_catches_a_twin_restored_at_this_real_site(module: ModuleTyp
     catch -- asserting a red there would be asserting the impossible, and the
     limitation is documented rather than tested away.
     """
-    authority = _authority_by_token()
-    restorable = [
-        (attribute, value) for attribute, value in _named_tokens(module, authority=authority) if not value.isdigit()
-    ]
+    for module in _token_naming_modules():
+        authority = _authority_by_token()
+        restorable = [
+            (attribute, value) for attribute, value in _named_tokens(module, authority=authority) if not value.isdigit()
+        ]
 
-    assert restorable, "no dotted token at this site, so nothing can be restored and the case is vacuous"
-    assert not _twin_declarations(module, authority=authority), (
-        "the site already carries a twin, so the restoration proves nothing"
-    )
+        assert restorable, f"no dotted token at {module.__name__}, so nothing can be restored and the case is vacuous"
+        assert not _twin_declarations(module, authority=authority), (
+            f"{module.__name__} already carries a twin, so the restoration proves nothing"
+        )
 
-    attribute, value = restorable[0]
-    mutated = _namespace_with_restored_twin(module, attribute=attribute, value=value)
+        attribute, value = restorable[0]
+        mutated = _namespace_with_restored_twin(module, attribute=attribute, value=value)
 
-    assert attribute.partition("[")[0] in vars(mutated), (
-        "the restored attribute vanished, so the case is keyed on a stale name"
-    )
-    assert _twin_declarations(mutated, authority=authority) == (attribute,)
+        assert attribute.partition("[")[0] in vars(mutated), (
+            "the restored attribute vanished, so the case is keyed on a stale name"
+        )
+        assert _twin_declarations(mutated, authority=authority) == (attribute,)
 
 
 @pytest.mark.parametrize("name", (*_SHARED_M303_CONSTANTS, *_SHARED_M390_CONSTANTS))

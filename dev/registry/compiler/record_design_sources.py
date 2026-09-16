@@ -243,6 +243,16 @@ def _correction_index(entries: list[object], sidecar_path: Path) -> CorrectionIn
     )
 
 
+def correction_sidecar_path(source_path: Path) -> Path | None:
+    """Return the readable correction sidecar for ``source_path``, or ``None`` when none is authored."""
+    return _resolve_annotation(source_path.with_name(source_path.name + _CORRECTION_SUFFIX))
+
+
+def declared_non_record_sheets_path(source_path: Path) -> Path | None:
+    """Return the readable declared non-record sheets file for ``source_path``'s modelo, or ``None``."""
+    return _resolve_annotation(source_path.parent.parent / _DECLARED_NON_RECORD_SHEETS_FILENAME)
+
+
 def load_corrections(source_path: Path) -> CorrectionIndex:
     """Load a hand-authored, per-binary sidecar declaring record-design corrections.
 
@@ -257,7 +267,7 @@ def load_corrections(source_path: Path) -> CorrectionIndex:
     -- a field-type correction and a header-cell correction may both appear in
     it, per :data:`RecordDesignCorrection`.
     """
-    sidecar_path = _resolve_annotation(source_path.with_name(source_path.name + _CORRECTION_SUFFIX))
+    sidecar_path = correction_sidecar_path(source_path)
     if sidecar_path is None:
         return EMPTY_CORRECTIONS
     entries = _load_annotation_entries(
@@ -306,8 +316,7 @@ def load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, st
     extractor cannot itself tell a lookup tab apart from a dropped record
     body, so that judgement is a registry act, never inferred here.
     """
-    modelo_root = source_path.parent.parent
-    declaration_path = _resolve_annotation(modelo_root / _DECLARED_NON_RECORD_SHEETS_FILENAME)
+    declaration_path = declared_non_record_sheets_path(source_path)
     if declaration_path is None:
         return _EMPTY_DECLARED_NON_RECORD_SHEET_REASONS
     entries = _load_annotation_entries(

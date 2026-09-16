@@ -878,6 +878,47 @@ def _is_cli_tabular_header_line(text: str) -> bool:
     return all(_CLI_HEADER_CELL_PATTERN.fullmatch(cell) is not None for cell in cells)
 
 
+#: Path segments whose CHILD segment is a custody identity: the capsule
+#: directories, the keystore's per-profile sidecars, and each owner directory
+#: under the custody-hold root. A UUID appearing directly beneath one of these
+#: names the operator's profile and is redacted. A UUID anywhere else in a path
+#: is the operator's own directory naming -- a scratch root, a temp directory,
+#: an export destination -- and survives, because rewriting it hands the
+#: operator a path that does not exist.
+_CLI_CUSTODY_UUID_PARENTS = frozenset({"buckets", "keystore"})
+_CLI_CUSTODY_UUID_GRANDPARENT = "profile-custody-holds"
+_CLI_PATH_SEPARATORS = frozenset({"/", "\\"})
+
+
+def _cli_uuid_is_custody_identity(text: str, start: int, end: int) -> bool:
+    """Judge whether one UUID match identifies a profile rather than a directory."""
+    before = text[:start]
+    if not before or before[-1] not in _CLI_PATH_SEPARATORS:
+        # Not a path segment at all: a bare identifier token, which is exactly
+        # the surface this redaction exists to hide.
+        return True
+    if end < len(text) and text[end] not in _CLI_PATH_SEPARATORS and not text[end].isspace():
+        # A longer token that merely starts with a UUID shape; leave it to the
+        # remaining passes rather than truncating it into a placeholder.
+        return True
+    segments = [segment for segment in re.split(r"[\\/]", before) if segment]
+    if not segments:
+        return True
+    if segments[-1].lower() in _CLI_CUSTODY_UUID_PARENTS:
+        return True
+    return len(segments) >= 2 and segments[-2].lower() == _CLI_CUSTODY_UUID_GRANDPARENT
+
+
+def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
+    """Apply ``replace`` only to UUID matches that identify a profile."""
+    return _CLI_UUID_PATTERN.sub(
+        lambda match: (
+            replace(match) if _cli_uuid_is_custody_identity(text, match.start(), match.end()) else match.group(0)
+        ),
+        text,
+    )
+
+
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
     # A column-header row carries no identifier values, only field names; the
     # ``label<TAB>value`` heuristic would otherwise rewrite the *next column
@@ -886,7 +927,7 @@ def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
     if _is_cli_tabular_header_line(text):
         redacted = redact_for_log(text)
         if not reveal_identifiers:
-            redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
+            redacted = _sub_cli_uuids(redacted, lambda _match: CLI_PROFILE_ID_PLACEHOLDER)
         return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
     # Under the reveal opt-out a revealed profile/bucket id is an opaque UUID
     # that must survive the downstream free-text passes verbatim — otherwise the
@@ -921,9 +962,9 @@ def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
     # The reveal opt-out protects the same bare-UUID surface so its value survives
     # the downstream PII pass verbatim.
     if reveal_identifiers:
-        redacted = _CLI_UUID_PATTERN.sub(_protect_revealed_uuid, redacted)
+        redacted = _sub_cli_uuids(redacted, _protect_revealed_uuid)
     else:
-        redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
+        redacted = _sub_cli_uuids(redacted, lambda _match: CLI_PROFILE_ID_PLACEHOLDER)
     redacted = redact_for_log(redacted)
     redacted = _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
     for index, original in enumerate(protected):

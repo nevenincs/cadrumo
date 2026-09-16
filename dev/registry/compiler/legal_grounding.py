@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
@@ -296,9 +297,14 @@ def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Pa
 _LEGAL_CORPUS_CACHE: dict[tuple[str, int, int, str, str, str, str, tuple[str, ...]], str] = {}
 
 
+@lru_cache(maxsize=32)
+def _resolved_source_root(source_root: Path) -> Path:
+    return source_root.resolve()
+
+
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     path_text, _, anchor = reference.corpus_ref.partition("#")
-    root = source_root.resolve()
+    root = _resolved_source_root(source_root)
     path = (root / path_text).resolve()
     if root not in path.parents and path != root:
         raise RegistryValidationError(f"legal reference {reference.id!r} escapes repository root")

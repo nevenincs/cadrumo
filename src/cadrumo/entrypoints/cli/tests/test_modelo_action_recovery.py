@@ -22,7 +22,6 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.operator_surface.command_ports import cli_argv_for
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings, override_settings
-from ....core.config_support import SecretStoreBackend
 from ..verb_input_schema import build_verb_input_schemas
 from .subprocess_cli import _as_text_completed_process
 
@@ -40,7 +39,6 @@ def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
     environment.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_SECRET_STORE_BACKEND": "auto",
             "CADRUMO_SECRET_STORE_DIR": str(secret_store_dir),
             "CADRUMO_SECRET_PASSPHRASE": load_settings().cadrumo_dev_test_database_password.get_secret_value(),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
@@ -275,7 +273,6 @@ def _work_state(*, storage_root: Path, secret_store_dir: Path, work_unit_id: str
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
         cadrumo_secret_store_dir=secret_store_dir,
         cadrumo_secret_passphrase=passphrase,
     ) as settings:

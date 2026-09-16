@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import secrets
 
-from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryEnrollment
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 PROFILE_PASSPHRASE = secrets.token_urlsafe(32)
@@ -26,9 +25,4 @@ READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 )
 
 
-def verify_recovery_handover(enrollment: ProfileRecoveryEnrollment) -> str:
-    """Return the exact generated phrase as real possession proof for a test profile."""
-    return enrollment.recovery_key.mnemonic
-
-
-__all__ = ["PROFILE_PASSPHRASE", "READY_PROFILE_FACTS", "verify_recovery_handover"]
+__all__ = ["PROFILE_PASSPHRASE", "READY_PROFILE_FACTS"]

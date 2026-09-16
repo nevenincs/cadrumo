@@ -22,7 +22,7 @@ The Stage-1 ADVISORY predicates are replaced by per-box ``equals`` BLOCKING_RULE
 consistency predicates (box == semantic source) that catch a future mis-edit.
 
 Real adapters (encrypted SQLite via ``isolated_runtime_profile`` →
-``SecureObjectRepository`` + ``EphemeralMasterKeyProvider``), real catalogue
+``SecureObjectRepository`` + ``EphemeralBucketSession``), real catalogue
 repositories, real registry authority, real calculation engine and verify gate. No
 mocks/stubs/skips/xfail. The two seeded transactions carry DISTINCT non-equal cuotas
 so a copy/contamination cannot satisfy the equality assertions, and each box-equals-
@@ -232,7 +232,7 @@ def _iva_transaction(
             "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
-            "category_id": "test_iva_operation",
+            "category_id": "material_oficina",
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,

@@ -24,11 +24,11 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tomllib
 from datetime import date
 from pathlib import Path
 from typing import TypedDict
 
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.schema_references import (
     source_window_applies_across,
 )
@@ -49,7 +49,7 @@ def source_windows(legal_dir: Path | None = None) -> dict[str, tuple[date | None
     """Return applicability windows declared by every bundled source catalogue."""
     windows: dict[str, tuple[date | None, date | None, str]] = {}
     for path in sorted((legal_dir or LEGAL).rglob("*.toml")):
-        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        payload = parse_toml(path.read_text(encoding="utf-8"))
         for source_id, entry in (payload.get("sources") or {}).items():
             windows[source_id] = (
                 entry.get("applies_from"),
@@ -71,7 +71,7 @@ def legal_windows(legal_dir: Path | None = None) -> dict[str, tuple[date | None,
     """
     windows: dict[str, tuple[date | None, date | None, str]] = {}
     for path in sorted((legal_dir or LEGAL).rglob("*.toml")):
-        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        payload = parse_toml(path.read_text(encoding="utf-8"))
         for ref_id, entry in (payload.get("legal") or {}).items():
             # ONLY the period axis is admissible. ``effective_from`` says when
             # the text came into force, which for an orden published after the
@@ -100,7 +100,7 @@ def revision_spans(revision_dir: Path) -> tuple[date, date | None] | None:
     manifest = revision_dir / "revision.toml"
     if not manifest.exists():
         return None
-    payload = tomllib.loads(manifest.read_text(encoding="utf-8"))
+    payload = parse_toml(manifest.read_text(encoding="utf-8"))
     for body in (payload.get("revisions") or {}).values():
         start = body.get("valid_from")
         if isinstance(start, date):

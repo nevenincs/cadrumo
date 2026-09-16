@@ -1327,6 +1327,10 @@ application:
         cens: aquest perfil encara no en té cap, de manera que la consulta no pot
         confirmar que el registre que retorna l''AEAT sigui vostre. Executeu aeat
         config profile edit per afegir-lo.'
+      custody_profile_already_present: Aquest magatzem ja conté el perfil que desa
+        l'arxiu. Una càpsula conserva la seva identitat en restaurar-se, així que
+        una còpia de seguretat només es pot restaurar en un magatzem que encara no
+        la tingui, o després d'eliminar el perfil original.
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
@@ -1345,6 +1349,14 @@ application:
         com a màxim {maximum_scalars} escalars Unicode; se n'han rebut {scalar_count}.
       profile_password_too_many_utf8_bytes: La contrasenya del perfil ha d'ocupar
         com a màxim {maximum_utf8_bytes} bytes UTF-8; se n'han rebut {utf8_byte_count}.
+      recovery_already_enrolled: Aquest perfil ja té un codi de recuperació. Desactiva'l
+        primer per emetre'n un de nou.
+      recovery_code_rejected: El codi de recuperació no és correcte; la contrasenya
+        no ha canviat.
+      recovery_not_enrolled: Aquest perfil no té codi de recuperació, així que la
+        contrasenya no es pot restablir.
+      recovery_possession_mismatch: El codi de recuperació no s'ha confirmat correctament;
+        no s'ha registrat res.
       registration_displaced_session_not_retired: No s'ha pogut crear el perfil. No
         s'ha pogut eliminar la sessió emmagatzemada del perfil que substitueix. Tanca
         qualsevol programa que estigui utilitzant el magatzem de perfils i torna-ho

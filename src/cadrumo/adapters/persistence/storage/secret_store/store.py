@@ -8,7 +8,7 @@ which :class:`SensitivityClass` members those are; every refusal and
 docstring here reads it rather than restating it. Each record is wrapped in an
 :class:`adapters.persistence.storage.envelope.Envelope` of
 :class:`SecretRecord`, encrypted via the blob store's per-record DEK wrapped
-by the active :class:`MasterKeyProvider` using AES-256-GCM, and indexed by
+by the active bucket session's data key using AES-256-GCM, and indexed by
 an HMAC-SHA256 digest of the natural-key string so consumers can query
 :meth:`SecretStore.get` without leaking the plaintext key.
 
@@ -60,7 +60,6 @@ from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
 from ..master_key.active_session import get_active_master_key
-from ..master_key.master_key import MasterKeyProvider
 from ..storage_path_definitions import (
     INDEX_FILENAME,
     SECRET_INDEX_SCHEMA_VERSION,
@@ -240,22 +239,17 @@ class SecretStore:
         *,
         store_dir: Path,
         blob_store: EncryptedBlobStore,
-        master_key_provider: MasterKeyProvider | None = None,
     ) -> None:
-        """Bind the store to a directory, a blob store, and a master-key provider.
+        """Bind the store to a directory and a blob store.
 
         Args:
             store_dir: Root directory for the index file and the lock
                 sidecar. Created on first use.
             blob_store: Underlying encrypted blob store. Records are
                 persisted via this repository.
-            master_key_provider: Optional override. Used to derive the
-                lookup sub-key via HKDF. Falls back to
-                the active bucket session's data key.
         """
         self._store_dir = Path(store_dir)
         self._blob_store = blob_store
-        self._master_key_provider = master_key_provider
 
     @property
     def store_dir(self) -> Path:
@@ -263,9 +257,7 @@ class SecretStore:
         return self._store_dir
 
     def _master_key(self) -> bytes:
-        """Return the active master key from injected provider or active session."""
-        if self._master_key_provider is not None:
-            return self._master_key_provider.get_master_key()
+        """Return the active bucket session's data key."""
         return get_active_master_key()
 
     def _digest(self, key: str) -> str:

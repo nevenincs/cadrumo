@@ -20,12 +20,12 @@ proven against genuine registry data rather than a synthetic shape.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.errors.error_codes import build_error_envelope
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+from ....domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
 from ..calculate_input import ModeloCalculateBindingInputError, _validated_binding_input_channel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -41,7 +41,7 @@ _M100_DATE_BINDING: BindingId = "renta-profile-taxpayer-birth-date"
 
 
 def _revision():
-    return compiled_bundled_authority().validate_modelo(_MODELO).revisions[_REVISION]
+    return published_revision(_MODELO, _REVISION)
 
 
 def _channel_inputs():
@@ -105,7 +105,7 @@ def test_date_sourced_binding_is_detected_as_a_date_channel() -> None:
     date binding in the live registry, so a regression that stops detecting it
     fails here rather than passing vacuously.
     """
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A")
+    snapshot = published_snapshot("100", filing_year=2024, period="0A")
     revision = snapshot.revision
     date_ids = revision_date_binding_ids(revision)
     assert _M100_DATE_BINDING in date_ids

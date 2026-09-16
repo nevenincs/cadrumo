@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import content_hash_hex
-from ..authority import ValidatedRegistryAuthority
+from ..authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from ..authority_artifact import _json_value
 from ..ids import RevisionId
 from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
@@ -65,8 +65,9 @@ def build_snapshot(
     if cached is not None and cached[0] is modelo and cached[1] is catalogues:
         return cached[2]
 
-    snapshot = _fixture_authority(modelo, catalogues).snapshot(
-        modelo.id,
+    snapshot = _graded_snapshot(
+        modelo,
+        catalogues,
         filing_year=filing_year,
         period=period,
         on=on,
@@ -75,6 +76,45 @@ def build_snapshot(
     )
     _SNAPSHOT_CACHE[key] = (modelo, catalogues, snapshot)
     return snapshot
+
+
+def _graded_snapshot(
+    modelo: ModeloDefinition,
+    catalogues: RegistryCatalogues,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None,
+    revision_id: RevisionId | None,
+    grade: RegistryAuthorityGrade,
+) -> RegistrySnapshot:
+    """Validate one modelo slice against the governed facts that belong to it.
+
+    Catalogues that carry their own governed facts are a self-contained
+    authority and resolve through a content-identified fixture authority. A
+    view of the published generation carries no governed facts: those live in
+    the published generation, so the slice is validated inside a published
+    operation lease, which scopes that generation's facts for the build.
+    """
+    if catalogues.facts.facts:
+        return _fixture_authority(modelo, catalogues).snapshot(
+            modelo.id,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+        )
+    with bundled_indexed_authority().operation():
+        return _build_validated_snapshot(
+            modelo,
+            catalogues,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+        )
 
 
 def build_validated_snapshot(
@@ -87,8 +127,9 @@ def build_validated_snapshot(
     revision_id: RevisionId | None = None,
 ) -> RegistrySnapshot:
     """Return a filing-grade snapshot for a validated modelo slice."""
-    return _fixture_authority(modelo, catalogues).snapshot(
-        modelo.id,
+    return _graded_snapshot(
+        modelo,
+        catalogues,
         filing_year=filing_year,
         period=period,
         on=on,

@@ -42,7 +42,6 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-import tomllib
 import zipfile
 from dataclasses import dataclass
 from functools import cache
@@ -51,6 +50,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files
 
@@ -135,7 +135,7 @@ def _expected_members(companion: _Companion) -> set[str]:
 def _pyproject_version(pyproject: Path) -> str:
     """Return the ``project.version`` string declared by a pyproject file."""
     with pyproject.open("rb") as handle:
-        return str(tomllib.load(handle)["project"]["version"])
+        return str(load_toml(handle)["project"]["version"])
 
 
 def _build_wheel(companion: _Companion, out_root: Path) -> _BuiltWheel:

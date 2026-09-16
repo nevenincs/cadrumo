@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterator, Sequence
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -70,12 +70,13 @@ def _write_row_with_wrong_bucket_key(
 ) -> None:
     active_bucket_id = resolve_active_bucket_id()
     assert active_bucket_id is not None
-    session = BucketSession.open(
+    session = BucketSession.open_resumed(
         bucket_id=active_bucket_id,
-        kek=key,
         dek=key,
         idle_minutes=15,
         opened_at=_SESSION_OPENED_AT,
+        idle_deadline=_SESSION_OPENED_AT + timedelta(minutes=15),
+        absolute_deadline=_SESSION_OPENED_AT + timedelta(minutes=240),
     )
     with activate_session(session):
         secure_object_repository_for_active_bucket().save(

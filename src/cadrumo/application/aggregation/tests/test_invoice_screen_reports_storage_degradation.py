@@ -30,7 +30,8 @@ the real production path.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....application.invoices.catalogue_reads_ports import (
     InvoiceCatalogueReader,
@@ -92,7 +93,7 @@ class _UnreadableInvoiceCatalogue:
 
 
 def _context() -> CalculationSourceContext:
-    revision = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD_CODE).revision
+    revision = published_snapshot("303", filing_year=_YEAR, period=_PERIOD_CODE).revision
     return CalculationSourceContext(
         bucket_id=_UnreadableInvoiceCatalogue.bucket_id,
         modelo="303",

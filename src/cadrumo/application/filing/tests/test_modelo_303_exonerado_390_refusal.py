@@ -8,9 +8,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+)
 
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
@@ -128,7 +130,7 @@ _ENDPOINTS = frozenset(
 
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
     )
 
 
@@ -165,14 +167,14 @@ def _regimen_evidence(period: Period, *, operation: PinnedAuthorityOperation) ->
         scope_decision=scope,
         rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
         regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
-            registry_snapshot=compiled_bundled_authority().snapshot(
+            registry_snapshot=operation.snapshot(
                 "303",
                 filing_year=period.filing_year,
                 period=period.code,
             ),
             scope_decision=scope,
         ),
-        dana_2024_eligibility=None,
+        dana_eligibility=None,
         operation=operation,
     )
 
@@ -182,7 +184,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
 ) -> None:
     """Persisted A28 facts need no caller-authored export applicability envelope."""
     period = Period.from_year_and_code(2025, "4T")
-    provider = build_runtime_schema_provider(filing_year=2025, period=period, modelos=("303",))
+    provider = build_runtime_schema_provider(filing_year=2025, period=period, modelos=("303",), operation=operation)
     inputs = {
         "07": Decimal("0"),
         "iva.soportado.interiores": Decimal("0"),

@@ -18,7 +18,6 @@ import ast
 import json
 import os
 import sys
-import tomllib
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
@@ -26,6 +25,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from types import FunctionType
 from typing import TYPE_CHECKING, TypedDict, override
+
+from cadrumo.core.toml import TomlDecodeError, load_toml
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -119,8 +120,8 @@ def _relative(path: Path, root: Path) -> str:
 def _load_toml(path: Path) -> tuple[dict[str, object] | None, str | None]:
     try:
         with path.open("rb") as stream:
-            return dict(_required_mapping(tomllib.load(stream), context=str(path))), None
-    except (OSError, tomllib.TOMLDecodeError) as exc:
+            return dict(_required_mapping(load_toml(stream), context=str(path))), None
+    except (OSError, TomlDecodeError) as exc:
         return None, f"{type(exc).__name__}: {exc}"
 
 

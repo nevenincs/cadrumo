@@ -56,10 +56,10 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _NOW = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
 _MINTER = "mint_evidence_consent_token"

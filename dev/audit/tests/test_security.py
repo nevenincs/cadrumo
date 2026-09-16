@@ -10,10 +10,10 @@ that actually runs semgrep over the tree lives in ``test_security_scan``.
 from __future__ import annotations
 
 import json
-import tomllib
 
 import pytest
 
+from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 
 from ..security import (
@@ -100,7 +100,7 @@ def test_command_excludes_the_python36_python37_compatibility_rules() -> None:
 def test_legacy_rule_exclusions_are_anchored_to_the_open_project_floor() -> None:
     """The compatibility-rule filter must not drift back to a Python ceiling."""
     with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
-        project = tomllib.load(handle)["project"]
+        project = load_toml(handle)["project"]
 
     requires_python = project["requires-python"]
     assert requires_python == ">=3.13"

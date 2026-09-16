@@ -19,10 +19,9 @@ documents — so this gate also asserts that scoping statement survives.
 
 from __future__ import annotations
 
-import tomllib
-
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -40,7 +39,7 @@ _PROJECT_DIRS = {
 def test_distribution_declares_and_carries_the_attribution_chain(distribution: str) -> None:
     """Each published distribution declares license-files = LICENSE + NOTICE and ships both."""
     project_dir = _PROJECT_DIRS[distribution]
-    pyproject = tomllib.loads((project_dir / "pyproject.toml").read_text(encoding="utf-8"))
+    pyproject = parse_toml((project_dir / "pyproject.toml").read_text(encoding="utf-8"))
     declared = pyproject["project"].get("license-files")
     assert declared == ["LICENSE", "NOTICE"], (
         f"{distribution} pyproject must declare license-files = ['LICENSE', 'NOTICE'] "

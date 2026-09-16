@@ -1,11 +1,10 @@
-"""The bounded recovery-enrollment channel `config profile create` requires.
+"""The bounded recovery-code channel `config profile recovery enable` uses headlessly.
 
-Creation never publishes a password-only profile. The verb hands the recovery
-mnemonic over exactly once and requires the exact phrase back as proof of
-possession before the registration transaction publishes. At a terminal the
-operator reads the phrase and types it back; on a host with no controlling
-terminal the same exchange runs over two explicit descriptors, a writable
-handoff and a readable verification.
+The verb hands the minted recovery code over exactly once and requires the
+exact code back as proof of possession before the wrapper is installed. At a
+terminal the operator reads the code and types it back; on a host with no
+controlling terminal the same exchange runs over two explicit descriptors, a
+writable handoff and a readable verification.
 
 Playing the operator's part is a relay: read the one bounded document the verb
 writes, hand the identical document back. It has to run on its own thread
@@ -31,10 +30,10 @@ _HANDOFF_CHUNK: Final[int] = 4096
 _RELAY_JOIN_SECONDS: Final[float] = 5.0
 
 
-def _relay_the_mnemonic(handoff_read: int, verification_write: int) -> None:
-    """Read the handed-out mnemonic and return it as the possession proof.
+def _relay_the_code(handoff_read: int, verification_write: int) -> None:
+    """Read the handed-out code and return it as the possession proof.
 
-    Both directions carry the same ``{"recovery_mnemonic": ...}`` document, so
+    Both directions carry the same ``{"recovery_code": ...}`` document, so
     the operator's part is an echo. Neither side depends on end-of-file: the
     document is newline-framed, and reading stops at the frame.
     """
@@ -52,7 +51,7 @@ def _relay_the_mnemonic(handoff_read: int, verification_write: int) -> None:
 
 @contextmanager
 def scripted_registration_descriptors() -> Iterator[tuple[int, int]]:
-    """Yield the ``(handoff_write, verification_read)`` descriptors for one creation.
+    """Yield the ``(handoff_write, verification_read)`` descriptors for one enrolment.
 
     The two yielded descriptors are the verb's ends of the exchange. The
     relay's own ends stay here and are released only once the relay has
@@ -63,7 +62,7 @@ def scripted_registration_descriptors() -> Iterator[tuple[int, int]]:
     handoff_read, handoff_write = os.pipe()
     verification_read, verification_write = os.pipe()
     relay = threading.Thread(
-        target=_relay_the_mnemonic,
+        target=_relay_the_code,
         args=(handoff_read, verification_write),
         daemon=True,
     )

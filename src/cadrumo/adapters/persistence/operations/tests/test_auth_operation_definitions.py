@@ -90,7 +90,6 @@ def _register_profile() -> UUID:
     registered = register_profile_with_credentials(
         label="S39 Auth Operation Subject",
         passphrase=_CURRENT,
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )

@@ -29,18 +29,18 @@ from ..bucket_session import _ROUTED_SETTINGS_MEMO_SIZE, BucketSession
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "bafde89c-041e-4756-882b-933aaf16cad8"  # was '11111111-1111-1111-1111-111111111111'
-_KEK = b"k" * 32
 _DEK = b"d" * 32
 _NOW = datetime(2026, 1, 1, tzinfo=UTC)
 
 
 def _session() -> BucketSession:
-    return BucketSession.open(
+    return BucketSession.open_resumed(
         bucket_id=_BUCKET_ID,
-        kek=_KEK,
         dek=_DEK,
         idle_minutes=30,
         opened_at=_NOW,
+        idle_deadline=_NOW + timedelta(minutes=30),
+        absolute_deadline=_NOW + timedelta(minutes=240),
     )
 
 

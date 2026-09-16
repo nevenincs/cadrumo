@@ -59,7 +59,6 @@ def _register(label: str) -> str:
     """Create one real profile through the real door and return its id."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,

@@ -14,7 +14,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....application.user_profile.registration import register_profile_with_credentials
-from ....core.config_support import SecretStoreBackend
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -22,7 +21,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _env(tmp_path: Path) -> dict[str, str]:
     return {
-        "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.AUTO.value,
         "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
@@ -77,7 +75,6 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     label = "operator"
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=label,
             passphrase=dev_test_database_password(),
             profile_create_context=_profile_create_context_for_test,

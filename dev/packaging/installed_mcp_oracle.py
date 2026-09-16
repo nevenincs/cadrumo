@@ -32,7 +32,6 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import UTF_8
 
 from ._installed_wheel_binding import installed_distribution_payload_sha256
-from ._recovery_enrollment import enrolled_profile_creation
 from .command_execution import run_command
 from .hashing import sha256_path
 from .installed_tax_oracle import (
@@ -613,27 +612,19 @@ def run_installed_mcp_oracle(
     protocol_environment_overrides = _protocol_environment_overrides(sibling_cli, environment_overrides)
 
     passphrase = secrets.token_urlsafe(32)
-    # Creation refuses without a channel to hand the recovery phrase over and
-    # read the exact phrase back. The sibling tax oracle plays the operator's
-    # part through `enrolled_profile_creation`; this one called the CLI
-    # straight through and so could never succeed once enrollment became
-    # mandatory. Asking the product to skip a possession proof is not the
-    # alternative -- the oracle does what an operator does.
-    with enrolled_profile_creation(
-        cli=sibling_cli,
-        arguments=("--format", "json", *cli_profile_create_arguments(), "--secrets-stdin"),
-    ) as invocation:
-        profile = run_command(
-            invocation.argv,
-            cwd=resolved_work_dir,
-            environment=isolated_product_environment(storage_root),
-            timeout_seconds=timeout_seconds,
-            input_text=json.dumps(
-                {"passphrase": passphrase, "passphrase_confirmation": passphrase},
-                separators=(",", ":"),
-            ),
-            inherited_descriptors=invocation.inherited_descriptors,
-        )
+    # A machine caller is never asked about recovery: the profile is born
+    # passphrase-only through the bounded stdin channel, which is all the
+    # oracle needs.
+    profile = run_command(
+        (str(sibling_cli), "--format", "json", *cli_profile_create_arguments(), "--secrets-stdin"),
+        cwd=resolved_work_dir,
+        environment=isolated_product_environment(storage_root),
+        timeout_seconds=timeout_seconds,
+        input_text=json.dumps(
+            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
+            separators=(",", ":"),
+        ),
+    )
     if profile.returncode != 0:
         # Carrying the child's own output: the bare sentence that stood here
         # made every CI failure of this lane undiagnosable without a rerun.

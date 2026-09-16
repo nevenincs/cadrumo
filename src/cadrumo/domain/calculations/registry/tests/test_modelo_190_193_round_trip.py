@@ -38,7 +38,7 @@ from .....core.resources.bundled_data import bundled_path
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
-from ._published_authority import artifact_components
+from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -47,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> None:
     """M193 relation formulas cover money only; perceptor count is a bound distinct-NIF fact."""
 
-    modelo, catalogues = artifact_components("193")
+    modelo, catalogues = bundled_modelo_components("193")
     revision = next(iter(modelo.revisions.values()))
 
     # Graph-wiring assertions — each monetary output casilla must declare an

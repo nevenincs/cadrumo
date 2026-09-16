@@ -12,21 +12,20 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl
 
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_base import RegistrySourceKind
-from ......domain.calculations.registry.source_byte_availability import layout_embedded_source_ids
 from ..declarations_observations import (
-    _submitted_file_coverage_for_casillas,
     observed_casillas_from_submitted_file,
     observed_header_facts_from_submitted_file,
+    published_layout_source_payloads,
     registry_observation_from_filed_declaration,
 )
 from ..declarations_schema import Declaracion
@@ -34,7 +33,6 @@ from ..errors import SedeParseError
 from ..schema import FiledDeclaracionArtefact
 from ._declarations_support import (
     _DECLARATIONS_LISTING_URL,
-    _FIXTURE_ROOT,
     _SUBMITTED_FILE_100_2023_0A,
     _filed_observation,
     _submitted_file_payload,
@@ -42,7 +40,10 @@ from ._declarations_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_SUBMITTED_FILES = _FIXTURE_ROOT / "submitted-files"
+_FIXED_WIDTH_CONTEXTS = pytest.mark.parametrize(
+    ("modelo", "ejercicio", "period_code"),
+    [("111", 2025, "1T"), ("130", 2026, "1T")],
+)
 
 
 def _declaration(modelo: str, ejercicio: int, period_code: str, expediente_id: str) -> Declaracion:
@@ -76,83 +77,78 @@ def _with_source_kind(snapshot: RegistrySnapshot, source_id: str, kind: Registry
     return snapshot.model_copy(update={"sources": sources})
 
 
-@pytest.mark.parametrize(
-    ("modelo", "ejercicio", "period_code", "expediente_id", "fixture"),
-    [
-        ("111", 2025, "1T", "202511113520436S", _SUBMITTED_FILES / "modelo-111-2025-1T-redacted.txt"),
-        ("130", 2026, "1T", "202610013522222A", _SUBMITTED_FILES / "modelo-130-2026-1T-redacted.txt"),
-    ],
-)
-def test_fixed_width_read_succeeds_without_record_design_bytes_and_keeps_its_citations(
-    operation: PinnedAuthorityOperation,
-    modelo: str,
-    ejercicio: int,
-    period_code: str,
-    expediente_id: str,
-    fixture: Path,
-) -> None:
-    snapshot = operation.snapshot(modelo, filing_year=ejercicio, period=period_code)
+def _without_source(snapshot: RegistrySnapshot, source_id: str) -> RegistrySnapshot:
+    """Return an isolated snapshot copy whose catalogue omits ``source_id``."""
+    sources = {key: value for key, value in snapshot.sources.items() if str(key) != source_id}
+    return snapshot.model_copy(update={"sources": sources})
+
+
+def _record_design_ids(snapshot: RegistrySnapshot) -> list[str]:
     layout = resolve_export_layout(snapshot).layout
-    citation_only = [
+    return [
         str(ref) for ref in layout.source_refs if snapshot.sources[str(ref)].kind is RegistrySourceKind.RECORD_DESIGN
     ]
-    assert citation_only, "the fixed-width layout must cite its record design"
-    assert layout_embedded_source_ids((layout,), sources=snapshot.sources) == frozenset()
-    for source_id in citation_only:
+
+
+@_FIXED_WIDTH_CONTEXTS
+def test_fixed_width_layout_requests_no_source_bytes(
+    operation: PinnedAuthorityOperation, modelo: str, ejercicio: int, period_code: str
+) -> None:
+    snapshot = operation.snapshot(modelo, filing_year=ejercicio, period=period_code)
+    record_designs = _record_design_ids(snapshot)
+    assert record_designs, "the fixed-width layout must cite its record design"
+    for source_id in record_designs:
         with pytest.raises(LookupError):
             operation.source_evidence(source_id)
 
-    body = _submitted_file_payload(fixture)
-    observed = observed_casillas_from_submitted_file(
-        snapshot=snapshot,
-        declaration=_declaration(modelo, ejercicio, period_code, expediente_id),
-        body=body,
-        artefact=_artefact(body),
-        operation=operation,
-    )
-    coverage = _submitted_file_coverage_for_casillas(
-        snapshot=snapshot, body=body, casillas=observed, operation=operation
-    )
-    headers = observed_header_facts_from_submitted_file(snapshot=snapshot, body=body, operation=operation)
+    assert published_layout_source_payloads(snapshot=snapshot, operation=operation) == {}
 
-    assert observed
-    assert coverage == pytest.approx(1.0)
-    assert all(fact.source_artefact_kind == "submitted_file" for fact in headers)
+
+@_FIXED_WIDTH_CONTEXTS
+def test_record_design_citations_survive_into_registry_observations(
+    operation: PinnedAuthorityOperation, modelo: str, ejercicio: int, period_code: str
+) -> None:
+    snapshot = operation.snapshot(modelo, filing_year=ejercicio, period=period_code)
+    record_designs = set(_record_design_ids(snapshot))
+    cited_casillas = {
+        casilla.id: casilla
+        for casilla in snapshot.revision.casillas
+        if casilla.legal_refs and record_designs.intersection(str(ref) for ref in casilla.source_refs)
+    }
+    assert cited_casillas
 
     registry_observation = registry_observation_from_filed_declaration(
         _filed_observation(
             modelo=modelo,
             ejercicio=ejercicio,
             period=period_code,
-            casilla_values={item.casilla_id: Decimal(item.value) for item in observed},
+            casilla_values=dict.fromkeys(cited_casillas, Decimal("1")),
         ),
         operation=operation,
     )
-    casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    assert registry_observation.observations
+
+    assert {row.casilla_id for row in registry_observation.observations} == set(cited_casillas)
     for row in registry_observation.observations:
-        assert row.source_refs == casillas[row.casilla_id].source_refs
-        assert row.legal_refs == casillas[row.casilla_id].legal_refs
-    cited = {str(ref) for row in registry_observation.observations for ref in row.source_refs}
-    assert set(citation_only) <= cited
+        assert row.source_refs == cited_casillas[row.casilla_id].source_refs
+        assert row.legal_refs == cited_casillas[row.casilla_id].legal_refs
+        assert record_designs.intersection(str(ref) for ref in row.source_refs)
 
 
-def test_xml_dictionary_read_still_consumes_its_embedded_dictionary(operation: PinnedAuthorityOperation) -> None:
-    snapshot = operation.snapshot("100", filing_year=2023, period="0A")
-    layout = resolve_export_layout(snapshot).layout
-    body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
+def test_header_read_refuses_a_layout_citing_an_uncatalogued_source(operation: PinnedAuthorityOperation) -> None:
+    published = operation.snapshot("111", filing_year=2025, period="1T")
+    record_design_id = _record_design_ids(published)[0]
+    snapshot = _without_source(published, record_design_id)
 
-    embedded = layout_embedded_source_ids((layout,), sources=snapshot.sources)
-    observed = observed_casillas_from_submitted_file(
-        snapshot=snapshot,
-        declaration=_declaration("100", 2023, "0A", "202310010000001A"),
-        body=body,
-        artefact=_artefact(body),
-        operation=operation,
+    with pytest.raises(RegistryValidationError, match=record_design_id):
+        observed_header_facts_from_submitted_file(snapshot=snapshot, body=b"", operation=operation)
+
+
+def test_header_read_still_yields_nothing_for_an_unparseable_fichero(operation: PinnedAuthorityOperation) -> None:
+    snapshot = operation.snapshot("111", filing_year=2025, period="1T")
+
+    assert (
+        observed_header_facts_from_submitted_file(snapshot=snapshot, body=b"not a fichero", operation=operation) == ()
     )
-
-    assert str(layout.dictionary_source_ref) in embedded
-    assert observed
 
 
 def test_xml_dictionary_classified_without_bytes_refuses_the_read(operation: PinnedAuthorityOperation) -> None:
@@ -175,15 +171,8 @@ def test_xml_dictionary_classified_without_bytes_refuses_the_read(operation: Pin
 
 def test_embedded_source_missing_from_the_generation_fails_loudly(operation: PinnedAuthorityOperation) -> None:
     published = operation.snapshot("111", filing_year=2025, period="1T")
-    record_design_id = str(resolve_export_layout(published).layout.source_refs[0])
+    record_design_id = _record_design_ids(published)[0]
     snapshot = _with_source_kind(published, record_design_id, RegistrySourceKind.DICTIONARY)
-    body = _submitted_file_payload(_SUBMITTED_FILES / "modelo-111-2025-1T-redacted.txt")
 
     with pytest.raises(LookupError, match=record_design_id):
-        observed_casillas_from_submitted_file(
-            snapshot=snapshot,
-            declaration=_declaration("111", 2025, "1T", "202511113520436S"),
-            body=body,
-            artefact=_artefact(body),
-            operation=operation,
-        )
+        published_layout_source_payloads(snapshot=snapshot, operation=operation)

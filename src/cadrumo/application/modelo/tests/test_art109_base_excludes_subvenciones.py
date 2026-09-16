@@ -26,7 +26,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
@@ -125,7 +124,8 @@ def _coverage(*rows: Transaction):
 
 
 def _declared_concepts(fact_id: str) -> frozenset[ConceptoIngreso]:
-    fact = compiled_bundled_authority().catalogues.facts.facts[fact_id]
+    with bundled_indexed_authority().operation() as operation:
+        fact = operation.governed_fact(fact_id)
     payload = fact.variants[0].payload
     if not isinstance(payload, EntitySetFactPayload):
         raise TypeError(f"fact {fact_id!r} must use an entity-set payload")

@@ -17,7 +17,7 @@ taxonomy vocabulary rather than pinned as if they were.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -42,7 +42,6 @@ def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> 
             {
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
                 "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
-                "CADRUMO_SECRET_STORE_BACKEND": "auto",
                 "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
                 "CADRUMO_BLOB_STORE_DIR": str(tmp_path / "probe-blobs"),
                 "CADRUMO_LIVE_STATE_DIR": str(tmp_path / "probe-live-state"),
@@ -74,10 +73,11 @@ def _isolated_secure_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _session() -> BucketSession:
-    return BucketSession.open(
+    return BucketSession.open_resumed(
         bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
         dek=b"d" * 32,
         idle_minutes=15,
         opened_at=_SESSION_OPENED_AT,
+        idle_deadline=_SESSION_OPENED_AT + timedelta(minutes=15),
+        absolute_deadline=_SESSION_OPENED_AT + timedelta(minutes=240),
     )

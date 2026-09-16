@@ -30,7 +30,6 @@ import secrets
 import shutil
 import subprocess
 import sys
-import tomllib
 import venv
 import zipfile
 from collections.abc import Set as AbstractSet
@@ -41,6 +40,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
+from cadrumo.core.toml import load_toml, parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 from dev.source_tree import repository_files, snapshot
 
@@ -378,7 +378,7 @@ def _dependency_group_applies_to_current_platform(entry: str | dict[str, Any]) -
 def pyproject_surfaces(repo_root: Path) -> DependencySurfaces:
     """Return project, optional, extras, and dev dependency name sets from pyproject."""
     with (repo_root / "pyproject.toml").open("rb") as handle:
-        pyproject = tomllib.load(handle)
+        pyproject = load_toml(handle)
     project = pyproject["project"]
     project_name = normalise_distribution_name(project["name"])
     project_requirements = project.get("dependencies", [])
@@ -458,7 +458,7 @@ def optional_extra_registry(repo_root: Path) -> tuple[dict[str, str], set[str]]:
 def assert_optional_extra_registry_matches_pyproject(repo_root: Path) -> None:
     """Verify capability-gated optional extras match pyproject declarations."""
     with (repo_root / "pyproject.toml").open("rb") as handle:
-        pyproject = tomllib.load(handle)
+        pyproject = load_toml(handle)
     optional_dependencies = pyproject["project"].get("optional-dependencies", {})
     project_name = pyproject["project"]["name"]
     registry_extras, _symbols = optional_extra_registry(repo_root)
@@ -541,7 +541,7 @@ def build_source_data_paths(source_root: Path) -> set[str]:
 
 def _configured_corpus_binary_suffixes(repo_root: Path) -> tuple[str, ...]:
     """Return corpus suffixes excluded by the root wheel configuration."""
-    pyproject = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+    pyproject = parse_toml((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
     excluded = pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
     prefix = f"{_CORPUS_SOURCE_PREFIX}**/*"
     suffixes = tuple(sorted({Path(pattern).suffix.lower() for pattern in excluded if pattern.startswith(prefix)}))
@@ -716,7 +716,7 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
         if candidate.startswith(("./", "../")) and repo_root is not None:
             local_pyproject = (repo_root / candidate / "pyproject.toml").resolve()
             if local_pyproject.is_file():
-                local = tomllib.loads(local_pyproject.read_text(encoding=_UTF_8))
+                local = parse_toml(local_pyproject.read_text(encoding=_UTF_8))
                 names.add(normalise_distribution_name(local["project"]["name"]))
                 continue
         names.add(requirement_name(stripped))
@@ -1063,7 +1063,7 @@ from __future__ import annotations
 
 import hashlib
 import os
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from cadrumo.adapters.outbound.llm.client import LLMClient
@@ -1090,13 +1090,14 @@ settings = Settings(
     cadrumo_database_url=f"sqlite:///{{(root / 'attachments.db').as_posix()}}",
     cadrumo_local_storage_root=root / "state",
 )
-session = BucketSession.open(
+opened_at = datetime.now(UTC).replace(microsecond=0)
+session = BucketSession.open_resumed(
     bucket_id="packaging-smoke",
-    kek=os.urandom(32),
     dek=os.urandom(32),
     idle_minutes=15,
-    opened_at=datetime.now(UTC).replace(microsecond=0),
-    unsecured_backend=True,
+    opened_at=opened_at,
+    idle_deadline=opened_at + timedelta(minutes=15),
+    absolute_deadline=opened_at + timedelta(minutes=15),
 )
 payload = b"%PDF-1.4\\n%cadrumo-packaging-attachment-smoke\\n"
 try:
@@ -1185,7 +1186,6 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
         # first run on a fresh macOS host). The passphrase-backed file backend is the
         # smoke's posture everywhere, and keeps smoke runs from writing real
         # keys into any host keychain.
-        "CADRUMO_SECRET_STORE_BACKEND": "unsecured",
     }
     create = run_checked(
         [

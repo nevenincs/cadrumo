@@ -292,7 +292,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         duration without re-authentication.
 
         Runtime-bound repositories also refuse stale handles whose active
-        session changed bucket or fell back to the unsecured backend after
+        session changed bucket after
         construction. No-op when no session is bound and this repository is
         not runtime-bound; bootstrap-exempt verbs rely on that direct mode.
         """
@@ -317,8 +317,6 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     "session_expired": True,
                 },
             )
-        if self._require_secure_active_session and session.unsecured_backend:
-            raise runtime_not_ready_error(StorageRuntimeReadinessCode.UNSECURED_BACKEND)
         if self._active_session_bucket_id is not None and not session_serves_bucket(
             session, self._active_session_bucket_id
         ):

@@ -5,10 +5,9 @@ environment, settings, or a keyring. On a host with no controlling terminal it
 therefore needs an explicit bounded payload, and every verb after creation
 needs a second one to unlock the profile the creation minted.
 
-The recovery-enrollment descriptors the same verb requires are not built here:
-they are a channel rather than a payload, and callers that spawn the CLI as a
-child process need the identical exchange. They come from
-``scripted_registration_descriptors``.
+Creation never asks a machine caller about recovery. The optional
+``config profile recovery enable`` verb needs a descriptor pair rather than a
+payload; that channel lives in ``dev.scripted_registration_channels``.
 """
 
 from __future__ import annotations

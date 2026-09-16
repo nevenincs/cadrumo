@@ -42,7 +42,6 @@ from __future__ import annotations
 
 import os
 import sys
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -50,6 +49,7 @@ from typing import cast
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev._paths import UTF_8
 
 from ._locale_chrome import docs_chrome
@@ -117,8 +117,8 @@ def _legal_permalinks(repo_root: Path) -> dict[str, LegalGrounding]:
         return grounding
     for fragment in scan_directory(catalogue, pattern="*.toml"):
         try:
-            data = cast(dict[str, object], tomllib.loads(fragment.read_text(encoding=_UTF_8)))
-        except tomllib.TOMLDecodeError as error:
+            data = cast(dict[str, object], parse_toml(fragment.read_text(encoding=_UTF_8)))
+        except TomlDecodeError as error:
             # A malformed fragment silently dropped every citation it declared.
             raise SystemExit(
                 f"{fragment} is not valid TOML, so the citations it declares would be "

@@ -1310,17 +1310,25 @@ def _apply_casilla_positions(
     except ValidationError as exc:
         raise RegistryLoadError(f"{context}: invalid casilla positions: {exc}") from exc
     seen: set[str] = set()
+    # Row ids move with their rows, so one derivation per row serves every
+    # declaration; deriving them afresh per declaration made a large edition
+    # quadratic in its member count.
+    row_ids: list[str | None] = [_row_id(row) for row in rows]
     for declaration in positions:
         identity = str(declaration.id)
         if identity in seen:
             raise RegistryLoadError(f"{context}: duplicate casilla position for {identity!r}")
         seen.add(identity)
-        index = next((i for i, row in enumerate(rows) if _row_id(row) == identity), None)
+        try:
+            index = row_ids.index(identity)
+        except ValueError:
+            index = None
         if index is None or declaration.position >= len(rows):
             raise RegistryLoadError(f"{context}: casilla position for {identity!r} is outside the effective member set")
-        row, origin = rows.pop(index), origins.pop(index)
+        row, origin, row_id = rows.pop(index), origins.pop(index), row_ids.pop(index)
         rows.insert(declaration.position, row)
         origins.insert(declaration.position, origin)
+        row_ids.insert(declaration.position, row_id)
     return rows, origins
 
 

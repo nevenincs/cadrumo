@@ -18,7 +18,7 @@ than matters of effort, so each carries a gate here rather than a review:
   desynchronise the event log from the detail store.
 
 Every test drives the real stack: real
-:class:`~cadrumo.adapters.persistence.storage.tests.ephemeral_master_key.EphemeralMasterKeyProvider`, real per-bucket SQLite,
+:class:`~cadrumo.adapters.persistence.storage.tests.ephemeral_bucket_session.EphemeralBucketSession`, real per-bucket SQLite,
 real serializer, real production write and read paths. No doubles.
 """
 

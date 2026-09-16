@@ -21,7 +21,7 @@ from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_valid
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.classification.policies import SensitivityClass
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import Period
+from ....core.period import Period, is_administrative_period_token
 from ....core.revision_review import RevisionReviewStatus
 from .errors import RegistryValidationError
 from .ids import LegalRefId, SourceRefId
@@ -878,8 +878,16 @@ class SourceCitation(RegistryModel):
 
 
 def filing_period_from_scope(filing_year: int, period: str) -> Period | None:
-    """Return a core :class:`Period` when the registry token is a real filing-period code."""
-    try:
-        return Period.from_year_and_code(filing_year, period)
-    except ValueError:
+    """Return a core :class:`Period` when the registry token is a real filing-period code.
+
+    An administrative registry token (Modelo 036 ``ALTA``, Modelo 145
+    ``comunicacion``) addresses a revision rather than naming a period, so it has
+    no filing period and yields ``None``. Every other token must build a
+    :class:`Period`; a malformed token or out-of-range year still raises.
+
+    Raises:
+        PeriodError: When a non-administrative token cannot build a period.
+    """
+    if is_administrative_period_token(period):
         return None
+    return Period.from_year_and_code(filing_year, period)

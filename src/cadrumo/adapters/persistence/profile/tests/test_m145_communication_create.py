@@ -18,19 +18,23 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from .....adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....application.modelo.m145_communication import build_m145_communication_service_contract
 from .....application.modelo.m145_communication_period import M145CommunicationPeriod
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecord,
+    M145CommunicationRecordValidationError,
     create_m145_communication_record,
     derive_m145_communication_record_id,
     m145_communication_record_object_key,
     read_m145_communication_record,
 )
+from .....core.period import Period, PeriodError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -176,12 +180,48 @@ def test_create_m145_communication_record_distinguishes_variation_period(
             operation=operation,
         )
 
+    assert communication.period_token is M145CommunicationPeriod.COMMUNICATION
     assert variation.period_token is M145CommunicationPeriod.VARIATION
+    assert communication_read.registry_snapshot_ref.period == "COMUNICACION"
+    assert variation_read.registry_snapshot_ref.period == "VARIACION"
     assert variation.communication_record_id != communication.communication_record_id
     assert {record.communication_record_id for record in (communication_read, variation_read)} == {
         communication.communication_record_id,
         variation.communication_record_id,
     }
+
+
+@pytest.mark.parametrize("period_token", [M145CommunicationPeriod.COMMUNICATION, M145CommunicationPeriod.VARIATION])
+def test_each_m145_event_scope_selects_its_own_snapshot_without_a_filing_period(
+    operation: PinnedAuthorityOperation,
+    period_token: M145CommunicationPeriod,
+) -> None:
+    contract = build_m145_communication_service_contract(
+        period_token=period_token,
+        filing_year=2026,
+        operation=operation,
+    )
+    snapshot = operation.snapshot("145", filing_year=2026, period=period_token.value)
+
+    assert contract.period_token == period_token.value
+    assert snapshot.period == period_token.value
+    assert snapshot.filing_period is None
+
+
+@pytest.mark.parametrize("invalid_token", ["alta", "COMUNICACIONX"])
+def test_create_m145_communication_command_refuses_an_undeclared_event_token(invalid_token: str) -> None:
+    with pytest.raises(ValidationError, match="period_token"):
+        M145CommunicationCreateCommand(
+            communication_year=2026,
+            period_token=invalid_token,
+            field_values=_field_values(),
+        )
+
+
+@pytest.mark.parametrize("period_token", list(M145CommunicationPeriod))
+def test_an_m145_event_token_is_not_a_filing_period(period_token: M145CommunicationPeriod) -> None:
+    with pytest.raises(PeriodError):
+        Period.from_year_and_code(2026, period_token.value)
 
 
 def test_create_m145_communication_record_refuses_undeclared_casilla_id(
@@ -192,7 +232,10 @@ def test_create_m145_communication_record_refuses_undeclared_casilla_id(
         communication_year=2026,
         field_values={"perceptor.no-declarado": "x"},
     )
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime, pytest.raises(ValueError, match="undeclared casilla"):
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path) as runtime,
+        pytest.raises(M145CommunicationRecordValidationError, match="undeclared casilla"),
+    ):
         create_m145_communication_record(
             command,
             bucket_id=runtime.bucket_id,

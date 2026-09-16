@@ -6,27 +6,30 @@ thread an explicit session reference through SQLAlchemy's
 :meth:`process_bind_param` signature (the method is invoked by
 SQLAlchemy's column machinery with a fixed ``(self, value, dialect)``
 shape). The substrate also forbids module-global mutable state that
-could survive a bucket switch — the :class:`BucketSession` instance is
-the only legitimate owner of unlocked KEK and DEK bytes.
+could survive a bucket switch -- the :class:`BucketSession` instance is
+the only legitimate owner of unlocked DEK bytes.
 
-This module composes both constraints with a ``ContextVar`` (PEP 567)
-holding the active :class:`BucketSession`. The CLI entry point opens
-a session and enters :func:`activate_session` as a contextmanager;
-every column-level decrypt or encrypt call inside the block resolves
-the active DEK through :func:`get_active_master_key`. On exit the
-``ContextVar`` token is reset to the previous value (``None`` at the
-top of the stack), so no *binding* outlives the with-block - the
-session itself is not closed here, only unbound from this context.
-:func:`close_active_bucket_session` is the explicit eviction boundary:
-it closes the current session before removing that exact binding.
+This module composes both constraints with a
+:class:`~cadrumo.core.process_binding.ProcessScopedBinding` holding the active
+:class:`BucketSession`. The binding holds the session OBJECT, never its key
+bytes, so the session remains the sole owner of unlocked DEK material and
+:meth:`BucketSession.close` remains the sole zeroisation boundary.
 
-The pattern is per-thread and per-async-task by PEP 567 semantics.
-``asyncio.Task`` instances inherit a copy of the parent context at
-creation time, so the active session crosses into spawned tasks
-correctly. :class:`concurrent.futures.ThreadPoolExecutor` workers do
-NOT inherit ``ContextVar`` state by default; future code introducing
-a thread-pool worker on the encrypt path must propagate the active
-session explicitly via :func:`contextvars.copy_context`.
+Who logged in is a fact about the PROCESS, not about one span of work. Exactly
+one profile is unlocked per process, and every surface that reads encrypted
+storage -- a parsed CLI invocation, a Textual credential screen running on a
+thread worker, a second :func:`asyncio.run` frame in the same program -- must
+observe the same answer. A plain :class:`~contextvars.ContextVar` cannot carry
+that: a login performed inside a copied context is discarded when that context
+ends, which reaches the operator as a correct authentication followed by a
+surface that cannot find the profile it just unlocked.
+
+So :func:`bind_active_bucket_session` publishes process-wide, and
+:func:`activate_session` still shadows that publication for the duration of a
+block -- nested activations stack and unwind exactly as before, and no
+*binding* made by the context manager outlives its ``with``.
+:func:`close_active_bucket_session` is the explicit eviction boundary: it
+closes the current session before removing that exact binding.
 """
 
 from __future__ import annotations
@@ -34,11 +37,11 @@ from __future__ import annotations
 import atexit as _atexit
 from collections.abc import Generator
 from contextlib import contextmanager
-from contextvars import ContextVar
 from typing import TypeGuard, override
 
 from .....application.auth.operator_probe_ports import ActiveProfileSessionPresencePort
 from .....core.logging import get_logger
+from .....core.process_binding import ProcessScopedBinding
 from .....core.time.clock import now
 from ..bucket.errors import BucketLockedError
 from ..errors import SecretStoreError
@@ -47,10 +50,8 @@ from .live_sessions import close_all_live_bucket_sessions
 
 _log = get_logger(__name__)
 
-active_session: ContextVar[BucketSession | None] = ContextVar(
-    "aeat_active_bucket_session",
-    default=None,
-)
+active_session: ProcessScopedBinding[BucketSession] = ProcessScopedBinding("aeat_active_bucket_session")
+"""The one live :class:`BucketSession` this process has unlocked, if any."""
 
 
 class NoActiveBucketSessionError(SecretStoreError):
@@ -75,43 +76,42 @@ class NoActiveBucketSessionError(SecretStoreError):
 def activate_session(session: BucketSession) -> Generator[None]:
     """Bind ``session`` as the active :class:`BucketSession` for the block.
 
-    The previous value of the :class:`ContextVar` is restored on exit
-    via the :class:`contextvars.Token` returned by ``set()``, so nested
-    activations stack and unwind cleanly. The session itself is not
-    closed on exit — ownership of the :class:`BucketSession` lifecycle
-    stays with the caller that opened it.
+    The binding this installs is scoped to the block: nested activations
+    stack and unwind cleanly, and on exit the caller observes exactly what
+    it observed before, whether that was an enclosing activation or the
+    process-wide binding :func:`bind_active_bucket_session` published. The
+    session itself is not closed on exit — ownership of the
+    :class:`BucketSession` lifecycle stays with the caller that opened it.
 
     Args:
         session: The unlocked :class:`BucketSession` whose DEK becomes
             the column-level encryption key for the duration of the
             block.
     """
-    token = active_session.set(session)
-    try:
+    with active_session.override(session):
         yield
-    finally:
-        active_session.reset(token)
 
 
 def bind_active_bucket_session(session: BucketSession) -> None:
-    """Bind ``session`` as the active session for the rest of this context.
+    """Publish ``session`` as this PROCESS's active session.
 
-    The unscoped counterpart of :func:`activate_session`, for the one
-    caller shape that has no enclosing ``with`` block: a persisted profile
-    session resumed at CLI start-up, whose binding must outlive the
-    function that opened it and is evicted explicitly by
-    :func:`close_active_bucket_session` (or by the interpreter-exit hook).
+    The unscoped counterpart of :func:`activate_session`, for the caller
+    shape that has no enclosing ``with`` block: an authenticated or resumed
+    profile session, whose binding must outlive the function that opened it
+    and is evicted explicitly by :func:`close_active_bucket_session` (or by
+    the interpreter-exit hook).
 
-    :func:`activate_session` cannot serve that shape — entering its
-    generator without holding a reference lets the garbage collector
-    finalise it, and the ``finally`` clause then resets the binding out
-    from under the caller. Callers that DO have a scope must keep using
-    :func:`activate_session` so the previous binding is restored on exit.
+    The publication is process-wide because the fact is: one profile is
+    unlocked per process, and a credential surface that authenticates on a
+    thread worker or inside its own event loop must be visible to the
+    surface that reads storage afterwards. Callers that DO have a scope, and
+    mean to shadow this binding only for that scope, use
+    :func:`activate_session` instead.
 
     Args:
         session: The unlocked :class:`BucketSession` to bind.
     """
-    active_session.set(session)
+    active_session.bind(session)
 
 
 def _require_fresh_active_session() -> BucketSession:
@@ -274,18 +274,14 @@ def close_active_bucket_session() -> None:
     try:
         session.close()
     finally:
-        if active_session.get() is session:
-            active_session.set(None)
+        active_session.clear_bound(session)
 
 
 @contextmanager
 def suspend_active_session() -> Generator[None]:
     """Temporarily clear the active :class:`BucketSession` for the current context."""
-    token = active_session.set(None)
-    try:
+    with active_session.override(None):
         yield
-    finally:
-        active_session.reset(token)
 
 
 def _close_active_session_at_exit() -> None:

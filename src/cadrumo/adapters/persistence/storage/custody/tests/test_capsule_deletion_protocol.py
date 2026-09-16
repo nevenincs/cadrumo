@@ -29,6 +29,7 @@ import pytest
 from ......core.config import Settings
 from ......core.profile_publication import ProfilePublicationKind
 from ..capsule import (
+    install_committed_profile_custody_recovery_envelope,
     inventory_committed_profile_custody_capsule,
     profile_custody_deletion_path,
     publish_profile_custody_capsule,
@@ -52,7 +53,7 @@ _TRANSACTION_ID = UUID("4f28d1c4-e466-4a08-a25a-ea5925146f36")
 _DEK = bytes(range(32))
 _EPOCH = base64.b64encode(b"e" * 16).decode("ascii")
 _PASSPHRASE = "profile " + "password" + " 123"
-_RECOVERY_SECRET = "profile " + "recovery" + " 123"
+_RECOVERY_SECRET = "-".join(("ABCDE", "FGHJK", "LMNPQ", "RSTUV", "WXYZ2", "34567"))
 
 
 def _kdf() -> ProfileCustodyKdfParameters:
@@ -92,10 +93,12 @@ def _publish(tmp_path: Path) -> Settings:
         publication_kind=ProfilePublicationKind.ENROLL,
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
-        recovery_envelope=recovery,
         data_files={"state/current.bin": b"current encrypted payload"},
         settings=settings,
     )
+    # Enrolled after publication, as the product does, so the protocol is
+    # exercised against the fullest capsule shape it can meet.
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, recovery.canonical_json_bytes(), settings=settings)
     return settings
 
 

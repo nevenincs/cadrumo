@@ -33,6 +33,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
+from .m145_communication_period import M145CommunicationPeriod
 
 M145_COMMUNICATION_SERVICE_OWNER = "cadrumo.application.modelo"
 
@@ -85,38 +86,35 @@ class M145CommunicationServiceContract(BaseModel):
 
 
 def build_m145_communication_service_contract(
-    *, filing_year: int | None = None, operation: PinnedAuthorityOperation
+    *,
+    period_token: M145CommunicationPeriod,
+    filing_year: int | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> M145CommunicationServiceContract:
     """Return the registry-backed Modelo 145 local communication contract.
 
-    Reads the law-selected Modelo 145 revision for the communication period
-    and refuses if the registry exposes filing, deadline, live-read, portal, or
-    other non-local surfaces. The returned record is read-only ownership data;
-    it does not create, persist, export, or transition any communication, so
-    the revision is read structurally (:func:`select_revision`) rather than
-    through a filing-grade snapshot.
+    Reads the law-selected Modelo 145 revision for the requested communication
+    period and refuses if that revision does not declare the period or exposes
+    filing, deadline, live-read, portal, or other non-local surfaces. The
+    returned record is read-only ownership data; it does not create, persist,
+    export, or transition any communication, so the revision is read
+    structurally rather than through a filing-grade snapshot.
     """
     selected_filing_year = date.today().year if filing_year is None else filing_year
-    directory = operation.modelo_directory(Modelo("145").value)
-    year_revision = max(
-        (
-            operation.revision(Modelo("145").value, str(candidate.id))
-            for candidate in directory.revisions
-            if candidate.period_selector.periods_for_year(selected_filing_year)
-        ),
-        key=lambda revision: (revision.valid_from, str(revision.id)),
-    )
-    period_tokens = tuple(
-        str(period) for period in year_revision.period_selector.periods_for_year(selected_filing_year)
-    )
-    if len(period_tokens) != 1:
-        raise ValueError("Modelo 145 communication contract requires one registry period token")
-    period_token = period_tokens[0]
+    requested_token = M145CommunicationPeriod(period_token).value
     revision = operation.revision_for_context(
         Modelo("145").value,
         filing_year=selected_filing_year,
-        period=period_token,
+        period=requested_token,
     )
+    declared_tokens = tuple(
+        str(period).lower() for period in revision.period_selector.periods_for_year(selected_filing_year)
+    )
+    if requested_token not in declared_tokens:
+        raise ValueError(
+            f"Modelo 145 revision {revision.id!r} does not declare communication period {requested_token!r} "
+            f"for {selected_filing_year}; declared {declared_tokens!r}"
+        )
     declared_surfaces = frozenset(str(link.surface) for link in revision.application_links)
     forbidden = tuple(sorted(declared_surfaces & _FORBIDDEN_SURFACES))
     if forbidden:
@@ -127,9 +125,16 @@ def build_m145_communication_service_contract(
 
     return M145CommunicationServiceContract(
         revision_id=revision.id,
-        period_token=period_token,
+        period_token=requested_token,
         surfaces=_EXPECTED_SURFACES,
-        export_layout_ids=tuple(sorted(layout.id for layout in revision.export_layouts)),
+        export_layout_ids=tuple(
+            sorted(
+                layout.id
+                for layout in operation.revision_with_export_layouts(
+                    Modelo("145").value, str(revision.id)
+                ).export_layouts
+            )
+        ),
         legal_refs=tuple(sorted(str(ref) for ref in revision.legal_refs)),
         source_refs=tuple(sorted(str(ref) for ref in revision.source_refs)),
     )

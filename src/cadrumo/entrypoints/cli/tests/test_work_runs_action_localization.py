@@ -48,8 +48,9 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -58,7 +59,7 @@ from .._modelo_work_runs_cli import _workflow_run_payload, _workflow_run_tab_lin
 from ..common import resolve_cli_precondition_action
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _T = datetime(2026, 4, 12, 9, 0, tzinfo=UTC)
 _PROFILE_ID = "22222222-2222-4222-8222-222222222222"
@@ -85,7 +86,8 @@ _RAW_COMMAND_PATTERN = re.compile(r"(?i)(?:^|[\s`'\"])(?:aeat)\s+")
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+def _isolated_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Iterator[None]:
+    del authority_operation
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),

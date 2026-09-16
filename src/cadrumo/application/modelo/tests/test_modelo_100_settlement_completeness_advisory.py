@@ -27,10 +27,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
@@ -166,7 +166,7 @@ def test_settlement_advisory_registered_on_revision(filing_year: int) -> None:
     semantics are base liquidable general (antecedent) and cuota resultante de
     la autoliquidación (consequent). No formula output is asserted.
     """
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=filing_year, period="0A")
+    snapshot = published_snapshot("100", filing_year=filing_year, period="0A")
     matches = [p for p in snapshot.revision.verification_predicates if p.predicate_id.endswith(_PREDICATE_ID_SUFFIX)]
     assert len(matches) == 1, f"expected exactly one settlement guard on M100 {filing_year}"
     predicate = matches[0]

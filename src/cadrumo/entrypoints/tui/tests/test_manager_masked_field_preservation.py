@@ -126,7 +126,6 @@ async def test_the_masked_field_under_test_really_is_masked_and_optional(tmp_pat
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -154,7 +153,6 @@ async def test_saving_a_masked_field_without_typing_does_not_clear_it(tmp_path) 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -189,7 +187,6 @@ async def test_pressing_enter_in_an_untouched_masked_box_does_not_clear_it(tmp_p
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -215,7 +212,6 @@ async def test_whitespace_typed_into_a_masked_box_does_not_clear_it(tmp_path) ->
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -247,7 +243,6 @@ async def test_a_masked_field_can_still_be_deliberately_cleared(tmp_path) -> Non
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -281,7 +276,6 @@ async def test_the_clear_gesture_is_offered_only_where_the_box_cannot_express_it
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -320,7 +314,6 @@ async def test_an_unmasked_field_is_still_cleared_by_emptying_its_box(tmp_path) 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -353,7 +346,6 @@ async def test_the_clear_button_is_not_the_one_enter_reaches(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -390,7 +382,6 @@ async def test_an_enum_dialog_pre_selects_nothing_it_cannot_confirm_is_current(t
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -427,7 +418,6 @@ async def test_an_enum_dialog_still_pre_selects_the_token_the_field_holds(tmp_pa
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -477,7 +467,6 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,

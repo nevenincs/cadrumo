@@ -28,9 +28,6 @@ from ..errors import (
     BucketError,
     BucketLockedError,
     BucketValidationError,
-    NoActiveBucketError,
-    RecoveryUnavailableError,
-    RecoveryVerificationError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -38,12 +35,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _BUCKET_ERROR_CLASSES: tuple[type[BucketError], ...] = (
     BucketError,
     BucketValidationError,
-    NoActiveBucketError,
     BucketBusyError,
     BucketAlreadyPresentError,
     BucketLockedError,
-    RecoveryUnavailableError,
-    RecoveryVerificationError,
 )
 
 
@@ -72,15 +66,10 @@ def test_bucket_busy_payload_carries_bucket_id_and_pid() -> None:
             {"bucket_id": "bucket-001", "bucket_session_unlocked": False},
             id="locked",
         ),
-        pytest.param(
-            RecoveryUnavailableError(bucket_id="bucket-001"),
-            {"bucket_id": "bucket-001"},
-            id="recovery-unavailable",
-        ),
     ),
 )
 def test_bucket_id_payload_carries_bucket_id(
-    error: BucketAlreadyPresentError | BucketLockedError | RecoveryUnavailableError,
+    error: BucketAlreadyPresentError | BucketLockedError,
     expected_context: dict[str, str | bool],
 ) -> None:
     assert error.bucket_id == "bucket-001"

@@ -6,12 +6,12 @@ identifier, the manifest digest, the archive schema version, and the
 export timestamp; the encrypted payload travels as the archive's one
 other member.
 
-Recovery material is not part of this transport. A profile's recovery
-record is an exclusive per-profile artifact with its own file, schema
-and export grammar, so no archive member, header flag, or member-count
-rule depends on it. Optional material that could not be produced, or
-arrived damaged, can therefore no longer make an otherwise complete
-backup read as malformed.
+Recovery material is not part of this transport. A profile's optional
+recovery wrapper lives only in its committed capsule and is enrolled again
+explicitly after a restore, so no archive member, header flag, or
+member-count rule depends on it. Optional material that could not be
+produced, or arrived damaged, can therefore never make an otherwise
+complete backup read as malformed.
 """
 
 from __future__ import annotations

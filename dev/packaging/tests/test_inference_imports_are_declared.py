@@ -40,7 +40,6 @@ it would have made the gate an assertion about its own table.
 from __future__ import annotations
 
 import ast
-import tomllib
 from collections.abc import Iterator
 from importlib.metadata import packages_distributions
 from pathlib import Path
@@ -48,6 +47,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 
 from .._distribution_names import normalise_distribution_name
@@ -71,7 +71,7 @@ def _declared_distributions() -> set[str]:
     and teach everyone to distrust it.
     """
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
-        pyproject = tomllib.load(handle)
+        pyproject = load_toml(handle)
 
     requirement_lists: list[list[str]] = [pyproject["project"].get("dependencies", [])]
     requirement_lists.extend(pyproject["project"].get("optional-dependencies", {}).values())

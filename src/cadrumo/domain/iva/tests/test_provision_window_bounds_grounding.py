@@ -24,19 +24,19 @@ from collections.abc import Iterable
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.validity_window import ValidityWindow
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.schema_references import LegalReference
+from ...calculations.registry.tests.published_authority import published_legal_references
 from ..catalogue import bundled_iva_catalogue
 from ..place_of_supply import load_place_of_supply_table
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _legal_catalogue() -> dict[str, LegalReference]:
-    return dict(compiled_bundled_authority().catalogues.legal)
+def _legal_catalogue(reference_ids: Iterable[str]) -> dict[str, LegalReference]:
+    return published_legal_references(reference_ids)
 
 
 def _permitted_span(
@@ -96,10 +96,10 @@ def test_every_grounded_iva_row_stays_inside_its_provisions_effective_span() -> 
     catalogue each run, so amending a provision's effective date automatically
     re-judges every row that cites it.
     """
-    catalogue = _legal_catalogue()
     with bundled_indexed_authority().operation() as operation:
         rows = _catalogue_rows(operation=operation) + _place_of_supply_rows(operation=operation)
     assert rows, "no grounded IVA rows were measured; this gate would pass vacuously"
+    catalogue = _legal_catalogue({reference for _label, references, _window in rows for reference in references})
 
     violations = []
     for label, references, window in rows:
@@ -142,9 +142,9 @@ def test_a_window_inside_the_span_is_not_a_violation() -> None:
 
 def test_the_permitted_span_of_several_provisions_is_their_intersection() -> None:
     """A rule rests on every article it reads, so the narrowest one bounds it."""
-    catalogue = _legal_catalogue()
     early = "ley-37-1992:art-68"
     late = "ley-37-1992:art-13"
+    catalogue = _legal_catalogue([early, late])
 
     start_alone, _ = _permitted_span([early], catalogue)
     start_together, _ = _permitted_span([early, late], catalogue)
@@ -159,7 +159,6 @@ def test_the_permitted_span_of_several_provisions_is_their_intersection() -> Non
 
 def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
     """Anchor: an unresolvable id would make the span check silently skip a row."""
-    catalogue = _legal_catalogue()
     with bundled_indexed_authority().operation() as operation:
         cited = {
             reference
@@ -167,6 +166,7 @@ def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
             + _place_of_supply_rows(operation=operation)
             for reference in references
         }
+    catalogue = _legal_catalogue(cited)
 
     assert cited, "no provisions were cited at all; the gate above would be vacuous"
     assert sorted(reference for reference in cited if reference not in catalogue) == []

@@ -35,7 +35,6 @@ covering whatever was added afterwards.
 from __future__ import annotations
 
 import ast
-import tomllib
 from collections.abc import Iterator
 from importlib.metadata import packages_distributions
 from pathlib import Path
@@ -43,6 +42,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 
 from .._distribution_names import normalise_distribution_name
@@ -72,7 +72,7 @@ def _requirement_names(requirements: object) -> set[str]:
 def _dev_only_distributions() -> set[str]:
     """Distributions available to developers and to nobody who installs this."""
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
-        pyproject = tomllib.load(handle)
+        pyproject = load_toml(handle)
 
     shipped = _requirement_names(pyproject["project"].get("dependencies", []))
     for extra in pyproject["project"].get("optional-dependencies", {}).values():
@@ -192,7 +192,7 @@ def test_the_test_surface_is_excluded_because_it_does_not_ship() -> None:
     asserted here rather than assumed.
     """
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
-        pyproject = tomllib.load(handle)
+        pyproject = load_toml(handle)
 
     excluded = pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
 

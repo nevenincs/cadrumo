@@ -1,6 +1,6 @@
 """Parity gate: the live TOML parser must reproduce known-correct registry values.
 
-:func:`cadrumo.core.read_toml` reads through stdlib :mod:`tomllib`. This test
+:func:`cadrumo.core.read_toml` reads through stdlib ``rtoml``. This test
 is written so that it keeps its meaning if that ever changes, because it never
 asks the parser what the parser says. It does NOT compare the
 parser's output against itself or against a second parser's output (either

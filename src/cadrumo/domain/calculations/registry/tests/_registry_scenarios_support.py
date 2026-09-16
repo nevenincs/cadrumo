@@ -9,7 +9,7 @@ from functools import lru_cache
 
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ..ids import LegalRefId, SourceRefId
-from ._published_authority import artifact_components
+from .registry_tree import bundled_modelo_components
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -71,7 +71,7 @@ _HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025: dict[CasillaId, str] = {
 
 @lru_cache(maxsize=1)
 def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
-    modelo, _catalogues = artifact_components("100")
+    modelo, _catalogues = bundled_modelo_components("100")
     revision = modelo.revisions["2025"]
     refs: dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]] = {
         casilla.id: (

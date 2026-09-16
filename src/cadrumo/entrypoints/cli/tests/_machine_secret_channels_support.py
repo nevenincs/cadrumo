@@ -21,7 +21,6 @@ from cadrumo.tests.audited_process import run_audited_process
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
-from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment, export_profile_recovery_artifact
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.config import override_settings
 from ....tests.inventory import SRC_CADRUMO
@@ -52,7 +51,7 @@ _PROMPTS = (
     "new profile passphrase:",
     "confirm new profile passphrase:",
     "pkcs#12 passphrase (input hidden):",
-    "recovery phrase (24 words):",
+    "recovery code:",
 )
 
 
@@ -263,7 +262,6 @@ def _settings(storage_root: Path, *, output_language: str = "en") -> dict[str, o
     return {
         "cadrumo_local_storage_root": str(storage_root),
         "cadrumo_secret_store_dir": str(storage_root / "fallback-store"),
-        "cadrumo_secret_store_backend": "auto",
         "cadrumo_output_language": output_language,
     }
 
@@ -561,33 +559,18 @@ def _assert_success(
     return document
 
 
-def _register(
-    storage_root: Path,
-    *,
-    label: str = "s13-operator",
-    recovery: bool = False,
-):
+def _register(storage_root: Path, *, label: str = "s13-operator"):
+    """Register one password-only profile and close its session, as the CLI would."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    captured: list[ProfileRecoveryEnrollment] = []
-    phrases: list[str] = []
-
-    def handover(enrollment: ProfileRecoveryEnrollment) -> str:
-        mnemonic = str(enrollment.recovery_key.mnemonic)
-        if recovery:
-            phrases.append(mnemonic)
-            captured.append(enrollment)
-        return mnemonic
-
     with override_settings(cadrumo_local_storage_root=storage_root):
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=_PROFILE_INPUT,
-            recovery_handover=handover,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
         close_active_bucket_session()
-    return outcome, captured, phrases
+    return outcome
 
 
 def _register_certificate_source(storage_root: Path, *, name: str) -> None:
@@ -620,20 +603,10 @@ def cleanup_keychain(tmp_path: Path) -> None:
             reap_profile_session_keys(child)
 
 
-def _restore_material(tmp_path: Path) -> tuple[Path, Path, str]:
+def _restore_material(tmp_path: Path) -> Path:
+    """Register a profile in a scratch root and return its committed capsule directory."""
     source = tmp_path / "restore-source"
-    outcome, enrollments, phrases = _register(source, recovery=True)
+    outcome = _register(source)
     from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 
-    material = load_committed_profile_password_material(UUID(outcome.profile_id), root=source)
-    artifact = tmp_path / "recovery.artifact.json"
-    export_profile_recovery_artifact(
-        enrollments[0],
-        current_password=_PROFILE_INPUT,
-        password_envelope=material.envelope,
-        sentinel=material.sentinel,
-        target=artifact,
-    )
-    phrase = phrases[0]
-    assert isinstance(phrase, str)
-    return material.capsule_path, artifact, phrase
+    return load_committed_profile_password_material(UUID(outcome.profile_id), root=source).capsule_path

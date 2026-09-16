@@ -38,10 +38,9 @@ input, and the shipped registry authority is its compiled output.
 
 from __future__ import annotations
 
-import tomllib
-
 import pytest
 
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev._paths import REPO_ROOT
 from dev.quality.unread_inputs import report_unread
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -95,8 +94,8 @@ def _entry_kinds() -> dict[str, str]:
     unread: list[str] = []
     for fragment in sorted(_MAPPINGS.rglob("*.toml")):
         try:
-            data = tomllib.loads(fragment.read_text(encoding="utf-8"))
-        except (OSError, tomllib.TOMLDecodeError) as refusal:
+            data = parse_toml(fragment.read_text(encoding="utf-8"))
+        except (OSError, TomlDecodeError) as refusal:
             # Malformedness itself is another gate's subject, but its CONSEQUENCE
             # lands here: a fragment that does not parse contributes no entries,
             # so every export ref into it reads as ``kind is None`` below and is

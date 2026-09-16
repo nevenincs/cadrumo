@@ -8,13 +8,12 @@ refused rather than silently dropped from every search result.
 
 from __future__ import annotations
 
-import tomllib
-
 import pytest
 
 from ....core.concept_lifecycle import ConceptLifecycle
 from ....core.directory_scan import scan_directory
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.toml import parse_toml
 from ..errors import CorpusSearchInputError
 from ..terminology import (
     _project_concept,
@@ -67,7 +66,7 @@ def test_every_stored_token_in_the_tree_is_a_declared_member() -> None:
     # it must see the raw token rather than an already-hydrated member.
     stored: set[str] = set()
     for path in scan_directory(_terminology_root(), pattern="*.toml"):
-        payload = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
+        payload = parse_toml(path.read_text(encoding=UTF_8_ENCODING))
         concept = payload.get("concept")
         assert isinstance(concept, dict), path.name
         token = concept.get("lifecycle")
@@ -78,14 +77,14 @@ def test_every_stored_token_in_the_tree_is_a_declared_member() -> None:
 
 
 def test_known_token_projects_to_the_matching_member() -> None:
-    payload = tomllib.loads(_KNOWN_LIFECYCLE_FRAGMENT)
+    payload = parse_toml(_KNOWN_LIFECYCLE_FRAGMENT)
     projected = _project_concept(payload, locale="es")
     assert projected is not None
     assert projected.lifecycle is ConceptLifecycle.DEPRECATED
 
 
 def test_unknown_token_is_refused_with_the_accepted_set() -> None:
-    payload = tomllib.loads(_UNKNOWN_LIFECYCLE_FRAGMENT)
+    payload = parse_toml(_UNKNOWN_LIFECYCLE_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as excinfo:
         _project_concept(payload, locale="es")
     context = excinfo.value.context

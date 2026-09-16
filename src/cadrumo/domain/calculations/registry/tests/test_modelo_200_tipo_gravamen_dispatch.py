@@ -34,7 +34,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -42,10 +41,8 @@ from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_formula import ParameterDefinition
-from ._published_authority import (
-    artifact_components,
-    artifact_snapshot,
-)
+from .published_authority import published_legal_evidence_text, published_snapshot
+from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -104,7 +101,7 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
 
 
 def _snapshot():
-    return artifact_snapshot("200", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def _parameters() -> dict[str, ParameterDefinition]:
@@ -170,7 +167,7 @@ def test_nonprofit_cuota_bracket_carries_the_ley_49_2002_rate_authority() -> Non
 
 def test_ley_49_2002_art_10_nonprofit_rate_links_to_bundled_corpus() -> None:
     """The regime-specific 10% legal reference resolves to the bundled BOE excerpt."""
-    _, catalogues = artifact_components("200")
+    _, catalogues = bundled_modelo_components("200")
     reference = catalogues.legal["ley-49-2002:art-10"]
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-10.html#a10"
@@ -182,7 +179,7 @@ def test_ley_49_2002_art_10_nonprofit_rate_links_to_bundled_corpus() -> None:
         "explotaciones económicas no exentas",
         "tipo del 10 por 100",
     )
-    assert compiled_bundled_authority().legal_evidence_text(reference.id)
+    assert published_legal_evidence_text(reference.id)
 
 
 def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:

@@ -24,6 +24,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
 from ...core.time.utc import validate_utc_aware
+from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.retention.floor import RetentionFloorAssessment, assess_retention_floor
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwner, ProfileDeletionHoldOwnerProjection
@@ -214,7 +215,13 @@ class FilingRetentionAuthority:
             )
         return snapshot
 
-    def assess(self, profile_id: UUID, *, now: datetime) -> RetentionFloorAssessment:
+    def assess(
+        self,
+        profile_id: UUID,
+        *,
+        now: datetime,
+        authority: GovernedFactSource | None = None,
+    ) -> RetentionFloorAssessment:
         """Return the FULL retention position for one profile's filed records.
 
         The same computation :meth:`project` performs, returned whole instead of
@@ -240,13 +247,24 @@ class FilingRetentionAuthority:
         return assess_retention_floor(
             self._verified_snapshot(profile_id).filing_records,
             as_of=now.astimezone(UTC),
+            authority=authority,
         )
 
-    def project(self, profile_id: UUID, *, now: datetime) -> ProfileDeletionHoldOwnerProjection:
+    def project(
+        self,
+        profile_id: UUID,
+        *,
+        now: datetime,
+        authority: GovernedFactSource | None = None,
+    ) -> ProfileDeletionHoldOwnerProjection:
         """Evaluate persisted filing facts using the domain retention authority."""
         validate_utc_aware(now)
         snapshot = self._verified_snapshot(profile_id)
-        assessment = assess_retention_floor(snapshot.filing_records, as_of=now.astimezone(UTC))
+        assessment = assess_retention_floor(
+            snapshot.filing_records,
+            as_of=now.astimezone(UTC),
+            authority=authority,
+        )
         return ProfileDeletionHoldOwnerProjection(
             owner=ProfileDeletionHoldOwner.FILING,
             profile_id=profile_id,

@@ -25,7 +25,7 @@ from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH, r
 from ....application.ledger.preconditions import LedgerPreconditionCondition
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..common import cli_policy_refusal_projection

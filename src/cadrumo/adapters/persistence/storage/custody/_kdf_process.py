@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import os
 import signal
 import subprocess
@@ -52,21 +51,14 @@ def launch_worker(
 
 
 def _launch_worker_process(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
-    """Launch the fixed worker argv through asyncio's shell-free exec boundary."""
-    return asyncio.run(_create_worker_process(command, launch_kwargs))
+    """Launch the fixed worker argv directly, owning the child for its whole lifetime.
 
-
-async def _create_worker_process(
-    command: list[str],
-    launch_kwargs: dict[str, object],
-) -> subprocess.Popen[bytes]:
-    process = await asyncio.create_subprocess_exec(*command, **cast(Any, launch_kwargs))
-    native_process = cast(Any, process)._transport.get_extra_info("subprocess")
-    if not isinstance(native_process, subprocess.Popen):
-        process.kill()
-        await process.wait()
-        raise _supervision_refusal()
-    return cast("subprocess.Popen[bytes]", native_process)
+    The supervisor keeps the child alive across arbitrary caller threads and
+    event loops, so the process must not be owned by a loop-bound transport
+    that terminates it when the loop or the transport is collected.
+    """
+    process: subprocess.Popen[Any] = subprocess.Popen(command, **cast(Any, launch_kwargs))
+    return cast("subprocess.Popen[bytes]", process)
 
 
 def clear_worker_handle_inheritance(*, request_read: int, result_write: int) -> None:

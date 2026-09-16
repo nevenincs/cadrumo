@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-import tomllib
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -20,6 +19,7 @@ from pathlib import Path, PurePosixPath
 from pydantic import TypeAdapter
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     GovernedFactQuery,
@@ -454,7 +454,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--registry-root", type=Path, default=bundled_path("registry", "aeat"))
     args = parser.parse_args(argv)
-    iva_ledger = tomllib.loads(_IVA_RETIREMENT_LEDGER.read_text(encoding="utf-8"))
+    iva_ledger = parse_toml(_IVA_RETIREMENT_LEDGER.read_text(encoding="utf-8"))
     open_steps = _open_plan_steps(_FACTS_REGISTRY_PLAN.read_text(encoding="utf-8"))
     findings = (
         *live_facts_catalogue_findings(args.registry_root),

@@ -35,13 +35,13 @@ The screen exits 0 whatever it finds. It reports; the gate beside it decides.
 from __future__ import annotations
 
 import sys
-import tomllib
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from ..compiler.authority import compiled_bundled_authority
@@ -166,7 +166,7 @@ def _wire_integer(value: object, *, field_name: str) -> int:
 
 def _shipped_records(revision_root: Path) -> Iterator[tuple[str, dict[str, object]]]:
     for layout_file in sorted((revision_root / "export_layouts").glob("*.toml")):
-        document = _object_mapping(tomllib.loads(layout_file.read_text(encoding="utf-8")))
+        document = _object_mapping(parse_toml(layout_file.read_text(encoding="utf-8")))
         if document is None:
             continue
         revisions = _object_mapping(document.get("revisions"))

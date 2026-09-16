@@ -6,7 +6,11 @@ from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
 
 from ....application.filing.producer_snapshot import build_filing_producer_snapshot
 from ....core.filing_projection_ref import (
@@ -59,9 +63,9 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     period = Period.from_year_and_code(2026, "1T")
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = published_snapshot("303", filing_year=2026, period="1T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
@@ -106,13 +110,13 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
         scope_decision=scope,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=None,
+        dana_eligibility=None,
         calculation_result=calculate_m303_regimen_simplificado_result(
             period=period,
             scope_decision=scope,
             rows=rows,
             regimen_snapshot=regimen_snapshot,
-            dana_2024_eligibility=None,
+            dana_eligibility=None,
             operation=authority_operation,
         ),
     )
@@ -202,13 +206,13 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
 ) -> None:
     """All five live epochs preserve their calculated module endpoint values."""
     period = Period.from_year_and_code(filing_year, period_code)
-    registry_snapshot = compiled_bundled_authority().snapshot(
+    registry_snapshot = published_snapshot(
         "303",
         filing_year=filing_year,
         period=period_code,
     )
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
@@ -259,13 +263,13 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
         scope_decision=scope,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=None,
+        dana_eligibility=None,
         calculation_result=calculate_m303_regimen_simplificado_result(
             period=period,
             scope_decision=scope,
             rows=rows,
             regimen_snapshot=regimen_snapshot,
-            dana_2024_eligibility=None,
+            dana_eligibility=None,
             operation=authority_operation,
         ),
     )

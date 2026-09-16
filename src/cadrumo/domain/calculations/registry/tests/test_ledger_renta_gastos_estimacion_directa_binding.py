@@ -7,7 +7,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -22,7 +21,6 @@ from ....renta.ledger_expenses import (
     evaluate_renta_deductibility,
 )
 from ..authority import PinnedAuthorityOperation
-from ..authority_artifact import GovernedFactComponentQuery
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
@@ -33,8 +31,7 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
 )
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
-from ._published_authority import artifact_components
-from .authority_fakes import FakeAuthorityComponentReader
+from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -61,18 +58,8 @@ _UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-@pytest.fixture(scope="session")
-def operation() -> PinnedAuthorityOperation:
-    """Expose canonical authored facts through one generation-pinned operation."""
-    authority = compiled_bundled_authority()
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
-    )
-    return PinnedAuthorityOperation(reader, reader.pin())
-
-
 def _modelo_100_snapshot(filing_year: int):
-    modelo, catalogues = artifact_components("100")
+    modelo, catalogues = bundled_modelo_components("100")
     return build_snapshot(
         modelo,
         catalogues,

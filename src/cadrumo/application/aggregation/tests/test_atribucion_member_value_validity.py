@@ -23,7 +23,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 
 from ..atribucion_member import (
     _decimal,
@@ -33,7 +34,7 @@ from ..atribucion_member import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-_PROFILE_SCHEMA = load_user_profile_schema()
+_PROFILE_SCHEMA = published_profile_schema()
 
 
 def _socio(share_pct: object, *, index: int = 0) -> _SocioFacts:

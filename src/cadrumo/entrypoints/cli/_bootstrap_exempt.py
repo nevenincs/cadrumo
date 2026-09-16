@@ -344,6 +344,17 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
         cites_verbs=("app modelo review-package verify-signature",),
     ),
     BootstrapExemption(
+        verb_path="config profile archive inspect",
+        criterion=ExemptionCriterion.OPERATOR_SUPPLIED_ARTEFACT,
+        note=(
+            "Reports the plaintext header of an operator-supplied sealed archive without "
+            "decrypting it, so it reads no capsule and opens no session. Gating it made the "
+            "verb unusable on a host with no keychain, where the root gate refused before the "
+            "handler ran even though the answer needs nothing the gate protects."
+        ),
+        cites_verbs=("config profile archive export",),
+    ),
+    BootstrapExemption(
         verb_path="app diagnostics telemetry status",
         criterion=ExemptionCriterion.CONFIGURATION_ONLY,
         note=(

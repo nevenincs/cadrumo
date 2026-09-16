@@ -16,7 +16,7 @@ from ...application.workbench_generation import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from .account import (
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
@@ -647,7 +647,6 @@ def resolve_modelo_workspace_static_inspection(
     another profile.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.modelo.registry_authority_capture import PinnedRegistryAuthorityCapture
     from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ...application.modelo.workspace import resolve_static_inspection_result
     from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
@@ -661,7 +660,7 @@ def resolve_modelo_workspace_static_inspection(
         ),
         bucket_id=unit.bucket_id,
         catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
-        authority=PinnedRegistryAuthorityCapture(operation),
+        authority=operation,
         output_language=output_language,
     )
 
@@ -676,7 +675,6 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     the session.
     """
     from ...core.config import load_settings, override_settings
-    from ...core.config_support import SecretStoreBackend
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
     from ..adapter_composition import profile_adapter_composition
@@ -692,7 +690,6 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
             override_settings(
                 cadrumo_local_storage_root=storage_root,
                 cadrumo_active_profile=None,
-                cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
                 cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
                 cadrumo_profile_kdf_measure_calibration=False,
                 **{secret_field: secret_path},
@@ -916,6 +913,34 @@ async def run_authenticated_workbench_sessions(
         provider = next_provider
 
 
+TUI_SELF_TEST_FLAG = "--self-test"
+TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE = 2
+
+
+class TuiModuleArgumentError(CadrumoError):
+    """Arguments outside the independent TUI root's closed invocation surface."""
+
+
+def run_module(
+    arguments: list[str],
+    *,
+    workbench_root_inputs_provider: InstalledWorkbenchRootInputsProviderV1 | None = None,
+) -> int:
+    """Start the root session from ``python -m``, retaining only the self-test flag.
+
+    The argument surface and its refusal live here rather than in
+    ``__main__.py``: a module executed as ``__main__`` carries that module
+    name, so an error class defined there could never resolve the error code
+    the registry declares for it.
+    """
+    if arguments not in ([], [TUI_SELF_TEST_FLAG]):
+        raise TuiModuleArgumentError(f"unrecognised TUI module arguments: {arguments!r}")
+    return main(
+        headless=arguments == [TUI_SELF_TEST_FLAG],
+        workbench_root_inputs_provider=workbench_root_inputs_provider,
+    )
+
+
 def main(
     *,
     headless: bool = False,
@@ -953,6 +978,8 @@ def main(
 
 
 __all__ = [
+    "TUI_MODULE_ARGUMENT_ERROR_EXIT_CODE",
+    "TUI_SELF_TEST_FLAG",
     "AuthenticatedSessionRecomposeDoorV1",
     "InstalledWorkbenchAccountInputsV1",
     "InstalledWorkbenchFactoryDependenciesV1",
@@ -961,6 +988,7 @@ __all__ = [
     "InstalledWorkbenchRootInputsProviderV1",
     "InstalledWorkbenchRootInputsV1",
     "InstalledWorkbenchSearchInputsProviderV1",
+    "TuiModuleArgumentError",
     "TuiOperationCompositionV1",
     "compose_installed_workbench_generation_provider",
     "compose_installed_workbench_root",
@@ -971,4 +999,5 @@ __all__ = [
     "profile_storage_scope",
     "resolve_modelo_workspace_static_inspection",
     "run_authenticated_workbench_sessions",
+    "run_module",
 ]

@@ -45,14 +45,7 @@ _CANONICAL_HELPER = "core/hashing.py"
 #: enumerated, so they are not yet delegated. Delegating one means dropping its
 #: entry in the SAME commit: the grounding test refuses an entry whose module no
 #: longer hosts a reducible body.
-_REDUCIBLE_ONE_SHOT_BASELINE: dict[str, int] = {
-    # Delegating this one costs an import line, which pushes the module past the
-    # 300-line reviewability ceiling that test_registry_reviewability.py enforces.
-    # The file keeps `import hashlib` regardless for two non-reducible streaming
-    # digests, so the delegation buys almost nothing; left as-is rather than
-    # degrading the module's prose or raising its size baseline to fit.
-    "dev/registry/compiler/verdict_cache.py": 1,
-}
+_REDUCIBLE_ONE_SHOT_BASELINE: dict[str, int] = {}
 
 
 def _is_sha256_constructor(func: ast.expr) -> bool:

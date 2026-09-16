@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.tests.env_scope import scoped_env_var
 
 from ..compiler.compiled_cache import compiled_cache_path, loader_code_fingerprint
 from ..compiler.loader import clear_registry_tree_cache, load_registry_tree
@@ -24,7 +24,7 @@ def test_compiled_cache_path_changes_when_the_tree_fingerprint_changes(tmp_path:
     first = ((str(root / "modelos" / "999.toml"), 10, 123, "digest-a"),)
     second = ((str(root / "modelos" / "999.toml"), 11, 123, "digest-b"),)
 
-    with override_settings(cadrumo_registry_disk_cache_dir=tmp_path / "cache"):
+    with scoped_env_var("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(tmp_path / "cache")):
         first_path = compiled_cache_path(root, first)
         second_path = compiled_cache_path(root, second)
         assert first_path != second_path
@@ -61,7 +61,7 @@ def test_loader_reuses_the_publicly_addressable_compiled_cache(tmp_path: Path) -
     """A warm public loader call reuses the cache for an unchanged bundled tree."""
     cache_dir = tmp_path / "registry-cache"
     root = bundled_path("registry", "aeat").resolve()
-    with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
+    with scoped_env_var("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(cache_dir)):
         clear_registry_tree_cache()
         clear_fingerprint_cache()
         fingerprints = collect_registry_tree_fingerprints(root)

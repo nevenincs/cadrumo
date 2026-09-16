@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import ast
-import tomllib
 from datetime import date
 from pathlib import Path
 
 import pytest
 from pydantic import TypeAdapter
 
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
 from cadrumo.domain.calculations.registry.facts.schema import (
     GovernedFact,
@@ -227,7 +227,7 @@ def test_applicable_resolved_fact_without_provenance_is_rejected() -> None:
 
 def _live_iva_retirement_ledger() -> dict[str, object]:
     return TypeAdapter(dict[str, object]).validate_python(
-        tomllib.loads(
+        parse_toml(
             (REPO_ROOT / "dev" / "registry" / "analysis" / "facts_iva_retirement.toml").read_text(
                 encoding="utf-8",
             ),

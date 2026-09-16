@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,7 +35,7 @@ def _source_citation_refs(value: object) -> Iterator[str]:
 
 
 def test_modelo_100_boe_form_sources_are_layout_only() -> None:
-    sources = tomllib.loads(_LEGAL_IRPF.read_text(encoding="utf-8"))["sources"]
+    sources = parse_toml(_LEGAL_IRPF.read_text(encoding="utf-8"))["sources"]
 
     for source_ref in _BOE_FORM_SOURCES:
         source = sources[source_ref]
@@ -47,7 +47,7 @@ def test_modelo_100_boe_form_sources_are_layout_only() -> None:
 def test_modelo_100_source_citations_do_not_use_layout_sources() -> None:
     offenders = []
     for path in scan_directory(_MODELO_100_ROOT, pattern="*.toml", recursive=True):
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        data = parse_toml(path.read_text(encoding="utf-8"))
         for source_ref in _source_citation_refs(data):
             if source_ref in _BOE_FORM_SOURCES:
                 offenders.append(f"{path.relative_to(_ROOT).as_posix()} -> {source_ref}")

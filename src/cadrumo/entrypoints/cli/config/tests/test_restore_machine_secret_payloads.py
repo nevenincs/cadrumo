@@ -1,18 +1,17 @@
-"""Canonical machine-secret payloads for the two profile-restore doors."""
+"""Canonical machine-secret payload for the profile-restore door."""
 
 from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
 
-from ..restore_cli import RestorePassphraseSecrets, RestoreRecoverySecrets
+from ..restore_cli import RestorePassphraseSecrets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_restore_exposes_both_strict_payload_models() -> None:
+def test_restore_exposes_exactly_the_passphrase_payload_model() -> None:
     assert tuple(RestorePassphraseSecrets.model_fields) == ("passphrase",)
-    assert tuple(RestoreRecoverySecrets.model_fields) == ("recovery_secret",)
 
 
 def test_passphrase_door_hard_cuts_the_legacy_password_field() -> None:
@@ -24,10 +23,9 @@ def test_passphrase_door_hard_cuts_the_legacy_password_field() -> None:
     assert parsed.passphrase.get_secret_value() == "current-value"
 
 
-def test_recovery_door_accepts_only_the_recovery_secret() -> None:
-    """Artifact presence selects a disjoint payload rather than a union."""
+def test_passphrase_door_refuses_a_recovery_secret() -> None:
+    """A restore proves the passphrase only; recovery is enrolled afterwards by its own verb."""
     with pytest.raises(ValidationError):
-        RestoreRecoverySecrets.model_validate({"passphrase": "wrong-door"})
-
-    parsed = RestoreRecoverySecrets.model_validate({"recovery_secret": "24-word-phrase"})
-    assert parsed.recovery_secret.get_secret_value() == "24-word-phrase"
+        RestorePassphraseSecrets.model_validate({"recovery_code": "AAAAA-AAAAA-AAAAA-AAAAA-AAAAA-AAAAA"})
+    with pytest.raises(ValidationError):
+        RestorePassphraseSecrets.model_validate({"recovery_secret": "retired-door"})

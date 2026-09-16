@@ -22,14 +22,12 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ......application.modelo.registry_authority_capture import PinnedRegistryAuthorityCapture
 from ......application.modelo.work_addressing import ModeloVisibleFilingTarget
 from ......application.modelo.work_lifecycle import create_work_unit
 from ......application.modelo.workspace import resolve_static_inspection_result
 from ......application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
-from ......domain.calculations.registry.tests.published_authority import published_profile_create_context
 from ......domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
@@ -58,7 +56,10 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 @pytest.fixture
 def bucket_and_repository(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepository]]:
     """Yield one real bucket-scoped work-unit repository over an isolated profile."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+    ):
         seed_test_profile_record(
             _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
@@ -66,25 +67,24 @@ def bucket_and_repository(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalog
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
-                context=published_profile_create_context(),
+                context=operation.profile_create_context(),
             ),
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        with bundled_indexed_authority().operation() as operation:
-            create_work_unit(
-                bucket_id=profile.bucket_id,
-                modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                revision_id=_REVISION,
-                ports=WorkLifecyclePorts(
-                    work_unit_repository=repository,
-                    bucket_event_repository=BucketEventHistoryRepository(),
-                ),
-                clock=_T0,
-                operation=operation,
-            )
-            yield profile.bucket_id, repository
+        create_work_unit(
+            bucket_id=profile.bucket_id,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id=_REVISION,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=repository,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
+            clock=_T0,
+            operation=operation,
+        )
+        yield profile.bucket_id, repository
 
 
 def resolve_real_result(bucket_id: str, repository: WorkUnitCatalogueRepository, language: OutputLanguage):
@@ -98,6 +98,6 @@ def resolve_real_result(bucket_id: str, repository: WorkUnitCatalogueRepository,
             ),
             bucket_id=bucket_id,
             catalogue_repository=repository,
-            authority=PinnedRegistryAuthorityCapture(operation),
+            authority=operation,
             output_language=language,
         )

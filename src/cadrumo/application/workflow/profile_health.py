@@ -47,6 +47,7 @@ from ...core.profile_session import ProfileRecordUnavailability, ProfileSessionR
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import active_profile_pointer_repair_verdict, no_action_precondition_verdict
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
+from ..user_profile.completeness import conditional_profile_missing_required, missing_required_field_paths
 from ..user_profile.keys_validation import validate_profile_values
 from ..user_profile.profile_keys import profile_keys
 from ..user_profile.profile_pointer import active_profile_pointer_transaction
@@ -590,8 +591,20 @@ def _health_from_record_resolution(
         )
 
     values = record_to_path_values(record)
+    # Key COUNTS come from the compiled key catalogue, which is what the
+    # progress projection is about. Which required fields are still MISSING is
+    # a different fact with its own authority: the completeness module, the
+    # same one `config profile view` and the overview read. Deriving it from
+    # the key catalogue's gated-question notion instead is what made `status`
+    # and `view` report different missing-field counts for one record.
     validation = validate_profile_values(values, operation=operation)
-    status: ProfileHealthStatusValue = ProfileHealthStatus.READY if validation.valid else ProfileHealthStatus.INCOMPLETE
+    missing_required = (
+        *missing_required_field_paths(operation.profile_schema(), values),
+        *conditional_profile_missing_required(values),
+    )
+    status: ProfileHealthStatusValue = (
+        ProfileHealthStatus.READY if not missing_required else ProfileHealthStatus.INCOMPLETE
+    )
     return _finalise_health(
         ActiveProfileHealth(
             active_profile=active_profile,
@@ -601,7 +614,7 @@ def _health_from_record_resolution(
             profile_record_present=True,
             profile_present_keys=validation.present_keys,
             profile_total_keys=validation.total_keys,
-            missing_required=validation.missing_required,
+            missing_required=missing_required,
         ),
         label=label,
     )

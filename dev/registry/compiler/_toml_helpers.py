@@ -8,6 +8,7 @@ from typing import cast
 def as_toml_table(value: object) -> dict[str, object] | None:
     if not isinstance(value, dict):
         return None
-    if any(not isinstance(key, str) for key in cast("dict[object, object]", value)):
-        return None
+    for key in cast("dict[object, object]", value):
+        if not isinstance(key, str):
+            return None
     return cast("dict[str, object]", value)

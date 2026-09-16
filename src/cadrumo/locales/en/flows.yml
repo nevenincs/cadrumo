@@ -298,6 +298,18 @@ flows:
       together are easier to remember and harder to guess than one short complicated
       word.
     password_label: Password
+    recovery:
+      cancel_button: Cancel
+      confirm_button: I have written it down
+      offer_consequence: 'Without it, a forgotten password means the data cannot be
+        recovered. You can also set it up later with: aeat config profile recovery
+        enable'
+      offer_explanation: A recovery code lets you set a new password if you forget
+        it. It is shown once; write it down and keep it apart from this computer.
+      offer_heading: Set up a recovery code?
+      progress: Setting up recovery
+      setup_button: Set up recovery
+      skip_button: Skip for now
     refusal:
       confirmation_mismatch: The two passwords do not match.
       username_required: Enter a name for this profile.
@@ -309,9 +321,10 @@ flows:
     title: Create your profile
     username_hint: How this profile appears in lists. You can change it later.
     username_label: Profile name
-    why_password: 'Your tax data stays on this computer and is never sent anywhere.
-      The password encrypts it on disk, so it cannot be read without you. It cannot
-      be reset: if you lose it, the data is unrecoverable.'
+    why_password: Your tax data stays on this computer and is never sent anywhere.
+      The password encrypts it on disk, so it cannot be read without you. If you lose
+      it, the data is unrecoverable unless you set up a recovery code, which you will
+      be offered next.
   review:
     action_edit: Edit an answer
     action_prompt: What do you want to do?

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Final
 
 from cadrumo.application.operator_surface.command_ports import (
     CommandNodeKind,
-    MachineSecretPresence,
+    ProfileAuthenticationPosture,
 )
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
@@ -24,7 +24,6 @@ from ..command_spec import (
     LazyBinding,
     LiteralValue,
     MachineSecretChannelKind,
-    MachineSecretConditionSpec,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
@@ -72,6 +71,7 @@ _ENTITY_TYPE_CHOICES: tuple[str, ...] = ()
 _LEGAL_ENTITY_FORM_CHOICES: tuple[str, ...] = ()
 _IRPF_ESTIMATION_REGIME_CHOICES: tuple[str, ...] = ()
 _IRPF_SPECIAL_REGIME_CHOICES: tuple[str, ...] = ()
+_FISCAL_RESIDENCY_CHOICES: tuple[str, ...] = ()
 
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
@@ -92,6 +92,7 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_profile_delete": "._profile_delete",
     "_profile_inspect": "._profile_inspect",
     "_profile_repeatable_row": "._profile_repeatable_row",
+    "recovery": ".recovery",
     "restore_cli": ".restore_cli",
 }
 
@@ -182,6 +183,7 @@ def _leaf(
     *,
     recovery_handoff: RecoveryHandoffSpec | None = None,
     profile_target_parameter: str | None = None,
+    profile_authentication: ProfileAuthenticationPosture = ProfileAuthenticationPosture.NOT_APPLICABLE,
 ) -> CommandSpec:
     return CommandSpec(
         key,
@@ -202,6 +204,7 @@ def _leaf(
         machine_secret=machine_secret,
         recovery_handoff=recovery_handoff,
         profile_target_parameter=profile_target_parameter,
+        profile_authentication=profile_authentication,
     )
 
 
@@ -343,10 +346,7 @@ _WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
     "legal-entity-form": ValueContract(DeferredTarget("builtins", "str"), choices=_LEGAL_ENTITY_FORM_CHOICES),
     "irpf-estimation-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_ESTIMATION_REGIME_CHOICES),
     "irpf-special-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_SPECIAL_REGIME_CHOICES),
-    "fiscal-residency": ValueContract(
-        DeferredTarget("....domain.contribuyente.renta_codes", "FiscalResidency", __package__),
-        choices=(),
-    ),
+    "fiscal-residency": ValueContract(DeferredTarget("builtins", "str"), choices=_FISCAL_RESIDENCY_CHOICES),
 }
 
 
@@ -402,18 +402,33 @@ _WIZARD_CREATE_PARAMETERS = (
         "cli.config.custody.secrets_fd_help",
         machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
     ),
+)
+_RECOVERY_SECRET_OPTIONS = (
     _option(
-        "recovery_handoff_fd",
-        ("--recovery-handoff-fd",),
-        WHOLE_NUMBER_VALUE,
-        "cli.config.profile.create_recovery_handoff_fd_help",
+        "secrets_stdin",
+        ("--secrets-stdin",),
+        FLAG_VALUE,
+        "cli.config.custody.secrets_stdin_help",
+        default=False,
+        flag=True,
+        machine_secret_channel=MachineSecretChannelKind.STDIN,
     ),
     _option(
-        "recovery_verification_fd",
-        ("--recovery-verification-fd",),
+        "secrets_fd",
+        ("--secrets-fd",),
         WHOLE_NUMBER_VALUE,
-        "cli.config.profile.create_recovery_verification_fd_help",
+        "cli.config.custody.secrets_fd_help",
+        machine_secret_channel=MachineSecretChannelKind.FILE_DESCRIPTOR,
     ),
+)
+_RECOVERY_PASSPHRASE_SECRET = MachineSecretSpec(
+    (
+        MachineSecretVariantSpec(
+            "passphrase",
+            (MachineSecretFieldSpec("passphrase"),),
+            DeferredTarget(".recovery", "RecoveryEnableSecrets", __package__),
+        ),
+    )
 )
 
 PROFILE_COMMAND_SPECS = (
@@ -476,7 +491,7 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileArchiveExportResult",
         BOOTSTRAP_WRITE,
         (
-            _argument("name", TEXT_VALUE, "cli.config.profile.archive.export_name_help"),
+            _argument("name", TEXT_VALUE, "cli.config.profile.archive.export_name_help", required=False),
             _option(
                 "output",
                 ("--output",),
@@ -667,13 +682,42 @@ PROFILE_COMMAND_SPECS = (
                 ),
             )
         ),
+    ),
+    _group("config_profile_recovery", "config_profile", "recovery", "cli.config.profile.recovery.help"),
+    _leaf(
+        "config_profile_recovery_enable",
+        "config_profile_recovery",
+        "enable",
+        "cli.config.profile.recovery.enable_help",
+        "recovery",
+        "profile_recovery_enable",
+        _PAYLOADS,
+        "ConfigProfileRecoveryResult",
+        ENCRYPTED_DESTRUCTIVE,
+        (
+            *_RECOVERY_SECRET_OPTIONS,
+            _option(
+                "recovery_handoff_fd",
+                ("--recovery-handoff-fd",),
+                WHOLE_NUMBER_VALUE,
+                "cli.config.profile.recovery.handoff_fd_help",
+            ),
+            _option(
+                "recovery_verification_fd",
+                ("--recovery-verification-fd",),
+                WHOLE_NUMBER_VALUE,
+                "cli.config.profile.recovery.verification_fd_help",
+            ),
+            _LANGUAGE,
+        ),
+        _RECOVERY_PASSPHRASE_SECRET,
         recovery_handoff=RecoveryHandoffSpec(
             handoff_parameter="recovery_handoff_fd",
             handoff_direction="write",
             verification_parameter="recovery_verification_fd",
             verification_direction="read",
             required_together=True,
-            json_fields=("recovery_mnemonic",),
+            json_fields=("recovery_code",),
             maximum_bytes=8192,
             strict_utf8_object=True,
             duplicate_extra_missing_fields_refused=True,
@@ -683,6 +727,33 @@ PROFILE_COMMAND_SPECS = (
             collides_with_parameters=("secrets_fd",),
             windows_handle_bootstrap="cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
         ),
+        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
+    ),
+    _leaf(
+        "config_profile_recovery_disable",
+        "config_profile_recovery",
+        "disable",
+        "cli.config.profile.recovery.disable_help",
+        "recovery",
+        "profile_recovery_disable",
+        _PAYLOADS,
+        "ConfigProfileRecoveryResult",
+        ENCRYPTED_DESTRUCTIVE,
+        (*_RECOVERY_SECRET_OPTIONS, _LANGUAGE),
+        _RECOVERY_PASSPHRASE_SECRET,
+        profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
+    ),
+    _leaf(
+        "config_profile_recovery_status",
+        "config_profile_recovery",
+        "status",
+        "cli.config.profile.recovery.status_help",
+        "recovery",
+        "profile_recovery_status",
+        _PAYLOADS,
+        "ConfigProfileRecoveryStatusResult",
+        PROFILE_READ,
+        (_LANGUAGE,),
     ),
     _leaf(
         "config_profile_delete",
@@ -805,16 +876,6 @@ PROFILE_COMMAND_SPECS = (
                 transport_role=TransportRole.PRIMARY,
             ),
             _option(
-                "artifact",
-                ("--artifact",),
-                PATH_VALUE,
-                "cli.config.profile.archive.import_artifact_help",
-                constraint=ParameterConstraint(exists=True, dir_okay=False),
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.AUXILIARY,
-            ),
-            _option(
                 "secrets_stdin",
                 ("--secrets-stdin",),
                 FLAG_VALUE,
@@ -838,13 +899,6 @@ PROFILE_COMMAND_SPECS = (
                     "passphrase",
                     (MachineSecretFieldSpec("passphrase"),),
                     DeferredTarget(".restore_cli", "RestorePassphraseSecrets", __package__),
-                    MachineSecretConditionSpec("artifact", MachineSecretPresence.ABSENT),
-                ),
-                MachineSecretVariantSpec(
-                    "recovery",
-                    (MachineSecretFieldSpec("recovery_secret"),),
-                    DeferredTarget(".restore_cli", "RestoreRecoverySecrets", __package__),
-                    MachineSecretConditionSpec("artifact", MachineSecretPresence.PRESENT),
                 ),
             )
         ),

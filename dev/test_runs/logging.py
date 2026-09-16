@@ -14,6 +14,9 @@ from uuid import uuid4
 import pytest
 
 _STATE_KEY = pytest.StashKey["RunLog"]()
+_SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
+_COLLECTION_SUMMARY_KEY = pytest.StashKey[str]()
+_collection_errors = 0
 _ACTIVE: RunLog | None = None
 
 
@@ -147,6 +150,22 @@ def _announce(config: pytest.Config, message: str) -> None:
         print(message, flush=True)
 
 
+def _redirect_collection_output(config: pytest.Config, run_log: RunLog) -> bool:
+    """Send the collect-only listing to the persistent run transcript.
+
+    The listing is the bulk of a collect-only run and belongs with the other
+    evidence on disk; the terminal keeps the log location and a one-line
+    summary so a reader with no context still knows what happened and where
+    to look.
+    """
+    if not config.option.collectonly:
+        return False
+    terminal = config.pluginmanager.getplugin("terminalreporter")
+    if terminal is not None:
+        terminal._tw._file = run_log.stream
+    return True
+
+
 def configure(config: pytest.Config) -> None:
     """Create and announce the controller's unique run directory."""
     root = Path(os.environ["CADRUMO_TEST_RUN_ROOT"]).resolve()
@@ -159,7 +178,13 @@ def configure(config: pytest.Config) -> None:
         run_log = RunLog(Path(config.rootpath))
         _ACTIVE = run_log
     config.stash[_STATE_KEY] = run_log
-    _announce(config, f"test run log: {run_log.path} (cache={root / 'cache'}, scratch={root / 'scratch'})")
+    silent_collection = _redirect_collection_output(config, run_log)
+    config.stash[_SILENT_COLLECTION_KEY] = silent_collection
+    notice = f"test run log: {run_log.path} (cache={root / 'cache'}, scratch={root / 'scratch'})"
+    if silent_collection:
+        print(notice, flush=True)
+    else:
+        _announce(config, notice)
 
 
 def log_start(nodeid: str) -> None:
@@ -186,8 +211,16 @@ def log_collection_report(report: pytest.CollectReport) -> None:
     """Persist collection failures before test execution can begin."""
     if not report.failed:
         return
+    global _collection_errors
+    _collection_errors += 1
     if _ACTIVE is not None:
         _ACTIVE.write(f"COLLECTION FAILED {report.nodeid}\n{report.longrepr}")
+
+
+def log_internal_error(excrepr: object) -> None:
+    """Persist pytest's own traceback when execution aborts with exit code 3."""
+    if _ACTIVE is not None:
+        _ACTIVE.write(f"INTERNALERROR\n{excrepr}")
 
 
 def finish(config: pytest.Config, exitstatus: int | pytest.ExitCode) -> None:
@@ -195,6 +228,14 @@ def finish(config: pytest.Config, exitstatus: int | pytest.ExitCode) -> None:
     global _ACTIVE
     run_log = config.stash.get(_STATE_KEY, None)
     if run_log is not None:
+        if config.stash.get(_SILENT_COLLECTION_KEY, False):
+            run_log.exit_status = int(exitstatus)
+            session = config.pluginmanager.get_plugin("session")
+            collected = getattr(session, "testscollected", 0)
+            config.stash[_COLLECTION_SUMMARY_KEY] = (
+                f"collected {collected} test(s), {_collection_errors} collection error(s)"
+            )
+            return
         run_log.finish(exitstatus)
         _ACTIVE = None
 
@@ -216,6 +257,18 @@ def restate(config: pytest.Config) -> None:
     """
     run_log = config.stash.get(_STATE_KEY, None)
     if run_log is None:
+        return
+    if config.stash.get(_SILENT_COLLECTION_KEY, False):
+        if run_log.exit_status is None:
+            raise RuntimeError("collect-only run reached unconfigure without an exit status")
+        run_log.finish(run_log.exit_status)
+        global _ACTIVE
+        _ACTIVE = None
+        summary = config.stash.get(_COLLECTION_SUMMARY_KEY, "collection summary unavailable")
+        print(
+            f"collect-only: {summary}; listing in {run_log.path} (exit={run_log.exit_status})",
+            flush=True,
+        )
         return
     print(
         f"test run log: {run_log.path} (exit={run_log.exit_status}, metadata={run_log.metadata_path})",

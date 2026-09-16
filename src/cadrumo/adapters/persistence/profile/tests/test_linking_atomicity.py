@@ -6,7 +6,7 @@ one-sided -- the invoice citing a transaction that does not cite it back, or
 the reverse -- which is precisely what
 :func:`~cadrumo.domain.invoices.verify_link_consistency` reports. These tests
 pin the write to a single unit of work using real adapters throughout: a real
-:class:`~cadrumo.adapters.persistence.storage.tests.ephemeral_master_key.EphemeralMasterKeyProvider`, a real
+:class:`~cadrumo.adapters.persistence.storage.tests.ephemeral_bucket_session.EphemeralBucketSession`, a real
 SQLite-backed
 :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`, and the
 production serializers. Nothing here is stubbed; the failure injected in

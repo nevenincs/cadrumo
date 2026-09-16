@@ -9,7 +9,8 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
 
 from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.aggregation import BindingSourceKind
@@ -85,7 +86,7 @@ def _empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
 
 
 def _prior_m303_snapshot_ref():
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 class _InMemoryTransactionCatalogueRepository:
@@ -223,13 +224,12 @@ def _ledger_iva_resolver(
 
 @cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_definition = compiled_bundled_authority().modelo(modelo)
-    return modelo_definition.revisions[revision_id]
+    return published_revision(modelo, revision_id)
 
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    return published_snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _raw_transaction(
@@ -275,7 +275,7 @@ def _iva_transaction(
         "business_classification": BusinessClassification.BUSINESS,
         "source_jurisdiction": "ES",
         "group_label": None,
-        "category_id": "test_iva_operation",
+        "category_id": "material_oficina",
         "taxable_base": taxable_base,
         "iva_rate": Decimal("0.21"),
         "iva_amount": iva_amount,

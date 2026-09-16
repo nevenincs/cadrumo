@@ -50,7 +50,7 @@ from .source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,
 )
-from .validate_evidence import EvidenceValidator
+from .validate_evidence import EvidenceValidator, flush_corpus_text_cache
 from .validate_layout_authority_content import validate_layout_authority_content
 from .validate_official_source_guidance_content import validate_suppression_notice_content
 from .validate_record_design_epochs import (
@@ -71,6 +71,7 @@ from .validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
+from .validation_verdict_cache import ValidationVerdictScope, is_validated, record_validated
 
 if TYPE_CHECKING:
     from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
@@ -94,6 +95,7 @@ class RegistryValidator:
         justificante_corpus_root: Path | None = None,
         user_profile_schema: ProfileSchemaDefinition | None = None,
         source_evidence_fingerprint: SourceEvidenceFingerprint | None = None,
+        verdicts: ValidationVerdictScope | None = None,
     ) -> None:
         """Bind the catalogues and optional evidence roots the checks read.
 
@@ -103,7 +105,9 @@ class RegistryValidator:
             justificante_corpus_root: Specimen corpus root for the declaracion PDF gate.
             user_profile_schema: Profile schema used to close profile-sourced bindings.
             source_evidence_fingerprint: Precomputed evidence fingerprint for memoization.
+            verdicts: Recorded clean per-modelo validations this run may reuse and extend.
         """
+        self._verdicts = verdicts
         self._legal = catalogues.legal
         self._sources = catalogues.sources
         self._facts = catalogues.facts
@@ -371,7 +375,13 @@ class RegistryValidator:
         """Run catalogue and per-model checks in their established order."""
         failures: list[str] = list(self._validate_catalogues())
         for modelo in modelo_tuple:
-            failures.extend(self._validate_modelo(modelo, validate_catalogues=False))
+            key = None if self._verdicts is None else self._verdicts.modelo_key(str(modelo.id))
+            if key is not None and is_validated(key):
+                continue
+            modelo_failures = self._validate_modelo(modelo, validate_catalogues=False)
+            failures.extend(modelo_failures)
+            if key is not None and not modelo_failures:
+                record_validated(key, subject=f"modelo {modelo.id}")
         return failures
 
     def _cache_registry_failures(
@@ -416,8 +426,13 @@ class RegistryValidator:
         if cached_failures is not None:
             return cached_failures
 
-        failures = self._validate_registry_modelos(modelo_tuple)
-        failures.extend(validate_registry_scope(modelo_tuple))
+        try:
+            failures = self._validate_registry_modelos(modelo_tuple)
+            failures.extend(validate_registry_scope(modelo_tuple))
+        finally:
+            # Source-text extraction is the validation's dominant cold cost;
+            # persisting it here is what lets the next process skip it.
+            flush_corpus_text_cache()
         failure_tuple = tuple(failures)
         self._cache_registry_failures(cache_key, modelo_tuple, failure_tuple)
         return failure_tuple

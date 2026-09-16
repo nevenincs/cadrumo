@@ -187,13 +187,15 @@ def _emit_projected_profile_status(
     """Validate and render the final configured-profile projection."""
     from pydantic import ValidationError
 
+    from ....application.wizard.catalogue import build_setup_flow
     from ....application.wizard.persistence import project_answers
     from ....core.logging import get_logger
-    from ....core.wizard_catalogue import get_setup_flow
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ..config_payloads import ConfigStatusResult
 
     try:
-        projection = project_answers(get_setup_flow(), values)
+        with bundled_indexed_authority().operation() as operation:
+            projection = project_answers(build_setup_flow(operation), values)
     except ValidationError:
         get_logger(__name__).debug("config profile status projection validation failed; reporting profile incomplete")
         result = ConfigStatusResult(

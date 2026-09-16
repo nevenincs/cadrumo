@@ -224,7 +224,11 @@ def observe_installed_bootstrap(*, allow_credential_screens: bool = True) -> Ins
     from ...core.credentials import assess_profile_password
     from ...domain.calculations.registry.authority import bundled_indexed_authority
     from .secret.credentials import run_credential_screen
-    from .secret.registration import RegistrationScreen, build_profile_registration_attempt
+    from .secret.registration import (
+        RegistrationScreen,
+        build_profile_recovery_enrollment_attempt,
+        build_profile_registration_attempt,
+    )
 
     registered: list[bool] = [False]
 
@@ -240,6 +244,7 @@ def observe_installed_bootstrap(*, allow_credential_screens: bool = True) -> Ins
             RegistrationScreen(
                 assess=assess_profile_password,
                 register=build_profile_registration_attempt,
+                enroll_recovery=build_profile_recovery_enrollment_attempt,
             )
         )
         registered[0] = outcome is not None

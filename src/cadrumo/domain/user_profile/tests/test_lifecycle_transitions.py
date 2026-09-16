@@ -5,19 +5,18 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.published_authority import published_profile_create_context
+from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ..errors import UserProfileValidationError
 from ..values import ProfileSetupState, UserProfileRecord, UserProfileSnapshot, create_user_profile_record
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
-_CREATE_CONTEXT = published_profile_create_context()
 
 
 def _incomplete_record() -> UserProfileRecord:
     return create_user_profile_record(
-        context=_CREATE_CONTEXT,
+        context=leased_profile_create_context(),
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.INCOMPLETE,
     )
@@ -38,17 +37,17 @@ def test_a_record_must_declare_its_setup_state() -> None:
     with pytest.raises(ValidationError, match="setup_state"):
         UserProfileRecord.model_validate(
             {
-                "schema_id": _CREATE_CONTEXT.schema.id,
-                "schema_version": _CREATE_CONTEXT.schema.version,
+                "schema_id": leased_profile_create_context().schema.id,
+                "schema_version": leased_profile_create_context().schema.version,
                 "profile_id": _PROFILE_ID,
             },
-            context=_CREATE_CONTEXT,
+            context=leased_profile_create_context(),
         )
 
 
 def test_a_complete_record_states_it() -> None:
     record = create_user_profile_record(
-        context=_CREATE_CONTEXT,
+        context=leased_profile_create_context(),
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
     )
@@ -59,15 +58,15 @@ def test_legacy_lifecycle_fields_are_rejected() -> None:
     with pytest.raises(ValidationError, match="extra_forbidden"):
         UserProfileRecord.model_validate(
             {
-                "schema_id": _CREATE_CONTEXT.schema.id,
-                "schema_version": _CREATE_CONTEXT.schema.version,
+                "schema_id": leased_profile_create_context().schema.id,
+                "schema_version": leased_profile_create_context().schema.version,
                 "profile_id": _PROFILE_ID,
                 "status": "active",
             },
-            context=_CREATE_CONTEXT,
+            context=leased_profile_create_context(),
         )
 
 
 def test_incomplete_record_cannot_be_snapshotted() -> None:
     with pytest.raises(UserProfileValidationError, match="cannot snapshot an incomplete profile record"):
-        UserProfileSnapshot.from_profile(_incomplete_record(), context=_CREATE_CONTEXT)
+        UserProfileSnapshot.from_profile(_incomplete_record(), context=leased_profile_create_context())

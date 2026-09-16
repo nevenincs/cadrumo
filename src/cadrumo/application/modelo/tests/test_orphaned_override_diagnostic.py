@@ -18,8 +18,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..calculation_actions import _orphaned_override_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -31,7 +31,7 @@ carries after the cut, and the one this advisory exists for."""
 
 def _m303_revision():
     """Return the live Modelo 303 revision, not a stand-in for one."""
-    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
+    return published_snapshot("303", filing_year=2026, period="1T").revision
 
 
 def test_retired_relation_key_surfaces_a_structured_advisory() -> None:

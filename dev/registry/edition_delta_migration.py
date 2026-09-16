@@ -130,7 +130,6 @@ import hashlib
 import json
 import re
 import sys
-import tomllib
 from collections import Counter
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import asdict, dataclass
@@ -141,6 +140,7 @@ from typing import Final, cast
 import tomlkit
 from pydantic import ValidationError
 
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.keyed_families import (
@@ -1392,7 +1392,7 @@ def _split_blocks(text: str, header: re.Pattern[str] = _ROW_HEADER) -> tuple[str
 
 
 def _block_row(block: str, section: str = _CASILLAS) -> _Row:
-    revisions = tomllib.loads(block).get("revisions")
+    revisions = parse_toml(block).get("revisions")
     if not isinstance(revisions, dict) or len(revisions) != 1:
         raise MigrationRefusedError(f"{section} block does not declare exactly one revision:\n{block}")
     (revision,) = revisions.values()
@@ -1411,7 +1411,7 @@ def _read_fragments(edition_dir: Path) -> tuple[_Fragment, ...]:
 
 
 def _manifest_table(text: str, revision_id: str) -> _Row:
-    revisions = tomllib.loads(text).get("revisions")
+    revisions = parse_toml(text).get("revisions")
     if not isinstance(revisions, dict) or revision_id not in revisions:
         raise MigrationRefusedError(f"revision.toml does not declare [revisions.{revision_id!r}]")
     return _as_row(revisions[revision_id])
@@ -2862,7 +2862,7 @@ def _comparable(value: object, *, revision_id: str, path: str) -> object:
     differs between the two reads the proof compares. So the permitted set is
     closed, and anything outside it is refused by key path and type.
 
-    The set is what the corpus holds: ``tomllib`` yields ``str``, ``int``,
+    The set is what the corpus holds: ``rtoml`` yields ``str``, ``int``,
     ``float``, ``bool`` and the three ``datetime`` types, and a census of every
     modelo TOML file finds ``str``, ``int``, ``bool``, ``date`` and ``float``
     only. ``None`` reaches the payload from ``label_origins``. A ``datetime``

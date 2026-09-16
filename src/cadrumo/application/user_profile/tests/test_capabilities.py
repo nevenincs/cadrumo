@@ -18,12 +18,12 @@ from ....core.capabilities import ServiceCapability
 from ....core.config import load_settings
 from ....core.parsing.utils import parse_bool
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..capabilities import CapabilitySource, _parse_bool_fact, resolve_capability
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _NOW = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
 

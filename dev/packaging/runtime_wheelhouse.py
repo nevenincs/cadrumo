@@ -16,7 +16,6 @@ import os
 import re
 import shutil
 import tempfile
-import tomllib
 import uuid
 import zipfile
 from collections.abc import Sequence
@@ -33,6 +32,7 @@ from packaging.tags import Tag
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import parse_toml
 
 from .hashing import sha256_path
 from .uv_constraints import export_runtime_constraints
@@ -321,7 +321,7 @@ def _plan_runtime_wheelhouse(repo_root: Path, python_version: str) -> RuntimeWhe
     """Resolve one runtime's exact lock wheels across every supported platform."""
     root = repo_root.resolve(strict=True)
     python_minor = _canonical_python_minor(python_version)
-    lock = tomllib.loads((root / "uv.lock").read_text(encoding=_UTF_8))
+    lock = parse_toml((root / "uv.lock").read_text(encoding=_UTF_8))
     by_name: dict[str, list[dict[str, Any]]] = {}
     for package in lock.get("package", []):
         if isinstance(package, dict) and isinstance(package.get("name"), str):

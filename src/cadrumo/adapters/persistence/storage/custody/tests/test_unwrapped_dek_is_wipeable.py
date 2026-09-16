@@ -41,7 +41,7 @@ from ..zeroise import zeroise
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_KEK = bytes(range(32))
+_SESSION_KEY = bytes(range(32))
 _DEK = bytes(range(100, 132))
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 _SESSION_ID = UUID("22222222-2222-4222-8222-222222222222")
@@ -69,7 +69,7 @@ def test_session_receipt_unwrap_returns_a_buffer_that_wipes() -> None:
     and unreachable. Returning the buffer directly is what removes that copy.
     """
     record = wrap_profile_session_dek(
-        session_key=_KEK,
+        session_key=_SESSION_KEY,
         dek=_DEK,
         profile_id=_PROFILE_ID,
         session_id=_SESSION_ID,
@@ -80,7 +80,7 @@ def test_session_receipt_unwrap_returns_a_buffer_that_wipes() -> None:
         absolute_deadline=_ABSOLUTE_DEADLINE,
     )
 
-    recovered = unwrap_profile_session_dek(session_key=_KEK, record=record)
+    recovered = unwrap_profile_session_dek(session_key=_SESSION_KEY, record=record)
 
     assert isinstance(recovered, bytearray)
     assert recovered == _DEK

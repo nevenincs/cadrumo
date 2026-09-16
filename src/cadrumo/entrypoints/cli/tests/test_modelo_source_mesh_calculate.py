@@ -168,7 +168,7 @@ def _transaction(
         "business_classification": BusinessClassification.BUSINESS,
         "source_jurisdiction": "ES",
         "group_label": None,
-        "category_id": "test_iva_operation",
+        "category_id": "material_oficina",
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,
         "iva_amount": iva_amount,

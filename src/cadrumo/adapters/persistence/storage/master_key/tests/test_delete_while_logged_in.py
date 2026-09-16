@@ -72,7 +72,6 @@ def _register_and_sign_in(root: Path) -> UUID:
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=_LABEL,
         passphrase=_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,

@@ -40,7 +40,7 @@ from .m303_orden_constants import (
     validate_generated_source_counts as _validate_generated_source_counts,
 )
 from .schema_base import RegistryModel, RegistrySourceKind
-from .schema_references import LegalReference, SourceReference
+from .schema_references import LegalReference, SourceReference, TemporalSupportEnvelope
 
 _M303_2022_RECORD_DESIGN_SOURCE_REF = "aeat-dr-303-2022"
 _M303_2022_RECORD_DESIGN_SOURCE_DIGEST = "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
@@ -89,7 +89,7 @@ class M303AnnualOrdenGeneratedSource(RegistryModel):
     seasonal_index_day_bands: tuple[tuple[int, int], ...] = Field(min_length=3, max_length=3)
     seasonal_index_coefficients: tuple[Decimal, ...] = Field(min_length=3, max_length=3)
     difficult_justification_pct: Percentage
-    lorca_2022_reduction_pct: Decimal | None = None
+    lorca_reduction_pct: Decimal | None = None
 
     @model_validator(mode="after")
     def _is_the_exact_supported_annual_quota_shape(self) -> M303AnnualOrdenGeneratedSource:
@@ -140,7 +140,7 @@ class M303AnnualOrdenProjection(RegistryModel):
     non_agricultural_ingresos_a_cuenta: tuple[PorcentajeIngresoCuentaIaeOrdenAnual, ...] = Field(min_length=1)
     seasonal_indexes: tuple[IndiceTemporadaOrdenAnual, ...] = Field(min_length=1)
     difficult_justification: DificilJustificacionOrdenAnual
-    lorca_2022_reduction: ReduccionLorcaOrdenAnual | None
+    lorca_reduction: ReduccionLorcaOrdenAnual | None
 
     @model_validator(mode="after")
     def _rows_are_complete_and_year_scoped(self) -> M303AnnualOrdenProjection:
@@ -200,7 +200,7 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
         ),
         "annual Orden 2022 agricultural refusal must retain its exact AEAT design source",
     )
-    reduction = projection.lorca_2022_reduction
+    reduction = projection.lorca_reduction
     if projection.ejercicio == 2022:
         _validate_2022_annual_orden_coordinate(
             ejercicio=projection.ejercicio,
@@ -211,13 +211,12 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
         )
         if reduction is None:
             raise RegistryValidationError("annual Orden 2022 projection lacks its Lorca reduction authority")
+    if reduction is not None:
         validate_percentage_shape(reduction.percentage, scope="projection", subject="Lorca reduction")
         _require_invariant(
             reduction.source_refs == (projection.source_ref,),
             "annual Orden Lorca reduction must retain its exact source reference",
         )
-    elif reduction is not None:
-        raise RegistryValidationError("only the 2022 annual Orden projection may carry the Lorca reduction")
 
 
 class M303AnnualOrdenAuthority(RegistryModel):
@@ -267,7 +266,7 @@ class M303AnnualOrdenSnapshot(RegistryModel):
     non_agricultural_ingresos_a_cuenta: tuple[PorcentajeIngresoCuentaIaeOrdenAnual, ...] = Field(min_length=1)
     seasonal_indexes: tuple[IndiceTemporadaOrdenAnual, ...] = Field(min_length=1)
     difficult_justification: DificilJustificacionOrdenAnual
-    lorca_2022_reduction: ReduccionLorcaOrdenAnual | None
+    lorca_reduction: ReduccionLorcaOrdenAnual | None
 
     @model_validator(mode="after")
     def _references_match_the_activity_rows(self) -> M303AnnualOrdenSnapshot:
@@ -310,19 +309,17 @@ def _validate_snapshot_activity_coordinates(snapshot: M303AnnualOrdenSnapshot) -
 
 
 def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> None:
-    reduction = snapshot.lorca_2022_reduction
+    reduction = snapshot.lorca_reduction
     if snapshot.ejercicio == 2022:
         _require_invariant(
             reduction is not None and reduction.percentage == Decimal("20"),
             "annual Orden 2022 snapshot lacks its Lorca reduction authority",
         )
-        if reduction is not None:
-            _require_invariant(
-                reduction.source_refs == (snapshot.source_ref,),
-                "annual Orden snapshot Lorca reduction must retain its exact source reference",
-            )
-    elif reduction is not None:
-        raise RegistryValidationError("only the 2022 annual Orden snapshot may carry the Lorca reduction")
+    if reduction is not None:
+        _require_invariant(
+            reduction.ejercicio == snapshot.ejercicio and reduction.source_refs == (snapshot.source_ref,),
+            "annual Orden snapshot Lorca reduction must retain its exact year and source reference",
+        )
     _require_invariant(
         snapshot.agricultural_authority.annual_orden_source_ref == snapshot.source_ref,
         "annual Orden snapshot agricultural refusal must retain its exact source reference",
@@ -348,6 +345,7 @@ class M303RegimenSimplificadoSnapshot(RegistryModel):
     """One resolved M303 annual-Orden, scope, and record-design coordinate."""
 
     filing_year: FilingYear
+    support: TemporalSupportEnvelope | None = None
     registry_revision_id: RevisionId
     scope_decision: M303RegimenSimplificadoScopeDecision
     orden: M303AnnualOrdenSnapshot
@@ -366,7 +364,13 @@ def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoS
         "M303 regimen simplificado snapshot requires an epoch-pinned record design",
     )
     _require_invariant(
-        snapshot.filing_year == snapshot.orden.ejercicio
+        (
+            snapshot.filing_year == snapshot.orden.ejercicio
+            or (
+                snapshot.support is not None
+                and snapshot.support.projection_coordinate(snapshot.filing_year) == snapshot.orden.ejercicio
+            )
+        )
         and snapshot.registry_revision_id == snapshot.orden.registry_revision_id,
         "M303 regimen simplificado snapshot must retain its filing year and revision coordinate",
     )

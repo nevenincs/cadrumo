@@ -44,7 +44,7 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 
 __all__ = ["profile_storage_root_fixture"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 # The minimum schema-valid fact set the user-profile schema accepts.
 _VALID_FACTS: Mapping[str, str] = {
@@ -73,7 +73,6 @@ def _register(label: str, *, facts: Mapping[str, str]) -> None:
     """Run the real create door for ``label`` against ``facts``."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_CREDENTIAL_INPUT,
         facts=tuple(UserProfileFact(path=path, value=value) for path, value in facts.items()),

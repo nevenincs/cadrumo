@@ -16,7 +16,7 @@ from ....domain.iva.regimen_simplificado_rows import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.modelos.calculation_revision_m303_evidence import (
-    M303DANA2024EligibilityEvidence,
+    M303DANAEligibilityEvidence,
     M303Exonerado390FilingEvidence,
 )
 from ....domain.modelos.calculation_revision_m303_handoff import (
@@ -38,7 +38,7 @@ def regimen_simplificado_filing_evidence(
     scope_decision: M303RegimenSimplificadoScopeDecision,
     rows: RegimenSimplificadoFilingRows,
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
-    dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
+    dana_eligibility: M303DANAEligibilityEvidence | None,
     operation: PinnedAuthorityOperation,
 ) -> M303RegimenSimplificadoFilingEvidence:
     """Build real calculation-bearing simplified-regime evidence for a test filing."""
@@ -46,13 +46,13 @@ def regimen_simplificado_filing_evidence(
         scope_decision=scope_decision,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=dana_2024_eligibility,
+        dana_eligibility=dana_eligibility,
         calculation_result=calculate_m303_regimen_simplificado_result(
             period=period,
             scope_decision=scope_decision,
             rows=rows,
             regimen_snapshot=regimen_snapshot,
-            dana_2024_eligibility=dana_2024_eligibility,
+            dana_eligibility=dana_eligibility,
             operation=operation,
         ),
     )
@@ -92,7 +92,7 @@ def general_m303_filing_evidence(
                     registry_snapshot=snapshot,
                     scope_decision=scope,
                 ),
-                dana_2024_eligibility=None,
+                dana_eligibility=None,
                 operation=operation,
             ),
         ),
@@ -129,7 +129,7 @@ def general_m303_filing_evidence_from_regimen_snapshot(
                 scope_decision=scope,
                 rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
                 regimen_snapshot=regimen_snapshot,
-                dana_2024_eligibility=None,
+                dana_eligibility=None,
                 operation=operation,
             ),
         ),

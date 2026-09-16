@@ -30,10 +30,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..formula_runtime_ops import apply_rounding
 from ..schema_rounding import RegistryRoundingCode
+from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _integer_ceiling_targets() -> list[tuple[str, str, str, object, object]]:
     """Return (modelo, revision, formula id, sign, min_value) for every ceiling-rounded formula."""
     rows: list[tuple[str, str, str, object, object]] = []
-    for modelo in compiled_bundled_authority().modelos:
+    for modelo in bundled_registry_tree()[0]:
         for revision_id, revision in modelo.revisions.items():
             casillas = {str(casilla.id): casilla for casilla in revision.casillas}
             for formula in revision.formulas or ():

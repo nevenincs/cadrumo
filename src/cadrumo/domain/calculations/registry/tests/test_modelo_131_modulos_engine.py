@@ -58,7 +58,7 @@ from ._modelo_131_modulos_engine_support import (
     _expected_modulos_generales,
     _run_modulos_engine,
 )
-from ._published_authority import artifact_snapshot
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -426,7 +426,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
     """The pequeña-dimensión-ignorado and temporada/inicio-conflicto advisory-support flags."""
 
     def test_pequena_dimension_ignorado_flag_fires_on_especial_epigrafe(self) -> None:
-        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -441,7 +441,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("1")
 
     def test_pequena_dimension_ignorado_flag_stays_zero_on_ordinary_epigrafe(self) -> None:
-        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -455,7 +455,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
     def test_pequena_dimension_ignorado_flag_stays_zero_when_not_declared(self) -> None:
-        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -466,7 +466,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
     def test_temporada_inicio_conflicto_flag_fires_when_both_declared(self) -> None:
-        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -481,7 +481,7 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-temporada-inicio-actividad-conflicto-flag"] == Decimal("1")
 
     def test_temporada_inicio_conflicto_flag_stays_zero_when_only_one_declared(self) -> None:
-        snapshot = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,

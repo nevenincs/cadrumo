@@ -30,7 +30,7 @@ def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_
     )
     emit_envelope(
         ctx,
-        command="config.profile.show",
+        command="config.profile.view",
         result=result,
         lines=(
             "readiness\tmissing_profile_record",
@@ -74,7 +74,7 @@ def _emit_profile_record_unreadable(
     )
     emit_envelope(
         ctx,
-        command="config.profile.show",
+        command="config.profile.view",
         result=result,
         lines=(
             "readiness\tprofile_record_unreadable",

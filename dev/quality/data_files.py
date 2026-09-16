@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import tomllib
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Final
@@ -12,6 +11,7 @@ from typing import Final
 from yamllint.config import YamlLintConfig
 from yamllint.linter import run as run_yamllint
 
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 from dev.source_tree import repository_files
 
@@ -81,8 +81,8 @@ def check_file(path: Path, *, display: str | None = None) -> tuple[str, ...]:
         logical_text += "\n"
     if path.suffix.lower() == ".toml":
         try:
-            tomllib.loads(logical_text)
-        except tomllib.TOMLDecodeError as exc:
+            parse_toml(logical_text)
+        except TomlDecodeError as exc:
             findings.append(f"{label}: invalid TOML: {exc}")
     else:
         findings.extend(

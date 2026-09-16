@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.errors.hierarchy import CoreValidationError
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
@@ -17,7 +17,7 @@ from ..regimen_simplificado_rows import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_AUTHORITY = compiled_bundled_authority()
+_AUTHORITY = PublishedGovernedFactSource()
 
 
 @pytest.mark.parametrize(

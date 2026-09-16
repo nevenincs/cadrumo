@@ -71,7 +71,6 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
     with isolated_profile_storage_root(tmp_path=tmp_path / "source-root") as source_root:
         profile_create_context, profile_decode_context = _profile_contexts_for_test()
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Restore-born",
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=profile_create_context,

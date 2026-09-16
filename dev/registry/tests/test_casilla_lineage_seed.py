@@ -6,7 +6,6 @@ refusing would turn a test red rather than leave it vacuously green.
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
@@ -14,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     lineage_totality,
@@ -375,7 +375,7 @@ def test_a_load_failure_with_nothing_to_carry_names_no_row(tmp_path: Path) -> No
     path = tmp_path / "ledger.toml"
     path.write_text(render_ledger([plan], {_LOADABLE: []}, (failure,), ()) + "\n", encoding="utf-8")
 
-    document = tomllib.loads(path.read_text(encoding="utf-8"))
+    document = parse_toml(path.read_text(encoding="utf-8"))
     assert document["load_failed"] == [{"modelo": failure.modelo, "reason": failure.reason}]
     assert all(entry["modelo"] != _PLANTED for entry in document["refusal"])
 
@@ -473,7 +473,7 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
     path = tmp_path / "ledger.toml"
     path.write_text(render_ledger([plan], {_LOADABLE: []}, (), (record,)) + "\n", encoding="utf-8")
 
-    document = tomllib.loads(path.read_text(encoding="utf-8"))
+    document = parse_toml(path.read_text(encoding="utf-8"))
     assert document["stamping_in_progress"] == [
         {
             "modelo": _PLANTED,

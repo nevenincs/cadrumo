@@ -110,7 +110,6 @@ def _register_profile() -> UUID:
         outcome = register_profile_with_credentials(
             label="S40 Profile Operation Subject",
             passphrase=_PROFILE_CREDENTIAL_INPUT,
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=authority_operation.profile_create_context(),
             profile_decode_context=authority_operation.profile_decode_context(),
         )

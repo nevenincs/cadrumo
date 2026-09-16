@@ -36,8 +36,8 @@ from ....core.credentials import assess_profile_password
 from ....core.i18n.render import output_language, tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.tui.components.host import ScreenHostApp
-from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
-from .fixture import registration_attempt
+from ....entrypoints.tui.secret.registration import RecoveryCodeScreen, RecoveryOfferScreen, RegistrationScreen
+from .fixture import recovery_enrollment_attempt, registration_attempt
 
 pytestmark = [
     pytest.mark.integration,
@@ -51,8 +51,34 @@ _TARGET_LANGUAGE = "hu"
 
 
 def _screen() -> RegistrationScreen:
-    """The production composition, wired to the doors the CLI gives it."""
-    return RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
+    """The production composition, wired to the doors the CLI gives it.
+
+    The recovery door is wired too: the offer and code screens that follow
+    creation are part of the first surface and must speak its language.
+    """
+    return RegistrationScreen(
+        assess=assess_profile_password,
+        register=registration_attempt,
+        enroll_recovery=recovery_enrollment_attempt,
+    )
+
+
+async def _wait_for_screen(pilot, screen_type: type, *, composed: str, polls: int = 300) -> bool:
+    """Pause until ``screen_type`` is active and ``composed`` is queryable on it.
+
+    Creation runs real key derivation, and a pushed screen is active before
+    its ``compose`` has run, so both the screen and one of its widgets are
+    awaited before the page's words are read.
+    """
+
+    def _ready() -> bool:
+        return isinstance(pilot.app.screen, screen_type) and bool(pilot.app.screen.query(composed))
+
+    for _ in range(polls):
+        if _ready():
+            return True
+        await pilot.pause(0.1)
+    return _ready()
 
 
 def _text(app: RegistrationScreen, selector: str) -> str:
@@ -207,28 +233,73 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
             await pilot.pause()
             await pilot.click("#btn-create")
-            for _ in range(100):
-                if isinstance(pilot.app.screen, RecoveryWordsScreen):
-                    break
-                await pilot.pause(0.1)
-            assert isinstance(pilot.app.screen, RecoveryWordsScreen)
-            recovery = pilot.app.screen
-            assert str(recovery.query_one("#words-heading", Static).content) == tr(
-                "cli.config.custody.recovery_words_heading", locale=_TARGET_LANGUAGE
-            ), "the recovery handoff must retain the registration surface's explicit language"
-            recovery.query_one("#field-recovery-verification", Input).value = str(
-                recovery.query_one("#words-value", Static).render()
+
+            # The offer that follows creation is still the first surface, so
+            # it must answer in the language the chooser was left on. Each
+            # expectation is pinned to differ between the two languages first,
+            # so a catalogue that translated nothing could not pass.
+            offer_zones = {
+                "#offer-heading": "flows.registration.recovery.offer_heading",
+                "#offer-explanation": "flows.registration.recovery.offer_explanation",
+                "#offer-consequence": "flows.registration.recovery.offer_consequence",
+            }
+            offer_buttons = {
+                "#btn-setup-recovery": "flows.registration.recovery.setup_button",
+                "#btn-skip-recovery": "flows.registration.recovery.skip_button",
+            }
+            for key in (*offer_zones.values(), *offer_buttons.values()):
+                assert tr(key, locale=_STARTING_LANGUAGE) != tr(key, locale=_TARGET_LANGUAGE), key
+
+            assert await _wait_for_screen(pilot, RecoveryOfferScreen, composed="#btn-skip-recovery"), (
+                "creation must be followed by the offer"
             )
-            for _ in range(100):
-                if recovery.query("#btn-confirm-words"):
-                    break
-                await pilot.pause(0.05)
-            await pilot.click("#btn-confirm-words")
+            offer = pilot.app.screen
+            for selector, key in offer_zones.items():
+                assert str(offer.query_one(selector, Static).content) == tr(key, locale=_TARGET_LANGUAGE), (
+                    "the recovery offer must retain the registration surface's explicit language"
+                )
+            for selector, key in offer_buttons.items():
+                assert str(offer.query_one(selector, Button).label) == tr(key, locale=_TARGET_LANGUAGE), selector
+
+            await pilot.click("#btn-setup-recovery")
+            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
+                "setting up must show the code screen"
+            )
+            code_screen = pilot.app.screen
+            code_zones = {
+                "#code-heading": "cli.config.profile.recovery.code_heading",
+                "#code-warning": "cli.config.profile.recovery.code_warning",
+            }
+            code_buttons = {
+                "#btn-confirm-code": "flows.registration.recovery.confirm_button",
+                "#btn-cancel-code": "flows.registration.recovery.cancel_button",
+            }
+            for key in (
+                *code_zones.values(),
+                *code_buttons.values(),
+                "cli.config.profile.recovery.verification_prompt",
+            ):
+                assert tr(key, locale=_STARTING_LANGUAGE) != tr(key, locale=_TARGET_LANGUAGE), key
+            for selector, key in code_zones.items():
+                assert str(code_screen.query_one(selector, Static).content) == tr(key, locale=_TARGET_LANGUAGE), (
+                    "the recovery code handoff must retain the registration surface's explicit language"
+                )
+            for selector, key in code_buttons.items():
+                assert str(code_screen.query_one(selector, Button).label) == tr(key, locale=_TARGET_LANGUAGE), selector
+            verification = code_screen.query_one("#field-recovery-verification", Input)
+            assert verification.placeholder == tr(
+                "cli.config.profile.recovery.verification_prompt", locale=_TARGET_LANGUAGE
+            )
+
+            code = str(code_screen.query_one("#code-value", Static).content)
+            assert code, "the code must be on screen before it can be typed back"
+            verification.value = code
+            await pilot.click("#btn-confirm-code")
             await pilot.app.workers.wait_for_complete()
-            for _ in range(200):
+            for _ in range(300):
                 if app.outcome is not None:
                     break
-                await pilot.pause(0.05)
+                await pilot.pause(0.1)
 
         assert app.error is None
         assert app.outcome is not None, "the screen must still create the profile"

@@ -29,6 +29,7 @@ from .declarations_observations import (
     _registry_snapshot_for_declaration,
     _store_artefact,
     _submitted_file_coverage_for_casillas,
+    _submitted_file_layout_refusal,
     _with_derived_303_compensation_available_observation,
     observed_casillas_from_submitted_file,
     observed_header_facts_from_submitted_file,
@@ -131,12 +132,20 @@ async def _capture_submitted_file_if_available(
                     artefact=submitted_artefact,
                     operation=operation,
                 )
-                extraction_coverage["submitted_file"] = _submitted_file_coverage_for_casillas(
-                    snapshot=snapshot,
-                    body=submitted_body,
-                    casillas=casillas,
-                    operation=operation,
-                )
+                try:
+                    extraction_coverage["submitted_file"] = _submitted_file_coverage_for_casillas(
+                        snapshot=snapshot,
+                        body=submitted_body,
+                        casillas=casillas,
+                        operation=operation,
+                    )
+                except RegistryValidationError as exc:
+                    raise _submitted_file_layout_refusal(
+                        snapshot=snapshot,
+                        declaration=declaration,
+                        artefact=submitted_artefact,
+                        reason=str(exc),
+                    ) from exc
                 headers = observed_header_facts_from_submitted_file(
                     snapshot=snapshot,
                     body=submitted_body,

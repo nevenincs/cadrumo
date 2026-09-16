@@ -16,7 +16,7 @@ import pytest
 
 from .....core.aggregation import BindingAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..authority import ValidatedRegistryAuthority
+from ..authority import PinnedAuthorityOperation
 from ..binding_aggregation import binding_aggregation_op
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relations import (
@@ -90,7 +90,7 @@ def _calculate_historical_m100(snapshot: RegistrySnapshot, *, year: int) -> Regi
 
 @pytest.mark.parametrize("year", _YEARS)
 def test_historical_pagos_fraccionados_relation_contract_and_fold(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
     year: int,
 ) -> None:
     """2020-2023 declare the current M130/M131 relation contract and fold it into 0604."""

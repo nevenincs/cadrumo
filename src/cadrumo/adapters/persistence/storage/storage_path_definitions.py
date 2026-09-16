@@ -88,10 +88,9 @@ RUNS_DIRNAME = storage_location(StorageCategory.RUNS).subpath
 LLM_USAGE_DIRNAME = storage_location(StorageCategory.LLM_USAGE).subpath
 LLM_RUN_TELEMETRY_DIRNAME = storage_location(StorageCategory.LLM_RUN_TELEMETRY).subpath
 TOKENS_DIRNAME = storage_location(StorageCategory.TOKENS).subpath
-#: Two-component subpaths (``cache/<name>``) -- interpolated whole, not split,
+#: A two-component subpath (``cache/<name>``) -- interpolated whole, not split,
 #: since the taxonomy declares the compound as one subpath rather than two
 #: nested categories.
-VALIDATION_VERDICT_CACHE_SUBPATH = storage_location(StorageCategory.VALIDATION_VERDICT_CACHE).subpath
 LLM_CACHE_SUBPATH = storage_location(StorageCategory.LLM_CACHE).subpath
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
@@ -477,15 +476,14 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
-    # The five entries below declare filename TEMPLATES rather than a single
+    # The four entries below declare filename TEMPLATES rather than a single
     # fixed leaf -- a daily log filename, a bucket/provider-keyed lock name, a
-    # digest-suffixed cache filename, a provider/model-keyed cache path --
-    # each governed by the taxonomy's parent directory member (LLM_USAGE,
-    # LLM_RUN_TELEMETRY, TOKENS, VALIDATION_VERDICT_CACHE, LLM_CACHE) plus a
+    # provider/model-keyed cache path -- each governed by the taxonomy's parent
+    # directory member (LLM_USAGE, LLM_RUN_TELEMETRY, TOKENS, LLM_CACHE) plus a
     # grammar spelling the interpolated shape, exactly the mechanism the six
     # entries above already use for the blob/run fan-outs.
     #
-    # Three of the five (llm_usage_record, llm_run_telemetry_record,
+    # Three of the four (llm_usage_record, llm_run_telemetry_record,
     # llm_cache_entry) are NOT materialised as files: their producers persist
     # through ``secure_object_repository_for_active_bucket().save(...)``
     # (encrypted SQL secure objects), and each producer's own docstring
@@ -516,13 +514,6 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar=f"<root>/{TOKENS_DIRNAME}/<bucket_id>-<auth_provider_kind>-auth.lock",
         owner="cadrumo.application.auth",
-        anchor=StoragePathAnchor.STORAGE_ROOT,
-    ),
-    StoragePathDefinition(
-        key="validation_verdict_cache_entry",
-        kind=StoragePathKind.FILE,
-        grammar=f"<root>/{VALIDATION_VERDICT_CACHE_SUBPATH}/cadrumo_validation_verdict_<sha256[:16]>.json",
-        owner="cadrumo.domain.calculations.registry",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(

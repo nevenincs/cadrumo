@@ -12,27 +12,40 @@ it types into the real widgets, clicks the real button, and then proves
 the profile exists and its bucket answers to the typed password. That is
 the whole paradigm shift in one path — a name and a password, and the
 profile is real.
+
+Recovery is the optional follow-up. The tests under "recovery offer" drive
+the real enrolment door through the offer and code screens and read the
+result off the capsule on disk: skipping and cancelling install nothing,
+and only a confirmed code installs the wrapper.
 """
 
 from __future__ import annotations
 
 import unicodedata
+from collections.abc import Callable
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from textual.css.query import NoMatches
-from textual.widgets import Input, Static
+from textual.widgets import Button, Input, Static
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
+
+from ....adapters.persistence.storage.custody.recovery import PROFILE_CUSTODY_RECOVERY_FILENAME
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_interaction import attempt_profile_login
 from ....application.user_profile.login_session import logout_active_profile
+from ....application.user_profile.recovery_custody import profile_recovery_status
 from ....core.credentials import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n.render import tr
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.secret.credentials import assessment_refusal
-from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
-from .fixture import registration_attempt
+from ....entrypoints.tui.secret.registration import RecoveryCodeScreen, RecoveryOfferScreen, RegistrationScreen
+from .fixture import recovery_enrollment_attempt, registration_attempt
 
 pytestmark = [
     pytest.mark.integration,
@@ -49,6 +62,55 @@ def _storage_entries(storage_root: Path) -> tuple[Path, ...]:
         return tuple(storage_root.iterdir())
     except FileNotFoundError:
         return ()
+
+
+def _recovery_envelopes(storage_root: Path) -> tuple[Path, ...]:
+    """Every installed recovery wrapper under the isolated root, wherever its capsule lives."""
+    return tuple(sorted(storage_root.rglob(PROFILE_CUSTODY_RECOVERY_FILENAME)))
+
+
+async def _wait_until(pilot, condition: Callable[[], bool], *, polls: int = 300, interval: float = 0.1) -> bool:
+    """Pause the pilot until ``condition`` holds or the poll budget is spent.
+
+    Creation and enrolment both run real key derivation on a worker thread,
+    so the screens they push arrive after an amount of time this test does
+    not own; the budget is generous and the return value is asserted by the
+    caller so a stalled path reads as a failure rather than a hang.
+    """
+    for _ in range(polls):
+        if condition():
+            return True
+        await pilot.pause(interval)
+    return condition()
+
+
+async def _wait_for_screen(pilot, screen_type: type, *, composed: str) -> bool:
+    """Wait for ``screen_type`` to be active AND for ``composed`` to be queryable on it.
+
+    A pushed screen is active before its ``compose`` has run, so a click
+    addressed to it in that window finds nothing; the widget's presence is
+    what proves the screen is ready to be driven.
+    """
+    return await _wait_until(
+        pilot,
+        lambda: isinstance(pilot.app.screen, screen_type) and bool(pilot.app.screen.query(composed)),
+    )
+
+
+async def _displayed_recovery_code(pilot) -> str:
+    """The code the RecoveryCodeScreen shows, once it has actually rendered."""
+    code: str = ""
+
+    def _rendered() -> bool:
+        nonlocal code
+        try:
+            code = str(pilot.app.screen.query_one("#code-value", Static).content)
+        except NoMatches:
+            return False
+        return bool(code)
+
+    assert await _wait_until(pilot, _rendered), "the recovery code never rendered"
+    return code
 
 
 @pytest.mark.parametrize(
@@ -107,7 +169,8 @@ def _screen(**kwargs) -> RegistrationScreen:
 
     The production composition rather than a stand-in, so these tests
     exercise the same path an operator does: a stub here would prove the
-    widgets talk to a stub.
+    widgets talk to a stub. Without ``enroll_recovery`` the screen is the
+    passphrase-only composition that leaves as soon as the profile exists.
     """
     return RegistrationScreen(assess=assess_profile_password, register=registration_attempt, **kwargs)
 
@@ -134,7 +197,7 @@ async def _fill(screen: RegistrationScreen, pilot, *, username: str, password: s
         pytest.param("a" * 256, id="256-scalars"),
         pytest.param("😀" * 256, id="1024-bytes"),
         pytest.param("é" * 15, id="composed"),
-        pytest.param("e\u0301" * 15, id="decomposed"),
+        pytest.param("é" * 15, id="decomposed"),
     ),
 )
 async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_path, candidate: str) -> None:
@@ -150,36 +213,14 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(app, pilot, username="Screen Subject", password=candidate, confirm=candidate)
             await pilot.click("#btn-create")
-            for _ in range(100):
-                if isinstance(pilot.app.screen, RecoveryWordsScreen):
-                    break
-                await pilot.pause(0.1)
-            assert isinstance(pilot.app.screen, RecoveryWordsScreen)
-            recovery = pilot.app.screen
-            words: Static | None = None
-            for _ in range(100):
-                try:
-                    words = recovery.query_one("#words-value", Static)
-                except NoMatches:
-                    await pilot.pause(0.05)
-                    continue
-                if str(words.render()):
-                    break
-                await pilot.pause(0.05)
-            assert words is not None
-            recovery.query_one("#field-recovery-verification", Input).value = str(words.render())
-            for _ in range(100):
-                if recovery.query("#btn-confirm-words"):
-                    break
-                await pilot.pause(0.05)
-            await pilot.click("#btn-confirm-words")
             await pilot.app.workers.wait_for_complete()
-            for _ in range(200):
-                if app.outcome is not None:
-                    break
-                await pilot.pause(0.05)
+            # Without an enrolment door there is nothing to offer: the screen
+            # leaves the moment the profile exists, and no offer was pushed.
+            assert await _host_received(pilot), "the screen must leave as soon as the profile exists"
+            assert not isinstance(pilot.app.screen, RecoveryOfferScreen | RecoveryCodeScreen)
 
         assert app.outcome is not None
+        assert pilot.app.return_value is app.outcome
         assert app.outcome.label == "Screen Subject"
         assert app.outcome.setup_state.value == "incomplete"
 
@@ -188,8 +229,9 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         # real Argon2id, sentinel proof, and session publication without making
         # an inbound-surface test depend on persistence-owned record types.
         profile_id = str(app.outcome.profile_id)
+        _, profile_decode_context = _profile_contexts_for_test()
         logout_active_profile()
-        authenticated = attempt_profile_login(profile_id, candidate)
+        authenticated = attempt_profile_login(profile_id, candidate, profile_decode_context=profile_decode_context)
         assert authenticated.refusal is None
         assert authenticated.outcome is not None
         assert authenticated.outcome.bucket_id == profile_id
@@ -200,7 +242,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
             candidate,
         )
         wrong_password = counterpart if counterpart != candidate else "a-different-secret"
-        refused = attempt_profile_login(profile_id, wrong_password)
+        refused = attempt_profile_login(profile_id, wrong_password, profile_decode_context=profile_decode_context)
         assert refused.outcome is None
         assert refused.refusal
 
@@ -261,7 +303,7 @@ async def test_seven_scalar_failure_is_typed_without_internal_diagnostics(tmp_pa
 async def test_unkeyed_unexpected_registration_failure_keeps_internal_classification(tmp_path) -> None:
     fault = RuntimeError("synthetic registration transport failure")
 
-    def fail_registration(_label: str, _password: str, _language: str, _recovery_handover):
+    def fail_registration(_label: str, _password: str, _language: str):
         raise fault
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -340,3 +382,144 @@ async def test_the_password_fields_are_masked(tmp_path) -> None:
             assert app.query_one("#field-username", Input).password is False
             await pilot.pause()
             pilot.app.exit(None)
+
+
+# ── recovery offer ──────────────────────────────────────────────────────────
+
+
+def _screen_with_recovery() -> RegistrationScreen:
+    """The installed composition: creation followed by the optional recovery offer."""
+    return _screen(enroll_recovery=recovery_enrollment_attempt)
+
+
+async def _create_and_reach_the_offer(app: RegistrationScreen, pilot, *, username: str) -> None:
+    await _fill(app, pilot, username=username, password=_TYPED_INPUT, confirm=_TYPED_INPUT)
+    await pilot.click("#btn-create")
+    assert await _wait_for_screen(pilot, RecoveryOfferScreen, composed="#btn-skip-recovery"), (
+        "creation must be followed by the recovery offer"
+    )
+    assert app in pilot.app.screen_stack, "the screen must not leave while the offer is still open"
+    assert pilot.app.return_value is None, "the host must not receive the profile while the offer is still open"
+
+
+async def _host_received(pilot) -> bool:
+    """Whether the hosted screen has dismissed with its outcome, ending the host."""
+    return await _wait_until(pilot, lambda: pilot.app.return_value is not None)
+
+
+@pytest.mark.asyncio
+async def test_skipping_the_recovery_offer_leaves_with_the_profile_and_installs_nothing(tmp_path) -> None:
+    """Declining is the default and costs nothing: the profile stays passphrase-only."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        app = _screen_with_recovery()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _create_and_reach_the_offer(app, pilot, username="Skips Recovery")
+            offer = pilot.app.screen
+            assert offer.focused is offer.query_one("#btn-skip-recovery", Button), "declining must be the default"
+            await pilot.click("#btn-skip-recovery")
+            await pilot.app.workers.wait_for_complete()
+            assert await _host_received(pilot), "skipping must leave with the created profile"
+
+        assert app.error is None
+        assert app.outcome is not None
+        assert pilot.app.return_value is app.outcome
+        assert app.outcome.label == "Skips Recovery"
+        assert _recovery_envelopes(storage_root) == ()
+        assert profile_recovery_status(profile_id=UUID(app.outcome.profile_id)).enrolled is False
+
+
+@pytest.mark.asyncio
+async def test_confirming_the_displayed_code_installs_the_recovery_wrapper(tmp_path) -> None:
+    """Setting up recovery shows the code once and installs only after it is typed back.
+
+    The code is retyped in lower case without its separators: case and
+    grouping are presentation, and an operator copying from paper must not
+    be refused over them. Installation is read off the capsule on disk and
+    through the application's own status door, not off the screen.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        app = _screen_with_recovery()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _create_and_reach_the_offer(app, pilot, username="Enrols Recovery")
+            await pilot.click("#btn-setup-recovery")
+            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
+                "setting up must show the code screen"
+            )
+            assert _recovery_envelopes(storage_root) == (), "nothing is installed before the code is confirmed"
+
+            code = await _displayed_recovery_code(pilot)
+            assert "-" in code, "the code is shown grouped for copying"
+            pilot.app.screen.query_one("#field-recovery-verification", Input).value = code.replace("-", "").lower()
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            await pilot.click("#btn-confirm-code")
+            await pilot.app.workers.wait_for_complete()
+            assert await _host_received(pilot), "a confirmed code must leave with the created profile"
+            assert status.tone != "error", f"enrolment was refused: {status.message}"
+
+        assert app.error is None
+        assert app.outcome is not None
+        assert pilot.app.return_value is app.outcome
+        envelopes = _recovery_envelopes(storage_root)
+        assert len(envelopes) == 1, f"exactly one wrapper must be installed, found {envelopes}"
+        assert envelopes[0].parent.name == "custody"
+        assert profile_recovery_status(profile_id=UUID(app.outcome.profile_id)).enrolled is True
+
+
+@pytest.mark.asyncio
+async def test_a_wrong_code_is_refused_in_place_without_installing(tmp_path) -> None:
+    """A mistyped confirmation keeps the code screen open and installs nothing."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        app = _screen_with_recovery()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _create_and_reach_the_offer(app, pilot, username="Mistypes Code")
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            await pilot.click("#btn-setup-recovery")
+            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
+                f"setting up must show the code screen; status read {status.tone!r}: {status.message}"
+            )
+            code = await _displayed_recovery_code(pilot)
+            wrong = code[::-1]
+            assert wrong != code
+            field = pilot.app.screen.query_one("#field-recovery-verification", Input)
+            field.value = wrong
+            await pilot.click("#btn-confirm-code")
+            await pilot.pause()
+
+            assert isinstance(pilot.app.screen, RecoveryCodeScreen), "a mismatch keeps the operator on the code"
+            assert field.value == "", "the mistyped proof is cleared, not kept for editing"
+            assert pilot.app.return_value is None
+            assert _recovery_envelopes(storage_root) == ()
+
+            await pilot.click("#btn-cancel-code")
+            await pilot.app.workers.wait_for_complete()
+            assert await _host_received(pilot), "cancelling must still leave with the created profile"
+
+        assert app.outcome is not None
+        assert pilot.app.return_value is app.outcome
+        assert _recovery_envelopes(storage_root) == ()
+
+
+@pytest.mark.asyncio
+async def test_cancelling_on_the_code_screen_installs_nothing_and_still_leaves_with_the_profile(tmp_path) -> None:
+    """Backing out after seeing the code is a decline, not a failure."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        app = _screen_with_recovery()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _create_and_reach_the_offer(app, pilot, username="Cancels Recovery")
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            await pilot.click("#btn-setup-recovery")
+            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
+                f"setting up must show the code screen; status read {status.tone!r}: {status.message}"
+            )
+            await _displayed_recovery_code(pilot)
+            await pilot.click("#btn-cancel-code")
+            await pilot.app.workers.wait_for_complete()
+            assert await _host_received(pilot), "cancelling must still leave with the created profile"
+            assert status.tone != "error", "a deliberate cancel is not a refusal"
+
+        assert app.error is None
+        assert app.outcome is not None
+        assert pilot.app.return_value is app.outcome
+        assert app.outcome.label == "Cancels Recovery"
+        assert _recovery_envelopes(storage_root) == ()
+        assert profile_recovery_status(profile_id=UUID(app.outcome.profile_id)).enrolled is False

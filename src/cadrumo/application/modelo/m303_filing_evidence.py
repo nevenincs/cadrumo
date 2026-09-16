@@ -149,7 +149,7 @@ def _validate_m303_simplified_filing_evidence(
         scope_decision=regimen.scope_decision,
         rows=regimen.rows,
         regimen_snapshot=regimen.regimen_snapshot,
-        dana_2024_eligibility=regimen.dana_2024_eligibility,
+        dana_eligibility=regimen.dana_eligibility,
         operation=operation,
     )
     if regimen.calculation_result != expected_result:

@@ -133,7 +133,6 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, 
         decode_context = operation.profile_decode_context()
         with override_settings(cadrumo_profile_kdf_measure_calibration=False):
             outcome = register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=label,
                 passphrase=passphrase,
                 facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),

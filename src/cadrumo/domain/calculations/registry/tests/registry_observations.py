@@ -6,10 +6,9 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from functools import cache
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId
+from ..authority import bundled_indexed_authority
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..temporal import select_revision
 from .registry_tree import bundled_registry_tree
@@ -59,12 +58,13 @@ def registry_grounded_observation_rows(
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> tuple[CasillaObservation, ...]:
     """Return ordered observations carrying legal and source provenance."""
-    snapshot = compiled_bundled_authority().snapshot(
-        modelo,
-        filing_year=filing_year,
-        period=period,
-        grade=grade,
-    )
+    with bundled_indexed_authority().operation() as authority:
+        snapshot = authority.snapshot(
+            modelo,
+            filing_year=filing_year,
+            period=period,
+            grade=grade,
+        )
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     observations: list[CasillaObservation] = []
     for casilla_id, value in casilla_values:

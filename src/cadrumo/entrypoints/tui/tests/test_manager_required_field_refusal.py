@@ -111,7 +111,6 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -136,7 +135,6 @@ async def test_a_whitespace_only_submission_on_a_required_field_does_not_clear_i
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -164,7 +162,6 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
@@ -197,7 +194,6 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,

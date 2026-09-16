@@ -18,7 +18,7 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
-from ._published_authority import artifact_snapshot
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,7 +56,7 @@ _ACTIVITY_CASES = {
 
 
 def _calculate_activity_value(period: str, epigrafe: str, module_inputs: dict[str, Decimal]) -> Decimal:
-    snapshot = artifact_snapshot("131", 2025, period, grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = published_snapshot("131", filing_year=2025, period=period, grade=RegistryAuthorityGrade.CALCULATION)
     assert snapshot.filing_period is not None
     result = calculate_registry_snapshot(
         snapshot,

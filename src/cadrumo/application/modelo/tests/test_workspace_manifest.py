@@ -7,10 +7,11 @@ from functools import cache
 from typing import TYPE_CHECKING, Annotated, Literal, get_args
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel, ValidationError
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..workspace_manifest import (
     ModeloWorkspaceFieldManifestEntryV1,
     ModeloWorkspaceFieldManifestV1,
@@ -67,7 +68,7 @@ class _UnresolvedForwardReference(BaseModel):
 @cache
 def _snapshot():
     """Use one real, exported authority snapshot with generated export layouts."""
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T")
+    return published_snapshot("303", filing_year=2025, period="4T")
 
 
 @cache
@@ -78,7 +79,8 @@ def _manifest() -> ModeloWorkspaceFieldManifestV1:
 @cache
 def _inspection():
     """Use one real, exported static-inspection projection for the same coordinate."""
-    return compiled_bundled_authority().capture_law_selected_projection("303", filing_year=2025, period="4T").projection
+    with bundled_indexed_authority().operation() as operation:
+        return operation.capture_law_selected_projection("303", filing_year=2025, period="4T").projection
 
 
 @cache
@@ -324,7 +326,7 @@ def test_capture_is_singleflight_and_current_against_its_own_coordinate() -> Non
 def test_a_distinct_snapshot_coordinate_is_a_distinct_owner_scope() -> None:
     """Two filing coordinates never validate each other's capture."""
     snapshot = _snapshot()
-    other = compiled_bundled_authority().snapshot("303", filing_year=2025, period="3T")
+    other = published_snapshot("303", filing_year=2025, period="3T")
 
     captured = capture_modelo_workspace_manifest(snapshot)
     other_coordinate = read_modelo_workspace_manifest_current_coordinate(other)

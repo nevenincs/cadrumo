@@ -392,10 +392,13 @@ def _optional_header_index(values: tuple[object, ...], *header_names: str) -> in
     return None
 
 
+_TOTAL_LABELS: frozenset[str] = frozenset({"total", "total:"})
+
+
 def total_label_index(values: tuple[object, ...]) -> int | None:
     """Return the index of the row's ``Total`` label cell, or ``None`` when absent."""
     for index, value in enumerate(values):
-        if _normalise_header_cell(value) in {"total", "total:"}:
+        if value is not None and _normalise_header_cell(value) in _TOTAL_LABELS:
             return index
     return None
 

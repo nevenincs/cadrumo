@@ -7,10 +7,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
@@ -80,13 +80,11 @@ def _m720_revision() -> ModeloRevision:
         period_selector=PeriodSelector(year_from=2013, periods=("0A",)),
         legal_refs=_M720_LEGAL_REFS,
         source_refs=_M720_SOURCE_REFS,
-        parameters=compiled_bundled_authority()
-        .snapshot(
+        parameters=published_snapshot(
             "720",
             filing_year=2025,
             period="0A",
-        )
-        .revision.parameters,
+        ).revision.parameters,
         bindings=tuple(_m720_row_binding(binding_id, row_field) for binding_id, row_field in _M720_ROW_BINDINGS),
     )
 

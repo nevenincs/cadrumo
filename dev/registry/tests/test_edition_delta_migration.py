@@ -23,7 +23,6 @@ from __future__ import annotations
 import json
 import re
 import shutil
-import tomllib
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -31,7 +30,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.toml import render_toml
+from cadrumo.core.toml import parse_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -158,7 +157,7 @@ def _edition_dir(root: Path, modelo_id: str, revision_id: str) -> Path:
 def _stated_ids(edition_dir: Path) -> set[str]:
     ids: set[str] = set()
     for fragment in (edition_dir / "casillas").glob("*.toml"):
-        for revision in tomllib.loads(fragment.read_text(encoding="utf-8"))["revisions"].values():
+        for revision in parse_toml(fragment.read_text(encoding="utf-8"))["revisions"].values():
             ids.update(str(row["id"]) for row in revision["casillas"])
     return ids
 
@@ -301,7 +300,7 @@ def test_references_beyond_the_default_are_stated_as_additions(
         before = {casilla.id: casilla for casilla in pilot_before.revisions[edition.revision_id].casillas}
         after = {casilla.id: casilla for casilla in staged.revisions[edition.revision_id].casillas}
         for fragment in sorted((edition_dir / "casillas").glob("*.toml")):
-            for revision in tomllib.loads(fragment.read_text(encoding="utf-8"))["revisions"].values():
+            for revision in parse_toml(fragment.read_text(encoding="utf-8"))["revisions"].values():
                 for row in revision["casillas"]:
                     if "additional_source_refs" not in row:
                         continue
@@ -376,7 +375,7 @@ def test_a_row_stating_only_a_lineage_claim_moves_to_the_canonical_carrier(
     authored_payload_fields = sum(
         len(row)
         for fragment in (edition_dir / "casillas").glob("*.toml")
-        for revision in tomllib.loads(fragment.read_text(encoding="utf-8"))["revisions"].values()
+        for revision in parse_toml(fragment.read_text(encoding="utf-8"))["revisions"].values()
         for row in revision["casillas"]
         if row["id"] == row_id
     )

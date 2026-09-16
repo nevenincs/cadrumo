@@ -53,8 +53,9 @@ from .facts.resolution import (
     ResolvedGovernedFact,
     ResolvedMappingFact,
     resolve_governed_fact,
+    resolve_validated_governed_fact,
 )
-from .facts.schema import GovernedFact, GovernedFactCatalogue
+from .facts.schema import GovernedFact
 from .governed_fact_scope import validating_governed_facts
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .provenance import NormativeCorpusProvenance
@@ -148,6 +149,32 @@ def _require_artifact_coordinate_domain(domain: ContentDigest) -> None:
     expected = hmac.digest(_artifact_process_nonce, nonce.encode("ascii"), "sha256").hex()[:32]
     if not hmac.compare_digest(signature, expected):
         raise RegistrySnapshotError("registry authority coordinate belongs to another process incarnation")
+
+
+_REGISTRY_CAPTURE_GENERATION = 1
+"""The one generation a registry capture comparison domain ever holds.
+
+A domain is minted per immutable authority incarnation -- an admitted
+generation pin, or one constructed validated authority -- so every capture
+under that domain observes the same content. A new generation arrives as a new
+incarnation and therefore a new domain; it is never a successor generation
+inside an old one.
+"""
+_PUBLISHED_CAPTURE_DOMAIN_LIMIT = 16
+_published_capture_domains: dict[AuthorityGenerationPin, ContentDigest] = {}
+_published_capture_domains_lock = RLock()
+
+
+def _published_capture_domain(pin: AuthorityGenerationPin) -> ContentDigest:
+    """Return the process-authenticated comparison domain shared by every lease of one pin."""
+    with _published_capture_domains_lock:
+        domain = _published_capture_domains.get(pin)
+        if domain is None:
+            domain = _artifact_coordinate_domain(f"{pin.logical_generation}:{pin.reader_incarnation}")
+            if len(_published_capture_domains) >= _PUBLISHED_CAPTURE_DOMAIN_LIMIT:
+                _published_capture_domains.pop(next(iter(_published_capture_domains)))
+            _published_capture_domains[pin] = domain
+        return domain
 
 
 @dataclass(frozen=True, slots=True, weakref_slot=True)
@@ -527,7 +554,7 @@ class ValidatedRegistryAuthority:
             return RegistryAuthorityCapture(
                 projection=projection,
                 comparison_domain=self._current_coordinate().comparison_domain,
-                generation=0,
+                generation=_REGISTRY_CAPTURE_GENERATION,
             )
 
     def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
@@ -541,7 +568,7 @@ class ValidatedRegistryAuthority:
             raise RegistrySnapshotError("registry authority has no published capture coordinate")
         return RegistryAuthorityCurrentCoordinate(
             comparison_domain=comparison_domain,
-            generation=0,
+            generation=_REGISTRY_CAPTURE_GENERATION,
         )
 
     def deadline_windows(
@@ -627,6 +654,10 @@ class PinnedAuthorityOperation:
 
     _reader: AuthorityComponentReader
     generation: AuthorityGenerationPin
+    _state_lock: RLock = field(default_factory=RLock, init=False, repr=False, compare=False)
+    _fact_resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     def pin(self) -> AuthorityGenerationPin:
         """Return this operation's already-leased generation pin."""
@@ -770,13 +801,21 @@ class PinnedAuthorityOperation:
         )
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
-        """Resolve one fact without hydrating the whole governed catalogue."""
-        value = self.governed_fact(str(query.fact_id))
-        return resolve_governed_fact(
-            GovernedFactCatalogue(facts={value.fact_id: value}),
-            query,
-            authority_digest=self.generation.logical_generation,
-        )
+        """Resolve one fact once per query without revalidating its static component."""
+        with self._state_lock:
+            cached = self._fact_resolutions.get(query)
+            if cached is not None:
+                return cached
+            value = self.governed_fact(str(query.fact_id))
+            resolved = resolve_validated_governed_fact(
+                value,
+                query,
+                authority_digest=self.generation.logical_generation,
+            )
+            if len(self._fact_resolutions) >= 1024:
+                self._fact_resolutions.pop(next(iter(self._fact_resolutions)))
+            self._fact_resolutions[query] = resolved
+            return resolved
 
     def runtime_catalogue(self, family: str) -> object:
         """Load one named runtime catalogue family."""
@@ -840,6 +879,51 @@ class PinnedAuthorityOperation:
         evidence = self.legal_evidence(str(legal_ref_id))
         return AuthorityEvidenceProjection(legal=(evidence,)).quotation_is_grounded(str(legal_ref_id), quotation)
 
+    def capture_law_selected_projection(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        grade: RegistryAuthorityGrade | None = None,
+    ) -> RegistryAuthorityCapture:
+        """Capture a law-selected inspection or grade-admitted snapshot from this generation.
+
+        ``grade=None`` selects the static inspection; supplying a grade selects
+        the snapshot admission path. The capture compares current against every
+        coordinate read from the same admitted generation in this process.
+        """
+        normalized = Modelo(modelo_id).value
+        projection: RegistryAuthorityProjection
+        if grade is None:
+            directory = self.modelo_directory(normalized)
+            selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=on)
+            revision = self.revision(normalized, str(selected.id))
+            modelo = directory.materialize(revision)
+            legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
+            projection = RegistryRevisionInspection.from_revision(
+                modelo=modelo,
+                revision=revision,
+                source_root=None,
+                sources={source_id: self.source_reference(source_id) for source_id in source_ids},
+                legal_ref_ids=frozenset(legal_ids),
+            )
+        else:
+            projection = self.snapshot(normalized, filing_year=filing_year, period=period, on=on, grade=grade)
+        return RegistryAuthorityCapture(
+            projection=projection,
+            comparison_domain=_published_capture_domain(self.generation),
+            generation=_REGISTRY_CAPTURE_GENERATION,
+        )
+
+    def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
+        """Return the current coordinate captures from this generation compare against."""
+        return RegistryAuthorityCurrentCoordinate(
+            comparison_domain=_published_capture_domain(self.generation),
+            generation=_REGISTRY_CAPTURE_GENERATION,
+        )
+
     def source_evidence(self, source_reference_id: str) -> PublishedSourceEvidence:
         """Load one publisher-captured public source payload."""
         value = self._reader.load(
@@ -858,6 +942,7 @@ class IndexedRegistryAuthority:
         """Open one descriptor-selected generation without hydrating components."""
         self._descriptor_path = descriptor_path.resolve()
         self._reader = SQLiteAuthorityReader(self._descriptor_path)
+        self._operation = PinnedAuthorityOperation(self._reader, self._reader.pin())
         self._descriptor_digest = sha256_hex(self._descriptor_path.read_bytes())
         self._retired_readers: list[SQLiteAuthorityReader] = []
         self._reader_lock = RLock()
@@ -865,10 +950,11 @@ class IndexedRegistryAuthority:
     @contextmanager
     def operation(self) -> Generator[PinnedAuthorityOperation]:
         """Pin one reader incarnation for a complete application operation."""
-        reader = self._reader_for_operation()
+        reader, operation = self._authority_for_operation()
         try:
             with reader.lease() as generation:
-                operation = PinnedAuthorityOperation(reader, generation)
+                if generation != operation.generation:
+                    raise RegistrySnapshotError("authority operation generation disagrees with its reader lease")
                 with validating_governed_facts(operation):
                     yield operation
         finally:
@@ -882,17 +968,18 @@ class IndexedRegistryAuthority:
                 reader.close()
             self._retired_readers.clear()
 
-    def _reader_for_operation(self) -> SQLiteAuthorityReader:
-        """Admit a descriptor change for subsequent operations only."""
+    def _authority_for_operation(self) -> tuple[SQLiteAuthorityReader, PinnedAuthorityOperation]:
+        """Return the shared operation cache for the currently admitted reader generation."""
         with self._reader_lock:
             descriptor_digest = sha256_hex(self._descriptor_path.read_bytes())
             if descriptor_digest == self._descriptor_digest:
-                return self._reader
+                return self._reader, self._operation
             replacement = SQLiteAuthorityReader(self._descriptor_path)
             self._retired_readers.append(self._reader)
             self._reader = replacement
+            self._operation = PinnedAuthorityOperation(replacement, replacement.pin())
             self._descriptor_digest = descriptor_digest
-            return replacement
+            return replacement, self._operation
 
     def _close_retired_readers(self) -> None:
         """Close old generations once their last in-flight operation releases."""

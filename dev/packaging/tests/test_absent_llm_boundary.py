@@ -18,13 +18,13 @@ failure this module exists to make visible.
 from __future__ import annotations
 
 import ast
-import tomllib
 from importlib.metadata import packages_distributions
 from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 
 from .._distribution_names import normalise_distribution_name
@@ -45,7 +45,7 @@ def _core_requirement_names() -> set[str]:
     the cheaper surface here does not weaken the check.
     """
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
-        pyproject = tomllib.load(handle)
+        pyproject = load_toml(handle)
     names: set[str] = set()
     for requirement in pyproject["project"]["dependencies"]:
         name = requirement.split(";")[0].strip()
@@ -97,7 +97,7 @@ def test_the_llm_extra_declares_a_requirement_core_does_not() -> None:
     and a single combined check would not say which half broke.
     """
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
-        pyproject = tomllib.load(handle)
+        pyproject = load_toml(handle)
     extra_requirements = pyproject["project"]["optional-dependencies"]["llm"]
     core_names = _core_requirement_names()
 

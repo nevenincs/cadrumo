@@ -23,7 +23,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -60,7 +61,7 @@ def _m347_clave_c_threshold() -> Decimal:
 
 
 def _revision(revision_id: str):
-    return compiled_bundled_authority().modelo("347").revisions[revision_id]
+    return published_revision("347", revision_id)
 
 
 def _declarado_record(revision) -> ExportRecordDefinition:

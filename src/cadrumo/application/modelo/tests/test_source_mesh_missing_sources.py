@@ -24,10 +24,13 @@ See Also:
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry.schema import BindingDefinition
+from ....domain.calculations.registry.tests.published_authority import (
+    published_revision_definitions,
+    published_snapshot,
+)
 from ...aggregation.source_resolution_operations import collect_unhandled_source_diagnostics
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_actions import assert_no_novel_source_kinds
@@ -39,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _declared_source_kinds() -> frozenset[BindingSourceKind]:
     return frozenset(
         binding.source
-        for modelo in compiled_bundled_authority().modelos
+        for modelo in published_revision_definitions()
         for revision in modelo.revisions.values()
         for binding in revision.bindings
         if getattr(binding.aggregation, "op", None) is not BindingAggregationOp.ROWS
@@ -71,7 +74,7 @@ def test_novel_source_binding_raises_not_silent_zero() -> None:
     # Resolved from (modelo, filing year, period) rather than indexed by a
     # literal revision id: AEAT re-cuts revision layouts, and this modelo's
     # a broad M303 revision was decomposed into four narrower revisions.
-    revision = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=2025, period="1T").revision
     synthetic = BindingDefinition.model_construct(
         id="synthetic-missing-source-binding",
         provider={"kind": "synthetic_unrouted_source_qqq"},
@@ -91,7 +94,7 @@ def test_novel_source_binding_raises_not_silent_zero() -> None:
 
 def test_row_producing_binding_uses_its_detail_row_channel() -> None:
     """An unknown row source does not need a scalar source-mesh resolver."""
-    revision = compiled_bundled_authority().snapshot("232", filing_year=2025, period="0A").revision
+    revision = published_snapshot("232", filing_year=2025, period="0A").revision
     row_binding = next(
         binding
         for binding in revision.bindings
@@ -119,7 +122,7 @@ def _deferred_binding() -> BindingDefinition:
 
 def test_deferred_source_binding_is_not_novel_and_is_not_exempted_by_row_shape() -> None:
     """A kind registered ``deferred`` passes the novel gate on its registration, not on a ROWS exemption."""
-    revision = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=2025, period="1T").revision
     patched = revision.model_copy(update={"bindings": (*revision.bindings, _deferred_binding())})
 
     assert_no_novel_source_kinds(patched)
@@ -133,7 +136,7 @@ def test_deferred_source_binding_is_not_novel_and_is_not_exempted_by_row_shape()
 
 
 def test_deferred_source_binding_surfaces_as_deferred_diagnostic() -> None:
-    revision = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=2025, period="1T").revision
     patched = revision.model_copy(update={"bindings": (_deferred_binding(),)})
 
     diagnostics = collect_unhandled_source_diagnostics(patched, handled_sources=frozenset())

@@ -20,7 +20,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -30,6 +29,7 @@ from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -183,11 +183,7 @@ def _seed_work_unit(
     bucket_id = repository.bucket_id
     assert bucket_id is not None
     typed_period = Period.from_year_and_code(filing_year, period)
-    revision_id = (
-        compiled_bundled_authority()
-        .snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token)
-        .revision.id
-    )
+    revision_id = published_snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,

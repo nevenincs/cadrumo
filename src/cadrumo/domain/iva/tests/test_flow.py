@@ -21,19 +21,19 @@ See Also:
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Iterator
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.iva.flow import IvaSettlementSide
 
 from ....core.resources.bundled_data import bundled_path
+from ....core.toml import load_toml
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.binding_selector_utils import selector_as_dict
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
+from ...calculations.registry.tests.published_authority import published_legal_references, published_revision
 from ..classification import InvoiceKind
 from ..flow import (
     IvaFlowDirection,
@@ -296,7 +296,7 @@ def test_iva_flow_legal_articles_present_in_registry_toml() -> None:
     """The three LIVA articles backing the flow taxonomy must be in the registry."""
     path = bundled_path("registry", "aeat", "legal", "iva-flow.toml")
     with path.open("rb") as handle:
-        data = tomllib.load(handle)
+        data = load_toml(handle)
     legal = data.get("legal", {})
     assert "ley-37-1992:art-84" in legal
     assert "ley-37-1992:art-88" in legal
@@ -309,7 +309,7 @@ def test_iva_flow_legal_articles_carry_required_text_quotes() -> None:
     on drift)."""
     path = bundled_path("registry", "aeat", "legal", "iva-flow.toml")
     with path.open("rb") as handle:
-        data = tomllib.load(handle)
+        data = load_toml(handle)
     legal = data["legal"]
     assert any("Sujetos pasivos" in entry for entry in legal["ley-37-1992:art-84"]["required_text"])
     assert any("Repercusión del impuesto" in entry for entry in legal["ley-37-1992:art-88"]["required_text"])
@@ -329,10 +329,10 @@ def test_iva_flow_corpus_excerpts_present_with_boe_quotes() -> None:
 def test_iva_flow_load_registry_recognises_three_articles() -> None:
     """The registry tree loader must surface the three LIVA articles in
     the catalogue."""
-    catalogues = compiled_bundled_authority().catalogues
-    assert "ley-37-1992:art-84" in catalogues.legal
-    assert "ley-37-1992:art-88" in catalogues.legal
-    assert "ley-37-1992:art-92" in catalogues.legal
+    legal = published_legal_references(("ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92"))
+    assert "ley-37-1992:art-84" in legal
+    assert "ley-37-1992:art-88" in legal
+    assert "ley-37-1992:art-92" in legal
 
 
 # ---------------------------------------------------------------------------
@@ -445,8 +445,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     changes, this test fires unless 303's formula updates in lockstep."""
     from ..flow import is_devengada_flow
 
-    m303 = compiled_bundled_authority().modelo("303")
-    revision = m303.revisions["2022"]
+    revision = published_revision("303", "2022")
 
     # Each ledger_iva_aggregation binding declares its flow direction in
     # the selector. Collect the flow directions of all bindings whose

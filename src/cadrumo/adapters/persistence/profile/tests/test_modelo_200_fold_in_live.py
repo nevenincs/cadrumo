@@ -37,7 +37,7 @@ observation-persistence API
 (:meth:`CalculationObservationRepository.save_observation`, the same write path the
 local-file carry flow uses), stamped with the non-official ``app_filing``
 source_kind, over a real encrypted-SQLite object store
-(:class:`SecureObjectRepository` + :class:`EphemeralMasterKeyProvider` via
+(:class:`SecureObjectRepository` + :class:`EphemeralBucketSession` via
 :func:`isolated_runtime_profile`). M200 is a sociedad surface: the live calculate
 needs the six-binding legal-entity profile scaffold (``new-entity-flag``,
 ``incn-prior-12-months``, ``tributacion-estado-porcentaje``,

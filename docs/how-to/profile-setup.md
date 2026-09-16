@@ -26,10 +26,9 @@ under a different name. To understand why the tool is local-first and
 human-gated, see the [explanation guides](../explanation/index.md).
 
 List your profiles with `aeat config profile list` and see which one is active.
-Create each additional taxpayer interactively so its passphrase and one-time
-recovery phrase are both enrolled and verified, then switch by exact name.
-The executable example checks the current active-profile composition without
-fabricating another taxpayer or recovery phrase:
+Create each additional taxpayer interactively so its passphrase is chosen at
+the terminal, then switch by exact name. The executable example checks the
+current active-profile composition without fabricating another taxpayer:
 
 ```{cli-sequence} profile-setup-multiple
 :verify: Confirm the profile list identifies the active taxpayer exactly.
@@ -101,14 +100,16 @@ Each page explains its choices and shows the expected format for dates,
 amounts, and identifiers, and refuses an invalid value on the spot. A
 malformed date or tax identifier never reaches your stored profile.
 
-The wizard prompts for the profile passphrase before it stores anything. It
-then shows a 24-word recovery phrase and requires exact re-entry before it
-publishes the profile. Creation refuses if this verification does not finish.
-Recovery cannot be added later, and it never participates in password login.
+The wizard prompts for the profile passphrase before it stores anything. Once
+the profile exists it asks whether to set up an optional recovery code, which
+can reset a forgotten passphrase; answering no is the default and you can
+enable it later. See [protect access to your
+data](protect-data-access.md#set-up-a-recovery-code-optional).
 
-For unattended runs, provide the separate recovery handoff and verification
-channels described in
-[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
+For unattended runs, supply the passphrase through the machine channel
+described in
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt);
+recovery is never offered on that path.
 
 Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can also
 store its default output language.

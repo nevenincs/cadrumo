@@ -4,11 +4,10 @@ Walks :class:`~cadrumo.domain.calculations.registry.FormulaExpression` trees
 declared on a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` to
 extract casilla, binding, parameter, and date-binding references, and
 produces topologically sorted evaluation orders for the formula engine.
+Dangling expression references and formula dependency cycles are rejected
+when the registry authority is built, before these graph builders run.
 
 See Also:
-    :mod:`dev.registry.compiler.validate_formulas`
-        Validation layer that rejects dangling expression refs and formula
-        dependency cycles before runtime graph builders are used.
     :mod:`cadrumo.domain.calculations.registry.formula_runtime`
         Formula evaluator that consumes these graph projections.
     :mod:`cadrumo.domain.calculations.registry.queries`

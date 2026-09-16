@@ -17,12 +17,10 @@ from datetime import date
 from typing import cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.tipos_actividad import TipoActividad
 from ...calculations.registry.authority import (
     PinnedAuthorityOperation,
-    ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
 from ...calculations.registry.facts.resolution import (
@@ -32,7 +30,9 @@ from ...calculations.registry.facts.resolution import (
     ResolvedScalarFact,
 )
 from ...calculations.registry.facts.schema import FactOwnership, ScalarFactPayload
+from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (
     load_tipo_actividad_selectors,
@@ -52,7 +52,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 
 def _art_95_selector_ids(
     *,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
     effective_date: date,
 ) -> tuple[str, ...]:
     """Read the article-95 selector cohort from the registry's M036 catalogue fact."""
@@ -85,7 +85,7 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
     no codes keeps the gap where a reader looks for the mapping; dropping the
     entry would make the file read as a complete partition of art. 95.
     """
-    authority = compiled_bundled_authority()
+    authority = PublishedGovernedFactSource()
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     selectors = load_tipo_actividad_selectors(selector_ids, effective_date=date(2026, 4, 1), authority=authority)
     empty_selector_ids = tuple(fact_id for fact_id, codes in selectors.items() if not codes)
@@ -98,7 +98,7 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
 
 def test_no_code_selects_two_partitions() -> None:
     """A code selects at most one partition, so a rate lookup cannot be ambiguous."""
-    authority = compiled_bundled_authority()
+    authority = PublishedGovernedFactSource()
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     selected = [
         code
@@ -113,7 +113,7 @@ def test_no_code_selects_two_partitions() -> None:
 
 def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     """Selectors draw from the closed code set, never a free-form token."""
-    authority = compiled_bundled_authority()
+    authority = PublishedGovernedFactSource()
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     accepted = {member.value for member in TipoActividad}
     for codes in load_tipo_actividad_selectors(
@@ -211,5 +211,5 @@ def test_selector_resolution_refuses_a_non_entity_set_fact(authority_operation: 
         resolve_tipo_actividad_selector(
             "rirpf-art-95:selector-m036-actividades-profesionales",
             effective_date=date(2025, 12, 31),
-            authority=cast("ValidatedRegistryAuthority", ScalarAuthority()),
+            authority=cast("GovernedFactSource", ScalarAuthority()),
         )

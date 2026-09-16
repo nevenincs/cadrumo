@@ -26,7 +26,6 @@ audit trail from BOE → substrate → ledger → modelo is grep-able.
 from __future__ import annotations
 
 import re
-import tomllib
 from collections.abc import Iterator
 from datetime import date
 from datetime import date as _esp_date
@@ -34,13 +33,17 @@ from decimal import Decimal
 from typing import cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    published_legal_references,
+    published_revision,
+)
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
 
 from ....core.resources.bundled_data import bundled_path
+from ....core.toml import load_toml
 from ...calculations.registry.schema_base import ThresholdComparison
 from ...invoices.enums import iva_rate_kind, iva_rate_percentage
 from ..lookup import lookup_rate
@@ -85,7 +88,7 @@ def _read_corpus_excerpt(name: str) -> str:
 def _legal_entry(toml_relative: str, article_id: str) -> dict[str, str | list[str]]:
     path = bundled_path("registry", "aeat", "legal") / toml_relative
     with path.open("rb") as handle:
-        data = tomllib.load(handle)
+        data = load_toml(handle)
     return cast(dict[str, str | list[str]], data["legal"][article_id])
 
 
@@ -273,15 +276,12 @@ def test_liva_art_103_margin_is_registry_data_not_a_python_constant() -> None:
 
 def test_liva_art_103_pre_2015_ejercicio_is_refused_rather_than_guessed() -> None:
     """TEETH: the repealed redaction has no citable authority, so it is refused."""
-    from dev.registry.compiler.authority import compiled_bundled_authority
-
     from ..prorrata_especial_parameters import (
         ProrrataEspecialMandatoryParameterError,
         resolve_prorrata_especial_mandatory_parameters,
     )
 
-    authority = compiled_bundled_authority()
-    revision = authority.modelo("303").revisions["2025"]
+    revision = published_revision("303", "2025")
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
         resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
     assert "predates the only redaction" in str(excinfo.value)
@@ -414,8 +414,10 @@ def test_registry_tree_loader_recognises_all_rate_articles() -> None:
     that backs the IVA + IRPF rate substrate. If any article is missing
     from the catalogue, downstream modelo bindings can't reference it
     and validation fails — this test catches the regression upstream."""
-    catalogues = compiled_bundled_authority().catalogues
-    assert "ley-37-1992:art-90" in catalogues.legal
-    assert "ley-37-1992:art-91" in catalogues.legal
-    assert "ley-37-1992:art-161" in catalogues.legal
-    assert "ley-35-2006:art-85" in catalogues.legal
+    legal = published_legal_references(
+        ("ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "ley-35-2006:art-85"),
+    )
+    assert "ley-37-1992:art-90" in legal
+    assert "ley-37-1992:art-91" in legal
+    assert "ley-37-1992:art-161" in legal
+    assert "ley-35-2006:art-85" in legal

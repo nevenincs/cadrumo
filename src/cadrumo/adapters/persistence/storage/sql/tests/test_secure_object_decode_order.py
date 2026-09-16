@@ -12,7 +12,7 @@ unreadable VERDICT is order-invariant, since a row must pass both to be read.
 So every assertion here is on the attributed FAILURE, never on the verdict; an
 assertion on the verdict would pass under either order and prove nothing.
 
-Real behaviour throughout: real SQLite, a real ``EphemeralMasterKeyProvider``,
+Real behaviour throughout: real SQLite, a real ``EphemeralBucketSession``,
 real AEAD, real stored-metadata corruption. Nothing is mocked.
 """
 
@@ -29,7 +29,7 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ...errors import SecureObjectUnreadableError
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectUnreadable
 from ._secure_objects_support import (
     _repo_at,
@@ -97,7 +97,7 @@ def test_batch_attributes_a_doubly_broken_row_to_lineage(tmp_path: Path) -> None
     AEAD failure text instead. The verdict -- unreadable -- is identical under
     both orders, which is exactly why this test asserts the reason.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "order-batch.db"
     with provider:
         _seed(db_path)
@@ -120,7 +120,7 @@ def test_both_surfaces_attribute_a_doubly_broken_row_identically(tmp_path: Path)
     reported a decryption failure. Cross-surface agreement on WHICH check
     failed is the property the shared decode core establishes.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "order-both.db"
     with provider:
         _seed(db_path)
@@ -143,7 +143,7 @@ def test_lineage_only_break_is_attributed_to_lineage(tmp_path: Path) -> None:
     exists to show the lineage check refuses on its own rather than only
     winning a race with decryption.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "order-lineage.db"
     with provider:
         _seed(db_path)
@@ -161,7 +161,7 @@ def test_ciphertext_only_break_is_attributed_to_decryption(tmp_path: Path) -> No
     attribution above is not simply swallowing every failure -- a decryption
     failure still surfaces as one.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "order-cipher.db"
     with provider:
         _seed(db_path)
@@ -248,7 +248,7 @@ def test_malformed_row_metadata_is_isolated_to_its_own_row(
     a bare ValueError out of ``int()`` and took every remaining row with it.
     The shared decode core was never even reached.
     """
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / f"malformed-{column}.db"
     with provider:
         _seed(db_path)
@@ -286,7 +286,7 @@ def test_malformed_row_metadata_is_isolated_to_its_own_row(
 
 def test_an_untampered_namespace_still_scans_clean(tmp_path: Path) -> None:
     """Positive control: the normalisation guard reports nothing on healthy rows."""
-    provider = EphemeralMasterKeyProvider()
+    provider = EphemeralBucketSession()
     db_path = tmp_path / "clean-scan.db"
     with provider:
         _seed(db_path)

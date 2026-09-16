@@ -31,7 +31,6 @@ See Also:
 
 from __future__ import annotations
 
-import tomllib
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -39,6 +38,7 @@ from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
+from ....core.toml import load_toml
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..classification import InvoiceKind
@@ -109,7 +109,7 @@ def _bundled_legal_ref_ids() -> frozenset[str]:
     )
     for path in swept:
         with path.open("rb") as handle:
-            payload = tomllib.load(handle)
+            payload = load_toml(handle)
         legal_table = payload.get("legal")
         if isinstance(legal_table, dict):
             ids.update(legal_table)

@@ -638,7 +638,7 @@ class AuthorityArtifact:
         if legal_ids != set(self.catalogues.legal):
             raise ValueError("authority artifact legal evidence must cover exactly its legal catalogue")
         required_sources = embedded_source_ids(self.catalogues.sources)
-        source_ids = {item.source_reference_id for item in self.evidence.sources}
+        source_ids = frozenset(item.source_reference_id for item in self.evidence.sources)
         if source_ids != required_sources:
             raise ValueError("authority artifact source evidence must cover exactly its runtime source catalogue")
         for item in self.evidence.sources:

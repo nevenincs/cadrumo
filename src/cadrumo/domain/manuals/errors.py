@@ -29,8 +29,7 @@ class ManualReviewRequiredError(ManualError):
     The verify CLI rejects any :class:`~cadrumo.domain.manuals.Manual`,
     :class:`~cadrumo.domain.manuals.Section`, or
     :class:`~cadrumo.domain.manuals.Rule` record missing
-    ``definition_reviewed_by`` or ``definition_reviewed_at`` when the
-    ``CADRUMO_MANUALS_REVIEW_REQUIRED`` setting is enabled.
+    ``definition_reviewed_by`` or ``definition_reviewed_at``.
     """
 
 

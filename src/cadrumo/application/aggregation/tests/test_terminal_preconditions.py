@@ -12,9 +12,9 @@ from types import ModuleType
 from typing import override
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import AggregationCaptureKind
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
@@ -336,7 +336,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        revision=compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision,
+        revision=published_snapshot("303", filing_year=2025, period="1T").revision,
     )
     expected_facts: dict[str, str | int | bool | Decimal]
     if refusal == "uncovered_deduction":

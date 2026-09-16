@@ -7,7 +7,6 @@ import hashlib
 import io
 import json
 import re
-import tomllib
 import unicodedata
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
@@ -20,6 +19,7 @@ from babel.messages.mofile import write_mo
 from babel.messages.pofile import read_po
 
 from cadrumo.core.i18n.render import extract_placeholders
+from cadrumo.core.toml import TomlDecodeError, load_toml
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._spelling import SpellingToolError, load_dictionaries
@@ -1099,8 +1099,8 @@ def _parallel_localization_inventory(
     for path in sorted(data_root.rglob("*.toml")) if data_root.is_dir() else ():
         try:
             with path.open("rb") as handle:
-                payload = tomllib.load(handle)
-        except (OSError, tomllib.TOMLDecodeError) as exc:
+                payload = load_toml(handle)
+        except (OSError, TomlDecodeError) as exc:
             counts["invalid_data_files"] += 1
             findings.append(_data_finding("invalid_localization_data", path, "", type(exc).__name__))
             continue
@@ -1649,8 +1649,8 @@ def _platform_identity_terms(repository: Path) -> frozenset[str]:
     descriptor = repository / "docs" / "_data" / "download_channels.toml"
     try:
         with descriptor.open("rb") as handle:
-            payload = tomllib.load(handle)
-    except (OSError, tomllib.TOMLDecodeError):
+            payload = load_toml(handle)
+    except (OSError, TomlDecodeError):
         return frozenset[str]()
     channels = payload.get("channel")
     if not isinstance(channels, list):

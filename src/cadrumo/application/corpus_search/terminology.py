@@ -27,7 +27,6 @@ Notes:
 from __future__ import annotations
 
 import re
-import tomllib
 from collections.abc import Iterable
 from functools import lru_cache
 from pathlib import Path
@@ -43,6 +42,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources.bundled_data import bundled_path
 from ...core.text_fold import fold_for_matching
+from ...core.toml import parse_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from .errors import CorpusSearchInputError
 
@@ -271,7 +271,7 @@ def load_terminology_concepts(locale: str = _FALLBACK_LOCALE) -> tuple[Terminolo
     root = _terminology_root()
     concepts: list[TerminologyConcept] = []
     for path in scan_directory(root, pattern="*.toml"):
-        payload = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
+        payload = parse_toml(path.read_text(encoding=UTF_8_ENCODING))
         projected = _project_concept(payload, locale=locale)
         if projected is not None:
             concepts.append(projected)

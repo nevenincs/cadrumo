@@ -24,12 +24,12 @@ can be deleted in one line deserves a check that runs in every lane.
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 from typing import Final
 
 import pytest
 
+from ..core.toml import parse_toml
 from .inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -43,7 +43,7 @@ _PYPROJECT: Final[Path] = REPO_ROOT / "pyproject.toml"
 
 def _configured_addopts() -> str:
     """Return the committed pytest ``addopts`` string."""
-    config = tomllib.loads(_PYPROJECT.read_text(encoding="utf-8"))
+    config = parse_toml(_PYPROJECT.read_text(encoding="utf-8"))
     return str(config["tool"]["pytest"]["ini_options"]["addopts"])
 
 

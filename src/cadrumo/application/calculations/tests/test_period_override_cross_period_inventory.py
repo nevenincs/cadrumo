@@ -12,7 +12,7 @@ from typing import Final
 
 import pytest
 
-from ...tests.period_override_authority import authority_with_period_override, pinned_operation_for_authority
+from ...tests.period_override_authority import period_override_operation
 from ..cross_period_clean_state import cross_period_dependency_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -25,20 +25,20 @@ _SERVED: Final = ("2T", "3T", "4T")
 
 
 def test_the_inventory_covers_only_the_periods_the_override_year_serves() -> None:
-    authority = authority_with_period_override(
+    with period_override_operation(
         modelo_id=_MODELO,
         revision_id=_REVISION,
         year=_YEAR,
         periods=_SERVED,
-    )
-    declared = authority.modelo(_MODELO).revisions[_REVISION].period_selector
-    assert declared.periods[0] == _DROPPED, "the fixture must discriminate a flat read"
+    ) as operation:
+        declared = operation.revision(_MODELO, _REVISION).period_selector
+        assert declared.periods[0] == _DROPPED, "the fixture must discriminate a flat read"
 
-    inventory = cross_period_dependency_inventory(
-        pinned_operation_for_authority(authority),
-        filing_year=_YEAR,
-        modelos=[_MODELO],
-    )
+        inventory = cross_period_dependency_inventory(
+            operation,
+            filing_year=_YEAR,
+            modelos=[_MODELO],
+        )
 
     covered = {str(item.target_period.code) for item in inventory.items}
     assert covered == set(_SERVED)

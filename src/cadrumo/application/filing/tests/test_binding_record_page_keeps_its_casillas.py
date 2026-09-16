@@ -21,7 +21,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
@@ -35,7 +36,7 @@ _REVISION = "2025"
 @pytest.fixture(scope="module")
 def pagina_siete() -> ExportRecordDefinition:
     """The real, binding-resolved Modelo 390 pagina 7 record."""
-    revision = compiled_bundled_authority().modelo("390").revisions[_REVISION]
+    revision = published_revision("390", _REVISION)
     record = next(
         candidate
         for layout in derive_export_layouts_from_bindings(revision)

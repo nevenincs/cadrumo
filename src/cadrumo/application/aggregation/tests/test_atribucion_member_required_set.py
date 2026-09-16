@@ -31,7 +31,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 
 from ..atribucion_member import (
     _REQUIRED_FIELDS,
@@ -87,7 +88,7 @@ _SAMPLE_ROW: Mapping[str, object] = {
 
 
 def _declared_fields() -> frozenset[str]:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     section = next(candidate for candidate in schema.sections if candidate.key == _SECTION)
     return frozenset(field.key for field in section.fields)
 

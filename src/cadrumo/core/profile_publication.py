@@ -21,11 +21,7 @@ class ProfilePublicationKind(StrEnum):
     """Which act published this generation of a profile's custody capsule."""
 
     ENROLL = "enroll"
-    """First publication, establishing custody for a profile that had none.
-
-    An enrolment is the only publication that may mint a recovery envelope, because
-    it is the only one where no earlier envelope exists to republish.
-    """
+    """First publication, establishing custody for a profile that had none."""
 
     RESTORE = "restore"
     """Republication of custody for a profile that already had it.

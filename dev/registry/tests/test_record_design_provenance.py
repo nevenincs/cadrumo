@@ -1,11 +1,11 @@
 """Official-design citations remain checked after the rename campaign is retired."""
 
-import tomllib
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from dev.registry.record_design_labels import RecordDesignUnavailableError, record_design_source_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -17,7 +17,7 @@ def test_an_evolution_cites_the_design_source_the_edition_declares() -> None:
     root = Path(bundled_path("registry", "aeat", "modelos"))
     for edition in ("2021", "2022"):
         manifest = root / "714" / "revisions" / edition / "revision.toml"
-        table = tomllib.loads(manifest.read_text(encoding="utf-8"))["revisions"][edition]
+        table = parse_toml(manifest.read_text(encoding="utf-8"))["revisions"][edition]
         assert record_design_source_ref("714", edition) in table.get("source_refs", ())
 
 

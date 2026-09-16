@@ -1,8 +1,7 @@
 """Support types and defaults for the central settings facade.
 
 This module holds the closed settings enums and derived records consumed
-by :class:`~core.config.Settings`: secret storage selection
-(:class:`~core.config_support.SecretStoreBackend`), LLM provider selection
+by :class:`~core.config.Settings`: LLM provider selection
 (:class:`~core.config_support.LLMProvider`), and database routing via
 :class:`~core.config_support.StorageRouteKind` and
 :class:`~core.config_support.StorageRouteClassification`.
@@ -63,26 +62,6 @@ def assert_canonical_protected_resource(value: str, *, subject: str) -> str:
     if value != AEAT_CERTIFICATE_PROTECTED_URL:
         raise ValueError(f"{subject} must use the canonical protected resource")
     return value
-
-
-class SecretStoreBackend(StrEnum):
-    """Whether at-rest material is protected by real custody or a published key.
-
-    :class:`~core.config.Settings` exposes this closed set through
-    ``cadrumo_secret_store_backend``. It is a two-state axis, not a choice
-    among storage mechanisms: there is exactly one secured route, the profile's
-    own password custody, and one deliberately unsecured route for testing and
-    tutorial scenarios.
-
-    The set previously also offered ``keyring`` and ``file``, naming a
-    keychain-backed and a passphrase-derived file-backed master-key provider.
-    Both providers were deleted in the per-profile custody cutover, and nothing
-    ever branched on either member, so the two spellings selected nothing while
-    reading as storage modes an operator could choose between.
-    """
-
-    AUTO = "auto"
-    UNSECURED = "unsecured"
 
 
 class TuiAppearance(StrEnum):
@@ -232,7 +211,6 @@ __all__ = [
     "AEAT_CERTIFICATE_PROTECTED_URL",
     "JustificanteParserBackendSetting",
     "LLMProvider",
-    "SecretStoreBackend",
     "StorageRouteClassification",
     "StorageRouteKind",
     "assert_canonical_protected_resource",

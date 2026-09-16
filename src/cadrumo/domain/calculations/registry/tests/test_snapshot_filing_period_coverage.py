@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from ..authority import ValidatedRegistryAuthority
+from ..authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
@@ -43,7 +43,7 @@ _FILING_COORDINATES: tuple[tuple[str, int, str], ...] = (
 
 @pytest.mark.parametrize(("modelo", "filing_year", "period"), _ADMINISTRATIVE_COORDINATES)
 def test_an_administrative_coordinate_carries_no_filing_period(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
     modelo: str,
     filing_year: int,
     period: str,
@@ -62,7 +62,7 @@ def test_an_administrative_coordinate_carries_no_filing_period(
 
 @pytest.mark.parametrize(("modelo", "filing_year", "period"), _FILING_COORDINATES)
 def test_a_filing_coordinate_carries_a_consistent_filing_period(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
     modelo: str,
     filing_year: int,
     period: str,
@@ -81,7 +81,7 @@ def test_a_filing_coordinate_carries_a_consistent_filing_period(
 
 
 def test_the_two_classes_are_both_represented(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """Both branches are exercised, so neither list can quietly empty out."""
     absent = [

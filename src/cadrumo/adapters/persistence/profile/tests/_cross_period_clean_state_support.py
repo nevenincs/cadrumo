@@ -8,10 +8,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
@@ -44,7 +40,6 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -54,13 +49,15 @@ from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bind
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context,
+    published_snapshot,
+)
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -130,27 +127,16 @@ def _store_ready_profile(
                 ),
                 created_at=_CLOCK,
                 updated_at=_CLOCK,
-                context=_profile_creation_context_for_test(),
+                context=leased_profile_create_context(),
             ),
         )
 
 
 @cache
 def _snapshot_390() -> RegistrySnapshot:
-    """Build a CALCULATION-grade snapshot directly, bypassing filing-grade admission.
-
-    Modelo 390 carries a real fichero-BOE layout on every revision, so this
-    succeeds without going through
-    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`, whose
-    ``.load()`` validates the entire registry tree -- including modelos with no
-    export layout at all -- and currently refuses unconditionally as a result.
-    """
-    modelos, catalogues = bundled_registry_tree()
-    modelo = next(candidate for candidate in modelos if candidate.id == "390")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
+    """Build a CALCULATION-grade snapshot from the published generation, below filing-grade admission."""
+    return published_snapshot(
+        "390",
         filing_year=_M390_YEAR,
         period=_M390_PERIOD,
         grade=RegistryAuthorityGrade.CALCULATION,
@@ -206,7 +192,7 @@ def _save_source_observation(
 
 @cache
 def _snapshot_353() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("353", filing_year=_M353_YEAR, period=_M353_PERIOD)
+    return published_snapshot("353", filing_year=_M353_YEAR, period=_M353_PERIOD)
 
 
 @cache
@@ -268,7 +254,7 @@ def _seed_member_322_filing(
             "aeat_justificante_csv": f"JUST322{member_nif}",
         }
     values = _member_source_values(member_nif, source_casilla_ids)
-    registry_snapshot = compiled_bundled_authority().snapshot(
+    registry_snapshot = published_snapshot(
         "322",
         filing_year=_M353_YEAR,
         period=_M353_PERIOD,
@@ -471,7 +457,7 @@ def _source_casilla_ids_by_period() -> dict[str, set[CasillaId]]:
 
 
 def _create_source_303_work_unit(period: str, *, operation: PinnedAuthorityOperation) -> WorkUnit:
-    registry_snapshot = compiled_bundled_authority().snapshot(
+    registry_snapshot = operation.snapshot(
         "303",
         filing_year=_M390_YEAR,
         period=period,
@@ -683,13 +669,11 @@ def _seed_source_filing_record_without_import_flow(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=compiled_bundled_authority()
-        .snapshot(
+        registry_snapshot_ref=published_snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
-        )
-        .snapshot_ref,
+        ).snapshot_ref,
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=casilla_values,
         observations=registry_grounded_observations(

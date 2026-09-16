@@ -51,10 +51,11 @@ from __future__ import annotations
 
 import ast
 import sys
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
+
+from cadrumo.core.toml import parse_toml
 
 from .unread_inputs import report_unread
 
@@ -305,7 +306,7 @@ def _declared_read_only(declaration: Path = _DECLARATION) -> dict[str, str]:
     """Return the declared read-only stores mapped to their rationale."""
     if not declaration.exists():
         return {}
-    document = tomllib.loads(declaration.read_text(encoding="utf-8"))
+    document = parse_toml(declaration.read_text(encoding="utf-8"))
     declared: dict[str, str] = {}
     for entry in document.get("read_only", ()):
         name = str(entry.get("name", "")).strip()

@@ -15,12 +15,11 @@ failure that produced this rewrite.
 
 from __future__ import annotations
 
-import tomllib
-
 import pytest
 
 from cadrumo.core.corpus_text import resolve_anchored_extracted_unit
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 from dev.corpus.fetch_boe_normative import (
     ArticleRedaction,
@@ -532,7 +531,7 @@ def test_only_the_shared_loader_walks_the_legal_catalogue() -> None:
     """The duplication the hoist removed must not grow back.
 
     Two screens each carried the same directory constant, the same
-    byte-identical refusal and the same glob-to-tomllib walk, and the copies had
+    byte-identical refusal and the same glob-to-rtoml walk, and the copies had
     already diverged in what they returned. Keyed on the directory path rather
     than on a function name, so a re-implementation under any name is caught.
     """
@@ -608,7 +607,7 @@ def test_only_the_known_non_entry_files_contribute_no_legal_entry() -> None:
     silent = {
         path.name
         for path in scan_directory(_REPO_ROOT / LEGAL_DIR, pattern="*.toml")
-        if not tomllib.loads(path.read_text(encoding="utf-8")).get("legal", {})
+        if not parse_toml(path.read_text(encoding="utf-8")).get("legal", {})
     }
     assert silent == _FILES_WITHOUT_A_LEGAL_TABLE, (
         "the set of catalogue TOMLs contributing no legal entry has changed; unexpectedly "

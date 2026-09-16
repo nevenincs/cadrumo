@@ -78,7 +78,6 @@ try:
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
         cadrumo_secret_store_dir=storage_root / "fallback-store",
-        cadrumo_secret_store_backend="auto",
         cadrumo_secret_passphrase=None,
         cadrumo_output_language="en",
     )
@@ -96,7 +95,6 @@ try:
         register_profile_with_credentials(
             label=label,
             passphrase=passphrase,
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         )
         logout_active_profile()
         verdict["profile_registered"] = True

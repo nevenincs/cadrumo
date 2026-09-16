@@ -302,7 +302,7 @@ class ConfigProfileArchiveExportResult(OutputSchema):
     copy cannot learn it. Telling the requester is safe; publishing it in the
     bytes would not be.
 
-    No password, recovery phrase, key material or label enters this payload.
+    No password, recovery code, key material or label enters this payload.
     """
 
     bucket_id: BucketId
@@ -337,20 +337,13 @@ class ConfigProfileArchiveImportResult(OutputSchema):
     Reports one completed restore of a capsule the operator held on disk.
 
     ``authority`` names which door proved the key rather than leaving it
-    implicit in which flags were passed, so a caller reading a stored envelope
-    later can tell a password restore from a recovery-artifact one.
+    implicit, so a caller reading a stored envelope later can audit it.
 
-    ``recovery_enrolled`` is reported on every restore because a restore IS a
-    publication, and publication is the only moment a recovery wrapper can be
-    installed. A restored profile carrying ``false`` has permanently lost its
-    second door, and an operator who is not told cannot act on it.
+    ``recovery_enrolled`` is reported on every restore because a restore never
+    installs a recovery wrapper: a restored profile always carries ``false``
+    here, and an operator who is not told cannot know to enrol again.
 
-    ``password_unchanged`` is the recovery door's honest limit: that door
-    republishes the capsule under its EXISTING password envelope, so it
-    recovers the records without recovering the credential. It is a field
-    rather than only a notice so a machine caller can branch on it.
-
-    No password, recovery phrase, key material or wrapper bytes enter this
+    No password, recovery code, key material or wrapper bytes enter this
     payload.
     """
 
@@ -358,7 +351,41 @@ class ConfigProfileArchiveImportResult(OutputSchema):
     label: str
     authority: ProfileRestoreAuthority
     recovery_enrolled: bool
-    password_unchanged: bool
+
+
+class ConfigProfileRecoveryResult(OutputSchema):
+    """JSON envelope for ``aeat config profile recovery enable`` and ``disable``.
+
+    Reports the enrolment state after the verb and whether it changed. The
+    recovery code itself never enters this payload: it reaches the operator
+    only through the controlling terminal or the explicit handoff descriptor.
+    """
+
+    profile_id: ProfileId
+    enrolled: bool
+    changed: bool
+
+
+class ConfigProfileRecoveryStatusResult(OutputSchema):
+    """JSON envelope for ``aeat config profile recovery status``."""
+
+    profile_id: ProfileId
+    enrolled: bool
+
+
+class ConfigPassphraseResetResult(OutputSchema):
+    """JSON envelope for ``aeat config passphrase reset``.
+
+    Same non-secret facts as a passphrase change: the reset re-wraps the
+    existing key under the new passphrase, preserves the DEK epoch, and leaves
+    the recovery enrolment that authorised it in place.
+    """
+
+    profile_id: BucketId
+    changed: bool
+    password_generation: PostChangePasswordGeneration
+    dek_epoch_preserved: bool
+    recovery_enrollment_retained: bool
 
 
 class ConfigLogoutResult(OutputSchema):

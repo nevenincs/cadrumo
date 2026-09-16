@@ -21,7 +21,7 @@ from ......core.secure_object_write import SecureObjectWrite
 from ...crypto.encrypted_columns import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectDeletion
 from ..secure_objects import SecureObjectRepository
 
@@ -52,7 +52,7 @@ def _repo(tmp_path: Path) -> Generator[SecureObjectRepository]:
 
 
 def test_apply_batch_upserts_and_deletes_in_one_unit(tmp_path: Path) -> None:
-    with EphemeralMasterKeyProvider(), _repo(tmp_path) as repo:
+    with EphemeralBucketSession(), _repo(tmp_path) as repo:
         repo.apply_batch((_write("alpha", b"alpha-1"), _write("beta", b"beta-1")))
         assert repo.exists(_NS, "alpha")
         assert repo.exists(_NS, "beta")
@@ -70,7 +70,7 @@ def test_apply_batch_upserts_and_deletes_in_one_unit(tmp_path: Path) -> None:
 
 
 def test_namespace_payload_hashes_keys_match_natural_key_digests(tmp_path: Path) -> None:
-    with EphemeralMasterKeyProvider(), _repo(tmp_path) as repo:
+    with EphemeralBucketSession(), _repo(tmp_path) as repo:
         repo.apply_batch((_write("alpha", b"stable-body"), _write("beta", b"beta-body")))
 
         stored = repo.namespace_payload_hashes(_NS)
@@ -90,7 +90,7 @@ def test_apply_batch_is_atomic_on_failure(tmp_path: Path) -> None:
     A stale ``expected_revision_id`` raises *inside* the unit of work; the sibling
     upsert and the deletion in the same batch must not survive.
     """
-    with EphemeralMasterKeyProvider(), _repo(tmp_path) as repo:
+    with EphemeralBucketSession(), _repo(tmp_path) as repo:
         repo.apply_batch((_write("keep", b"keep-body"), _write("victim", b"victim-body")))
 
         with pytest.raises(SecureObjectRevisionConflictError):

@@ -1840,8 +1840,6 @@ cli:
         remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
       current_passphrase_prompt: 'Contraseña actual del perfil: '
-      data_loss_warning: Anota ahora esta clave de recuperación. AEAT no almacena
-        la clave de recuperación en claro y no puede mostrarla otra vez.
       errors:
         echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
           por lo que el secreto quedaría visible en pantalla; use --secrets-stdin
@@ -1907,11 +1905,6 @@ cli:
       profile_secrets_stdin_help: Lee la contraseña del perfil de destino exacto desde
         un objeto JSON acotado en la entrada estándar después de que falle la reanudación
         de la sesión.
-      recovery_words_cancel: Cancelar la creación
-      recovery_words_confirm: Ya la he anotado
-      recovery_words_heading: Guarda esta frase de recuperación
-      recovery_words_warning: Solo se muestra una vez. Quien tenga esta frase puede
-        abrir el perfil sin la contraseña.
       secrets_fd_help: Descriptor de archivo para leer secretos de máquina.
       secrets_stdin_help: Lee los secretos como un único objeto JSON acotado desde
         la entrada estándar en lugar de solicitarlos.
@@ -2047,10 +2040,14 @@ cli:
           cerrar.
     passphrase:
       change_help: Cambia la contraseña sin volver a cifrar los registros ni invalidar
-        una frase de recuperación.
+        un código de recuperación.
       help: Gestiona la contraseña que protege el perfil activo.
       no_active_profile: No hay ningún perfil activo. Inicia sesión con 'aeat config
         login NOMBRE' antes de cambiar su contraseña.
+      reset_code_prompt: 'Código de recuperación: '
+      reset_help: Establece una nueva contraseña para un perfil demostrando su código
+        de recuperación; úsalo cuando hayas olvidado la contraseña.
+      reset_name_help: Nombre del perfil cuya contraseña se restablece.
     profile:
       add_row:
         duplicate_field: El campo %{field} se indicó más de una vez; no se escribió
@@ -2060,26 +2057,22 @@ cli:
         invalid_value: Cada --value debe usar la sintaxis CAMPO=VALOR; no se escribió
           nada.
         section_help: Clave de la sección repetible del perfil.
+        unknown_section: '''{section}'' no es una sección repetible del perfil. Secciones
+          disponibles: {sections}.'
         value_help: Campo de la fila como CAMPO=VALOR; repítalo por cada campo informado.
       archive:
-        export_help: Escribe la capsula del perfil indicado en un archivo sellado
-          en --to; el archivo se cifra con la contrasena del perfil y no incluye la
-          etiqueta.
+        export_help: Escribe la cápsula del perfil indicado en un archivo sellado
+          en --output; el archivo se cifra con la contraseña del perfil y no incluye
+          la etiqueta.
         export_name_help: Perfil a respaldar; por defecto el activo.
-        export_out_help: Ruta de destino del archivo.
+        export_out_help: Ruta de destino del archivo. El nombre debe terminar en '.cadrumo-bucket.tar.gz'.
         help: Copia de seguridad de un perfil en un archivo sellado y cifrado AEAD,
           o inspeccion de uno; restauralo con 'aeat config profile archive import'.
-        import_artifact_help: Archivo de artefacto de recuperacion; uselo cuando se
-          haya perdido la contrasena del perfil.
         import_file_help: Ruta al directorio de la capsula sin publicar que se va
           a restaurar.
-        import_help: Vuelve a publicar una capsula de perfil desde un directorio;
-          anade --artifact para recuperar con la frase de 24 palabras.
+        import_help: Vuelve a publicar una cápsula de perfil desde un directorio o
+          un archivo sellado demostrando su contraseña.
         import_label_help: Nombre visible del perfil restaurado.
-        import_password_unchanged: 'Tus registros estan restaurados, pero la contrasena
-          del perfil no ha cambiado: esta via recupera los datos, no la credencial.
-          Inicia sesion con la contrasena original o cambiala en cuanto puedas.'
-        import_recovery_secret_prompt: 'Frase de recuperacion (24 palabras): '
         inspect_help: Muestra la cabecera de un archivo sellado sin descifrarlo ni
           restaurarlo.
         inspect_path_help: Ruta al archivo sellado que se va a inspeccionar.
@@ -2104,6 +2097,10 @@ cli:
           de auditoría pendientes.
         reconcile_none_info: No se ha encontrado ninguna exportación de perfil interrumpida.
           Ninguna ejecución anterior ha dejado nada pendiente.
+        refusal:
+          export_suffix: La ruta de destino debe terminar en '{suffix}'. Vuelve a
+            ejecutar el comando con un --output que use esa terminación; no se ha
+            leído ningún perfil.
       bundle_flow:
         export_section_title: Exportar el paquete de perfil
         import_section_title: Importar el paquete de perfil
@@ -2166,9 +2163,15 @@ cli:
         help: Declara que el perfil activo está listo para presentar.
         incomplete: 'Faltan datos obligatorios en el perfil: {paths}'
       create_confirm_passphrase_prompt: 'Confirma la contraseña del nuevo perfil: '
-      create_help: Crea un perfil activo con recuperación obligatoria y verificada.
-        La recuperación no puede añadirse después ni participa en el inicio de sesión
-        con contraseña.
+      create_guidance_unavailable: El perfil se ha creado correctamente, pero no se
+        han podido preparar los avisos con los pasos siguientes. Consulta 'config
+        profile status' para ver qué falta.
+      create_help: Crea un perfil protegido por una contraseña. En un terminal ofrece
+        después un código de recuperación opcional; puedes omitirlo o añadirlo más
+        tarde con 'aeat config profile recovery enable'.
+      create_login_required: El perfil '{profile}' se ha creado, pero todavía no tienes
+        una sesión abierta en él. Inicia sesión con el comando 'config login {profile}'
+        para desbloquear sus datos antes de continuar.
       create_name_required: Se requiere un nombre de perfil. Ejecuta 'aeat config
         profile create NOMBRE'.
       create_passphrase_channel_absent: No hay ningún canal de contraseña disponible.
@@ -2176,33 +2179,14 @@ cli:
       create_passphrase_mismatch: La contraseña y su confirmación no coinciden; no
         se creó ningún perfil.
       create_passphrase_prompt: 'Contraseña del nuevo perfil: '
-      create_recovery_channel_absent: La recuperación es obligatoria. En modo sin
-        terminal, proporcione --recovery-handoff-fd y --recovery-verification-fd;
-        no se creó ningún perfil.
-      create_recovery_descriptor_collision: La entrega, la verificación y la contraseña
-        deben usar descriptores distintos; no se leyó ningún descriptor.
-      create_recovery_descriptor_pair_required: --recovery-handoff-fd y --recovery-verification-fd
-        deben proporcionarse juntos.
-      create_recovery_descriptor_reserved: Los descriptores de recuperación deben
-        ser no negativos y no pueden ser la entrada, salida ni error estándar.
-      create_recovery_enrolled: La recuperación se inscribió al crear el perfil tras
-        verificar la posesión exacta. No puede añadirse después; la frase es una prueba
-        explícita de restauración y el inicio de sesión con contraseña sigue siendo
-        independiente.
-      create_recovery_handoff_fd_help: Escribe la frase de recuperación de un solo
-        uso como un objeto JSON secreto acotado en este descriptor heredado escribible.
-      create_recovery_handoff_too_large: La entrega de recuperación superó el límite
-        de 8192 bytes; no se creó ningún perfil.
-      create_recovery_handoff_unwritable: El descriptor de entrega no era un canal
-        heredado escribible; no se creó ningún perfil.
-      create_recovery_verification_cancelled: Se canceló la confirmación de recuperación;
-        no se creó ningún perfil.
-      create_recovery_verification_fd_help: Lee la frase exacta como un objeto JSON
-        secreto acotado desde este descriptor heredado legible antes de publicar.
-      create_recovery_verification_mismatch: No se pudo verificar la posesión de la
-        frase de recuperación; no se creó ningún perfil.
-      create_recovery_verification_prompt: 'Vuelva a introducir la frase de recuperación
-        para verificar su posesión: '
+      create_recovery_enrolled: 'La recuperación está configurada. Guarda el código
+        lejos de este equipo: permite restablecer una contraseña olvidada.'
+      create_recovery_offer_prompt: '¿Configurar ahora un código de recuperación?
+        Permite restablecer una contraseña olvidada y también puedes añadirlo más
+        tarde. [y/N] '
+      create_recovery_skipped: La recuperación no está configurada. Sin ella no se
+        puede restablecer una contraseña olvidada; actívala cuando quieras con el
+        comando 'config profile recovery enable'.
       delete:
         help: Elimina un perfil y su estado local; --yes confirma la eliminación
         name_help: Nombre del perfil que quieres eliminar
@@ -2265,6 +2249,45 @@ cli:
         modelos. Vuelve a abrirlo cuando quieras con 'aeat config profile edit'.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
+      recovery:
+        channel_absent: Un código de recuperación solo puede mostrarse en un terminal.
+          En un host sin terminal, indica --recovery-handoff-fd y --recovery-verification-fd;
+          no se registró nada.
+        code_heading: 'Tu código de recuperación. Anótalo y guárdalo lejos de este
+          equipo:'
+        code_warning: Se muestra una sola vez. Cualquiera que tenga este código puede
+          establecer una nueva contraseña para el perfil.
+        descriptor_collision: La entrega de recuperación, la verificación de recuperación
+          y la carga de la contraseña deben usar descriptores distintos; no se leyó
+          ningún descriptor.
+        descriptor_pair_required: --recovery-handoff-fd y --recovery-verification-fd
+          deben indicarse juntos.
+        descriptor_reserved: Los descriptores de recuperación no pueden ser negativos
+          ni la entrada, la salida o el error estándar.
+        disable_help: Elimina el código de recuperación del perfil activo tras demostrar
+          su contraseña.
+        enable_help: Registra un código de recuperación para el perfil activo tras
+          demostrar su contraseña; el código se muestra una sola vez y debe escribirse
+          de vuelta.
+        enabled_notice: La recuperación está configurada. Si olvidas la contraseña,
+          ejecuta el comando 'config passphrase reset NOMBRE' con este código.
+        handoff_fd_help: Escribe el código de recuperación de un solo uso como un
+          objeto JSON secreto acotado en este descriptor heredado de escritura.
+        handoff_too_large: La entrega de recuperación superó su límite de 8192 bytes;
+          no se registró nada.
+        handoff_unwritable: El descriptor de entrega de recuperación no era un canal
+          heredado de escritura; no se registró nada.
+        help: Gestiona el código de recuperación opcional que permite restablecer
+          una contraseña olvidada.
+        no_active_profile: No hay ningún perfil activo. Inicia sesión con 'aeat config
+          login NOMBRE' antes de gestionar su código de recuperación.
+        status_help: Indica si el perfil activo tiene un código de recuperación registrado.
+        verification_fd_help: Lee el código de recuperación exacto como un objeto
+          JSON secreto acotado desde este descriptor heredado de lectura antes de
+          instalar nada.
+        verification_mismatch: El código introducido no coincide; no se registró nada.
+        verification_prompt: 'Escribe el código de recuperación para confirmar que
+          lo tienes: '
       sandbox:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
           perfil real; todos los comandos se ejecutan contra este bucket aislado y

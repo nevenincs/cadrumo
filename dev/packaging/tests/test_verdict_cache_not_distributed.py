@@ -81,7 +81,6 @@ _SCAFFOLD: Final[dict[str, str]] = {
     "src/cadrumo/__init__.py": "",
     "src/cadrumo/py.typed": "",
     "src/cadrumo/core/external_constants.toml": "placeholder = 1\n",
-    "src/cadrumo/adapters/persistence/storage/_bip39_wordlist.txt": "abandon\n",
     "src/cadrumo_harness/__init__.py": "",
     "src/cadrumo_harness/py.typed": "",
     "src/cadrumo_harness/_data/placeholder.json": "{}\n",

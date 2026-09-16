@@ -271,6 +271,7 @@ def build_validated_snapshot(
         filing_period=filing_period_from_scope(filing_year, period),
         filing_year=filing_year,
         authored_filing_year=temporal_resolution.authored_filing_year,
+        supported_filing_years=catalogues.supported_filing_years,
         revision_projection_direction=temporal_resolution.projection_direction,
         period=period,
         legal=_catalogue_slice(catalogues.legal, legal_ids),

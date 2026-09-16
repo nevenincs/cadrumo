@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
@@ -26,7 +27,7 @@ _OFFICIAL_CHILD_BIRTH_DATE = date(2023, 1, 1)
 _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS = 500
 _OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS = 2_290
 _FACT_CONTEXT = FamilyFactResolutionContext(
-    compiled_bundled_authority(),
+    PublishedGovernedFactSource(),
     date(_FILING_YEAR, 12, 31),
     date(_FILING_YEAR, 12, 31),
 )

@@ -73,11 +73,10 @@ class TestTheExcludedTerritoriesAreRecognised:
         doing so.
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            import tomllib
-
             from ....core.resources.bundled_data import bundled_path
+            from ....core.toml import parse_toml
 
-            payload = tomllib.loads(
+            payload = parse_toml(
                 bundled_path("registry", "aeat", "iva", "territories.toml").read_text(encoding="utf-8"),
             )
             records = payload["territory"]

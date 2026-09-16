@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import tomllib
 from datetime import UTC, date, datetime, time
 from pathlib import Path
 
 import pytest
 
-from ..toml import freeze_toml, read_toml, render_toml, to_str_keyed_dict
+from ..toml import TomlDecodeError, freeze_toml, parse_toml, read_toml, render_toml, to_str_keyed_dict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -50,7 +49,7 @@ def test_invalid_toml_wraps_decode_failure_via_error_factory(tmp_path: Path) -> 
         read_toml(target, error_factory=ValueError)
     assert str(target) in str(file_exc.value)
     assert "invalid TOML" in str(file_exc.value)
-    assert isinstance(file_exc.value.__cause__, tomllib.TOMLDecodeError)
+    assert isinstance(file_exc.value.__cause__, TomlDecodeError)
 
 
 def test_read_toml_wraps_invalid_utf8_as_invalid_toml(tmp_path: Path) -> None:
@@ -108,10 +107,10 @@ _EVERY_VALUE_SHAPE: dict[str, object] = {
 
 
 def test_render_toml_parses_back_to_every_value_it_was_given() -> None:
-    """Every value shape tomllib produces survives render then parse unchanged."""
+    """Every value shape rtoml produces survives render then parse unchanged."""
     rendered = render_toml(_EVERY_VALUE_SHAPE)
 
-    assert tomllib.loads(rendered) == _EVERY_VALUE_SHAPE
+    assert parse_toml(rendered) == _EVERY_VALUE_SHAPE
 
 
 def test_render_toml_accepts_the_tuples_freeze_produces() -> None:
@@ -144,7 +143,7 @@ def test_render_toml_places_comments_above_their_table_and_the_parser_drops_them
         "[[revisions.2025.casillas]]",
         'id = "02"',
     ]
-    assert tomllib.loads(rendered) == document
+    assert parse_toml(rendered) == document
 
 
 def test_render_toml_refuses_a_value_with_no_toml_form() -> None:

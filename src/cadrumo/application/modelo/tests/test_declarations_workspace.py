@@ -7,13 +7,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -70,7 +70,7 @@ def _revision_id(work_unit_id: str, *, amount: str = _PRIVATE_AMOUNT) -> str:
 
 def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, ModeloRecordCatalogue]:
     period = Period.from_year_and_code(2026, "1T")
-    registry_revision_id = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id
+    registry_revision_id = published_snapshot("130", filing_year=2026, period="1T").revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo="130",

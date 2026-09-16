@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import ast
 import os
-import tomllib
 import warnings
 from importlib import import_module
+
+from cadrumo.core.toml import load_toml
 
 # Pin the CLI output language to English BEFORE any project module is imported.
 # CLI help strings are tr() values resolved at import time; the sphinx-click
@@ -37,7 +38,7 @@ def _project_metadata() -> dict[str, object]:
     """Load project metadata from ``pyproject.toml`` for Sphinx display fields."""
     pyproject = _PROJECT_ROOT / "pyproject.toml"
     with pyproject.open("rb") as stream:
-        project_metadata = tomllib.load(stream).get("project")
+        project_metadata = load_toml(stream).get("project")
     if not isinstance(project_metadata, dict) or not all(isinstance(key, str) for key in project_metadata):
         raise ValueError("pyproject.toml must declare a string-keyed [project] table")
     return {key: value for key, value in project_metadata.items()}
@@ -766,7 +767,7 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|"
-        r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|numpy|"
+        r"rich|yaml|rtoml|tomli|cryptography|jinja2|markupsafe|numpy|"
         r"prompt_toolkit|google|typing_extensions|asyncio|anyio|contextvars|"
         r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
     ),

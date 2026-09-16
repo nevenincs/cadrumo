@@ -43,7 +43,6 @@ import pytest
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
 from cadrumo_harness.mcp.tools import build_tool_descriptors
-from dev.scripted_registration_channels import scripted_registration_descriptors
 
 from .._models import ContradictionScenario
 from .._runner import check_contradiction_scenario
@@ -86,31 +85,28 @@ _MUTATING_COMMANDS = (
 
 
 def _create_profile() -> None:
-    with scripted_registration_descriptors() as (handoff, verification):
-        result = invoke_cached_cli(
-            [
-                "config", "profile", "create", _PROFILE_ID,
-                "--quiet", "--accept-defaults",
-                "--entity-type", "natural_person",
-                "--irpf-income-categories", "actividad_economica",
-                "--tax-id", "12345678Z",
-                "--name", "Operator",
-                "--surnames", "Contradiction",
-                "--activity", "design",
-                "--tax-residence-jurisdiction-scope", "common_regime",
-                "--tax-residence-ccaa", "madrid",
-                "--iva-regime", "GENERAL",
-                "--iva-m303-regime-composition", "general",
-                "--no-iva-redeme-enrolled",
-                "--no-iva-cash-accounting-regime-enrolled",
-                "--no-iva-voluntary-sii-enrolled",
-                "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-                "--secrets-stdin",
-                "--recovery-handoff-fd", str(handoff),
-                "--recovery-verification-fd", str(verification),
-            ],
-            input=creation_secrets_payload(),
-        )  # fmt: skip
+    result = invoke_cached_cli(
+        [
+            "config", "profile", "create", _PROFILE_ID,
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Contradiction",
+            "--activity", "design",
+            "--tax-residence-jurisdiction-scope", "common_regime",
+            "--tax-residence-ccaa", "madrid",
+            "--iva-regime", "GENERAL",
+            "--iva-m303-regime-composition", "general",
+            "--no-iva-redeme-enrolled",
+            "--no-iva-cash-accounting-regime-enrolled",
+            "--no-iva-voluntary-sii-enrolled",
+            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+            "--secrets-stdin",
+        ],
+        input=creation_secrets_payload(),
+    )  # fmt: skip
     assert result.exit_code == 0, result.output
 
     session = invoke_cached_cli(

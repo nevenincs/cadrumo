@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import tomllib
 from enum import StrEnum
 from functools import cache
 from typing import NamedTuple
 
 import pytest
 
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_continuity_locale_key,
@@ -122,8 +122,8 @@ def _continuity_backing() -> dict[str, str]:
     for casilla_file in modelos_dir.glob("*/revisions/*/casillas/*.toml"):
         modelo_id = casilla_file.parents[3].name
         try:
-            document = tomllib.loads(casilla_file.read_text(encoding="utf-8"))
-        except (OSError, tomllib.TOMLDecodeError):  # pragma: no cover - unreadable fragment
+            document = parse_toml(casilla_file.read_text(encoding="utf-8"))
+        except (OSError, TomlDecodeError):  # pragma: no cover - unreadable fragment
             continue
         for revision_id, revision in (document.get("revisions") or {}).items():
             if not isinstance(revision, dict):

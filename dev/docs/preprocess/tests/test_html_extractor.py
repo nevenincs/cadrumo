@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-from cadrumo.core.orden_anual_sections import extract_lorca_2022_reduction
+from cadrumo.core.orden_anual_sections import extract_lorca_reduction
 from dev._paths import REPO_ROOT
 
 from ..normatives_html import (
@@ -281,7 +281,7 @@ def test_2022_iva_units_preserve_the_legacy_table_shape_and_lorca_reduction() ->
     assert "cuota anual" in lorca.text
 
 
-def test_lorca_2022_reduction_is_scoped_to_its_observed_heading() -> None:
+def test_lorca_reduction_is_scoped_to_its_observed_heading() -> None:
     """The singular extractor accepts Lorca 2022 but does not reinterpret DANA."""
     lorca = BeautifulSoup(
         """
@@ -303,7 +303,7 @@ def test_lorca_2022_reduction_is_scoped_to_its_observed_heading() -> None:
         "lxml",
     )
 
-    reduction = extract_lorca_2022_reduction(lorca, source_label="synthetic-lorca-2022.html")
+    reduction = extract_lorca_reduction(lorca, source_label="synthetic-lorca-2022.html")
 
     assert reduction is not None
     assert reduction.ejercicio == 2022
@@ -311,7 +311,7 @@ def test_lorca_2022_reduction_is_scoped_to_its_observed_heading() -> None:
     assert reduction.annex_scope == "ANEXO II"
     assert reduction.percentage == Decimal("20")
     assert reduction.calculation_periods == ("trimestral", "anual")
-    assert extract_lorca_2022_reduction(dana, source_label="synthetic-dana-2024.html") is None
+    assert extract_lorca_reduction(dana, source_label="synthetic-dana-2024.html") is None
 
 
 def test_toc_and_form_boilerplate_is_stripped() -> None:

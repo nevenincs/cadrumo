@@ -52,7 +52,6 @@ def _run_cadrumo(
         settings={
             "cadrumo_local_storage_root": storage_root,
             "cadrumo_secret_store_dir": storage_root / "fallback-store",
-            "cadrumo_secret_store_backend": "auto",
             "cadrumo_secret_passphrase": resolved_passphrase,
             "cadrumo_output_language": "en",
         },
@@ -585,12 +584,14 @@ def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     deletion rather than a rename: an alias or a hidden registration would
     satisfy a mounted-verb check while reinstating the door the ruling removed.
 
-    This list previously asserted ``recover`` and ``recovery`` were mounted.
-    Both had been retired by an accepted ruling, so the assertion outlived the
-    decision it was written under and failed against a tree that was correct --
-    the mirror of the repair that fixed gates asserting removed verbs were
-    absent. They are now checked in the retired direction, which is the claim
-    that is actually true and which still catches a silent reinstatement.
+    This list previously asserted ``recover`` and ``recovery`` were mounted
+    under ``config``. Both had been retired by an accepted ruling, so the
+    assertion outlived the decision it was written under and failed against a
+    tree that was correct -- the mirror of the repair that fixed gates
+    asserting removed verbs were absent. They are now checked in the retired
+    direction, which is the claim that is actually true and which still
+    catches a silent reinstatement. Optional recovery lives under the profile
+    subject as ``config profile recovery``, never at the ``config`` root.
 
     ``passphrase change`` is the sole credential-rotation door. Its presence is
     asserted beside login/logout while the older ambiguous custody spellings

@@ -49,17 +49,10 @@ errors:
       deserialised. Re-authenticate to create a new session.
     auth_session_unavailable: No verified active AEAT session is available. Authenticate
       before continuing.
-    auth_storage_bucket_recovery_verification: The recovery code entered is not valid.
-      Re-type the 24 words exactly as they appear in the backup.
     auth_storage_keyring_unavailable: The operating-system keychain is unavailable.
       Either no credential store is registered, or this logon session cannot hold
       credentials, which is common on a network or service logon. Sign in interactively,
       or check that a credential store is installed and active.
-    auth_storage_master_key_material_missing: No master-key material exists. The secure
-      store has not been provisioned yet.
-    auth_storage_master_key_unavailable: This profile session was resumed and carries
-      only its data key; the key-encryption material is login-scoped. Run `aeat config
-      login` to re-authenticate.
     clave_movil_identity_checksum: The Cl@ve Móvil identifier has a valid shape but
       its checksum letter does not match its digits. Check the final letter on your
       document and try again.
@@ -469,8 +462,6 @@ errors:
     fail_storage: A storage error occurred.
     fail_storage_blob_not_found: The requested object was not found in the encrypted
       store.
-    fail_storage_bucket_recovery_unavailable: The recovery wrap for the active bucket
-      could not be loaded. Recovery may never have been enrolled.
     fail_storage_persistence: A persistence error occurred in the secure store.
     fail_storage_profile_custody: Profile custody could not be completed.
     fail_storage_repository: A repository operation failed.
@@ -781,8 +772,6 @@ errors:
       cannot be admitted from the supplied projection.
     canonical_tui_module_argument: The TUI module accepts only its supported arguments.
     canonical_tui_navigation_contract: The TUI navigation request violates its contract.
-    canonical_tui_recovery_handover_abandoned: The recovery handover was abandoned
-      before confirmation could be completed.
     canonical_tui_recovery_handover_cancelled: The recovery handover was cancelled
       by the operator.
     canonical_tui_unknown_design_token: The TUI stylesheet references an undeclared
@@ -876,6 +865,7 @@ errors:
     profile_name_collision: The profile name provided is already in use. Choose a
       different name.
     profile_passphrase_rotation: The profile password could not be changed.
+    profile_recovery: The recovery request could not be completed.
     profile_registration: The profile could not be registered.
     reconciliation_declaration_source_unsupported: Reconciliation from a declaration
       is not available yet.
@@ -968,8 +958,6 @@ errors:
       a browser; run it from an interactive shell.
     refused_google_profile_unbound: No active profile is bound. Select a profile or
       use --profile.
-    refused_google_unsecured_mode: Google cannot be authorized in unsecured-storage
-      mode with a profile that carries a real NIF.
     refused_google_validation: The Google parameters provided failed validation.
     refused_inventory_actividad_conflict: An inventory already exists for that activity
       and year.
@@ -1119,10 +1107,8 @@ errors:
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
       the syntax of the filter provided.'
     refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
-    refused_storage_bucket_already_present: The import collides with a storage bucket
-      that already exists.
-    refused_storage_bucket_no_active: No active bucket could be resolved. Select a
-      profile and try again.
+    refused_storage_bucket_already_present: A bucket with that identifier already
+      exists.
     refused_storage_master_key_no_active_session: Encryption requires an active session.
       Run `aeat config login NAME` and try again.
     refused_storage_profile_custody: This profile custody operation is refused.
@@ -1136,8 +1122,6 @@ errors:
       Use the overwrite option to replace it.
     refused_storage_session_expired: The active session expired due to inactivity.
       Re-activate it with aeat config login NAME.
-    refused_storage_unsecured_mode: The unsecured storage backend was requested without
-      the required opt-in. It is not safe for real data.
     refused_tabular_source_unreadable: The tabular file could not be decoded, or carries
       no table with a header row.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot

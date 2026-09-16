@@ -358,36 +358,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.persistence.storage.errors.MasterKeyUnavailableError",
-        ErrorCode(
-            code="AUTH_STORAGE_MASTER_KEY_UNAVAILABLE",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_storage_master_key_unavailable",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.persistence.storage.errors.MasterKeyMaterialMissingError",
-        ErrorCode(
-            code="AUTH_STORAGE_MASTER_KEY_MATERIAL_MISSING",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_storage_master_key_material_missing",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.persistence.storage.errors.UnsecuredModeRefusedError",
-        ErrorCode(
-            code="REFUSED_STORAGE_UNSECURED_MODE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_storage_unsecured_mode",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.persistence.storage.errors.NonceCollisionError",
         ErrorCode(
             code="INTEGRITY_STORAGE_NONCE_COLLISION",

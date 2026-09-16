@@ -3,20 +3,16 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....domain.calculations.registry.schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _authority():
-    return compiled_bundled_authority()
-
-
 def test_formula_backed_casillas_are_computed_inputs() -> None:
-    authority = _authority()
-    snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_snapshot("130", filing_year=2026, period="1T")
 
     formula_casillas = [casilla for casilla in snapshot.revision.casillas if casilla.formula is not None]
 
@@ -25,8 +21,7 @@ def test_formula_backed_casillas_are_computed_inputs() -> None:
 
 
 def test_binding_backed_casillas_are_bound_inputs() -> None:
-    authority = _authority()
-    snapshot = authority.snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     bound_casillas = [casilla for casilla in snapshot.revision.casillas if casilla.binding is not None]
 
@@ -35,8 +30,7 @@ def test_binding_backed_casillas_are_bound_inputs() -> None:
 
 
 def test_filing_period_metadata_casillas_are_informational_inputs() -> None:
-    authority = _authority()
-    snapshot = authority.snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     period_casillas = [casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period"]
 

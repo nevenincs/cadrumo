@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.runtime_catalogues import (
     ApoderamientoScopeRecord,
@@ -58,8 +58,8 @@ def compile_runtime_catalogues(registry_root: Path) -> RuntimeRegistryCatalogues
 def read_catalogue_document(path: Path) -> Mapping[str, object]:
     """Read one runtime catalogue TOML document from ``path``."""
     try:
-        return tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, tomllib.TOMLDecodeError) as exc:
+        return parse_toml(path.read_text(encoding="utf-8"))
+    except (OSError, TomlDecodeError) as exc:
         raise RegistryValidationError(f"cannot compile runtime catalogue {path}: {exc}") from exc
 
 

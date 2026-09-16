@@ -29,7 +29,7 @@ from ...errors import (
     SecretNotFoundError,
     StorageValidationError,
 )
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -41,16 +41,11 @@ _SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
 
 @pytest.fixture
 def store(tmp_path: Path, fixed_master_key: bytes) -> Iterator[SecretStore]:
-    provider = EphemeralMasterKeyProvider(key=fixed_master_key)
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "store-root",
-        master_key_provider=provider,
-    )
-    yield SecretStore(
-        store_dir=tmp_path / "fallback-store",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
+    with EphemeralBucketSession(key=fixed_master_key):
+        yield SecretStore(
+            store_dir=tmp_path / "fallback-store",
+            blob_store=EncryptedBlobStore(root_dir=tmp_path / "store-root"),
+        )
 
 
 def _make_record(

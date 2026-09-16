@@ -5,7 +5,9 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from dev.registry.compiler.authority import compiled_bundled_authority
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+)
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
@@ -100,8 +102,8 @@ _M130_ACCEPT_ACTIVITY_MARKER: bool = True
 
 @cache
 def _renta_income_category_authority() -> GovernedFactSource:
-    """Pin the bundled registry authority used by the category matchers below."""
-    return compiled_bundled_authority()
+    """Pin the published registry authority used by the category matchers below."""
+    return PublishedGovernedFactSource()
 
 
 def m130_activity_category_matcher(transaction: Transaction) -> bool:

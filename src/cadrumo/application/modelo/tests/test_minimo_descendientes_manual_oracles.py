@@ -35,7 +35,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.domain.calculations.registry.authority import (
@@ -47,6 +46,7 @@ from cadrumo.domain.calculations.registry.authority import (
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
 from ....domain.user_profile.values import UserProfileFactValue
 from ..profile_binding import (
@@ -88,7 +88,7 @@ def _expected(name: str, casilla_id: str) -> Decimal:
 
 
 def _snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=_ORACLE_YEAR, period="0A")
+    return published_snapshot("100", filing_year=_ORACLE_YEAR, period="0A")
 
 
 def _injected_decimal(facts: dict[str, UserProfileFactValue], key: str) -> Decimal:

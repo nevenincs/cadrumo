@@ -7,11 +7,11 @@ from decimal import Decimal
 from typing import Literal, get_args
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -32,7 +32,7 @@ _RELATION = "modelo-390-prev-303-cuota-devengada-total"
 
 def test_m390_reconciliation_target_reaches_a_binding_declared_only_as_an_alternate() -> None:
     """The adjustment consumes the canonical reverse join, including alternates."""
-    snapshot = compiled_bundled_authority().snapshot(Modelo("390").value, filing_year=2025, period="0A")
+    snapshot = published_snapshot(Modelo("390").value, filing_year=2025, period="0A")
     revised_casillas = tuple(
         CasillaDefinition.model_validate(
             {
@@ -126,7 +126,7 @@ def test_union_collapses_an_identical_row_named_by_both_paths_to_one() -> None:
     assert len(unioned) == 1
     values = detail_row_binding_values_for_calculation(
         work_unit=_work_unit(Modelo("349")),
-        revision=compiled_bundled_authority().snapshot(Modelo("349").value, filing_year=2025, period="0A").revision,
+        revision=published_snapshot(Modelo("349").value, filing_year=2025, period="0A").revision,
         detail_rows=unioned,
     )
     assert values["iva-349-declarante-numero-operadores"] == Decimal("1")

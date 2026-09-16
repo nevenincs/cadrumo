@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import ast
 import re
-import tomllib
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
@@ -33,6 +32,7 @@ from cadrumo.core.external_constants import (
     ExternalConstants,
     load_external_constants,
 )
+from cadrumo.core.toml import parse_toml
 from cadrumo.tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,
@@ -56,7 +56,7 @@ def _registry_toml_payload() -> dict[str, object]:
     """Return the bundled ``external_constants.toml`` parsed to a mapping."""
 
     toml_path = Path(__file__).parents[1] / "external_constants.toml"
-    loaded = tomllib.loads(toml_path.read_text(encoding="utf-8"))
+    loaded = parse_toml(toml_path.read_text(encoding="utf-8"))
     payload: dict[str, object] = {}
     for key, value in loaded.items():
         assert isinstance(key, str), "TOML table keys must be strings"

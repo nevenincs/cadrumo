@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..authority import ValidatedRegistryAuthority
+from ..authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -53,15 +53,15 @@ _EXPECTED_SLUGS = frozenset(
 )
 
 
-def _family(authority: ValidatedRegistryAuthority, revision_id: str):
+def _family(authority: PinnedAuthorityOperation, revision_id: str):
     """Return the art-107/109 parameters declared by one modelo 303 revision."""
-    revision = authority.modelo("303").revisions[revision_id]
+    revision = authority.revision("303", revision_id)
     return tuple(p for p in revision.parameters if _FAMILY in p.id)
 
 
 @pytest.mark.parametrize("revision_id", _REVISION_IDS)
 def test_every_revision_declares_the_whole_family(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
     revision_id: str,
 ) -> None:
     """A revision that declares part of the family would resolve half the arithmetic."""
@@ -71,7 +71,7 @@ def test_every_revision_declares_the_whole_family(
 
 @pytest.mark.parametrize("revision_id", _REVISION_IDS)
 def test_each_figure_carries_exactly_one_filing_period_value(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
     revision_id: str,
 ) -> None:
     """TEETH: a second dated value applies new law to a good acquired under the old.
@@ -91,11 +91,11 @@ def test_each_figure_carries_exactly_one_filing_period_value(
 
 @pytest.mark.parametrize("revision_id", _REVISION_IDS)
 def test_each_value_is_bounded_by_its_revision_window(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
     revision_id: str,
 ) -> None:
     """An unbounded value would outlive the revision that grounds it."""
-    revision = registry_authority.modelo("303").revisions[revision_id]
+    revision = registry_authority.revision("303", revision_id)
     for parameter in _family(registry_authority, revision_id):
         value = parameter.values[0]
         assert value.valid_from == revision.valid_from
@@ -103,7 +103,7 @@ def test_each_value_is_bounded_by_its_revision_window(
 
 
 def test_the_figures_are_identical_across_every_revision(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """TEETH the other way: an unnoticed divergence between revisions.
 

@@ -1,6 +1,6 @@
 """Real-behaviour tests for the terminal-direct secret display channel.
 
-A recovery mnemonic is a bearer credential over the whole encrypted store, so
+A recovery code is a bearer credential over the whole encrypted store, so
 the property that matters is not "it printed" but "it did not print anywhere
 durable". These drive the real function against real streams and a real
 detached child process: no mocks, and the no-terminal case is exercised by
