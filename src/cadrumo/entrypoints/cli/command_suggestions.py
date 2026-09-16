@@ -286,11 +286,6 @@ class LazySubcommand:
         return self._target
 
     @property
-    def is_materialized(self) -> bool:
-        """Report cached materialization without importing the target."""
-        return self._command is not None
-
-    @property
     def help(self) -> str | None:
         """Return the immutable long-help registration metadata."""
         return self._help

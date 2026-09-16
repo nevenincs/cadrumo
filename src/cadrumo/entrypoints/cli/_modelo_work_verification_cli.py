@@ -239,7 +239,8 @@ def work_verify(
         selected_revision.work_unit_id,
         ports=calculation_ports.work_lifecycle_ports,
     )
-    require_profile_ready_for_work_unit(
+    # One decrypted record serves every gate and advisory this command runs.
+    profile = require_profile_ready_for_work_unit(
         selected_work_unit,
         operation=authority_operation(ctx),
         profile_decode_context=authority_operation(ctx).profile_decode_context(),
@@ -255,6 +256,7 @@ def work_verify(
             actor=actor or resolve_default_actor(),
             workflow_profile=workflow_profile,
             operation=operation,
+            profile=profile,
         )
     report = verification.report
     report_payload = verification_report_payload(report, finding_preconditions=verification.finding_preconditions)
@@ -403,7 +405,8 @@ def work_file(
         selected_revision.work_unit_id,
         ports=calculation_ports.work_lifecycle_ports,
     )
-    require_profile_ready_for_work_unit(
+    # One decrypted record serves every gate this command runs.
+    profile = require_profile_ready_for_work_unit(
         selected_work_unit,
         operation=authority_operation(ctx),
         profile_decode_context=authority_operation(ctx).profile_decode_context(),
@@ -423,6 +426,7 @@ def work_file(
         prior_domiciliation_election=prior_domiciliation_election,
         ports=filing_ports,
         operation=authority_operation(ctx),
+        profile=profile,
     )
     result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]

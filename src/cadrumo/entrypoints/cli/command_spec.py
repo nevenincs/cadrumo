@@ -100,7 +100,6 @@ _validate_policy_types = _policy_validation.validate_policy_types
 _validate_policy_write_route = _policy_validation.validate_policy_write_route
 
 _graph_by_key = _structure_validation.graph_by_key
-_graph_by_path = _structure_validation.graph_by_path
 _graph_by_schema_identity = _structure_validation.graph_by_schema_identity
 _graph_nodes = _structure_validation.graph_nodes
 _validate_callback_parameters = _structure_validation.validate_callback_parameters
@@ -646,7 +645,7 @@ class CommandSpecGraph:
     :meth:`spec`, :meth:`node`, :meth:`root`) load only the families they reach, and
     :meth:`find_schema_identity` stops loading once its identity is found. Every
     whole-graph query (:attr:`specs`, :meth:`by_key`, :meth:`nodes`,
-    :meth:`by_path`, :meth:`by_schema_identity`) loads all families first.
+    :meth:`by_schema_identity`) loads all families first.
     Each load revalidates the specs loaded so far; the full load validates the
     complete graph.
     """
@@ -768,10 +767,6 @@ class CommandSpecGraph:
     def nodes(self) -> tuple[CommandSpecNode, ...]:
         """Return every command spec paired with its derived operator path."""
         return _graph_nodes(self.specs, node_type=CommandSpecNode)
-
-    def by_path(self) -> MappingProxyType[tuple[str, ...], CommandSpec]:
-        """Return the exact derived operator-path index."""
-        return _graph_by_path(self.specs, node_type=CommandSpecNode)
 
     def resolve_path(self, path: tuple[str, ...]) -> CommandSpec:
         """Resolve one complete operator path, loading only the families along it."""

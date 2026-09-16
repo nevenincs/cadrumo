@@ -22,6 +22,12 @@ _LEDGER_WORK = (
     "cadrumo.entrypoints.ledger_action_composition",
 )
 _ECB_ADAPTER = "cadrumo.adapters.outbound.fx.ecb_provider"
+_SQL_PROFILE_STORAGE = (
+    "cadrumo.adapters.persistence.profile.buckets",
+    "cadrumo.adapters.persistence.profile._secure_enveloped_document",
+    "cadrumo.adapters.persistence.storage.sql.secure_objects",
+)
+_WATCHED = (*_LEDGER_WORK, _ECB_ADAPTER, *_SQL_PROFILE_STORAGE)
 _PROBE = """
 import json, os, sys
 from cadrumo.entrypoints.cli.bootstrap import main
@@ -52,7 +58,7 @@ def _loaded_after(
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
             "CADRUMO_OUTPUT_LANGUAGE": "es",
             "CADRUMO_TEST_IMPORT_REPORT": str(report),
-            "CADRUMO_TEST_WATCHED_MODULES": json.dumps([*_LEDGER_WORK, _ECB_ADAPTER]),
+            "CADRUMO_TEST_WATCHED_MODULES": json.dumps(_WATCHED),
         }
     )
     if site_dir is not None:
@@ -72,7 +78,7 @@ def _loaded_after(
     return completed.returncode, output, [str(name) for name in loaded]
 
 
-def test_a_ledger_verb_refused_for_want_of_a_profile_imports_no_ledger_work(tmp_path: Path) -> None:
+def test_a_ledger_verb_refused_for_want_of_a_profile_imports_no_ledger_or_sql_storage(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         returncode, output, loaded = _loaded_after(
             "app", "ledger", "list", tmp_path=tmp_path, storage_root=storage_root
@@ -80,6 +86,16 @@ def test_a_ledger_verb_refused_for_want_of_a_profile_imports_no_ledger_work(tmp_
 
     assert returncode == 2, output
     assert tr("cli.config.errors.no_active_profile", locale="es") in output
+    assert loaded == []
+
+
+def test_a_profile_free_verb_imports_no_sql_profile_storage(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        returncode, output, loaded = _loaded_after(
+            "--format", "json", "app", "live", "portals", "list", tmp_path=tmp_path, storage_root=storage_root
+        )
+
+    assert returncode == 0, output
     assert loaded == []
 
 
@@ -97,7 +113,7 @@ def test_the_import_probe_reports_an_eagerly_imported_module(tmp_path: Path) -> 
     site_dir = tmp_path / "site"
     site_dir.mkdir()
     (site_dir / "sitecustomize.py").write_text(
-        "".join(f"import {name}\n" for name in (*_LEDGER_WORK, _ECB_ADAPTER)),
+        "".join(f"import {name}\n" for name in _WATCHED),
         encoding="utf-8",
     )
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
@@ -105,4 +121,4 @@ def test_the_import_probe_reports_an_eagerly_imported_module(tmp_path: Path) -> 
             "app", "ledger", "list", tmp_path=tmp_path, storage_root=storage_root, site_dir=site_dir
         )
 
-    assert loaded == sorted([*_LEDGER_WORK, _ECB_ADAPTER]), output
+    assert loaded == sorted(_WATCHED), output
