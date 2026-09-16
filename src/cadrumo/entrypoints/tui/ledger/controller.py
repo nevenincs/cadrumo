@@ -455,6 +455,8 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
     """Shared one-scroll shell and semantic navigation behavior."""
 
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
+    IS_WORKSPACE_OVERVIEW: ClassVar[bool] = False
+    """Whether Back from this body leaves the workspace rather than returning to its overview."""
     CSS = BASE_CSS + tokenised(
         """
         .ledger-page { width: 100%; height: 1fr; }
@@ -548,8 +550,12 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         replace_workspace_body(cast(App[object], self.app), resolve_ledger_screen(self.controller, event.target))
 
     def on_ledger_back_requested(self, _: LedgerBackRequested) -> None:
-        """Leave the workspace by dismissing this child, as the siblings do."""
-        self.dismiss(None)
+        """Return an area to the Ledger overview; leave the workspace only from the overview."""
+        # An overview that cannot open would bounce Back straight back here.
+        if self.IS_WORKSPACE_OVERVIEW or self.controller.refusal_for(LedgerWorkspaceArea.OVERVIEW) is not None:
+            self.dismiss(None)
+            return
+        self.post_message(LedgerRouteRequested(self.controller.route_target(LedgerWorkspaceArea.OVERVIEW)))
 
     def on_ledger_review_requested(self, _: LedgerReviewRequested) -> None:
         """Say that the selection led nowhere, rather than appearing to work.

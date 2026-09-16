@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast, override
+from typing import ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
@@ -21,6 +21,8 @@ from .controller import (
 
 class LedgerOverviewScreen(LedgerWorkspaceScreen):
     """Lead with unresolved work and affected declarations, never financial totals."""
+
+    IS_WORKSPACE_OVERVIEW: ClassVar[bool] = True
 
     def __init__(self, controller: LedgerWorkspaceController) -> None:
         """Retain the injected read-only workspace controller."""
