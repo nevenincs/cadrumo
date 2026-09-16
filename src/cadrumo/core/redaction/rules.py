@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping
+from functools import cache
 from types import MappingProxyType
 from typing import overload
 from urllib.parse import urlparse
@@ -479,6 +480,7 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
     return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules)
 
 
+@cache
 def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionRule, ...]:
     """Resolve the default rule set for a sensitivity class.
 
@@ -493,9 +495,16 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
             default rules should apply.
 
     Returns:
-        Ordered tuple of rules for that class.
+        Ordered tuple of rules for that class. Cached per class: the policy
+        table and the rule registry are both frozen mappings of frozen
+        records, and every redacted string resolved this afresh.
     """
     return default_rules_for(_default_policy_for(sensitivity))
+
+
+@cache
+def _compiled_rule_pattern(pattern: str) -> re.Pattern[str]:
+    return re.compile(pattern, re.MULTILINE)
 
 
 #: An ISO-8601 instant, matched whole. The fractional-second form is what
@@ -678,7 +687,7 @@ def _gated_replacement(
 
 
 def _apply_one(rule: _RedactionRule, value: str) -> str:
-    pattern = re.compile(rule.pattern, re.MULTILINE)
+    pattern = _compiled_rule_pattern(rule.pattern)
     protected = _timestamp_spans(value)
     identity_protected = (*protected, *_uuid_spans(value))
 
@@ -785,6 +794,11 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         raise RedactionError(f"redact() expects str; got {type(value).__name__}")
     result = value
     for rule in rules:
+        # Every strategy rewrites matches only, so a string the pattern does
+        # not match comes back unchanged; skipping it avoids scanning the
+        # string for timestamp and UUID spans that nothing would consult.
+        if _compiled_rule_pattern(rule.pattern).search(result) is None:
+            continue
         result = _apply_one(rule, result)
     return result
 
