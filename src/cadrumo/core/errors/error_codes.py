@@ -171,11 +171,10 @@ def complete_error_envelope_model() -> None:
 _ERROR_REGISTRY_MUTABLE: dict[str, ErrorCode] = {}
 _CLASS_CODE_REGISTRY: dict[type[BaseException], ErrorCode] = {}
 
-# Collects CadrumoError subclasses whose bind_error_code call arrived before
-# _DECLARED_CODE_BY_QUALNAME was fully populated (i.e. during the circular-
-# import window while this module is still initialising).  get_registered_
-# error_code drains this set on every call so deferred classes are bound
-# at first runtime use rather than at class-creation time.
+# Collects CadrumoError subclasses created before the declared-code catalogue
+# was loaded. The catalogue spans every layer's declaration module, so loading
+# it at import would make any exception import walk all of them; the first
+# lookup loads it and drains this set instead.
 _DEFERRED_BIND: set[type[BaseException]] = set()
 
 
@@ -201,10 +200,6 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from ..type_guards import is_object_mapping
-from .registry.declared_codes import ALL_DECLARED_ERROR_CODES
-
-
 def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping[str, ErrorCode]:
     """Register raw declarations while refusing duplicate class ownership."""
     declared: dict[str, ErrorCode] = {}
@@ -217,12 +212,23 @@ def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping
     return MappingProxyType(declared)
 
 
-_DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = _build_declared_code_map(ALL_DECLARED_ERROR_CODES)
+_declared_code_map: Mapping[str, ErrorCode] | None = None
+
+
+def declared_error_codes_by_qualname() -> Mapping[str, ErrorCode]:
+    """Return the declared-code catalogue, loading and registering it on first use."""
+    global _declared_code_map
+    if _declared_code_map is None:
+        from .registry.declared_codes import ALL_DECLARED_ERROR_CODES
+
+        _declared_code_map = _build_declared_code_map(ALL_DECLARED_ERROR_CODES)
+    return _declared_code_map
 
 
 def get_registered_error_code_by_code(code: str) -> ErrorCode:
     """Resolve one stable code through the sole declared ErrorCode authority."""
-    matches = tuple(error_code for error_code in _DECLARED_CODE_BY_QUALNAME.values() if error_code.code == code)
+    declared = declared_error_codes_by_qualname()
+    matches = tuple(error_code for error_code in declared.values() if error_code.code == code)
     if len(matches) != 1:
         from .hierarchy import InternalInvariantError
 
@@ -231,20 +237,17 @@ def get_registered_error_code_by_code(code: str) -> ErrorCode:
 
 
 def _flush_deferred_binds() -> None:
-    """Attempt to bind any classes whose registration was deferred.
+    """Bind every class created before the declared-code catalogue loaded.
 
-    Called at the start of get_registered_error_code so that classes
-    defined during the circular-import window (before
-    _DECLARED_CODE_BY_QUALNAME was ready) are bound on first runtime use.
+    Loads the catalogue first; a class still unbound afterwards has no
+    declaration and stays pending for its caller to refuse.
     """
+    declared = declared_error_codes_by_qualname()
     if not _DEFERRED_BIND:
         return
     still_pending: set[type[BaseException]] = set()
     for error_type in list(_DEFERRED_BIND):
-        qualname = _qualname(error_type)
-        # _DECLARED_CODE_BY_QUALNAME is guaranteed populated by the time
-        # any runtime call reaches here; failures here are genuine gaps.
-        code = _DECLARED_CODE_BY_QUALNAME.get(qualname)
+        code = declared.get(_qualname(error_type))
         if code is not None:
             _CLASS_CODE_REGISTRY[error_type] = code
             type.__setattr__(error_type, "code", code)
@@ -258,10 +261,10 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
     """Bind a stable :class:`ErrorCode` to ``error_type``.
 
     Called from ``CadrumoError.__init_subclass__`` at class-creation
-    time.  If the global :data:`_DECLARED_CODE_BY_QUALNAME` mapping is
-    not yet available (the module is still initialising due to a circular
-    import) the class is added to :data:`_DEFERRED_BIND` and bound
-    lazily on first use via :func:`get_registered_error_code`.
+    time. Until the declared-code catalogue has been loaded, including while
+    it is loading, the class is added to :data:`_DEFERRED_BIND` and bound on
+    first use via :func:`get_registered_error_code`; once it is loaded, an
+    undeclared class is refused at creation.
 
     Args:
         error_type: Error class being declared.
@@ -276,21 +279,10 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
     bound = _CLASS_CODE_REGISTRY.get(error_type)
     if bound is not None:
         return bound
-    # _DECLARED_CODE_BY_QUALNAME is assigned at module level after the
-    # registry submodule import on the line above.  During the circular-
-    # import window (when another module triggers CadrumoError subclass
-    # creation while _registry.py is still executing) this name does not
-    # yet exist in the module globals.  Defer rather than crash.
-    declared: object = globals().get("_DECLARED_CODE_BY_QUALNAME")
+    declared = _declared_code_map
     if declared is None:
         _DEFERRED_BIND.add(error_type)
-        # _DECLARED_CODE_BY_QUALNAME is absent during the circular-import window;
-        # get_registered_error_code drains _DEFERRED_BIND after loading.
         return None
-    if not is_object_mapping(declared):
-        from .hierarchy import InternalInvariantError
-
-        raise InternalInvariantError("the declared error-code registry is not a mapping")
     qualname = _qualname(error_type)
     code = declared.get(qualname)
     if not isinstance(code, ErrorCode):
@@ -312,21 +304,17 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
 def get_registered_error_code(error: BaseException | type[BaseException]) -> ErrorCode:
     """Return the registered :class:`ErrorCode` for ``error``.
 
-    Drains any deferred binds accumulated during the circular-import
-    window before attempting the lookup, so classes defined before
-    ``_DECLARED_CODE_BY_QUALNAME`` was populated are bound here on first
-    runtime use.
+    Loads the declared-code catalogue and drains the deferred binds before
+    the lookup, so classes created before the catalogue loaded are bound
+    here on first use.
     """
     _flush_deferred_binds()
     error_type = error if isinstance(error, type) else type(error)
     code = _CLASS_CODE_REGISTRY.get(error_type)
     if code is None:
         resolved = bind_error_code(error_type)
-        # bind_error_code returns None only during the circular-import window
-        # (when _DECLARED_CODE_BY_QUALNAME is absent).  Any runtime call to
-        # get_registered_error_code arrives after the module has finished
-        # loading so the deferred set has been drained by _flush_deferred_binds
-        # above; None here would mean the class has no declared ErrorCode entry.
+        # The catalogue is loaded by now, so None means it is still loading:
+        # a lookup from inside a declaration module has nothing to return.
         if resolved is None:
             from .hierarchy import InternalInvariantError
 
