@@ -150,28 +150,28 @@ def test_ladder_authorised_outranks_carried() -> None:
     resolution = resolve_provisional_percentage((_carried_entry(pct="80"), _authorised_entry(pct="60")))
     assert resolution.resolved is True
     assert resolution.percentage == Decimal("60")
-    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert resolution.provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
 
 
 def test_ladder_inicio_outranks_carried() -> None:
     """An inicio-de-actividades proposal (105.Tres) outranks the carried prior definitive."""
     resolution = resolve_provisional_percentage((_carried_entry(pct="80"), _inicio_entry(pct="50")))
     assert resolution.percentage == Decimal("50")
-    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("inicio_actividad")
+    assert resolution.provenance == ProrrataProvisionalProvenance.from_registry("inicio_actividad")
 
 
 def test_ladder_authorised_outranks_inicio() -> None:
     """The deterministic tie-break: an explicit AEAT authorisation outranks a self-proposed inicio percentage."""
     resolution = resolve_provisional_percentage((_inicio_entry(pct="50"), _authorised_entry(pct="60")))
     assert resolution.percentage == Decimal("60")
-    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert resolution.provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
 
 
 def test_ladder_single_carried_resolves() -> None:
     """A lone carried entry resolves to its own percentage."""
     resolution = resolve_provisional_percentage((_carried_entry(pct="72"),))
     assert resolution.percentage == Decimal("72")
-    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
+    assert resolution.provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
 
 
 def test_ladder_no_candidates_is_unresolved_never_default() -> None:
@@ -322,7 +322,7 @@ def test_interrumpida_tres_ultimos_provenance_resolves_in_ladder() -> None:
     )
     resolution = resolve_provisional_percentage((resumed,))
     assert resolution.percentage == Decimal("70")
-    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("interrumpida_tres_ultimos")
+    assert resolution.provenance == ProrrataProvisionalProvenance.from_registry("interrumpida_tres_ultimos")
 
 
 def _settled(ejercicio: int, con: str, sin: str) -> ProrrataRegisterEntry:
@@ -597,7 +597,7 @@ def test_register_sector_definitions_declare_partition() -> None:
     assert register.sector_definition_for("arrendamiento") is arrendamiento
     arrendamiento_definition = register.sector_definition_for("arrendamiento")
     assert arrendamiento_definition is not None
-    assert arrendamiento_definition.letra is SectorDiferenciadoLetra.from_registry("a")
+    assert arrendamiento_definition.letra == SectorDiferenciadoLetra.from_registry("a")
     assert register.sector_definition_for("unknown") is None
 
 
@@ -759,4 +759,4 @@ def test_sector_definition_letra_hydrates_from_stored_token() -> None:
     original = _sector("arrendamiento-financiero", SectorDiferenciadoLetra.from_registry("c"), "6491")
     restored = SectorDefinition.model_validate_json(original.model_dump_json())
     assert restored == original
-    assert restored.letra is SectorDiferenciadoLetra.from_registry("c")
+    assert restored.letra == SectorDiferenciadoLetra.from_registry("c")
