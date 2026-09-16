@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from datetime import datetime
 from pathlib import Path
@@ -168,7 +169,11 @@ class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
 
 
 class OperationLeaseFilesystemRepository(OperationLeaseRepository):
-    """Caller-clocked durable owner-lease port over the operation journal root."""
+    """Caller-clocked durable owner-lease port over the operation journal root.
+
+    Each transition runs its lock wait and file access on a worker thread, so
+    the awaiting event loop is never parked on lease contention or disk.
+    """
 
     def __init__(self, *, storage_root: Path) -> None:
         """Bind the durable lease port to the configured storage root."""
@@ -183,6 +188,37 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         observed_at: datetime,
     ) -> OperationLeaseObservation:
         """Return absent, active, or expired durable lease state at ``observed_at``."""
+        return await asyncio.to_thread(self._inspect, scope_ref, operation_id, observed_at)
+
+    @override
+    async def acquire(self, candidate: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult:
+        """Acquire only an absent lease; live and expired predecessors remain unchanged."""
+        return await asyncio.to_thread(self._acquire, candidate, observed_at)
+
+    @override
+    async def compare_and_swap(
+        self,
+        predecessor: OperationOwnerLease,
+        successor: OperationOwnerLease,
+        *,
+        observed_at: datetime,
+    ) -> OperationLeaseResult:
+        """Renew an exact live owner or take over an exact expired owner."""
+        if predecessor.scope_ref != successor.scope_ref:
+            raise ValueError("operation lease compare-and-swap cannot change conflict scope")
+        return await asyncio.to_thread(self._compare_and_swap, predecessor, successor, observed_at)
+
+    @override
+    async def release(self, predecessor: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult:
+        """Release only the exact current lease and persist its absent successor."""
+        return await asyncio.to_thread(self._release, predecessor, observed_at)
+
+    def _inspect(
+        self,
+        scope_ref: OperationConflictScopeReference,
+        operation_id: OperationId,
+        observed_at: datetime,
+    ) -> OperationLeaseObservation:
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
             self._storage.refuse_retired_operation_path(
@@ -210,9 +246,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
                 current=current,
             )
 
-    @override
-    async def acquire(self, candidate: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult:
-        """Acquire only an absent lease; live and expired predecessors remain unchanged."""
+    def _acquire(self, candidate: OperationOwnerLease, observed_at: datetime) -> OperationLeaseResult:
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
             self._storage.refuse_retired_operation_path(
@@ -251,17 +285,12 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
                 predecessor=current,
             )
 
-    @override
-    async def compare_and_swap(
+    def _compare_and_swap(
         self,
         predecessor: OperationOwnerLease,
         successor: OperationOwnerLease,
-        *,
         observed_at: datetime,
     ) -> OperationLeaseResult:
-        """Renew an exact live owner or take over an exact expired owner."""
-        if predecessor.scope_ref != successor.scope_ref:
-            raise ValueError("operation lease compare-and-swap cannot change conflict scope")
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
             current = self._storage.current_unlocked(predecessor.scope_ref)
@@ -295,9 +324,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
             )
             return result
 
-    @override
-    async def release(self, predecessor: OperationOwnerLease, *, observed_at: datetime) -> OperationLeaseResult:
-        """Release only the exact current lease and persist its absent successor."""
+    def _release(self, predecessor: OperationOwnerLease, observed_at: datetime) -> OperationLeaseResult:
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
             current = self._storage.current_unlocked(predecessor.scope_ref)

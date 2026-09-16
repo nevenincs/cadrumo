@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
+from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
+
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
@@ -91,7 +93,7 @@ def test_canonical_namespace_is_registered_once_in_its_defining_module() -> None
     """The global operation-reference home is unique and definition-owned."""
     namespace = OPERATION_SECURE_REFERENCE_NAMESPACE
 
-    assert STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace.key) is namespace
+    assert lookup_namespace_definition(namespace.key) is namespace
     assert STORAGE_NAMESPACE_REGISTRY.namespace_by_value(namespace.namespace) is namespace
     assert namespace.owner == "cadrumo.adapters.persistence.operations"
     assert namespace.object_key_grammar == "{content_digest}"

@@ -6,6 +6,7 @@ import asyncio
 import json
 import multiprocessing
 import sys
+import threading
 from datetime import UTC, datetime, timedelta
 from multiprocessing.queues import Queue
 from multiprocessing.synchronize import Event
@@ -248,13 +249,11 @@ def _observe_in_process(
 ) -> None:
     """Read one real observation and signal entry to its actual lock context.
 
-    The observation read holds the journal lock through the awaitable
-    acquisition, because its caller is a UI poll worker that must not
-    stall its event loop. Both acquisition names are accepted so this
-    probe tracks the lock context rather than one spelling of it; either
-    way it fires only on entry to a real acquisition.
+    The observation read takes the journal lock on a worker thread so its
+    caller's event loop never waits, so the probe traces new threads as well
+    as this one; it fires only on entry to a real acquisition.
     """
-    acquisitions = {"exclusive_file_lock", "exclusive_file_lock_async"}
+    acquisitions = {"exclusive_file_lock"}
 
     def trace(frame: object, event: str, argument: object) -> object:
         del argument
@@ -264,7 +263,9 @@ def _observe_in_process(
         return trace
 
     previous_trace = sys.gettrace()
+    previous_thread_trace = threading.gettrace()
     sys.settrace(trace)
+    threading.settrace(trace)
     try:
         materialization = asyncio.run(
             OperationJournalRepository(storage_root=Path(storage_root)).read_observation(
@@ -275,6 +276,7 @@ def _observe_in_process(
         )
     finally:
         sys.settrace(previous_trace)
+        threading.settrace(previous_thread_trace)
     results.put(materialization.model_dump_json())
 
 

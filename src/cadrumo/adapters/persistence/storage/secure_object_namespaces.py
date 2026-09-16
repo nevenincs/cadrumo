@@ -240,13 +240,6 @@ class StorageHierarchyRegistry(BaseModel):
             raise NamespaceRegistryError("duplicate storage path registry key")
         return self
 
-    def namespace_by_key(self, key: str) -> SecureObjectNamespaceDefinition:
-        """Return a :class:`SecureObjectNamespaceDefinition` by registry key."""
-        for namespace in self.namespaces:
-            if namespace.key == key:
-                return namespace
-        raise KeyError(key)
-
     def namespace_by_value(self, value: str) -> SecureObjectNamespaceDefinition:
         """Return a :class:`SecureObjectNamespaceDefinition` by persisted namespace value."""
         for namespace in self.namespaces:

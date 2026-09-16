@@ -7,6 +7,8 @@ import importlib.util
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
+
 from .....core.classification.policies import SensitivityClass
 from .....core.errors.error_codes import build_error_envelope
 from .....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
@@ -155,7 +157,7 @@ def test_secure_object_registry_preserves_the_declared_namespace_sequence() -> N
 
 
 def test_secure_object_registry_names_application_namespaces() -> None:
-    expedientes = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_expedientes_snapshot")
+    expedientes = lookup_namespace_definition("live_expedientes_snapshot")
 
     assert expedientes == LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 
@@ -166,7 +168,7 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     """
     from ..secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 
-    declaration = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_m036_declaration")
+    declaration = lookup_namespace_definition("live_m036_declaration")
 
     assert declaration == LIVE_M036_DECLARATION_NAMESPACE
     assert declaration.namespace == "cadrumo.application.modelo.m036_declaration"
@@ -178,7 +180,7 @@ def test_secure_object_registry_names_m145_communication_record_namespace() -> N
     """Modelo 145 local communication records persist through this namespace."""
     from ..secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 
-    record = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("m145_communication_record")
+    record = lookup_namespace_definition("m145_communication_record")
 
     assert record == M145_COMMUNICATION_RECORD_NAMESPACE
     assert record.namespace == "cadrumo.application.modelo.m145_communication_record"
@@ -191,7 +193,7 @@ def test_secure_object_registry_names_live_justificante_capture_namespace() -> N
     """The live justificante-capture verb persists the pulled receipt
     through this bucket-scoped FINANCIAL namespace (live-justificante-reconcile decision).
     """
-    capture = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_justificante_capture_snapshot")
+    capture = lookup_namespace_definition("live_justificante_capture_snapshot")
 
     assert capture == LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
     assert capture.namespace == "cadrumo.application.live.justificante_capture_snapshot"
@@ -201,9 +203,9 @@ def test_secure_object_registry_names_live_justificante_capture_namespace() -> N
 
 
 def test_singleton_object_keys_are_named_registry_values() -> None:
-    workflow_state = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("workflow_state")
-    invoice_catalogue = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("invoice_catalogue")
-    inventory_ledger = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_inventory_ledger")
+    workflow_state = lookup_namespace_definition("workflow_state")
+    invoice_catalogue = lookup_namespace_definition("invoice_catalogue")
+    inventory_ledger = lookup_namespace_definition("profile_inventory_ledger")
 
     assert workflow_state.require_default_object_key() == SECURE_OBJECT_WORKFLOW_STATE_KEY
     assert invoice_catalogue.require_default_object_key() == SECURE_OBJECT_CATALOGUE_KEY
@@ -211,7 +213,7 @@ def test_singleton_object_keys_are_named_registry_values() -> None:
 
 
 def test_profile_ledger_namespaces_are_registered() -> None:
-    inventory = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_inventory_ledger")
+    inventory = lookup_namespace_definition("profile_inventory_ledger")
 
     assert inventory == PROFILE_INVENTORY_LEDGER_NAMESPACE
     assert inventory.namespace == "cadrumo.persistence.profile.inventory"
@@ -239,7 +241,7 @@ def test_profile_ledger_namespace_registration_coverage_is_present() -> None:
 
 
 def test_transaction_participation_index_namespace_is_registered() -> None:
-    registered = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("transaction_participation_index")
+    registered = lookup_namespace_definition("transaction_participation_index")
 
     assert registered.namespace == "cadrumo.domain.modelos.participation_index"
     assert registered.owner == "cadrumo.domain.modelos"
@@ -292,7 +294,7 @@ def test_modelo_catalogue_namespaces_pin_their_persisted_addresses() -> None:
         assert definition.sensitivity is SensitivityClass.FINANCIAL
         # Each must resolve from the registry under its own key, so a definition
         # cannot satisfy this test while being absent from the authority set.
-        assert STORAGE_NAMESPACE_REGISTRY.namespace_by_key(definition.key) is definition
+        assert lookup_namespace_definition(definition.key) is definition
 
     # The four are distinct addresses; a copy-paste collapsing two would pass
     # every per-definition assertion above.
@@ -536,7 +538,7 @@ def test_auth_session_cache_remote_namespaces_are_registered() -> None:
     }
 
     for key, (expected, namespace, sensitivity, object_key_grammar) in expected_contracts.items():
-        registered = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(key)
+        registered = lookup_namespace_definition(key)
 
         assert registered == expected
         assert registered.namespace == namespace
@@ -592,7 +594,7 @@ def test_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:
     }
 
     for key, expected_namespace in expected_namespaces.items():
-        namespace = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(key)
+        namespace = lookup_namespace_definition(key)
 
         assert namespace == expected_namespace
         assert namespace.remote_mirror_policy is StorageRemoteMirrorPolicy.TEST_ONLY
