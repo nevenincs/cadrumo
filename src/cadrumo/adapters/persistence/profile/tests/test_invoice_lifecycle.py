@@ -20,25 +20,25 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-from cadrumo.adapters.persistence.profile.catalogue_creation import (
-    build_catalogue_creation_ports,
-    build_catalogue_lifecycle_ports,
-)
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
-from cadrumo.application.invoices.catalogue_lifecycle import (
+from .....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from .....application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
     remove_catalogue_invoice,
     resolve_catalogue_invoice,
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
-from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
-from cadrumo.domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
+from .....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
+from .....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
+from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.iva.classification import InvoiceKind
+from .....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..catalogue_creation import (
+    build_catalogue_creation_ports,
+    build_catalogue_lifecycle_ports,
+)
+from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -58,7 +58,7 @@ def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
-        rate_provider=default_ecb_rate_provider(),
+        rate_provider=recorded_ecb_rate_provider(),
     )
     if linked:
         invoice = invoice.model_copy(update={"linked_transaction_ids": linked})
@@ -145,7 +145,7 @@ def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path: Path) -> Non
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
-                rate_provider=default_ecb_rate_provider(),
+                rate_provider=recorded_ecb_rate_provider(),
             ),
             ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
         )
@@ -206,7 +206,7 @@ def _linked_invoice(bucket_id: str):
     """A persisted invoice already bound to a transaction."""
     from datetime import date as _date
 
-    from cadrumo.domain.invoices.models import derive_invoice_id
+    from .....domain.invoices.models import derive_invoice_id
 
     kind = InvoiceKind.RECEIVED
     number = "UPD-2026-001"
@@ -371,7 +371,7 @@ def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> No
     the operator-facing text comes from the catalogue. Re-introducing prose at
     any of the five raise sites makes ``str(exc)`` that sentence and fails here.
     """
-    from cadrumo.core.errors.error_codes import resolve_error_message
+    from .....core.errors.error_codes import resolve_error_message
 
     transaction_id = "b" * 64
     catalogue = InvoiceCatalogue.from_invoices([_build("2026-0142")])

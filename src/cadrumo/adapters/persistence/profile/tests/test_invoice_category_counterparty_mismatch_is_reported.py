@@ -38,27 +38,27 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
-from cadrumo.application.aggregation.source_mesh import (
+from .....application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from .....application.aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceResolution,
 )
-from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
-from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from cadrumo.core.aggregation import IntracomOperationType
-from cadrumo.core.period import Period
-from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.invoices.models import InvoiceCatalogue
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from .....application.invoices.catalogue_creation import build_catalogue_invoice
+from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .....core.aggregation import IntracomOperationType
+from .....core.period import Period
+from .....domain.bienes_inversion.register import BienesInversionIvaRegister
+from .....domain.invoices.models import InvoiceCatalogue
+from .....domain.iva.classification import InvoiceKind
+from .....domain.iva.schema import IvaCategory
+from .....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from .....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..catalogue_reads import InvoiceCatalogueReadAdapter
+from ..invoices import InvoiceCatalogueRepository
+from ..prorrata_register import ProrrataRegisterRepository
+from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -99,7 +99,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
         # Clave E: an ordinary entrega intracomunitaria. Stated because the
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,
-        rate_provider=default_ecb_rate_provider(),
+        rate_provider=recorded_ecb_rate_provider(),
     )
     catalogue = InvoiceCatalogue.from_invoices((invoice,))
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(catalogue)
@@ -201,7 +201,7 @@ def test_a_supportable_supply_produces_no_advisory(secure_objects: SecureObjectR
         # Clave E: an ordinary entrega intracomunitaria. Stated because the
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,
-        rate_provider=default_ecb_rate_provider(),
+        rate_provider=recorded_ecb_rate_provider(),
     )
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
         InvoiceCatalogue.from_invoices((invoice,)),

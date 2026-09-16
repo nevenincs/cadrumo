@@ -35,21 +35,21 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from cadrumo.application.filing.draft_construction import build_draft
-from cadrumo.application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
-from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
-from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.filing.protocols import CasillaSchemaProvider
-from cadrumo.domain.filing.schema import ModeloDraft
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.submission.models import ModeloDraftStatus
-from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
+from .....application.filing.draft_construction import build_draft
+from .....application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
+from .....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .....application.invoices.catalogue_creation import build_catalogue_invoice
+from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.filing.protocols import CasillaSchemaProvider
+from .....domain.filing.schema import ModeloDraft
+from .....domain.invoices.models import Invoice, InvoiceCatalogue
+from .....domain.iva.classification import InvoiceKind
+from .....domain.submission.models import ModeloDraftStatus
+from .....entrypoints.adapter_composition import build_draft_review_ports
+from .....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ...storage.tests.secure_sql import TestRuntimeProfile
+from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -94,7 +94,7 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
         taxable_base=taxable_base,
         iva_rate=Decimal("21"),
         currency="EUR",
-        rate_provider=default_ecb_rate_provider(),
+        rate_provider=recorded_ecb_rate_provider(),
     )
 
 

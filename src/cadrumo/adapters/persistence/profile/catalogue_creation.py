@@ -27,9 +27,9 @@ from ....domain.buckets.errors import BucketEventValidationError
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ....domain.currency.errors import ExchangeRateProviderError
+from ....domain.currency.service import ExchangeRateProvider
 from ....domain.invoices.errors import InvoicePersistenceError, InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
-from ...outbound.fx.ecb_provider import EcbReferenceRateProvider
 from ..storage.errors import StorageError
 from .buckets import BucketEventHistoryRepository
 from .catalogue_reads import build_invoice_catalogue_read_ports
@@ -128,10 +128,10 @@ class CatalogueCreationEventRepositoryAdapter(CatalogueInvoiceEventRepositoryPor
 
 
 class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
-    """Translate the ECB provider to the application rate capability."""
+    """Translate the host's exchange-rate provider to the application rate capability."""
 
-    def __init__(self, *, provider: EcbReferenceRateProvider) -> None:
-        """Bind the ECB reference-rate provider."""
+    def __init__(self, *, provider: ExchangeRateProvider) -> None:
+        """Bind the host-composed exchange-rate provider."""
         self._provider = provider
 
     @property
@@ -150,8 +150,8 @@ class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
 
 
 def build_catalogue_creation_ports(*, bucket_id: str) -> CatalogueCreationPorts:
-    """Bind the existing encrypted repositories and ECB provider for a bucket."""
-    from ...outbound.fx.ecb_provider import default_ecb_rate_provider
+    """Bind the existing encrypted repositories and the host's rate provider for a bucket."""
+    from ....application.exchange_rate_provider import exchange_rate_provider
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     normalized_bucket_id = bucket_id.strip()
@@ -166,7 +166,7 @@ def build_catalogue_creation_ports(*, bucket_id: str) -> CatalogueCreationPorts:
         event_repository=CatalogueCreationEventRepositoryAdapter(
             repository=BucketEventHistoryRepository(objects=objects),
         ),
-        rate_provider=CatalogueCreationRateProviderAdapter(provider=default_ecb_rate_provider()),
+        rate_provider=CatalogueCreationRateProviderAdapter(provider=exchange_rate_provider()),
     )
 
 
