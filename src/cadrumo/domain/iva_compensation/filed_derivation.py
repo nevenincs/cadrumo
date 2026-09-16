@@ -15,11 +15,10 @@ from typing import TYPE_CHECKING, Literal
 
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
-from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from . import carry_forward as _carry_forward
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.queries import RegistryQueryService
+    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,20 +28,6 @@ class CompensationCasillaDeclarations:
     posterior: CasillaId
     generated: CasillaId
     result: CasillaId
-
-
-def resolve_iva_compensation_registry_declarations(
-    query_service: RegistryQueryService,
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
-    """Read the selected binding/formula declarations without a Python fallback."""
-    return (
-        query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
-        query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
-    )
 
 
 class M303CompensationBasis(StrEnum):
@@ -122,5 +107,4 @@ __all__ = [
     "M303CompensationBasis",
     "M303CompensationBasisValue",
     "derive_m303_compensation_available_from_casillas",
-    "resolve_iva_compensation_registry_declarations",
 ]

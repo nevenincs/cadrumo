@@ -6,8 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-
 from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import (
     IvaCompensationExpiryReviewState,
@@ -15,74 +13,11 @@ from ....domain.iva_compensation.carry_forward import (
     derive_iva_compensation_year_end_carry_partition,
     iva_compensation_period_sort_key,
 )
-from ..iva_compensation_history import (
-    cross_check_iva_compensation_annual_summary,
-    iva_compensation_annual_summary_from_filed_observation,
-)
 from ._iva_compensation_history_support import (
-    _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA,
-    _filed_390_observation,
     _state,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        states = (
-            _state(filing_year=2025, period="1T", generated=Decimal("50.00")),
-            _state(filing_year=2025, period="4T", generated=Decimal("100.00")),
-        )
-        report = build_iva_compensation_carry_forward_report(states, as_of_year=2025)
-        summary = iva_compensation_annual_summary_from_filed_observation(
-            _filed_390_observation(
-                last_period_compensation=Decimal("100.00"),
-                generated_not_in_last_period=Decimal("50.00"),
-            ),
-            operation=_authority_operation_for_test,
-        )
-
-        cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
-
-        assert summary.last_period_compensation_amount == Decimal("100.00")
-        assert summary.generated_not_in_last_period_amount == Decimal("50.00")
-        assert summary.total_pending_amount == Decimal("150.00")
-        assert cross_check.carry_forward_remaining_amount == Decimal("150.00")
-        assert cross_check.modelo_390_total_pending_amount == Decimal("150.00")
-        assert cross_check.expected_last_period_compensation_amount == Decimal("100.00")
-        assert cross_check.expected_generated_not_in_last_period_amount == Decimal("50.00")
-        assert cross_check.difference_amount == Decimal("0.00")
-        assert cross_check.last_period_difference_amount == Decimal("0.00")
-        assert cross_check.generated_not_in_last_period_difference_amount == Decimal("0.00")
-        assert cross_check.mismatched_casilla_ids == ()
-        assert cross_check.matches is True
-        assert cross_check.summary_source_observation_key == "390:2025:0A:200039000000001Z"
-
-
-def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        states = (_state(filing_year=2025, period="4T", generated=Decimal("100.00")),)
-        report = build_iva_compensation_carry_forward_report(states, as_of_year=2025)
-        summary = iva_compensation_annual_summary_from_filed_observation(
-            _filed_390_observation(
-                last_period_compensation=Decimal("80.00"),
-                generated_not_in_last_period=Decimal("0.00"),
-            ),
-            operation=_authority_operation_for_test,
-        )
-
-        cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
-
-        assert cross_check.carry_forward_remaining_amount == Decimal("100.00")
-        assert cross_check.modelo_390_total_pending_amount == Decimal("80.00")
-        assert cross_check.expected_last_period_compensation_amount == Decimal("100.00")
-        assert cross_check.expected_generated_not_in_last_period_amount == Decimal("0.00")
-        assert cross_check.difference_amount == Decimal("20.00")
-        assert cross_check.last_period_difference_amount == Decimal("20.00")
-        assert cross_check.generated_not_in_last_period_difference_amount == Decimal("0.00")
-        assert cross_check.mismatched_casilla_ids == (_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA,)
-        assert cross_check.matches is False
 
 
 _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
@@ -97,43 +32,6 @@ _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
         ("expired_review_required", "active"),
     ),
 )
-
-
-@pytest.mark.parametrize(
-    ("prior_year", "as_of_year", "prior_year_expiry_state", "expiry_review_states"),
-    _PRIOR_YEAR_390_CROSS_CHECK_CASES,
-    ids=("active-prior-year", "expired-prior-year"),
-)
-def test_modelo_390_cross_check_keeps_prior_year_lots_out_of_annual_fields(
-    prior_year: int,
-    as_of_year: int,
-    prior_year_expiry_state: IvaCompensationExpiryReviewState,
-    expiry_review_states: tuple[str, ...],
-) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        states = (
-            _state(filing_year=prior_year, period="4T", generated=Decimal("25.00")),
-            _state(filing_year=2025, period="4T", generated=Decimal("100.00")),
-        )
-        report = build_iva_compensation_carry_forward_report(states, as_of_year=as_of_year)
-        summary = iva_compensation_annual_summary_from_filed_observation(
-            _filed_390_observation(
-                last_period_compensation=Decimal("100.00"),
-                generated_not_in_last_period=Decimal("0.00"),
-            ),
-            operation=_authority_operation_for_test,
-        )
-
-        cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
-
-        assert report.lots[0].expiry_review_state is prior_year_expiry_state
-        assert cross_check.carry_forward_remaining_amount == Decimal("100.00")
-        assert cross_check.modelo_390_total_pending_amount == Decimal("100.00")
-        assert cross_check.expected_last_period_compensation_amount == Decimal("100.00")
-        assert cross_check.expected_generated_not_in_last_period_amount == Decimal("0.00")
-        assert cross_check.mismatched_casilla_ids == ()
-        assert cross_check.matches is True
-        assert cross_check.expiry_review_states == expiry_review_states
 
 
 def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_double_count() -> None:

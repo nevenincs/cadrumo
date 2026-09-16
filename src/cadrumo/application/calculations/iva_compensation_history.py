@@ -71,9 +71,7 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva_compensation.carry_forward import (
-    IvaCompensationCarryForwardReport,
     IvaCompensationPeriodState,
-    derive_iva_compensation_year_end_carry_partition,
 )
 from ...domain.iva_compensation.errors import (
     IvaCompensationCasillaReferenceError,
@@ -89,13 +87,7 @@ from .revision_carry_gate import revision_carry_outcome
 
 
 class IvaCompensationAnnualSummary(BaseModel):
-    """Filed Modelo 390 annual IVA compensation summary for cross-checking.
-
-    Compared against the
-    :class:`~domain.iva_compensation.carry_forward.IvaCompensationCarryForwardReport`
-    built from Modelo 303 period states by
-    :func:`cross_check_iva_compensation_annual_summary`.
-    """
+    """Filed Modelo 390 annual IVA compensation summary for cross-checking."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -463,63 +455,6 @@ def iva_compensation_annual_summary_from_filed_observation(
     )
 
 
-def cross_check_iva_compensation_annual_summary(
-    report: IvaCompensationCarryForwardReport,
-    summary: IvaCompensationAnnualSummary,
-    *,
-    period_states: tuple[IvaCompensationPeriodState, ...] = (),
-) -> IvaCompensationAnnualCrossCheck:
-    """Compare projections with filed evidence.
-
-    Returns an
-    :class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualCrossCheck`.
-
-    The expected ``iva.anual.compensacion-ultimo-periodo-97`` and
-    ``iva.anual.compensacion-generada-ejercicio-no-97`` figures are derived
-    through the SAME FIFO carry partition that drives the Modelo 390 calculation
-    (:func:`~domain.iva_compensation.carry_forward.derive_iva_compensation_year_end_carry_partition`),
-    so the
-    cross-check and both annual carry bindings cannot diverge: all three read
-    one partition of the year's pending credit. ``period_states`` is the same
-    tuple of filed Modelo 303 states the carry-forward ``report`` was built
-    from; it supplies the last period's disponible that discriminates the
-    final-period carry from the generated-not-carried amount.
-    """
-    partition = derive_iva_compensation_year_end_carry_partition(
-        report,
-        period_states,
-        filing_year=summary.filing_year,
-    )
-    last_period = partition.last_period_amount
-    generated_not_in_last = partition.generated_not_in_last_amount
-    remaining = last_period + generated_not_in_last
-    difference = remaining - summary.total_pending_amount
-    last_period_difference = last_period - summary.last_period_compensation_amount
-    generated_difference = generated_not_in_last - summary.generated_not_in_last_period_amount
-    mismatches = tuple(
-        casilla
-        for casilla, drift in (
-            (_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA, last_period_difference),
-            (_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA, generated_difference),
-        )
-        if drift != ZERO
-    )
-    return IvaCompensationAnnualCrossCheck(
-        filing_year=summary.filing_year,
-        carry_forward_remaining_amount=remaining,
-        modelo_390_total_pending_amount=summary.total_pending_amount,
-        expected_last_period_compensation_amount=last_period,
-        expected_generated_not_in_last_period_amount=generated_not_in_last,
-        difference_amount=difference,
-        last_period_difference_amount=last_period_difference,
-        generated_not_in_last_period_difference_amount=generated_difference,
-        matches=difference == ZERO and not mismatches,
-        mismatched_casilla_ids=mismatches,
-        expiry_review_states=tuple(str(lot.expiry_review_state) for lot in report.lots),
-        summary_source_observation_key=summary.source_observation_key,
-    )
-
-
 def _decimal_casilla_values(
     observation: FiledDeclaracionObservationProtocol,
     *,
@@ -610,7 +545,6 @@ __all__ = [
     "IvaCompensationAnnualCrossCheck",
     "IvaCompensationAnnualSummary",
     "correct_iva_compensation_period",
-    "cross_check_iva_compensation_annual_summary",
     "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",
     "iva_compensation_state_from_observation_envelope",
