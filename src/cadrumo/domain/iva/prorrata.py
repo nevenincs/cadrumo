@@ -72,23 +72,23 @@ from __future__ import annotations
 from datetime import date
 from decimal import ROUND_CEILING, Decimal
 from enum import StrEnum
-from typing import Annotated, Self
+from typing import Annotated
 
 from pydantic import (
     BaseModel,
     Field,
-    GetCoreSchemaHandler,
     StringConstraints,
     ValidationError,
     field_validator,
     model_validator,
 )
-from pydantic_core import CoreSchema, core_schema
+from pydantic_core import core_schema
 
-from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents
 from ...core.percentage import Percentage
+from ...core.registry_token import StrictRegistryToken
 from .errors import ProrrataInputError
 from .prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 
@@ -119,8 +119,6 @@ class ProrrataRegime(str):
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
         """Expose the opaque token as a non-empty string to Pydantic."""
-        from pydantic_core import core_schema
-
         return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
 
     @property
@@ -155,51 +153,10 @@ def _default_registry_prorrata_regime(*, effective_date: date | None = None) -> 
         raise ProrrataInputError(str(exc)) from exc
 
 
-class _ProrrataRegistryToken(str):
+class _ProrrataRegistryToken(StrictRegistryToken):
     """Opaque token base whose membership is projected by the facts registry."""
 
     __slots__ = ()
-
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        if not _registry_validated:
-            raise TypeError(f"{cls.__name__} tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError(f"{cls.__name__} token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Materialise a token only from a typed registry projection."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        """Refuse unprojected strings at Pydantic/domain boundaries."""
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError(f"{cls.__name__} must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical registry token for serialization."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical registry token for diagnostics."""
-        return str(self)
 
 
 class ProrrataKind(_ProrrataRegistryToken):
