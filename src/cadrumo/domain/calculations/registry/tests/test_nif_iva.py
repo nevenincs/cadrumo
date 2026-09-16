@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.identity.nif_iva import normalise_nif_iva
-from ..nif_iva_catalogue import nif_iva_format_for_country, nif_iva_prefix_for_country
+from ..nif_iva_catalogue import nif_iva_format_for_country, resolve_nif_iva_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,19 +50,19 @@ def test_nif_iva_patterns_match_examples_and_country_cases() -> None:
 
 
 def test_country_prefix_resolution_handles_greece_spain_and_unknown_codes() -> None:
-    greek_prefix = nif_iva_prefix_for_country("GR")
+    greek_prefix = resolve_nif_iva_catalogue().prefix_for_country("GR")
     assert greek_prefix is not None
     assert greek_prefix.value == "EL"
-    lower_greek_prefix = nif_iva_prefix_for_country("gr")
+    lower_greek_prefix = resolve_nif_iva_catalogue().prefix_for_country("gr")
     assert lower_greek_prefix is not None
     assert lower_greek_prefix.value == "EL"
-    el_prefix = nif_iva_prefix_for_country("EL")
+    el_prefix = resolve_nif_iva_catalogue().prefix_for_country("EL")
     assert el_prefix is not None
     assert el_prefix.value == "EL"
     assert nif_iva_format_for_country("ES") is None
     assert nif_iva_format_for_country("US") is None
     assert nif_iva_format_for_country("JP") is None
-    assert nif_iva_prefix_for_country("ES") is None
+    assert resolve_nif_iva_catalogue().prefix_for_country("ES") is None
 
 
 def test_normalise_strips_separators_and_uppercases() -> None:

@@ -16,7 +16,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-from ..calendar_ccaa_catalogue import calendar_ccaa_choices
+from ..calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ..schema_scalars import (
     BicString,
     CalendarDate,
@@ -140,7 +140,7 @@ class TestCCAACode:
 
         assert accepted, "the validator accepts nothing; this probe cannot discriminate"
         with bundled_indexed_authority().operation() as operation:
-            members = calendar_ccaa_choices(effective_date=date(2025, 7, 1), authority=operation)
+            members = resolve_calendar_ccaa_catalogue(effective_date=date(2025, 7, 1), authority=operation).choices
         assert len(accepted) == len(members), (
             f"the shape check accepts {len(accepted)} codes but Spain has {len(members)} autonomous territories"
         )

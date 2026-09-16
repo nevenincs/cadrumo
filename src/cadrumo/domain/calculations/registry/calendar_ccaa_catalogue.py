@@ -247,22 +247,9 @@ def require_calendar_ccaa(
     ).require(value)
 
 
-def calendar_ccaa_choices(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> tuple[CalendarCCAA, ...]:
-    """Return the registry-authored calendar territory choices."""
-    return resolve_calendar_ccaa_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).choices
-
-
 __all__ = [
     "CalendarCcaaCatalogue",
     "CalendarCcaaDefinition",
-    "calendar_ccaa_choices",
     "require_calendar_ccaa",
     "resolve_calendar_ccaa_catalogue",
 ]

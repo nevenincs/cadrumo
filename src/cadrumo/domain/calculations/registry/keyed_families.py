@@ -31,15 +31,11 @@ __all__ = (
     "INHERITED_FAMILIES",
     "INHERITED_FAMILY_SPECS",
     "KEYED_FAMILY_SPECS",
-    "NON_INHERITED_FAMILIES",
-    "PER_EDITION_FAMILIES",
     "RESTATABLE_FAMILIES",
-    "SOURCE_DEFAULT_FIELDS",
     "FamilyInheritanceMode",
     "KeyedFamilySpec",
     "family_identity_value",
     "family_spec",
-    "schema_family_specs",
 )
 
 
@@ -308,25 +304,11 @@ INHERITED_FAMILIES: Final[frozenset[str]] = frozenset(spec.section for spec in I
 RESTATABLE_FAMILIES: Final[frozenset[str]] = frozenset(
     spec.section for spec in INHERITED_FAMILY_SPECS if spec.restatable
 )
-PER_EDITION_FAMILIES: Final[frozenset[str]] = frozenset(
-    spec.section for spec in CANONICAL_FAMILY_SPECS if spec.inheritance is FamilyInheritanceMode.PER_EDITION
-)
-NON_INHERITED_FAMILIES: Final[frozenset[str]] = frozenset(
-    spec.section for spec in CANONICAL_FAMILY_SPECS if not spec.inherited
-)
 HELD_BACK_FAMILY_REASONS: Final[Mapping[str, str]] = MappingProxyType(
     {spec.section: spec.holdback_reason for spec in CANONICAL_FAMILY_SPECS if spec.holdback_reason is not None}
-)
-SOURCE_DEFAULT_FIELDS: Final[tuple[tuple[str, str], ...]] = tuple(
-    (spec.section, spec.source_default_key) for spec in CANONICAL_FAMILY_SPECS if spec.source_default_key is not None
 )
 
 
 def family_spec(section: str) -> KeyedFamilySpec | None:
     """Return the canonical policy for ``section``, if it is known."""
     return _BY_SECTION.get(section)
-
-
-def schema_family_specs() -> tuple[KeyedFamilySpec, ...]:
-    """Return canonical specs corresponding to typed ``SCHEMA_FAMILY`` fields."""
-    return tuple(spec for spec in CANONICAL_FAMILY_SPECS if spec.schema_family)

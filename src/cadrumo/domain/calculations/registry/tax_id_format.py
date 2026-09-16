@@ -123,11 +123,6 @@ def tax_id_format(authority: GovernedFactSource, *, effective_date: date) -> Spa
     )
 
 
-def validate_authoritative_spanish_tax_id(value: str, authority: GovernedFactSource, *, effective_date: date) -> str:
-    """Validate one identifier against an explicitly supplied authority."""
-    return validate_spanish_tax_id(value, tax_id_format(authority, effective_date=effective_date))
-
-
 def tax_id_format_value(
     key: str,
     *,
@@ -189,5 +184,4 @@ __all__ = [
     "tax_id_format_from_catalogue",
     "tax_id_format_from_declarations",
     "tax_id_format_value",
-    "validate_authoritative_spanish_tax_id",
 ]

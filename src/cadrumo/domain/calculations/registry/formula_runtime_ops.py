@@ -42,7 +42,6 @@ if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
     from .authority import PinnedAuthorityOperation
-    from .authority_artifact import AuthorityComponentReader, AuthorityGenerationPin
     from .formula_runtime import EvalContext as _EvalContext
     from .schema import ModeloRevision
 
@@ -544,37 +543,6 @@ def read_parameter(
     except RegistrySnapshotError as exc:
         raise RegistryValidationError(f"modelo {modelo_id!r} is not registered in the indexed authority") from exc
     parameter = next((p for p in revision.parameters if p.id == parameter_id), None)
-    if parameter is None:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} not registered under modelo {modelo_id!r} revision {revision_id!r}",
-        )
-    return resolve_parameter(parameter, date_context)
-
-
-def read_parameter_from_component(
-    reader: AuthorityComponentReader,
-    *,
-    pin: AuthorityGenerationPin,
-    modelo_id: str,
-    revision_id: RevisionId,
-    parameter_id: str,
-    date_context: Mapping[str, date],
-) -> Decimal:
-    """Resolve one parameter from a revision loaded through a pinned reader.
-
-    The caller owns the operation pin.  This path performs no repinning and no
-    authority-wide model traversal; the reader receives the exact modelo and
-    revision coordinate and returns one typed revision component.
-    """
-    from .queries import load_modelo_revision_component
-
-    revision = load_modelo_revision_component(
-        reader,
-        pin=pin,
-        modelo_id=modelo_id,
-        revision_id=str(revision_id),
-    )
-    parameter = next((candidate for candidate in revision.parameters if candidate.id == parameter_id), None)
     if parameter is None:
         raise RegistryValidationError(
             f"parameter {parameter_id!r} not registered under modelo {modelo_id!r} revision {revision_id!r}",

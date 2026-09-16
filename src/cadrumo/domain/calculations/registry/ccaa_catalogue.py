@@ -270,18 +270,6 @@ def ccaa_choices(
     return resolve_ccaa_catalogue(effective_date=effective_date, authority=authority).choices
 
 
-def foral_cli_choices(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> tuple[str, ...]:
-    """Return the foral redirects exposed by the operator-facing CLI."""
-    return resolve_ccaa_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).foral_cli_aliases
-
-
 def default_ccaa(
     *,
     effective_date: date | None = None,
@@ -296,7 +284,6 @@ __all__ = [
     "CcaaDefinition",
     "ccaa_choices",
     "default_ccaa",
-    "foral_cli_choices",
     "require_ccaa",
     "resolve_ccaa_catalogue",
 ]

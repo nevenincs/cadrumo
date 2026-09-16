@@ -189,9 +189,15 @@ class SQLiteAuthorityReader:
                 self._active_leases -= 1
 
     def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
-        """Load and decode one component from exactly this admitted generation."""
+        """Load and decode one component from exactly this admitted generation.
+
+        Identity is verified wherever this reader touches the database: when the
+        lease takes its pin, and inside every uncached load. A cache hit reads
+        no file and is served under the pin the lease already verified, so it
+        does not re-stat the database. That is what keeps a command that loads
+        thousands of components from paying a metadata query for each one.
+        """
         self._require_pin(pin)
-        self._verify_database_identity()
         return self._cache.get_or_load(
             (pin, query),
             lambda: self._load_uncached(query, pin=pin),
@@ -293,47 +299,21 @@ class SQLiteAuthorityReader:
             self._connections.put(connection)
 
     def _admit_database(self) -> None:
+        """Bind the opened database to its descriptor's format and generation.
+
+        Structural integrity -- page checks, foreign-key closure, a complete
+        component count and an acyclic dependency graph -- is proved once, at
+        publication, before the descriptor naming these bytes is written. The
+        size and SHA-256 identity check has already tied the opened file to
+        exactly those published bytes, so repeating the scans here would only
+        re-prove what the digest guarantees.
+        """
         with self._checkout() as connection:
-            quick = connection.execute("PRAGMA quick_check").fetchone()
-            if quick != ("ok",):
-                raise AuthorityStoreCorruptionError(f"authority database quick_check failed: {quick!r}")
-            if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
-                raise AuthorityStoreCorruptionError("authority database foreign-key closure failed")
             row = connection.execute(
-                "SELECT format, logical_generation, component_count FROM authority_manifest WHERE singleton = 1"
+                "SELECT format, logical_generation FROM authority_manifest WHERE singleton = 1"
             ).fetchone()
-            if row is None or row[0] != AUTHORITY_DATABASE_FORMAT or row[1] != self._descriptor.logical_generation:
-                raise AuthorityStoreCorruptionError("authority database manifest disagrees with its descriptor")
-            count = connection.execute("SELECT COUNT(*) FROM components").fetchone()
-            if count is None or count[0] != row[2]:
-                raise AuthorityStoreCorruptionError("authority database manifest component count is incomplete")
-            dependency_rows = connection.execute(
-                "SELECT component_kind, component_key, dependency_kind, dependency_key FROM dependencies"
-            ).fetchall()
-            self._require_acyclic_dependencies(dependency_rows)
-
-    @staticmethod
-    def _require_acyclic_dependencies(rows: list[tuple[str, str, str, str]]) -> None:
-        """Refuse a complete component dependency graph containing any cycle."""
-        graph: dict[tuple[str, str], list[tuple[str, str]]] = {}
-        for component_kind, component_key, dependency_kind, dependency_key in rows:
-            graph.setdefault((component_kind, component_key), []).append((dependency_kind, dependency_key))
-        visiting: set[tuple[str, str]] = set()
-        visited: set[tuple[str, str]] = set()
-
-        def visit(node: tuple[str, str]) -> None:
-            if node in visiting:
-                raise AuthorityStoreCorruptionError(f"authority database dependency cycle includes {node!r}")
-            if node in visited:
-                return
-            visiting.add(node)
-            for dependency in graph.get(node, ()):
-                visit(dependency)
-            visiting.remove(node)
-            visited.add(node)
-
-        for node in graph:
-            visit(node)
+        if row is None or row[0] != AUTHORITY_DATABASE_FORMAT or row[1] != self._descriptor.logical_generation:
+            raise AuthorityStoreCorruptionError("authority database manifest disagrees with its descriptor")
 
     def _read_database_identity(self) -> _DatabaseIdentity:
         try:

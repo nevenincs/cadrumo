@@ -107,23 +107,6 @@ def wizard_page_declarations(*, authority: GovernedFactSource | None = None) -> 
     return pages
 
 
-def wizard_option_declarations(
-    *,
-    authority: GovernedFactSource | None = None,
-) -> dict[str, tuple[str, str, str]]:
-    """Return question option declarations as ``flag, kind, help`` tuples."""
-    prefix = "wizard.option."
-    options: dict[str, tuple[str, str, str]] = {}
-    for key, value in mapping_fact_entries(_SETUP_FACT_ID, authority=authority).items():
-        if not key.startswith(prefix):
-            continue
-        parts = value.split("|", 2)
-        if len(parts) != 3:
-            raise RegistryValidationError(f"invalid wizard option declaration {key!r}")
-        options[key.removeprefix(prefix)] = (parts[0], parts[1], parts[2])
-    return options
-
-
 def legal_source_kind_declarations(*, authority: GovernedFactSource | None = None) -> dict[str, str]:
     """Return legal-reference kind to citation-source mappings."""
     prefix = "legal.source_kind."
@@ -139,6 +122,5 @@ __all__ = [
     "mapping_fact_entries",
     "profile_field_bindings",
     "setup_answer_declarations",
-    "wizard_option_declarations",
     "wizard_page_declarations",
 ]

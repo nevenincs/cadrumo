@@ -36,7 +36,6 @@ __all__ = [
     "Modelo720RowObservation",
     "RefundOperationObservation",
     "RelatedPartyOperationObservation",
-    "foreign_asset_binding_row_field",
     "resolve_atribucion_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
     "validate_atribucion_binding",
@@ -272,28 +271,6 @@ def _validated_foreign_asset_selector(binding: BindingDefinition) -> ForeignAsse
         raise RegistryValidationError(f"binding {binding.id!r} has malformed foreign-asset selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "foreign-asset")
     return selector
-
-
-def foreign_asset_binding_row_field(binding: BindingDefinition) -> str | None:
-    """Return the ``row_field`` a ``foreign_asset`` binding declares, or ``None``.
-
-    Reads through the typed :func:`_validated_foreign_asset_selector` rather
-    than a raw ``selector_as_dict(binding).get("row_field")``. Every
-    ``foreign_asset`` binding is row-field-shaped by construction (its
-    selector's ``fact`` accepts only the ``"row_field"`` literal, and build
-    validation refuses a ``row_field``-less selector under that fact), so
-    ``row_field`` is never legitimately absent from a valid foreign-asset
-    binding -- a raw ``.get()`` returning ``None`` there could ONLY mean a
-    RENAMED field, which would silently, permanently make every foreign-asset
-    row-field binding unmatchable by any caller searching for a specific
-    field, with no error at all.
-
-    Returns ``None`` for a binding that is not ``foreign_asset`` at all -- a
-    real, different fact from a drifted selector on one that is.
-    """
-    if binding.source is not BindingSourceKind.FOREIGN_ASSET:
-        return None
-    return _validated_foreign_asset_selector(binding).row_field
 
 
 def validate_foreign_asset_binding(binding: BindingDefinition) -> list[str]:

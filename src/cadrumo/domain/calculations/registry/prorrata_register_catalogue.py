@@ -610,46 +610,6 @@ def require_sector_diferenciado_letra(
     ).require_sector_letter(value)
 
 
-def require_registry_declared_prorrata_register_regime(
-    value: object, *, effective_date: date
-) -> ProrrataRegisterRegime:
-    """Validate a prorrata regime against the candidate registry in scope."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("prorrata register regime validation requires the candidate facts in scope")
-    return require_prorrata_register_regime(value, effective_date=effective_date, authority=authority)
-
-
-def require_registry_declared_prorrata_transition(
-    value: object, *, effective_date: date
-) -> ProrrataEspecialTransitionKind:
-    """Validate a prorrata transition against the candidate registry in scope."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("prorrata transition validation requires the candidate facts in scope")
-    return require_prorrata_transition(value, effective_date=effective_date, authority=authority)
-
-
-def require_registry_declared_prorrata_provenance(
-    value: object, *, effective_date: date
-) -> ProrrataProvisionalProvenance:
-    """Validate a prorrata provenance against the candidate registry in scope."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("prorrata provenance validation requires the candidate facts in scope")
-    return require_prorrata_provenance(value, effective_date=effective_date, authority=authority)
-
-
-def require_registry_declared_sector_diferenciado_letra(
-    value: object, *, effective_date: date
-) -> SectorDiferenciadoLetra:
-    """Validate a sector letter against the candidate registry in scope."""
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("sector-letter validation requires the candidate facts in scope")
-    return require_sector_diferenciado_letra(value, effective_date=effective_date, authority=authority)
-
-
 __all__ = [
     "ProrrataProvenanceDefinition",
     "ProrrataRegisterCatalogue",
@@ -672,10 +632,6 @@ __all__ = [
     "require_prorrata_provenance",
     "require_prorrata_register_regime",
     "require_prorrata_transition",
-    "require_registry_declared_prorrata_provenance",
-    "require_registry_declared_prorrata_register_regime",
-    "require_registry_declared_prorrata_transition",
-    "require_registry_declared_sector_diferenciado_letra",
     "require_sector_diferenciado_letra",
     "resolve_prorrata_register_catalogue",
     "revocacion_prorrata_transition",

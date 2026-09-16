@@ -5,7 +5,7 @@ uppercase check, so a typo'd / invalid clave shipped clean -- weakening the
 percepciones = (perceptor, clave/subclave) granularity contract. It is now typed as
 :class:`cadrumo.core.aggregation.RetencionClave`, the closed Modelo 190 / 193 perceptor
 clave catalogue (A-L), and ``subclave`` is a numeric validated string. The M349 / M347
-operation "clave" is a DISTINCT taxonomy (:class:`OperationKind349`) and is untouched.
+operation "clave" is a DISTINCT taxonomy (the registry operation catalogue) and is untouched.
 
 These tests pin: the enum equals the bundled Modelo 190 Diseño de Registros clave set
 (A-L, the parity gate); a valid clave constructs; an out-of-set / lowercase / empty

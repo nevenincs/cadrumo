@@ -415,7 +415,6 @@ def authority_query_from_identity(kind: str, key: str) -> AuthorityComponentQuer
             return ExportLayoutComponentQuery(modelo_id, revision_id, layout_id)
     except (ValueError, TypeError) as exc:
         raise AuthorityComponentCodecError(f"invalid authority component identity {kind!r}/{key!r}") from exc
-    raise AuthorityComponentCodecError(f"unknown authority component identity {kind!r}/{key!r}")
 
 
 @dataclass(frozen=True, slots=True)
