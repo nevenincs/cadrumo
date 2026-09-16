@@ -407,6 +407,7 @@ def _project_workspace_areas(
     readiness_issues: int,
     affected: tuple[LedgerAffectedDeclarationRefV1, ...],
     reconciliation_count: int,
+    evidence_pending_review: int | None,
 ) -> tuple[LedgerWorkspaceAreaStateV1, ...]:
     """Build the fixed area catalogue from already-validated projection facts."""
     return (
@@ -447,8 +448,8 @@ def _project_workspace_areas(
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.EVIDENCE,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_INVOICES),
-            status=LedgerWorkspaceStatus.UNMEASURED,
-            item_count=0,
+            status=_evidence_status(evidence_pending_review),
+            item_count=evidence_pending_review or 0,
         ),
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.RECONCILIATION,
@@ -465,6 +466,21 @@ def _project_workspace_areas(
     )
 
 
+def _evidence_status(pending_review: int | None) -> LedgerWorkspaceStatus:
+    """Classify the evidence area from its measured review queue.
+
+    ``None`` means the caller did not measure the queue, which stays
+    ``UNMEASURED`` rather than reading as an empty one: an absent measurement
+    and a proven zero are different facts, and Home refuses to offer evidence
+    work it cannot count.
+    """
+    if pending_review is None:
+        return LedgerWorkspaceStatus.UNMEASURED
+    if pending_review < 0:
+        raise LedgerWorkspaceProjectionError("evidence review count cannot be negative")
+    return LedgerWorkspaceStatus.NEEDS_ATTENTION if pending_review else LedgerWorkspaceStatus.EMPTY
+
+
 def project_ledger_workspace(
     *,
     summary: LedgerStatusReport,
@@ -474,6 +490,7 @@ def project_ledger_workspace(
     invoices: InvoiceCatalogue,
     revisions: Mapping[str, CalculationRevision],
     work_units: WorkUnitCatalogue,
+    evidence_pending_review: int | None,
     invoice_reconciliation_reader: LedgerInvoiceReconciliationReaderProtocol = suggest_reconciliations,
     link_consistency_reader: LedgerLinkConsistencyReaderProtocol = verify_link_consistency,
     filing_staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
@@ -507,6 +524,7 @@ def project_ledger_workspace(
         readiness_issues=0 if preflight is None else len(preflight.issues),
         affected=affected,
         reconciliation_count=len(suggestions) + len(inconsistencies) + len(affected),
+        evidence_pending_review=evidence_pending_review,
     )
     return LedgerWorkspaceProjectionV1(
         bucket_id=bucket_id,
