@@ -32,6 +32,7 @@ from ..local_reader import RoleFitnessOutcome, role_model_targets
 from ..local_reader_operation import (
     LOCAL_READER_OPERATION_DEFINITION_ID,
     LocalReaderProvisionAction,
+    LocalReaderProvisionOutcome,
     LocalReaderProvisionPublicResultV1,
     LocalReaderProvisionRequest,
     LocalReaderSetupStep,
@@ -43,6 +44,7 @@ from ..local_reader_operation import (
     local_reader_fact_mapping,
     local_reader_public_verdict,
     local_reader_setup_phase,
+    provision_local_reader,
 )
 from ..operations.composition import OperationComposedServices, compose_operation_services
 from ..operations.frontend_requests import (
@@ -399,3 +401,35 @@ def test_the_published_result_schema_is_immutable_and_registers() -> None:
     assert registration.contract.result_schema is not None
     schema = json.dumps(LocalReaderProvisionPublicResultV1.model_json_schema(mode="validation"))
     assert '"additionalProperties": {' not in schema, "a published mapping would be mutable"
+
+
+def _essence(result: LocalReaderProvisionPublicResultV1 | LocalReaderProvisionOutcome) -> tuple[object, ...]:
+    return (
+        result.action,
+        result.succeeded,
+        result.stopped_step,
+        result.failed_condition_id,
+        tuple((step.step, step.state, step.failed_condition_id) for step in result.steps),
+        tuple(
+            (item.step, item.model, item.roles, item.succeeded, item.already_satisfied, item.failed_condition_id)
+            for item in result.models
+        ),
+    )
+
+
+@pytest.mark.timeout(180)
+@pytest.mark.parametrize("pull_fails", [False, True])
+def test_the_direct_call_and_the_supervised_operation_settle_identically(tmp_path: Path, pull_fails: bool) -> None:
+    request = build_local_reader_setup_request(consent=False)
+    with _runtime(installed=set(), residents=set(), pull_fails=pull_fails):
+        supervised = _run(tmp_path, _Ports(), request)
+    ports = _Ports()
+    with _runtime(installed=set(), residents=set(), pull_fails=pull_fails):
+        direct = asyncio.run(
+            provision_local_reader(
+                request.payload, spawn=ports.spawn, run_installer=ports.install, text_probe=ports.probe
+            )
+        )
+
+    assert _essence(direct) == _essence(supervised.result)
+    assert direct.succeeded is not pull_fails

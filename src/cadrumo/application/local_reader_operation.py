@@ -17,6 +17,7 @@ import asyncio
 import threading
 from collections.abc import Mapping
 from enum import StrEnum
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
@@ -88,6 +89,7 @@ __all__ = [
     "LocalReaderModelOutcome",
     "LocalReaderModelOutcomeV1",
     "LocalReaderProvisionAction",
+    "LocalReaderProvisionEvents",
     "LocalReaderProvisionExecutor",
     "LocalReaderProvisionOutcome",
     "LocalReaderProvisionPublicResultV1",
@@ -106,8 +108,10 @@ __all__ = [
     "build_local_reader_start_request",
     "build_local_reader_verify_request",
     "local_reader_fact_mapping",
+    "local_reader_provision_effect",
     "local_reader_public_verdict",
     "local_reader_setup_phase",
+    "provision_local_reader",
 ]
 
 LOCAL_READER_OPERATION_DEFINITION_ID = "local-reader.provision"
@@ -521,6 +525,28 @@ def _refused_target(target: RoleModelTarget, step: LocalReaderSetupStep | None) 
     )
 
 
+class LocalReaderProvisionEvents(Protocol):
+    """Where a provisioning run reports its progress; the supervised operation journals it."""
+
+    async def step(self, step: LocalReaderSetupStep) -> None:
+        """Report that a setup step begins."""
+        ...
+
+    async def progress(self, *, completed: int, total: int) -> None:
+        """Report fetched bytes of the model being pulled."""
+        ...
+
+
+class _UnobservedEvents:
+    """Progress nobody watches: a direct caller reads only the settled outcome."""
+
+    async def step(self, step: LocalReaderSetupStep) -> None:
+        del step
+
+    async def progress(self, *, completed: int, total: int) -> None:
+        del completed, total
+
+
 class _ProgressRelay:
     """Carries the latest fetch progress from the worker thread to the event loop."""
 
@@ -533,7 +559,7 @@ class _ProgressRelay:
         with self._lock:
             self._latest = progress
 
-    async def publish(self, events: OperationEventEmitter) -> None:
+    async def publish(self, events: LocalReaderProvisionEvents) -> None:
         with self._lock:
             latest = self._latest
         if latest is None or latest.total_bytes is None or latest.completed_bytes is None:
@@ -542,7 +568,7 @@ class _ProgressRelay:
         if reading == self._published or reading[1] == 0:
             return
         self._published = reading
-        await events.progress(completed=reading[0], total=reading[1], unit_code=LOCAL_READER_PULL_PROGRESS_UNIT)
+        await events.progress(completed=reading[0], total=reading[1])
 
 
 def _targets(role: ModelRole | None, model: str | None = None) -> tuple[RoleModelTarget, ...]:
@@ -555,8 +581,26 @@ def _settled_effect(changed: int, failed: int) -> OperationEffect:
     return OperationEffect.PARTIAL if failed else OperationEffect.UPDATED
 
 
-class LocalReaderProvisionExecutor:
-    """Run one provisioning action through the application's provisioning doors."""
+def local_reader_provision_effect(outcome: LocalReaderProvisionOutcome) -> OperationEffect:
+    """Return the committed extent a settled provisioning outcome represents."""
+    if outcome.action is LocalReaderProvisionAction.SETUP:
+        changed = sum(step.state is LocalReaderSetupStepState.CHANGED for step in outcome.steps)
+        return _settled_effect(changed, 0 if outcome.succeeded else 1)
+    if outcome.action is LocalReaderProvisionAction.INSTALL:
+        install = outcome.install
+        changed = install is not None and install.installed and not install.already_installed
+        return OperationEffect.UPDATED if changed else OperationEffect.NONE
+    if outcome.action is LocalReaderProvisionAction.START:
+        return OperationEffect.UPDATED if outcome.runtime_started else OperationEffect.NONE
+    if outcome.action is LocalReaderProvisionAction.VERIFY:
+        return OperationEffect.NONE
+    changed = sum(item.succeeded and not item.already_satisfied for item in outcome.models)
+    failed = sum(not item.succeeded for item in outcome.models)
+    return _settled_effect(changed, failed)
+
+
+class _LocalReaderProvisioner:
+    """Every provisioning action, over the injected process and fitness ports."""
 
     def __init__(
         self,
@@ -564,39 +608,21 @@ class LocalReaderProvisionExecutor:
         spawn: RuntimeSpawner,
         run_installer: InstallerRunner,
         text_probe: TextExtractionFitnessProbe,
+        events: LocalReaderProvisionEvents,
     ) -> None:
-        """Bind the injected runtime spawner, installer runner and text-reader fitness probe."""
         self._spawn = spawn
         self._run_installer = run_installer
         self._text_probe = text_probe
+        self._events = events
 
-    async def execute(
-        self,
-        request: OperationRequest[LocalReaderProvisionRequest],
-        context: OperationExecutorContext,
-    ) -> str:
-        """Execute the requested action and persist its settled outcome."""
-        if request.subject_ref != LOCAL_READER_OPERATION_SUBJECT:
-            raise ValueError("local-reader operation subject must name the local runtime")
-        payload = request.payload
-        await context.events.phase(_PREFLIGHT)
-        await context.events.phase(_EXECUTE)
-        await context.events.effect(OperationEffect.UNKNOWN)
-        outcome = await self._dispatch(payload, context)
-        await context.events.effect(self._effect_of(outcome))
-        await context.events.phase(_SETTLEMENT)
-        return await context.operands.put(outcome, written_at=now())
-
-    async def _dispatch(
-        self, payload: LocalReaderProvisionRequest, context: OperationExecutorContext
-    ) -> LocalReaderProvisionOutcome:
+    async def run(self, payload: LocalReaderProvisionRequest) -> LocalReaderProvisionOutcome:
         match payload.action:
             case LocalReaderProvisionAction.INSTALL:
                 return await self._install(consent=payload.consent)
             case LocalReaderProvisionAction.START:
                 return await self._start()
             case LocalReaderProvisionAction.PULL:
-                return _settled(LocalReaderProvisionAction.PULL, await self._pull(_targets(payload.role), context))
+                return _settled(LocalReaderProvisionAction.PULL, await self._pull(_targets(payload.role)))
             case LocalReaderProvisionAction.LOAD:
                 return _settled(
                     LocalReaderProvisionAction.LOAD, await self._load(_targets(payload.role, payload.model))
@@ -608,24 +634,7 @@ class LocalReaderProvisionExecutor:
                     LocalReaderProvisionAction.REMOVE, await self._remove(_targets(payload.role, payload.model))
                 )
             case LocalReaderProvisionAction.SETUP:
-                return await self._setup(consent=payload.consent, context=context)
-
-    @staticmethod
-    def _effect_of(outcome: LocalReaderProvisionOutcome) -> OperationEffect:
-        if outcome.action is LocalReaderProvisionAction.SETUP:
-            changed = sum(step.state is LocalReaderSetupStepState.CHANGED for step in outcome.steps)
-            return _settled_effect(changed, 0 if outcome.succeeded else 1)
-        if outcome.action is LocalReaderProvisionAction.INSTALL:
-            install = outcome.install
-            changed = install is not None and install.installed and not install.already_installed
-            return OperationEffect.UPDATED if changed else OperationEffect.NONE
-        if outcome.action is LocalReaderProvisionAction.START:
-            return OperationEffect.UPDATED if outcome.runtime_started else OperationEffect.NONE
-        if outcome.action is LocalReaderProvisionAction.VERIFY:
-            return OperationEffect.NONE
-        changed = sum(item.succeeded and not item.already_satisfied for item in outcome.models)
-        failed = sum(not item.succeeded for item in outcome.models)
-        return _settled_effect(changed, failed)
+                return await self._setup(consent=payload.consent)
 
     async def _install(self, *, consent: bool) -> LocalReaderProvisionOutcome:
         installed = await asyncio.to_thread(install_runtime, consent=consent, run=self._run_installer)
@@ -658,7 +667,6 @@ class LocalReaderProvisionExecutor:
     async def _pull(
         self,
         targets: tuple[RoleModelTarget, ...],
-        context: OperationExecutorContext,
         *,
         step: LocalReaderSetupStep | None = None,
         skip_installed: bool = False,
@@ -687,7 +695,7 @@ class LocalReaderProvisionExecutor:
             )
             while not task.done():
                 await asyncio.wait({task}, timeout=_PROGRESS_POLL_S)
-                await relay.publish(context.events)
+                await relay.publish(self._events)
             pulled = task.result()
             items.append(
                 LocalReaderModelOutcome(
@@ -773,7 +781,7 @@ class LocalReaderProvisionExecutor:
             )
         return items
 
-    async def _setup(self, *, consent: bool, context: OperationExecutorContext) -> LocalReaderProvisionOutcome:
+    async def _setup(self, *, consent: bool) -> LocalReaderProvisionOutcome:
         steps: list[LocalReaderSetupStepOutcome] = []
         models: list[LocalReaderModelOutcome] = []
         install: LocalReaderInstallOutcome | None = None
@@ -797,7 +805,7 @@ class LocalReaderProvisionExecutor:
             else:
                 record(step, LocalReaderSetupStepState.CHANGED)
 
-        await context.events.phase(local_reader_setup_phase(LocalReaderSetupStep.INSTALL))
+        await self._events.step(LocalReaderSetupStep.INSTALL)
         if await asyncio.to_thread(read_runtime_version) is not None:
             # A runtime that already answers needs no install, wherever it lives.
             record(LocalReaderSetupStep.INSTALL, LocalReaderSetupStepState.UNCHANGED)
@@ -813,7 +821,7 @@ class LocalReaderProvisionExecutor:
                 record(LocalReaderSetupStep.INSTALL, LocalReaderSetupStepState.CHANGED)
 
         if stopped is None:
-            await context.events.phase(local_reader_setup_phase(LocalReaderSetupStep.START))
+            await self._events.step(LocalReaderSetupStep.START)
             started = await self._start()
             runtime_started = started.runtime_started
             if not started.succeeded:
@@ -827,14 +835,14 @@ class LocalReaderProvisionExecutor:
 
         targets = _targets(None) if stopped is None else ()
         if stopped is None:
-            await context.events.phase(local_reader_setup_phase(LocalReaderSetupStep.PULL))
-            pulled = await self._pull(targets, context, step=LocalReaderSetupStep.PULL, skip_installed=True)
+            await self._events.step(LocalReaderSetupStep.PULL)
+            pulled = await self._pull(targets, step=LocalReaderSetupStep.PULL, skip_installed=True)
             record_models(LocalReaderSetupStep.PULL, pulled)
         if stopped is None:
-            await context.events.phase(local_reader_setup_phase(LocalReaderSetupStep.LOAD))
+            await self._events.step(LocalReaderSetupStep.LOAD)
             record_models(LocalReaderSetupStep.LOAD, await self._load(targets, step=LocalReaderSetupStep.LOAD))
         if stopped is None:
-            await context.events.phase(local_reader_setup_phase(LocalReaderSetupStep.VERIFY))
+            await self._events.step(LocalReaderSetupStep.VERIFY)
             verified = await self._verify_targets(targets, step=LocalReaderSetupStep.VERIFY)
             models.extend(verified)
             failed = next((item for item in verified if not item.succeeded), None)
@@ -861,6 +869,83 @@ class LocalReaderProvisionExecutor:
             facts={} if refusal is None else dict(refusal.facts),
             precondition_verdict=None if refusal is None else refusal.precondition_verdict,
         )
+
+
+async def provision_local_reader(
+    payload: LocalReaderProvisionRequest,
+    *,
+    spawn: RuntimeSpawner,
+    run_installer: InstallerRunner,
+    text_probe: TextExtractionFitnessProbe,
+    events: LocalReaderProvisionEvents | None = None,
+) -> LocalReaderProvisionOutcome:
+    """Run one provisioning action and return its settled outcome.
+
+    The single implementation of install, start, pull, load, verify, remove
+    and setup. The supervised operation wraps it with journaled progress for
+    frontends that hold a profile session; a host-level caller such as the
+    command line runs it directly, because provisioning the machine's runtime
+    needs no profile. Never raises for a refusal: every refusal is a typed
+    verdict on the outcome.
+    """
+    provisioner = _LocalReaderProvisioner(
+        spawn=spawn,
+        run_installer=run_installer,
+        text_probe=text_probe,
+        events=_UnobservedEvents() if events is None else events,
+    )
+    return await provisioner.run(payload)
+
+
+class _JournaledEvents:
+    """Carries provisioning progress onto the supervised operation's event stream."""
+
+    def __init__(self, events: OperationEventEmitter) -> None:
+        self._events = events
+
+    async def step(self, step: LocalReaderSetupStep) -> None:
+        await self._events.phase(local_reader_setup_phase(step))
+
+    async def progress(self, *, completed: int, total: int) -> None:
+        await self._events.progress(completed=completed, total=total, unit_code=LOCAL_READER_PULL_PROGRESS_UNIT)
+
+
+class LocalReaderProvisionExecutor:
+    """Supervise :func:`provision_local_reader`: journal its progress and persist its outcome."""
+
+    def __init__(
+        self,
+        *,
+        spawn: RuntimeSpawner,
+        run_installer: InstallerRunner,
+        text_probe: TextExtractionFitnessProbe,
+    ) -> None:
+        """Bind the injected runtime spawner, installer runner and text-reader fitness probe."""
+        self._spawn = spawn
+        self._run_installer = run_installer
+        self._text_probe = text_probe
+
+    async def execute(
+        self,
+        request: OperationRequest[LocalReaderProvisionRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        """Execute the requested action and persist its settled outcome."""
+        if request.subject_ref != LOCAL_READER_OPERATION_SUBJECT:
+            raise ValueError("local-reader operation subject must name the local runtime")
+        await context.events.phase(_PREFLIGHT)
+        await context.events.phase(_EXECUTE)
+        await context.events.effect(OperationEffect.UNKNOWN)
+        outcome = await provision_local_reader(
+            request.payload,
+            spawn=self._spawn,
+            run_installer=self._run_installer,
+            text_probe=self._text_probe,
+            events=_JournaledEvents(context.events),
+        )
+        await context.events.effect(local_reader_provision_effect(outcome))
+        await context.events.phase(_SETTLEMENT)
+        return await context.operands.put(outcome, written_at=now())
 
 
 def _settled(action: LocalReaderProvisionAction, items: list[LocalReaderModelOutcome]) -> LocalReaderProvisionOutcome:
