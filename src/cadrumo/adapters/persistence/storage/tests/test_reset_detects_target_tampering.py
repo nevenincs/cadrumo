@@ -34,7 +34,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
+from cadrumo.application.user_profile.custody_ports import profile_custody_port
 
 from .test_config_reset import (
     _OVERRIDE_REASON,
@@ -76,7 +76,7 @@ def test_resume_pauses_when_a_content_covered_custody_record_changed(tmp_path: P
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         original = operation.targets[0].fingerprint
@@ -92,7 +92,7 @@ def test_resume_pauses_when_a_content_covered_custody_record_changed(tmp_path: P
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            bucket_storage=default_profile_bucket_storage(),
+            bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 

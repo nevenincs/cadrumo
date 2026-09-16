@@ -122,7 +122,11 @@ from .filesystem import (
 from .filesystem import (
     read_regular_file_fd as _read_regular_file_fd,
 )
-from .filesystem_primitives import PROFILE_CUSTODY_COMMIT_FILENAME, ProfileCustodyPasswordReadOperation
+from .filesystem_primitives import (
+    PROFILE_CUSTODY_COMMIT_FILENAME,
+    ProfileCustodyPasswordReadOperation,
+    shared_directory_anchors,
+)
 from .filesystem_primitives import anchor_directory as _anchor_directory
 from .filesystem_primitives import ensure_real_directory as _ensure_real_directory
 from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
@@ -787,9 +791,19 @@ def _current_capsule_commits(
     # material lives outside the buckets tree, so a store whose buckets root is
     # absent can still be a retired store, and returning "no profiles" for it
     # would route the operator to enrol beside key material nothing can read.
-    refuse_retired_profile_custody_paths(capsules_root, keystore_root=keystore_root)
-    if not os.path.lexists(capsules_root):
-        return ()
+    with shared_directory_anchors(), ExitStack() as shared_chain:
+        # Hold the storage root's chain for the whole observation, read-anchored
+        # because it is the final component of this anchor, so the retired-path
+        # scan and the capsule scan reuse it instead of each re-opening it.
+        if os.path.lexists(storage_root):
+            _anchor_directory(shared_chain, storage_root, final_access=0x80000000)
+        refuse_retired_profile_custody_paths(capsules_root, keystore_root=keystore_root)
+        if not os.path.lexists(capsules_root):
+            return ()
+        return _anchored_observations(capsules_root, include_label=include_label)
+
+
+def _anchored_observations(capsules_root: Path, *, include_label: bool) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
     return anchored_current_capsule_commits(
         capsules_root,
         parse_commit=parse_profile_custody_commit,

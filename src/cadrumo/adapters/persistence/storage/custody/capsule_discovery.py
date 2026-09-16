@@ -37,7 +37,12 @@ from .filesystem import (
     read_regular_file,
     read_regular_file_fd,
 )
-from .filesystem_primitives import anchor_directory, posix_directory_fd, posix_open_child_directory
+from .filesystem_primitives import (
+    anchor_directory,
+    posix_directory_fd,
+    posix_open_child_directory,
+    shared_directory_anchors,
+)
 from .paths import profile_custody_directory_name
 
 
@@ -211,7 +216,9 @@ def _anchored_retired_member_paths_posix(scan_root: Path, member_paths: tuple[st
 
 def _anchored_retired_member_paths_windows(scan_root: Path, member_paths: tuple[str, ...]) -> tuple[str, ...]:
     detected: set[str] = set()
-    with ExitStack() as anchors:
+    # Each candidate anchor reuses the scan root's held chain instead of
+    # re-opening every component above it.
+    with shared_directory_anchors(), ExitStack() as anchors:
         anchor_directory(anchors, scan_root, final_access=0x80000000)
         try:
             with os.scandir(scan_root) as entries:
@@ -402,7 +409,10 @@ def _anchored_current_capsule_commits_windows(
     label_maximum_bytes: int | None,
 ) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
     discovered: list[AnchoredCurrentCapsuleCommit] = []
-    with ExitStack() as anchors:
+    # Member anchors -- candidate, data directory, and the record reads
+    # beneath them -- reuse the components the capsules-root anchor and the
+    # candidate anchor already hold, for exactly as long as those are held.
+    with shared_directory_anchors(), ExitStack() as anchors:
         anchor_directory(anchors, capsules_root, final_access=0x80000000)
         try:
             with os.scandir(capsules_root) as entries:

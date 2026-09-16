@@ -6,7 +6,8 @@ import os
 import stat
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
-from dataclasses import dataclass
+from contextvars import ContextVar
+from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
 from typing import Any, Final, Literal
@@ -159,6 +160,55 @@ def windows_create_file_api() -> tuple[Any, Any, Any, Any]:
     return ctypes, wintypes, kernel32, create_file
 
 
+@dataclass(slots=True)
+class _HeldComponent:
+    """One verified component handle and the number of live anchors relying on it."""
+
+    handle: int
+    access: int
+    users: int = 0
+
+
+@dataclass(slots=True)
+class _AnchorSession:
+    """Component handles shared by the anchors of one custody operation."""
+
+    held: dict[str, list[_HeldComponent]] = field(default_factory=dict)
+
+
+_ANCHOR_SESSION: ContextVar[_AnchorSession | None] = ContextVar("profile_custody_anchor_session", default=None)
+
+
+@contextmanager
+def shared_directory_anchors() -> Generator[None]:
+    """Let the anchors of one operation share the component handles they hold.
+
+    An operation such as one capsule scan anchors the same ancestor chain again
+    for every member it inspects -- every component of the storage root, then
+    the capsules directory -- and each anchor re-opened all of them. Inside this
+    scope an anchor reuses a component that another live anchor already holds
+    with at least the access it needs, and opens only what is missing. A
+    component stays held while ANY anchor relying on it is live, so no read runs
+    under an ancestor that was released; a handle closes when its last user
+    leaves. The scope holds nothing of its own, so nothing outlives the
+    operation. Nested scopes share the outermost session.
+    """
+    if _ANCHOR_SESSION.get() is not None:
+        yield
+        return
+    session = _AnchorSession()
+    token = _ANCHOR_SESSION.set(session)
+    try:
+        yield
+    finally:
+        _ANCHOR_SESSION.reset(token)
+        leftover = [component for components in session.held.values() for component in components]
+        if leftover:
+            _ctypes, _wintypes, kernel32, _create_file = windows_create_file_api()
+            for component in leftover:
+                kernel32.CloseHandle(component.handle)
+
+
 @contextmanager
 def windows_directory_anchor(
     path: Path,
@@ -167,35 +217,95 @@ def windows_directory_anchor(
     errors: WindowsDirectoryAnchorErrors = _PROFILE_CUSTODY_DIRECTORY_ANCHOR_ERRORS,
 ) -> Generator[int]:
     """Lock every real component against reparse and delete substitution."""
-    ctypes, wintypes, kernel32, create_file = windows_create_file_api()
-    file_information_type = windows_file_information_type()
+    session = _ANCHOR_SESSION.get()
+    if session is None:
+        with _windows_directory_anchor_owned(path, final_access=final_access, errors=errors) as handle:
+            yield handle
+        return
+    with _windows_directory_anchor_shared(session, path, final_access=final_access, errors=errors) as handle:
+        yield handle
+
+
+@contextmanager
+def _windows_directory_anchor_owned(
+    path: Path,
+    *,
+    final_access: int,
+    errors: WindowsDirectoryAnchorErrors,
+) -> Generator[int]:
+    _ctypes, _wintypes, kernel32, _create_file = windows_create_file_api()
     handles: list[int] = []
     try:
         component_paths = windows_component_paths(path)
         for index, current in enumerate(component_paths):
-            handle = create_file(
-                current,
-                final_access if index == len(component_paths) - 1 else 0,
-                0x00000001 | 0x00000002,
-                None,
-                3,
-                0x02000000 | 0x00200000,
-                None,
-            )
-            if handle == wintypes.HANDLE(-1).value:
-                raise ProfileCustodyRecordError(errors.cannot_open)
-            handles.append(int(handle))
-            info = file_information_type()
-            if not kernel32.GetFileInformationByHandle(handle, ctypes.byref(info)):
-                raise ProfileCustodyRecordError(errors.cannot_verify)
-            if not info.dwFileAttributes & 0x10 or info.dwFileAttributes & 0x400:
-                raise ProfileCustodyRecordError(errors.invalid_entry)
+            access = final_access if index == len(component_paths) - 1 else 0
+            handles.append(_open_verified_component(current, access, errors=errors))
         if not handles:
             raise ProfileCustodyRecordError(errors.empty_path)
         yield handles[-1]
     finally:
         for handle in reversed(handles):
             kernel32.CloseHandle(handle)
+
+
+@contextmanager
+def _windows_directory_anchor_shared(
+    session: _AnchorSession,
+    path: Path,
+    *,
+    final_access: int,
+    errors: WindowsDirectoryAnchorErrors,
+) -> Generator[int]:
+    _ctypes, _wintypes, kernel32, _create_file = windows_create_file_api()
+    relied_on: list[tuple[str, _HeldComponent]] = []
+    try:
+        component_paths = windows_component_paths(path)
+        for index, current in enumerate(component_paths):
+            access = final_access if index == len(component_paths) - 1 else 0
+            key = os.path.normcase(current)
+            held = session.held.setdefault(key, [])
+            component = next((candidate for candidate in held if candidate.access & access == access), None)
+            if component is None:
+                opened = _open_verified_component(current, access, errors=errors)
+                component = _HeldComponent(handle=opened, access=access)
+                held.append(component)
+            component.users += 1
+            relied_on.append((key, component))
+        if not relied_on:
+            raise ProfileCustodyRecordError(errors.empty_path)
+        yield relied_on[-1][1].handle
+    finally:
+        for key, component in reversed(relied_on):
+            component.users -= 1
+            if component.users == 0:
+                kernel32.CloseHandle(component.handle)
+                session.held[key].remove(component)
+
+
+def _open_verified_component(current: str, access: int, *, errors: WindowsDirectoryAnchorErrors) -> int:
+    """Open one component without delete sharing and prove it is a real directory."""
+    ctypes, wintypes, kernel32, create_file = windows_create_file_api()
+    handle = create_file(
+        current,
+        access,
+        0x00000001 | 0x00000002,
+        None,
+        3,
+        0x02000000 | 0x00200000,
+        None,
+    )
+    if handle == wintypes.HANDLE(-1).value:
+        raise ProfileCustodyRecordError(errors.cannot_open)
+    try:
+        info = windows_file_information_type()()
+        if not kernel32.GetFileInformationByHandle(handle, ctypes.byref(info)):
+            raise ProfileCustodyRecordError(errors.cannot_verify)
+        if not info.dwFileAttributes & 0x10 or info.dwFileAttributes & 0x400:
+            raise ProfileCustodyRecordError(errors.invalid_entry)
+    except BaseException:
+        kernel32.CloseHandle(handle)
+        raise
+    return int(handle)
 
 
 def windows_component_paths(path: Path) -> tuple[str, ...]:
@@ -323,6 +433,7 @@ __all__ = [
     "posix_directory_fd",
     "posix_mkdir_child_directory",
     "posix_open_child_directory",
+    "shared_directory_anchors",
     "windows_create_file_api",
     "windows_directory_anchor",
     "windows_file_information_type",

@@ -1,23 +1,19 @@
 """Internal SQLAlchemy ORM mapper classes.
 
-Backs the declarative schema consumed by Alembic autogenerate.
-Intentionally kept out of the :mod:`adapters.persistence.storage`
-public API: the public surface exposes pydantic v2 records (see
-:mod:`adapters.persistence.storage.sql.records`) and the
-per-domain repositories bridge between the ORM rows and the typed
-records.
+Declares the schema materialised by the storage engine. Intentionally kept
+out of the :mod:`adapters.persistence.storage` public API: repositories
+bridge between these rows and their typed records.
 """
 
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from sqlalchemy import (
     CheckConstraint,
     Date,
     DateTime,
-    ForeignKey,
     Index,
     Integer,
     LargeBinary,
@@ -25,7 +21,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from ..crypto.encrypted_columns import HashedLookup
 
@@ -57,14 +53,10 @@ _intpk = Annotated[int, mapped_column(Integer, primary_key=True, autoincrement=T
 _str32 = Annotated[str, mapped_column(String(32), nullable=False)]
 _str32_opt = Annotated[str | None, mapped_column(String(32), nullable=True)]
 _str64 = Annotated[str, mapped_column(String(64), nullable=False)]
-_str64_unique = Annotated[str, mapped_column(String(64), unique=True, nullable=False)]
 _str64_opt = Annotated[str | None, mapped_column(String(64), nullable=True)]
 _str128 = Annotated[str, mapped_column(String(128), nullable=False)]
 _str128_opt = Annotated[str | None, mapped_column(String(128), nullable=True)]
-_str255 = Annotated[str, mapped_column(String(255), nullable=False)]
 _str255_opt = Annotated[str | None, mapped_column(String(255), nullable=True)]
-_str512 = Annotated[str, mapped_column(String(512), nullable=False)]
-_str1024 = Annotated[str, mapped_column(String(1024), nullable=False)]
 _text_opt = Annotated[str | None, mapped_column(Text, nullable=True)]
 
 _int_required = Annotated[int, mapped_column(Integer, nullable=False)]
@@ -75,100 +67,6 @@ _datetime_tz_opt = Annotated[datetime | None, mapped_column(DateTime(timezone=Tr
 
 _large_binary = Annotated[bytes, mapped_column(LargeBinary, nullable=False)]
 _hashed_lookup = Annotated[bytes, mapped_column(HashedLookup(), nullable=False)]
-
-_portal_modelo_fk = Annotated[
-    int | None,
-    mapped_column(ForeignKey("modelos.id", ondelete="SET NULL"), nullable=True),
-]
-_corpus_modelo_fk = Annotated[
-    int,
-    mapped_column(ForeignKey("modelos.id", ondelete="CASCADE"), nullable=False),
-]
-
-
-class ModeloRow(Base):
-    """Row in the ``modelos`` table.
-
-    Attributes:
-        id: Surrogate integer primary key.
-        identifier: Stable natural key for the modelo record.
-        name: Human-readable modelo name.
-    """
-
-    __tablename__ = "modelos"
-
-    id: Mapped[_intpk]
-    identifier: Mapped[_str64_unique]
-    name: Mapped[_str255]
-
-
-class PortalOrmRow(Base):
-    """Row in the ``portals`` table.
-
-    Attributes:
-        id: Surrogate integer primary key.
-        identifier: Stable natural key (e.g. ``SEDE_ELECTRONICA_ROOT``).
-        base_url: Canonical URL for the portal.
-        auth_method: Authentication method as a short string code.
-        modelo_id: Optional foreign key to :class:`ModeloRow`.
-    """
-
-    __tablename__ = "portals"
-    __table_args__ = (
-        CheckConstraint(
-            "auth_method IN ('clave', 'certificate', 'dnie', 'none')",
-            name="ck_portals_auth_method",
-        ),
-    )
-
-    id: Mapped[_intpk]
-    identifier: Mapped[_str64_unique]
-    base_url: Mapped[_str512]
-    auth_method: Mapped[_str32]
-    modelo_id: Mapped[_portal_modelo_fk]
-    label: Mapped[_str255]
-
-    if TYPE_CHECKING:
-        modelo: Mapped[ModeloRow | None]
-    else:
-        modelo = relationship("ModeloRow", lazy="joined")
-
-
-class CorpusArtifactRow(Base):
-    """Row in the ``corpus_artifacts`` table.
-
-    Attributes:
-        id: Surrogate integer primary key.
-        year: Tax year this artifact belongs to.
-        modelo_id: Foreign key to the owning :class:`ModeloRow`.
-        file_path: Project-relative path to the on-disk artifact.
-        sha256: Hex digest of the artifact bytes.
-        source_url: URL the artifact was fetched from.
-        fetched_at: Timestamp when the artifact was fetched (UTC).
-    """
-
-    __tablename__ = "corpus_artifacts"
-    __table_args__ = (
-        UniqueConstraint(
-            "year",
-            "modelo_id",
-            "file_path",
-            name="uq_corpus_artifacts_identity",
-        ),
-    )
-
-    id: Mapped[_intpk]
-    year: Mapped[_int_required]
-    modelo_id: Mapped[_corpus_modelo_fk]
-    file_path: Mapped[_str1024]
-    sha256: Mapped[_str64]
-    source_url: Mapped[_str1024]
-    fetched_at: Mapped[_datetime_tz]
-
-    if TYPE_CHECKING:
-        modelo: Mapped[ModeloRow]
-    else:
-        modelo = relationship("ModeloRow", lazy="joined")
 
 
 class TransactionDateIndexRow(Base):

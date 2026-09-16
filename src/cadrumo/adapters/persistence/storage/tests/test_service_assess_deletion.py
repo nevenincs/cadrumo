@@ -51,7 +51,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.application.bucket_maintenance.contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
 from cadrumo.application.bucket_maintenance.service import BucketMaintenanceService
 from cadrumo.application.operator_actions.models import PreconditionVerdict
-from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
+from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from cadrumo.domain.buckets.errors import BucketDeleteRefusedError
 from cadrumo.domain.modelos.filing_record import ModeloRecord
@@ -117,7 +117,7 @@ def _record_snapshot(root: Path, *records: ModeloRecord) -> None:
 
 
 def _assess() -> BucketDeletionAssessment:
-    return BucketMaintenanceService(bucket_storage=default_profile_bucket_storage()).assess_deletion(
+    return BucketMaintenanceService(bucket_storage=profile_custody_port().bucket_storage()).assess_deletion(
         AssessBucketDeletionCommand(bucket_id=_PROFILE_ID),
     )
 
@@ -338,7 +338,7 @@ def test_the_fingerprint_folds_the_real_capsule_and_moves_with_it(tmp_path: Path
 def test_an_absent_target_is_reported_rather_than_refused(tmp_path: Path) -> None:
     """A bucket that is not on disk carries no metadata and no retention claim."""
     with _published_profile(tmp_path):
-        assessment = BucketMaintenanceService(bucket_storage=default_profile_bucket_storage()).assess_deletion(
+        assessment = BucketMaintenanceService(bucket_storage=profile_custody_port().bucket_storage()).assess_deletion(
             AssessBucketDeletionCommand(bucket_id="44444444-4444-4444-8444-444444444444"),
         )
         assert assessment.exists is False
