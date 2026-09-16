@@ -110,6 +110,36 @@ def test_an_ancestor_stays_held_while_any_anchor_relies_on_it(tmp_path: Path) ->
         parent.rename(tmp_path / "moved")
 
 
+def test_a_shared_handle_outlives_its_owner_while_a_reusing_anchor_is_live(
+    tmp_path: Path,
+    opened: list[tuple[str, int]],
+) -> None:
+    """SECURITY: the owner's exit must not close the handle a reusing anchor stands on.
+
+    The dependant anchors the same directory with weaker access, so it opens
+    nothing and holds nothing beneath it: only the shared handle can keep the
+    directory from being renamed once the owner has left.
+    """
+    directory = tmp_path / "capsules"
+    directory.mkdir()
+
+    with shared_directory_anchors():
+        owner = ExitStack()
+        owned = owner.enter_context(windows_directory_anchor(directory, final_access=_GENERIC_READ))
+        before = len(opened)
+        dependant = ExitStack()
+        reused = dependant.enter_context(windows_directory_anchor(directory))
+        assert opened[before:] == []
+        assert reused == owned
+        owner.close()
+
+        with pytest.raises(PermissionError):
+            directory.rename(tmp_path / "moved")
+
+        dependant.close()
+        directory.rename(tmp_path / "moved")
+
+
 def test_a_component_is_released_when_its_last_user_leaves(tmp_path: Path) -> None:
     """Sharing never stretches a hold: an anchor that ended no longer pins anything."""
     directory = tmp_path / "capsules" / "member"
