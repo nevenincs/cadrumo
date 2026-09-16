@@ -486,6 +486,8 @@ class InstalledWorkbenchFactoryDependenciesV1:
     declarations_work_action: ActionReference
     declarations_revisions_action: ActionReference
     declarations_filing_action: ActionReference
+    attachment_review_queue: Callable[[], tuple[AttachmentReviewItem, ...]] | None = None
+    """Lists the attachments awaiting review; absent, the evidence area is refused."""
 
 
 def compose_installed_workbench_generation_provider(
@@ -502,10 +504,10 @@ def compose_installed_workbench_generation_provider(
 
     def provide(operation_runtime: TuiOperationCompositionV1) -> InstalledWorkbenchRootInputsV1:
         account_factories = dependencies.account.factories(operation_runtime.services)
-        profile_id = dependencies.account.profile_id
+        read_queue = dependencies.attachment_review_queue
         current = [generation_provider()]
         home_pending: list[WorkbenchGenerationV1 | None] = [current[0]]
-        attachment_queue = [_read_attachment_queue(profile_id)]
+        attachment_queue: list[tuple[AttachmentReviewItem, ...] | None] = [None if read_queue is None else read_queue()]
         loop = operation_runtime.event_loop
 
         def publish(apply: Callable[[], None]) -> None:
@@ -522,7 +524,7 @@ def compose_installed_workbench_generation_provider(
 
         def capture(*, for_home: bool = False) -> WorkbenchGenerationV1:
             generation = generation_provider()
-            attachments = _read_attachment_queue(profile_id)
+            attachments = None if read_queue is None else read_queue()
 
             def apply() -> None:
                 current[0] = generation
@@ -684,7 +686,7 @@ def _available_admission(destination: str) -> WorkbenchDestinationAdmission:
     )
 
 
-def _read_attachment_queue(profile_id: str) -> tuple[AttachmentReviewItem, ...]:
+def read_attachment_review_queue(profile_id: str) -> tuple[AttachmentReviewItem, ...]:
     """List the attachments awaiting review; it decrypts every manifest, so only captures call it."""
     from ...adapters.persistence.storage.attachment import AttachmentStore
     from ...application.ledger.attachment_review import list_attachment_review_queue
@@ -735,7 +737,7 @@ def _search_inputs(generation: WorkbenchGenerationV1) -> InstalledWorkbenchSearc
 
 def _ledger_generation_factory(
     current: list[WorkbenchGenerationV1],
-    attachment_queue: list[tuple[AttachmentReviewItem, ...]],
+    attachment_queue: list[tuple[AttachmentReviewItem, ...] | None],
     dependencies: InstalledWorkbenchFactoryDependenciesV1,
     operation: PinnedAuthorityOperation,
     capture_ledger: Callable[[], LedgerWorkspaceProjectionV1],
