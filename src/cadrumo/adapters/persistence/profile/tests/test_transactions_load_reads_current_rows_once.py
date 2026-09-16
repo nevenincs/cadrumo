@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -13,8 +14,9 @@ from sqlalchemy import update
 
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.transactions import models as transaction_models
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
-from .....domain.transactions.errors import LedgerStorageError
+from .....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....domain.transactions.repository import transaction_object_key
@@ -112,4 +114,53 @@ def test_one_stale_row_still_refuses_the_whole_read(tmp_path: Path) -> None:
             )
 
         with pytest.raises(LedgerStorageError, match="explicit IVA authority migration before read"):
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+
+def test_a_load_still_proves_every_stored_row(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A read from storage re-derives each row's id; appends trusting members never reach here."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
+            TransactionCatalogue.from_transactions([_transaction(f"row-{index}") for index in range(3)]),
+        )
+        derivations: list[str] = []
+        derive = transaction_models.derive_transaction_id
+
+        def counting(*args: Any, **kwargs: Any) -> str:
+            derivations.append("derived")
+            return derive(*args, **kwargs)
+
+        monkeypatch.setattr(transaction_models, "derive_transaction_id", counting)
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    assert len(derivations) >= 3
+
+
+def test_a_tampered_stored_row_is_refused_on_load(tmp_path: Path) -> None:
+    """TEETH: a stored row whose body no longer derives its id does not load."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        target = _transaction("row-tampered")
+        TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
+            TransactionCatalogue.from_transactions([_transaction("row-intact"), target]),
+        )
+        object_key = transaction_object_key(profile.bucket_id, target.transaction_id)
+        record = profile.repository.load(
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+            object_key,
+            expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
+        )
+        assert record is not None
+        envelope = json.loads(record.payload.decode("utf-8"))
+        envelope["payload"]["raw"]["description"] = "rewritten after the id was derived"
+        profile.repository.save(
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(StoredTransactionDriftError):
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
