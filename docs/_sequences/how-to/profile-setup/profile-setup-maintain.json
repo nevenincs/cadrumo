@@ -40,7 +40,7 @@
         "result": {
           "archive_schema_version": 4,
           "bucket_id": "<bucket-id>",
-          "recovery_enrolled": true,
+          "recovery_enrolled": false,
           "target": "docs-sequence-sandbox.cadrumo-bucket.tar.gz"
         },
         "schema_version": "2",

@@ -1,6 +1,6 @@
-@step Create your taxpayer profile interactively so the passphrase and one-time recovery phrase are both enrolled and verified.
+@step Create your taxpayer profile interactively so the passphrase is chosen at the terminal.
 @static aeat config profile create me
-@blocked interactive-tty Profile creation must receive and verify the recovery phrase through an interactive terminal.
+@blocked interactive-tty Profile creation prompts for the passphrase through an interactive terminal.
 @step Confirm the selected profile is active before adding taxpayer facts and ledger rows.
 @result aeat --format json config profile list
 @expect result.profiles[0].active == true

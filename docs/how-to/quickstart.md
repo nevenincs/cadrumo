@@ -29,13 +29,13 @@ with:
 If it is not, [Install Cadrumo](../workstation-setup.md) covers the full
 setup, including the package download and optional integrations.
 
-## The passphrase and recovery phrase
+## The passphrase and the optional recovery code
 
 `aeat` encrypts each profile under its own random key, wrapped by that
 profile's passphrase.
-Profile creation also shows a one-time recovery phrase and requires you to
-enter it back before the profile is published. Store that phrase separately:
-it cannot be enrolled later. The first command that touches the store asks for
+After the profile exists, creation at a terminal offers an optional recovery
+code that can reset a forgotten passphrase; you can skip it and enable it later
+with `aeat config profile recovery enable`. The first command that touches the store asks for
 the passphrase and the tool reuses it for the rest of the session. For
 unattended runs after creation, see
 [Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
@@ -49,12 +49,12 @@ A profile is your personal taxpayer record inside the tool. Create it with your
 own details:
 
 ```{cli-sequence} quickstart-create-profile
-:verify: Confirm the interactive recovery handoff is required and the selected profile is active.
+:verify: Confirm profile creation prompts for the passphrase at a terminal and the selected profile is active.
 ```
 
 The wizard collects the name and surnames that filing requires and the activity
-start date that scopes out prior periods. It does not publish a password-only
-profile: creation completes only after you copy and verify the recovery phrase.
+start date that scopes out prior periods. The profile is published with its
+passphrase as its only door; recovery is offered afterwards and is optional.
 
 Confirm the active profile is configured and ready:
 

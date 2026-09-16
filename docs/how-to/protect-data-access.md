@@ -1,12 +1,14 @@
 # Protect access to your data
 
 Cadrumo encrypts each profile under its own data key. The profile passphrase
-opens that key for normal login and daily work. Recovery never participates in
-password login.
+opens that key for normal login and daily work. An optional recovery code can
+open the same key for one purpose only: setting a new passphrase when the old
+one is forgotten. It never participates in login.
 
-Use this guide to store the passphrase and recovery phrase safely, change the
-passphrase, run commands without an interactive prompt, log out safely, and
-reset local state only as a last resort.
+Use this guide to store the passphrase safely, decide whether to set up a
+recovery code, change or reset the passphrase, run commands without an
+interactive prompt, log out safely, and reset local state only as a last
+resort.
 
 ## Before you start
 
@@ -26,9 +28,9 @@ Your passphrase opens the key to your encrypted data. Treat it accordingly:
 - Keep a second copy somewhere you can still reach after a disk failure.
 - Never store it in a shared shell profile, a committed script, or a log.
 
-If you lose the passphrase and the separately stored recovery proof, the
-encrypted data is permanently unreadable. The only way forward is a reset,
-which deletes it.
+If you lose the passphrase and have not set up a recovery code, the encrypted
+data is permanently unreadable. The only way forward is a reset, which deletes
+it.
 
 Do not reset when only *some* records fail to open. Quarantine them first.
 Quarantine moves each unreadable record, still encrypted, into an archive
@@ -36,41 +38,77 @@ inside the same storage and leaves every readable record untouched, so it
 deletes nothing and can be previewed before it runs. See
 [diagnose and repair your local setup](troubleshooting.md).
 
-## Store your recovery phrase safely
+## Set up a recovery code (optional)
 
-Cadrumo hands over a 24-word recovery phrase once, at the moment it creates a
-profile. At a terminal it shows the phrase and requires you to re-enter it.
-For headless automation it writes one bounded secret JSON object to an
-explicit inherited descriptor and requires the exact phrase back through a
-second bounded descriptor. It never uses normal JSON output, standard output,
-standard error, arguments, environment variables, or logs, and Cadrumo keeps
-no copy. Nobody can show it to you again.
+A recovery code is a second way to open the profile data key. It exists so a
+forgotten passphrase can be replaced instead of costing the records. It is off
+by default: a profile is created with its passphrase as its only door, and you
+choose whether to add the code.
 
-Write it down when it appears. Store it apart from your passphrase and apart
-from the computer holding the data. The phrase alone cannot restore a profile:
-recovery also requires a matching external artifact and the source capsule.
+When you create a profile at a terminal, Cadrumo asks once whether to set up a
+recovery code and defaults to no. The full-screen registration asks the same
+question on its own screen with a `Skip for now` choice. Either way you can
+decide later.
 
-A profile is never created with a password only. Every creation door enrolls
-recovery. If the one-time handoff cannot complete, or if possession cannot be
-verified, creation refuses before publishing the profile. Recovery cannot be
-added after creation. Losing or damaging recovery does not block password
-login, passphrase changes, normal backup, or normal password restore.
+To enable it on the active profile:
 
-For a headless create, provide both `--recovery-handoff-fd WRITE_FD` and
+```text
+aeat config profile recovery enable
+```
+
+Cadrumo asks for the current passphrase, shows the code once on the terminal,
+and asks you to type it back before anything is installed. The code looks like
+`XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`; case, hyphens and spaces do not matter
+when you type it. Write it down and keep it apart from your passphrase and
+apart from the computer holding the data. Cadrumo keeps no copy and cannot show
+it again.
+
+Anyone holding the code can set a new passphrase for the profile, so treat it
+as you would the passphrase itself. To check or remove it:
+
+```text
+aeat config profile recovery status
+aeat config profile recovery disable
+```
+
+Disabling asks for the current passphrase. Enabling again issues a fresh code;
+the old one stops working.
+
+The code stays valid across ordinary passphrase changes. It does not travel
+inside a backup archive: a restored profile always starts without recovery, and
+the restore command says so. Enable it again after a restore if you want it.
+
+### Reset a forgotten passphrase
+
+If you have the recovery code and have forgotten the passphrase:
+
+```text
+aeat config passphrase reset PROFILE
+```
+
+Enter the recovery code, then the new passphrase twice. Nothing is echoed. The
+existing key is re-wrapped under the new passphrase, so no record is
+re-encrypted and the recovery code keeps working afterwards. A wrong code, a
+profile without recovery, a new passphrase that is too short, or two copies
+that do not match all refuse and leave the profile untouched.
+
+To reset without an interactive prompt, send
+`{"recovery_code": "...", "new_passphrase": "...",
+"new_passphrase_confirmation": "..."}` through `--secrets-stdin` or
+`--secrets-fd FD`.
+
+### Enable recovery without a terminal
+
+A recovery code can only be shown on a terminal, so a headless caller must take
+delivery of it explicitly. Provide `--secrets-stdin` or `--secrets-fd FD` with
+`{"passphrase": "..."}`, plus both `--recovery-handoff-fd WRITE_FD` and
 `--recovery-verification-fd READ_FD`. Read exactly one object shaped as
-`{"recovery_mnemonic":"..."}` from the first pipe, store the phrase securely,
-then send the same strict object through the second pipe. Use distinct
-anonymous pipes and distinct descriptor numbers; neither descriptor may be
-0, 1, or 2 or collide with `--secrets-fd`. The process closes each descriptor
-after its one bounded operation. A missing half, malformed proof, mismatch,
-oversized payload, descriptor collision, or I/O failure leaves no profile.
-
-The CLI does not currently export a recovery artifact, so do not treat the
-phrase as a complete operator recovery path. Where an external provisioning
-workflow supplies the matching artifact, use it only with the explicit
-artifact-based `profile archive import` command and a source capsule. The artifact and
-phrase prove a restore; they do not log in, reset the passphrase, enroll
-recovery in the restored profile, or travel inside a normal backup archive.
+`{"recovery_code":"..."}` from the first pipe, store the code securely, then
+send the same strict object through the second pipe. Use distinct anonymous
+pipes and distinct descriptor numbers; neither descriptor may be 0, 1, or 2 or
+collide with `--secrets-fd`. The process closes each descriptor after its one
+bounded operation. A missing half, malformed proof, mismatch, oversized
+payload, descriptor collision, or I/O failure enrols nothing.
 
 ## Change your passphrase
 
@@ -85,7 +123,7 @@ Enter the current passphrase, then the new one twice. Nothing is echoed.
 The change re-wraps the existing key rather than replacing it, so:
 
 - No record is re-encrypted, and every existing record stays readable.
-- A recovery phrase you wrote down earlier stays correct.
+- A recovery code you set up earlier stays correct.
 
 The command reports both facts back to you. If the current passphrase is wrong,
 the new one is too short, or the two copies do not match, it refuses and leaves
@@ -109,14 +147,14 @@ history.
 
 Automation cannot answer an interactive passphrase prompt. Supply a bounded
 UTF-8 JSON object through an explicit input channel. Do not put a profile
-passphrase, recovery phrase, or certificate passphrase in an environment
+passphrase, recovery code, or certificate passphrase in an environment
 variable or command-line argument. The CLI does not use
 `CADRUMO_SECRET_PASSPHRASE` as a secret-input fallback.
 
 There are two separate option pairs:
 
 - Use leaf `--secrets-stdin` or `--secrets-fd FD` when the command itself owns
-  the secret. The six leaf commands and their exact objects are listed below.
+  the secret. The leaf commands and their exact objects are listed below.
 - Use root `--profile-secrets-stdin` or `--profile-secrets-fd FD` before
   `config` when a profile-bound command needs to authenticate a selected
   profile after its persisted session cannot resume. Its object is
@@ -135,13 +173,16 @@ Use the same two leaf flags on each scalar-secret command:
 | `aeat config login` | `{"passphrase": "..."}` |
 | `aeat config profile create` | `{"passphrase": "...", "passphrase_confirmation": "..."}` |
 | `aeat config passphrase change` | `{"current_passphrase": "...", "new_passphrase": "...", "new_passphrase_confirmation": "..."}` |
-| `aeat config profile archive import` without `--artifact` | `{"passphrase": "..."}` |
-| `aeat config profile archive import` with `--artifact` | `{"recovery_secret": "..."}` |
+| `aeat config passphrase reset PROFILE` | `{"recovery_code": "...", "new_passphrase": "...", "new_passphrase_confirmation": "..."}` |
+| `aeat config profile archive import` | `{"passphrase": "..."}` |
+| `aeat config profile recovery enable` | `{"passphrase": "..."}` |
+| `aeat config profile recovery disable` | `{"passphrase": "..."}` |
 | `aeat config auth certificate secret set` | `{"certificate_passphrase": "..."}` |
 
-Each object must contain exactly the fields shown. For profile creation, also
-provide the required recovery-handoff pair described in [store your recovery
-phrase safely](#store-your-recovery-phrase-safely). Duplicate, missing, extra,
+Each object must contain exactly the fields shown. Profile creation through a
+machine channel never asks about recovery; enable it afterwards with the
+handoff pair described in [enable recovery without a
+terminal](#enable-recovery-without-a-terminal). Duplicate, missing, extra,
 oversized, malformed, or non-UTF-8 input is refused. The former restore field
 `password` and certificate field `secret` are not accepted.
 
@@ -165,7 +206,8 @@ a profile session, no matching live session exists, and persisted-session
 resume has failed. It is refused without being read when the command does not
 need profile authentication, when the exact target already has a live or
 resumed session, or when the command is self-authenticating. Login, create,
-restore, logout, and passphrase change do not accept this root proof.
+restore, logout, passphrase change, passphrase reset, and recovery enable or
+disable do not accept this root proof.
 
 On a host without usable keychain persistence, successful root authentication
 continues only the current process. The command emits a Notice that the
@@ -200,12 +242,13 @@ On POSIX, start the process with the pipe's read descriptor in the child
 process's `pass_fds` allowlist, then pass that number to `--secrets-fd` or
 `--profile-secrets-fd`. On Windows, do not assume a numeric CRT descriptor is
 inherited directly. Allowlist inheritable Windows HANDLEs and use the supported
-bootstrap wrapper to convert them with `msvcrt.open_osfhandle`. Recovery uses
-one writable handoff HANDLE and one readable verification HANDLE:
+bootstrap wrapper to convert them with `msvcrt.open_osfhandle`. Recovery
+enrolment uses one writable handoff HANDLE and one readable verification
+HANDLE:
 
 ```text
 python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --profile-handle ROOT_HANDLE --secrets-handle LEAF_HANDLE -- config auth certificate secret set --name SOURCE
-python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --recovery-handoff-handle WRITE_HANDLE --recovery-verification-handle READ_HANDLE -- config profile create NAME --quiet --secrets-stdin
+python -m cadrumo.entrypoints.cli._windows_profile_secret_bootstrap --recovery-handoff-handle WRITE_HANDLE --recovery-verification-handle READ_HANDLE -- config profile recovery enable --quiet --secrets-stdin
 ```
 
 Omit `--profile-handle` or `--secrets-handle` when the invocation needs only

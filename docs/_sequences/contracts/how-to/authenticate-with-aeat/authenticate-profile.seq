@@ -1,6 +1,6 @@
-@step Start the interactive profile wizard, which enrolls both the passphrase and its one-time recovery phrase.
+@step Start the interactive profile wizard, which prompts for the passphrase.
 @static aeat config profile create me
-@blocked interactive-tty Profile creation must receive and verify the recovery phrase through an interactive terminal.
+@blocked interactive-tty Profile creation prompts for the passphrase through an interactive terminal.
 @step Confirm a profile is active before configuring AEAT authentication.
 @result aeat --format json config profile list
 @expect result.profiles[0].active == true

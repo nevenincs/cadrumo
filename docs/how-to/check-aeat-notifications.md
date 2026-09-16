@@ -32,10 +32,10 @@ configured. Configure a provider first. See
 
 You need:
 - an [active profile](profile-setup.md#what-the-active-profile-means). Create
-  one at a terminal so you can record and verify its one-time recovery phrase:
+  one at a terminal so you can choose its passphrase:
 
   ```{cli-sequence} check-notifications-profile
-  :verify: Confirm profile creation requires the interactive recovery handoff and leaves a selected profile active.
+  :verify: Confirm profile creation prompts for the passphrase at a terminal and leaves a selected profile active.
   ```
 
 - the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) saved in that profile
