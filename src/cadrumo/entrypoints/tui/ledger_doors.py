@@ -8,6 +8,7 @@ same service would decide differently.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
@@ -24,6 +25,9 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.transactions.errors import TransactionValidationError
 from .ledger.models import (
+    LedgerEvidenceConfirmationV1,
+    LedgerEvidenceConfirmedV1,
+    LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
     LedgerImportFileRefusalV1,
@@ -41,9 +45,13 @@ if TYPE_CHECKING:
     from ...application.invoices.bulk_import import BulkInvoiceImportResult
     from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
     from ...application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
+    from ...application.ledger.evidence_ports import LedgerEvidencePorts
+    from ...application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
+    from ...application.ledger.invoice_draft_records import InvoiceDraft
     from ...application.ledger.workspace import LedgerWorkspaceProjectionV1
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.invoices.enums import InvoiceClass
+    from ...domain.iva.regime_legend import RegimeLegend
     from .ledger.models import LedgerInvoiceAddDoorV1
     from .ledger.workspace_injection import LedgerWorkspaceRefreshV1
 
@@ -274,6 +282,7 @@ class LedgerEvidenceDoor:
     """The signed-in profile's purchase-invoice documents and the reader that reads them."""
 
     profile_id: str
+    operation: PinnedAuthorityOperation
 
     def _service(self) -> PurchaseInvoiceEvidenceService:
         from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
@@ -333,6 +342,75 @@ class LedgerEvidenceDoor:
         result = self._service().add(bucket_id=self.profile_id, source_path=source_path, actor=_ACTOR)
         return self._row(result.record, self._settled())
 
+    def _reading(self) -> tuple[LedgerEvidencePorts, InvoiceDraftExtractionPorts, tuple[RegimeLegend, ...]]:
+        """Compose what one on-host read needs, exactly as the CLI evidence verbs do."""
+        from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+        from ...domain.iva.regime_legend import resolve_regime_legends
+        from ..adapter_composition import build_ledger_evidence_ports
+        from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
+
+        evidence_ports = build_ledger_evidence_ports(bucket_id=self.profile_id)
+        period = default_invoice_extraction_period()
+        legends = resolve_regime_legends(operation=self.operation, effective_date=period.end_date)
+        return evidence_ports, invoice_draft_extraction_ports(evidence_ports=evidence_ports), legends
+
+    def _extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
+        from ...application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
+
+        _evidence_ports, extraction_ports, legends = self._reading()
+        draft = extract_invoice_draft_from_evidence(
+            bucket_id=self.profile_id,
+            evidence_id=evidence_id,
+            ports=extraction_ports,
+            operation=self.operation,
+            legends=legends,
+        )
+        return _draft_row(evidence_id, draft)
+
+    async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
+        """Read one stored document on this machine, off the event loop; nothing is recorded."""
+        return await asyncio.to_thread(self._extract, evidence_id)
+
+    def _confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
+        from ...adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
+        from ...adapters.persistence.profile.counterparty_establishment import (
+            build_counterparty_establishment_repository,
+        )
+        from ...adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
+        from ...application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
+
+        evidence_ports, extraction_ports, legends = self._reading()
+        result = confirm_invoice_draft_from_evidence(
+            bucket_id=self.profile_id,
+            kind=confirmation.kind,
+            counterparty_country=confirmation.country_code,
+            evidence_id=confirmation.evidence_id,
+            counterparty_name=confirmation.counterparty_name,
+            confirmed_by=_ACTOR,
+            catalogue_creation_ports=build_catalogue_creation_ports(bucket_id=self.profile_id),
+            invoice_confirmation_ports=build_invoice_confirmation_ports(bucket_id=self.profile_id),
+            counterparty_establishment_repository=build_counterparty_establishment_repository(
+                bucket_id=self.profile_id
+            ),
+            evidence_ports=evidence_ports,
+            extraction_ports=extraction_ports,
+            operation=self.operation,
+            legends=legends,
+        )
+        invoice = result.invoice
+        return LedgerEvidenceConfirmedV1(
+            invoice_id=invoice.invoice_id,
+            invoice_number=invoice.invoice_number,
+            grand_total=invoice.grand_total,
+            currency=invoice.currency,
+            created=result.created,
+            printed_total_disagrees=result.total_discrepancy is not None,
+        )
+
+    async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
+        """Re-read the document and record it as an invoice, off the event loop."""
+        return await asyncio.to_thread(self._confirm, confirmation)
+
     def reader_readiness(self) -> LedgerReaderReadinessV1:
         """Ask the reader for its one readiness claim; nothing is started or loaded."""
         from ...application.local_reader import EXTRACTION_READER_ROLES, read_local_reader_status
@@ -345,6 +423,27 @@ class LedgerEvidenceDoor:
             extraction_ready=status.extraction_ready,
             failed_condition_id=None if status.extraction_ready else failed,
         )
+
+
+def _text(value: object) -> str | None:
+    return None if value is None else str(value)
+
+
+def _draft_row(evidence_id: str, draft: InvoiceDraft) -> LedgerEvidenceDraftV1:
+    return LedgerEvidenceDraftV1(
+        evidence_id=evidence_id,
+        supplier_name=draft.supplier_name,
+        supplier_tax_id=_text(draft.supplier_tax_id),
+        invoice_number=draft.invoice_number,
+        invoice_date=_text(draft.invoice_date),
+        taxable_base=_text(draft.taxable_base),
+        iva_rate=_text(draft.iva_rate),
+        iva_amount=_text(draft.iva_amount),
+        grand_total=_text(draft.grand_total),
+        currency=_text(draft.currency),
+        suggested_kind=draft.suggested_kind,
+        discrepancies=len(draft.discrepancies),
+    )
 
 
 def ledger_workspace_refresh(

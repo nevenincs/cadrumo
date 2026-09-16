@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
 from typing import Final, cast, override
 
 from pydantic import ValidationError
 from textual.app import ComposeResult
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
 from ....core.errors.hierarchy import CadrumoError
+from ....domain.iva.classification import InvoiceKind
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
     LedgerEvidenceReviewRequested,
@@ -16,7 +18,12 @@ from .controller import (
     LedgerWorkspaceScreen,
     ledger_copy,
 )
-from .models import LedgerEvidenceRecordRowV1, LedgerEvidenceRecordStatus
+from .models import (
+    LedgerEvidenceConfirmationV1,
+    LedgerEvidenceDraftV1,
+    LedgerEvidenceRecordRowV1,
+    LedgerEvidenceRecordStatus,
+)
 from .workspace_presentation import door_refusal_text
 
 _RECORD_STATUS_LOCALE_KEYS: Final[dict[LedgerEvidenceRecordStatus, str]] = {
@@ -25,10 +32,40 @@ _RECORD_STATUS_LOCALE_KEYS: Final[dict[LedgerEvidenceRecordStatus, str]] = {
     LedgerEvidenceRecordStatus.DECLINED: "tui.ledger.evidence.record_status.declined",
     LedgerEvidenceRecordStatus.UNMEASURED: "tui.ledger.evidence.record_status.unmeasured",
 }
-_READING_REFUSAL_LOCALE_KEYS: Final[dict[str, str]] = {
-    "ledger-evidence-extract": "tui.ledger.evidence.reading_refused.extract",
-    "ledger-evidence-confirm": "tui.ledger.evidence.reading_refused.confirm",
+_KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
+    InvoiceKind.RECEIVED: "tui.ledger.invoice.kind.received",
+    InvoiceKind.ISSUED: "tui.ledger.invoice.kind.issued",
 }
+
+
+def draft_lines(draft: LedgerEvidenceDraftV1) -> tuple[str, ...]:
+    """Show what the reader found; a field it could not ground reads as unread, not as zero."""
+    unread = ledger_copy("tui.ledger.evidence.draft.unread")
+
+    def shown(value: str | None) -> str:
+        return unread if value is None else value
+
+    return (
+        ledger_copy(
+            "tui.ledger.evidence.draft.supplier",
+            name=shown(draft.supplier_name),
+            nif=shown(draft.supplier_tax_id),
+        ),
+        ledger_copy(
+            "tui.ledger.evidence.draft.identity",
+            number=shown(draft.invoice_number),
+            date=shown(draft.invoice_date),
+        ),
+        ledger_copy(
+            "tui.ledger.evidence.draft.amounts",
+            base=shown(draft.taxable_base),
+            rate=shown(draft.iva_rate),
+            iva=shown(draft.iva_amount),
+            total=shown(draft.grand_total),
+            currency=shown(draft.currency),
+        ),
+        ledger_copy("tui.ledger.evidence.draft.discrepancies", count=draft.discrepancies),
+    )
 
 
 class LedgerEvidenceScreen(LedgerWorkspaceScreen):
@@ -41,6 +78,9 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         self.selected_record_id: str | None = None
         self.requested_review: LedgerEvidenceReviewRequested | None = None
         self._records: tuple[LedgerEvidenceRecordRowV1, ...] | None = None
+        self.draft: LedgerEvidenceDraftV1 | None = None
+        self.reading = False
+        """Whether a read or a confirmation is out; a second press waits for it."""
 
     @override
     def compose(self) -> ComposeResult:
@@ -59,6 +99,23 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
                 yield ContentDataTable[str](id="ledger-evidence-records", cursor_type="row", zebra_stripes=True)
                 yield Static("", id="ledger-evidence-record-detail", markup=False)
                 yield Button(ledger_copy("tui.ledger.evidence.extract"), id="ledger-evidence-extract", disabled=True)
+                yield Static("", id="ledger-evidence-draft", markup=False)
+                yield Static(ledger_copy("tui.ledger.invoice.field.kind"), markup=False)
+                yield Select[str](
+                    tuple((ledger_copy(_KIND_LOCALE_KEYS[kind]), kind.value) for kind in InvoiceKind),
+                    value=InvoiceKind.RECEIVED.value,
+                    allow_blank=False,
+                    id="ledger-evidence-kind",
+                )
+                yield Static(ledger_copy("tui.ledger.invoice.field.country_code"), markup=False)
+                yield Input(value="ES", max_length=2, id="ledger-evidence-country")
+                yield Static(
+                    ledger_copy(
+                        "tui.ledger.invoice.optional", label=ledger_copy("tui.ledger.invoice.field.counterparty_name")
+                    ),
+                    markup=False,
+                )
+                yield Input(id="ledger-evidence-counterparty")
                 yield Button(ledger_copy("tui.ledger.evidence.confirm"), id="ledger-evidence-confirm", disabled=True)
                 yield Static(ledger_copy("tui.ledger.evidence.add_label"), markup=False)
                 yield Input(placeholder=ledger_copy("tui.ledger.evidence.path_placeholder"), id="ledger-evidence-path")
@@ -167,29 +224,97 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         self.query_one("#ledger-evidence-confirm", Button).disabled = False
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Add a document, or explain why reading one cannot start here."""
+        """Add, read or confirm a document; reading waits on the reader's readiness."""
         match event.button.id:
             case "ledger-evidence-add":
                 self._add()
-            case "ledger-evidence-extract" | "ledger-evidence-confirm" if self.selected_record_id is not None:
-                self._refuse_reading(event.button.id)
+            case "ledger-evidence-extract" if self.selected_record_id is not None and self._reader_ready():
+                self._start(self._extract(self.selected_record_id), "tui.ledger.evidence.reading")
+            case "ledger-evidence-confirm" if self.selected_record_id is not None and self._reader_ready():
+                confirmation = self._confirmation(self.selected_record_id)
+                if confirmation is not None:
+                    self._start(self._confirm(confirmation), "tui.ledger.evidence.confirming")
             case _:
                 return
 
-    def _refuse_reading(self, button_id: str) -> None:
-        """Gate reading on the reader's own readiness claim, and say what to do next."""
+    def _reader_ready(self) -> bool:
+        """Refuse a read the reader says it cannot do, naming the failed condition."""
         readiness = self.controller.reader_readiness()
-        notice = self.query_one("#ledger-refusal", Static)
         self._show_reader()
-        if readiness is None or not readiness.extraction_ready:
-            notice.update(
-                ledger_copy(
-                    "tui.ledger.evidence.reading_refused.reader",
-                    condition="-" if readiness is None else readiness.failed_condition_id or "-",
-                )
+        if readiness is not None and readiness.extraction_ready:
+            return True
+        self.query_one("#ledger-refusal", Static).update(
+            ledger_copy(
+                "tui.ledger.evidence.reading_refused.reader",
+                condition="-" if readiness is None else readiness.failed_condition_id or "-",
             )
+        )
+        return False
+
+    def _start(self, work: Coroutine[object, object, None], status_key: str) -> None:
+        if self.reading:
+            work.close()
             return
-        notice.update(ledger_copy(_READING_REFUSAL_LOCALE_KEYS[button_id], evidence_id=self.selected_record_id))
+        self.reading = True
+        self.query_one("#ledger-refusal", Static).update("")
+        self.query_one("#ledger-flow-status", Static).update(ledger_copy(status_key))
+        self.run_worker(work, group="ledger-evidence-reading")
+
+    def _confirmation(self, evidence_id: str) -> LedgerEvidenceConfirmationV1 | None:
+        country = self.query_one("#ledger-evidence-country", Input).value.strip().upper()
+        if len(country) != 2 or not country.isalpha():
+            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.import.country_required"))
+            return None
+        counterparty = self.query_one("#ledger-evidence-counterparty", Input).value.strip()
+        return LedgerEvidenceConfirmationV1(
+            evidence_id=evidence_id,
+            kind=InvoiceKind(str(cast("Select[str]", self.query_one("#ledger-evidence-kind", Select)).value)),
+            country_code=country,
+            counterparty_name=counterparty or None,
+        )
+
+    async def _extract(self, evidence_id: str) -> None:
+        status = self.query_one("#ledger-flow-status", Static)
+        try:
+            draft = await self.controller.extract_evidence(evidence_id)
+        except (CadrumoError, ValidationError) as error:
+            status.update(ledger_copy("tui.ledger.evidence.read_failed"))
+            self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+        else:
+            self.draft = draft
+            status.update(ledger_copy("tui.ledger.evidence.read_done"))
+            self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
+            if draft.suggested_kind is not None:
+                self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
+            counterparty = self.query_one("#ledger-evidence-counterparty", Input)
+            if not counterparty.value and draft.supplier_name:
+                counterparty.value = draft.supplier_name
+        finally:
+            self.reading = False
+
+    async def _confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> None:
+        status = self.query_one("#ledger-flow-status", Static)
+        try:
+            confirmed = await self.controller.confirm_evidence(confirmation)
+        except (CadrumoError, ValidationError) as error:
+            self.reading = False
+            status.update(ledger_copy("tui.ledger.evidence.confirm_failed"))
+            self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
+            return
+        self.reading = False
+        lines = [
+            ledger_copy(
+                "tui.ledger.evidence.confirmed" if confirmed.created else "tui.ledger.evidence.already_confirmed",
+                number=confirmed.invoice_number,
+                total=format(confirmed.grand_total, "f"),
+                currency=confirmed.currency,
+            )
+        ]
+        if confirmed.printed_total_disagrees:
+            lines.append(ledger_copy("tui.ledger.evidence.printed_total_disagrees"))
+        message = "\n".join(lines)
+        status.update(message)
+        self.refresh_then(lambda: self._after_reread(message))
 
     def _add(self) -> None:
         raw = self.query_one("#ledger-evidence-path", Input).value.strip()

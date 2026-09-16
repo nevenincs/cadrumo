@@ -38,6 +38,9 @@ from .models import (
     LEDGER_DESTINATION_BY_AREA,
     LedgerClassificationSubmissionV1,
     LedgerEntryRowV1,
+    LedgerEvidenceConfirmationV1,
+    LedgerEvidenceConfirmedV1,
+    LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRowV1,
     LedgerExclusionSubmissionV1,
@@ -416,6 +419,18 @@ class LedgerWorkspaceController:
         if self.evidence_door is None:
             raise InternalInvariantError("evidence registration is unavailable")
         return await self.evidence_door.add(source_path)
+
+    async def extract_evidence(self, evidence_id: str) -> LedgerEvidenceDraftV1:
+        """Read one registered document through the injected evidence door."""
+        if self.evidence_door is None:
+            raise InternalInvariantError("evidence reading is unavailable")
+        return await self.evidence_door.extract(evidence_id)
+
+    async def confirm_evidence(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
+        """Record one read document as an invoice through the injected evidence door."""
+        if self.evidence_door is None:
+            raise InternalInvariantError("evidence confirmation is unavailable")
+        return await self.evidence_door.confirm(confirmation)
 
     def reader_readiness(self) -> LedgerReaderReadinessV1 | None:
         """Measure the local reader, or ``None`` when no door can measure it."""

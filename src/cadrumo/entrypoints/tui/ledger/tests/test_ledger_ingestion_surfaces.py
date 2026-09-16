@@ -20,6 +20,9 @@ from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..models import (
+    LedgerEvidenceConfirmationV1,
+    LedgerEvidenceConfirmedV1,
+    LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
     LedgerExclusionSubmissionV1,
@@ -158,6 +161,8 @@ class _EvidenceDoor:
         self.ready = ready
         self.records: list[LedgerEvidenceRecordRowV1] = []
         self.added: list[str] = []
+        self.extracted: list[str] = []
+        self.confirmed: list[LedgerEvidenceConfirmationV1] = []
 
     def list_records(self) -> tuple[LedgerEvidenceRecordRowV1, ...]:
         return tuple(self.records)
@@ -185,6 +190,34 @@ class _EvidenceDoor:
         if self.ready:
             return LedgerReaderReadinessV1(extraction_ready=True)
         return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="provisioning.runtime.reachable")
+
+    async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
+        self.extracted.append(evidence_id)
+        return LedgerEvidenceDraftV1(
+            evidence_id=evidence_id,
+            supplier_name="Hardware Profesional Sur SL",
+            supplier_tax_id="B92000090",
+            invoice_number="A-0003",
+            invoice_date="2026-03-27",
+            taxable_base=None,
+            iva_rate="21",
+            iva_amount=None,
+            grand_total=None,
+            currency="EUR",
+            suggested_kind=InvoiceKind.RECEIVED,
+            discrepancies=0,
+        )
+
+    async def confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> LedgerEvidenceConfirmedV1:
+        self.confirmed.append(confirmation)
+        return LedgerEvidenceConfirmedV1(
+            invoice_id="c" * 64,
+            invoice_number="A-0003",
+            grand_total=Decimal("1452.00"),
+            currency="EUR",
+            created=True,
+            printed_total_disagrees=False,
+        )
 
 
 def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenceScreen:
@@ -240,12 +273,29 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
             await pilot.pause()
             refusal = str(screen.query_one("#ledger-refusal", Static).render())
             assert "aeat config provision" in refusal
+            assert not door.extracted
             door.ready = True
             screen.query_one("#ledger-evidence-extract", Button).press()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
-            assert "evidence extract --evidence-id 8747cbf318cf0adb" in str(
-                screen.query_one("#ledger-refusal", Static).render()
-            )
+            assert door.extracted == ["8747cbf318cf0adb"]
+            draft = str(screen.query_one("#ledger-evidence-draft", Static).render())
+            # An amount the reader could not ground reads as unread, never as zero.
+            assert "Base unread" in draft
+            assert "0.00" not in draft
+            assert screen.query_one("#ledger-evidence-counterparty", Input).value == "Hardware Profesional Sur SL"
+            screen.query_one("#ledger-evidence-confirm", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert door.confirmed == [
+                LedgerEvidenceConfirmationV1(
+                    evidence_id="8747cbf318cf0adb",
+                    kind=InvoiceKind.RECEIVED,
+                    country_code="ES",
+                    counterparty_name="Hardware Profesional Sur SL",
+                )
+            ]
+            assert refreshes == [1, 1]
 
 
 class _ExclusionDoor:

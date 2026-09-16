@@ -737,7 +737,7 @@ def _ledger_generation_factory(
             # gives only the door and the operator supplies the rest.
             import_door=LedgerImportDoor(profile_id=profile_id, operation=operation),
             invoice_add_door=ledger_invoice_add_door(profile_id, operation),
-            evidence_door=LedgerEvidenceDoor(profile_id=profile_id),
+            evidence_door=LedgerEvidenceDoor(profile_id=profile_id, operation=operation),
             refresh=ledger_workspace_refresh(profile_id, capture_ledger),
         )(context)
 
