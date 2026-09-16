@@ -1,30 +1,20 @@
-"""IS-3 first-year flag resolves WITHOUT the wizard catalogue (#30 decouple).
+"""The first-year flag resolves in a process that never imports the wizard.
 
-Companion to ``application/modelo/tests/test_modelo_200_first_year_cuota_e2e.py``
-(which exercises the CLI path WITH the wizard ``SETUP_FLOW`` catalogue registered).
-That path could not, before #30, surface the failure mode: the engine's first-year
-derivation (``_first_year_modalidad_cuota_no_m202`` / ``activity_start_date_for_bucket``)
-re-built the profile through ``taxpayer_profile_from_mapping`` -> ``get_setup_flow()``
-and SILENTLY swallowed ``WizardCatalogueNotRegisteredError``, so in any process that
-computes an M200 without registering the catalogue (a non-CLI calc entrypoint) the
-first-year relaxation silently over-blocked (cuota-diferencial unresolved), cause
-hidden.
+The engine's first-year derivation (``_first_year_modalidad_cuota_no_m202`` /
+``activity_start_date_for_bucket``) reads the wizard-free profile projection
+(``record_to_path_values``). A non-CLI calculation entrypoint therefore resolves
+the first-year relaxation without any setup surface.
 
-#30 decouples the derivation onto the wizard-FREE profile projection
-(``record_to_path_values``). This module proves it in a GENUINELY
-catalogue-unregistered process: a self-contained child process that does its own
-isolated bucket setup and full M200 calculate but NEVER imports the wizard
-catalogue, so ``get_setup_flow()`` raises there. The child asserts the catalogue is
-unregistered (the discriminating condition), then:
-
-  POST-fix: the first-year flag resolves True off the projection, the activity-start
-  date resolves, and the M200/2025 cuota-diferencial (DP200014B:00611) COMPUTES.
-  PRE-fix: the wizard error was swallowed -> flag False, date None, 00611 ABSENT.
+A self-contained child process does its own isolated bucket setup and full M200
+calculate, then asserts that ``cadrumo.application.wizard`` was never imported
+(the discriminating condition). In that process the first-year flag resolves
+True, the activity-start date resolves, and the M200/2025 cuota-diferencial
+(DP200014B:00611) computes.
 
 Real-behaviour, real-adapter (the child runs the real encrypted-SQLite store via
 ``isolated_runtime_profile``, the real registry authority, the real calculate
-action). No mocks, no monkeypatch (the no-catalogue condition is achieved by
-process isolation, not by patching ``get_setup_flow``).
+action). No mocks, no monkeypatch: the no-wizard condition comes from process
+isolation.
 """
 
 from __future__ import annotations
@@ -40,23 +30,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 # Child process: does its own isolated setup + full M200/2025 first-year calculate
-# WITHOUT ever importing cadrumo.application.wizard.catalogue, so the wizard SETUP_FLOW
-# catalogue is unregistered in this process. argv[1] is a tmp dir for the bucket.
+# WITHOUT ever importing cadrumo.application.wizard. argv[1] is a tmp dir for the bucket.
 _CHILD_SCRIPT = r"""
 import sys
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-
-# Discriminating precondition: the wizard catalogue must NOT be registered here.
-from cadrumo.core.wizard_catalogue import WizardCatalogueNotRegisteredError, get_setup_flow
-
-try:
-    get_setup_flow()
-    print("CATALOGUE:REGISTERED")
-    raise SystemExit(3)
-except WizardCatalogueNotRegisteredError:
-    print("CATALOGUE:UNREGISTERED")
 
 from cadrumo.application.calculations.relation_prefill import (
     activity_start_date_for_bucket,
@@ -66,7 +45,6 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.period import Period
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.domain.resources.registry import resources
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -77,9 +55,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
-# Custody is composed AFTER the catalogue probe above, so it cannot perturb the
-# discriminating precondition this child exists to prove. The ports are bound by
-# an explicit composition root that a `python -c` child does not inherit.
+# The custody ports are bound by an explicit composition root that a
+# `python -c` child does not inherit.
 from contextlib import ExitStack
 
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
@@ -133,7 +110,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
 
     profile_path_values_reader = _ProfilePathValuesReader(record_to_path_values(record))
 
-    # The decoupled helpers must resolve off the projection with NO catalogue.
+    # The decoupled helpers must resolve off the projection with NO wizard.
     print(
         "FIRST_YEAR:"
         + str(
@@ -191,18 +168,12 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     )
     present = "DP200014B:00611" in result.revision.casilla_values
     print("CUOTA_DIFERENCIAL:" + ("PRESENT" if present else "ABSENT"))
+print("WIZARD:" + ("IMPORTED" if "cadrumo.application.wizard" in sys.modules else "NOT_IMPORTED"))
 """
 
 
 def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: Path) -> None:
-    """In a process where the wizard catalogue is unregistered, the first-year flag still resolves.
-
-    The child process never registers the wizard ``SETUP_FLOW`` catalogue, so it is
-    the genuine non-CLI calc context. Post-#30, the decoupled projection-based
-    derivation resolves the first-year relaxation and the M200/2025 cuota-diferencial
-    COMPUTES; pre-#30 the swallowed ``WizardCatalogueNotRegisteredError`` left the
-    flag False, the date None, and the casilla ABSENT.
-    """
+    """In a process that never imports the wizard, the first-year flag still resolves."""
     child = ensure_text_completed_process(
         run_audited_process(
             [sys.executable, "-c", _CHILD_SCRIPT, str(tmp_path)],
@@ -215,14 +186,14 @@ def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: 
     out = child.stdout
     detail = f"\n--- stdout ---\n{out}\n--- stderr ---\n{child.stderr}"
 
-    # The discriminating precondition: the catalogue is genuinely unregistered.
-    assert "CATALOGUE:UNREGISTERED" in out, f"test invalid - wizard catalogue was registered in the child{detail}"
     assert child.returncode == 0, f"child process failed{detail}"
+    # The discriminating precondition: the wizard is genuinely absent.
+    assert "WIZARD:NOT_IMPORTED" in out, f"test invalid - the child imported the wizard{detail}"
 
     # Post-#30: the decoupled derivation resolves off the wizard-free projection.
-    assert "FIRST_YEAR:True" in out, f"first-year flag must resolve True WITHOUT the wizard catalogue{detail}"
+    assert "FIRST_YEAR:True" in out, f"first-year flag must resolve True WITHOUT the wizard{detail}"
     assert "ACTIVITY_START:2025-01-01" in out, f"activity-start must resolve off the projection{detail}"
     # And the full calculate computes the cuota-diferencial (no silent over-block).
     assert "CUOTA_DIFERENCIAL:PRESENT" in out, (
-        f"M200/2025 first-year cuota-diferencial DP200014B:00611 must COMPUTE without the wizard catalogue{detail}"
+        f"M200/2025 first-year cuota-diferencial DP200014B:00611 must COMPUTE without the wizard{detail}"
     )

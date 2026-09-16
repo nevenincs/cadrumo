@@ -60,7 +60,6 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
-from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
     regime_apportions_deduction,
@@ -69,14 +68,11 @@ from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionProvider,
     prorrata_source_casilla_ids,
 )
-from ...domain.calculations.registry.queries import PinnedRegistryQueryService
-from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.iva.flow import is_issued_flow_direction
 from ...domain.iva.prorrata import (
     RegularizacionProrrataDireccion,
     RegularizacionProrrataResult,
@@ -85,7 +81,6 @@ from ...domain.iva.prorrata import (
     is_especial_mandatory,
 )
 from ...domain.iva.prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
-from ...domain.iva.schema import IvaCategory
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import (
     ProrrataProvisionalResolution,
@@ -110,27 +105,6 @@ from .revision_carry_gate import revision_carry_outcome
 # evidence mechanics only.
 
 _SOURCE_KIND: Final = BindingSourceKind.PRORRATA_REGULARIZACION
-_LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
-
-
-def prorrata_registry_declarations(
-    *,
-    operation: PinnedAuthorityOperation,
-    modelo: str,
-    filing_year: int,
-    period: str,
-) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
-    """Resolve prorrata declarations from one selected registry scope.
-
-    Binding targets, source casillas, period partitions, applicability, and
-    provenance stay in the selected revision. The calculation module consumes
-    only the authority-backed reports and keeps arithmetic/evidence mechanics.
-    """
-    query_service = PinnedRegistryQueryService(operation)
-    return (
-        query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
-        query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
-    )
 
 
 # Registry-owned target declarations remain in the selected binding fragments.
@@ -238,10 +212,6 @@ class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
     Declared annual volume casillas remain the filing authority. This projection
     records the currently classifiable ledger output-volume view so settlement
     can warn when it contradicts those declared values.
-
-    See Also:
-        :func:`build_prorrata_declared_volume_divergence_advisory`
-            Builds this rollup and the optional non-blocking diagnostic.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -364,108 +334,6 @@ def build_prorrata_missing_provisional_advisory(
         source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
         message=message,
     )
-
-
-def build_prorrata_declared_volume_divergence_advisory(
-    *,
-    declared_volume_total: Decimal,
-    declared_volume_con_derecho: Decimal,
-    ledger_observations: Iterable[IvaLedgerObservation],
-    ejercicio_periods: Iterable[Period],
-    regularizacion_year: int,
-    art_104_tres_excluded_ledger_ids: Iterable[str] = (),
-) -> tuple[ProrrataDeclaredVolumeLedgerRollup, CalculationSourceDiagnostic | None]:
-    """Compare declared annual prorrata volumes with the exclusion-filtered ledger rollup.
-
-    The rollup is deliberately advisory-only and remains a reconciliation
-    pre-fill PROPOSAL, never a filed-volume authority: the operator-declared
-    annual volume casillas keep the filing authority; this only surfaces a
-    divergence. It applies the LIVA art. 104.Tres denominator exclusions on the
-    ledger side before summing: the structural (cuotas), category-derived
-    (art. 7 no-sujeta, art. 9.1.d autoconsumo) exclusions never enter because
-    :func:`_prorrata_volume_side` already resolves them to neither term, and the
-    operator-declared judgment exclusions (foreign PE, non-habitual
-    inmobiliario/financiero) are skipped here by ledger id via the
-    ``art_104_tres_excluded_ledger_ids`` argument (typically
-    :attr:`~application.aggregation.IvaLedgerAggregation.art_104_tres_excluded_ledger_ids`):
-    observations with those ids are removed from both terms of the ledger-side
-    ratio and recorded on the rollup so the exclusion is auditable, never
-    silent. The bienes-de-inversión exclusion (art. 104.Tres 3.º) is owned by
-    the bienes-inversión register and is not applied here.
-
-    See Also:
-        :class:`~domain.calculations.registry.IvaLedgerObservation`
-            Typed ledger observation stream classified into con-derecho and
-            sin-derecho output volumes.
-    """
-    periods = tuple(ejercicio_periods)
-    if not periods:
-        raise ValueError("ejercicio_periods must contain at least one Period")
-
-    excluded_ids = frozenset(art_104_tres_excluded_ledger_ids)
-    ledger_volume_con_derecho = Decimal("0")
-    ledger_volume_sin_derecho = Decimal("0")
-    included_ledger_ids: list[str] = []
-    applied_exclusions: set[str] = set()
-    for observation in ledger_observations:
-        if not any(period.contains(observation.transaction_date) for period in periods):
-            continue
-        if observation.ledger_id in excluded_ids:
-            applied_exclusions.add(observation.ledger_id)
-            continue
-        volume_side = _prorrata_volume_side(observation)
-        if volume_side is None:
-            continue
-        included_ledger_ids.append(observation.ledger_id)
-        if volume_side == "con_derecho":
-            ledger_volume_con_derecho += observation.base_amount
-        else:
-            ledger_volume_sin_derecho += observation.base_amount
-
-    declared_volume_sin_derecho = declared_volume_total - declared_volume_con_derecho
-    rollup = ProrrataDeclaredVolumeLedgerRollup(
-        declared_volume_total=declared_volume_total,
-        declared_volume_con_derecho=declared_volume_con_derecho,
-        declared_volume_sin_derecho=declared_volume_sin_derecho,
-        ledger_volume_total=ledger_volume_con_derecho + ledger_volume_sin_derecho,
-        ledger_volume_con_derecho=ledger_volume_con_derecho,
-        ledger_volume_sin_derecho=ledger_volume_sin_derecho,
-        included_ledger_ids=tuple(sorted(included_ledger_ids)),
-        art_104_tres_excluded_ledger_ids=tuple(sorted(applied_exclusions)),
-    )
-    if not rollup.diverges:
-        return rollup, None
-
-    exclusion_note = ""
-    if rollup.art_104_tres_excluded_ledger_ids:
-        exclusion_note = (
-            f" Se excluyeron {len(rollup.art_104_tres_excluded_ledger_ids)} operación(es) por el art. 104.Tres "
-            "(establecimiento permanente en el extranjero / operación inmobiliaria o financiera no habitual)."
-        )
-    diagnostic = CalculationSourceDiagnostic(
-        reason="source_issue",
-        source_kind=_LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND,
-        message=(
-            f"Volúmenes anuales de prorrata declarados para {regularizacion_year} difieren del rollup "
-            f"IVA de libro: declarado con derecho {declared_volume_con_derecho}, sin derecho "
-            f"{declared_volume_sin_derecho}; libro con derecho {ledger_volume_con_derecho}, "
-            f"sin derecho {ledger_volume_sin_derecho}. Las casillas declaradas conservan la autoridad."
-            f"{exclusion_note}"
-        ),
-    )
-    return rollup, diagnostic
-
-
-def _prorrata_volume_side(
-    observation: IvaLedgerObservation,
-    *,
-    con_derecho_categories: frozenset[IvaCategory] | None = None,
-) -> str | None:
-    if not is_issued_flow_direction(observation.flow_direction):
-        return None
-    if con_derecho_categories is not None and observation.category in con_derecho_categories:
-        return "con_derecho"
-    return None
 
 
 def project_prorrata_regularizacion_feed(
@@ -1363,11 +1231,9 @@ __all__ = [
     "ProrrataDeclaredVolumeLedgerRollup",
     "ProrrataRegularizacionFeedProjection",
     "ProrrataRegularizacionSourceResolver",
-    "build_prorrata_declared_volume_divergence_advisory",
     "build_prorrata_especial_mandatory_advisory",
     "build_prorrata_missing_provisional_advisory",
     "buildprorrata_regularizacion_advisory",
     "derive_prorrata_applicability",
     "project_prorrata_regularizacion_feed",
-    "prorrata_registry_declarations",
 ]

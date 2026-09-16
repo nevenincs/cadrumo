@@ -187,11 +187,9 @@ def cross_period_dependency_inventory(
     :class:`RegistrySnapshot` evaluated for
     dependency coverage.
     """
-    selected_codes = None if modelos is None else frozenset(modelos)
+    selected_modelos = operation.modelo_ids() if modelos is None else tuple(modelos)
     items: list[CrossPeriodDependencyInventoryItem] = []
-    for modelo_id in operation.modelo_ids():
-        if selected_codes is not None and modelo_id not in selected_codes:
-            continue
+    for modelo_id in selected_modelos:
         directory = operation.modelo_directory(modelo_id)
         for revision in directory.revisions:
             if not revision.period_selector.includes_year(filing_year):
@@ -206,7 +204,7 @@ def cross_period_dependency_inventory(
                 snapshot = operation.snapshot(
                     modelo_id,
                     filing_year=filing_year,
-                    period=period,
+                    period=str(period),
                     revision_id=str(revision.id),
                 )
                 dependencies = cross_period_dependency_requirements(snapshot)

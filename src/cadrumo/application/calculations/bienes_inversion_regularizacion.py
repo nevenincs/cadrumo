@@ -49,8 +49,6 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
-from ...domain.calculations.registry.queries import PinnedRegistryQueryService
-from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
@@ -68,21 +66,6 @@ from .revision_carry_gate import revision_carry_outcome
 #: apart from the single-disposal regularización on the same casilla.
 _REGISTER_SOURCE = BindingSourceKind.BIENES_INVERSION_REGULARIZACION
 _TRANSMISSION_SOURCE = f"{_REGISTER_SOURCE.value}_transmision"
-
-
-def bienes_inversion_registry_declarations(
-    *,
-    operation: PinnedAuthorityOperation,
-    modelo: str,
-    filing_year: int,
-    period: str,
-) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
-    """Read the selected capital-goods declarations through the registry boundary."""
-    query_service = PinnedRegistryQueryService(operation)
-    return (
-        query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
-        query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
-    )
 
 
 def _selected_registry_reports(
@@ -729,7 +712,6 @@ class BienesInversionRegularizacionSourceResolver:
 
 __all__ = [
     "BienesInversionRegularizacionSourceResolver",
-    "bienes_inversion_registry_declarations",
     "build_bienes_inversion_regularizacion_advisory",
     "build_bienes_inversion_transmision_advisory",
 ]
