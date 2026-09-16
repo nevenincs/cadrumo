@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -55,7 +56,7 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(
 
     assert digest == attachment.attachment_id
     assert store.read_bytes(digest) == body
-    with store.open_bytes(digest) as handle:
+    with BytesIO(store.read_bytes(digest)) as handle:
         assert handle.read() == body
     loaded = store.load_manifest(digest)
     assert loaded == attachment
