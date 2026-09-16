@@ -9,7 +9,7 @@ from typing import ClassVar, cast
 import pytest
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Button, Static
+from textual.widgets import Static
 
 from ....application.operations.composition import OperationComposedServices
 from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
@@ -26,6 +26,7 @@ from ..account import (
     AccountSessionExpiredError,
 )
 from ..app import CadrumoTuiApp
+from ..components.account_chrome import AccountActionV1, account_status_line
 from ..home import HomeScreen
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
@@ -245,7 +246,10 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
         await pilot.press("escape")
         await pilot.pause()
 
-        assert app.query_one("#root-account", Static).render() == "Expired profile"
+        # The bar names the session as the root now holds it: expired.
+        assert app.account_session is not None
+        assert app.account_session.posture is HomeSessionPosture.EXPIRED
+        assert str(app.query_one("#root-account-bar", Static).render()) == account_status_line(app.account_session)
         assert app._active_target is None
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         with pytest.raises(InternalInvariantError, match="no composed destination"):
@@ -386,7 +390,7 @@ async def test_change_user_returns_typed_identity_and_revokes_old_profile_root()
     )
 
     async with app.run_test(size=(80, 24)) as pilot:
-        app.query_one("#root-change-user", Button).press()
+        await pilot.press("f5")
         await pilot.pause()
         assert app.screen is handover
         handover.dismiss(outcome)
@@ -423,7 +427,7 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
     )
 
     async with app.run_test(size=(80, 24)) as pilot:
-        app.query_one("#root-password", Button).press()
+        await pilot.press("f6")
         await pilot.pause()
         assert app.screen is password
         password.dismiss(outcome)
@@ -470,29 +474,26 @@ async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_lo
 @pytest.mark.asyncio
 @pytest.mark.parametrize("width", [80, 100, 120])
 async def test_account_header_is_keyboard_reachable_without_horizontal_overflow(width: int) -> None:
-    """Every account utility remains a real focus target at supported widths."""
+    """Every account control has a key named in the footer, and the bar fits the width."""
     app = CadrumoTuiApp(
         services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         account_factories=_account_factories(HandoverScreen()),
     )
-    expected = {
-        "root-change-user",
-        "root-password",
-        "root-profile",
-        "root-appearance",
-        "root-language",
-        "root-sign-out",
-    }
 
     async with app.run_test(size=(width, 24)) as pilot:
         await pilot.pause()
-        buttons = list(app.query("#root-account-actions Button"))
-        assert {button.id for button in buttons} == expected
-        assert all(button.can_focus and not button.disabled for button in buttons)
-        assert all(button.region.x >= 0 and button.region.right <= width for button in buttons)
-        assert app.query_one("#root-account-bar").scrollable_content_region.width <= width
+        actions = {active.binding.action for active in app.active_bindings.values()}
+        bound = {action for action in actions if action.startswith("account(") or action == "toggle_appearance"}
+        assert bound == {
+            "toggle_appearance",
+            *(f"account('{action.value}')" for action in AccountActionV1 if action is not AccountActionV1.APPEARANCE),
+        }
+        bar = app.query_one("#root-account-bar")
+        assert bar.region.x >= 0
+        assert bar.region.right <= width
+        assert bar.scrollable_content_region.width <= width
 
 
 @pytest.mark.asyncio
