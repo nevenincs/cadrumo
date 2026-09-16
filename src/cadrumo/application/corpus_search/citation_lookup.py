@@ -32,10 +32,6 @@ from typing import TYPE_CHECKING, override
 
 from ...domain.calculations.registry.authority_artifact import (
     AuthorityComponentCodecError,
-    AuthorityComponentKind,
-    AuthorityGenerationPin,
-    EvidenceComponentQuery,
-    PublishedLegalEvidence,
 )
 from ...domain.calculations.registry.schema_references import LegalReference
 from .errors import CorpusSearchInputError
@@ -43,7 +39,6 @@ from .models import CitationResolution
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.authority_artifact import AuthorityComponentReader
 
 
 class CitationLookup(ABC):
@@ -161,43 +156,6 @@ class _OperationCitationLookup(CitationLookup):
                 context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
             ) from exc
         if evidence.legal_reference_id != str(reference.id):
-            raise CorpusSearchInputError(
-                reason="citation_extracted_text_absent",
-                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
-            )
-        return evidence.anchored_text
-
-
-class _ComponentCitationLookup(CitationLookup):
-    """Citation lookup whose evidence comes from one generation-pinned reader."""
-
-    def __init__(
-        self,
-        legal: Mapping[str, LegalReference],
-        *,
-        reader: AuthorityComponentReader,
-        pin: AuthorityGenerationPin,
-    ) -> None:
-        self._legal = dict(legal)
-        self._reader = reader
-        self._pin = pin
-
-    @override
-    def _verbatim_text(self, reference: LegalReference) -> str:
-        try:
-            evidence = self._reader.load(
-                EvidenceComponentQuery(
-                    reference_id=str(reference.id),
-                    kind=AuthorityComponentKind.LEGAL_EVIDENCE,
-                ),
-                pin=self._pin,
-            )
-        except (AuthorityComponentCodecError, LookupError) as exc:
-            raise CorpusSearchInputError(
-                reason="citation_extracted_text_absent",
-                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
-            ) from exc
-        if not isinstance(evidence, PublishedLegalEvidence) or evidence.legal_reference_id != str(reference.id):
             raise CorpusSearchInputError(
                 reason="citation_extracted_text_absent",
                 context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},

@@ -22,8 +22,6 @@ from ..core.storage_taxonomy_locations import storage_location
 from .config_reset_models import (
     ConfigResetOperation,
     ConfigResetOperationStatus,
-    ConfigResetTarget,
-    ConfigResetTargetPhase,
 )
 from .journal_repository import JournalRepositoryBase
 
@@ -52,78 +50,6 @@ class ConfigResetJournalOwnershipError(ConfigResetJournalError):
 
 class ConfigResetJournalIncompleteError(ConfigResetJournalError):
     """Raised when a new operation would overlap an incomplete reset."""
-
-
-def _require_target_present(
-    operation: ConfigResetOperation,
-    *,
-    operation_id: str,
-    bucket_id: str,
-) -> ConfigResetTarget:
-    target = next(
-        (candidate for candidate in operation.targets if candidate.bucket_id == bucket_id),
-        None,
-    )
-    if target is None:
-        raise ConfigResetJournalOwnershipError(
-            translated_message="errors.error.error_config_boundary",
-            context={"operation_id": str(operation_id), "bucket_id": str(bucket_id), "target_contained": False},
-        )
-    return target
-
-
-def _require_owned_fingerprint(
-    target: ConfigResetTarget,
-    *,
-    operation_id: str,
-    bucket_id: str,
-    expected_fingerprint: str,
-) -> None:
-    fingerprint = target.fingerprint
-    if not target.exists_at_snapshot or fingerprint is None or fingerprint.digest != expected_fingerprint:
-        raise ConfigResetJournalOwnershipError(
-            translated_message="errors.error.error_config_boundary",
-            context={"operation_id": str(operation_id), "bucket_id": str(bucket_id), "fingerprint_owned": False},
-        )
-
-
-def _require_approved_retention(
-    target: ConfigResetTarget,
-    *,
-    operation_id: str,
-    bucket_id: str,
-) -> None:
-    retention = target.retention
-    if retention is None or (retention.blocks_erase and not retention.override_approved):
-        raise ConfigResetJournalOwnershipError(
-            translated_message="errors.error.error_config_boundary",
-            context={
-                "operation_id": str(operation_id),
-                "bucket_id": str(bucket_id),
-                "retention_decision_approved": False,
-            },
-        )
-
-
-def _require_deleting_marker(
-    target: ConfigResetTarget,
-    *,
-    operation_id: str,
-    bucket_id: str,
-    expected_fingerprint: str,
-) -> None:
-    marker = target.deletion_marker
-    if (
-        marker is None
-        or marker.operation_id != operation_id
-        or marker.bucket_id != bucket_id
-        or marker.fingerprint != expected_fingerprint
-        or target.phase not in {ConfigResetTargetPhase.DELETING, ConfigResetTargetPhase.DELETED}
-    ):
-        raise ConfigResetJournalOwnershipError(
-            translated_message="errors.error.error_config_boundary",
-            context={"operation_id": str(operation_id), "bucket_id": str(bucket_id), "deleting_marker_present": False},
-        )
 
 
 class ConfigResetJournalRepository(JournalRepositoryBase[ConfigResetOperation]):
