@@ -19,7 +19,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.authority import admitted_revision_id, compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -71,7 +71,7 @@ _CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
 
 @cache
 def _revision_id(modelo: str, filing_year: int, period: str) -> str:
-    return compiled_bundled_authority().admitted_revision_id(modelo, filing_year=filing_year, period=period)
+    return admitted_revision_id(compiled_bundled_authority(), modelo, filing_year=filing_year, period=period)
 
 
 def _populated_observation() -> RegistryModeloObservation:
