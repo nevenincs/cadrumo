@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....application.filing.draft_review_ports import DraftReviewPorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -28,7 +29,7 @@ from ....domain.filing.schema import (
     registry_schema_version,
 )
 from ....domain.invoices.enums import PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
@@ -114,7 +115,7 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
             "linked_transaction_ids": (),
         },
     )
-    invoice_catalogue = InvoiceCatalogue.from_invoices((invoice,))
+    invoice_catalogue = build_invoice_catalogue((invoice,))
 
     finding = ModeloValidationFinding(
         casilla_id=_REVIEW_FINDING_CASILLA,

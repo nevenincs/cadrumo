@@ -11,6 +11,8 @@ from collections.abc import Iterable, Iterator, Mapping
 from datetime import date, datetime
 from pathlib import Path
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....application.calculations.observations_repository import (
     CalculationObservationStorageProtocol,
     ObservationEnvelopePayload,
@@ -136,7 +138,7 @@ class InMemoryInvoiceRepository:
     def load(self) -> InvoiceCatalogue:
         if self._error is not None:
             raise self._error
-        return self._catalogue or InvoiceCatalogue.from_invoices(())
+        return self._catalogue or build_invoice_catalogue(())
 
     def save(self, catalogue: InvoiceCatalogue) -> None:
         if self._error is not None:
