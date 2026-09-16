@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,8 @@ from .....adapters.persistence.storage.tests.profile_storage_root_fixture import
 from .....tests.cli_envelope import unwrap_schema_envelope
 from ...main import app as root_app
 from ...tests.cli_runner import invoke_typer_app
+from .isolated_storage_fixture import live_cli_profile as live_cli_profile
+from .isolated_storage_fixture import profile_cli, profile_facts
 
 __all__ = ["profile_storage_root_fixture"]
 
@@ -98,3 +101,27 @@ def test_profile_add_row_persists_an_activities_row_and_rejects_bad_values_witho
     assert duplicate.exit_code != 0, duplicate.output
 
     assert _show_values() == success_values
+
+
+@pytest.mark.usefixtures("live_cli_profile")
+def test_a_mistyped_field_and_an_all_blank_row_are_refused_apart() -> None:
+    """Each refusal must name the mistake the operator actually made.
+
+    Reproduction: ``add-row activities --value descripcion=Taller`` was refused
+    as a row with no populated field. Undeclared keys were dropped before the
+    blank check, so an operator who had filled a field was told they had not,
+    and the mistyped key was never named. A row that really is blank
+    (``--value description=``) must still be refused, as a different mistake.
+    """
+    before = profile_facts()
+
+    mistyped = profile_cli("add-row", "activities", "--value", "descripcion=Taller")
+    blank = profile_cli("add-row", "activities", "--value", "description=")
+
+    assert mistyped.exit_code == 2, mistyped.output
+    assert blank.exit_code == 2, blank.output
+    mistyped_context = json.loads(mistyped.stderr)["error"]["context"]
+    blank_context = json.loads(blank.stderr)["error"]["context"]
+    assert mistyped_context["unknown"] == "descripcion"
+    assert "unknown" not in blank_context
+    assert profile_facts() == before
