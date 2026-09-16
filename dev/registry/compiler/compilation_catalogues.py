@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..calculations.registry.schema_references import LegalReference, SourceReference
+    from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 __all__ = ["CompilationCatalogues", "compiling_catalogues", "compiling_catalogues_in_scope"]
 

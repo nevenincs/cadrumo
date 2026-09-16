@@ -11,11 +11,6 @@ from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Final
 
-from cadrumo.core.corpus_annotation import (
-    CORPUS_PAGE_ANNOTATION_SUFFIX,
-    CorpusPageAnnotation,
-    resolve_annotated_pdf_pages,
-)
 from cadrumo.core.corpus_text import CorpusAnchorResolutionError
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
@@ -35,6 +30,11 @@ from cadrumo.domain.calculations.registry.artifact_catalogue import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
+from dev.registry.compiler.corpus_annotation import (
+    CORPUS_PAGE_ANNOTATION_SUFFIX,
+    CorpusPageAnnotation,
+    resolve_annotated_pdf_pages,
+)
 
 from .legal_grounding import PROVISION_SUFFIXED_FILENAME
 

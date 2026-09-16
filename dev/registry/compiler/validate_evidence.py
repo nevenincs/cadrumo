@@ -18,15 +18,15 @@ from pydantic import ConfigDict, TypeAdapter, ValidationError
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.manual_corpus_sidecar import (
-    MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
-    MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
-    ManualCorpusTextSidecar,
-)
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from dev.cache_root import dev_cache_dir
+from dev.corpus.manual_corpus_sidecar import (
+    MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
+    MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
+    ManualCorpusTextSidecar,
+)
 
 if TYPE_CHECKING:
     import pypdfium2

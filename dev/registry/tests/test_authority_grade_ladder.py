@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
-from cadrumo.domain.calculations.registry.schema_family_coverage import build_revision_coverage_manifest
+from dev.registry.compiler.schema_family_coverage import build_revision_coverage_manifest
 
 from ..compiler.loader import load_registry_tree
 from ..compiler.validate_authority_grade import validate_authority_grade_section

@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from datetime import date
 from pathlib import Path
 from threading import Event
 from types import SimpleNamespace
+from typing import Concatenate
 
 import pytest
 
@@ -23,6 +26,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityBuildIdentity,
     AuthorityComponentCodecError,
     AuthorityEvidenceProjection,
+    ModeloDirectoryComponentQuery,
     ProfileSchemaComponentQuery,
 )
 from cadrumo.domain.calculations.registry.authority_store import (
@@ -41,7 +45,8 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
 )
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
-from ..compiler.authority_database import build_authority_database
+from ..compiler import authority_database as authority_database_compiler
+from ..compiler.authority_database import build_authority_database, require_acyclic_authority_dependencies
 from ..compiler.profile_schema import capture_profile_schema
 from ..pipeline import authority_publication
 from ..pipeline.authority_publication import install_validated_authority_database, promote_accepted_authority_database
@@ -61,14 +66,79 @@ def test_retired_whole_authority_json_surfaces_do_not_exist() -> None:
     assert not tuple(path.relative_to(repository_root) for path in retired_paths if path.exists())
 
 
-def test_admission_refuses_a_complete_dependency_cycle() -> None:
+def test_publication_proof_refuses_a_complete_dependency_cycle() -> None:
     rows = [
-        ("modelo_revision", "100\x1frev", "governed_fact", "fact-a"),
-        ("governed_fact", "fact-a", "modelo_revision", "100\x1frev"),
+        ("modelo_revision", "100rev", "governed_fact", "fact-a"),
+        ("governed_fact", "fact-a", "modelo_revision", "100rev"),
     ]
 
-    with pytest.raises(AuthorityStoreCorruptionError, match="dependency cycle"):
-        SQLiteAuthorityReader._require_acyclic_dependencies(rows)
+    with pytest.raises(RegistryValidationError, match="dependency cycle"):
+        require_acyclic_authority_dependencies(rows)
+
+
+def _publishes_nothing(destination: Path) -> bool:
+    return not (destination / "authority.current.json").exists() and not list(destination.glob("authority-*.sqlite3"))
+
+
+def _followed_by[**P](
+    real: Callable[Concatenate[sqlite3.Connection, P], None],
+    extra: Callable[[sqlite3.Connection], None],
+) -> Callable[Concatenate[sqlite3.Connection, P], None]:
+    """Run ``real`` unchanged, then ``extra`` on the same candidate connection."""
+
+    def wrapped(connection: sqlite3.Connection, /, *args: P.args, **kwargs: P.kwargs) -> None:
+        real(connection, *args, **kwargs)
+        extra(connection)
+
+    return wrapped
+
+
+def test_publication_refuses_a_cyclic_candidate_before_writing_a_descriptor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def add_a_reverse_edge(connection: sqlite3.Connection) -> None:
+        component_kind, component_key, dependency_kind, dependency_key = connection.execute(
+            "SELECT component_kind, component_key, dependency_kind, dependency_key FROM dependencies LIMIT 1"
+        ).fetchone()
+        connection.execute(
+            "INSERT INTO dependencies(component_kind, component_key, ordinal, dependency_kind, dependency_key) "
+            "VALUES (?, ?, 0, ?, ?)",
+            (dependency_kind, dependency_key, component_kind, component_key),
+        )
+
+    monkeypatch.setattr(
+        authority_database_compiler,
+        "_insert_dependencies",
+        _followed_by(authority_database_compiler._insert_dependencies, add_a_reverse_edge),
+    )
+
+    with pytest.raises(RegistryValidationError, match="dependency cycle"):
+        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=lambda: None)
+    assert _publishes_nothing(tmp_path)
+
+
+def test_publication_refuses_a_candidate_with_a_dangling_dependency(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def add_a_dangling_edge(connection: sqlite3.Connection) -> None:
+        component_kind, component_key = connection.execute(
+            "SELECT component_kind, component_key FROM dependencies LIMIT 1"
+        ).fetchone()
+        connection.execute(
+            "INSERT INTO dependencies(component_kind, component_key, ordinal, dependency_kind, dependency_key) "
+            "VALUES (?, ?, 999, 'governed_fact', 'no-such-fact')",
+            (component_kind, component_key),
+        )
+
+    monkeypatch.setattr(
+        authority_database_compiler,
+        "_insert_dependencies",
+        _followed_by(authority_database_compiler._insert_dependencies, add_a_dangling_edge),
+    )
+
+    with pytest.raises(RegistryValidationError, match="authority database compilation failed"):
+        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=lambda: None)
+    assert _publishes_nothing(tmp_path)
 
 
 def _artifact() -> AuthorityArtifact:
@@ -140,6 +210,52 @@ def test_profile_component_load_is_generation_pinned_and_lazy(tmp_path: Path) ->
         assert profile.id == "cadrumo.user_profile"
         assert reader.telemetry().entries == 1
         assert reader.active_leases == 0
+    finally:
+        reader.close()
+
+
+def test_cached_loads_verify_database_identity_once_per_lease_not_per_load(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    reader = SQLiteAuthorityReader(_published_candidate(tmp_path), max_connections=2)
+    verifications: list[None] = []
+    real_verify = reader._verify_database_identity
+
+    def counting_verify() -> None:
+        verifications.append(None)
+        real_verify()
+
+    monkeypatch.setattr(reader, "_verify_database_identity", counting_verify)
+    try:
+        with reader.lease() as pin:
+            first = reader.load(ProfileSchemaComponentQuery(), pin=pin)
+            repeats = [reader.load(ProfileSchemaComponentQuery(), pin=pin) for _ in range(50)]
+
+        assert all(repeat is first for repeat in repeats)
+        # One for the lease's pin, one for the single database read.
+        assert len(verifications) == 2
+    finally:
+        reader.close()
+
+
+def test_a_database_changed_under_the_reader_is_refused_at_its_next_database_touch(tmp_path: Path) -> None:
+    descriptor_path = _published_candidate(tmp_path)
+    database = tmp_path / AuthorityDescriptor.read(descriptor_path).database
+    reader = SQLiteAuthorityReader(descriptor_path, max_connections=2)
+    try:
+        with reader.lease() as pin:
+            profile = reader.load(ProfileSchemaComponentQuery(), pin=pin)
+            status = database.stat()
+            os.utime(database, ns=(status.st_atime_ns, status.st_mtime_ns + 1_000_000_000))
+
+            # The lease pinned this generation, and a cache hit reads no file.
+            assert reader.load(ProfileSchemaComponentQuery(), pin=pin) is profile
+            with pytest.raises(AuthorityStoreCorruptionError, match="changed after admission"):
+                reader.load(ModeloDirectoryComponentQuery("130"), pin=pin)
+
+        assert reader.telemetry().entries == 0
+        with pytest.raises(AuthorityStoreCorruptionError, match="changed after admission"), reader.lease():
+            pass
     finally:
         reader.close()
 

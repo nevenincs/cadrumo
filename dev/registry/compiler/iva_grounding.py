@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues_in_scope
 from cadrumo.domain.iva.errors import IvaCatalogueError
+from dev.registry.compiler.compilation_catalogues import compiling_catalogues_in_scope
 
 from .legal_grounding import verify_legal_reference_grounding
 

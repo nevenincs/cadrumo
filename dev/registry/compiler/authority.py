@@ -17,8 +17,8 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
-from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
+from dev.registry.compiler.compilation_catalogues import compiling_catalogues
 
 from . import fact_providers
 from .authority_state import (

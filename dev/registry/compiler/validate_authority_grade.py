@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_family_coverage import build_revision_coverage_manifest
+from dev.registry.compiler.schema_family_coverage import build_revision_coverage_manifest
 
 #: Families whose resolution the calculation rung specifically asserts.
 _CALCULATION_FAMILIES: frozenset[str] = frozenset({"formulas"})

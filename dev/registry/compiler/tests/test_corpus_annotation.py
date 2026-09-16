@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.corpus_annotation import CorpusPageAnnotation, resolve_annotated_pdf_pages
 from cadrumo.core.corpus_text import CorpusAnchorResolutionError
+from dev.registry.compiler.corpus_annotation import CorpusPageAnnotation, resolve_annotated_pdf_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

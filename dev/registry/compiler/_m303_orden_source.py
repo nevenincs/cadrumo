@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import cast
 from urllib.parse import urlsplit
 
-from cadrumo.core.corpus_sidecar import render_corpus_sidecar_text
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.hashing import sha256_hex
@@ -37,6 +36,7 @@ from cadrumo.domain.calculations.registry.m303_orden_constants import (
 )
 from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from dev.docs.preprocess.schema import render_corpus_sidecar_text
 
 from .m303_orden_raw_models import (
     M303AnnualOrdenRawActivity,

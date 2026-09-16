@@ -34,13 +34,13 @@ from cadrumo.domain.calculations.registry.schema_base import (
     SCHEMA_FAMILY,
     RegistryModel,
 )
-from cadrumo.domain.calculations.registry.schema_family_coverage import (
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler.schema_family_coverage import (
     RevisionCoverageManifest,
     SchemaFamilyCoverageRow,
     build_revision_coverage_manifest,
 )
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ...compiler.loader import load_modelo_directory
 from ..coverage import REQUIRED_COVERAGE_TIERS

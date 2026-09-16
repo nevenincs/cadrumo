@@ -21,8 +21,8 @@ from typing import Final
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.identifier_lineage import EDITION_PLACEHOLDER, identifier_lineage
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.compiler.identifier_lineage import EDITION_PLACEHOLDER, identifier_lineage
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest

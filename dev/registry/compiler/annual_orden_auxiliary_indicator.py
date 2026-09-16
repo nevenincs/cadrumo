@@ -7,10 +7,10 @@ from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
 
-from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from .schema_base import DateAxis
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 _FACT_ID = "liva-orden-auxiliary-activity-indicator"
 _KEY_SEPARATOR = "|"

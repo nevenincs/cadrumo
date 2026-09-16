@@ -14,12 +14,15 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 
-from ....core.casilla_id import CasillaId
-from ....core.i18n.render import MissingTranslationError
-from .ids import RevisionId
-from .revision_order import revisions_overlap as _revisions_overlap
-from .schema import ModeloDefinition, ModeloRevision
-from .schema_surfaces import CasillaContinuidadEvolutionDefinition, CasillaDefinition
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.i18n.render import MissingTranslationError
+from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.revision_order import revisions_overlap as _revisions_overlap
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
+)
 
 _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "label",

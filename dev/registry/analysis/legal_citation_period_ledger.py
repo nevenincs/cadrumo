@@ -16,7 +16,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from cadrumo.core.toml import parse_toml
-from cadrumo.domain.calculations.registry.casilla_legal_citation_period import (
+from dev.registry.analysis.casilla_legal_citation_period import (
     CasillaCitationKey,
     CitationPeriodRefusal,
 )

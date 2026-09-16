@@ -29,7 +29,6 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
-from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.keyed_families import (
     INHERITED_FAMILY_SPECS as _CANONICAL_INHERITED_FAMILY_SPECS,
@@ -80,6 +79,7 @@ from cadrumo.domain.calculations.registry.schema_formula import FormulaExpressio
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, CasillaEvolutionKind
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
+from dev.registry.compiler.identifier_lineage import identifier_lineage
 
 from ._loader_revision_fragments import (
     merge_revision_fragment as _merge_revision_fragment,
@@ -1588,7 +1588,7 @@ def _resolve_inherited_references(
     An inherited row arrives with the references its stating edition authored,
     which name that edition's formulas and bindings. Each reference is replaced
     by the declaration of this edition carrying the same lineage, as
-    :func:`~cadrumo.domain.calculations.registry.identifier_lineage.identifier_lineage`
+    :func:`~dev.registry.compiler.identifier_lineage.identifier_lineage`
     defines it: the reference's lineage is taken against the stating edition,
     each declaration's against this one. A reference whose lineage no
     declaration of this edition carries is refused rather than kept, since the

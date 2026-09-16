@@ -17,14 +17,14 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, computed_field, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.schema_family_disposition import (
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.schema_family_disposition import (
     UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
     RegistrySchemaFamilyDisposition,
 )
-from .errors import RegistryValidationError
-from .ids import LegalRefId, SourceRefId
-from .schema import REVISION_SCHEMA_FAMILY_FIELDS, ModeloRevision
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
+from cadrumo.domain.calculations.registry.schema import REVISION_SCHEMA_FAMILY_FIELDS, ModeloRevision
 
 __all__ = (
     "CoverageModel",

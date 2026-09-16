@@ -69,6 +69,11 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
                 raise RegistryValidationError(f"compiled authority database integrity_check failed: {integrity!r}")
             if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
                 raise RegistryValidationError("compiled authority database foreign-key closure failed")
+            require_acyclic_authority_dependencies(
+                connection.execute(
+                    "SELECT component_kind, component_key, dependency_kind, dependency_key FROM dependencies"
+                ).fetchall()
+            )
             connection.execute("VACUUM")
         finally:
             connection.close()
@@ -82,6 +87,33 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
         byte_count=len(payload),
         component_count=len(components),
     )
+
+
+def require_acyclic_authority_dependencies(rows: list[tuple[str, str, str, str]]) -> None:
+    """Refuse a component dependency graph containing any cycle.
+
+    The runtime reader resolves a component's dependencies recursively and does
+    not re-prove this graph, so a cycle must never reach a published database.
+    """
+    graph: dict[tuple[str, str], list[tuple[str, str]]] = {}
+    for component_kind, component_key, dependency_kind, dependency_key in rows:
+        graph.setdefault((component_kind, component_key), []).append((dependency_kind, dependency_key))
+    visiting: set[tuple[str, str]] = set()
+    visited: set[tuple[str, str]] = set()
+
+    def visit(node: tuple[str, str]) -> None:
+        if node in visiting:
+            raise RegistryValidationError(f"compiled authority database dependency cycle includes {node!r}")
+        if node in visited:
+            return
+        visiting.add(node)
+        for dependency in graph.get(node, ()):
+            visit(dependency)
+        visiting.remove(node)
+        visited.add(node)
+
+    for node in graph:
+        visit(node)
 
 
 @dataclass(frozen=True, slots=True)

@@ -73,14 +73,14 @@ from cadrumo.domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, EvidenceTierField, coerce_enum_member
-from cadrumo.domain.calculations.registry.schema_family_coverage import (
-    CoverageModel,
-)
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev.registry.compiler.schema_family_coverage import (
+    CoverageModel,
+)
 
 from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 

@@ -10,9 +10,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from .corpus_text import CorpusAnchorResolutionError
-from .hex import HEX_PATTERN_64
-from .type_guards import is_object_dict, is_object_list
+from cadrumo.core.corpus_text import CorpusAnchorResolutionError
+from cadrumo.core.hex import HEX_PATTERN_64
+from cadrumo.core.type_guards import is_object_dict, is_object_list
 
 CORPUS_PAGE_ANNOTATION_SUFFIX = ".annotation.json"
 _PAGE_TITLE = re.compile(r"Pag\. (?P<number>[1-9]\d*)")
