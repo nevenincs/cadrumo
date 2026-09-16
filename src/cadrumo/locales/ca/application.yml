@@ -212,11 +212,6 @@ application:
           només es reconstrueix per al Model 303; s'ha indicat el model {modelo}.
         modelo_303_only: L'historial de compensació d'IVA només accepta observacions
           del Model 303.
-        modelo_390_only: El resum anual de compensació d'IVA només accepta observacions
-          del Model 390.
-        observed_casilla_ids_noncanonical: Les observacions de compensació d'IVA han
-          d'usar els identificadors de casella declarats pel model {modelo} revisió
-          {revision}; {casilla_ids} no estan declarats.
         repository_backend_split: El magatzem d'observacions del Model 303 i el de
           l'historial de compensació d'IVA han de compartir un únic backend xifrat
           perquè totes dues escriptures es confirmin alhora.

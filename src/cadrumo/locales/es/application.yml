@@ -212,11 +212,6 @@ application:
           IVA solo se reconstruye para el Modelo 303; se ha indicado el modelo {modelo}.
         modelo_303_only: El historial de compensación de IVA solo acepta observaciones
           del Modelo 303.
-        modelo_390_only: El resumen anual de compensación de IVA solo acepta observaciones
-          del Modelo 390.
-        observed_casilla_ids_noncanonical: Las observaciones de compensación de IVA
-          deben usar los identificadores de casilla declarados por el modelo {modelo}
-          revisión {revision}; {casilla_ids} no están declarados.
         repository_backend_split: El almacén de observaciones del Modelo 303 y el
           del historial de compensación de IVA deben compartir un único backend cifrado
           para que ambas escrituras se confirmen a la vez.

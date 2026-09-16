@@ -1734,6 +1734,7 @@ tui:
     choose_role: Elige una tarea de la tabla para descargar, cargar, comprobar o eliminar
       su modelo.
     column:
+      fitness: Prueba del modelo
       installed: Instalado
       loaded: Cargado
       model: Modelo
@@ -1754,6 +1755,11 @@ tui:
     extraction_not_ready: Todavía no se pueden leer documentos de factura en este
       equipo.
     extraction_ready: Los documentos de factura se pueden leer en este equipo.
+    fitness:
+      fit: apto
+      not_verified: sin verificar
+      timed_out: tiempo agotado
+      unfit: no apto
     host: 'Runtime en {endpoint} · instalado: {installed} · responde: {reachable}
       · versión {version}'
     install: Instalar runtime
@@ -1887,6 +1893,7 @@ tui:
       quit: Salir
       quit_help: Sale de Cadrumo; la sesión del perfil queda como está
     title: 'Cadrumo: sesión de terminal'
+    updating: Actualizando el área de trabajo…
   search:
     action:
       classify_ledger: Clasificar libro mayor

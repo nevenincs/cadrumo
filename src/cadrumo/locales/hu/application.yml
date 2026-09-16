@@ -202,11 +202,6 @@ application:
           a Modelo 303 esetén építhető újra; a megadott modelo: {modelo}.'
         modelo_303_only: Az IVA-kompenzációs előzmények csak Modelo 303 megfigyeléseket
           fogadnak el.
-        modelo_390_only: Az éves áfa-kompenzációs összesítő csak Modelo 390 megfigyeléseket
-          fogad el.
-        observed_casilla_ids_noncanonical: Az IVA-kompenzációs megfigyeléseknek a(z)
-          {modelo} modelo {revision} változatában deklarált casilla-azonosítókat kell
-          használniuk; a(z) {casilla_ids} nincs deklarálva.
         repository_backend_split: A Modelo 303 megfigyelési tárnak és az IVA-kompenzációs
           előzménytárnak egyetlen titkosított háttértárat kell megosztania, hogy mindkét
           írás együtt véglegesüljön.
