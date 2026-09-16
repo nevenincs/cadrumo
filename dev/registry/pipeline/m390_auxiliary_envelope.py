@@ -20,14 +20,14 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period, StandardPeriodCode
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.filing.errors import FilingExportValidationError
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
+from dev.registry.compiler.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
     AUXILIARY_ENVELOPE_HEADER_ROWS,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
 )
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.filing.errors import FilingExportValidationError
-from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
 
 from ..maintenance_support import resolve_record_design_binary
 from .export_fragment_provenance import ExportFragmentTarget

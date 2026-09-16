@@ -23,8 +23,8 @@ from pydantic import ValidationError
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import content_hash_hex, sha256_hex
 from cadrumo.domain.calculations.registry import record_design_schema
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignExtraction
 from dev.cache_root import dev_cache_dir
+from dev.registry.compiler.record_design_schema import RecordDesignExtraction
 
 from . import record_design_sources
 

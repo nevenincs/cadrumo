@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.record_design_schema import (
     RecordDesignExtraction,
     RecordDesignSkippedSheet,
 )

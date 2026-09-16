@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.record_design_schema import (
     RecordDesignRelativeSuffixMarker,
 )
 
@@ -370,7 +370,7 @@ def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> Non
     the record identifier. Peeling on width would silently truncate that closing and
     reclassify a real identifier component as physical padding.
     """
-    from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignRelativeSuffixMarker
+    from dev.registry.compiler.record_design_schema import RecordDesignRelativeSuffixMarker
 
     from ..compiler.record_design_layout_markers import split_record_terminator
 

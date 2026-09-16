@@ -52,14 +52,14 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.record_design_schema import (
     RecordDesignCorrection,
     RecordDesignFieldTypeCorrection,
     RecordDesignHeaderCellCorrection,
     RecordDesignRangeStartCorrection,
     RecordDesignSinglePositionCorrection,
 )
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.record_design import extract_record_design
 from ..compiler.record_design_pdf_repairs import collapse_stuttered_row_prefix, join_wrapped_row_descriptions

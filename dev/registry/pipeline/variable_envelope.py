@@ -31,7 +31,6 @@ from cadrumo.domain.calculations.registry.ids import (
     RecordId,
     RevisionId,
 )
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignAuxiliaryEnvelopeHeaderRole
 from cadrumo.domain.calculations.registry.schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
     FilingEnvelopeCloserDerivation,
@@ -40,6 +39,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
     FilingEnvelopeTotalDerivation,
 )
+from dev.registry.compiler.record_design_schema import RecordDesignAuxiliaryEnvelopeHeaderRole
 
 from .record_design_intermediate import (
     RecordDesignIntermediateAuxiliaryEnvelopeHeader,

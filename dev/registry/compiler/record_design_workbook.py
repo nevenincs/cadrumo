@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from xlrd.sheet import Sheet as XlrdSheet
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.record_design_schema import (
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderField,
     RecordDesignAuxiliaryEnvelopeHeaderRole,

@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignField, RecordDesignSheet
+from dev.registry.compiler.record_design_schema import RecordDesignField, RecordDesignSheet
 
 from ..compiler.record_design_pdf_state import contiguity_failure
 

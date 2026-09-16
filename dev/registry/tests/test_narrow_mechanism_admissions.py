@@ -41,11 +41,11 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.record_design_schema import (
+from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_CONTENT,
     validate_auxiliary_envelope_header_contents,
 )
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.record_design import extract_record_design
 
