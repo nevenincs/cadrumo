@@ -16,8 +16,8 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import TypeAdapter
 
-from .errors.hierarchy import CoreValidationError
-from .text_fold import ascii_slug
+from cadrumo.core.errors.hierarchy import CoreValidationError
+from cadrumo.core.text_fold import ascii_slug
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup, Tag
@@ -182,7 +182,7 @@ def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> Or
     """Extract the complete IVA simplified-regime authority from one Orden source."""
     from bs4 import BeautifulSoup
 
-    from .orden_anual_sections import (
+    from dev.docs.preprocess.orden_anual_sections import (
         extract_agricultural_indexes,
         extract_difficult_justification,
         extract_ingresos_a_cuenta,
