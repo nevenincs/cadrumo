@@ -45,7 +45,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.config import override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
@@ -55,7 +54,7 @@ from ..compiler.loader import (
     clear_registry_tree_cache,
     load_registry_tree,
 )
-from ..compiler.loader_cache import is_bundled_registry_root, registry_disk_cache_enabled
+from ..compiler.loader_cache import REGISTRY_DISK_CACHE_DIR_ENV, is_bundled_registry_root, registry_disk_cache_enabled
 from ..compiler.loader_fingerprints import (
     clear_fingerprint_cache,
     collect_registry_tree_fingerprints,
@@ -69,7 +68,6 @@ from ..conformance.loader_directory_mode_support import (
 from ..conformance.loader_directory_mode_support import (
     write_fragmented_modelo as _write_fragmented_modelo,
 )
-from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -258,14 +256,7 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
     """
     isolated_cache_dir = tmp_path / "registry-disk-cache"
     isolated_cache_dir.mkdir()
-    # ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` backs the Settings field
-    # ``cadrumo_registry_disk_cache_dir``; ``load_settings()`` caches the
-    # constructed ``Settings`` per active-profile pointer, so a plain
-    # ``os.environ`` mutation via ``scoped_env_var`` is invisible to the
-    # in-process resolver once any earlier call has already built and cached
-    # a ``Settings`` instance. ``override_settings`` is the mechanism that
-    # actually takes effect for this in-process load.
-    with override_settings(cadrumo_registry_disk_cache_dir=isolated_cache_dir):
+    with scoped_env_var("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(isolated_cache_dir)):
         clear_registry_tree_cache()
         clear_fingerprint_cache()
 
@@ -286,7 +277,7 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
                 "-c",
                 (
                     "from dev.registry.compiler.loader import load_registry_tree\n"
-                    "from cadrumo.core.resources import bundled_path\n"
+                    "from cadrumo.core.resources.bundled_data import bundled_path\n"
                     "root = bundled_path('registry', 'aeat').resolve()\n"
                     "modelos, _ = load_registry_tree(root)\n"
                     "print(len(modelos))\n"
@@ -297,7 +288,7 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
             env={
                 **os.environ,
                 "PYTEST_CURRENT_TEST": "simulated_worker::test_shares_bundled_disk_cache",
-                REGISTRY_DISK_CACHE_DIR_ENV_VAR: str(isolated_cache_dir),
+                REGISTRY_DISK_CACHE_DIR_ENV: str(isolated_cache_dir),
             },
             text=True,
             timeout=60,
@@ -380,7 +371,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "\n"
         "import pytest\n"
         "\n"
-        "from cadrumo.core.resources import bundled_path\n"
+        "from cadrumo.core.resources.bundled_data import bundled_path\n"
         "from dev.registry.compiler.loader import load_registry_tree\n"
         "\n"
         "pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]\n"
@@ -426,7 +417,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
             timeout_seconds=_SUBPROCESS_TIMEOUT_SECONDS,
         )
 
-    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir)):
+    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV, str(isolated_cache_dir)):
         for stale in _bundled_registry_disk_cache_files(isolated_cache_dir):
             stale.unlink(missing_ok=True)
 
@@ -503,7 +494,7 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
 
     isolated_cache_dir = tmp_path / "registry-disk-cache"
     isolated_cache_dir.mkdir()
-    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir)):
+    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV, str(isolated_cache_dir)):
         before = _bundled_registry_disk_cache_files(isolated_cache_dir)
         assert before == set(), "the test-owned cache directory must start empty for the assertion below to bite"
 

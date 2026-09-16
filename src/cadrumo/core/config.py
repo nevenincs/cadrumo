@@ -440,14 +440,6 @@ class Settings(CadrumoLlmSettings):
         description="Root directory for the bundled legal normatives corpus",
     )
 
-    # ── Registry corpus-text validation cache ───────────────────────────────
-    cadrumo_corpus_text_cache_dir: Path = Field(
-        default=Path("cache") / "corpus-text",
-        description=(
-            "Directory for the registry corpus source-text validation cache "
-            "(normalised text keyed by content fingerprint)"
-        ),
-    )
     cadrumo_corpus_search_cache_dir: Path = Field(
         default=Path("cache") / "corpus-search",
         description=(
@@ -982,10 +974,8 @@ class Settings(CadrumoLlmSettings):
         "cadrumo_secret_store_dir",
         "cadrumo_blob_store_dir",
         "cadrumo_live_state_dir",
-        "cadrumo_registry_disk_cache_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
-        "cadrumo_corpus_text_cache_dir",
         "cadrumo_corpus_search_cache_dir",
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",

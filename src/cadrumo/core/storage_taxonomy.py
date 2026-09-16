@@ -221,11 +221,8 @@ class StorageCategory(StrEnum):
 
     # ── Regenerable, evictable caches ───────────────────────────────────────
     LLM_CACHE = "llm-cache"
-    CORPUS_TEXT_CACHE = "corpus-text-cache"
-    CORPUS_TEXT_CACHE_FILE = "corpus-text-cache.file"
     CORPUS_SEARCH_CACHE = "corpus-search-cache"
     CORPUS_SEARCH_INDEX = "corpus-search-cache.index"
-    REGISTRY_DISK_CACHE = "registry-disk-cache"
     # ── Durable generated outputs ───────────────────────────────────────────
     SUBMISSIONS = "submissions"
     SUBMISSIONS_AMENDMENT_RESULTS = "submissions.amendment-results"

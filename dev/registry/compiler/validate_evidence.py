@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import warnings
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
@@ -23,8 +24,6 @@ from cadrumo.core.manual_corpus_sidecar import (
     ManualCorpusTextSidecar,
 )
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
@@ -42,12 +41,10 @@ _SourceTextCacheKey = tuple[str, str, str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 _LOGGER = logging.getLogger(__name__)
 
-# Bare filename, read off the taxonomy rather than an untethered string
-# literal. Still joined onto ``cadrumo_corpus_text_cache_dir`` exactly as
-# before -- the member carries no ``settings_field`` and is not safe to
-# resolve directly, because ``CORPUS_TEXT_CACHE`` is operator-overridable
-# (see the member's declaration in ``core.storage_taxonomy``).
-_CORPUS_TEXT_CACHE_FILENAME = Path(storage_location(StorageCategory.CORPUS_TEXT_CACHE_FILE).subpath).name
+CORPUS_TEXT_CACHE_DIR_ENV = "CADRUMO_CORPUS_TEXT_CACHE_DIR"
+"""Environment variable that relocates the corpus-text validation cache."""
+
+_CORPUS_TEXT_CACHE_FILENAME = "cadrumo_corpus_text_cache.json"
 
 # Shipped sidecar constants (written by the corpus extraction tooling).
 # Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json
@@ -243,18 +240,26 @@ _disk_cache_dirty: bool = False
 _DISK_CACHE_ADAPTER: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], config=ConfigDict(strict=True))
 
 
-def _corpus_text_cache_path() -> Path:
-    """Return the settings-derived corpus-text cache file location.
+def corpus_text_cache_dir() -> Path:
+    """Resolve the runner-local corpus-text validation cache directory.
 
-    Resolved through the taxonomy accessor rather than by reading
-    ``cadrumo_corpus_text_cache_dir`` here. Both answer the same today, because
-    the settings field is what the accessor consults first -- but only one of
-    them stays correct if the member's resolution ever gains a case. Defaults
-    under ``<cadrumo_local_storage_root>/cache/corpus-text`` (scoped per user by
-    the storage root), replacing the former shared OS-temp-dir location that
-    any two users or CI containers on one host could clobber.
+    Follows the development cache convention: an explicit
+    ``CADRUMO_CORPUS_TEXT_CACHE_DIR`` wins, otherwise ``~/.cadrumo`` holds it.
+    The cache lives outside the application's storage root, so validating
+    evidence never changes the application state that root fingerprints, and
+    it stays scoped per user rather than shared through an OS temp directory.
+
+    Returns:
+        The directory holding the corpus-text cache file.
     """
-    return storage_path(StorageCategory.CORPUS_TEXT_CACHE) / _CORPUS_TEXT_CACHE_FILENAME
+    override = os.environ.get(CORPUS_TEXT_CACHE_DIR_ENV)
+    if override:
+        return Path(override)
+    return Path.home() / ".cadrumo" / "corpus-text"
+
+
+def _corpus_text_cache_path() -> Path:
+    return corpus_text_cache_dir() / _CORPUS_TEXT_CACHE_FILENAME
 
 
 def flush_corpus_text_cache() -> None:

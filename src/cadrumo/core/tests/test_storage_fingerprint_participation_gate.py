@@ -78,19 +78,9 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "Run-timing telemetry. It moves on every model call and carries no taxpayer state.",
     ),
     ExclusionExpectation(
-        "cadrumo_corpus_text_cache_dir",
-        "Regenerable cache keyed by content fingerprint over the finite bundled corpus.",
-    ),
-    ExclusionExpectation(
         "cadrumo_corpus_search_cache_dir",
         "A search index rebuilt from a static bundled corpus. It is derived from shipped bytes, "
         "so it carries no taxpayer state of its own.",
-    ),
-    ExclusionExpectation(
-        "cadrumo_registry_disk_cache_dir",
-        "The compiled registry pickle, rewritten on every recompile. Fingerprinting it churned "
-        "the digest and produced spurious replay refusals; it was included only because the old "
-        "hardcoded list could not resolve a field defaulting to None.",
     ),
 )
 """The exclusion set, stated independently of the taxonomy, with a reason each.

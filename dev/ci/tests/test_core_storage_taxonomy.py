@@ -209,20 +209,6 @@ def test_fingerprint_participation_is_a_declared_axis_on_every_member() -> None:
     )
 
 
-def test_the_opt_in_override_member_governs_its_name_without_deriving_its_field() -> None:
-    """Governing a name and deriving a field are separate decisions.
-
-    The registry disk cache resolver selects a shared temporary location under
-    pytest precisely by observing that the field is unset, so deriving a default
-    into it would silently retire that branch.
-    """
-    location = storage_location(StorageCategory.REGISTRY_DISK_CACHE)
-    assert location.subpath == "cache/registry"
-    assert location.settings_field == "cadrumo_registry_disk_cache_dir"
-    assert not location.derives_settings_default
-    assert location.settings_field not in ROOT_DERIVED_STORAGE_FIELDS
-
-
 def test_storage_path_reads_the_member_field_so_an_override_wins(tmp_path: Path) -> None:
     """An explicit per-field override outranks root derivation, here as everywhere."""
     elsewhere = tmp_path / "operator-chosen-drafts"

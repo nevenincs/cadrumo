@@ -1,9 +1,7 @@
 """Real-behavior coverage for the warm in-process CLI runtime.
 
 Exercises :mod:`cadrumo_harness.mcp.inprocess` against the real ``aeat`` Typer app,
-the real registry and real filesystem state. The compiled-cache directory is
-isolated so a user's pre-existing development cache cannot become test authority.
-The runtime's contract is that it runs the genuine CLI pipeline in-process and
+the real registry and real filesystem state. The runtime's contract is that it runs the genuine CLI pipeline in-process and
 returns a completed run whose captured stdout parses to the same JSON envelope
 the subprocess transport would emit; the byte-for-byte parity against the
 subprocess transport itself is proven separately in
@@ -28,17 +26,6 @@ from ..inprocess import (
 from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _fresh_registry_cache(tmp_path, monkeypatch: pytest.MonkeyPatch):
-    """Run the real bundled registry against a fresh canonical compiled cache."""
-    from cadrumo.core.config import reset_settings_cache
-
-    monkeypatch.setenv("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(tmp_path / "registry-cache"))
-    reset_settings_cache()
-    yield
-    reset_settings_cache()
 
 
 def test_live_tier_stays_on_subprocess_other_tiers_run_in_process() -> None:

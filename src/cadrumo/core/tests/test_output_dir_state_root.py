@@ -50,7 +50,6 @@ DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
     "cadrumo_llm_usage_dir": "llm-usage",
     "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
     "cadrumo_llm_cache_dir": "cache/llm-cache",
-    "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
     "cadrumo_corpus_search_cache_dir": "cache/corpus-search",
     "cadrumo_submissions_dir": "submissions",
     "cadrumo_workflow_runs_dir": "workflow-runs",
@@ -166,4 +165,4 @@ def test_cache_dirs_share_the_cache_namespace(tmp_path: Path) -> None:
     settings = _settings_from_env(CADRUMO_LOCAL_STORAGE_ROOT=str(storage_root))
 
     assert settings.cadrumo_llm_cache_dir == storage_root / "cache" / "llm-cache"
-    assert settings.cadrumo_corpus_text_cache_dir == storage_root / "cache" / "corpus-text"
+    assert settings.cadrumo_corpus_search_cache_dir == storage_root / "cache" / "corpus-search"
