@@ -28,8 +28,6 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
         bucket de agregación solicitado.
-      candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
-        de agregación.'
       differentiated_sector_inactive_for_filing_year: Un sector diferenciado está
         inactivo para el ejercicio.
       differentiated_sector_without_filing_year_entry: Un sector diferenciado no tiene
@@ -1528,6 +1526,7 @@ tui:
         esta pantalla.
       refresh_failed: El cambio se ha guardado, pero esta vista no se ha podido volver
         a leer. Vuelve al Inicio para actualizarla.
+      refreshing: Actualizando el espacio de trabajo…
     import:
       again: Importar otro archivo
       browse: Examinar
@@ -1671,6 +1670,14 @@ tui:
         en esta sesión.
     review:
       empty: Ahora mismo no hay asientos que revisar.
+      exclude_cancel: Mantener apunte
+      exclude_confirm: Excluir apunte
+      exclude_failed: El apunte no se ha excluido.
+      exclude_hint: Pulsa x para excluir de la declaración el apunte resaltado.
+      exclude_question: ¿Excluir {entry} de la declaración? Sigue en el libro y se
+        puede volver a clasificar más adelante.
+      excluded: '{entry} se ha excluido de la declaración.'
+      excluding: Excluyendo el apunte…
       filter_all: 'Filtro: todos los estados de revisión'
       open: Abrir revisión
       title: Revisión del libro contable

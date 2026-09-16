@@ -285,11 +285,6 @@ errors:
       Social Security regime must file an IRPF declaration regardless of income level
       (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: A RENTA field value is not valid.
-    error_resources_backend: An error occurred while reading the bundled application
-      data.
-    error_resources_load: A bundled application resource could not be loaded.
-    error_resources_not_found: The requested bundled resource was not found.
-    error_resources_validation: A bundled application file failed strict validation.
     error_retention: Could not evaluate the tax-record retention policy.
     error_review: A review error occurred.
     error_sede: An error occurred in the AEAT electronic Sede.

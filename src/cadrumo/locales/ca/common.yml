@@ -29,7 +29,6 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
-      candidate_outside_period: La candidatura queda fora del període.
       differentiated_sector_inactive_for_filing_year: Un sector diferenciat està inactiu
         per a l'exercici.
       differentiated_sector_without_filing_year_entry: Un sector diferenciat no té
@@ -1514,6 +1513,7 @@ tui:
         pantalla.
       refresh_failed: El canvi s'ha desat, però aquesta vista no s'ha pogut tornar
         a llegir. Torna a l'Inici per actualitzar-la.
+      refreshing: S'està actualitzant l'espai de treball…
     import:
       again: Importa un altre fitxer
       browse: Navega
@@ -1656,6 +1656,14 @@ tui:
         aquesta sessió.
     review:
       empty: Ara mateix no hi ha cap apunt per revisar.
+      exclude_cancel: Mantén l'assentament
+      exclude_confirm: Exclou l'assentament
+      exclude_failed: L'assentament no s'ha exclòs.
+      exclude_hint: Prem x per excloure de la declaració l'assentament ressaltat.
+      exclude_question: Excloure {entry} de la declaració? Continua al llibre i es
+        pot tornar a classificar més endavant.
+      excluded: '{entry} s''ha exclòs de la declaració.'
+      excluding: S'està excloent l'assentament…
       filter_all: 'Filtre: tots els estats de revisió'
       open: Obre la revisió
       title: Revisió del llibre comptable

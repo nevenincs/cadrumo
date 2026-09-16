@@ -25,8 +25,6 @@ aggregation:
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
-      candidate_outside_period: 'Belső hiba: az IVA-jelölt az aggregálási időszakon
-        kívül esik.'
       differentiated_sector_inactive_for_filing_year: Egy elkülönített szektor inaktív
         a bevallási évre.
       differentiated_sector_without_filing_year_entry: Egy elkülönített szektorhoz
@@ -1506,6 +1504,7 @@ tui:
         befejezését.
       refresh_failed: A módosítás mentésre került, de ezt a nézetet nem sikerült újraolvasni.
         Térj vissza a Kezdőlapra a frissítéshez.
+      refreshing: A munkaterület frissítése…
     import:
       again: Másik fájl importálása
       browse: Tallózás
@@ -1645,6 +1644,14 @@ tui:
         nem végezhető el.
     review:
       empty: Jelenleg nincs felülvizsgálandó tétel.
+      exclude_cancel: Tétel megtartása
+      exclude_confirm: Tétel kizárása
+      exclude_failed: A tétel nem került kizárásra.
+      exclude_hint: Nyomd meg az x billentyűt a kijelölt tétel bevallásból való kizárásához.
+      exclude_question: 'Kizárod a bevallásból ezt: {entry}? A főkönyvben marad, és
+        később újra besorolható.'
+      excluded: '{entry} kizárva a bevallásból.'
+      excluding: A tétel kizárása…
       filter_all: 'Szűrő: minden felülvizsgálati állapot'
       open: Felülvizsgálat megnyitása
       title: Főkönyvi felülvizsgálat

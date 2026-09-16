@@ -290,11 +290,6 @@ errors:
       rendszerben nyilvántartott munkavállalóknak jövedelemszinttől függetlenül IRPF-bevallást
       kell benyújtaniuk (Ley 35/2006 96. cikk, BOE-A-2006-20764).'
     error_renta_validation: Egy RENTA-mezőérték érvénytelen.
-    error_resources_backend: Hiba történt a csomagolt alkalmazásadatok olvasása során.
-    error_resources_load: Egy csomagolt alkalmazás-erőforrás nem tölthető be.
-    error_resources_not_found: A kért csomagolt erőforrás nem található.
-    error_resources_validation: Egy csomagolt alkalmazásfájl nem ment át a szigorú
-      érvényesítésen.
     error_retention: Nem sikerült kiértékelni az adónyilvántartás megőrzési szabályzatát.
     error_review: Felülvizsgálati hiba történt.
     error_sede: Hiba történt az AEAT elektronikus Sede-n.

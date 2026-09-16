@@ -309,12 +309,6 @@ errors:
       inscritos en RETMAR deben presentar declaración del IRPF independientemente
       del nivel de ingresos (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: Un valor de la declaración de la Renta no es válido.
-    error_resources_backend: Se produjo un error al leer los datos incluidos en la
-      aplicación.
-    error_resources_load: No se pudo cargar un recurso incluido en la aplicación.
-    error_resources_not_found: No se encontró el recurso incluido solicitado.
-    error_resources_validation: Un archivo incluido en la aplicación no superó la
-      validación estricta.
     error_retention: No se ha podido evaluar la política de conservación de registros
       tributarios.
     error_review: Se produjo un error en la revisión.

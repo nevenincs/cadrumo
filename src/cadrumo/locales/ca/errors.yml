@@ -312,12 +312,6 @@ errors:
       al règim especial de la Seguretat Social del mar han de presentar declaració
       de l''IRPF independentment del nivell d''ingressos (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: Un valor de la declaració de la Renda no és vàlid.
-    error_resources_backend: S'ha produït un error en llegir les dades incloses en
-      l'aplicació.
-    error_resources_load: No s'ha pogut carregar un recurs inclòs en l'aplicació.
-    error_resources_not_found: No s'ha trobat el recurs inclòs sol·licitat.
-    error_resources_validation: Un fitxer inclòs en l'aplicació no ha superat la validació
-      estricta.
     error_retention: No s'ha pogut avaluar la política de conservació de registres
       tributaris.
     error_review: S'ha produït un error en la revisió.

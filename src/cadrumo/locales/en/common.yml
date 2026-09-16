@@ -27,8 +27,6 @@ aggregation:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
         aggregation bucket.
-      candidate_outside_period: 'Internal error: IVA candidate falls outside the aggregation
-        period.'
       differentiated_sector_inactive_for_filing_year: A differentiated sector is inactive
         for the filing year.
       differentiated_sector_without_filing_year_entry: A differentiated sector has
@@ -1485,6 +1483,7 @@ tui:
         screen.
       refresh_failed: Your change was saved, but this view could not be re-read. Return
         to Home to refresh it.
+      refreshing: Updating the workspace…
     import:
       again: Import another file
       browse: Browse
@@ -1624,6 +1623,14 @@ tui:
         session.
     review:
       empty: No entries currently need review.
+      exclude_cancel: Keep entry
+      exclude_confirm: Exclude entry
+      exclude_failed: The entry was not excluded.
+      exclude_hint: Press x to exclude the highlighted entry from filing.
+      exclude_question: Exclude {entry} from filing? It stays in the ledger and can
+        be classified again later.
+      excluded: '{entry} was excluded from filing.'
+      excluding: Excluding the entry…
       filter_all: 'Filter: all review statuses'
       open: Open review
       title: Ledger review
