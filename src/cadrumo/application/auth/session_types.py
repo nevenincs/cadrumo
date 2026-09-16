@@ -160,11 +160,6 @@ class AeatLoginAssertion(BaseModel):
         return None
 
     @property
-    def parsed_nif(self) -> str | None:
-        """Return the identity observed by the verification probe."""
-        return self.identity_nif
-
-    @property
     def parsed_subject(self) -> str | None:
         """Return the certificate subject when certificate auth produced the assertion."""
         if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
