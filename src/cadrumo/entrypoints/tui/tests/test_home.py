@@ -10,6 +10,7 @@ import pytest
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
+from ....core.i18n.render import tr
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ..components.host import ScreenHostApp
@@ -64,7 +65,10 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
         )
         assert app.focused is not None and app.focused.id == "home-actions"
         rendered = screen_text(app, *size)
-        assert "Status: Active local session" in rendered
+        # The session line belongs to the root's account bar, which reads the
+        # live session; a bare host has none, so the bar names the account only.
+        assert tr("tui.root.account.default_profile") in rendered
+        assert "Active local session" not in rendered
         assert str(screen.query_one("#home-ledger", Static).render()).startswith("Available -")
         assert str(screen.query_one("#home-agenda-state", Static).render()).startswith("Available")
         assert len(projection.actions) <= 3

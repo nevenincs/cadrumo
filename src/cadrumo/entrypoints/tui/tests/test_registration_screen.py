@@ -85,16 +85,22 @@ async def _wait_until(pilot, condition: Callable[[], bool], *, polls: int = 300,
 
 
 async def _wait_for_screen(pilot, screen_type: type, *, composed: str) -> bool:
-    """Wait for ``screen_type`` to be active AND for ``composed`` to be queryable on it.
+    """Wait for ``screen_type`` to be active AND for ``composed`` to be laid out on it.
 
-    A pushed screen is active before its ``compose`` has run, so a click
-    addressed to it in that window finds nothing; the widget's presence is
-    what proves the screen is ready to be driven.
+    A pushed screen is active before its ``compose`` has run, and a composed
+    widget has no place on screen until the next layout pass. A click sent
+    in either window lands on nothing and presses nothing, so the widget
+    having a non-empty region is what proves the screen can be driven.
     """
-    return await _wait_until(
-        pilot,
-        lambda: isinstance(pilot.app.screen, screen_type) and bool(pilot.app.screen.query(composed)),
-    )
+
+    def laid_out() -> bool:
+        screen = pilot.app.screen
+        if not isinstance(screen, screen_type):
+            return False
+        widgets = screen.query(composed)
+        return bool(widgets) and widgets.first().region.area > 0
+
+    return await _wait_until(pilot, laid_out)
 
 
 async def _displayed_recovery_code(pilot) -> str:

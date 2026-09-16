@@ -561,3 +561,51 @@ async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal() -
     assert app.workbench_search_service is initial_search
     assert "12345678Z" not in app.workbench_search_refusal_code
     assert "protected" not in app.workbench_search_refusal_code
+
+
+@pytest.mark.asyncio
+async def test_the_return_to_home_rereads_off_the_event_loop_and_shows_that_it_is_updating() -> None:
+    """A slow generation capture must not freeze the root while it runs."""
+    import threading
+
+    contexts: list[TuiScreenContextV1] = []
+    release = threading.Event()
+    refreshed_search = WorkbenchSearchService(())
+    refreshes: list[int] = []
+
+    def slow_refresh() -> WorkbenchSearchService:
+        refreshes.append(1)
+        release.wait(timeout=10)
+        return refreshed_search
+
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue(contexts),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        workbench_search_service=WorkbenchSearchService(()),
+        refresh_workbench_search=slow_refresh,
+    )
+
+    async with app.run_test() as pilot:
+        app.navigate_to(
+            TuiNavigationTargetV1(
+                destination="workbench.ledger",
+                focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
+            )
+        )
+        await pilot.pause()
+        await pilot.press("escape")
+        for _ in range(5):
+            await pilot.pause()
+        # The loop keeps turning while the capture is out, and says why the page is empty.
+        assert app.query_one("#root-updating", Static).display
+        assert app.workbench_search_service is not refreshed_search
+        release.set()
+        await app.workers.wait_for_complete()
+        for _ in range(4):
+            await pilot.pause()
+        assert not app.query_one("#root-updating", Static).display
+        assert isinstance(app.screen, HomeScreen)
+
+    assert refreshes == [1]
+    assert app.workbench_search_service is refreshed_search

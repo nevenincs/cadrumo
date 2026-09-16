@@ -158,9 +158,9 @@ def compose_secure_profile_workbench_generation_provider(
 def compose_local_reader_page(services: OperationComposedServices) -> Callable[[], Screen[None]]:
     """Bind the document reader page to this session's operation platform.
 
-    Start, pull and verify are submitted into the same journal and leases the
-    rest of the session uses, so a pull running here is one ``config provision``
-    would see, not a second inventory's.
+    Setup, install, start, pull, load, verify and remove are submitted into the
+    same journal and leases the rest of the session uses, so an action running
+    here is one ``config provision`` would see, not a second inventory's.
     """
 
     def open_page() -> Screen[None]:
@@ -223,6 +223,9 @@ def _ledger_classification_submitter(
     """
 
     async def submit(submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
+        return await asyncio.to_thread(write, submission)
+
+    def write(submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
         from ...application.ledger.actions_manual import update_manual_transaction_fields
         from ..ledger_action_composition import compose_ledger_action_ports
 
@@ -252,6 +255,9 @@ def _ledger_link_submitter(profile_id: str, operation: PinnedAuthorityOperation)
     """
 
     async def submit(submission: LedgerLinkSubmissionV1) -> LedgerLinkResultV1:
+        return await asyncio.to_thread(write, submission)
+
+    def write(submission: LedgerLinkSubmissionV1) -> LedgerLinkResultV1:
         from ...application.ledger.actions_manual import link_manual_transaction_invoice
         from ..ledger_action_composition import compose_ledger_action_ports
         from .ledger.models import LedgerLinkResultV1 as _LedgerLinkResultV1
@@ -280,6 +286,9 @@ def _ledger_exclusion_submitter(profile_id: str, operation: PinnedAuthorityOpera
     """
 
     async def submit(submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
+        return await asyncio.to_thread(write, submission)
+
+    def write(submission: LedgerExclusionSubmissionV1) -> ManualLedgerTransactionResult:
         from ...application.ledger.actions_lifecycle import mark_transaction_reviewed_excluded
         from ..ledger_action_composition import compose_ledger_action_ports
 

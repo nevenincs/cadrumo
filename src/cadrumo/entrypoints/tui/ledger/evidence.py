@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Coroutine
 from typing import Final, cast, override
 
@@ -23,6 +24,7 @@ from .models import (
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
+    LedgerReaderReadinessV1,
 )
 from .workspace_presentation import door_refusal_text
 
@@ -147,7 +149,7 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             records.add_column(ledger_copy("tui.ledger.evidence.column.invoice"), key="invoice")
             records.add_column(ledger_copy("tui.ledger.evidence.column.status"), key="status")
             self._show_records()
-            self._show_reader()
+            self.run_worker(self._measure_reader(), group="ledger-evidence-reader")
         table.focus()
 
     def _show_records(self) -> None:
@@ -167,8 +169,14 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
                 ledger_copy("tui.ledger.evidence.records_empty")
             )
 
-    def _show_reader(self) -> None:
-        readiness = self.controller.reader_readiness()
+    async def _read_readiness(self) -> LedgerReaderReadinessV1 | None:
+        """Ask the reader off the event loop: the probe looks for executables and calls the runtime."""
+        return await asyncio.to_thread(self.controller.reader_readiness)
+
+    async def _measure_reader(self) -> None:
+        self._show_reader(await self._read_readiness())
+
+    def _show_reader(self, readiness: LedgerReaderReadinessV1 | None) -> None:
         line = self.query_one("#ledger-evidence-reader", Static)
         if readiness is None:
             line.update("")
@@ -228,28 +236,14 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         match event.button.id:
             case "ledger-evidence-add":
                 self._add()
-            case "ledger-evidence-extract" if self.selected_record_id is not None and self._reader_ready():
+            case "ledger-evidence-extract" if self.selected_record_id is not None:
                 self._start(self._extract(self.selected_record_id), "tui.ledger.evidence.reading")
-            case "ledger-evidence-confirm" if self.selected_record_id is not None and self._reader_ready():
+            case "ledger-evidence-confirm" if self.selected_record_id is not None:
                 confirmation = self._confirmation(self.selected_record_id)
                 if confirmation is not None:
                     self._start(self._confirm(confirmation), "tui.ledger.evidence.confirming")
             case _:
                 return
-
-    def _reader_ready(self) -> bool:
-        """Refuse a read the reader says it cannot do, naming the failed condition."""
-        readiness = self.controller.reader_readiness()
-        self._show_reader()
-        if readiness is not None and readiness.extraction_ready:
-            return True
-        self.query_one("#ledger-refusal", Static).update(
-            ledger_copy(
-                "tui.ledger.evidence.reading_refused.reader",
-                condition="-" if readiness is None else readiness.failed_condition_id or "-",
-            )
-        )
-        return False
 
     def _start(self, work: Coroutine[object, object, None], status_key: str) -> None:
         if self.reading:
@@ -258,7 +252,24 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
         self.reading = True
         self.query_one("#ledger-refusal", Static).update("")
         self.query_one("#ledger-flow-status", Static).update(ledger_copy(status_key))
-        self.run_worker(work, group="ledger-evidence-reading")
+        self.run_worker(self._when_reader_ready(work), group="ledger-evidence-reading")
+
+    async def _when_reader_ready(self, work: Coroutine[object, object, None]) -> None:
+        """Run ``work`` only if the reader says it can; otherwise name the failed condition."""
+        readiness = await self._read_readiness()
+        self._show_reader(readiness)
+        if readiness is not None and readiness.extraction_ready:
+            await work
+            return
+        work.close()
+        self.reading = False
+        self.query_one("#ledger-flow-status", Static).update("")
+        self.query_one("#ledger-refusal", Static).update(
+            ledger_copy(
+                "tui.ledger.evidence.reading_refused.reader",
+                condition="-" if readiness is None else readiness.failed_condition_id or "-",
+            )
+        )
 
     def _confirmation(self, evidence_id: str) -> LedgerEvidenceConfirmationV1 | None:
         country = self.query_one("#ledger-evidence-country", Input).value.strip().upper()
