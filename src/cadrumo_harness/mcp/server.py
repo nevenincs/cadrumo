@@ -651,8 +651,12 @@ def _ensure_adapter_composition() -> None:
     global _ADAPTER_COMPOSITION_ENTERED
     if _ADAPTER_COMPOSITION_ENTERED:
         return
+    from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+
     from ._composition import profile_adapter_composition
 
+    _ADAPTER_COMPOSITION.enter_context(bind_exchange_rate_provider_factory(default_ecb_rate_provider))
     _ADAPTER_COMPOSITION.enter_context(profile_adapter_composition())
     _ADAPTER_COMPOSITION_ENTERED = True
 
