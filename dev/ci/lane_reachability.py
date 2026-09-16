@@ -560,7 +560,7 @@ def _workflow_run_steps(text: str, events: tuple[str, ...]) -> tuple[_RunStep, .
     does not have. See :mod:`dev.ci.workflow_job_gates` for what a guard is
     allowed to prove and what it is refused.
     """
-    document = yaml.safe_load(text)
+    document = yaml.load(text, Loader=yaml.CSafeLoader)
     if not isinstance(document, dict):
         return ()
     steps: list[_RunStep] = []
@@ -614,7 +614,7 @@ def _workflow_events(text: str) -> tuple[str, ...]:
     detect, so the naive spelling would have hidden the finding while looking
     like it made it.
     """
-    document = yaml.safe_load(text)
+    document = yaml.load(text, Loader=yaml.CSafeLoader)
     if not isinstance(document, dict):
         return ()
     block = document.get("on", document.get(True))
