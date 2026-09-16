@@ -22,7 +22,9 @@ from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_sc
 from cadrumo.application.ledger.counterparty_establishment import ConfirmedCounterpartyFacts
 from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentPersistenceError
 from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.domain.iva.classification import IvaTerritorialScope
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.iva.classification import IvaTerritorialScope, require_iva_territorial_scope
+from cadrumo.domain.iva.schema import require_eu_member_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -89,5 +91,26 @@ def test_stored_scope_outside_the_registry_vocabulary_is_refused_at_load(
     assert repository.load(original.counterparty_key) == original
 
     _rewrite_scope(secure_objects, original.counterparty_key, "atlantis")
-    with pytest.raises((CounterpartyEstablishmentPersistenceError, ValueError)):
+    with pytest.raises(CounterpartyEstablishmentPersistenceError):
         repository.load(original.counterparty_key)
+
+
+def test_reload_under_a_leased_authority_returns_both_projected_axes(
+    secure_objects: SecureObjectRepository,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    original = ConfirmedCounterpartyFacts.create(
+        tax_identifier="B12345674",
+        territorial_scope=require_iva_territorial_scope("es_canarias", operation=operation),
+        identification_state=require_eu_member_state("FR", authority=operation),
+        asserted_by="operator@example.test",
+        asserted_at=datetime(2026, 4, 17, 11, 5, tzinfo=UTC),
+    )
+    CounterpartyEstablishmentRepository(objects=secure_objects).save(original)
+
+    loaded = CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+
+    assert loaded == original
+    assert loaded is not None
+    assert loaded.territorial_scope == require_iva_territorial_scope("es_canarias", operation=operation)
+    assert loaded.identification_state == require_eu_member_state("FR", authority=operation)

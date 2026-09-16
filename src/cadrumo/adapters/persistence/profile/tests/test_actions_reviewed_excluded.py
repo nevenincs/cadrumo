@@ -23,6 +23,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, Ma
 from cadrumo.application.ledger.review_projection import ledger_transaction_review_status
 from cadrumo.application.review.filter import LedgerReviewStatus
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
@@ -73,6 +74,12 @@ def _archive_manual_transaction(secure_objects: SecureObjectRepository, **kwargs
         bucket_event_repository=bucket_event_repository,
     ) as ports:
         return archive_manual_transaction(ports=ports, **kwargs)
+
+
+def _load_transactions(transaction_repository: Any) -> Any:
+    """Read the stored catalogue back under the pinned authority stored rows decode against."""
+    with bundled_indexed_authority().operation():
+        return transaction_repository.load()
 
 
 def _mark_reviewed_excluded(secure_objects: SecureObjectRepository, **kwargs: Any) -> Any:
@@ -141,7 +148,7 @@ def test_mark_reviewed_excluded_persists_state_quintet_and_event(
     assert ledger_transaction_review_status(result.transaction) is LedgerReviewStatus.EXCLUDED
 
     # Persisted across the encrypted boundary (roundtrip).
-    persisted = transaction_repository.load().get(created.ref.transaction_id)
+    persisted = _load_transactions(transaction_repository).get(created.ref.transaction_id)
     assert persisted is not None
     assert persisted.business_classification is BusinessClassification.REVIEWED_EXCLUDED
     assert persisted.classified_by == "manual"
@@ -185,7 +192,7 @@ def test_mark_reviewed_excluded_clears_business_pct_and_survives_roundtrip(
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
-    persisted = transaction_repository.load().get(created.ref.transaction_id)
+    persisted = _load_transactions(transaction_repository).get(created.ref.transaction_id)
     assert persisted is not None
     assert persisted.business_classification is BusinessClassification.REVIEWED_EXCLUDED
     assert persisted.business_pct is None

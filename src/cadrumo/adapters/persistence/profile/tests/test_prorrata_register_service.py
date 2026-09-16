@@ -74,7 +74,7 @@ def test_declare_especial_transition_persists_typed_option(
     persisted = loaded.entry_for(2026)
     assert persisted is not None
     assert persisted.especial_transition is not None
-    assert persisted.especial_transition.kind is ProrrataEspecialTransitionKind.from_registry("opcion")
+    assert persisted.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
     assert persisted.especial_transition.evidence_reference == "modelo-303-2026-prorrata-opcion"
 
 
@@ -108,8 +108,8 @@ def test_record_aeat_autorizada_persists_authorised_override(
     assert len(loaded.entries) == 1
     entry = loaded.entry_for(2026)
     assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime.from_registry("general")
+    assert entry.regime == ProrrataRegisterRegime.from_registry("general")
     assert entry.provisional_percentage == Decimal("63.5")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert entry.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
     assert entry.authorisation_reference == "AEAT-AUTH-2026-0007"
     assert entry.source_observation_ref is None
