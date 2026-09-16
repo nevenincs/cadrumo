@@ -596,7 +596,7 @@ def resolve_confirmed_counterparty_facts(
     if (
         evidenced_scope is not None
         and stored.territorial_scope is not None
-        and evidenced_scope is not stored.territorial_scope
+        and evidenced_scope != stored.territorial_scope
     ):
         return ConfirmedCounterpartyResolution(
             contradiction=CounterpartyEstablishmentContradiction(

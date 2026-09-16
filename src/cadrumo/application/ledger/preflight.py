@@ -63,12 +63,13 @@ from ..aggregation.iva_ledger import (
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )
-from ..user_profile.censo_sync import bound_raw_afectacion_ratio_for_bucket
+from ..user_profile.censo_sync import raw_afectacion_ratio_for_record
 from .transaction_repository import transaction_catalogue_repository
 from .usage_ratio_repository import UsageRatioProfileLoader, usage_ratio_profile_with_censo_guard
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.values import UserProfileRecord
 
 
 class LedgerPreflightIssueReason(StrEnum):
@@ -193,6 +194,11 @@ def preflight_ledger_tax_readiness(
     censo_ratio_mismatch_detail = None
     missing_home_office_afectacion_detail = None
     if _catalogue_uses_home_office_usage_ratio(period=period, transactions=transactions):
+        # Both home-office checks read the dwelling m2; the profile is decrypted
+        # once here and handed to each, not once per check.
+        profile_record = _bucket_profile_record(bucket_id, operation=operation)
+        if raw_afectacion_ratio is None and profile_record is not None:
+            raw_afectacion_ratio = raw_afectacion_ratio_for_record(profile_record)
         censo_ratio_mismatch_detail = _censo_ratio_mismatch_detail(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion_ratio,
@@ -204,6 +210,7 @@ def preflight_ledger_tax_readiness(
             year=period.filing_year,
             usage_ratio_profile_loader=usage_ratio_profile_loader,
             operation=operation,
+            profile_record=profile_record,
         )
     return preflight_transaction_catalogue(
         bucket_id=bucket_id,
@@ -308,12 +315,27 @@ def _period_transactions(*, period: Period, transactions: TransactionCatalogue) 
     )
 
 
+def _bucket_profile_record(bucket_id: str, *, operation: PinnedAuthorityOperation) -> UserProfileRecord | None:
+    """Decrypt the bucket's own profile record, or return ``None`` when it has none."""
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    try:
+        return ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+
+
 def _missing_home_office_afectacion_detail(
     *,
     bucket_id: str,
     year: int,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
     operation: PinnedAuthorityOperation,
+    profile_record: UserProfileRecord | None,
 ) -> str | None:
     """Report the absence of any proportion a home-office row could deduct on.
 
@@ -333,6 +355,7 @@ def _missing_home_office_afectacion_detail(
         year=year,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
         operation=operation,
+        profile_record=profile_record,
     )
     if any(category in ratios for category in home_office_categories()):
         return None
@@ -354,8 +377,6 @@ def _censo_ratio_mismatch_detail(
     operation: PinnedAuthorityOperation,
 ) -> str | None:
     resolved_raw = raw_afectacion_ratio
-    if resolved_raw is None:
-        resolved_raw = bound_raw_afectacion_ratio_for_bucket(bucket_id, operation=operation)
     try:
         usage_ratio_profile_with_censo_guard(
             bucket_id=bucket_id,

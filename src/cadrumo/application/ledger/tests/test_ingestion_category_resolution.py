@@ -218,9 +218,7 @@ def test_a_code_disagreeing_with_the_table_takes_neither_side() -> None:
     """
     verdict = _resolve(established=True, rate_tier=IvaRateKind("general")).category
     assert verdict is not None
-    rival = next(
-        c for c in (IvaCategory("domestic_reverse_charge"), IvaCategory("domestic_exempt")) if c != verdict
-    )
+    rival = next(c for c in (IvaCategory("domestic_reverse_charge"), IvaCategory("domestic_exempt")) if c != verdict)
 
     resolution = _resolve(established=True, stated=rival, rate_tier=IvaRateKind("general"))
 
