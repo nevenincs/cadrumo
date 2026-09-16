@@ -312,6 +312,8 @@ flows:
       skip_button: Skip for now
     refusal:
       confirmation_mismatch: The two passwords do not match.
+      profile_already_exists: A profile named '%{profile}' already exists. Choose
+        a different name, or leave this screen and sign in to that profile instead.
       username_required: Enter a name for this profile.
     section: Name and password
     strength:

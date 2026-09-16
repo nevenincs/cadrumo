@@ -1279,8 +1279,8 @@ application:
         vagy az eredeti profil törlése után.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
-      passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik
-      passphrase_current_rejected: A jelenlegi jelszó helytelen; a jelszó nem változott
+      passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik.
+      passphrase_current_rejected: A jelenlegi jelszó helytelen; a jelszó nem változott.
       profile_already_exists: A(z) %{profile} profil már létezik; futtassa az aeat
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
@@ -1288,9 +1288,9 @@ application:
       profile_password_contains_surrogate: A profiljelszó olyan értéket tartalmaz,
         amely nem kódolható szigorú UTF-8 formában.
       profile_password_too_few_scalars: A profiljelszónak legalább {minimum_scalars}
-        Unicode skalárértéket kell tartalmaznia; a kapott érték {scalar_count}.
+        karakterből kell állnia; a kapott érték {scalar_count}.
       profile_password_too_many_scalars: A profiljelszó legfeljebb {maximum_scalars}
-        Unicode skalárértéket tartalmazhat; a kapott érték {scalar_count}.
+        karakterből állhat; a kapott érték {scalar_count}.
       profile_password_too_many_utf8_bytes: A profiljelszó UTF-8 kódolása legfeljebb
         {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
       recovery_already_enrolled: Ehhez a profilhoz már tartozik helyreállítási kód.

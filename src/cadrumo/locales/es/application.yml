@@ -1334,18 +1334,18 @@ application:
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       no_active_profile_selected: No hay un perfil activo seleccionado.
-      passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden
+      passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden.
       passphrase_current_rejected: La contraseña actual no es correcta; la contraseña
-        no se ha cambiado
+        no se ha cambiado.
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
       profile_authentication_refused: No se aceptó la contraseña del perfil.
       profile_password_contains_surrogate: La contraseña del perfil contiene un valor
         que no puede codificarse como UTF-8 estricto.
-      profile_password_too_few_scalars: La contraseña del perfil debe contener al
-        menos {minimum_scalars} escalares Unicode; se recibieron {scalar_count}.
-      profile_password_too_many_scalars: La contraseña del perfil debe contener como
-        máximo {maximum_scalars} escalares Unicode; se recibieron {scalar_count}.
+      profile_password_too_few_scalars: La contraseña del perfil debe tener al menos
+        {minimum_scalars} caracteres; se recibieron {scalar_count}.
+      profile_password_too_many_scalars: La contraseña del perfil debe tener como
+        máximo {maximum_scalars} caracteres; se recibieron {scalar_count}.
       profile_password_too_many_utf8_bytes: La contraseña del perfil debe ocupar como
         máximo {maximum_utf8_bytes} bytes UTF-8; se recibieron {utf8_byte_count}.
       recovery_already_enrolled: Este perfil ya tiene un código de recuperación. Desactívalo

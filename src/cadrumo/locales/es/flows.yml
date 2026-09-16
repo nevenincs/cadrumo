@@ -314,6 +314,8 @@ flows:
       skip_button: Omitir por ahora
     refusal:
       confirmation_mismatch: Las dos contraseñas no coinciden.
+      profile_already_exists: Ya existe un perfil llamado '%{profile}'. Elige otro
+        nombre, o sal de esta pantalla e inicia sesión en ese perfil.
       username_required: Introduce un nombre para este perfil.
     section: Nombre y contraseña
     strength:

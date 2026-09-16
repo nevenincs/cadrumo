@@ -315,6 +315,8 @@ flows:
       skip_button: Omet per ara
     refusal:
       confirmation_mismatch: Les dues contrasenyes no coincideixen.
+      profile_already_exists: Ja existeix un perfil anomenat '%{profile}'. Tria un
+        altre nom, o surt d'aquesta pantalla i inicia la sessió en aquest perfil.
       username_required: Introdueix un nom per a aquest perfil.
     section: Nom i contrasenya
     strength:

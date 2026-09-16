@@ -1172,8 +1172,8 @@ errors:
     refused_profile_label_ambiguous: 'Rechazado: la etiqueta del perfil es ambigua.'
     refused_profile_lifo_forbidden: La valoración de existencias por el método LIFO
       no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
-    refused_profile_login_throttled: Demasiados intentos de inicio de sesión fallidos.
-      Espera %{seconds} segundos antes de volver a intentarlo.
+    refused_profile_login_throttled: El inicio de sesión se pausa tras un intento
+      fallido. Espera %{seconds} s antes de volver a intentarlo.
     refused_profile_not_configured: La verificación de la declaración de la Renta
       necesita un perfil de residencia fiscal. Completa el perfil antes de continuar.
     refused_profile_not_found: No existe ningún perfil con el identificador indicado.

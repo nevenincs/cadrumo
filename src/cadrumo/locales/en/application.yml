@@ -1226,18 +1226,18 @@ application:
         schema.
       no_active_profile_selected: No active profile selected.
       passphrase_confirmation_mismatch: The new password and its confirmation do not
-        match
+        match.
       passphrase_current_rejected: The current password is not correct; the password
-        was not changed
+        was not changed.
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
       profile_authentication_refused: The profile password was not accepted.
       profile_password_contains_surrogate: The profile password contains a value that
         cannot be encoded as strict UTF-8.
-      profile_password_too_few_scalars: The profile password must contain at least
-        {minimum_scalars} Unicode scalars; received {scalar_count}.
-      profile_password_too_many_scalars: The profile password must contain at most
-        {maximum_scalars} Unicode scalars; received {scalar_count}.
+      profile_password_too_few_scalars: The profile password must be at least {minimum_scalars}
+        characters; {scalar_count} received.
+      profile_password_too_many_scalars: The profile password must be at most {maximum_scalars}
+        characters; {scalar_count} received.
       profile_password_too_many_utf8_bytes: The profile password must use at most
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
       recovery_already_enrolled: This profile already has a recovery code. Disable

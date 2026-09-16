@@ -1105,8 +1105,8 @@ errors:
       A profil UUID-jával egyértelműsítse.
     refused_profile_lifo_forbidden: A LIFO készletértékelés adózási célból nem megengedett.
       Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.
-    refused_profile_login_throttled: Túl sok sikertelen bejelentkezési kísérlet. Várj
-      %{seconds} másodpercet, mielőtt újra próbálkoznál.
+    refused_profile_login_throttled: A bejelentkezés egy sikertelen kísérlet után
+      szünetel. Várj %{seconds} másodpercet, mielőtt újra próbálkoznál.
     refused_profile_not_configured: A RENTA-ellenőrzéshez adóügyi illetőségi profil
       szükséges. A folytatás előtt töltse ki a profilt.
     refused_profile_not_found: Nem létezik profil a megadott azonosítóval.

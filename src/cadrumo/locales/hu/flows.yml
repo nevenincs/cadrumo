@@ -314,6 +314,8 @@ flows:
       skip_button: Kihagyás most
     refusal:
       confirmation_mismatch: A két jelszó nem egyezik.
+      profile_already_exists: Már létezik '%{profile}' nevű profil. Válassz másik
+        nevet, vagy lépj ki erről a képernyőről, és jelentkezz be abba a profilba.
       username_required: Adj meg egy nevet ennek a profilnak.
     section: Név és jelszó
     strength:

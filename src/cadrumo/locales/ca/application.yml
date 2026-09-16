@@ -1335,18 +1335,18 @@ application:
         l'esquema de perfil d'usuari.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       passphrase_confirmation_mismatch: La nova contrasenya i la seva confirmació
-        no coincideixen
+        no coincideixen.
       passphrase_current_rejected: La contrasenya actual no és correcta; la contrasenya
-        no s'ha canviat
+        no s'ha canviat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
       profile_authentication_refused: No s'ha acceptat la contrasenya del perfil.
       profile_password_contains_surrogate: La contrasenya del perfil conté un valor
         que no es pot codificar com a UTF-8 estricte.
-      profile_password_too_few_scalars: La contrasenya del perfil ha de contenir almenys
-        {minimum_scalars} escalars Unicode; se n'han rebut {scalar_count}.
-      profile_password_too_many_scalars: La contrasenya del perfil ha de contenir
-        com a màxim {maximum_scalars} escalars Unicode; se n'han rebut {scalar_count}.
+      profile_password_too_few_scalars: La contrasenya del perfil ha de tenir almenys
+        {minimum_scalars} caràcters; se n'han rebut {scalar_count}.
+      profile_password_too_many_scalars: La contrasenya del perfil ha de tenir com
+        a màxim {maximum_scalars} caràcters; se n'han rebut {scalar_count}.
       profile_password_too_many_utf8_bytes: La contrasenya del perfil ha d'ocupar
         com a màxim {maximum_utf8_bytes} bytes UTF-8; se n'han rebut {utf8_byte_count}.
       recovery_already_enrolled: Aquest perfil ja té un codi de recuperació. Desactiva'l
