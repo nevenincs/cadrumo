@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import ast
-import tomllib
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -95,7 +95,7 @@ def test_every_ledger_iva_aggregation_selector_declares_role_and_treatment() -> 
     bindings = tuple(
         binding
         for path in scan_directory(_MODELOS_ROOT, pattern="*.toml", recursive=True)
-        for binding in _binding_records(tomllib.loads(path.read_text(encoding="utf-8")))
+        for binding in _binding_records(parse_toml(path.read_text(encoding="utf-8")))
     )
 
     assert bindings, "no ledger_iva_aggregation binding was scanned"

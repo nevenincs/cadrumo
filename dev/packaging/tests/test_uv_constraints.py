@@ -18,10 +18,10 @@ and a stand-in would prove something about the stand-in.
 from __future__ import annotations
 
 import pathlib
-import tomllib
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from ..uv_constraints import (
@@ -97,7 +97,7 @@ def test_the_excluded_names_are_the_lockfile_s_own_non_registry_packages() -> No
     writing the names down. This asserts the derivation reads the lockfile's
     own marker rather than any list an author maintains.
     """
-    document = tomllib.loads((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
+    document = parse_toml((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
     packages = [entry for entry in document.get("package", ()) if isinstance(entry, dict)]
     expected = sorted(str(entry["name"]) for entry in packages if "registry" not in (entry.get("source") or {}))
 

@@ -17,11 +17,11 @@ audit trail for the identity claim.
 
 from __future__ import annotations
 
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
 
 __all__ = [
@@ -155,8 +155,8 @@ def load_adjudications(path: Path) -> AdjudicationSet:
     if not path.is_file():
         return AdjudicationSet.empty()
     try:
-        data = tomllib.loads(path.read_text(encoding=_UTF_8))
-    except (OSError, tomllib.TOMLDecodeError) as error:
+        data = parse_toml(path.read_text(encoding=_UTF_8))
+    except (OSError, TomlDecodeError) as error:
         raise RegistryError(f"cannot read adjudications file {path}: {error}") from error
 
     def tables(key: str) -> list[dict[str, object]]:

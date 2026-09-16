@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import cache
 from importlib.metadata import version
 from pathlib import Path
 from sys import version_info
@@ -12,7 +13,24 @@ from cadrumo.core.hashing import content_hash_hex, sha256_hex
 
 
 def authority_compiler_identity(*, source_roots: Mapping[str, Path] | None = None) -> str:
-    """Hash compiler and domain semantics afresh, excluding tests and authoring data."""
+    """Hash compiler and domain semantics, excluding tests and authoring data.
+
+    The digest over the package's own sources is computed once per process:
+    the code it hashes is the code this process already imported, so it
+    cannot change underneath a running compile. Explicit ``source_roots``
+    are hashed afresh on every call.
+    """
+    if source_roots is None:
+        return _bundled_compiler_identity()
+    return _compiler_identity(source_roots=source_roots)
+
+
+@cache
+def _bundled_compiler_identity() -> str:
+    return _compiler_identity(source_roots=None)
+
+
+def _compiler_identity(*, source_roots: Mapping[str, Path] | None) -> str:
     package = Path(cadrumo.__file__).resolve().parent
     development = Path(__file__).resolve().parents[1]
     roots = (

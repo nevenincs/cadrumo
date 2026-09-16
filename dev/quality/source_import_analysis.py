@@ -18,11 +18,11 @@ import ast
 import fnmatch
 import io
 import tokenize
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 
 SRC_ROOT = REPO_ROOT / "src"
@@ -192,7 +192,7 @@ def wheel_exclude_globs(pyproject_path: Path = PYPROJECT_PATH) -> tuple[str, ...
     raises: silently defaulting to "nothing is excluded" would make every
     module look shipped, and defaulting to "everything" would mute the gate.
     """
-    data = tomllib.loads(pyproject_path.read_text(encoding=_UTF_8))
+    data = parse_toml(pyproject_path.read_text(encoding=_UTF_8))
     excludes = data["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
     return tuple(str(glob) for glob in excludes)
 

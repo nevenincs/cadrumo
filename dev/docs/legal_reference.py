@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import os
 import re
-import tomllib
 import unicodedata
 from dataclasses import dataclass
 from datetime import date
@@ -28,6 +27,7 @@ from urllib.parse import urlsplit
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.link_safety import is_link_like
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from dev._paths import UTF_8
 
@@ -506,8 +506,8 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     seen_ids: dict[str, Path] = {}
     for fragment in scan_directory(catalogue, pattern="*.toml"):
         try:
-            data = cast(dict[str, object], tomllib.loads(fragment.read_text(encoding=_UTF_8)))
-        except (OSError, tomllib.TOMLDecodeError) as exc:
+            data = cast(dict[str, object], parse_toml(fragment.read_text(encoding=_UTF_8)))
+        except (OSError, TomlDecodeError) as exc:
             raise LegalReferenceError(f"cannot read legal catalogue fragment {fragment}: {exc}") from exc
         legal = data.get("legal")
         if legal is None:

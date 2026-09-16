@@ -12,13 +12,13 @@ with a colon where an equals belongs.
 from __future__ import annotations
 
 import shutil
-import tomllib
 from datetime import date
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 
 from ..stamp import stamp_revision
 
@@ -74,7 +74,7 @@ def test_a_multiline_reviewer_note_is_replaced_whole(tmp_path: Path) -> None:
     )
 
     rewritten = manifest.read_bytes().decode("utf-8")
-    parsed = tomllib.loads(rewritten)["revisions"][_REVISION]
+    parsed = parse_toml(rewritten)["revisions"][_REVISION]
     assert parsed["reviewed_by"] == "agent: replacement"
     # The orphan is what broke it: prose surviving with no key to belong to.
     assert "first line" not in rewritten
@@ -86,7 +86,7 @@ def test_a_single_line_reviewer_note_is_still_replaced(tmp_path: Path) -> None:
     manifest = _stamp_replacement(tmp_path, 'reviewed_by = "agent: one line"\n')
     rewritten = manifest.read_bytes().decode("utf-8")
 
-    parsed = tomllib.loads(rewritten)["revisions"][_REVISION]
+    parsed = parse_toml(rewritten)["revisions"][_REVISION]
     assert parsed["reviewed_by"] == "agent: replacement"
     assert "one line" not in rewritten
 
@@ -96,7 +96,7 @@ def test_neighbouring_declarations_survive_the_removal(tmp_path: Path) -> None:
     manifest = _stamp_replacement(tmp_path, 'reviewed_by = """\nagent: note\n"""\n')
     rewritten = manifest.read_bytes().decode("utf-8")
 
-    parsed = tomllib.loads(rewritten)["revisions"][_REVISION]
+    parsed = parse_toml(rewritten)["revisions"][_REVISION]
     assert parsed["authority_grade"] == "applicability"
     assert "orden-hfp-816-2017:art-1" in parsed["legal_refs"]
 
@@ -128,7 +128,7 @@ def test_a_bracket_initial_prose_line_does_not_end_the_revision_table(tmp_path: 
     )
     rewritten = manifest.read_bytes().decode("utf-8")
 
-    parsed = tomllib.loads(rewritten)["revisions"][_REVISION]
+    parsed = parse_toml(rewritten)["revisions"][_REVISION]
     assert parsed["reviewed_by"] == "agent: replacement"
     # The whole prose span goes, including the bracket-initial line.
     assert "VERIFIED" not in rewritten

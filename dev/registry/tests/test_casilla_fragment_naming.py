@@ -6,7 +6,6 @@ Coverage is counted in declared rows and modelos, never fragment files.
 
 from __future__ import annotations
 
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -14,6 +13,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -54,8 +54,8 @@ def _naming_violations(root: Path) -> _PackingScan:
         for path in files:
             relative = path.relative_to(root).as_posix()
             try:
-                document = tomllib.loads(path.read_text(encoding="utf-8-sig"))
-            except tomllib.TOMLDecodeError as exc:
+                document = parse_toml(path.read_text(encoding="utf-8-sig"))
+            except TomlDecodeError as exc:
                 violations.append(f"{relative}: invalid TOML: {exc}")
                 continue
             if not document:

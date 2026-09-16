@@ -12,11 +12,11 @@ terse per Homebrew's style guide) is the canonical's leading clause.
 from __future__ import annotations
 
 import ast
-import tomllib
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -53,7 +53,7 @@ _CANONICAL_HOMEBREW_DESC = "Deterministic Spanish tax calculation CLI"
 
 
 def _pyproject_description() -> str:
-    data = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    data = parse_toml((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     return str(data["project"]["description"])
 
 

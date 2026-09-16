@@ -33,12 +33,13 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-import tomllib
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
+
+from cadrumo.core.toml import parse_toml
 
 PROJECTION_ENDPOINTS: Final = "projection_endpoints"
 VERIFICATION_PREDICATES: Final = "verification_predicates"
@@ -190,7 +191,7 @@ class AuthoringOutcome:
 
 def read_members(path: Path, family: str) -> tuple[tuple[str, int, Mapping[str, object]], ...]:
     """Return ``(revision, index, member)`` for every member of ``family`` in ``path``."""
-    document = tomllib.loads(path.read_text(encoding="utf-8"))
+    document = parse_toml(path.read_text(encoding="utf-8"))
     revisions = document.get("revisions")
     members: list[tuple[str, int, Mapping[str, object]]] = []
     if not isinstance(revisions, dict):

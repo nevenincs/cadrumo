@@ -82,17 +82,36 @@ class _RoleObservation:
         self.semantic_role_cardinality_reason = casilla.semantic_role_cardinality_reason
 
 
+_ROLE_OBSERVATION_MEMO: dict[
+    tuple[int, ...], tuple[tuple[ModeloDefinition, ...], Mapping[str, list[_RoleObservation]]]
+] = {}
+_ROLE_OBSERVATION_MEMO_ENTRIES = 4
+
+
 def _collect_role_observations(
     modelos: Iterable[ModeloDefinition],
 ) -> Mapping[str, list[_RoleObservation]]:
-    """Group every casilla declaring a ``semantic_role`` by that role."""
+    """Group every casilla declaring a ``semantic_role`` by that role.
+
+    Several gates group the same modelos; the grouping is memoised by the
+    identity of the modelo objects, which the memo keeps alive so an id can
+    never be reused by a different object while its entry is served.
+    """
+    modelo_tuple = tuple(modelos)
+    key = tuple(id(modelo) for modelo in modelo_tuple)
+    memo = _ROLE_OBSERVATION_MEMO.get(key)
+    if memo is not None and all(held is given for held, given in zip(memo[0], modelo_tuple, strict=True)):
+        return memo[1]
     grouped: dict[str, list[_RoleObservation]] = defaultdict(list)
-    for modelo in modelos:
+    for modelo in modelo_tuple:
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
                 if casilla.semantic_role is None:
                     continue
                 grouped[casilla.semantic_role].append(_RoleObservation(modelo.id, revision.id, casilla))
+    while len(_ROLE_OBSERVATION_MEMO) >= _ROLE_OBSERVATION_MEMO_ENTRIES:
+        _ROLE_OBSERVATION_MEMO.pop(next(iter(_ROLE_OBSERVATION_MEMO)))
+    _ROLE_OBSERVATION_MEMO[key] = (modelo_tuple, grouped)
     return grouped
 
 

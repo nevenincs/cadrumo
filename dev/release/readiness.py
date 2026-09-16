@@ -44,7 +44,6 @@ import json
 import re
 import shutil
 import subprocess
-import tomllib
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -54,6 +53,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 from dev.docs.download_matrix import load_descriptor, required_evidence_rows
 from dev.packaging.cohort_manifest import load_release_cohort
@@ -130,12 +130,12 @@ class ReadinessReport:
 
 
 def _read_project_version(project_file: Path) -> str:
-    data = tomllib.loads(project_file.read_text(encoding=_UTF_8))
+    data = parse_toml(project_file.read_text(encoding=_UTF_8))
     return str(data["project"]["version"])
 
 
 def _read_project_name(project_file: Path) -> str:
-    data = tomllib.loads(project_file.read_text(encoding=_UTF_8))
+    data = parse_toml(project_file.read_text(encoding=_UTF_8))
     return str(data["project"]["name"])
 
 
@@ -202,7 +202,7 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     pyproject_version = project_versions[0][1]
     package_version = _read_package_version(repo_root)
     manifest_version = _read_manifest_version(repo_root)
-    root_project = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+    root_project = parse_toml((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
     observed_pins = tuple(
         str(requirement)
         for requirement in root_project["project"]["dependencies"]

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import ast
-import tomllib
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core.toml import parse_toml
 
 _ROOT = Path(__file__).resolve().parents[3]
 _LEDGER = _ROOT / "dev/registry/analysis/facts_external_constants_retirement.toml"
@@ -33,7 +34,7 @@ def test_negative_census_includes_unannotated_module_bindings() -> None:
 
 
 def test_external_constants_retirement_census_matches_live_source() -> None:
-    ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
+    ledger = parse_toml(_LEDGER.read_text(encoding="utf-8"))
     constants = _top_level_constants(_ROOT / ledger["source_path"])
 
     assert ledger["declaration_count"] == ledger["consumer_count"] == 0
@@ -44,7 +45,7 @@ def test_external_constants_retirement_census_matches_live_source() -> None:
 
 
 def test_technical_configuration_boundary_matches_source() -> None:
-    ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
+    ledger = parse_toml(_LEDGER.read_text(encoding="utf-8"))
     boundary = ledger["preservation_boundary"]
     source = _ROOT / boundary["technical_configuration_source"]
     tree = ast.parse(source.read_text(encoding="utf-8"))

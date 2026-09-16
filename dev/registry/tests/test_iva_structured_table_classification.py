@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import tomllib
 from copy import deepcopy
 from hashlib import sha256
 from pathlib import Path
@@ -11,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,7 +46,7 @@ def _semantic_digest(rows: object) -> str:
 
 
 def test_every_remaining_iva_table_has_a_safe_s80_disposition() -> None:
-    analysis = tomllib.loads(_ANALYSIS_PATH.read_text(encoding="utf-8"))
+    analysis = parse_toml(_ANALYSIS_PATH.read_text(encoding="utf-8"))
     rows = analysis["remaining_structured_tables"]
     actual = {Path(row["data_path"]).name: (row["row_count"], row["classification"], row["decision"]) for row in rows}
     bundled_iva = bundled_path("registry", "aeat", "iva")
@@ -57,7 +57,7 @@ def test_every_remaining_iva_table_has_a_safe_s80_disposition() -> None:
     assert all(row["safe_next_scope"].strip() for row in rows)
 
     for filename, (table_name, row_count, expected_digest) in _SOURCE_TABLES.items():
-        payload = tomllib.loads((bundled_iva / filename).read_text(encoding="utf-8"))
+        payload = parse_toml((bundled_iva / filename).read_text(encoding="utf-8"))
         source_rows = payload[table_name]
 
         assert set(payload) == {table_name}
@@ -69,7 +69,7 @@ def test_every_remaining_iva_table_has_a_safe_s80_disposition() -> None:
 
 def test_s80_source_census_rejects_a_same_count_semantic_mutation() -> None:
     source = bundled_path("registry", "aeat", "iva", "catalogues.toml")
-    rows = tomllib.loads(source.read_text(encoding="utf-8"))["regulations"]
+    rows = parse_toml(source.read_text(encoding="utf-8"))["regulations"]
     mutated = deepcopy(rows)
     mutated[0]["requires_reverse_charge"] = not mutated[0]["requires_reverse_charge"]
 

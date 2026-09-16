@@ -32,7 +32,6 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
-import tomllib
 import zipfile
 from functools import cache
 from pathlib import Path
@@ -40,6 +39,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files
 
@@ -62,7 +62,7 @@ _CORPUS_BINARY_SUFFIXES = (".pdf", ".docx", ".xls", ".xlsm", ".xlsx", ".zip")
 def _wheel_exclusion_patterns() -> tuple[str, ...]:
     """Return Hatch's declared non-runtime source patterns once per test run."""
 
-    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    config = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     raw_patterns = config["tool"]["hatch"]["build"]["targets"]["wheel"].get("exclude", [])
     if not isinstance(raw_patterns, list):
         raise TypeError("Hatch wheel exclusion patterns must be declared as an array")

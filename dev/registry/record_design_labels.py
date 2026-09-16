@@ -27,11 +27,12 @@ from __future__ import annotations
 
 import hashlib
 import re
-import tomllib
 import unicodedata
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+
+from cadrumo.core.toml import load_toml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data"
@@ -188,7 +189,7 @@ def _legal_sources() -> dict[str, dict[str, object]]:
     sources: dict[str, dict[str, object]] = {}
     for path in sorted(LEGAL_ROOT.glob("*.toml")):
         with path.open("rb") as handle:
-            declared = tomllib.load(handle).get("sources")
+            declared = load_toml(handle).get("sources")
         if isinstance(declared, dict):
             for source_id, table in declared.items():
                 if isinstance(table, dict):
@@ -245,7 +246,7 @@ def record_design_source_ref(
     manifest = modelos_root / modelo / "revisions" / edition / "revision.toml"
     if manifest.is_file():
         with manifest.open("rb") as handle:
-            table = tomllib.load(handle).get("revisions", {}).get(edition, {})
+            table = load_toml(handle).get("revisions", {}).get(edition, {})
         refs = table.get("source_refs") if isinstance(table, dict) else None
         for ref in refs if isinstance(refs, list) else ():
             source = sources.get(str(ref))
@@ -292,7 +293,7 @@ def edition_record_designs(
         if not manifest.is_file():
             continue
         with manifest.open("rb") as handle:
-            table = tomllib.load(handle).get("revisions", {}).get(revision_dir.name, {})
+            table = load_toml(handle).get("revisions", {}).get(revision_dir.name, {})
         refs = table.get("source_refs") if isinstance(table, dict) else None
         for ref in refs if isinstance(refs, list) else ():
             source = sources.get(str(ref))

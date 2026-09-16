@@ -13,13 +13,13 @@ from __future__ import annotations
 import inspect
 import re
 import shutil
-import tomllib
 from datetime import date
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ...compiler.loader import load_modelo_directory
@@ -67,7 +67,7 @@ def _load(registry_root: Path):
 
 
 def _declared_stamp(registry_root: Path, revision: str) -> dict[str, object]:
-    table = tomllib.loads(_manifest(registry_root, revision).read_text("utf-8"))["revisions"][revision]
+    table = parse_toml(_manifest(registry_root, revision).read_text("utf-8"))["revisions"][revision]
     return {key: table[key] for key in GOVERNANCE_KEYS if key in table}
 
 

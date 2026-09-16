@@ -86,7 +86,6 @@ import hashlib
 import json
 import re
 import sys
-import tomllib
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -94,6 +93,7 @@ from enum import StrEnum
 from itertools import pairwise
 from pathlib import Path
 
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     judging_predecessor,
@@ -647,7 +647,7 @@ def load_rulings(path: Path = RULINGS_PATH) -> dict[str, list[Ruling]]:
     Rulings for an excluded modelo are applied to its data by whoever owns that
     modelo; this seeder reads them only to name its residual refusals precisely.
     """
-    document = tomllib.loads(path.read_text(encoding=_UTF_8))
+    document = parse_toml(path.read_text(encoding=_UTF_8))
     rulings: dict[str, list[Ruling]] = collections.defaultdict(list)
     for entry in document["ruling"]:
         rulings[entry["modelo"]].append(
@@ -1875,7 +1875,7 @@ def load_previous_ledger(path: Path = LEDGER_PATH) -> PreviousLedger:
     """
     if not path.is_file():
         return PreviousLedger(judged_at="", refusals={})
-    document = tomllib.loads(path.read_text(encoding=_UTF_8))
+    document = parse_toml(path.read_text(encoding=_UTF_8))
     run = document.get("run")
     judged_at = run.get("judged_at", "") if isinstance(run, Mapping) else ""
     by_modelo: dict[str, list[Mapping[str, object]]] = collections.defaultdict(list)

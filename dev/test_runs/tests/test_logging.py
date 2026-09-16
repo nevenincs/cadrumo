@@ -4,15 +4,69 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
+from io import StringIO
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.test_runs.logging import _redirect_collection_output
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
+
+
+def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Path) -> None:
+    transcript = (tmp_path / "run.log").open("w", encoding="utf-8")
+    console = StringIO()
+    terminal = SimpleNamespace(_tw=SimpleNamespace(_file=console))
+    config = SimpleNamespace(
+        option=SimpleNamespace(collectonly=True),
+        pluginmanager=SimpleNamespace(getplugin=lambda name: terminal if name == "terminalreporter" else None),
+    )
+    run_log = SimpleNamespace(stream=transcript)
+
+    assert _redirect_collection_output(config, run_log)
+    terminal._tw._file.write("<Module noisy_collection.py>\n")
+    transcript.close()
+
+    assert console.getvalue() == ""
+    assert (tmp_path / "run.log").read_text(encoding="utf-8") == "<Module noisy_collection.py>\n"
+
+
+def test_real_child_pytest_persists_internal_error_traceback() -> None:
+    environment = os.environ.copy()
+    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    environment["CADRUMO_INTERNAL_ERROR_PROBE"] = "1"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-n0",
+            "-p",
+            "dev.test_runs.tests.internal_error_probe",
+            "dev/test_runs/tests/path_probe.py",
+        ],
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+
+    assert result.returncode == pytest.ExitCode.INTERNAL_ERROR, result.stdout + result.stderr
+    match = re.search(r"test run log: (?P<path>.+?run\.log)", result.stdout)
+    assert match is not None, result.stdout
+    transcript = Path(match.group("path")).read_text(encoding="utf-8")
+    assert "INTERNALERROR" in transcript
+    assert "RuntimeError: internal error persistence probe" in transcript
 
 
 def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path) -> None:

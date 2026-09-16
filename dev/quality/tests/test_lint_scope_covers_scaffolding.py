@@ -27,13 +27,13 @@ not yet ignored -- is exactly what ruff would find too, tracked or not. Only a
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Container
 from pathlib import Path
 from typing import Final
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files
 
@@ -48,7 +48,7 @@ _SCAFFOLDING_TREES: Final[tuple[str, ...]] = (".vault", ".vaultspec", ".agents")
 
 def _excluded(pyproject: Path) -> list[str]:
     """Return ruff's ``extend-exclude`` entries from a pyproject file."""
-    config = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    config = parse_toml(pyproject.read_text(encoding="utf-8"))
     return list(config.get("tool", {}).get("ruff", {}).get("extend-exclude", []))
 
 

@@ -28,7 +28,6 @@ from __future__ import annotations
 import json
 import re
 import shutil
-import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -36,6 +35,7 @@ import pytest
 from typer.testing import CliRunner, Result
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS
 
 from ..cli import app
@@ -60,7 +60,7 @@ def _split_casilla_rows(text: str) -> tuple[str, list[str]]:
 
 
 def _row_of(block: str) -> dict[str, object]:
-    (revision,) = tomllib.loads(block)["revisions"].values()
+    (revision,) = parse_toml(block)["revisions"].values()
     (row,) = revision["casillas"]
     return dict(row)
 
@@ -75,7 +75,7 @@ def _file_rows(edition_dir: Path) -> list[dict[str, object]]:
 
 
 def _manifest(edition_dir: Path) -> dict[str, object]:
-    (revision,) = tomllib.loads((edition_dir / "revision.toml").read_text(encoding="utf-8"))["revisions"].values()
+    (revision,) = parse_toml((edition_dir / "revision.toml").read_text(encoding="utf-8"))["revisions"].values()
     return dict(revision)
 
 
@@ -159,7 +159,7 @@ def _view(registry_root: Path, modelo: str, revision: str, *, output_format: str
 def _rendered_edition(result: Result, revision: str) -> dict[str, object]:
     assert result.exit_code == 0, result.stderr
     assert result.stderr == ""
-    return dict(tomllib.loads(result.stdout)["revisions"][revision])
+    return dict(parse_toml(result.stdout)["revisions"][revision])
 
 
 def _comparable_row(row: object) -> dict[str, object]:

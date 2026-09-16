@@ -39,12 +39,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tomllib
 import unicodedata
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Final
+
+from cadrumo.core.toml import parse_toml
 
 _DATA: Final = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data"
 _LEGAL: Final = _DATA / "registry" / "aeat" / "legal"
@@ -84,7 +85,7 @@ def scan() -> Iterator[Finding]:
     """Yield every citation whose quote is not verbatim in its cited excerpt."""
     cache: dict[Path, tuple[str, str, str]] = {}
     for catalogue in sorted(_LEGAL.glob("*.toml")):
-        document = tomllib.loads(catalogue.read_text(encoding="utf-8"))
+        document = parse_toml(catalogue.read_text(encoding="utf-8"))
         for legal_id, entry in document.get("legal", {}).items():
             corpus_ref, quotes = entry.get("corpus_ref"), entry.get("required_text")
             if not corpus_ref or not quotes:

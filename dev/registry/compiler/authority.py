@@ -43,6 +43,7 @@ from .fact_providers import (
 )
 from .identity import RegistryIdentity, resolve_registry_identity
 from .loader import load_registry_tree
+from .loader_cache import is_bundled_registry_root
 from .loader_fingerprints import collect_registry_tree_fingerprints
 from .profile_schema import (
     CapturedProfileSchema,
@@ -53,6 +54,12 @@ from .profile_schema import (
 from .runtime_catalogues import compile_runtime_catalogues
 from .source_evidence_fingerprint import SourceEvidenceFingerprint, collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
+from .validation_verdict_cache import (
+    ValidationVerdictScope,
+    is_validated,
+    record_validated,
+    validation_verdict_scope,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,12 +182,16 @@ def _compile_validated_authority_uncached(
     identity: RegistryIdentity | None = None,
     profile_schema_path: Path | None = None,
     captured_profile_schema: CapturedProfileSchema | None = None,
+    verdicts: ValidationVerdictScope | None = None,
 ) -> ValidatedRegistryAuthority:
     """Compile and validate a source candidate; never used by product runtime.
 
     ``identity`` defaults to the identity resolved for ``registry_root`` the
     same way :func:`load_registry_tree` resolves it. A caller that must pin the
     identity it captured earlier, such as publication, passes it explicitly.
+    ``verdicts`` names the recorded clean validations this compile may reuse;
+    a registry-wide verdict skips validation, a per-modelo verdict skips that
+    modelo, and a clean run records both for later processes.
     """
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     if identity is None:
@@ -193,6 +204,13 @@ def _compile_validated_authority_uncached(
         captured_profile_schema=captured_profile_schema,
     )
     modelos, catalogues = authority.modelos, authority.catalogues
+    if verdicts is not None and is_validated(verdicts.registry_key):
+        return ValidatedRegistryAuthority.from_validated_components(
+            modelos=modelos,
+            catalogues=catalogues,
+            identity_digest=authority.identity_digest,
+            profile_schema=authority.profile_schema,
+        )
     source_evidence_fingerprint = collect_source_evidence_fingerprints(sources_root, use_cache=False)
     # Scope validation re-validates typed members whose field validators read
     # governed vocabulary, exactly as the tree load does, so it needs the same
@@ -211,7 +229,10 @@ def _compile_validated_authority_uncached(
             source_root=sources_root,
             source_evidence_fingerprint=source_evidence_fingerprint,
             user_profile_schema=authority.profile_schema,
+            verdicts=verdicts,
         ).validate_registry(modelos)
+    if verdicts is not None:
+        record_validated(verdicts.registry_key, subject="registry")
     return ValidatedRegistryAuthority.from_validated_components(
         modelos=modelos,
         catalogues=catalogues,
@@ -253,17 +274,30 @@ def compile_validated_authority(
             "profile_sha256": sha256_hex(captured.payload),
         }
     )
+    compiler_identity_digest = authority_compiler_identity()
+    verdicts = (
+        validation_verdict_scope(
+            registry_root=pair.registry_root,
+            registry_identity_digest=identity.digest,
+            fingerprints=identity.fingerprints,
+            source_receipt=source_receipt,
+            compiler_identity_digest=compiler_identity_digest,
+        )
+        if is_bundled_registry_root(pair.registry_root)
+        else None
+    )
     authority = cached_compilation(
         pair,
         registry_identity_digest=identity.digest,
         source_receipt=source_receipt,
-        compiler_identity_digest=authority_compiler_identity(),
+        compiler_identity_digest=compiler_identity_digest,
         build=lambda: _compile_validated_authority_uncached(
             pair.registry_root,
             pair.source_root,
             identity=identity,
             profile_schema_path=profile_path,
             captured_profile_schema=captured,
+            verdicts=verdicts,
         ),
     )
     register_authoring_authority(authority, source_root=pair.source_root)

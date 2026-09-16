@@ -25,7 +25,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import dev_test_database_password
-from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.entrypoints.cli.language_argv import language_from_argv
 from dev.packaging.command_execution import CommandResult, run_command
 
@@ -51,7 +50,6 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
     env = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
     env.update(
         {
-            "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.AUTO.value,
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_TOKEN_DIR": str(tmp_path / "probe-tokens"),

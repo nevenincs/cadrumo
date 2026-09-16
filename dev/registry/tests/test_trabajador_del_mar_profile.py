@@ -9,12 +9,12 @@ Covers two surfaces:
 
 from __future__ import annotations
 
-import tomllib
 from typing import Any, TypedDict
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import load_toml
 from cadrumo.domain.user_profile.schema import ProfileFieldType
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
@@ -36,7 +36,7 @@ class BindingEntry(TypedDict, total=False):
 def _load_trabajador_del_mar_bindings() -> list[BindingEntry]:
     path = bundled_path("registry", "aeat", "categories", "trabajador_del_mar.toml")
     with path.open("rb") as fh:
-        data: dict[str, Any] = tomllib.load(fh)
+        data: dict[str, Any] = load_toml(fh)
     raw_bindings = data.get("exemption_bindings")
     assert isinstance(raw_bindings, list), "trabajador_del_mar.toml must declare [[exemption_bindings]]"
 

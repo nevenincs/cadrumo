@@ -18,10 +18,10 @@ long after the run that caused it.
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 __all__ = [
@@ -63,7 +63,7 @@ def write_preserving_newlines(path: Path, text: str) -> str:
     return style
 
 
-def verify_written(path: Path, expected_newline: str, *, parse_toml: bool = True) -> None:
+def verify_written(path: Path, expected_newline: str, *, verify_toml: bool = True) -> None:
     """Re-read ``path`` from disk and prove the write did what it said.
 
     Raises :class:`RegistryLoadError` on a doubled carriage return, on a
@@ -77,9 +77,9 @@ def verify_written(path: Path, expected_newline: str, *, parse_toml: bool = True
     found = detect_newline(raw)
     if found != expected_newline:
         raise RegistryLoadError(f"{path}: line endings changed from {expected_newline!r} to {found!r}")
-    if not parse_toml:
+    if not verify_toml:
         return
     try:
-        tomllib.loads(raw.decode("utf-8"))
-    except (tomllib.TOMLDecodeError, UnicodeDecodeError) as exc:
+        parse_toml(raw.decode("utf-8"))
+    except (TomlDecodeError, UnicodeDecodeError) as exc:
         raise RegistryLoadError(f"{path}: read back as unparsable TOML: {exc}") from exc

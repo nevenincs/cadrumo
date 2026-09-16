@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic import ValidationError
 
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
@@ -32,8 +32,8 @@ def parse_captured_profile_schema(
 ) -> ProfileSchemaDefinition:
     """Parse one exact captured TOML payload without consulting ambient files."""
     try:
-        document = tomllib.loads(payload.decode("utf-8"))
-    except (UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        document = parse_toml(payload.decode("utf-8"))
+    except (UnicodeDecodeError, TomlDecodeError) as exc:
         raise RegistryValidationError(f"profile schema source {source_path} is not valid UTF-8 TOML") from exc
     unexpected = sorted(set(document) - _ENVELOPE_MEMBERS)
     missing = sorted({"schema", "sections"} - set(document))

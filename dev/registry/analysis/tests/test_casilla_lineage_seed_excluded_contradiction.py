@@ -10,10 +10,9 @@ its rows named, and the gate keeps its teeth where the seeder can actually act.
 
 from __future__ import annotations
 
-import tomllib
-
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev.registry.analysis.casilla_lineage_seed import (
     EXCLUDED_MODELOS,
     partition_contradictions,
@@ -70,7 +69,7 @@ def test_the_ledger_names_every_row_of_an_excluded_contradiction() -> None:
         excluded_contradictions={_an_excluded_modelo(): [_PLANTED, second]},
         judged_at="test-run",
     )
-    parsed = tomllib.loads(rendered)
+    parsed = parse_toml(rendered)
 
     assert parsed["excluded_contradiction"] == [
         {"modelo": _an_excluded_modelo(), "contradictions": [_PLANTED, second]},
@@ -80,4 +79,4 @@ def test_the_ledger_names_every_row_of_an_excluded_contradiction() -> None:
 def test_the_ledger_omits_the_record_when_no_excluded_modelo_contradicts() -> None:
     rendered = render_ledger([], {}, (), (), excluded_contradictions={}, judged_at="test-run")
 
-    assert "excluded_contradiction" not in tomllib.loads(rendered)
+    assert "excluded_contradiction" not in parse_toml(rendered)

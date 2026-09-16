@@ -10,7 +10,6 @@ proof to the application closure composer.
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
@@ -56,6 +55,7 @@ from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.time.clock import now
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     ValidatedRegistryAuthority,
@@ -418,10 +418,10 @@ def load_pinned_conformance_document(path: Path) -> PinnedConformanceVectorDocum
             does not satisfy the closed pinned-vector contract.
     """
     try:
-        raw = tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, tomllib.TOMLDecodeError, UnicodeDecodeError) as error:
+        raw = parse_toml(path.read_text(encoding="utf-8"))
+    except (OSError, TomlDecodeError, UnicodeDecodeError) as error:
         raise RegistryValidationError(f"pinned conformance vector {path.name} is unreadable: {error}") from error
-    # tomllib yields lists; the pinned contract is strict and frozen, so the two
+    # rtoml yields lists; the pinned contract is strict and frozen, so the two
     # declared array fields are hydrated to tuples before validation rather than
     # relaxing the model. The canonical freezer is private to another package,
     # so the two known fields are converted here instead of importing across it.

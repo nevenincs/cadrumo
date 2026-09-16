@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import re
-import tomllib
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.facts.modelo_parameter_fact import ModeloParameterFact
 from cadrumo.domain.calculations.registry.facts.schema import FactSelector
 
@@ -36,7 +36,7 @@ _AUTHORED_FACT_FAMILIES = {
 
 
 def _manifest() -> dict[str, Any]:
-    return tomllib.loads(_MANIFEST.read_text(encoding="utf-8"))
+    return parse_toml(_MANIFEST.read_text(encoding="utf-8"))
 
 
 def test_handoff_covers_exact_live_provider_and_fact_family_denominator() -> None:
@@ -90,7 +90,7 @@ def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
         if denominator:
             assert (_ROOT / denominator.split(":", maxsplit=1)[0]).exists()
 
-    external = tomllib.loads(
+    external = parse_toml(
         (_ROOT / manifest["external_constants_ledger"]).read_text(encoding="utf-8"),
     )
     assert external["schema_version"] == 2
@@ -101,7 +101,7 @@ def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
     assert "DEFAULT_IVA_GENERAL_RATE_PCT" in external["retired_statutory_symbols"]
     assert "classifications" not in external
 
-    iva = tomllib.loads((_ROOT / manifest["iva_ledger"]).read_text(encoding="utf-8"))
+    iva = parse_toml((_ROOT / manifest["iva_ledger"]).read_text(encoding="utf-8"))
     iva_fact_ids = {lane["destination_id"] for lane in iva["lanes"][:2]}
     assert iva_fact_ids == {
         "iva-rate-schedule",

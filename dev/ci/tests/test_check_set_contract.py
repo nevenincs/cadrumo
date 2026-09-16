@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import re
-import tomllib
 from collections import Counter
 from pathlib import Path
 from typing import Any, Final
@@ -12,6 +11,7 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from ..lane_reachability import _recipe_bodies, _recipes_invoked_by
@@ -39,14 +39,14 @@ def _events(document: dict[str, Any]) -> set[str]:
 
 
 def _registered_markers() -> set[str]:
-    data = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    data = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     return {entry.split(":", 1)[0].strip().casefold() for entry in data["tool"]["pytest"]["ini_options"]["markers"]}
 
 
 def _tool_names() -> set[str]:
     """Derive command/tool vocabulary from the checked-in execution surfaces."""
     names: set[str] = set()
-    project = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     names.update(name.casefold() for name in project.get("project", {}).get("scripts", {}))
     dependency_groups = project.get("dependency-groups", {})
     dependencies = list(project.get("project", {}).get("dependencies", []))

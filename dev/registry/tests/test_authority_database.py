@@ -31,7 +31,9 @@ from cadrumo.domain.calculations.registry.authority_store import (
     SQLiteAuthorityReader,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.resolution import MappingFactQuery
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
     minimal_catalogues,
     minimal_modelo,
@@ -158,6 +160,25 @@ def test_revision_context_selects_directory_before_one_complete_revision(tmp_pat
             assert snapshot.modelo.revisions == {snapshot.revision.id: snapshot.revision}
             assert operation.legal_reference("ley-35-2006:art-1").id == "ley-35-2006:art-1"
             assert operation.source_reference("aeat-dr-130-2019-v12").id == "aeat-dr-130-2019-v12"
+    finally:
+        authority.close()
+
+
+def test_operation_reuses_generation_scoped_fact_resolutions(tmp_path: Path) -> None:
+    authority = IndexedRegistryAuthority(_published_candidate(tmp_path))
+    query = MappingFactQuery(
+        fact_id="spanish-tax-identifier-format",
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=date(2025, 1, 1),
+    )
+    try:
+        with authority.operation() as first_operation:
+            first = first_operation.resolve_governed_fact(query)
+        with authority.operation() as second_operation:
+            second = second_operation.resolve_governed_fact(query)
+
+        assert second_operation is first_operation
+        assert second is first
     finally:
         authority.close()
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import shutil
-import tomllib
 from pathlib import Path
 
 import pytest
@@ -11,6 +10,7 @@ from typer.testing import CliRunner
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import compiled_bundled_authority
@@ -270,7 +270,7 @@ def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> Non
     is committed, rather than leaving it to silently accumulate.
     """
     path = Path(__file__).resolve().parents[1] / "pipeline" / "generated_export_bootstrap_targets.toml"
-    payload = tomllib.loads(path.read_text("utf-8"))
+    payload = parse_toml(path.read_text("utf-8"))
     targets = payload["targets"]
     assert targets, "the bootstrap-target roster must not be silently emptied"
 

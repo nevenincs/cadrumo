@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     decode_authority_component,
     encode_authority_component,
 )
+from cadrumo.domain.calculations.registry.authority_cache import retained_object_size
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DATABASE_FORMAT
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import SnapshotGlobalCatalogues
@@ -87,7 +88,24 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
 class _CompiledComponent:
     query: AuthorityComponentQuery
     payload: bytes
+    retained_weight: int
     dependencies: tuple[AuthorityComponentQuery, ...] = ()
+
+
+def _compiled_component(
+    query: AuthorityComponentQuery,
+    value: object,
+    *,
+    payload: bytes | None = None,
+    dependencies: tuple[AuthorityComponentQuery, ...] = (),
+) -> _CompiledComponent:
+    """Encode one component and publish the weight its decoded graph retains.
+
+    The reader charges exactly this weight against its budget instead of
+    re-measuring the graph on every load, so it is measured once here.
+    """
+    encoded = encode_authority_component(query, value) if payload is None else payload
+    return _CompiledComponent(query, encoded, max(len(encoded), retained_object_size(value)), dependencies)
 
 
 def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledComponent, ...]:
@@ -96,23 +114,18 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
     fact_queries = tuple(GovernedFactComponentQuery(fact_id) for fact_id in sorted(facts))
     fact_values = tuple(facts[query.fact_id] for query in fact_queries)
     components: list[_CompiledComponent] = [
-        _CompiledComponent(
-            query,
-            encode_authority_component(query, artifact.catalogues.facts.facts[query.fact_id]),
-        )
-        for query in fact_queries
+        _compiled_component(query, artifact.catalogues.facts.facts[query.fact_id]) for query in fact_queries
     ]
     profile_query = ProfileSchemaComponentQuery(profile_schema.id)
-    components.append(_CompiledComponent(profile_query, encode_authority_component(profile_query, profile_schema)))
+    components.append(_compiled_component(profile_query, profile_schema))
     snapshot_globals_query = SnapshotGlobalsComponentQuery()
-    snapshot_globals_payload = encode_authority_component(
-        snapshot_globals_query,
-        SnapshotGlobalCatalogues.from_catalogues(artifact.catalogues),
-    )
+    snapshot_globals = SnapshotGlobalCatalogues.from_catalogues(artifact.catalogues)
+    snapshot_globals_payload = encode_authority_component(snapshot_globals_query, snapshot_globals)
     components.append(
-        _CompiledComponent(
+        _compiled_component(
             snapshot_globals_query,
-            snapshot_globals_payload,
+            snapshot_globals,
+            payload=snapshot_globals_payload,
             dependencies=_decoded_fact_dependencies(
                 snapshot_globals_query,
                 snapshot_globals_payload,
@@ -123,22 +136,20 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
     )
     for family in type(artifact.catalogues.runtime).model_fields:
         query = RuntimeCatalogueComponentQuery(family)
-        components.append(
-            _CompiledComponent(query, encode_authority_component(query, getattr(artifact.catalogues.runtime, family)))
-        )
+        components.append(_compiled_component(query, getattr(artifact.catalogues.runtime, family)))
     for reference_id, reference in sorted(artifact.catalogues.legal.items()):
         query = ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.LEGAL_REFERENCE)
-        components.append(_CompiledComponent(query, encode_authority_component(query, reference)))
+        components.append(_compiled_component(query, reference))
     for reference_id, reference in sorted(artifact.catalogues.sources.items()):
         query = ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
-        components.append(_CompiledComponent(query, encode_authority_component(query, reference)))
+        components.append(_compiled_component(query, reference))
     for modelo in sorted(artifact.modelos, key=lambda item: str(item.id)):
         directory_query = ModeloDirectoryComponentQuery(str(modelo.id))
         directory = ModeloRevisionDirectory.from_modelo(
             modelo,
             support=artifact.catalogues.supported_filing_years,
         )
-        components.append(_CompiledComponent(directory_query, encode_authority_component(directory_query, directory)))
+        components.append(_compiled_component(directory_query, directory))
         for revision_id, revision in sorted(modelo.revisions.items(), key=lambda item: str(item[0])):
             query = ModeloRevisionComponentQuery(str(modelo.id), str(revision_id))
             base_revision = revision.model_copy(update={"export_layouts": ()})
@@ -152,7 +163,14 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
                 for reference_id in sorted(source_ids)
             )
             revision_fact_queries = _decoded_fact_dependencies(query, payload, fact_queries, fact_values)
-            components.append(_CompiledComponent(query, payload, revision_fact_queries + reference_queries))
+            components.append(
+                _compiled_component(
+                    query,
+                    base_revision,
+                    payload=payload,
+                    dependencies=revision_fact_queries + reference_queries,
+                )
+            )
             for layout in revision.export_layouts:
                 layout_query = ExportLayoutComponentQuery(str(modelo.id), str(revision_id), str(layout.id))
                 layout_dependencies = tuple(
@@ -162,19 +180,13 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
                     ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
                     for reference_id in sorted(set(layout.source_refs))
                 )
-                components.append(
-                    _CompiledComponent(
-                        layout_query,
-                        encode_authority_component(layout_query, layout),
-                        layout_dependencies,
-                    )
-                )
+                components.append(_compiled_component(layout_query, layout, dependencies=layout_dependencies))
     for item in artifact.evidence.legal:
         query = EvidenceComponentQuery(item.legal_reference_id, AuthorityComponentKind.LEGAL_EVIDENCE)
-        components.append(_CompiledComponent(query, encode_authority_component(query, item)))
+        components.append(_compiled_component(query, item))
     for item in artifact.evidence.sources:
         query = EvidenceComponentQuery(item.source_reference_id, AuthorityComponentKind.SOURCE_EVIDENCE)
-        components.append(_CompiledComponent(query, encode_authority_component(query, item)))
+        components.append(_compiled_component(query, item))
     return tuple(
         sorted(
             components,
@@ -252,7 +264,7 @@ def _insert_components(connection: sqlite3.Connection, components: tuple[_Compil
                 key,
                 "cadrumo-authority-component-v1",
                 sha256_hex(component.payload),
-                len(component.payload),
+                component.retained_weight,
                 component.payload,
             ),
         )

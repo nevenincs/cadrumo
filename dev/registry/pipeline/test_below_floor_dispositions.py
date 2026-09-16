@@ -9,7 +9,6 @@ must fail the day that exclusion stops holding.
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 
 import pytest
@@ -17,6 +16,7 @@ import rtoml
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 
 from ..compiler.loader import load_modelo_directory
 from .generated_tree_dispositions import (
@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _declared_floor() -> int:
-    payload = tomllib.loads(
+    payload = parse_toml(
         bundled_path("registry", "aeat", "legal", "supported-filing-years.toml").read_text("utf-8"),
     )
     return int(payload["supported_filing_years"]["floor"])

@@ -19,12 +19,12 @@ state, is the one shape that could lie without being detectable.
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict
 
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import CasillaRowKey
 
 from .casilla_lineage_seed import LEDGER_PATH
@@ -64,7 +64,7 @@ class LedgerRefusal:
 
 def load_ledger_refusals(path: Path = LEDGER_PATH) -> Mapping[CasillaRowKey, LedgerRefusal]:
     """Load every ``[[refusal]]`` keyed by the row it names."""
-    document = tomllib.loads(path.read_text(encoding="utf-8"))
+    document = parse_toml(path.read_text(encoding="utf-8"))
     refusals: dict[CasillaRowKey, LedgerRefusal] = {}
     for index, entry in enumerate(document.get("refusal", ())):
         blank = [name for name in _REQUIRED if not isinstance(entry.get(name), str) or not entry[name].strip()]

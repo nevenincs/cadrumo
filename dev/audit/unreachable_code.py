@@ -78,7 +78,6 @@ import ast
 import json
 import re
 import sys
-import tomllib
 from collections import deque
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
@@ -86,6 +85,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast
 
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 from dev.quality.source_import_analysis import (
     is_shipped_module,
@@ -325,7 +325,7 @@ class ShippedTreeSpec:
         so a campaign can ask "what is dead even if that surface counts?".
         """
         pyproject = repo_root / "pyproject.toml"
-        data = tomllib.loads(pyproject.read_text(encoding=_UTF_8))
+        data = parse_toml(pyproject.read_text(encoding=_UTF_8))
         project = data.get("project")
         if not isinstance(project, dict):
             raise ValueError(f"{pyproject} has no [project] table")
@@ -1356,8 +1356,8 @@ def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
                 continue
             try:
                 text = path.read_text(encoding=_UTF_8)
-                parsed = tomllib.loads(text) if path.suffix == ".toml" else json.loads(text)
-            except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, json.JSONDecodeError) as error:
+                parsed = parse_toml(text) if path.suffix == ".toml" else json.loads(text)
+            except (OSError, UnicodeDecodeError, TomlDecodeError, json.JSONDecodeError) as error:
                 unread.append(f"{path}: {type(error).__name__}: {error}")
                 continue
             collect(parsed)
@@ -1823,7 +1823,7 @@ def run_unreachable_code_scan(
     """
     try:
         spec = ShippedTreeSpec.from_repository(repo_root, extra_roots=extra_roots)
-    except (OSError, KeyError, ValueError, tomllib.TOMLDecodeError) as exc:
+    except (OSError, KeyError, ValueError, TomlDecodeError) as exc:
         return UnreachableCodeResult.error(f"packaging config unreadable ({exc})")
     return scan_unreachable_code(spec)
 

@@ -193,7 +193,6 @@ See Also:
 from __future__ import annotations
 
 import re
-import tomllib
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -205,7 +204,7 @@ from pydantic import ValidationError as PydanticValidationError
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.core.toml import to_str_keyed_dict
+from cadrumo.core.toml import TomlDecodeError, parse_toml, to_str_keyed_dict
 from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
@@ -887,8 +886,8 @@ def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str
 def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
     """Read the governance scalars the manifest already declares."""
     try:
-        parsed = tomllib.loads(text)
-    except tomllib.TOMLDecodeError as exc:
+        parsed = parse_toml(text)
+    except TomlDecodeError as exc:
         raise StampError(f"{manifest}: revision manifest is not valid TOML: {exc}") from exc
     revisions_raw = parsed.get("revisions")
     if not is_object_mapping(revisions_raw):

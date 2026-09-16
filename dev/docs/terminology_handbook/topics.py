@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tomllib
 from functools import lru_cache
 from pathlib import Path
 
@@ -13,6 +12,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.paths import file_stat_fingerprint
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import parse_toml
 
 _TOPIC_REGISTRY_ROOT = bundled_path("registry", "aeat", "topics")
 
@@ -55,7 +55,7 @@ def _load_topic_catalogue_cached(
     topics: list[Topic] = []
     for filename, _byte_count, _modified_ns in fingerprint:
         path = target / filename
-        raw = tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))
+        raw = parse_toml(path.read_text(encoding=UTF_8_ENCODING))
         slug = str(raw.get("slug") or path.stem)
         topics.append(
             Topic(

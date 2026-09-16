@@ -43,11 +43,11 @@ import dataclasses
 import hashlib
 import json
 import re
-import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignField,
     RecordDesignSheet,
@@ -914,8 +914,8 @@ def emit_records(
                         f"{outcome.segmento}: line {number} is neither comment nor key: {line[:60]!r}"
                     )
             try:
-                tomllib.loads(back)
-            except tomllib.TOMLDecodeError as error:
+                parse_toml(back)
+            except TomlDecodeError as error:
                 raise GenerationRefusedError(
                     f"{outcome.segmento}: the emitted shard does not parse: {error}"
                 ) from error

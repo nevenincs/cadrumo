@@ -84,7 +84,6 @@ def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         with bundled_indexed_authority().operation() as operation:
             register_profile_with_credentials(
-                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=label,
                 passphrase=_PROFILE_MARKER,
                 profile_create_context=operation.profile_create_context(),

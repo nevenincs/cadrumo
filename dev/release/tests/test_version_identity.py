@@ -21,11 +21,11 @@ shut.
 from __future__ import annotations
 
 import json
-import tomllib
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from ..version_identity import (
@@ -628,7 +628,7 @@ def _published_distribution_names() -> set[str]:
     the derivation fails when a distribution is added, renamed, or retired.
     """
     manifests = [REPO_ROOT / "pyproject.toml", *sorted((REPO_ROOT / "packaging").glob("*/pyproject.toml"))]
-    return {str(tomllib.loads(path.read_text(encoding="utf-8"))["project"]["name"]) for path in manifests}
+    return {str(parse_toml(path.read_text(encoding="utf-8"))["project"]["name"]) for path in manifests}
 
 
 def test_the_cohort_names_every_distribution_the_repository_publishes() -> None:

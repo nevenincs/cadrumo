@@ -113,11 +113,25 @@ def authoring_root_pair(root: Path, source_root: Path) -> AuthoringRootPair:
     )
 
 
+_evidence_digests: dict[tuple[str, int, int], str] = {}
+
+
 def source_evidence_receipt(fingerprints: tuple[tuple[str, int, int], ...]) -> str:
-    """Digest exact source bytes before a mutable compilation may be reused."""
+    """Digest exact source bytes before a mutable compilation may be reused.
+
+    The evidence tree is hundreds of megabytes, so a digest is reused while a
+    file's path, size and mtime are unchanged; a rewritten file re-reads. The
+    memo is process-local and cleared with the compiler state.
+    """
     entries: list[dict[str, object]] = []
     for raw_path, size, mtime_ns in fingerprints:
-        digest = hashlib.sha256(Path(raw_path).read_bytes()).hexdigest()
+        key = (raw_path, size, mtime_ns)
+        with _state_lock:
+            digest = _evidence_digests.get(key)
+        if digest is None:
+            digest = hashlib.sha256(Path(raw_path).read_bytes()).hexdigest()
+            with _state_lock:
+                _evidence_digests[key] = digest
         entries.append({"path": raw_path, "size": size, "mtime_ns": mtime_ns, "sha256": digest})
     return content_hash_hex({"schema": "registry-authoring-source-receipt/v1", "entries": entries})
 
@@ -178,6 +192,7 @@ def compiler_reset() -> Generator[None]:
         _generation += 1
         _slots.clear()
         _authority_sources.clear()
+        _evidence_digests.clear()
         yield
 
 

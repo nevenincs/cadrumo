@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import re
-import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.toml import load_toml
 from dev.ci.python_runtime_matrix import load_runtime_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -42,7 +42,7 @@ _INVENTORY_PATH = _REPO_ROOT / "dev" / "ci" / "python-runtime-matrix.json"
 def _classifiers(pyproject_path: Path) -> list[str]:
     """Read and structurally validate one project's classifier list."""
     with pyproject_path.open("rb") as fh:
-        data = tomllib.load(fh)
+        data = load_toml(fh)
     if not isinstance(data, dict):
         raise AssertionError(f"{pyproject_path}: project metadata is not a table")
     project = data.get("project")
@@ -204,7 +204,7 @@ _REQUIRES_PYTHON_RE = re.compile(r"^>=\s*(?P<minor>3\.\d+)$")
 def _extract_requires_python(pyproject_path: Path) -> str:
     """Return the ``project.requires-python`` specifier declared by a manifest."""
     with pyproject_path.open("rb") as fh:
-        data = tomllib.load(fh)
+        data = load_toml(fh)
     declared = data.get("project", {}).get("requires-python")
     assert isinstance(declared, str) and declared, (
         f"{pyproject_path}: declares no `project.requires-python` floor to compare"

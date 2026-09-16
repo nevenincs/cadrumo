@@ -3,7 +3,7 @@
 Both legal screens in this package need the same thing: every catalogue entry
 id mapped to its authored body. Each had grown its own copy of the walk -- the
 same directory constant, the same byte-identical refusal, the same
-glob-to-``tomllib``-to-``legal`` traversal -- and the copies had already
+glob-to-``rtoml``-to-``legal`` traversal -- and the copies had already
 diverged in what they returned, one projecting ``required_text`` and one
 carrying the whole body. The wider read is the one that generalises, so it is
 the one that lives here and the narrower consumer projects what it needs.
@@ -21,11 +21,11 @@ is the one output an audit instrument must never emit.
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import parse_toml
 from dev._paths import UTF_8
 
 #: Sourced from ``dev._paths`` so the dev harness has one owner for it. The
@@ -54,7 +54,7 @@ def load_legal_entries(root: Path) -> dict[str, dict[str, object]]:
         raise SystemExit(f"legal catalogue is missing, so the result would be meaningless: {legal_dir}")
     entries: dict[str, dict[str, object]] = {}
     for path in scan_directory(legal_dir, pattern="*.toml"):
-        data = tomllib.loads(path.read_text(encoding=_UTF_8))
+        data = parse_toml(path.read_text(encoding=_UTF_8))
         for entry_id, body in data.get("legal", {}).items():
             entries[entry_id] = body
     return entries

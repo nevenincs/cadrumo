@@ -282,7 +282,6 @@ def _server_environment(storage_root: Path) -> Generator[None]:
 
     overrides = {
         "CADRUMO_LOCAL_STORAGE_ROOT": str((storage_root / "storage").resolve()),
-        "CADRUMO_SECRET_STORE_BACKEND": "unsecured",
         "CADRUMO_SECRET_STORE_DIR": str((storage_root / "secrets").resolve()),
         "CADRUMO_SECRET_PASSPHRASE": DEV_TEST_DATABASE_PASSWORD,
         "CADRUMO_OUTPUT_LANGUAGE": "en",

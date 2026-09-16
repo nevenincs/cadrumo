@@ -21,9 +21,9 @@ pinned.
 from __future__ import annotations
 
 import shutil
-import tomllib
 from pathlib import Path
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
 
@@ -58,7 +58,7 @@ def local_product_packages(*, repo_root: Path) -> tuple[str, ...]:
     lock = repo_root / "uv.lock"
     if not lock.is_file():
         raise SystemExit(f"uv.lock not found at {lock}")
-    document = tomllib.loads(lock.read_text(encoding=_UTF_8))
+    document = parse_toml(lock.read_text(encoding=_UTF_8))
     names = tuple(
         sorted(
             str(entry["name"])

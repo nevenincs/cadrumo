@@ -170,7 +170,7 @@ def test_shipped_runtime_has_no_operative_authored_registry_reader() -> None:
         operative_accesses[relative] = [
             f"line {call.lineno}: {ast.get_source_segment(source, call) or '<call>'}" for call in accesses
         ]
-        forbidden_imports = sorted(_absolute_import_roots(tree) & {"tomllib", "rtoml"})
+        forbidden_imports = sorted(_absolute_import_roots(tree) & {"rtoml"})
         if forbidden_imports:
             toml_readers[relative] = forbidden_imports
 

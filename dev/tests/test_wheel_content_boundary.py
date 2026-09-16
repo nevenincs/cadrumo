@@ -14,8 +14,8 @@ way:
    ships — the 94%-of-weight payload the split sheds to the ``aeat-data-*``
    companions.
 3. The required functional payload still ships — the ``_data`` roots (corpus,
-   registry, terminology), the ``py.typed`` marker, the BIP-39 recovery
-   wordlist, and ``external_constants.toml`` — so the exclude cannot silently
+   registry, terminology), the ``py.typed`` marker, and
+   ``external_constants.toml`` — so the exclude cannot silently
    strip something the installed package needs.
 4. The corpus DERIVED surfaces the runtime reads (extracted text
    ``*.extracted.md``/``.json`` and normative html) survive: the corpus-binary
@@ -36,7 +36,6 @@ import re
 import shutil
 import subprocess
 import tarfile
-import tomllib
 import zipfile
 from collections.abc import Callable
 from pathlib import Path
@@ -44,6 +43,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files, snapshot
 
@@ -63,7 +63,7 @@ _SDIST_AUTHORED_REGISTRY_PREFIX = "src/cadrumo/_data/registry/aeat/"
 _SDIST_PROFILE_SCHEMA = "src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml"
 _DATABASE_NAME = re.compile(r"authority-[0-9a-f]{64}\.sqlite3")
 _DESCRIPTOR_MEMBERS = frozenset({"format", "database", "database_size", "database_sha256", "logical_generation"})
-_PROJECT_VERSION = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+_PROJECT_VERSION = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
 _ALLOWED_WHEEL_ROOTS = frozenset({"cadrumo", "cadrumo_harness", f"cadrumo-{_PROJECT_VERSION}.dist-info"})
 _ALLOWED_SDIST_FILES = frozenset(
     {
@@ -122,7 +122,6 @@ _REQUIRED_DATA_ROOTS = (
 )
 _REQUIRED_MEMBERS = (
     f"{_WHEEL_PREFIX}/py.typed",
-    f"{_WHEEL_PREFIX}/adapters/persistence/storage/_bip39_wordlist.txt",
     f"{_WHEEL_PREFIX}/core/external_constants.toml",
 )
 
@@ -363,7 +362,7 @@ def test_wheel_keeps_required_data_roots(wheel_members: frozenset[str]) -> None:
 
 
 def test_wheel_keeps_required_functional_members(wheel_members: frozenset[str]) -> None:
-    """The py.typed marker, BIP-39 wordlist, and external_constants.toml still ship."""
+    """The py.typed marker and external_constants.toml still ship."""
 
     missing = sorted(member for member in _REQUIRED_MEMBERS if member not in wheel_members)
     assert not missing, (

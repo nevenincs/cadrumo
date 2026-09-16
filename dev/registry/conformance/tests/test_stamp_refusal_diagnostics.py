@@ -22,7 +22,7 @@ appends a long computed ``localization_key`` as the payload's last entry, and
 that is documented, not assumed, where the loader test lives. The fix covers
 both sites identically anyway, because nothing about that protection is a
 contract either site can rely on. The third site wraps
-:exc:`tomllib.TOMLDecodeError`, whose messages are measured here to be purely
+:exc:`TomlDecodeError`, whose messages are measured here to be purely
 positional (line/column) and never echo the offending literal, so it needs a
 test proving that stays true rather than a code change.
 """
@@ -30,10 +30,11 @@ test proving that stays true rather than a code change.
 from __future__ import annotations
 
 import shutil
-import tomllib
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core.toml import TomlDecodeError, parse_toml
 
 from ..stamp import (
     StampError,
@@ -215,7 +216,7 @@ def test_load_refusal_never_carries_the_reviewer_identity(tmp_path: Path, review
 
 
 #: Malformed manifest bodies, each carrying a taxpayer-shaped literal in the
-#: position that breaks parsing. None of these are pydantic-mediated: tomllib
+#: position that breaks parsing. None of these are pydantic-mediated: rtoml
 #: raises its own `TOMLDecodeError` before any schema ever sees the payload.
 _MALFORMED_MANIFESTS = (
     pytest.param(
@@ -237,22 +238,22 @@ def test_toml_decode_refusal_never_carries_the_offending_literal(
     manifest_text: str,
     secret: str,
 ) -> None:
-    """Confirm, rather than assume, that ``tomllib``'s own errors stay positional.
+    """Confirm, rather than assume, that ``rtoml``'s own errors stay positional.
 
     This is the one refusal site this module cannot fix by changing what it
-    formats, because there is nothing to extract: ``tomllib.TOMLDecodeError``
+    formats, because there is nothing to extract: ``TomlDecodeError``
     carries no structured field list. So this test is the reproduction proving
     the premise -- pydantic and TOML errors both routinely echo the offending
-    literal -- does NOT hold for tomllib, using inputs shaped to be as
-    leak-prone as possible (the secret is the value tomllib is actively
+    literal -- does NOT hold for rtoml, using inputs shaped to be as
+    leak-prone as possible (the secret is the value rtoml is actively
     scanning when it fails).
     """
     manifest = tmp_path / "revision.toml"
 
-    # `tomllib` itself never echoes the literal -- reproduced directly so this
+    # `rtoml` itself never echoes the literal -- reproduced directly so this
     # test also demonstrates why `_declared_governance` needs no fix here.
-    with pytest.raises(tomllib.TOMLDecodeError) as raw_excinfo:
-        tomllib.loads(manifest_text)
+    with pytest.raises(TomlDecodeError) as raw_excinfo:
+        parse_toml(manifest_text)
     assert secret not in str(raw_excinfo.value)
 
     with pytest.raises(StampError) as excinfo:

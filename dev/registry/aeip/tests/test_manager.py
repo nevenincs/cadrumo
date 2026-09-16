@@ -594,7 +594,7 @@ def test_legal_refs_drift_is_classified_not_called_unchanged(inventory) -> None:
 
 def test_rendered_record_carries_the_target_revision_legal_refs(inventory) -> None:
     """A record renders the refs its pair actually carries, not a fixed default."""
-    import tomllib
+    from cadrumo.core.toml import parse_toml
 
     plan = plan_chains(inventory)
     pair = next(
@@ -603,7 +603,7 @@ def test_rendered_record_carries_the_target_revision_legal_refs(inventory) -> No
         for pair in entry.pairs
         if (pair.from_revision, pair.to_revision) == ("2024", "2025") and pair.evolution_kind != "retired"
     )
-    rendered = tomllib.loads(render_evolution_record(pair, casilla_id="0000"))
+    rendered = parse_toml(render_evolution_record(pair, casilla_id="0000"))
     record = rendered["revisions"]["2025"]["casilla_continuidad_evolutions"][0]
     assert record["legal_refs"] == list(pair.legal_refs)
     assert len(record["legal_refs"]) > 1, "the 2025 rows carry more than the framework article"
@@ -629,7 +629,7 @@ def test_roles_are_distinct_constants() -> None:
 
 def test_rendered_evolution_record_parses_as_toml() -> None:
     """A rendered record is valid TOML with the fields the registry expects."""
-    import tomllib
+    from cadrumo.core.toml import parse_toml
 
     plan_pair = render_evolution_record(
         EvolutionPair(
@@ -641,7 +641,7 @@ def test_rendered_evolution_record_parses_as_toml() -> None:
         casilla_id="1945",
         source_refs=("aeat-dr-100-2024-dictionary",),
     )
-    parsed = tomllib.loads(plan_pair)
+    parsed = parse_toml(plan_pair)
     record = parsed["revisions"]["2024"]["casilla_continuidad_evolutions"][0]
     assert record["continuidad_id"] == "irpf-aeip-example-aplicado"
     assert record["from_revision"] != record["to_revision"]

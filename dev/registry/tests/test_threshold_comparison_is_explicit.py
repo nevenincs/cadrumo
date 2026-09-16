@@ -24,11 +24,11 @@ invisible once compiled.
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -67,7 +67,7 @@ def _declared_values_in_source(revision_id: str, parameter_id: str) -> list[dict
     """
     found: list[dict[str, object]] = []
     for path in sorted((_M303_REVISIONS_ROOT / revision_id / "parameters").glob("*.toml")):
-        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+        raw = parse_toml(path.read_text(encoding="utf-8"))
         for revision in raw.get("revisions", {}).values():
             for parameter in revision.get("parameters", []):
                 if parameter.get("id") == parameter_id:

@@ -692,7 +692,6 @@
         "cadrumo.application.user_profile.profile_summary",
         "cadrumo.application.user_profile.projections",
         "cadrumo.application.user_profile.prospective_password",
-        "cadrumo.application.user_profile.recovery_contracts",
         "cadrumo.application.user_profile.recovery_custody",
         "cadrumo.application.user_profile.registration",
         "cadrumo.application.user_profile.repository",

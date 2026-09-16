@@ -6,13 +6,13 @@ import io
 import json
 import shutil
 import tarfile
-import tomllib
 import zipfile
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.toml import load_toml
 from dev._paths import REPO_ROOT
 
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
@@ -92,7 +92,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
 
     companions = build_companion_wheels(tmp_path, uv, build_root=build_root)
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
-        expected_version = tomllib.load(handle)["project"]["version"]
+        expected_version = load_toml(handle)["project"]["version"]
     assert (
         _assert_complete_wheel_cohort(
             wheel,

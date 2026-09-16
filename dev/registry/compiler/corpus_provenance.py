@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
@@ -24,24 +25,30 @@ _BOE_STRUCTURAL_MARKUP: Final = re.compile(
 )
 
 
+@lru_cache(maxsize=32)
+def _normative_roots(source_root: Path) -> tuple[Path, Path, Path, bool]:
+    """Resolve one source root's normative tree roots once; every reference under it shares them."""
+    root = source_root.resolve()
+    direct_normatives = (root / "corpus" / "normatives").resolve()
+    packaged_data_root = (root / _PACKAGED_DATA_ROOT).resolve()
+    packaged_normatives = (packaged_data_root / "corpus" / "normatives").resolve()
+    contained = (
+        root in direct_normatives.parents
+        and (packaged_data_root == root or root in packaged_data_root.parents)
+        and packaged_data_root in packaged_normatives.parents
+    )
+    return root, direct_normatives, packaged_normatives, contained
+
+
 def resolve_normative_corpus_path(source_root: Path, corpus_ref: str) -> Path | None:
     """Resolve one normative authoring input without allowing root escape."""
     corpus_path = corpus_ref.partition("#")[0]
     if not corpus_path.startswith(_NORMATIVES_TREE_PREFIX):
         return None
-    root = source_root.resolve()
-    direct_normatives = (root / "corpus" / "normatives").resolve()
-    packaged_data_root = (root / _PACKAGED_DATA_ROOT).resolve()
-    packaged_normatives = (packaged_data_root / "corpus" / "normatives").resolve()
+    root, direct_normatives, packaged_normatives, contained = _normative_roots(source_root)
     direct = (root / corpus_path).resolve()
     packaged = (root / _PACKAGED_DATA_ROOT / corpus_path).resolve()
-    if not (
-        root in direct_normatives.parents
-        and (packaged_data_root == root or root in packaged_data_root.parents)
-        and packaged_data_root in packaged_normatives.parents
-        and direct_normatives in direct.parents
-        and packaged_normatives in packaged.parents
-    ):
+    if not (contained and direct_normatives in direct.parents and packaged_normatives in packaged.parents):
         raise RegistryValidationError(f"normative corpus target {corpus_ref!r} escapes the normative corpus tree")
     path = direct if direct.is_file() else packaged
     if not path.is_file():

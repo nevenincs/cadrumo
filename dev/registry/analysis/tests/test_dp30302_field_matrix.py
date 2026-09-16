@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 from typing import TypedDict
 
@@ -14,6 +13,7 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoFactProjectionRef,
     compile_filing_projection_ref,
 )
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev._paths import REPO_ROOT
 
@@ -176,7 +176,7 @@ def test_persisted_matrix_reflects_the_two_corrected_constants() -> None:
 
 
 class _ProjectionEndpoint(TypedDict):
-    """One persisted projection-endpoint entry, as ``tomllib`` returns it."""
+    """One persisted projection-endpoint entry, as ``rtoml`` returns it."""
 
     projection_ref: dict[str, object]
 
@@ -203,7 +203,7 @@ def _projection_endpoints(revision_id: str) -> tuple[_ProjectionEndpoint, ...]:
     )
     endpoints: list[_ProjectionEndpoint] = []
     for fragment in sorted(directory.glob("*.toml")):
-        payload = tomllib.loads(fragment.read_text(encoding="utf-8"))
+        payload = parse_toml(fragment.read_text(encoding="utf-8"))
         endpoints.extend(payload["revisions"][revision_id]["projection_endpoints"])
     return tuple(endpoints)
 

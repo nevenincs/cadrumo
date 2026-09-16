@@ -43,12 +43,12 @@ from __future__ import annotations
 
 import argparse
 import sys
-import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
+from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.cohort_manifest import ArtifactKind
 
@@ -168,7 +168,7 @@ def download_page_path(repo_root: Path | None = None) -> Path:
 def load_descriptor(path: Path | None = None) -> DownloadDescriptor:
     """Load and strictly validate the channel descriptor."""
     resolved = path or descriptor_path()
-    raw = tomllib.loads(resolved.read_text(encoding=_UTF_8))
+    raw = parse_toml(resolved.read_text(encoding=_UTF_8))
     return DownloadDescriptor.model_validate(raw)
 
 
