@@ -64,6 +64,7 @@ from .prior_payment_advisory import (
     collect_prior_payment_not_deducted_diagnostics,
 )
 from .prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
+from .work_profile import ModeloWorkProfile
 
 __all__ = ["collect_bucket_aggregation_advisory_diagnostics"]
 
@@ -80,6 +81,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisory diagnostics raised after bucket aggregation calculation.
 
@@ -128,6 +130,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
             capability used by the Modelo 303 regularización advisory.
         transaction_repository: Required bucket-bound transaction catalogue
             capability used by the annual IVA settlement advisory.
+        profile: The bucket's profile when the calculation already loaded it;
+            when omitted, the profile-backed collectors read it themselves.
 
     Returns:
         Tuple of
@@ -151,6 +155,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             filing_year=filing_year,
             bucket_id=bucket_id,
             operation=operation,
+            profile=profile,
         )
         guarderia_madre_meses_undeclared_diagnostics = collect_guarderia_madre_meses_undeclared_diagnostics(
             revision,
@@ -160,6 +165,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             filing_year=filing_year,
             bucket_id=bucket_id,
             operation=operation,
+            profile=profile,
         )
 
     return (

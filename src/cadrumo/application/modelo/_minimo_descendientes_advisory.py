@@ -29,6 +29,7 @@ from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semant
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .work_profile import ModeloWorkProfile
 
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
@@ -218,17 +219,21 @@ def _profile_fact_strings(
     bucket_id: str,
     *,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
 ) -> dict[str, str] | None:
     """Return every non-null profile fact as a ``{path: str-value}`` map, or ``None``."""
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    if profile is not None:
+        record = profile.record
+    else:
+        from ..user_profile.profile_record_repository import ProfileRecordRepository
 
-    try:
-        record = ProfileRecordRepository.for_current_session(
-            bucket_id,
-            profile_decode_context=operation.profile_decode_context(),
-        ).load(bucket_id)
-    except ProfileNotFoundError:
-        return None
+        try:
+            record = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=operation.profile_decode_context(),
+            ).load(bucket_id)
+        except ProfileNotFoundError:
+            return None
     return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
 
 
@@ -434,6 +439,7 @@ def collect_guarderia_spend_shape_diagnostics(
     period_token: str,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise when a declared guardería figure contributes nothing because of its SHAPE.
 
@@ -461,6 +467,8 @@ def collect_guarderia_spend_shape_diagnostics(
         period_token: Registry period token used to confirm the selected scope.
         bucket_id: Bucket whose profile carries the descendant facts.
         operation: Authority operation supplying the profile and registry reads.
+        profile: The bucket's profile when the caller already loaded it; when
+            omitted, the facts are read from the bucket.
 
     Returns:
         A one-element tuple carrying the advisory, or an empty tuple.
@@ -472,6 +480,7 @@ def collect_guarderia_spend_shape_diagnostics(
         period_token=period_token,
         bucket_id=bucket_id,
         operation=operation,
+        profile=profile,
     )
     if context is None:
         return ()
@@ -486,6 +495,7 @@ def _guarderia_descendants(
     period_token: str,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
 ) -> _GuarderiaContext | None:
     """Resolve the shared preconditions the two Art. 81.3 collectors below need.
 
@@ -514,7 +524,7 @@ def _guarderia_descendants(
     )
     if registry_scope is None:
         return None
-    facts = _profile_fact_strings(bucket_id, operation=operation)
+    facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
     if facts is None:
         return None
     descendant_facts = facts
@@ -566,6 +576,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     period_token: str,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise when declared guardería spend yields nothing for want of the mother's months.
 
@@ -596,6 +607,8 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
         period_token: Registry period token used to confirm the selected scope.
         bucket_id: Bucket whose profile carries the descendant facts.
         operation: Authority operation supplying the profile and registry reads.
+        profile: The bucket's profile when the caller already loaded it; when
+            omitted, the facts are read from the bucket.
 
     Returns:
         A one-element tuple carrying the advisory, or an empty tuple.
@@ -607,6 +620,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
         period_token=period_token,
         bucket_id=bucket_id,
         operation=operation,
+        profile=profile,
     )
     if context is None:
         return ()

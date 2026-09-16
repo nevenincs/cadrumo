@@ -23,7 +23,6 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -59,6 +58,7 @@ from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
 from ..user_profile.validation import MODELO_WORK_PROFILE_BASELINE_MISSING_CODE, ProfileValidationService
 from .action_errors import ModeloProfileReadinessError
+from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -525,19 +525,6 @@ def _render_missing_requirement(requirement: ProfilePreflightRequirement) -> str
     return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
 
 
-@dataclass(frozen=True, slots=True)
-class ModeloWorkProfile:
-    """One authenticated profile record and the decode context its session used.
-
-    A command that runs several readiness gates for the same target loads this
-    once and hands it to each gate, instead of every gate decrypting the same
-    unchanged record again.
-    """
-
-    record: UserProfileRecord
-    profile_decode_context: ProfileDecodeContext
-
-
 def load_modelo_work_profile(
     *,
     bucket_id: str,
@@ -634,7 +621,7 @@ def require_profile_ready_for_modelo_work(
     profile_decode_context: ProfileDecodeContext,
     operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile | None = None,
-) -> None:
+) -> ModeloWorkProfile:
     """Refuse filing-grade modelo work when the active profile is not eligible.
 
     Loads the bucket's :class:`domain.user_profile.values.UserProfileRecord`,
@@ -649,7 +636,9 @@ def require_profile_ready_for_modelo_work(
     missing field the registry grounds - the memoised
     ``build_profile_grounding_index`` keeps the added per-call cost bounded on
     this hot path. ``profile`` is the record the calling command already
-    loaded for this target; when omitted the gate loads it.
+    loaded for this target; when omitted the gate loads it. Returns the record
+    the gate checked, so a caller that let the gate load it passes that same
+    record on instead of decrypting it again.
     """
     loaded = _load_profile_for_modelo_work(
         bucket_id=bucket_id,
@@ -706,6 +695,7 @@ def require_profile_ready_for_modelo_work(
         filing_year=filing_year,
         period=period,
     )
+    return loaded
 
 
 def require_existing_profile_baseline_ready_for_modelo_work(
@@ -772,15 +762,15 @@ def require_profile_ready_for_work_unit(
     profile_decode_context: ProfileDecodeContext,
     operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile | None = None,
-) -> None:
+) -> ModeloWorkProfile:
     """Run the profile readiness gate for an existing work unit.
 
     Calculation, verification, filing, and export services call this wrapper so
     a previously created :class:`~WorkUnit` is rechecked
     against the current :class:`domain.user_profile.values.UserProfileRecord`
-    before any filing-grade mutation proceeds.
+    before any filing-grade mutation proceeds. Returns the checked record.
     """
-    require_profile_ready_for_modelo_work(
+    return require_profile_ready_for_modelo_work(
         bucket_id=work_unit.bucket_id,
         modelo=str(work_unit.modelo),
         revision_id=work_unit.revision_id,
@@ -795,7 +785,6 @@ def require_profile_ready_for_work_unit(
 
 __all__ = [
     "BLOCKING_APPLICABILITY_VERDICTS",
-    "ModeloWorkProfile",
     "load_modelo_work_profile",
     "modelo_applicability_refusal",
     "modelo_work_profile_baseline_missing_paths",

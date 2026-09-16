@@ -84,7 +84,7 @@ from .work_selection import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from .profile_readiness_gate import ModeloWorkProfile
+    from .work_profile import ModeloWorkProfile
 
 
 class ModeloWorkSelectorError(ModeloError):

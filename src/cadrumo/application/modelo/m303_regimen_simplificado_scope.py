@@ -12,12 +12,12 @@ from ...domain.calculations.registry.iva_schema_vocabulary import (
 from ...domain.deadlines.models import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import ProfileSetupState
-from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import projection_for_taxpayer
 from .action_errors import ModeloProfileReadinessError
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .profile_readiness_gate import load_modelo_work_profile
+from .work_profile import ModeloWorkProfile
 
 _READINESS_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _READINESS_SCENARIO_PREFIX = "modelo.work.calculate.m303_profile_readiness"
@@ -38,28 +38,32 @@ def m303_profile_readiness_failure(
 
 
 def active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
-    """Return the work unit's active, setup-complete taxpayer profile, or raise."""
+    """Load the work unit's active, setup-complete taxpayer profile, or raise."""
     from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     with bundled_indexed_authority().operation() as operation:
-        profile_decode_context = operation.profile_decode_context()
-        try:
-            record = ProfileRecordRepository.for_current_session(
-                work_unit.bucket_id,
-                profile_decode_context=profile_decode_context,
-            ).load(work_unit.bucket_id)
-        except ProfileNotFoundError as exc:
-            raise ModeloProfileReadinessError(
-                precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
-            ) from exc
-        if record.setup_state is not ProfileSetupState.COMPLETE:
-            raise ModeloProfileReadinessError(
-                precondition_failure=m303_profile_readiness_failure(
-                    "profile_inactive",
-                    {"profile_present": True, "profile_setup_state": str(record.setup_state)},
-                ),
-            )
-        return projection_for_taxpayer(record, schema=profile_decode_context.schema)
+        profile = load_modelo_work_profile(
+            bucket_id=work_unit.bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+    return taxpayer_profile_for_work(profile)
+
+
+def taxpayer_profile_for_work(profile: ModeloWorkProfile | None) -> TaxpayerProfile:
+    """Project an already-loaded work profile, refusing an absent or incomplete one."""
+    if profile is None:
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
+        )
+    record = profile.record
+    if record.setup_state is not ProfileSetupState.COMPLETE:
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure(
+                "profile_inactive",
+                {"profile_present": True, "profile_setup_state": str(record.setup_state)},
+            ),
+        )
+    return projection_for_taxpayer(record, schema=profile.profile_decode_context.schema)
 
 
 def m303_regimen_simplificado_scope_for_profile(
@@ -106,12 +110,19 @@ def m303_regimen_simplificado_annual_summary_applies(work_unit: WorkUnit) -> boo
     applies regimen simplificado only to sujetos pasivos meeting its three
     stated requirements.
     """
-    return not m303_regimen_simplificado_scope_for_profile(active_taxpayer_profile(work_unit)).is_not_claimed
+    return m303_regimen_simplificado_annual_summary_applies_to_profile(active_taxpayer_profile(work_unit))
+
+
+def m303_regimen_simplificado_annual_summary_applies_to_profile(profile: TaxpayerProfile) -> bool:
+    """The same derivation as :func:`m303_regimen_simplificado_annual_summary_applies`, on a loaded profile."""
+    return not m303_regimen_simplificado_scope_for_profile(profile).is_not_claimed
 
 
 __all__ = [
     "active_taxpayer_profile",
     "m303_regimen_simplificado_annual_summary_applies",
+    "m303_regimen_simplificado_annual_summary_applies_to_profile",
     "m303_regimen_simplificado_scope_for_composition",
     "m303_regimen_simplificado_scope_for_profile",
+    "taxpayer_profile_for_work",
 ]

@@ -26,12 +26,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import _calculation_preparation
 from cadrumo.application.modelo._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -180,16 +178,7 @@ def _empty_usage_ratio_profile(*, bucket_id: str, operation: PinnedAuthorityOper
     return UsageRatioProfile()
 
 
-def _set_iva_regime(monkeypatch: pytest.MonkeyPatch, regime: IVARegime) -> None:
-    def resolve(_bucket_id: str, *, operation: PinnedAuthorityOperation) -> IVARegime:
-        del operation
-        return regime
-
-    monkeypatch.setattr(_calculation_preparation, "_iva_regime_for_bucket", resolve)
-
-
 def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassified(
-    monkeypatch: pytest.MonkeyPatch,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """SIMPLIFICADO work unit must not be blocked even when unclassified transactions exist.
@@ -199,7 +188,6 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
     path). The preflight check must not block M303 manual casillas 47-58.
     """
     bucket_id = _SIMPLIFICADO_PROFILE_ID
-    _set_iva_regime(monkeypatch, IVARegime("SIMPLIFICADO"))
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
     snapshot = published_snapshot("303", filing_year=2026, period="1T")
@@ -211,11 +199,11 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
         transaction_repository=tx_repo,
         usage_ratio_profile_loader=_empty_usage_ratio_profile,
         operation=operation,
+        profile_values={"iva.regime": "SIMPLIFICADO"},
     )
 
 
 def test_general_profile_raises_preflight_error_when_transactions_are_unclassified(
-    monkeypatch: pytest.MonkeyPatch,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Anti-tautology: GENERAL-regime work unit MUST be blocked by the same inputs.
@@ -224,7 +212,6 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     and the previous test becomes tautological.
     """
     bucket_id = _GENERAL_PROFILE_ID
-    _set_iva_regime(monkeypatch, IVARegime("GENERAL"))
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
     snapshot = published_snapshot("303", filing_year=2026, period="1T")
@@ -236,5 +223,6 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
             transaction_repository=tx_repo,
             usage_ratio_profile_loader=_empty_usage_ratio_profile,
             operation=operation,
+            profile_values={"iva.regime": "GENERAL"},
         )
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
