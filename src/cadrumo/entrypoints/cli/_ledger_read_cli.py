@@ -297,6 +297,8 @@ def _ledger_categories_payload(
 
 def ledger_categories(ctx: typer.Context) -> None:
     """List the recognised `--category-id` spending-category catalogue."""
+    # The category catalogue is registry authority, read under the command's lease.
+    authority_operation(ctx)
     families, category_ids, spending_lines = _spending_category_projection()
     irpf_categories, irpf_lines = _irpf_category_projection()
     lines = [*spending_lines, *irpf_lines]

@@ -217,7 +217,7 @@ def _create_manual_add_transaction(
     operation: PinnedAuthorityOperation,
 ) -> ManualLedgerTransactionResult:
     """Persist the canonical add command with the configured FX provider."""
-    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...application.exchange_rate_provider import exchange_rate_provider
     from ...domain.currency.service import CurrencyNormalizationService
     from ..ledger_action_composition import compose_ledger_action_ports
 
@@ -227,7 +227,7 @@ def _create_manual_add_transaction(
         return create_manual_transaction(
             command,
             ports=ports,
-            currency_normalizer=CurrencyNormalizationService(rate_provider=default_ecb_rate_provider()),
+            currency_normalizer=CurrencyNormalizationService(rate_provider=exchange_rate_provider()),
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc

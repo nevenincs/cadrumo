@@ -4,11 +4,11 @@ import json
 
 import pytest
 
-from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
+from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
 from ._ledger_corpus_support import _CORPUS, _FILES, _import_corpus, _invoke
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
-__all__ = ["live_fx_isolated_backend"]
+__all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

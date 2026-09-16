@@ -37,7 +37,7 @@ import pytest
 from click.testing import Result
 
 from ....tests.inventory import FIXTURES_DIR
-from ._isolated_profile_storage_fixtures import live_fx_seeded_backend
+from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
 from ._ledger_corpus_support import _match, _oracle_rules
 from .cli_runner import invoke_cached_cli
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
@@ -52,11 +52,8 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-# This module needs live tests enabled because revolut-multi.csv carries
-# GBP/USD rows, so importing it drives the CLI's live ECB euro reference-rate
-# normalizer rather than the provider's now-guarded default (see
-# fx._ecb_provider); that is exactly the isolation `live_fx_isolated_backend`
-# already provides.
+# revolut-multi.csv carries GBP/USD rows, so importing it converts through the
+# host's exchange-rate provider; the test host binds the recorded ECB answers.
 
 
 def _import_revolut() -> None:
@@ -67,8 +64,8 @@ def _import_revolut() -> None:
 # The imported multi-currency statement is the starting state every test reads
 # or disposes from, not the subject. Seeded once and copied per test, so each
 # test keeps its own storage root and nothing it changes escapes.
-_seeded_origin, live_fx_seeded_world = live_fx_seeded_backend(seed=_import_revolut)
-__all__ = ["_seeded_origin", "live_fx_seeded_world"]
+_seeded_origin, recorded_fx_seeded_world = recorded_fx_seeded_backend(seed=_import_revolut)
+__all__ = ["_seeded_origin", "recorded_fx_seeded_world"]
 
 
 def _uk_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:

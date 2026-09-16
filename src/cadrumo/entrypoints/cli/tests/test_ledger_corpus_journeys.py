@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
+from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
 from ._ledger_corpus_support import (
     _REVISION_CASILLA,
     _active_repo,
@@ -22,7 +22,7 @@ from ._ledger_corpus_support import (
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
-__all__ = ["live_fx_isolated_backend"]
+__all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

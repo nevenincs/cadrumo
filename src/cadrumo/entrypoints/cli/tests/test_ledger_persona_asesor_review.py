@@ -33,7 +33,7 @@ from click.testing import Result
 
 from ....tests.cli_envelope import unwrap_schema_envelope as _json
 from ....tests.inventory import FIXTURES_DIR
-from ._isolated_profile_storage_fixtures import live_fx_seeded_backend
+from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
 from .cli_runner import invoke_cached_cli
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
@@ -66,8 +66,8 @@ def _import_corpus() -> None:
 # once and giving each test a copy keeps the per-test isolation exactly as it
 # was -- each still gets its own storage root, so a classify or archive cannot
 # reach the next test -- while paying the import once instead of ten times.
-_seeded_origin, live_fx_seeded_world = live_fx_seeded_backend(seed=_import_corpus)
-__all__ = ["_seeded_origin", "live_fx_seeded_world"]
+_seeded_origin, recorded_fx_seeded_world = recorded_fx_seeded_backend(seed=_import_corpus)
+__all__ = ["_seeded_origin", "recorded_fx_seeded_world"]
 
 
 def _find(rows: list[dict[str, object]], needle: str) -> dict[str, object]:

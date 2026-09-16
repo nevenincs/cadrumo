@@ -471,7 +471,10 @@ class LLMClient:
                 self._require_load_headroom(provider, provider_request.model)
                 completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
-            _LOGGER.error(
+            # WARNING, not ERROR: the caller owns this failure and renders it as
+            # a typed refusal on stderr; an ERROR record would print the
+            # traceback ahead of that machine-readable document.
+            _LOGGER.warning(
                 "llm request failed provider=%s model=%s request_id=%s",
                 provider.value,
                 model,
