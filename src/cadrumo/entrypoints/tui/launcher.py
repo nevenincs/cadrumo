@@ -794,6 +794,8 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     scope has bound them; neither needs to know which concrete adapter serves
     the session.
     """
+    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...core.config import load_settings, override_settings
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
@@ -815,6 +817,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
                 **{secret_field: secret_path},
             )
         )
+        composition.enter_context(bind_exchange_rate_provider_factory(default_ecb_rate_provider))
         composition.enter_context(profile_adapter_composition())
         yield storage_root
 
@@ -1085,6 +1088,8 @@ def main(
     generation the root shell consumes. A caller that injects a provider has
     already made those choices, so its session is run exactly as given.
     """
+    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...core.logging import configure_logging
 
     # Importing a module no longer configures logging, so the host does it
@@ -1094,14 +1099,16 @@ def main(
         from .installed_session import run_installed_workbench_session
 
         return run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
-    asyncio.run(
-        run_authenticated_workbench_sessions(
-            headless=headless,
-            auto_pilot=auto_pilot,
-            workbench_root_inputs_provider=workbench_root_inputs_provider,
-            recompose_authenticated_session=recompose_authenticated_session,
+    # Bound before the loop starts, because asyncio.run copies the current context.
+    with bind_exchange_rate_provider_factory(default_ecb_rate_provider):
+        asyncio.run(
+            run_authenticated_workbench_sessions(
+                headless=headless,
+                auto_pilot=auto_pilot,
+                workbench_root_inputs_provider=workbench_root_inputs_provider,
+                recompose_authenticated_session=recompose_authenticated_session,
+            )
         )
-    )
     return 0
 
 

@@ -339,10 +339,12 @@ def run_installed_workbench_session(
     registration, which already unlocks what it created, continue straight
     into the workbench.
     """
+    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..adapter_composition import profile_adapter_composition
 
-    with profile_adapter_composition():
+    with bind_exchange_rate_provider_factory(default_ecb_rate_provider), profile_adapter_composition():
         while True:
             inventory = observe_profile_login_inventory()
             if inventory.state in {
