@@ -62,6 +62,7 @@ def test_bare_create_is_not_pre_empted_by_a_locked_existing_profile() -> None:
             "identity.surnames": "Profile",
             "activities.description": "design",
         },
+        log_in=False,
     )
     close_active_bucket_session()
 

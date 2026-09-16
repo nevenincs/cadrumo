@@ -70,6 +70,7 @@ def _create_complete_pipeline_profile() -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
 

@@ -42,7 +42,7 @@ from ....adapters.persistence.storage.custody.records import (
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....core.config import Settings
 from ....core.profile_publication import ProfilePublicationKind
-from .cli_performance import profile_cli_path
+from .cli_performance import profile_cli_invocation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -104,10 +104,10 @@ def _root_with(tmp_path: Path, name: str, count: int) -> Path:
 
 
 def _storage_calls(root: Path) -> int:
-    profile = profile_cli_path(_LIST_PATH, storage_root=root)
-    assert profile.invocation.failure_kind == "none", profile.invocation.stderr
-    assert profile.invocation.exit_code == 0, profile.invocation.stderr
-    return sum(profile.invocation.storage_operation_calls.values())
+    invocation = profile_cli_invocation(_LIST_PATH, storage_root=root)
+    assert invocation.failure_kind == "none", invocation.stderr
+    assert invocation.exit_code == 0, invocation.stderr
+    return sum(invocation.storage_operation_calls.values())
 
 
 @pytest.fixture(scope="module")

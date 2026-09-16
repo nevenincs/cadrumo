@@ -48,6 +48,7 @@ def _create_profile() -> None:
             "activities.description": "design",
             "tax_residence.jurisdiction_scope": "common_regime",
         },
+        log_in=False,
     )
 
 
@@ -73,6 +74,7 @@ def _create_first_year_activity_profile() -> None:
             "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
         },
+        log_in=False,
     )
 
 
@@ -98,6 +100,7 @@ def _create_autonoma_2024_activity_profile() -> None:
             "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
         },
+        log_in=False,
     )
 
 

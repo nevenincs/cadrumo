@@ -90,7 +90,7 @@ def test_profile_rename_verb_is_not_registered(_per_bucket_backend: Path) -> Non
     """
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
-    create_profile_via_cli("alpha")
+    create_profile_via_cli("alpha", log_in=False)
 
     result = _invoke(("config", "profile", "rename", "alpha", "beta"))
     assert result.exit_code != 0, result.output
@@ -123,8 +123,8 @@ def test_delete_active_profile_is_refused_and_survivors_stay_reachable(
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
     from ....core.bucket_pointer import resolve_active_bucket_id
 
-    create_profile_via_cli("alpha")
-    create_profile_via_cli("beta")
+    create_profile_via_cli("alpha", log_in=False)
+    create_profile_via_cli("beta", log_in=False)
     assert _invoke(("config", "login", "alpha")).exit_code == 0
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
@@ -154,7 +154,7 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     """
     from ....core.bucket_pointer import resolve_active_bucket_id
 
-    create_profile_via_cli("solo")
+    create_profile_via_cli("solo", log_in=False)
 
     assert _invoke(("config", "logout")).exit_code == 0
     assert resolve_active_bucket_id() is None
@@ -175,7 +175,7 @@ def test_list_and_status_work_from_a_no_active_session_state(
     no-active-profile state instead of refusing.
     """
 
-    create_profile_via_cli("alpha")
+    create_profile_via_cli("alpha", log_in=False)
 
     assert _invoke(("config", "logout")).exit_code == 0
 
@@ -199,7 +199,7 @@ def test_delete_active_profile_refuses_and_keeps_the_pointer_intact(
     """
     from ....core.bucket_pointer import resolve_active_bucket_id
 
-    create_profile_via_cli("alpha")
+    create_profile_via_cli("alpha", log_in=False)
     assert _invoke(("config", "login", "alpha")).exit_code == 0
     pointer_before = resolve_active_bucket_id()
     assert pointer_before is not None
@@ -222,8 +222,8 @@ def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
     leaves no pointer to clear and must not emit the notice.
     """
 
-    create_profile_via_cli("alpha")
-    create_profile_via_cli("beta")
+    create_profile_via_cli("alpha", log_in=False)
+    create_profile_via_cli("beta", log_in=False)
     assert _invoke(("config", "logout")).exit_code == 0
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
@@ -243,7 +243,7 @@ def test_delete_unknown_profile_refuses_with_an_unknown_profile_message(
     session-state diagnostic.
     """
 
-    create_profile_via_cli("alpha")
+    create_profile_via_cli("alpha", log_in=False)
 
     assert _invoke(("config", "logout")).exit_code == 0
 
@@ -268,7 +268,7 @@ def test_delete_valid_profile_with_no_active_session_succeeds(
     """
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
-    create_profile_via_cli("alpha")
+    create_profile_via_cli("alpha", log_in=False)
 
     assert _invoke(("config", "logout")).exit_code == 0
 
@@ -293,13 +293,14 @@ def test_deleted_profile_name_is_reusable_by_create(
     # filing-retention snapshots the deletion preflight requires; the
     # test seeding door deliberately does not, so a deletion subject
     # must be born through the scripted CLI door.
-    create_profile_via_cli("operator")
-    create_profile_via_cli("other")
+    create_profile_via_cli("operator", log_in=False)
+    create_profile_via_cli("other", log_in=False)
     assert _invoke(("config", "logout")).exit_code == 0
     _deleted = _invoke(("config", "profile", "delete", "operator", "--yes"))
     assert _deleted.exit_code == 0, _deleted.output
 
     register_cli_profile(
+        log_in=False,
         label="operator",
         facts={
             "identity.tax_id": "12345678Z",
@@ -331,7 +332,7 @@ def test_logout_settles_through_the_supervised_operation_journal(_per_bucket_bac
     supervised operation settles through the journal and leaves that record
     behind, which is what this pins.
     """
-    create_profile_via_cli("solo")
+    create_profile_via_cli("solo", log_in=False)
     root = Path(_per_bucket_backend)
     before = {path for path in root.rglob("*") if path.is_file()}
 

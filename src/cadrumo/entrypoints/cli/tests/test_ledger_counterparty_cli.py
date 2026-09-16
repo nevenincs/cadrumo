@@ -30,6 +30,8 @@ See Also:
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -37,14 +39,29 @@ from click.testing import Result
 
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.iva.schema import EUMemberState
-from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import (
     _invoke,
+    create_cli_surface_profile,
+    isolated_cli_surface_backend,
 )
 
-__all__ = ["_isolated_backend"]
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    """A fresh registered profile per test, driven in this process only.
+
+    Every case mutates the profile's confirmed-counterparty store, so each
+    gets its own storage root. Registration already leaves the profile's
+    session live here, and nothing in this module starts a second process
+    that would need a login's resumption receipt, so the second derivation is
+    skipped.
+    """
+    with isolated_cli_surface_backend(tmp_path):
+        create_cli_surface_profile(log_in=False)
+        yield
+
 
 #: A structurally valid Spanish CIF. The domestic population this channel
 #: exists for: a bare identifier with no country and no postal evidence, which

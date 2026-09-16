@@ -87,7 +87,10 @@ def cli_profile(tmp_path: Path) -> Iterator[None]:
     nothing from a profile.
     """
     with isolated_cli_surface_backend(tmp_path):
-        create_cli_surface_profile()
+        # Registration publishes the in-process session these tests use; the
+        # login receipt only lets a LATER process resume one, and nothing here
+        # spawns a second process.
+        create_cli_surface_profile(log_in=False)
         yield
 
 

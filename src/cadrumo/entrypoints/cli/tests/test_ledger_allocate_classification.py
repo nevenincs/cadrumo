@@ -44,6 +44,7 @@ def _imported_transaction_id(tmp_path: Path) -> str:
             "identity.name": "Tester",
             "identity.surnames": "Allocation",
         },
+        log_in=False,
     )
 
     statement = tmp_path / "statement.csv"

@@ -92,6 +92,11 @@ _SHARED_INVOICE_FIELDS: tuple[str, ...] = (
     "payment_status",
     "linked_transaction_ids",
     "notes",
+    # Settlement-side retención sits outside the totals and recargo inside, so
+    # neither is recoverable from the three totals above.
+    "retention_rate",
+    "retention_amount",
+    "recargo_amount",
     # The euro conversion and its provenance. A foreign-currency invoice
     # rendered as totals plus a currency code told the operator nothing about
     # whether those figures had reached euro at all -- and an unconverted
@@ -557,10 +562,6 @@ def invoice_import(
     import.
     """
     bucket_id = _business_invoice_bucket_id()
-    if not file.exists():
-        raise bad(
-            tr("cli.app.ledger.invoice.import_file_not_found", path=str(file)),
-        )
     catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
     source, result, mapping_reasons = _run_invoice_import(
         file,

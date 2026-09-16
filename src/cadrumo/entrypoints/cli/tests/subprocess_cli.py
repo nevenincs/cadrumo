@@ -151,7 +151,19 @@ def subprocess_cli_env(
     inheriting one that happens to fit some other test.
     """
     env = {key: value for key, value in os.environ.items() if not key.startswith(tuple(strip_prefixes))}
-    env.update({"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"})
+    env.update(
+        {
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONUTF8": "1",
+            # The in-process suite declines KDF calibration measurement
+            # session-wide; a child interpreter never sees that override, so a
+            # passphrase create or rotation there sampled the grid with one
+            # supervised worker per warmup and sample. The fixed point it falls
+            # back to is stronger than the measured floor, and the module that
+            # owns calibration proves measurement separately.
+            "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
+        }
+    )
     if extra:
         env.update(extra)
     return env

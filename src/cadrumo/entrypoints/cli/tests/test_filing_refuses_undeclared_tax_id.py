@@ -73,6 +73,7 @@ def _create_profile() -> None:
             "identity.surnames": "Identity",
             "activities.description": "design",
         },
+        log_in=False,
     )
 
 

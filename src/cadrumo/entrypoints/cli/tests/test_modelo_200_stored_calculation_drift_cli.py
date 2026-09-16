@@ -43,6 +43,7 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "tax_residence.ccaa": "madrid",
         },
+        log_in=False,
     )
 
     work = _invoke(

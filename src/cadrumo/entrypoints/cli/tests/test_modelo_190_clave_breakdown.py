@@ -41,6 +41,7 @@ def _create_profile() -> None:
             "identity.surnames": "Operator",
             "activities.description": "design",
         },
+        log_in=False,
     )
 
 

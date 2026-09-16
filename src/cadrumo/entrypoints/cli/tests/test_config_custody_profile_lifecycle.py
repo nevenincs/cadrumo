@@ -55,11 +55,6 @@ def _run_cadrumo(
             "cadrumo_secret_store_dir": storage_root / "fallback-store",
             "cadrumo_secret_passphrase": resolved_passphrase,
             "cadrumo_output_language": "en",
-            # Rotation would otherwise measure the KDF grid with one supervised
-            # worker per warmup and sample; the fixed point it falls back to is
-            # stronger than the measured floor, and no case here is about
-            # calibration.
-            "cadrumo_profile_kdf_measure_calibration": False,
         },
         env_strip_prefixes=("AEAT_", "PYTEST_"),
         extra_env=extra_env,

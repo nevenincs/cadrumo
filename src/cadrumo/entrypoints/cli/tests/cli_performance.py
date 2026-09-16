@@ -28,7 +28,8 @@ import traceback
 import types
 import warnings
 from collections import Counter
-from collections.abc import Callable, Collection, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from math import isfinite
 from pathlib import Path
@@ -51,6 +52,7 @@ __all__ = [
     "calibrate_cli_path",
     "evaluate_latency_budget",
     "measure_resolution_costs",
+    "profile_cli_invocation",
     "profile_cli_path",
     "verify_cli_profiler_instrumentation",
 ]
@@ -418,23 +420,77 @@ def profile_cli_path(
     """
     if timeout <= 0:
         raise ValueError("profiler timeout must be positive")
-    path_tokens = tuple(str(token) for token in command_path)
-    argument_tokens = tuple(str(token) for token in invocation_args)
+    with _observed_root(storage_root) as root:
+        return _profile_with_root(
+            tuple(str(token) for token in command_path),
+            tuple(str(token) for token in invocation_args),
+            root,
+            extra_env=extra_env,
+            stdin_payload=stdin_payload,
+            timeout=timeout,
+        )
+
+
+def profile_cli_invocation(
+    command_path: Sequence[str],
+    *,
+    invocation_args: Sequence[str] = (),
+    storage_root: Path | None = None,
+    extra_env: Mapping[str, str] | None = None,
+    stdin_payload: str | None = None,
+    timeout: float = 120.0,
+) -> CliPerformanceObservation:
+    """Observe only the real invocation of a CLI argument vector.
+
+    The invocation half of :func:`profile_cli_path`, for a caller that never
+    reads the resolution observation: it starts one cold child instead of two.
+    Arguments mean exactly what they mean there.
+    """
+    if timeout <= 0:
+        raise ValueError("profiler timeout must be positive")
+    with (
+        _observed_root(storage_root) as root,
+        tempfile.TemporaryDirectory(prefix="cadrumo-cli-cold-roots-") as directory,
+    ):
+        return _invocation_in_clone(
+            tuple(str(token) for token in command_path),
+            tuple(str(token) for token in invocation_args),
+            root,
+            Path(directory),
+            extra_env=extra_env,
+            stdin_payload=stdin_payload,
+            timeout=timeout,
+        )
+
+
+@contextmanager
+def _observed_root(storage_root: Path | None) -> Iterator[Path]:
+    """Yield the root to observe: the caller's, resolved, or a private temporary one."""
     if storage_root is None:
         with tempfile.TemporaryDirectory(prefix="cadrumo-cli-profile-") as directory:
-            return _profile_with_root(
-                path_tokens,
-                argument_tokens,
-                Path(directory),
-                extra_env=extra_env,
-                stdin_payload=stdin_payload,
-                timeout=timeout,
-            )
+            yield Path(directory)
+        return
     storage_root.mkdir(parents=True, exist_ok=True)
-    return _profile_with_root(
-        path_tokens,
-        argument_tokens,
-        storage_root.resolve(),
+    yield storage_root.resolve()
+
+
+def _invocation_in_clone(
+    command_path: tuple[str, ...],
+    invocation_args: tuple[str, ...],
+    storage_root: Path,
+    cold_parent: Path,
+    *,
+    extra_env: Mapping[str, str] | None,
+    stdin_payload: str | None,
+    timeout: float,
+) -> CliPerformanceObservation:
+    invocation_root = cold_parent / "invocation"
+    _clone_storage_root(storage_root, invocation_root)
+    return _run_child(
+        "invocation",
+        command_path,
+        invocation_args,
+        invocation_root,
         extra_env=extra_env,
         stdin_payload=stdin_payload,
         timeout=timeout,
@@ -453,9 +509,7 @@ def _profile_with_root(
     with tempfile.TemporaryDirectory(prefix="cadrumo-cli-cold-roots-") as directory:
         cold_parent = Path(directory)
         resolution_root = cold_parent / "resolution"
-        invocation_root = cold_parent / "invocation"
         _clone_storage_root(storage_root, resolution_root)
-        _clone_storage_root(storage_root, invocation_root)
         resolution = _run_child(
             "resolution",
             command_path,
@@ -464,11 +518,11 @@ def _profile_with_root(
             extra_env=extra_env,
             timeout=timeout,
         )
-        invocation = _run_child(
-            "invocation",
+        invocation = _invocation_in_clone(
             command_path,
             invocation_args,
-            invocation_root,
+            storage_root,
+            cold_parent,
             extra_env=extra_env,
             stdin_payload=stdin_payload,
             timeout=timeout,

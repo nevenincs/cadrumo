@@ -25,9 +25,21 @@ def _isolated_state(tmp_path: Path) -> Iterator[None]:
 active_profile_isolated_backend = active_profile_isolated_backend_fixture()
 
 
+_LLM_PROFILE_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
+_LLM_PROFILE_SETTINGS = {"cadrumo_output_language": "en"}
+
 llm_profile_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id="00000000-0000-4000-8000-000000000000",
-    settings_overrides={"cadrumo_output_language": "en"},
+    bucket_id=_LLM_PROFILE_BUCKET_ID,
+    settings_overrides=_LLM_PROFILE_SETTINGS,
+)
+
+#: The same profile, opened only for the tests that request it by name, for
+#: suites that mix profile-bound CLI cases with pure contract checks.
+llm_profile_backend_on_request = active_profile_isolated_backend_fixture(
+    bucket_id=_LLM_PROFILE_BUCKET_ID,
+    settings_overrides=_LLM_PROFILE_SETTINGS,
+    autouse=False,
+    name="llm_profile_backend",
 )
 
 
@@ -64,15 +76,25 @@ recorded_fx_isolated_backend_per_module = module_scoped_profile_isolated_backend
 def recorded_fx_seeded_backend(
     *,
     seed: Callable[[], None],
+    autouse: bool = True,
+    name: str = "_isolated_backend",
+    origin_name: str = "_isolated_backend_origin",
 ) -> tuple[Callable[..., Iterator[Path]], Callable[..., Iterator[None]]]:
     """Build the recorded-FX (origin, per-test) pair for a suite with costly seeding.
 
     For suites that DO mutate, where the module-scoped variant above would let
     one test's classify or split reach the next. Each test still gets its own
     storage root; only the seeding is shared, as a copy.
+
+    A suite needing two seeded worlds (the whole corpus and a single account,
+    say) binds this twice and states a distinct ``name``/``origin_name`` pair
+    for each, as the factory's own signature requires.
     """
     return seeded_isolated_backend_fixture(
         seed=seed,
         bucket_id=_RECORDED_FX_BUCKET_ID,
         settings_overrides=_RECORDED_FX_SETTINGS,
+        autouse=autouse,
+        name=name,
+        origin_name=origin_name,
     )

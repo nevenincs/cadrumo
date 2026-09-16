@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -10,11 +11,26 @@ import pytest
 from pydantic import ValidationError
 
 from .._ledger_rule_payloads import ClassificationRulePayload, RuleApplyAppliedPayload, RuleApplyMatchPayload
-from ._isolated_profile_storage_fixtures import llm_profile_isolated_backend
+from ._isolated_profile_storage_fixtures import llm_profile_backend_on_request
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["llm_profile_isolated_backend"]
+__all__ = ["llm_profile_backend_on_request"]
+
+_PROFILE_FREE_TESTS: set[Callable[..., None]] = set()
+
+
+def _profile_free[TestT: Callable[..., None]](test: TestT) -> TestT:
+    """Mark a pure payload-contract test that opens no profile."""
+    _PROFILE_FREE_TESTS.add(test)
+    return test
+
+
+@pytest.fixture(autouse=True)
+def _profile_unless_contract_only(request: pytest.FixtureRequest) -> None:
+    """Open the isolated profile for every CLI case; contract checks read none."""
+    if request.function not in _PROFILE_FREE_TESTS:
+        request.getfixturevalue("llm_profile_backend")
 
 
 def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
@@ -374,12 +390,14 @@ def test_rule_add_invalid_regex_rejected() -> None:
         },
     ),
 )
+@_profile_free
 def test_rule_payload_refuses_noncanonical_rule_contract(payload: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         ClassificationRulePayload.model_validate(payload)
 
 
 @pytest.mark.parametrize("payload_type", (RuleApplyMatchPayload, RuleApplyAppliedPayload))
+@_profile_free
 def test_rule_apply_payload_refuses_malformed_rule_identity(
     payload_type: type[RuleApplyMatchPayload | RuleApplyAppliedPayload],
 ) -> None:

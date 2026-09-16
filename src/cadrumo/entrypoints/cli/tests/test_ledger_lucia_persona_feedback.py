@@ -49,6 +49,7 @@ def _create_active_profile() -> None:
             "identity.surnames": "Example",
             "activities.description": "Test",
         },
+        log_in=False,
     )
 
 

@@ -61,7 +61,7 @@ def _setup_incomplete_rows(output: str) -> list[str]:
 
 def test_overview_calendar_names_an_uncommitted_profile_and_does_not_count_it() -> None:
     """A profile whose setup was never committed is named, and counted nowhere."""
-    create_profile_via_cli("onboarding", complete=False)
+    create_profile_via_cli("onboarding", complete=False, log_in=False)
 
     result = _invoke(_CALENDAR)
 
@@ -80,7 +80,7 @@ def test_overview_calendar_counts_a_committed_profile_and_names_no_incomplete_ro
     Without this case the companion above passes on a surface that emits the
     marker unconditionally, or on one that counts nothing at all.
     """
-    create_profile_via_cli("filer")
+    create_profile_via_cli("filer", log_in=False)
 
     result = _invoke(_CALENDAR)
 

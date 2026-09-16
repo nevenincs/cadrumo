@@ -146,6 +146,7 @@ def _create_profile() -> None:
             "identity.surnames": "Wizard",
             "activities.description": "design",
         },
+        log_in=False,
     )
 
 

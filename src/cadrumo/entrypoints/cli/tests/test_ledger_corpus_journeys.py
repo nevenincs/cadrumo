@@ -11,7 +11,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
+from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
 from ._ledger_corpus_support import (
     _REVISION_CASILLA,
     _active_repo,
@@ -22,16 +22,38 @@ from ._ledger_corpus_support import (
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
-__all__ = ["recorded_fx_isolated_backend"]
+
+def _seed_corpus() -> None:
+    """Import the whole corpus; the row count the helper returns is not seeding state."""
+    _import_corpus()
+
+
+# The import is the starting state here, never the subject: each world is
+# imported once per file and copied per test, so a split, stash or edit still
+# reaches no other test.
+_corpus_origin, corpus_world = recorded_fx_seeded_backend(
+    seed=_seed_corpus,
+    autouse=False,
+    name="corpus_world",
+    origin_name="corpus_world_origin",
+)
+_bbva_origin, bbva_world = recorded_fx_seeded_backend(
+    seed=_import_bbva,
+    autouse=False,
+    name="bbva_world",
+    origin_name="bbva_world_origin",
+)
+
+__all__ = ["_bbva_origin", "_corpus_origin", "bbva_world", "corpus_world"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 # --- Split, merge, archive, stash, remove, and track ------------------------
+@pytest.mark.usefixtures("corpus_world")
 def test_split_then_merge_roundtrip() -> None:
     from decimal import Decimal
 
-    _import_corpus()
     rows = _list_rows()
     parent = next(r for r in rows if "Subcontratacion desarrollo" in r["description"])
     tx = parent["transaction_id"]
@@ -72,8 +94,8 @@ def test_split_then_merge_roundtrip() -> None:
     assert Decimal(child_a["amount"]) + Decimal(child_b["amount"]) == Decimal(parent["amount"])
 
 
+@pytest.mark.usefixtures("corpus_world")
 def test_archive_then_history() -> None:
-    _import_corpus()
     rows = _list_rows()
     personal = next(r for r in rows if "Suscripcion Netflix" in r["description"])
     tx = personal["transaction_id"]
@@ -83,8 +105,8 @@ def test_archive_then_history() -> None:
     assert history.exit_code == 0, history.output
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_split_children_then_merge() -> None:
-    _import_bbva()
     parent = _find(_list_rows(), "Subcontratacion desarrollo freelance Juan")
     amount = abs(float(parent["amount"]))
     half = round(amount / 2, 2)
@@ -171,8 +193,8 @@ def test_split_children_then_merge() -> None:
     )
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_stash_remove_and_track() -> None:
-    _import_bbva()
     rows = _list_rows()
     stash_row = _find(rows, "Material oficina Papeleria Gomez")
     stashed = _invoke(
@@ -213,11 +235,11 @@ def test_stash_remove_and_track() -> None:
 
 
 # --- Modification lifecycle (edit lineage, history, blocking) ----------------------
+@pytest.mark.usefixtures("bbva_world")
 def test_edit_editable_facts_records_edit_lineage_chain() -> None:
     """Editing an id-affecting fact rewrites the row id and the new
     record carries an edit_lineage entry pointing back at the prior id.
     """
-    _import_bbva()
     rows = _list_rows()
     target = _find(rows, "Material oficina Papeleria Gomez")
     old_id = target["transaction_id"]
@@ -237,11 +259,11 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
     assert old_id not in {t.transaction_id for t in catalogue.values()}
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_reclassify_retains_classification_event_chain() -> None:
     """Reclassifying after review keeps the prior classification in the
     auditable bucket-event chain (the operator-facing classification history).
     """
-    _import_bbva()
     rows = _list_rows()
     target = _find(rows, "Material oficina Papeleria Gomez")
     tx = target["transaction_id"]
@@ -270,6 +292,7 @@ def test_reclassify_retains_classification_event_chain() -> None:
     assert txn.category_id == "asesoria_fiscal"
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: PinnedAuthorityOperation) -> None:
     """Once a verified modelo revision cites a ledger row, the CLI
     refuses to edit that row (finalized-modelo blocking guard).
@@ -291,7 +314,6 @@ def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: Pinn
     from ....domain.modelos.codes import ModeloCode
     from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
-    _import_bbva()
     rows = _list_rows()
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
     bucket_id = resolve_active_bucket_id()
@@ -383,12 +405,12 @@ def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: Pinn
 
 
 # --- Drive document-link fetch-and-encrypt-or-refuse -------------------------------
+@pytest.mark.usefixtures("bbva_world")
 def test_evidence_pull_refuses_when_document_bytes_are_unreachable() -> None:
     """A Drive link the app cannot fetch (no connected Google credentials) is
     refused: evidence must carry encrypted document bytes, so the verb never
     falls back to storing the bare link, and the row gains no attachment.
     """
-    _import_bbva()
     rows = _list_rows()
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
     link = "https://drive.google.com/file/d/ABC123ticket/view"
@@ -404,8 +426,8 @@ def test_evidence_pull_refuses_when_document_bytes_are_unreachable() -> None:
     assert not txn.attachment_ids, "a refused evidence pull must not bind any attachment to the row"
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_evidence_pull_refuses_non_link_source(tmp_path: Path) -> None:
-    _import_bbva()
     rows = _list_rows()
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
     # LOCAL_FILE is a valid AttachmentSource but not a document *link* source.
@@ -426,13 +448,13 @@ def test_evidence_pull_refuses_non_link_source(tmp_path: Path) -> None:
 
 
 # --- Split a mixed invoice into business + personal children -----------------------
+@pytest.mark.usefixtures("bbva_world")
 def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     """Split one parent row into a business child (with base/IVA) and a personal
     child, then classify each independently — the mixed-invoice per-child split.
     """
     from decimal import Decimal
 
-    _import_bbva()
     rows = _list_rows()
     parent = _find(rows, "Material oficina Papeleria Gomez")
     parent_id = parent["transaction_id"]

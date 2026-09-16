@@ -395,6 +395,9 @@ class EvidenceConfirmResult(OutputSchema):
     # one is ``None`` on a euro invoice, and the eur trio is ``None`` on a
     # foreign invoice no rate could be resolved for -- so the operator sees the
     # unconverted state at confirm, which is where they can still act on it.
+    retention_rate: str | None = None
+    retention_amount: str | None = None
+    recargo_amount: str | None = None
     fx_rate: str | None = None
     fx_rate_date: str | None = None
     fx_rate_source: str | None = None

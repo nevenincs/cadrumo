@@ -118,6 +118,7 @@ def _create_profile(*, activity_start_date: str = "2026-01-01") -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
 

@@ -42,6 +42,7 @@ _DEFAULT_CONSTRAINT: Final[tuple[object, ...]] = (
 )
 _MINIMUM_ONE_CONSTRAINT: Final[tuple[object, ...]] = (1, *_DEFAULT_CONSTRAINT[1:])
 _MINIMUM_ZERO_CONSTRAINT: Final[tuple[object, ...]] = (0, *_DEFAULT_CONSTRAINT[1:])
+_EXISTING_PATH_CONSTRAINT: Final[tuple[object, ...]] = (*_DEFAULT_CONSTRAINT[:4], True, *_DEFAULT_CONSTRAINT[5:])
 _NO_TRANSPORT: Final[tuple[str, ...]] = ("none", "not_applicable", "not_applicable")
 _REMOTE_HANDLE_TRANSPORT: Final[tuple[str, ...]] = ("remote_handle", "not_applicable", "not_applicable")
 _LOCAL_IN_FILE_PRIMARY_TRANSPORT: Final[tuple[str, ...]] = ("local_in", "file", "primary")
@@ -396,6 +397,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
                 "cli.ledger.import.file_help",
                 annotation="pathlib:Path",
                 default=_REQUIRED_DEFAULT,
+                constraint=_EXISTING_PATH_CONSTRAINT,
                 transport=_LOCAL_IN_FILE_PRIMARY_TRANSPORT,
             ),
             _expected_option(

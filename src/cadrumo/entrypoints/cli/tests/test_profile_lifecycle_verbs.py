@@ -136,6 +136,7 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
     register_cli_profile(
+        log_in=False,
         label="alpha",
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -152,6 +153,7 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
         },
     )
     register_cli_profile(
+        log_in=False,
         label="beta",
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -203,8 +205,8 @@ def test_config_login_activates_existing_profile() -> None:
     # provisions a raw session key rather than a passphrase-backed custody
     # envelope, so there is no operator passphrase for ``config login`` to
     # accept and the verb can only ever refuse.
-    register_cli_profile(label="operator")
-    register_cli_profile(label="spouse")
+    register_cli_profile(log_in=False, label="operator")
+    register_cli_profile(log_in=False, label="spouse")
     result = _login("operator")
     assert result.exit_code == 0, result.output
     assert "active_profile\toperator" in result.output
@@ -296,7 +298,7 @@ def test_config_login_emits_profile_activated_event() -> None:
     # Registered through the real credential door: ``seed`` provisions a raw
     # session key, not a passphrase-backed custody envelope, so ``config login``
     # has no operator passphrase to accept.
-    register_cli_profile(label="operator")
+    register_cli_profile(log_in=False, label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
     result = _login("operator")
@@ -319,7 +321,7 @@ def test_config_login_emits_profile_activated_event() -> None:
 def test_config_profile_view_emits_active_profile_facts() -> None:
     # Registered and logged in rather than seeded: `seed` opens a session that
     # closes with its context, so the verb runs with no active profile.
-    register_cli_profile(label="operator", facts={"identity.tax_id": "00000000T"})
+    register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000000T"})
     assert _login("operator").exit_code == 0
     result = _invoke_profile(("view",))
     assert result.exit_code == 0, result.output
@@ -335,7 +337,7 @@ def test_config_profile_view_emits_active_profile_facts() -> None:
 def test_config_profile_view_named_profile_includes_canonical_facts() -> None:
     # Registered and logged in: `seed` opens a session that closes with its
     # context, leaving the verb with no active profile.
-    register_cli_profile(label="operator", facts={"identity.tax_id": "00000001R"})
+    register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000001R"})
     assert _login("operator").exit_code == 0
     seed("spouse", tax_id="00000000T")
     result = _invoke_profile(("view", "spouse"))
@@ -360,7 +362,7 @@ def test_config_profile_delete_requires_yes() -> None:
 def test_config_profile_delete_tombstones_with_yes() -> None:
     # Registered but deliberately NOT activated: deleting the ACTIVE profile is
     # refused, so a login here would block the verb under test.
-    register_cli_profile(label="operator")
+    register_cli_profile(log_in=False, label="operator")
     result = _invoke_profile_app(("delete", "operator", "--yes"))
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
@@ -378,7 +380,7 @@ def test_config_profile_list_excludes_a_tombstoned_profile() -> None:
 
     # Registered but deliberately NOT activated: deleting the ACTIVE profile is
     # refused, so a login here would block the verb under test.
-    register_cli_profile(label="operator")
+    register_cli_profile(log_in=False, label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _invoke_profile(("list",))
     assert result.exit_code == 0, result.output
@@ -398,7 +400,7 @@ def test_config_login_refuses_a_tombstoned_profile() -> None:
     # Registered through the real credential door: ``seed`` provisions a raw
     # session key, not a passphrase-backed custody envelope, so ``config login``
     # has no operator passphrase to accept.
-    register_cli_profile(label="operator")
+    register_cli_profile(log_in=False, label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _login("operator")
     assert result.exit_code != 0, result.output
@@ -415,7 +417,7 @@ def test_config_profile_view_reports_a_tombstoned_profile_as_tombstoned() -> Non
 
     # Registered but deliberately NOT activated: deleting the ACTIVE profile is
     # refused, so a login here would block the verb under test.
-    register_cli_profile(label="operator")
+    register_cli_profile(log_in=False, label="operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _invoke_profile(("view", "operator"))
     assert result.exit_code == 0, result.output
@@ -431,7 +433,7 @@ def test_config_profile_view_inspects_a_tombstoned_profile_by_label_and_uuid() -
 
     # Registered but deliberately NOT activated: deleting the ACTIVE profile is
     # refused, so a login here would block the verb under test.
-    register_cli_profile(label="operator")
+    register_cli_profile(log_in=False, label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
     tombstoned_uuid = pointer.bucket_id
@@ -449,7 +451,7 @@ def test_config_profile_view_inspects_a_tombstoned_profile_by_label_and_uuid() -
 def test_config_profile_view_runs_validation_inline() -> None:
     # Registered and logged in: `seed` opens a session that closes with its
     # context, leaving the verb with no active profile.
-    register_cli_profile(label="operator")
+    register_cli_profile(log_in=False, label="operator")
     assert _login("operator").exit_code == 0
     result = _invoke_profile(("view",))
     assert result.exit_code == 0, result.output
@@ -476,6 +478,7 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile() -> None:
     it is reachable without the retired scripted-creation path.
     """
     register_cli_profile(
+        log_in=False,
         label="maria",
         facts={
             "identity.tax_id": "12345678Z",

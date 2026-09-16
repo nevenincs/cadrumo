@@ -64,12 +64,14 @@ def _create_profile(*, activity_start_date: str | None = None) -> None:
     Creation is a precondition here, not the subject: these tests exercise the
     modelo work UX against a profile that already exists.
     """
-    register_cli_profile(label=_PROFILE_LABEL, facts=operator_profile_facts(activity_start_date=activity_start_date))
+    register_cli_profile(
+        label=_PROFILE_LABEL, facts=operator_profile_facts(activity_start_date=activity_start_date), log_in=False
+    )
 
 
 def _create_gb_non_resident_profile() -> None:
     """Register the profile through the shared CLI registration door."""
-    register_cli_profile(label="operator", facts=GB_NON_RESIDENT_PROFILE_FACTS)
+    register_cli_profile(label="operator", facts=GB_NON_RESIDENT_PROFILE_FACTS, log_in=False)
 
 
 def _create_de_nonresident_legal_entity_profile() -> None:
@@ -92,6 +94,7 @@ def _create_de_nonresident_legal_entity_profile() -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        log_in=False,
     )
 
 
@@ -106,6 +109,7 @@ def _create_attribution_entity_intracom_profile() -> None:
             "activities.description": "intracommunity operations",
             "iva.does_intracomunitario": "true",
         },
+        log_in=False,
     )
 
 

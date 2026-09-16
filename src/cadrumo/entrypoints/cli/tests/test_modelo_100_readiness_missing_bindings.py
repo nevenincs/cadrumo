@@ -37,6 +37,7 @@ def _create_natural_person_profile() -> None:
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
         },
+        log_in=False,
     )
 
 

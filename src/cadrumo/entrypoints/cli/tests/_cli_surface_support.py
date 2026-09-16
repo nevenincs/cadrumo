@@ -31,10 +31,14 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def create_cli_surface_profile(label: str = "operator") -> None:
-    """Register the surface profile through the shared CLI registration door."""
+def create_cli_surface_profile(label: str = "operator", *, log_in: bool = True) -> None:
+    """Register the surface profile through the shared CLI registration door.
+
+    ``log_in`` is forwarded to ``register_cli_profile``.
+    """
     register_cli_profile(
         label=label,
+        log_in=log_in,
         facts={
             "identity.tax_id": "12345678Z",
             "taxpayer_type.entity_type": "natural_person",

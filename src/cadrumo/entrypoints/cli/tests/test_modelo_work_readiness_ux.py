@@ -67,6 +67,7 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
             "identity.name": "Operator",
             "identity.surnames": "Readiness",
         },
+        log_in=False,
     )
 
     status = _invoke(["--format", "json", "config", "profile", "status"])
@@ -101,7 +102,7 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
 
 def test_incomplete_setup_readiness_matches_work_create_and_names_completion_door() -> None:
     """Fact-complete is not operator-declared complete on either surface."""
-    register_cli_profile(label="issue-113-incomplete", complete=False)
+    register_cli_profile(label="issue-113-incomplete", complete=False, log_in=False)
 
     readiness = _invoke(
         [
@@ -249,6 +250,7 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
             "taxpayer_type.country_of_fiscal_residence": "FR",
             "censo.activity_start_date": "2026-07-15",
         },
+        log_in=False,
     )
 
     result = _invoke(

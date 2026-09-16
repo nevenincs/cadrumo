@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
+from ._isolated_profile_storage_fixtures import recorded_fx_seeded_backend
 from ._ledger_corpus_support import (
     _find,
     _import_bbva,
@@ -15,19 +15,42 @@ from ._ledger_corpus_support import (
 )
 from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
-__all__ = ["recorded_fx_isolated_backend"]
+
+# Every test here starts from an imported ledger, and the import is not what
+# any of them asserts. Each world is imported once per file and handed to each
+# test as its own copy, so the two tests that relabel rows still mutate nothing
+# another test can see.
+def _seed_corpus() -> None:
+    """Import the whole corpus; the row count the helper returns is not seeding state."""
+    _import_corpus()
+
+
+_corpus_origin, corpus_world = recorded_fx_seeded_backend(
+    seed=_seed_corpus,
+    autouse=False,
+    name="corpus_world",
+    origin_name="corpus_world_origin",
+)
+_bbva_origin, bbva_world = recorded_fx_seeded_backend(
+    seed=_import_bbva,
+    autouse=False,
+    name="bbva_world",
+    origin_name="bbva_world_origin",
+)
+
+__all__ = ["_bbva_origin", "_corpus_origin", "bbva_world", "corpus_world"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+@pytest.mark.usefixtures("corpus_world")
 def test_review_renders_corpus() -> None:
-    _import_corpus()
     result = _invoke(["app", "ledger", "review"])
     assert result.exit_code == 0, result.output
 
 
+@pytest.mark.usefixtures("corpus_world")
 def test_operator_can_filter_income_vs_expense() -> None:
-    _import_corpus()
     rows = _list_rows()
     incoming = [row for row in rows if row.get("direction") == "INCOMING"]
     outgoing = [row for row in rows if row.get("direction") == "OUTGOING"]
@@ -41,30 +64,30 @@ def test_operator_can_filter_income_vs_expense() -> None:
     assert transfer_candidates, "corpus must carry transfer candidates to reclassify"
 
 
+@pytest.mark.usefixtures("corpus_world")
 def test_status_reports_active_ledger() -> None:
-    _import_corpus()
     result = _invoke(["app", "ledger", "status"])
     assert result.exit_code == 0, result.output
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_review_filter_by_period_and_status() -> None:
-    _import_bbva()
     by_period = _invoke(["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
     assert by_period.exit_code == 0, by_period.output
     by_status = _invoke(["app", "ledger", "review", "--filter", "status=pending"])
     assert by_status.exit_code == 0, by_status.output
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_preflight_and_check_surface_missing_facts() -> None:
-    _import_bbva()
     preflight = _invoke(["app", "ledger", "preflight", "--period", "1T", "--year", "2025"])
     assert preflight.exit_code == 0, preflight.output
     check = _invoke(["app", "ledger", "check"])
     assert check.exit_code == 0, check.output
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_list_paging_is_honest_and_never_silently_caps() -> None:
-    _import_bbva()
     full = _list_payload()
     total = full["total"]
     assert total > 20, "fixture should carry enough rows to page"
@@ -97,8 +120,8 @@ def test_list_paging_is_honest_and_never_silently_caps() -> None:
     assert tail["shown"] == total - last_off
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_list_truncation_footer_states_the_full_total() -> None:
-    _import_bbva()
     total = _list_payload()["total"]
     listed = _invoke(["app", "ledger", "list", "--limit", "5"])
     assert listed.exit_code == 0, listed.output
@@ -106,8 +129,8 @@ def test_list_truncation_footer_states_the_full_total() -> None:
     assert "1-5" in listed.output
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_group_label_assign_filter_and_grouped_display() -> None:
-    _import_bbva()
     rows = _list_rows()
     a = _find(rows, "Material oficina Papeleria Gomez")
     b = _find(rows, "Comida de trabajo Restaurante El Olivo")
@@ -128,8 +151,8 @@ def test_group_label_assign_filter_and_grouped_display() -> None:
     assert "# Proyecto Acme" in grouped.output
 
 
+@pytest.mark.usefixtures("bbva_world")
 def test_unrelated_update_preserves_group_label() -> None:
-    _import_bbva()
     rows = _list_rows()
     row = _find(rows, "Material oficina Papeleria Gomez")
     _set_group(row["transaction_id"], "Q1 viajes")

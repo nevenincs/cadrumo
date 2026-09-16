@@ -16,8 +16,11 @@ from types import GenericAlias
 from typing import Any, cast, override
 
 import typer
-from click import Choice, Context, Parameter, ParamType
+from click import Choice
 from pydantic import TypeAdapter, ValidationError
+from typer._click.core import Context as TyContext
+from typer._click.core import Parameter as TyParameter
+from typer._click.types import ParamType as TyParamType
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
@@ -39,8 +42,13 @@ class CommandSpecTyperGroup(CadrumoTyperGroup):
     """Runtime group whose lazy table is namespaced to CommandSpec authority."""
 
 
-class _PydanticStringParamType(ParamType[str]):
-    """Convert an opaque string annotation through its declared Pydantic schema."""
+class _PydanticStringParamType(TyParamType):
+    """Convert an opaque string annotation through its declared Pydantic schema.
+
+    Subclasses Typer's vendored Click type: Typer wraps any other object in a
+    function adapter, which loses this type's name in help and raises the
+    wrong ``BadParameter`` class on a refused value.
+    """
 
     name = "registry value"
 
@@ -49,7 +57,7 @@ class _PydanticStringParamType(ParamType[str]):
         self.name = annotation.__name__
 
     @override
-    def convert(self, value: Any, param: Parameter | None, ctx: Context | None) -> str:
+    def convert(self, value: Any, param: TyParameter | None, ctx: TyContext | None) -> str:
         from ...domain.calculations.registry.authority import bundled_indexed_authority
 
         # Registry-declared string types validate against governed facts, and

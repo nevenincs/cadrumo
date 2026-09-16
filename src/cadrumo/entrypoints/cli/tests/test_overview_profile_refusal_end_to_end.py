@@ -14,7 +14,8 @@ on.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -41,22 +42,42 @@ _REFUSING_INVOCATIONS = (
     pytest.param(["app", "overview", "backlog"], id="backlog"),
 )
 
+#: The ids above, as the parameter every refusal assertion selects its capture by.
+_REFUSING_VERBS = tuple(str(parameters.id) for parameters in _REFUSING_INVOCATIONS)
+
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-@pytest.fixture
-def backend_missing_a_gating_fact(tmp_path: Path) -> Iterator[None]:
-    """Deliberately NOT autouse.
+@dataclass(frozen=True, slots=True)
+class _RefusedInvocation:
+    """One refusal, captured as the operator saw it."""
 
-    The control test at the bottom of this module needs a backend with the
-    fact ANSWERED, and the active-profile pointer transaction refuses to nest
-    across storage roots, so a test cannot opt out of an autouse backend by
-    opening its own.
+    text: Result
+    json: Result
+
+
+@pytest.fixture(scope="module")
+def refusals_with_the_fact_unanswered(tmp_path_factory: pytest.TempPathFactory) -> dict[str, _RefusedInvocation]:
+    """Every refusing invocation, run once over one backend that omits the fact.
+
+    Each assertion below reads a refusal; none of them changes the world that
+    produced it, so one backend and one invocation per verb serve all of them.
+    The backend is CLOSED before the captured refusals are handed out: the
+    control test at the bottom opens its own storage root, and the
+    active-profile pointer transaction refuses to nest across roots.
     """
-    with calendar_backend_omitting_gating_facts(tmp_path, _OMITTED_FACT_PATH):
-        yield
+    captured: dict[str, _RefusedInvocation] = {}
+    with calendar_backend_omitting_gating_facts(tmp_path_factory.mktemp("refusals"), _OMITTED_FACT_PATH):
+        for parameters in _REFUSING_INVOCATIONS:
+            args = parameters.values[0]
+            assert isinstance(args, list)
+            captured[str(parameters.id)] = _RefusedInvocation(
+                text=_invoke(args),
+                json=_invoke(["--format", "json", *args]),
+            )
+    return captured
 
 
 def _expected_label() -> str:
@@ -73,10 +94,10 @@ def test_the_omitted_field_has_a_label_distinct_from_its_selector_token() -> Non
     assert _expected_label() != _OMITTED_SELECTOR
 
 
-@pytest.mark.parametrize("args", _REFUSING_INVOCATIONS)
+@pytest.mark.parametrize("verb", _REFUSING_VERBS)
 def test_the_verb_refuses_because_the_profile_fact_is_unanswered(
-    args: list[str],
-    backend_missing_a_gating_fact: None,
+    verb: str,
+    refusals_with_the_fact_unanswered: dict[str, _RefusedInvocation],
 ) -> None:
     """The positive control for the label assertions below.
 
@@ -93,7 +114,7 @@ def test_the_verb_refuses_because_the_profile_fact_is_unanswered(
     # both of those are shared with a Click parameter error on the same verb,
     # measured against the live CLI, so neither can establish that omitting the
     # fact is what refused. A parameter error names no condition at all.
-    result = _invoke(["--format", "json", *args])
+    result = refusals_with_the_fact_unanswered[verb].json
 
     assert result.exit_code != 0, result.output
     envelope = json.loads(result.output)
@@ -102,21 +123,21 @@ def test_the_verb_refuses_because_the_profile_fact_is_unanswered(
     assert action["failed_condition_id"] == "cli.overview.profile.complete", result.output
 
 
-@pytest.mark.parametrize("args", _REFUSING_INVOCATIONS)
+@pytest.mark.parametrize("verb", _REFUSING_VERBS)
 def test_the_refusal_names_the_unanswered_field_by_its_operator_label(
-    args: list[str],
-    backend_missing_a_gating_fact: None,
+    verb: str,
+    refusals_with_the_fact_unanswered: dict[str, _RefusedInvocation],
 ) -> None:
-    result = _invoke(list(args))
+    result = refusals_with_the_fact_unanswered[verb].text
 
     assert result.exit_code != 0, result.output
     assert _expected_label() in result.output, result.output
 
 
-@pytest.mark.parametrize("args", _REFUSING_INVOCATIONS)
+@pytest.mark.parametrize("verb", _REFUSING_VERBS)
 def test_the_refusal_never_shows_the_bare_selector_token(
-    args: list[str],
-    backend_missing_a_gating_fact: None,
+    verb: str,
+    refusals_with_the_fact_unanswered: dict[str, _RefusedInvocation],
 ) -> None:
     """The token may appear only inside the enriched text, never on its own.
 
@@ -124,20 +145,20 @@ def test_the_refusal_never_shows_the_bare_selector_token(
     label that happens to embed the token does not mask a second, raw
     occurrence elsewhere in the refusal.
     """
-    result = _invoke(list(args))
+    result = refusals_with_the_fact_unanswered[verb].text
 
     assert result.exit_code != 0, result.output
     residue = result.output.replace(_expected_label(), "")
     assert _OMITTED_SELECTOR not in residue, result.output
 
 
-@pytest.mark.parametrize("args", _REFUSING_INVOCATIONS)
+@pytest.mark.parametrize("verb", _REFUSING_VERBS)
 def test_the_refusal_is_not_rendered_as_invalid_operator_input(
-    args: list[str],
-    backend_missing_a_gating_fact: None,
+    verb: str,
+    refusals_with_the_fact_unanswered: dict[str, _RefusedInvocation],
 ) -> None:
     """An unanswered profile fact is workflow state, not a bad command line."""
-    result = _invoke(list(args))
+    result = refusals_with_the_fact_unanswered[verb].text
 
     assert result.exit_code != 0, result.output
     assert "Invalid value" not in result.output, result.output

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, TypedDict, cast
 
 import typer
@@ -146,6 +147,10 @@ def evidence_add(
     notes: str = "",
 ) -> None:
     """Register a purchase invoice evidence record and return its id."""
+    # The same boundary refusal the import verbs raise for a missing --file; the
+    # argument stays a string so the record echoes the path exactly as typed.
+    if not Path(source_path).expanduser().is_file():
+        raise bad(tr("cli.help.path_not_found", path=source_path))
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
     result = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).add(
         bucket_id=transaction_repository.bucket_id,

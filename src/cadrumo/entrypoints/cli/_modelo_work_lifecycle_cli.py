@@ -10,6 +10,7 @@ from ...application.modelo.action_errors import (
     WorkUnitNotFoundError,
 )
 from ...application.modelo.profile_readiness_gate import (
+    load_modelo_work_profile,
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
 )
@@ -246,6 +247,8 @@ def work_create(
     resolved_actor = actor or resolve_default_actor()
     lifecycle_ports = work_lifecycle_ports_factory(ctx)(bucket_id=resolved_bucket)
     profile_decode_context = operation.profile_decode_context()
+    # One decrypted record serves every readiness gate this command runs.
+    profile = load_modelo_work_profile(bucket_id=resolved_bucket, profile_decode_context=profile_decode_context)
     require_existing_profile_baseline_ready_for_modelo_work(
         bucket_id=resolved_bucket,
         modelo=modelo,
@@ -254,6 +257,7 @@ def work_create(
         enforce_applicability=not allow_not_applicable,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        profile=profile,
     )
     resolved_revision_id = law_selected_revision_for_work_target(
         modelo=modelo,
@@ -271,6 +275,7 @@ def work_create(
         enforce_applicability=not allow_not_applicable,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        profile=profile,
     )
     try:
         ensure_result = ensure_modelo_work_unit_for_active_target(
@@ -285,6 +290,7 @@ def work_create(
             enforce_applicability=not allow_not_applicable,
             catalogue=lifecycle_ports.work_unit_repository.load(),
             ports=lifecycle_ports,
+            profile=profile,
         )
     except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
         raise typer.BadParameter(str(exc)) from exc
