@@ -1619,11 +1619,10 @@ def casillas_a_recapture_would_change(
     on every extraction improvement.
 
     NOT substitutable with the tree's other per-casilla comparators, and the
-    intersection rule above is why. ``detect_casilla_divergences`` and
-    ``compare_calculation_to_filed_observation`` both REPORT absence, as
-    missing-on-one-side rows, and the revision-vs-revision delta in
+    intersection rule above is why. ``detect_casilla_divergences`` REPORTS
+    absence, as missing-on-one-side rows, and the revision-vs-revision delta in
     ``application/modelo/projection.py`` treats an absent casilla as zero.
-    All three of those contracts would fire this advisory on an extraction
+    Both of those contracts would fire this advisory on an extraction
     improvement, which is the one thing it must never do. The absence contract
     is the discriminator, not the tolerance.
 
