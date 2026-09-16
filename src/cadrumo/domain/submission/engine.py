@@ -29,8 +29,6 @@ from datetime import date
 
 from ...core.config import Settings
 from ...core.logging import get_logger
-from .errors import SubmissionError
-from .models import ModeloPresentado, SubmissionStatus
 from .preflight import Preflight
 from .protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike, SubmissionRepositoryProtocol
 
@@ -106,60 +104,3 @@ class SubmissionEngine:
             skip_deadline_window=skip_deadline_window,
             skip_auth_readiness=skip_auth_readiness,
         )
-
-    def load_submission(self, submission_id: str) -> ModeloPresentado:
-        """Load a historical :class:`ModeloPresentado` by id.
-
-        Args:
-            submission_id: Stable submission identifier.
-
-        Returns:
-            The persisted :class:`ModeloPresentado` record.
-
-        Raises:
-            SubmissionError: If ``submission_id`` is malformed or no
-                secure object exists for the supplied id.
-        """
-        try:
-            filing = self._repository.load(submission_id)
-        except ValueError as exc:
-            raise SubmissionError(str(exc)) from exc
-        if filing is None:
-            _logger.debug("submission not found for id %s", submission_id)
-            raise SubmissionError(f"no persisted submission with id {submission_id!r}")
-        _logger.debug("loaded submission id=%s modelo=%s status=%s", submission_id, filing.modelo, filing.status)
-        return filing
-
-    def list_submissions(
-        self,
-        *,
-        modelo: str | None = None,
-        status: SubmissionStatus | None = None,
-    ) -> tuple[ModeloPresentado, ...]:
-        """Return historical persisted records, optionally filtered.
-
-        Args:
-            modelo: Optional AEAT modelo identifier to filter by
-                (``filing.modelo == modelo``).
-            status: Optional :class:`SubmissionStatus` to filter by.
-
-        Returns:
-            A chronologically reverse-sorted tuple of
-            :class:`ModeloPresentado` records. Returns an empty tuple
-            when no submission objects exist.
-        """
-        results: list[ModeloPresentado] = []
-        for filing in self._repository.iter_submissions():
-            if modelo is not None and filing.modelo != modelo:
-                continue
-            if status is not None and filing.status != status:
-                continue
-            results.append(filing)
-        results.sort(key=lambda f: f.submitted_at, reverse=True)
-        _logger.debug(
-            "list_submissions: returned %d records (modelo=%s status=%s)",
-            len(results),
-            modelo,
-            status,
-        )
-        return tuple(results)

@@ -729,38 +729,6 @@ class ProrrataRegister(BaseModel):
         entry = self.entry_for(ejercicio, sector_id=sector_id)
         return resolve_provisional_percentage(() if entry is None else (entry,))
 
-    def collect_last_three_active_years(
-        self,
-        *,
-        before_ejercicio: int,
-        sector_id: str | None = None,
-    ) -> ThreeActiveYearsAggregate:
-        """Aggregate the volume inputs of the last three ACTIVE años naturales (LIVA art. 105.Cinco).
-
-        Walks the register backward from ``before_ejercicio`` for the given
-        ``sector_id``, SKIPPING interrupted (sin operaciones) years and any year
-        that has not settled (no definitive volumes), and sums the con-derecho and
-        sin-derecho volume inputs of the last three active años naturales. An
-        "active" year is a settled, non-interrupted entry; the walk is over
-        *active* years, not calendar years, so the interruption gap is skipped.
-
-        Returns a :class:`ThreeActiveYearsAggregate` whose ``sufficient`` is
-        ``True`` only when three active years contributed; the application seed
-        turns an insufficient aggregate into a visible advisory rather than
-        assuming a percentage.
-        """
-        active = _last_three_active_entries(
-            self.entries,
-            before_ejercicio=before_ejercicio,
-            sector_id=sector_id,
-        )
-        summed_con, summed_sin = _sum_active_year_volumes(active)
-        return ThreeActiveYearsAggregate(
-            contributing_ejercicios=tuple(entry.ejercicio for entry in active),
-            summed_volume_con_derecho=summed_con,
-            summed_volume_sin_derecho=summed_sin,
-        )
-
 
 def _especial_transition_evidence(
     entries: tuple[ProrrataRegisterEntry, ...],
