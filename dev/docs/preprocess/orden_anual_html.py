@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import TypeAdapter
 
-from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.text_fold import ascii_slug
 
 if TYPE_CHECKING:
@@ -62,7 +61,7 @@ DIFFICULT_JUSTIFICATION_RE = re.compile(
 _SPACE_RE = re.compile(r"\s+")
 
 
-class OrdenAnualHtmlParseError(CoreValidationError):
+class OrdenAnualHtmlParseError(Exception):
     """Raised when an annual IVA authority source is structurally malformed."""
 
 

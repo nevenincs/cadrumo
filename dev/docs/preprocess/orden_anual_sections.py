@@ -7,7 +7,7 @@ from re import Match
 
 from bs4 import BeautifulSoup, Tag
 
-from cadrumo.core.orden_anual_html import (
+from dev.docs.preprocess.orden_anual_html import (
     AGRICULTURAL_ACTIVITY_RE,
     AGRICULTURAL_INDEX_RE,
     DIFFICULT_JUSTIFICATION_RE,
