@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....entrypoints.cli.command_specs import COMMAND_SPECS
+from ....entrypoints.cli.command_specs import COMMAND_GRAPH
 from ....tests.cli_envelope import parse_json_object
 from .cli_runner import invoke_cached_cli
 
@@ -36,7 +36,7 @@ def _envelope(*arguments: str) -> dict[str, object]:
 
 def _command_is_live(dotted: str) -> bool:
     """Return whether ``dotted`` names a command the registry actually declares."""
-    return dotted.replace(".", "_") in {specification.key for specification in COMMAND_SPECS}
+    return dotted.replace(".", "_") in {specification.key for specification in COMMAND_GRAPH.specs}
 
 
 def test_an_unknown_option_names_the_command_it_was_given_to() -> None:

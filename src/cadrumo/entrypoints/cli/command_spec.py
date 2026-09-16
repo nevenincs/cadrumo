@@ -666,9 +666,7 @@ class CommandSpecGraph:
 
     def _load_mount(self, key: str) -> None:
         pending = [
-            index
-            for index, family in enumerate(self.families)
-            if family.mount_key == key and index not in self._loaded
+            index for index, family in enumerate(self.families) if family.mount_key == key and index not in self._loaded
         ]
         if not pending:
             return

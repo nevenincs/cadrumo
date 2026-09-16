@@ -31,7 +31,7 @@ import pytest
 
 from ....core.json_contract import SchemaEnvelope
 from ..command_spec import SchemaState
-from ..command_specs import COMMAND_SPECS
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -64,7 +64,7 @@ def _schema_targets() -> list[tuple[str, object]]:
     contract from having one that misbehaves.
     """
     resolved: list[tuple[str, object]] = []
-    for spec in COMMAND_SPECS:
+    for spec in COMMAND_GRAPH.specs:
         schema = getattr(spec, "result_schema", None)
         if schema is None or schema.state is not SchemaState.TARGET or schema.target is None:
             continue
