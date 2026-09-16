@@ -76,7 +76,7 @@ class ProvisioningPreconditionCondition(StrEnum):
     RUNTIME_INSTALL_CONSENTED = "provisioning.runtime.install_consented"
     RUNTIME_INSTALL_SUCCEEDED = "provisioning.runtime.install_succeeded"
     ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
-    VISION_MODEL_INSTALLED = "provisioning.vision_model.installed"
+    ROLE_MODEL_FIT_FOR_ROLE = "provisioning.role_model.fit_for_role"
     HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met"
     SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available"
     SELECTED_MODEL_FITS = "provisioning.selected_model.fits"
