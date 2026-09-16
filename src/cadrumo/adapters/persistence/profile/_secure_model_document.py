@@ -22,7 +22,7 @@ by side and the rule for which one a given namespace belongs to.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -132,11 +132,6 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         if record is None:
             return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
         return self._decode_record(record.payload), record.revision_id
-
-    def _validate_payloads(self, payloads: Mapping[str, bytes]) -> None:
-        """Validate all upgraded singleton bytes before the migration batch writes."""
-        for payload in payloads.values():
-            self._model_type.model_validate_json(payload)
 
     def to_secure_object_write(
         self,

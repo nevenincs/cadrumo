@@ -45,8 +45,6 @@ from ._secure_object_row_codec import (
     secure_object_record_from_row,
 )
 from ._secure_object_schema import (
-    coerce_raw_bytes,
-    ensure_quarantine_table,
     parse_revision_ancestor_ids,
 )
 from ._secure_object_writes import OBJECT_KEY_SELECT_CHUNK, RowcountResult, SecureObjectWriteOperations
@@ -109,16 +107,10 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             )
         local_table.create(self._engine, checkfirst=True)
 
-    _coerce_raw_bytes = staticmethod(coerce_raw_bytes)
-
     @staticmethod
     def object_key_digest(object_key: str | bytes) -> bytes:
         """Derive the stored lookup digest for one natural object key."""
         return secure_object_key_digest(object_key)
-
-    def _ensure_quarantine_table(self) -> None:
-        """Create the quarantine archive table with the secure-object metadata shape."""
-        ensure_quarantine_table(self._engine)
 
     @property
     def namespace_registry(self) -> StorageHierarchyRegistry | None:

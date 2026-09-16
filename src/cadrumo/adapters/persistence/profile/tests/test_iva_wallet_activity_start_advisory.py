@@ -24,11 +24,43 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
 )
-from cadrumo.application.modelo.iva_wallet_gate import lazily_reconcile_local_iva_compensation_for_work_unit
+from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
+from cadrumo.application.user_profile.projections import profile_path_values_for_bucket
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationDecisionReason,
+    IvaCompensationReconciliationDecision,
+)
+from cadrumo.domain.modelos.work_unit import WorkUnit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _resolve_without_caller_inputs(
+    work_unit: WorkUnit,
+    *,
+    snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
+    repository: IvaWalletDecisionRepository,
+    observation_repository: CalculationObservationRepository,
+) -> IvaCompensationReconciliationDecision | None:
+    """Drive the calculation gate with no supplied, persisted or caller-bound compensation."""
+    decision = resolve_iva_compensation_decision_for_calculation(
+        work_unit,
+        snapshot=snapshot,
+        operation=operation,
+        supplied_decision=None,
+        repository=repository,
+        observation_repository=observation_repository,
+        binding_values=None,
+        backend_binding_values=None,
+        casilla_inputs=None,
+        backend_casilla_inputs=None,
+        profile_values=profile_path_values_for_bucket(work_unit.bucket_id),
+    )
+    assert decision is None or isinstance(decision, IvaCompensationReconciliationDecision)
+    return decision
 
 
 def _first_period_work_unit(*, operation: PinnedAuthorityOperation):
@@ -50,7 +82,7 @@ def test_declared_activity_start_persists_an_uncontrasted_first_period_zero(
 
         snapshot, work_unit = _first_period_work_unit(operation=operation)
 
-        decision = lazily_reconcile_local_iva_compensation_for_work_unit(
+        decision = _resolve_without_caller_inputs(
             work_unit,
             snapshot=snapshot,
             operation=operation,
@@ -93,7 +125,7 @@ def test_missing_activity_start_still_blocks_the_first_period_zero(
 
         snapshot, work_unit = _first_period_work_unit(operation=operation)
 
-        decision = lazily_reconcile_local_iva_compensation_for_work_unit(
+        decision = _resolve_without_caller_inputs(
             work_unit,
             snapshot=snapshot,
             operation=operation,

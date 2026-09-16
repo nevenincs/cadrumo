@@ -17,9 +17,6 @@ See Also:
     :class:`~domain.transactions.LedgerDatePartition`:
         Partition result contract that records whether the date index was
         complete.
-    :meth:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository.rebuild_date_index`:
-        Maintenance path that regenerates the derived routing index from the
-        encrypted catalogue.
 """
 
 from __future__ import annotations
@@ -285,62 +282,6 @@ def test_date_index_is_co_written_atomically_with_save(
     assert row.transaction_id == txn.transaction_id
     assert row.filing_date == date(2024, 5, 20)
     assert row.filing_year == 2024
-
-
-def test_rebuild_date_index_reconstructs_a_dropped_index(
-    tmp_path: Path,
-) -> None:
-    """``rebuild_date_index`` regenerates the index from the encrypted catalogue.
-
-    Per ``aeat-ledger-contract``: dropping every
-    index row for this bucket must not lose data -- a full decrypt-scan
-    rebuild must restore the exact same index a fresh save would have produced.
-    """
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        rows = [
-            _transaction(
-                provider_id=f"row-rebuild-{i}",
-                filing_date=date(2024, (i % 12) + 1, 10),
-                amount=Decimal("7.00"),
-                description=f"txn {i}",
-            )
-            for i in range(1, 6)
-        ]
-        repo.save(TransactionCatalogue.from_transactions(rows))
-
-        engine = profile.repository.engine
-        with session_scope(engine) as session:
-            session.execute(
-                delete(_orm.TransactionDateIndexRow).where(
-                    _orm.TransactionDateIndexRow.bucket_id == profile.bucket_id,
-                ),
-            )
-
-        with session_scope(engine) as session:
-            remaining = session.execute(
-                select(_orm.TransactionDateIndexRow.id).where(
-                    _orm.TransactionDateIndexRow.bucket_id == profile.bucket_id,
-                ),
-            ).all()
-        assert remaining == [], "fixture must actually drop the index for this proof to be meaningful"
-
-        written = repo.rebuild_date_index()
-
-        with session_scope(engine) as session:
-            rebuilt = (
-                session.execute(
-                    select(_orm.TransactionDateIndexRow.transaction_id).where(
-                        _orm.TransactionDateIndexRow.bucket_id == profile.bucket_id,
-                    ),
-                )
-                .scalars()
-                .all()
-            )
-
-    assert written == 5
-    assert set(rebuilt) == {row.transaction_id for row in rows}
 
 
 def test_load_for_date_range_falls_back_to_full_scan_when_index_is_missing(

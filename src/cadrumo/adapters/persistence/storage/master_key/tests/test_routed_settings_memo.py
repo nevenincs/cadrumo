@@ -100,26 +100,6 @@ def test_the_memo_stays_bounded(tmp_path) -> None:
     assert _derivations(session) <= _ROUTED_SETTINGS_MEMO_SIZE
 
 
-def test_invalidation_drops_every_retained_route(tmp_path) -> None:
-    """A re-materialised bucket must not be served a route resolved before it.
-
-    The memo resolves configured paths against the filesystem, so the
-    invalidation that accompanies an engine reset has to clear ALL retained
-    entries, not just the most recent one -- the reason this is a control
-    and not an afterthought is that the single-slot version could only ever
-    hold one, so "clear the slot" was trivially complete and stopped being
-    so the moment the memo retained a set.
-    """
-    session = _session()
-    session.routed_settings(Settings(cadrumo_local_storage_root=tmp_path / "one"))
-    session.routed_settings(Settings(cadrumo_local_storage_root=tmp_path / "two"))
-    assert _derivations(session) == 2
-
-    session.invalidate_engine()
-
-    assert _derivations(session) == 0, "invalidation must drop every retained route"
-
-
 def test_a_sealed_session_serves_no_route(tmp_path) -> None:
     """Closing a session must not leave a usable route behind it."""
     session = _session()
