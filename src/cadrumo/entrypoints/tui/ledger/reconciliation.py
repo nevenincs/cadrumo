@@ -171,8 +171,8 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.empty"))
 
     def _hide_submission_controls_if_unavailable(self) -> None:
-        """Keep mutation controls absent when the authorized link door is missing."""
-        if not self.controller.can_submit_links():
+        """Keep mutation controls absent when there is no door or nothing to link."""
+        if not self.controller.can_submit_links() or not self.controller.projection.invoice_reconciliations:
             self.query_one("#ledger-reconciliation-confirm", Button).display = False
             self.query_one("#ledger-reconciliation-cancel", Button).display = False
 
