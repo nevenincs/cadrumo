@@ -19,6 +19,7 @@ import json
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -39,10 +40,12 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ._cli_surface_profile_fixture import _isolated_backend
-from ._cli_surface_support import _active_bucket_id, _invoke
-
-__all__ = ["_isolated_backend"]
+from ._cli_surface_support import (
+    _active_bucket_id,
+    _invoke,
+    create_cli_surface_profile,
+    isolated_cli_surface_backend,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -73,6 +76,19 @@ _NEW_TRANSLATION_KEYS = (
     "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
     "cli.app.ledger.prorrata.settle_sector_entry_absent",
 )
+
+
+@pytest.fixture
+def cli_profile(tmp_path: Path) -> Iterator[None]:
+    """A freshly registered profile per test, for the verbs that write to it.
+
+    Registration derives the profile key in a KDF worker process, so it is paid
+    only where a test drives the ledger; the catalogue checks below read
+    nothing from a profile.
+    """
+    with isolated_cli_surface_backend(tmp_path):
+        create_cli_surface_profile()
+        yield
 
 
 @pytest.fixture
@@ -147,6 +163,7 @@ def _refusal_text(result) -> str:
     return json.dumps(json.loads(result.output)["error"], ensure_ascii=False)
 
 
+@pytest.mark.usefixtures("cli_profile")
 def test_seed_persists_the_carried_prior_definitiva_entry(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -188,6 +205,7 @@ def test_seed_persists_the_carried_prior_definitiva_entry(
     assert entries[0]["provisional_percentage"] == str(_PRIOR_DEFINITIVE)
 
 
+@pytest.mark.usefixtures("cli_profile")
 def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -234,6 +252,7 @@ def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding(
     assert standing.provisional_percentage == Decimal("42")
 
 
+@pytest.mark.usefixtures("cli_profile")
 def test_seed_is_idempotent(authority_operation: PinnedAuthorityOperation) -> None:
     """Seeding twice converges on one entry and does not double-apply."""
     _store_prior_settlement_observation()
@@ -255,6 +274,7 @@ def test_seed_is_idempotent(authority_operation: PinnedAuthorityOperation) -> No
     assert stored.provisional_percentage == _PRIOR_DEFINITIVE
 
 
+@pytest.mark.usefixtures("cli_profile")
 def test_seed_without_a_prior_observation_refuses_as_absent_not_zero(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -270,6 +290,7 @@ def test_seed_without_a_prior_observation_refuses_as_absent_not_zero(
     assert _service(authority_operation).get(_CURRENT_YEAR) is None
 
 
+@pytest.mark.usefixtures("cli_profile")
 def test_seed_refuses_to_displace_a_standing_regulated_override(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -292,6 +313,7 @@ def test_seed_refuses_to_displace_a_standing_regulated_override(
     assert standing.provisional_provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
 
 
+@pytest.mark.usefixtures("cli_profile")
 def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -363,6 +385,7 @@ def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio(
     assert stored.provisional_percentage == Decimal(str(definitive))
 
 
+@pytest.mark.usefixtures("cli_profile")
 def test_seed_sector_without_a_prior_definitive_refuses_as_absent(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -392,6 +415,7 @@ def test_seed_sector_without_a_prior_definitive_refuses_as_absent(
     assert _service(authority_operation).get(_CURRENT_YEAR, sector_id="arrendamiento") is None
 
 
+@pytest.mark.usefixtures("cli_profile")
 def test_settle_sector_without_an_entry_refuses() -> None:
     result = _invoke(
         [

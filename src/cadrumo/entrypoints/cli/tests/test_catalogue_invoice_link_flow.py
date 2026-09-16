@@ -27,8 +27,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
@@ -38,6 +36,7 @@ from ....core.aggregation import IntracomOperationType
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
+from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ._cli_text_output_support import _line_value
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
@@ -146,7 +145,7 @@ def test_link_refuses_cross_bucket_catalogue_invoice() -> None:
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
-        rate_provider=default_ecb_rate_provider(),
+        rate_provider=recorded_ecb_rate_provider(),
     )
     _write_raw_catalogue(InvoiceCatalogue.from_invoices([foreign_invoice]))
 

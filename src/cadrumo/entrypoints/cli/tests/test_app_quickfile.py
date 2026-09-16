@@ -29,13 +29,10 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-
+from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
@@ -43,6 +40,7 @@ from ....application.calculations.tests.filing_evidence import regimen_simplific
 from ....application.state_projection import ProjectionModeloReadiness
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
@@ -60,6 +58,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -264,8 +263,7 @@ def _m303_transaction(
 
 
 def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
-    from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-
+    from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ....application.invoices.catalogue_creation import build_catalogue_invoice
     from ....domain.invoices.models import InvoiceCatalogue
@@ -283,7 +281,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
         taxable_base=Decimal("200.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
-        rate_provider=default_ecb_rate_provider(),
+        rate_provider=recorded_ecb_rate_provider(),
     )
     sale = _m303_transaction(
         "quickfile-sale-general",

@@ -77,8 +77,8 @@ _PROBE = textwrap.dedent(
 
     from cadrumo.entrypoints.cli.tests.cli_performance import measure_resolution_costs
 
-    paths = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-    records = measure_resolution_costs(paths)
+    request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+    records = measure_resolution_costs(request["paths"], record_names_for=request["record_names_for"])
     Path(sys.argv[2]).write_text(json.dumps(records), encoding="utf-8")
     """
 )
@@ -86,15 +86,21 @@ _PROBE = textwrap.dedent(
 type _CostRecord = dict[str, Any]
 
 
-def _run_measurements(runs: list[list[str]], workdir: Path) -> list[list[_CostRecord]]:
-    """Run each list of node paths in its own interpreter, all concurrently."""
+def _run_measurements(runs: list[list[str]], workdir: Path, *, named: frozenset[str]) -> list[list[_CostRecord]]:
+    """Run each list of node paths in its own interpreter, all concurrently.
+
+    ``named`` paths also report their module names, for diffing a disagreement.
+    """
     started: list[tuple[subprocess.Popen[bytes], Path, Path]] = []
     try:
         for index, run in enumerate(runs):
             request = workdir / f"request-{index}.json"
             result = workdir / f"result-{index}.json"
             log = workdir / f"child-{index}.log"
-            request.write_text(json.dumps([name.split("/") for name in run]), encoding="utf-8")
+            request.write_text(
+                json.dumps({"paths": [name.split("/") for name in run], "record_names_for": sorted(named & set(run))}),
+                encoding="utf-8",
+            )
             with log.open("wb") as output:
                 process = subprocess.Popen(
                     [sys.executable, "-c", _PROBE, str(request), str(result)],
@@ -117,6 +123,13 @@ def _run_measurements(runs: list[list[str]], workdir: Path) -> list[list[_CostRe
 
 def _comparable(record: _CostRecord) -> tuple[object, ...]:
     return record["path"], record["modules"], record["digest"], record["error"] is not None
+
+
+def _module_diff(left: _CostRecord, right: _CostRecord) -> str:
+    left_names, right_names = set(left["names"] or ()), set(right["names"] or ())
+    return (
+        f"only in the first: {sorted(left_names - right_names)}; only in the second: {sorted(right_names - left_names)}"
+    )
 
 
 def _budgeted_nodes() -> list[tuple[str, str]]:
@@ -154,7 +167,9 @@ def resolution_costs(tmp_path_factory: pytest.TempPathFactory) -> dict[str, _Cos
     shards = [names[index::_BATCH_COUNT] for index in range(_BATCH_COUNT)]
     batches = [[_HEAVY_NODE, *shard, control_node, _HEAVY_NODE] for shard in shards]
     *batch_records, (control,) = _run_measurements(
-        [*batches, [control_node]], tmp_path_factory.mktemp("resolution-costs")
+        [*batches, [control_node]],
+        tmp_path_factory.mktemp("resolution-costs"),
+        named=frozenset({_HEAVY_NODE, control_node}),
     )
 
     for records in batch_records:
@@ -162,12 +177,14 @@ def resolution_costs(tmp_path_factory: pytest.TempPathFactory) -> dict[str, _Cos
         if _comparable(first) != _comparable(last):
             pytest.fail(
                 f"a batch measured `{_HEAVY_NODE}` differently before and after its other nodes "
-                f"({first['modules']} vs {last['modules']} modules): the per-node reset leaks state"
+                f"({first['modules']} vs {last['modules']} modules): the per-node reset leaks state; "
+                f"{_module_diff(first, last)}"
             )
         if _comparable(batched) != _comparable(control):
             pytest.fail(
                 f"`{control_node}` loads {batched['modules']} modules in a batch but "
-                f"{control['modules']} in a fresh interpreter: the batched measurement is not independent"
+                f"{control['modules']} in a fresh interpreter: the batched measurement is not independent; "
+                f"{_module_diff(batched, control)}"
             )
 
     costs = {record["path"]: record for records in batch_records for record in records[1:-2]}

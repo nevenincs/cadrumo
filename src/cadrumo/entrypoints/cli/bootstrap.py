@@ -5,13 +5,18 @@ from __future__ import annotations
 
 def main() -> None:
     """Defer file-backed logging until parsed CLI preflight authorizes it."""
+    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...core.logging import defer_logging_configuration, resume_logging_configuration
 
     defer_logging_configuration()
     try:
         from .main import main as cli_main
 
-        cli_main()
+        # The console script is the host that decides conversions use the live
+        # ECB reference rates.
+        with bind_exchange_rate_provider_factory(default_ecb_rate_provider):
+            cli_main()
     except ModuleNotFoundError as exc:
         # Backstop for a missing optional package whose feature boundary did
         # not guard it: turn the deep-stack import failure into the same

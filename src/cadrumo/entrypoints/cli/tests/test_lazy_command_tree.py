@@ -27,6 +27,7 @@ documenting a defect.
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import textwrap
@@ -120,3 +121,60 @@ def test_the_probe_detects_a_registry_import() -> None:
     assert completed.returncode == 0, completed.stderr
     leaked = [line for line in completed.stdout.splitlines() if line.strip()]
     assert leaked, "the scan cannot see a registry import; its module names have drifted"
+
+
+def _spec_family_modules(probe: str) -> list[str]:
+    completed = _run_python(
+        f"""
+        import json
+        import sys
+        {textwrap.indent(textwrap.dedent(probe), " " * 8).lstrip()}
+        families = sorted(
+            name
+            for name in sys.modules
+            if name.startswith("cadrumo.entrypoints.cli.") and name.endswith("command_specs")
+        )
+        print(json.dumps({{"families": families}}))
+        """,
+    )
+    assert completed.returncode == 0, completed.stderr
+    families: object = json.loads(completed.stdout.strip().splitlines()[-1])["families"]
+    assert isinstance(families, list)
+    return [str(name) for name in families]
+
+
+def test_importing_the_cli_loads_no_command_spec_family() -> None:
+    assert _spec_family_modules("import cadrumo.entrypoints.cli.main") == [
+        "cadrumo.entrypoints.cli._root_command_specs",
+        "cadrumo.entrypoints.cli.command_specs",
+    ]
+
+
+def test_a_ledger_help_loads_only_the_app_families_it_walks_through() -> None:
+    families = _spec_family_modules(
+        """
+        from click.testing import CliRunner
+        import typer.main
+        from cadrumo.entrypoints.cli.main import app
+
+        result = CliRunner().invoke(typer.main.get_command(app), ["app", "ledger", "list", "--help"])
+        assert result.exit_code == 0, result.output
+        """
+    )
+
+    assert "cadrumo.entrypoints.cli._app_ledger_command_specs" in families
+    assert not [name for name in families if name.startswith("cadrumo.entrypoints.cli.config.")]
+    assert "cadrumo.entrypoints.cli.modelo_work_command_specs" not in families
+
+
+def test_a_whole_graph_query_loads_every_command_spec_family() -> None:
+    families = _spec_family_modules(
+        """
+        from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+
+        assert COMMAND_GRAPH.nodes()
+        """
+    )
+
+    assert "cadrumo.entrypoints.cli.config.command_specs" in families
+    assert "cadrumo.entrypoints.cli.modelo_work_command_specs" in families

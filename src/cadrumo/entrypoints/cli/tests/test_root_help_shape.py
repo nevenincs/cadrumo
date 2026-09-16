@@ -23,14 +23,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ._profile_storage_fixtures import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-
+from ....adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ....application.operator_surface.help import build_help_document
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import Settings, load_settings
@@ -435,27 +433,30 @@ def test_installed_console_refuses_former_product_state_without_a_traceback(tmp_
 def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
     """The installed console script routes storage at the environment's root.
 
-    The profile is registered in-process against the same root, because
-    credential registration is the only creation door and no CLI verb can
-    mint a profile. The claim under test -- that the installed script reads
-    and writes the environment's storage root rather than the operator's real
-    one -- is measured by the two subprocess runs below.
+    The profile is published in-process against the same root through the
+    minimal capsule door, because no CLI verb can mint a profile without a
+    secret channel. The claim under test -- that the installed script reads and
+    writes the environment's storage root rather than the operator's real one --
+    is measured by the two subprocess runs below, which only list the capsule.
     """
     cli_executable = _installed_cli_executable()
     env = _console_env(tmp_path)
 
-    from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-
     from ....core.config import load_settings, override_settings
 
-    with override_settings(
-        cadrumo_local_storage_root=tmp_path / "storage",
-        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
-        cadrumo_active_profile=None,
+    profile_id = "22222222-2222-4222-8222-222222222222"
+    with (
+        override_settings(
+            cadrumo_local_storage_root=tmp_path / "storage",
+            cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
+            cadrumo_active_profile=None,
+        ),
+        open_test_profile_session(profile_id),
     ):
-        register_cli_profile(
-            label="operator",
-            facts={
+        register_minimal_profile(
+            profile_id=profile_id,
+            display_name="operator",
+            overrides={
                 "taxpayer_type.entity_type": "natural_person",
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Operator",

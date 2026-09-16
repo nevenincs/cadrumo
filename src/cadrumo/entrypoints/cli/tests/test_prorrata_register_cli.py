@@ -16,6 +16,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
@@ -32,9 +35,34 @@ from ....domain.prorrata_register.register import (
 )
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from .._prorrata_register_cli import _entry_payload
-from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import (
     _invoke,
+)
+
+# The CLI surface profile, published as a capsule with a derived test key rather
+# than enrolled and unlocked through the passphrase KDF on every test.
+_isolated_backend = active_profile_isolated_backend_fixture(
+    display_name="operator",
+    settings_overrides={
+        "cadrumo_auth_provider": None,
+        "cadrumo_certificate_path": None,
+        "cadrumo_certificate_password_secret": None,
+        "cadrumo_clave_movil_dni_nie": None,
+        "cadrumo_clave_movil_dni_fecha": None,
+        "cadrumo_clave_movil_nie_soporte": None,
+    },
+    profile_overrides={
+        "identity.name": "Operator",
+        "identity.surnames": "Example",
+        "activities.description": "Test",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    },
 )
 
 __all__ = ["_isolated_backend"]
