@@ -48,17 +48,6 @@ def test_split_decision_on_classification_suggestion_refuses() -> None:
         )
 
 
-@pytest.mark.parametrize("decision", [LlmReviewDecision.SUGGEST, LlmReviewDecision.NO_SPLIT])
-def test_non_persisting_terminals_refuse_durable_execution(decision: LlmReviewDecision) -> None:
-    with pytest.raises(TransactionValidationError):
-        execute_reviewed_decision(
-            _classification_suggestion(_UNKNOWN_TRANSACTION_ID),
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
-            decision=decision,
-            bucket_id="test-bucket",
-        )
-
-
 def test_every_invocation_origin_derives_a_distinct_nonblank_source_command() -> None:
     commands = {origin: origin.source_command for origin in LlmReviewInvocationOrigin}
     assert all(command.strip().startswith("aeat app ledger") for command in commands.values())

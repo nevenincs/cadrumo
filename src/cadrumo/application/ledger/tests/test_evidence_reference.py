@@ -18,6 +18,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
@@ -88,7 +90,7 @@ def _invoice(
 
 
 def _catalogue(*invoices: Invoice) -> InvoiceCatalogue:
-    return InvoiceCatalogue.from_invoices(invoices)
+    return build_invoice_catalogue(invoices)
 
 
 def _classify(evidence_id: str, *, records: tuple[PurchaseInvoiceEvidence, ...], invoices: InvoiceCatalogue):

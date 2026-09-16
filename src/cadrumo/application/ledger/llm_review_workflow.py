@@ -100,16 +100,13 @@ _ORIGIN_SOURCE_COMMANDS: dict[LlmReviewInvocationOrigin, str] = {
 class LlmReviewDecision(StrEnum):
     """The terminal decision an operator reaches on an LLM review subject.
 
-    ``SUGGEST`` is the non-persisting preview; ``APPLY`` approves and writes;
-    ``REJECT`` records an audit-trailed decline that mutates nothing; ``SPLIT``
-    and ``NO_SPLIT`` are the evidence-driven split verdicts.
+    ``APPLY`` approves and writes; ``REJECT`` records an audit-trailed decline
+    that mutates nothing; ``SPLIT`` is the evidence-driven split verdict.
     """
 
-    SUGGEST = "suggest"
     APPLY = "apply"
     REJECT = "reject"
     SPLIT = "split"
-    NO_SPLIT = "no_split"
 
 
 class ReviewedInvoiceDraft(BaseModel):
@@ -215,9 +212,7 @@ def execute_reviewed_decision(
     label is derived from the mandatory ``origin`` rather than defaulted inside
     application code.
 
-    ``SUGGEST`` and ``NO_SPLIT`` are non-persisting terminals (a preview and a
-    decline-to-split verdict): they never reach this dispatch and raise if
-    passed. A ``decision``/``suggestion`` shape mismatch (e.g. ``SPLIT`` on a
+    A ``decision``/``suggestion`` shape mismatch (e.g. ``SPLIT`` on a
     non-split suggestion) raises :class:`TransactionValidationError`.
     """
     source_command = origin.source_command
