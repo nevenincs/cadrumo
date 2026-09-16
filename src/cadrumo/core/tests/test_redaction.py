@@ -485,7 +485,7 @@ def test_identities_and_urls_beside_a_profile_id_are_still_redacted() -> None:
     (
         f"/data/cadrumo/buckets/{_PROFILE_ID}/profile.db",
         rf"C:\data\cadrumo\keystore\{_PROFILE_ID}",
-        f"/data/cadrumo/profile-custody-holds/{_PROFILE_ID}/hold.toml",
+        f"/data/cadrumo/profile-custody-holds/owner/{_PROFILE_ID}/hold.toml",
     ),
 )
 def test_a_profile_id_inside_custody_storage_is_masked(path: str) -> None:
@@ -499,7 +499,7 @@ def test_a_profile_id_inside_custody_storage_is_masked(path: str) -> None:
 @pytest.mark.parametrize(
     "path",
     (
-        f"/tmp/{_PROFILE_ID}/backup.cadrumo-bucket.tar.gz",
+        f"/home/op/exports/{_PROFILE_ID}/backup.cadrumo-bucket.tar.gz",
         rf"C:\Users\op\AppData\Local\Temp\{_PROFILE_ID}\repair.log",
         f"/data/cadrumo/profile-custody-holds/{_PROFILE_ID}",
     ),
