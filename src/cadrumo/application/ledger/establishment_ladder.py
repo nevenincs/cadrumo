@@ -269,11 +269,6 @@ class CounterpartyEstablishment(BaseModel):
         return self.contradiction is not None
 
     @property
-    def conflicted(self) -> bool:
-        """Return whether a foreign registration sits beside Spain-indicating evidence."""
-        return self.registration_conflict is not None
-
-    @property
     def declared_fact(self) -> DeclaredFact[IvaTerritorialScope] | None:
         """Return this scope in the form the criteria assembly consumes.
 

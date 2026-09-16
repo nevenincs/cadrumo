@@ -83,16 +83,19 @@ def _assemble_with_declared(
     def wrap(value):
         return None if value is None else DeclaredFact(value=value, source=_ASSERTED)
 
-    return assemble_classification_criteria(
-        declared=DeclaredFacts(
-            supply_nature=wrap(supply_nature),
-            customer_tax_status=wrap(asserted_customer_tax_status),
-            issuer_scope=wrap(asserted_issuer_scope),
-            customer_scope=wrap(asserted_customer_scope),
-            customer_identification_state=wrap(asserted_customer_identification_state),
-        ),
-        **kwargs,
+    declared = DeclaredFacts(
+        supply_nature=wrap(supply_nature),
+        customer_tax_status=wrap(asserted_customer_tax_status),
+        issuer_scope=wrap(asserted_issuer_scope),
+        customer_scope=wrap(asserted_customer_scope),
+        customer_identification_state=wrap(asserted_customer_identification_state),
     )
+    if "operation" in kwargs:
+        return assemble_classification_criteria(declared=declared, **kwargs)
+    # The assembly resolves governed facts, so it runs under the same pinned
+    # registry operation production opens around it.
+    with _indexed_authority_for_test().operation() as operation:
+        return assemble_classification_criteria(declared=declared, operation=operation, **kwargs)
 
 
 def _complete(**overrides: object):
@@ -193,7 +196,7 @@ def test_a_foreign_country_code_does_settle_the_territory() -> None:
 
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
-    assert assembly.criteria.issuer_residency is IvaTerritorialScope.from_registry("eu_member")
+    assert assembly.criteria.issuer_residency == IvaTerritorialScope.from_registry("eu_member")
 
 
 def test_an_absent_supply_nature_refuses_on_a_branch_that_forks() -> None:
@@ -287,7 +290,7 @@ def test_the_probe_forks_only_for_cross_territorial_scope() -> None:
             for nature in (SupplyNature.GOODS, SupplyNature.SERVICES):
                 assembly = _complete(
                     supply_nature=nature,
-                    customer_country_code="FR" if customer is IvaTerritorialScope.from_registry("eu_member") else None,
+                    customer_country_code="FR" if customer == IvaTerritorialScope.from_registry("eu_member") else None,
                     asserted_issuer_scope=issuer,
                     asserted_customer_scope=customer,
                     rate_tier=IvaRateKind("general"),
@@ -386,7 +389,7 @@ def test_a_printed_nature_maps_only_to_the_general_service_kind() -> None:
     services = _complete(supply_nature=SupplyNature.SERVICES)
 
     assert services.criteria is not None
-    assert services.criteria.kind is TransactionKind("services_general")
+    assert services.criteria.kind == TransactionKind("services_general")
 
 
 def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
@@ -429,7 +432,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         assert with_assertion.assembled
         assert with_assertion.criteria is not None
         assert with_assertion.criteria is not None
-        assert with_assertion.criteria.customer_tax_status is CustomerTaxStatus.from_registry("b2c_consumer")
+        assert with_assertion.criteria.customer_tax_status == CustomerTaxStatus.from_registry("b2c_consumer")
 
 
 def test_the_domestic_rate_tier_axis_is_carried_through() -> None:
@@ -443,7 +446,7 @@ def test_the_domestic_rate_tier_axis_is_carried_through() -> None:
 
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
-    assert assembly.criteria.rate_tier is IvaRateKind("general")
+    assert assembly.criteria.rate_tier == IvaRateKind("general")
 
 
 def test_a_domestic_operation_with_no_tier_names_the_tier_and_not_another_axis() -> None:
@@ -567,8 +570,8 @@ def test_a_spanish_postal_code_settles_the_territory_the_country_code_cannot() -
 
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
-    assert assembly.criteria.issuer_residency is IvaTerritorialScope.from_registry("es_canarias")
-    assert assembly.criteria.customer_residency is IvaTerritorialScope.from_registry("es_mainland")
+    assert assembly.criteria.issuer_residency == IvaTerritorialScope.from_registry("es_canarias")
+    assert assembly.criteria.customer_residency == IvaTerritorialScope.from_registry("es_mainland")
 
 
 def test_a_spanish_party_with_no_postal_code_refuses_rather_than_assuming_mainland() -> None:
@@ -841,7 +844,7 @@ def test_an_unestablished_status_is_stamped_as_unresolved_not_as_a_business() ->
     assembly = _domestic(asserted_customer_tax_status=None, supply_nature=None)
 
     assert assembly.criteria is not None
-    assert assembly.criteria.customer_tax_status is CustomerTaxStatus.from_registry("unknown"), (
+    assert assembly.criteria.customer_tax_status == CustomerTaxStatus.from_registry("unknown"), (
         f"an unestablished status was stamped as {assembly.criteria.customer_tax_status}"
     )
 
@@ -864,7 +867,7 @@ def test_the_undetermined_status_placeholder_never_changes_the_outcome() -> None
             operation=_authority_operation_for_test,
         )
         for status in classification_catalogue.customer_tax_statuses:
-            if status is CustomerTaxStatus.from_registry("unknown"):
+            if status == CustomerTaxStatus.from_registry("unknown"):
                 continue
             stated = classify_from_assembled_criteria(
                 _domestic(asserted_customer_tax_status=status, supply_nature=None),
@@ -963,10 +966,10 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules(*, operation: 
                 kind=kind,
                 direction=direction,
                 issuer_identification_state=EUMemberState.from_registry("de")
-                if issuer is IvaTerritorialScope.from_registry("eu_member")
+                if issuer == IvaTerritorialScope.from_registry("eu_member")
                 else None,
                 customer_identification_state=EUMemberState.from_registry("fr")
-                if customer is IvaTerritorialScope.from_registry("eu_member")
+                if customer == IvaTerritorialScope.from_registry("eu_member")
                 else None,
                 rate_tier=IvaRateKind("general"),
             ),
