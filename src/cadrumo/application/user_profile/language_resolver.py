@@ -31,8 +31,8 @@ from .login_session_port import profile_current_bucket_session
 _logger = get_logger(__name__)
 
 __all__ = [
-    "mirror_profile_output_language_hint",
     "active_profile_output_language_from_storage",
+    "mirror_profile_output_language_hint",
     "refresh_active_profile_output_language",
     "register_language_resolver",
     "resolve_active_profile_output_language",
