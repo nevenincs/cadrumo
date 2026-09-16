@@ -88,10 +88,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Self
 
-from pydantic import GetCoreSchemaHandler
-from pydantic_core import CoreSchema, core_schema
-
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.registry_token import StrictRegistryToken
 from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
 from .classification import InvoiceKind
 from .schema import IvaCategory
@@ -100,7 +97,7 @@ if TYPE_CHECKING:
     from ..calculations.registry.iva_flow_catalogue import IvaFlowDirectionCatalogue
 
 
-class IvaFlowDirection(str):
+class IvaFlowDirection(StrictRegistryToken):
     """Opaque IVA flow token projected from fact 0083.
 
     Flow membership, legal descriptions, and settlement-side semantics belong
@@ -111,19 +108,6 @@ class IvaFlowDirection(str):
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Construct only tokens admitted by the governing catalogue."""
-        if not _registry_validated:
-            raise TypeError("IvaFlowDirection tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("IvaFlowDirection token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
     def __copy__(self) -> Self:
         """Share an immutable token without repeating membership admission."""
         return self
@@ -131,35 +115,6 @@ class IvaFlowDirection(str):
     def __deepcopy__(self, memo: dict[int, object]) -> Self:
         """Preserve the admitted token when copying a containing projection."""
         return self
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("IvaFlowDirection must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Accept already admitted tokens at typed model boundaries."""
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical registry token for serialization."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical registry token for diagnostics."""
-        return str(self)
 
 
 def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind) -> IvaFlowDirection:
@@ -269,52 +224,10 @@ def derive_flow_for_classification(
     return flow_direction_for_invoice_kind(invoice_direction)
 
 
-class IvaSettlementSide(str):
+class IvaSettlementSide(StrictRegistryToken):
     """Opaque IVA settlement-side token projected from fact 0083."""
 
     __slots__ = ()
-
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        """Construct only tokens admitted by the governing catalogue."""
-        if not _registry_validated:
-            raise TypeError("IvaSettlementSide tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError("IvaSettlementSide token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise CoreValidationError("IvaSettlementSide must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Accept already admitted tokens at typed model boundaries."""
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        """Return the canonical registry token for serialization."""
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        """Return the canonical registry token for diagnostics."""
-        return str(self)
 
 
 def settlement_sides_for_flow(

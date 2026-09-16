@@ -172,78 +172,97 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
         return str(value)
 
 
-class IvaExemptionArticle(str):
+class _RegistryDeclarationDefinition(Protocol):
+    """The registry definition fields a declared token reports."""
+
+    @property
+    def token(self) -> _RegistryDeclaredToken: ...
+
+    @property
+    def description(self) -> str: ...
+
+    @property
+    def legal_refs(self) -> tuple[str, ...]: ...
+
+
+class _RegistryDeclarationCatalogue(Protocol):
+    """A dated catalogue that owns one declared token vocabulary."""
+
+    def definition(self, value: object) -> _RegistryDeclarationDefinition: ...
+
+
+class _RegistryDeclaredToken(str):
+    """Opaque token whose description and legal references a dated catalogue owns."""
+
+    __slots__ = ()
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the opaque token as a non-empty string to Pydantic."""
+        from pydantic_core import core_schema
+
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+
+    @property
+    def value(self) -> str:
+        """Return the opaque token for string-oriented serialization."""
+        return str(self)
+
+    @classmethod
+    def _declaration_catalogue(
+        cls,
+        on_date: date | None,
+        authority: GovernedFactSource | None,
+    ) -> _RegistryDeclarationCatalogue:
+        raise NotImplementedError
+
+    def registry_declarations(
+        self,
+        on_date: date | None = None,
+        *,
+        authority: GovernedFactSource | None = None,
+    ) -> Mapping[str, str]:
+        """Return this token's registry-owned description and legal references."""
+        definition = self._declaration_catalogue(on_date, authority).definition(self)
+        return {
+            "value": definition.token.value,
+            "description": definition.description,
+            "legal_refs": ",".join(definition.legal_refs),
+        }
+
+
+class IvaExemptionArticle(_RegistryDeclaredToken):
     """Opaque registry-projected IVA exemption-article token."""
 
     __slots__ = ()
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
-        """Expose the opaque token as a non-empty string to Pydantic."""
-        from pydantic_core import core_schema
-
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
-
-    @property
-    def value(self) -> str:
-        """Return the opaque token for string-oriented serialization."""
-        return str(self)
-
-    def registry_declarations(
-        self,
-        on_date: date | None = None,
-        *,
-        authority: GovernedFactSource | None = None,
-    ) -> Mapping[str, str]:
-        """Return this token's registry-owned description and legal references."""
+    @override
+    def _declaration_catalogue(
+        cls,
+        on_date: date | None,
+        authority: GovernedFactSource | None,
+    ) -> _RegistryDeclarationCatalogue:
         from ..calculations.registry.iva_schema_vocabulary import resolve_iva_exemption_article_catalogue
 
-        definition = resolve_iva_exemption_article_catalogue(
-            effective_date=on_date,
-            authority=authority,
-        ).definition(self)
-        return {
-            "value": definition.token.value,
-            "description": definition.description,
-            "legal_refs": ",".join(definition.legal_refs),
-        }
+        return resolve_iva_exemption_article_catalogue(effective_date=on_date, authority=authority)
 
 
-class IvaArt69DosService(str):
+class IvaArt69DosService(_RegistryDeclaredToken):
     """Opaque registry-projected Art. 69.Dos service token."""
 
     __slots__ = ()
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
-        """Expose the opaque token as a non-empty string to Pydantic."""
-        from pydantic_core import core_schema
-
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
-
-    @property
-    def value(self) -> str:
-        """Return the opaque token for string-oriented serialization."""
-        return str(self)
-
-    def registry_declarations(
-        self,
-        on_date: date | None = None,
-        *,
-        authority: GovernedFactSource | None = None,
-    ) -> Mapping[str, str]:
-        """Return this token's registry-owned description and legal references."""
+    @override
+    def _declaration_catalogue(
+        cls,
+        on_date: date | None,
+        authority: GovernedFactSource | None,
+    ) -> _RegistryDeclarationCatalogue:
         from ..calculations.registry.iva_schema_vocabulary import resolve_iva_art69_dos_service_catalogue
 
-        definition = resolve_iva_art69_dos_service_catalogue(
-            effective_date=on_date,
-            authority=authority,
-        ).definition(self)
-        return {
-            "value": definition.token.value,
-            "description": definition.description,
-            "legal_refs": ",".join(definition.legal_refs),
-        }
+        return resolve_iva_art69_dos_service_catalogue(effective_date=on_date, authority=authority)
 
 
 class EUMemberState(str):
