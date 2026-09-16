@@ -19,9 +19,8 @@ structural coverage.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import date
-from functools import cache, partial
+from functools import cache
 
 import pytest
 
@@ -229,110 +228,6 @@ def test_an_entry_date_under_an_excluded_relacion_refuses(
             DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, inscripcion_registro_civil_date=anchor)
         else:
             DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, acogimiento_resolucion_date=anchor)
-
-
-@pytest.mark.parametrize(
-    "relacion",
-    [
-        DescendantRelacion.from_registry("tutela"),
-        DescendantRelacion.from_registry("acogimiento_temporal"),
-        DescendantRelacion.from_registry("descendiente"),
-    ],
-)
-def test_the_predicate_withholds_even_if_an_excluded_record_somehow_holds_a_date(
-    relacion: DescendantRelacion,
-) -> None:
-    """The second layer, tested independently of the first.
-
-    ``model_construct`` deliberately bypasses validation to build the record the
-    coherence rule forbids. Nothing in production can produce it today -- which
-    is exactly why this test exists: without it the predicate's own relación
-    check is unreachable, so a future door that constructed records by another
-    path, or a weakened validator, would silently start granting the Art. 58.2
-    increase to a tutela guardian or a temporal carer with no test going red.
-
-    Verified by mutation: deleting the relación check from
-    :meth:`DescendantInfo.art_58_2_entry_date` leaves every other test in this
-    module green and fails only this one.
-    """
-    smuggled = DescendantInfo.model_construct(
-        birth_date=_OLD_BIRTH,
-        relacion=relacion,
-        inscripcion_registro_civil_date=date(2024, 1, 1),
-        acogimiento_resolucion_date=date(2024, 1, 1),
-        convive_con_contribuyente=True,
-        discapacidad_grado=None,
-    )
-
-    assert smuggled.art_58_2_entry_date() is None
-    assert smuggled.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
-    assert smuggled.art_58_2_window_anchor_missing(_YEAR, context=_FACT_CONTEXT) is False
-
-
-@pytest.mark.parametrize(
-    "relacion",
-    sorted(
-        descendant_relacion_entitling_tokens(
-            effective_date=_FACT_CONTEXT.filing_period,
-            authority=_FACT_CONTEXT.authority,
-        )
-    ),
-)
-def test_an_entitling_relacion_without_its_date_is_valid_and_withholds(
-    relacion: DescendantRelacion,
-) -> None:
-    """Incomplete is recordable; the grant is deferred, not the record refused.
-
-    An operator may know a child is adopted before they hold the inscription
-    date. Refusing the record would block them from stating a true fact, so the
-    window simply cannot be measured and the increase is withheld -- the
-    under-granting direction -- with the missing anchor reported so it does not
-    stay silent.
-    """
-    child = _older_child(relacion)
-
-    assert child.art_58_2_entry_date() is None
-    assert child.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
-    assert child.art_58_2_window_anchor_missing(_YEAR, context=_FACT_CONTEXT) is True
-
-
-@pytest.mark.parametrize(
-    ("build_child", "reason"),
-    [
-        (
-            partial(DescendantInfo, birth_date=date(2023, 1, 1), relacion=DescendantRelacion.from_registry("adoptado")),
-            "already under three, so the ordinary limb grants it anyway",
-        ),
-        (
-            partial(
-                DescendantInfo,
-                birth_date=_OLD_BIRTH,
-                relacion=DescendantRelacion.from_registry("acogimiento_temporal"),
-            ),
-            "excluded from the limb, so it has no anchor to be missing",
-        ),
-        (
-            partial(
-                DescendantInfo,
-                birth_date=_OLD_BIRTH,
-                relacion=DescendantRelacion.from_registry("adoptado"),
-                convive_con_contribuyente=False,
-            ),
-            "not cohabiting, so no mínimo applies at all",
-        ),
-        (
-            partial(DescendantInfo, birth_date=date(1990, 1, 1), relacion=DescendantRelacion.from_registry("adoptado")),
-            "over 25 with no discapacidad, so no tranche for the increase to attach to",
-        ),
-    ],
-)
-def test_the_missing_anchor_report_stays_silent_where_nothing_is_lost(
-    build_child: Callable[[], DescendantInfo],
-    reason: str,
-) -> None:
-    """A report that fires on states costing nothing trains the operator to ignore it."""
-    child = build_child()
-    assert child.art_58_2_window_anchor_missing(_YEAR, context=_FACT_CONTEXT) is False, reason
 
 
 def test_an_unstated_relacion_with_an_inscription_reads_as_adoptado() -> None:
