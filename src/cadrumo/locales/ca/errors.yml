@@ -1071,6 +1071,10 @@ errors:
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
       amb l'identificador indicat.
+    refused_ledger_evidence_reader_unavailable: El lector de documents per a aquest
+      justificant no està disponible en aquest equip, així que no s'ha llegit res.
+      Inicia el lector local, o tria un proveïdor extern per a aquesta lectura, i
+      torna-ho a provar.
     refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
       del Model 100 amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients

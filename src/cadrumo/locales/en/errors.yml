@@ -984,6 +984,9 @@ errors:
       contract. Correct the input and try again.
     refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the
       identifier provided.
+    refused_ledger_evidence_reader_unavailable: The document reader for this evidence
+      is not available on this machine, so nothing was read. Start the local reader,
+      or choose an off-host provider for this read, and try again.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
