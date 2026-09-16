@@ -1132,19 +1132,19 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     assert _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA not in informational_replay_inputs
 
 
-def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> None:
+def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operation: PinnedAuthorityOperation) -> None:
     """The CLI accepts the wizard's operator-selectable IVA-regime choices.
 
     ``IVARegime("NO_APLICA")`` is an internal projection sentinel for profiles
     that are not enrolled in IVA. It must not leak into the operator-facing
     ``--iva-regime`` choice set.
     """
-    from ....core.wizard_catalogue import get_setup_flow
+    from ...wizard.catalogue import build_setup_flow
     from ...wizard.commands import IVA_REGIME_CHOICE_VALUES
 
     wizard_values = {
         choice.value
-        for section in get_setup_flow().sections
+        for section in build_setup_flow(operation).sections
         for question in section.questions
         if question.id == "iva-regime"
         for choice in question.choices
