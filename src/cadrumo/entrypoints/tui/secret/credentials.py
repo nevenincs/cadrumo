@@ -26,8 +26,10 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
 
+from textual import events, on
 from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import Screen
@@ -112,6 +114,25 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
         self.outcome: OutcomeT | None = None
         self.error: BaseException | None = None
         self._attempt: Worker[CredentialAttempt[OutcomeT]] | None = None
+
+    @on(events.Mount)
+    def _describe_appearance_on_mount(self) -> None:
+        self.describe_appearance_key()
+
+    def describe_appearance_key(self) -> None:
+        """Name the appearance key in the footer, in this screen's language.
+
+        Bound here so a credential screen offers it before any workbench
+        exists, and described at render time for the reason the workbench
+        keys are: a class body resolves its text once, at import. Called again
+        by a screen that changes its own language.
+        """
+        bindings = self._bindings.key_to_bindings.get("f3")
+        if not bindings:
+            return
+        label = tr("tui.root.account.appearance", locale=self.output_locale())
+        self._bindings.key_to_bindings["f3"] = [replace(binding, description=label, show=True) for binding in bindings]
+        self.refresh_bindings()
 
     def _render_strength(
         self,

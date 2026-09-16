@@ -203,7 +203,16 @@ def declarations_screen_factory(
             calendar_entry_handoff=calendar_entry_handoff,
             calendar_recovery_handoff=calendar_recovery_handoff,
         )
-        return resolve_declarations_screen(controller, controller.target("declarations.overview"))
+        # A caller that asks for a calendar row -- Home's agenda -- opens the
+        # calendar itself; everything else opens on the overview, which
+        # restores a declaration row from the same focus.
+        focus = context.focus
+        opening = (
+            "declarations.calendar"
+            if focus is not None and focus.semantic_key.startswith("declarations.calendar")
+            else "declarations.overview"
+        )
+        return resolve_declarations_screen(controller, controller.target(opening))
 
     return create
 

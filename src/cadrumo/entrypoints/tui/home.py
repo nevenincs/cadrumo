@@ -14,7 +14,6 @@ from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.message import Message
-from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
 from ...application.overview.calendar_models import (
@@ -29,11 +28,11 @@ from ...application.overview.home import (
     HomeDeclarationState,
     HomeNextAction,
     HomeProjectionV1,
-    HomeSessionPosture,
     HomeTargetKind,
     HomeZoneState,
 )
 from ...core.i18n.render import lookup_translation, output_language, tr
+from .components.account_chrome import AccountChromeScreen
 from .components.theme import BASE_CSS, tokenised
 from .components.widgets import ContentDataTable, ContentScroll
 from .search import workbench_action_label
@@ -66,12 +65,6 @@ _AVAILABILITY_LOCALE_KEYS: Final = {
     HomeAvailability.STALE: "tui.home.availability.stale",
     HomeAvailability.NEVER_CAPTURED: "tui.home.availability.never_captured",
     HomeAvailability.UNAVAILABLE: "tui.home.availability.unavailable",
-}
-_SESSION_LOCALE_KEYS: Final = {
-    HomeSessionPosture.NO_PROFILE: "tui.home.session.no_profile",
-    HomeSessionPosture.LOCKED: "tui.home.session.locked",
-    HomeSessionPosture.ACTIVE: "tui.home.session.active",
-    HomeSessionPosture.EXPIRED: "tui.home.session.expired",
 }
 _DECLARATION_LOCALE_KEYS: Final = {
     HomeDeclarationState.DRAFT: "tui.home.declaration_state.draft",
@@ -156,6 +149,28 @@ def home_agenda_identity(item: HomeAgendaEntry) -> str:
     return f"agenda:{item.modelo}:{item.filing_year}:{item.period.registry_token}"
 
 
+def home_target_action_id(target: HomeTarget) -> str | None:
+    """Return the action a next-action row names, read back from its identity."""
+    if target.kind is not HomeTargetKind.ACTION:
+        return None
+    return target.identity.split(":")[1]
+
+
+def home_target_work_unit_id(target: HomeTarget) -> str | None:
+    """Return the work unit a resumable-declaration row names."""
+    if target.kind is not HomeTargetKind.DECLARATION:
+        return None
+    return target.identity.removeprefix("declaration:")
+
+
+def home_target_agenda_address(target: HomeTarget) -> tuple[str, str, str] | None:
+    """Return the Modelo, filing year and period an agenda row names."""
+    if target.kind is not HomeTargetKind.AGENDA:
+        return None
+    _kind, modelo, year, period = target.identity.split(":", 3)
+    return modelo, year, period
+
+
 def _action_cells(item: HomeNextAction) -> tuple[str, str, str]:
     """Name the action and its reason from the ids the application ranked.
 
@@ -201,7 +216,7 @@ def _evidence_copy(item: HomeAgendaEntry) -> str:
     )
 
 
-class HomeScreen(Screen[None]):
+class HomeScreen(AccountChromeScreen):
     """The selected responsive due-driven layout over one immutable projection."""
 
     WIDE_MINIMUM: ClassVar[int] = 120
@@ -251,16 +266,6 @@ class HomeScreen(Screen[None]):
     def compose(self) -> ComposeResult:
         projection = self.projection
         yield Static(tr("tui.home.title"), classes="cadrumo-banner", markup=False)
-        yield Static(
-            tr(
-                "tui.home.session_line",
-                label=projection.account.profile_label or tr("tui.home.account_fallback"),
-                status=tr(_SESSION_LOCALE_KEYS[projection.account.posture]),
-            ),
-            id="home-session",
-            classes="home-state",
-            markup=False,
-        )
         with ContentScroll(id="home-page", classes="cadrumo-scroll"), Static(id="home-layout"):
             with Static(id="home-main"):
                 yield Static(
@@ -489,4 +494,7 @@ __all__ = [
     "home_address",
     "home_agenda_identity",
     "home_declaration_identity",
+    "home_target_action_id",
+    "home_target_agenda_address",
+    "home_target_work_unit_id",
 ]

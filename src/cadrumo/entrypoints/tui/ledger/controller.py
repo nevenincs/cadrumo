@@ -7,7 +7,6 @@ from typing import ClassVar, Final, cast
 from textual.app import App
 from textual.binding import Binding
 from textual.message import Message
-from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.models import (
@@ -29,6 +28,7 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
+from ..components.account_chrome import AccountChromeScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -191,10 +191,15 @@ class LedgerWorkspaceController:
             return None
         if self.classification_target is not None:
             return None
+        # With no entries there is nothing to choose, and asking for a choice
+        # sends the operator looking for rows that do not exist.
+        reason_key = (
+            "tui.ledger.refusal.selection_required" if self.projection.entries else "tui.ledger.refusal.no_entries"
+        )
         return LedgerRouteRefusalV1(
             target=target,
             availability=LedgerWorkspaceAvailability.UNAVAILABLE,
-            reason_key="tui.ledger.refusal.selection_required",
+            reason_key=reason_key,
         )
 
     def _submission_door_is_missing(self, area: LedgerWorkspaceArea) -> bool:
@@ -422,7 +427,7 @@ class LedgerBackRequested(Message):
     """Request that the owning host return to the parent destination."""
 
 
-class LedgerWorkspaceScreen(Screen[None]):
+class LedgerWorkspaceScreen(AccountChromeScreen):
     """Shared one-scroll shell and semantic navigation behavior."""
 
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]

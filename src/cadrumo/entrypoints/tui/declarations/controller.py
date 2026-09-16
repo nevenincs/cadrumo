@@ -7,7 +7,6 @@ from typing import ClassVar, Final, cast
 
 from textual.binding import Binding
 from textual.message import Message
-from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
 from ....application.modelo.declarations_calendar import (
@@ -32,12 +31,13 @@ from ....application.overview.calendar_models import (
     OverviewPeriodState,
 )
 from ....application.overview.home import HomeAvailability
-from ....core.i18n.render import tr
+from ....core.i18n.render import lookup_translation, output_language, tr
 from ....core.text_fold import fold_diacritics
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ....domain.modelos.work_unit import WorkUnitState
+from ..components.account_chrome import AccountChromeScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiScreenContextV1
@@ -194,13 +194,26 @@ class DeclarationsWorkspaceController:
             if item.source is DeclarationsCalendarSource.SCHEDULE
         )
 
+    def destination_reason_code(self, destination: DeclarationsDestinationIdV1) -> str | None:
+        """Return why one destination is not available, as the application said it."""
+        zone = _ZONE_BY_DESTINATION[destination]
+        if zone is not None:
+            return self.zone_state(zone).reason_code
+        if self.calendar_projection is None:
+            return None
+        return next(
+            item.reason_code
+            for item in self.calendar_projection.sources
+            if item.source is DeclarationsCalendarSource.SCHEDULE
+        )
+
     def restored_id(self, semantic_key: str) -> str | None:
         """Return the matching opaque semantic restore token, if any."""
         focus = self.context.focus
         return focus.restore_token if focus is not None and focus.semantic_key == semantic_key else None
 
 
-class DeclarationsWorkspaceScreen(Screen[None]):
+class DeclarationsWorkspaceScreen(AccountChromeScreen):
     """One-scroll host-neutral shell with semantic internal navigation."""
 
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
@@ -208,6 +221,7 @@ class DeclarationsWorkspaceScreen(Screen[None]):
         """
         .declarations-page { width: 100%; height: 1fr; }
         .declarations-refusal { color: $warning; text-style: bold; height: auto; }
+        .declarations-empty { color: $text-muted; height: auto; }
         """
     )
 
@@ -243,12 +257,31 @@ class DeclarationsWorkspaceScreen(Screen[None]):
             DeclarationsWorkspaceAvailability.AVAILABLE.value,
             DeclarationsWorkspaceAvailability.STALE.value,
         }:
-            notice.update(declarations_copy("tui.declarations.refusal.source"))
+            notice.update(self._refusal_copy(destination))
             return True
         self.requested_target = self.controller.target(destination)
         notice.update("")
         self.post_message(DeclarationsRouteRequested(self.requested_target))
         return True
+
+    def _refusal_copy(self, destination: DeclarationsDestinationIdV1) -> str:
+        """Say why a destination cannot open, from the application's own reason.
+
+        The generic line only says the source is unavailable; the reason often
+        names something the operator can fix, such as incomplete profile
+        details. A reason without authored words falls back to the generic
+        line rather than to an invented phrase.
+        """
+        reason = self.controller.destination_reason_code(destination)
+        if reason is not None:
+            key = f"tui.declarations.refusal.reason.{reason}"
+            if lookup_translation(key, locale=output_language()) is not None:
+                return declarations_copy(key)
+        return declarations_copy("tui.declarations.refusal.source")
+
+    def show_empty(self) -> None:
+        """Say that a table has nothing in it, on the muted line, not the warning one."""
+        self.query_one("#declarations-empty", Static).update(declarations_copy("tui.declarations.empty"))
 
     def refuse_handoff(self) -> None:
         """Show an explicit refusal when the host omitted a target."""
@@ -367,6 +400,15 @@ def _validate_calendar_recovery_actions(projection: DeclarationsCalendarProjecti
 def calendar_focus_key(row: DeclarationsCalendarEntryRefV1) -> str:
     """Return a NamespacedId-compatible public natural calendar focus key."""
     modelo, year, period = row.semantic_key()
+    return calendar_address_focus_key(modelo, year, period)
+
+
+def calendar_address_focus_key(modelo: object, year: object, period: str) -> str:
+    """Return the calendar focus key for a Modelo, filing year and period.
+
+    Separate from :func:`calendar_focus_key` so a caller holding only the
+    natural address -- a Home agenda row -- lands on the same calendar row.
+    """
     return f"declarations.calendar.m{modelo}.y{year}.p{period.casefold()}"
 
 
@@ -437,6 +479,7 @@ __all__ = [
     "DeclarationsRouteRequested",
     "DeclarationsWorkspaceController",
     "DeclarationsWorkspaceScreen",
+    "calendar_address_focus_key",
     "calendar_aeat_label",
     "calendar_date_label",
     "calendar_focus_key",

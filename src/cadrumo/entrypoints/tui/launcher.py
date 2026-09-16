@@ -29,13 +29,14 @@ if TYPE_CHECKING:
     from textual.screen import Screen
 
     from ...application.ledger.models import ManualLedgerTransactionResult
+    from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
     from ...application.modelo.workspace_models import (
         ModeloWorkspaceProjectionV1,
         ModeloWorkspaceStaticInspectionResultV1,
     )
     from ...application.operations.composition import OperationComposedServices
     from ...application.operations.registry import OperationPublicContractSetV1
-    from ...application.operator_actions.models import ActionReference
+    from ...application.operator_actions.models import ActionReference, DeclaredNextAction
     from ...application.overview.home import HomeProjectionV1
     from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ...application.user_profile.overview import ProfileOverview
@@ -45,6 +46,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
+    from .declarations.models import CalendarRecoveryHandoffV1
     from .ledger.models import (
         LedgerClassificationSubmissionV1,
         LedgerClassificationSubmitterV1,
@@ -357,6 +359,7 @@ class InstalledWorkbenchAccountInputsV1:
     authenticate: Callable[[str, str], ProfileLoginAttempt]
     assess_password: Callable[[str], ProfilePasswordAssessment]
     rotate_password: Callable[[str, str, str], PassphraseChangeAttempt]
+    complete_setup: Callable[[], ProfileOverview] | None = None
 
     def __post_init__(self) -> None:
         """Bind every account door to one exact authenticated profile identity."""
@@ -375,6 +378,7 @@ class InstalledWorkbenchAccountInputsV1:
             authenticate=self.authenticate,
             assess_password=self.assess_password,
             rotate_password=self.rotate_password,
+            complete_setup=self.complete_setup,
             sign_out=compose_profile_sign_out_factory(services, profile_id=self.profile_id),
         )
 
@@ -493,9 +497,69 @@ def compose_installed_workbench_generation_provider(
             search_inputs=_search_inputs(generation),
             refresh_search_inputs=refresh_search_inputs,
             refresh_destinations=destinations,
+            action_candidates=_workspace_action_candidates(dependencies),
         )
 
     return provide
+
+
+def _workspace_action_candidates(
+    dependencies: InstalledWorkbenchFactoryDependenciesV1,
+) -> tuple[TuiActionCandidateV1, ...]:
+    """Declare every action the root hands a workspace as that workspace's candidate.
+
+    The root already decides which workspace performs which action when it
+    injects the references below; declaring them here is what lets Home's
+    suggested actions and the palette open the workspace that performs them.
+    With none declared, a suggested action was selectable and led nowhere.
+    """
+    from .navigation import TuiActionCandidateV1
+
+    owned = (
+        (
+            "workbench.ledger",
+            (
+                dependencies.ledger_review_action,
+                dependencies.ledger_evidence_action,
+                dependencies.ledger_classify_action,
+                dependencies.ledger_link_action,
+            ),
+        ),
+        (
+            "workbench.declarations",
+            (
+                dependencies.declarations_work_action,
+                dependencies.declarations_revisions_action,
+                dependencies.declarations_filing_action,
+            ),
+        ),
+    )
+    candidates: dict[str, TuiActionCandidateV1] = {}
+    for destination, actions in owned:
+        for action in actions:
+            action_id = str(action.action_id)
+            candidates.setdefault(
+                action_id,
+                TuiActionCandidateV1(action_candidate_id=action_id, destination=destination),
+            )
+    return tuple(candidates.values())
+
+
+def _admitted_candidates(
+    candidates: Iterable[TuiActionCandidateV1],
+    admissions: Mapping[str, WorkbenchDestinationAdmission],
+) -> tuple[TuiActionCandidateV1, ...]:
+    """Keep only candidates whose workspace is available in this capture.
+
+    A workspace that is not available may not admit actions, and availability
+    is re-read on every refresh, so the filter is applied at each build.
+    """
+    return tuple(
+        candidate
+        for candidate in candidates
+        if candidate.destination in admissions
+        and admissions[candidate.destination].state is WorkbenchDestinationAdmissionState.AVAILABLE
+    )
 
 
 def _available_admission(destination: str) -> WorkbenchDestinationAdmission:
@@ -610,7 +674,44 @@ def _declarations_generation_factory(
             filing_action=dependencies.declarations_filing_action,
             modelo_workspace_factory=modelo_workspace_factory,
             calendar_projection=calendar,
+            calendar_recovery_handoff=_calendar_work_create_handoff(
+                bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
+                actor=dependencies.account.profile_overview.label,
+            ),
         )(context)
+
+    return create
+
+
+def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarRecoveryHandoffV1:
+    """Bind the calendar's "create this declaration" action to the door ``modelo work create`` uses.
+
+    The calendar controller has already refused an action whose bound
+    arguments contradict its row, so the row's own address is the address the
+    action names. A refusal -- setup not complete, the modelo not applying to
+    this profile -- is raised as the application's typed error, for the
+    calendar to show as itself.
+    """
+
+    def create(action: DeclaredNextAction, entry: DeclarationsCalendarEntryRefV1, /) -> None:
+        from ...application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
+        from ...application.modelo.work_create_policy import guard_active_profile_foral_ccaa
+        from ..adapter_composition import build_work_lifecycle_ports
+
+        if action.action.action_id != "operator.modelo.work.create":
+            raise ValueError("the calendar handoff only creates declarations")
+        guard_active_profile_foral_ccaa()
+        ports = build_work_lifecycle_ports(bucket_id=bucket_id)
+        ensure_modelo_work_unit_for_active_target(
+            bucket_id=bucket_id,
+            modelo=str(entry.modelo),
+            filing_year=entry.filing_year,
+            period=entry.period,
+            registry_revision_id=None,
+            actor=actor,
+            catalogue=ports.work_unit_repository.load(),
+            ports=ports,
+        )
 
     return create
 
@@ -789,17 +890,18 @@ def compose_installed_workbench_root(
         if refresh_destinations is None:
             raise RuntimeError("destination refresh requested without a refresh provider")
         refreshed_admissions, refreshed_factories = refresh_destinations()
+        admissions = {"workbench.home": _available_admission("workbench.home"), **refreshed_admissions}
         return build_destination_catalogue(
-            admissions={"workbench.home": _available_admission("workbench.home"), **refreshed_admissions},
+            admissions=admissions,
             factories={"workbench.home": home_factory, **refreshed_factories},
-            action_candidates=inputs.action_candidates,
+            action_candidates=_admitted_candidates(inputs.action_candidates, admissions),
         )
 
     return InstalledWorkbenchRootCompositionV1(
         destination_catalogue=build_destination_catalogue(
             admissions=inputs.admissions,
             factories=factories,
-            action_candidates=inputs.action_candidates,
+            action_candidates=_admitted_candidates(inputs.action_candidates, inputs.admissions),
         ),
         admissions=inputs.admissions,
         refresh_home=inputs.refresh_home,

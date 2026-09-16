@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.message import Message
-from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
 from ....application.aeat_sync.workspace import (
@@ -36,6 +35,7 @@ from ....core.filing_year import FilingYear
 from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
+from ..components.account_chrome import AccountChromeScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..components.workspace_host import replace_workspace_body
@@ -193,7 +193,7 @@ class AeatSyncRouteRequested(Message):
         self.target = target
 
 
-class AeatSyncWorkspaceScreen(Screen[None]):
+class AeatSyncWorkspaceScreen(AccountChromeScreen):
     """Common one-scroll shell; it reads only the injected immutable projection."""
 
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
@@ -267,7 +267,11 @@ class AeatSyncWorkspaceScreen(Screen[None]):
         status = self.query_one("#aeat-sync-status", Static)
         if str(status.render()).strip():
             return
-        rendered_count = str(count) if count is not None else aeat_sync_copy("tui.aeat_sync.value.none")
+        rendered_count = (
+            aeat_sync_copy("tui.aeat_sync.status.items", count=count)
+            if count is not None
+            else aeat_sync_copy("tui.aeat_sync.value.none")
+        )
         status.update(f"{_label(self.zone)} · {_label(state.availability)} · {rendered_count}")
 
     def _render_navigation(self, navigation: DataTable[str]) -> None:
@@ -437,9 +441,29 @@ class AeatSyncWorkspaceScreen(Screen[None]):
             return
         zone = AeatSyncWorkspaceZone(event.row_key.value)
         if not self.controller.can_open(zone):
-            self.query_one("#aeat-sync-status", Static).update(aeat_sync_copy("tui.aeat_sync.refusal.source"))
+            self.query_one("#aeat-sync-status", Static).update(self._closed_zone_copy(zone))
             return
         self.post_message(AeatSyncRouteRequested(self.controller.target(zone)))
+
+    def _closed_zone_copy(self, zone: AeatSyncWorkspaceZone) -> str:
+        """Name the sources a closed zone is still waiting for.
+
+        The zone carries no reason of its own, but its sources say which of
+        them could not be observed, and that is what the operator needs to
+        know: which data has to arrive before the area can open.
+        """
+        missing = [
+            aeat_sync_copy(
+                "tui.aeat_sync.sources.entry",
+                source=_label(source.source),
+                availability=_label(source.availability),
+            )
+            for source in self.controller.state_for(zone).sources
+            if source.availability not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
+        ]
+        if not missing:
+            return aeat_sync_copy("tui.aeat_sync.refusal.source")
+        return aeat_sync_copy("tui.aeat_sync.refusal.sources_missing", sources=", ".join(missing))
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Track semantic identity instead of a mutable row position."""

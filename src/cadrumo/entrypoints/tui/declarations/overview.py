@@ -46,6 +46,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
                 markup=False,
             )
             yield ContentDataTable[str](id="declarations-list", cursor_type="row", zebra_stripes=True)
+            yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -72,7 +73,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
                 key=row.work_unit_id,
             )
         if not table.row_count:
-            self.query_one("#declarations-refusal", Static).update(declarations_copy("tui.declarations.empty"))
+            self.show_empty()
         restored = self.controller.restored_id("declarations.work")
         row_index = next((i for i, item in enumerate(table.ordered_rows) if item.key.value == restored), None)
         if row_index is None:

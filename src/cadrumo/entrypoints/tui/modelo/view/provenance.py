@@ -22,6 +22,10 @@ revision growing at all -- and row count therefore tells an operator
 nothing about completeness. The boundedness notice is the only thing that
 does.
 
+Each row names the subject and the source it came from; the resolver that
+read the source is a raw identifier and sits in a collapsed
+technical-details group, row for row.
+
 The per-value provenance nested on materialization records is NOT read
 here, and not because this destination prefers the facet: that nested field
 is never populated by any producer, so a screen drawing on it would render
@@ -35,7 +39,6 @@ from typing import ClassVar, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.screen import Screen
 from textual.widgets import Static
 
 from .....application.modelo.workspace_models import (
@@ -44,16 +47,18 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceProvenanceRecordV1,
 )
 from .....core.i18n.render import tr
+from ...components.account_chrome import AccountChromeScreen
 from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
 from .models import ModeloWorkspaceBoundedPageV1
+from .technical_details import TechnicalDetailRowV1, mount_technical_details
 
-_COLUMN_KEYS: tuple[str, ...] = ("subject", "resolver", "source_ref")
+_COLUMN_KEYS: tuple[str, ...] = ("subject", "source_ref")
 
 
-class ModeloWorkspaceProvenanceScreen(TypedAppAccess, Screen[None]):
+class ModeloWorkspaceProvenanceScreen(TypedAppAccess, AccountChromeScreen):
     """Flat attribution rows for the current session, or an explicit not-applicable."""
 
     BINDINGS: ClassVar = [
@@ -121,16 +126,16 @@ class ModeloWorkspaceProvenanceScreen(TypedAppAccess, Screen[None]):
         for column_key in _COLUMN_KEYS:
             table.add_column(tr(f"flows.modelo_workspace_provenance.column.{column_key}"), key=column_key)
         unattributed = tr("flows.modelo_workspace_provenance.value.unattributed")
+        resolver_label = tr("flows.modelo_workspace_provenance.column.resolver")
+        resolvers: list[TechnicalDetailRowV1] = []
         for index, record in enumerate(facet.records):
             source = record.calculation_source
-            table.add_row(
-                unattributed if record.subject is None else str(record.subject),
-                str(source.resolver_id),
-                str(source.source_ref),
-                key=str(index),
-            )
+            subject = unattributed if record.subject is None else str(record.subject)
+            table.add_row(subject, str(source.source_ref), key=str(index))
+            resolvers.append((str(index), f"{index + 1}. {resolver_label} ({subject})", str(source.resolver_id)))
         if not facet.records:
             body.mount(Static(tr("flows.modelo_workspace_provenance.empty"), id="workspace-provenance-empty"))
+        mount_technical_details(body, resolvers, id="workspace-provenance-technical-table")
 
     def action_quit_provenance(self) -> None:
         """Leave the destination without returning a value; this screen decides nothing."""

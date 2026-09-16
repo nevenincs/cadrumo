@@ -125,6 +125,20 @@ def compose_authenticated_account_inputs(
         )
         return build_profile_overview(applied, label=profile_label, schema=profile_schema)
 
+    def complete_setup() -> ProfileOverview:
+        """Promote setup to complete through the repository door ``complete-setup`` uses."""
+        profiles = ProfileRecordRepository.for_current_session(
+            profile_id,
+            profile_decode_context=profile_decode_context,
+        )
+        current = profiles.load(profile_id)
+        promoted = profiles.complete_setup(
+            profile_id,
+            expected_revision=current.record_revision,
+            expected_content_digest=current.content_digest,
+        )
+        return build_profile_overview(promoted, label=profile_label, schema=profile_schema)
+
     def authenticate(candidate_profile_id: str, passphrase: str):
         """Authenticate through the same generation-pinned decode context."""
         return attempt_profile_login(
@@ -141,6 +155,7 @@ def compose_authenticated_account_inputs(
             schema=profile_schema,
         ),
         persist_profile_field=persist_profile_field,
+        complete_setup=complete_setup,
         login_choices=tuple(login_choices),
         authenticate=authenticate,
         assess_password=assess_profile_password,

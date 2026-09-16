@@ -33,6 +33,7 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(declarations_copy("tui.declarations.revisions.explanation"), markup=False)
             yield ContentDataTable[str](id="declarations-revisions", cursor_type="row", zebra_stripes=True)
+            yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -54,7 +55,7 @@ class DeclarationsRevisionsScreen(DeclarationsWorkspaceScreen):
                 key=row.calculation_revision_id,
             )
         if not table.row_count:
-            self.query_one("#declarations-refusal", Static).update(declarations_copy("tui.declarations.empty"))
+            self.show_empty()
         restored = self.controller.restored_id("declarations.calculation_revision")
         index = next((i for i, item in enumerate(table.ordered_rows) if item.key.value == restored), None)
         if index is None:

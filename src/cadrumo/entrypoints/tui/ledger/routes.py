@@ -160,9 +160,25 @@ def ledger_screen_factory(
         link_submitter=link_submitter,
     )
 
+    # Which area performs each injected action. Classification needs an entry
+    # chosen first, so a request to classify opens the entries to choose from.
+    area_by_action = {
+        str(action.action_id): area
+        for action, area in (
+            (review_action, LedgerWorkspaceArea.REVIEW),
+            (classify_action, LedgerWorkspaceArea.ENTRIES),
+            (evidence_action, LedgerWorkspaceArea.EVIDENCE),
+            (link_action, LedgerWorkspaceArea.RECONCILIATION),
+        )
+        if action is not None
+    }
+
     def create(context: TuiScreenContextV1) -> LedgerWorkspaceScreen:
         controller = LedgerWorkspaceController(context, projection, injection)
-        return resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.OVERVIEW))
+        area = area_by_action.get(context.action_candidate_id or "", LedgerWorkspaceArea.OVERVIEW)
+        if controller.refusal_for(area) is not None:
+            area = LedgerWorkspaceArea.OVERVIEW
+        return resolve_ledger_screen(controller, controller.route_target(area))
 
     return create
 

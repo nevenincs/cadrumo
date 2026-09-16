@@ -361,6 +361,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
             tr("wizard.setup.profile.output-language.prompt", locale=locale)
         )
         self.query_one("#btn-create", Button).label = tr("flows.registration.create_button", locale=locale)
+        self.describe_appearance_key()
         self._render_strength(
             self.query_one("#field-password", Input).value,
             assess=self._assess_profile_password,

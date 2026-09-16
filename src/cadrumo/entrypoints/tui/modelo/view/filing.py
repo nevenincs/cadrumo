@@ -14,6 +14,9 @@ calling it to see whether it raises would be the derivation the contract
 forbids. That is a structural fact about the filing architecture, not a
 wiring gap awaiting a fix.
 
+The capability is named and its disposition said in words; the
+producer attribution sits in a collapsed technical-details group.
+
 NO REMOTE SUBMISSION, and none is offered. Filing happens outside this
 application by a human; this destination reports what is known and names
 the handoff.
@@ -25,7 +28,6 @@ from typing import ClassVar, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.screen import Screen
 from textual.widgets import Static
 
 from .....application.modelo.workspace_models import (
@@ -33,16 +35,18 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityV1,
 )
 from .....core.i18n.render import tr
+from ...components.account_chrome import AccountChromeScreen
 from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
-from .models import capability_row
+from .models import capability_label, capability_row, disposition_label
+from .technical_details import mount_technical_details, producer_row
 
 _FILING_CAPABILITIES: tuple[ModeloWorkspaceCapabilityName, ...] = (
     ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS,
 )
-_COLUMN_KEYS: tuple[str, ...] = ("capability", "disposition", "producer", "why")
+_COLUMN_KEYS: tuple[str, ...] = ("capability", "disposition")
 
 _WHY_KEYS: dict[ModeloWorkspaceCapabilityName, str] = {
     ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS: "why.draft_structural",
@@ -55,7 +59,7 @@ def _filing_capabilities(session: ModeloWorkspaceReadSession) -> tuple[ModeloWor
     return tuple(capability for capability in session.projection.capabilities if capability.capability in wanted)
 
 
-class ModeloWorkspaceFilingScreen(TypedAppAccess, Screen[None]):
+class ModeloWorkspaceFilingScreen(TypedAppAccess, AccountChromeScreen):
     """The filing capability beside the reason it reads as it does."""
 
     BINDINGS: ClassVar = [
@@ -90,24 +94,34 @@ class ModeloWorkspaceFilingScreen(TypedAppAccess, Screen[None]):
     def _mount_capabilities(self) -> None:
         """Mount the filing capability beside the reason it reads as it does.
 
-        The ``why`` column is keyed on the capability's own identity, not on
-        its disposition, so the structural reason cannot be silently attached
-        to a different capability.
+        The reason is keyed on the capability's own identity, not on its
+        disposition, so the structural reason cannot be silently attached to
+        a different capability. It is written as a sentence under the table
+        rather than as a column: a sentence-long cell widens the table past
+        the screen, and the horizontal scrollbar then covers the only row.
         """
         body = self.query_one("#workspace-filing-body", ContentScroll)
         table = ContentDataTable[str](id="workspace-filing-table", cursor_type="row", zebra_stripes=True)
         body.mount(table)
         for column_key in _COLUMN_KEYS:
             table.add_column(tr(f"flows.modelo_workspace_filing.column.{column_key}"), key=column_key)
-        for capability in _filing_capabilities(self._session):
-            row = capability_row(capability)
+        rows = tuple(capability_row(capability) for capability in _filing_capabilities(self._session))
+        for row in rows:
             table.add_row(
-                row.capability.value,
-                f"{row.glyph} {row.disposition.value}",
-                f"{row.producer_owner}.{row.producer}",
-                tr(f"flows.modelo_workspace_filing.{_WHY_KEYS[row.capability]}"),
-                key=row.capability.value,
+                capability_label(row.capability), disposition_label(row.disposition), key=row.capability.value
             )
+            body.mount(
+                Static(
+                    tr(
+                        "flows.modelo_workspace_filing.why_line",
+                        capability=capability_label(row.capability),
+                        why=tr(f"flows.modelo_workspace_filing.{_WHY_KEYS[row.capability]}"),
+                    ),
+                    id=f"workspace-filing-why-{row.capability.value}",
+                    markup=False,
+                )
+            )
+        mount_technical_details(body, (producer_row(row) for row in rows), id="workspace-filing-technical-table")
 
     def action_quit_filing(self) -> None:
         """Leave the destination without returning a value; this screen decides nothing."""

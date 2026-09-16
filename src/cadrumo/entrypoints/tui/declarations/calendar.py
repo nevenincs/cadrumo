@@ -6,7 +6,6 @@ from typing import ClassVar, cast, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.screen import Screen
 from textual.widgets import DataTable, Input, Select, Static
 
 from ....application.modelo.declarations_calendar import (
@@ -16,6 +15,9 @@ from ....application.modelo.declarations_calendar import (
 )
 from ....application.operator_actions.models import DeclaredNextAction
 from ....application.overview.home import HomeAvailability
+from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.hierarchy import CadrumoError
+from ..components.account_chrome import AccountChromeScreen
 from ..components.dialogs import ConfirmScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -31,13 +33,20 @@ from .controller import (
 )
 from .models import DeclarationsCalendarScopeV1
 
+_TUI_REFUSAL_KEYS: dict[str, str] = {
+    # The application's wording names the CLI command; here the same fix is a key away.
+    "application.modelo.errors.profile_readiness_setup_incomplete": (
+        "tui.declarations.calendar.recovery.setup_incomplete"
+    ),
+}
+
 
 def _identity(row: DeclarationsCalendarEntryRefV1) -> str:
     modelo, year, period = row.semantic_key()
     return f"{modelo}|{year}|{period}"
 
 
-class DeclarationsCalendarScreen(Screen[None]):
+class DeclarationsCalendarScreen(AccountChromeScreen):
     """Three-control agenda over an injected immutable safe projection."""
 
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
@@ -326,12 +335,25 @@ class DeclarationsCalendarScreen(Screen[None]):
                 declarations_copy("tui.declarations.refusal.handoff")
             )
             return
+        notice = self.query_one("#declarations-calendar-notice", Static)
         try:
             handoff(action, row)
+        except CadrumoError as refusal:
+            # The application's own reason -- setup not complete, the modelo
+            # not applying -- tells the operator what to fix; a generic line
+            # would not.
+            tui_key = _TUI_REFUSAL_KEYS.get(refusal.translated_message or "")
+            notice.update(declarations_copy(tui_key) if tui_key is not None else resolve_error_message(refusal))
+            return
         except Exception:
-            self.query_one("#declarations-calendar-notice", Static).update(
-                declarations_copy("tui.declarations.calendar.recovery.failure")
+            notice.update(declarations_copy("tui.declarations.calendar.recovery.failure"))
+            return
+        notice.update(
+            declarations_copy(
+                "tui.declarations.calendar.recovery.success",
+                address=natural_address(row.modelo, row.filing_year, row.period),
             )
+        )
 
     def replace_projection(self, projection: DeclarationsCalendarProjectionV1) -> None:
         """Re-render a newly injected projection while preserving semantic focus."""

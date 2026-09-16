@@ -113,6 +113,7 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(declarations_copy("tui.declarations.filing_history.axes"), markup=False)
             yield ContentDataTable[str](id="declarations-filings", cursor_type="row", zebra_stripes=True)
+            yield Static(id="declarations-empty", classes="declarations-empty", markup=False)
             yield Static(id="declarations-refusal", classes="declarations-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -122,7 +123,7 @@ class DeclarationsFilingHistoryScreen(DeclarationsWorkspaceScreen):
         _configure_filing_table(table)
         _populate_filing_history(table, self.controller)
         if not table.row_count:
-            self.query_one("#declarations-refusal", Static).update(declarations_copy("tui.declarations.empty"))
+            self.show_empty()
         _restore_filing_history_focus(self, table)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
