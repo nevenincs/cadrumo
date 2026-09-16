@@ -30,6 +30,7 @@ from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.ledger import tests as ledger_application_tests
 from cadrumo.application.ledger.batch_ingest import BatchItemResult, BatchRunResult, run_evidence_batch
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
@@ -62,7 +63,9 @@ _BUCKET_ID = "2b2b2b2b-2b2b-4b2b-8b2b-2b2b2b2b2b2b"
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 
-_CORPUS = Path(__file__).parent / "_evidence_corpus"
+#: The evidence corpus belongs to the ledger application tests; resolved through
+#: that package so the location follows its owner rather than this file's depth.
+_CORPUS = Path(ledger_application_tests.__file__).parent / "_evidence_corpus"
 
 #: A structured record: read by a parser, so this row is deterministic and
 #: reaches no model at all.
