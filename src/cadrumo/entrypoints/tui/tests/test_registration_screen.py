@@ -97,8 +97,11 @@ async def _wait_for_screen(pilot, screen_type: type, *, composed: str) -> bool:
         screen = pilot.app.screen
         if not isinstance(screen, screen_type):
             return False
-        widgets = screen.query(composed)
-        return bool(widgets) and widgets.first().region.area > 0
+        try:
+            area: int = screen.query(composed).first().region.area
+        except NoMatches:
+            return False
+        return area > 0
 
     return await _wait_until(pilot, laid_out)
 
