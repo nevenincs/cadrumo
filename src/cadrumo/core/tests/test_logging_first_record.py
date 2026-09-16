@@ -1,4 +1,4 @@
-"""Obtaining a logger is side-effect free; the first record still reaches cadrumo.log.
+"""Obtaining a logger is side-effect free; early records still reach cadrumo.log.
 
 Each probe runs in a fresh interpreter because the in-process test session has
 already configured logging, and the behaviour under test is what happens before
@@ -27,21 +27,31 @@ from pathlib import Path
 
 from cadrumo.core import logging as project_logging
 
-if sys.argv[2] == "deferred":
+mode = sys.argv[2]
+if mode in {"deferred", "late"}:
     project_logging.defer_logging_configuration()
 logger = project_logging.get_logger("cadrumo.tests.first_record")
 log_file = Path(sys.argv[1]) / "cadrumo.log"
 before = {"exists": log_file.exists(), "configured": project_logging._configured}
-logger.info("info record %s", "before-warning")
+if mode == "overflow":
+    for index in range(project_logging._PENDING_RECORD_LIMIT + 5):
+        logger.info("held record %d", index)
+    project_logging.configure_logging()
+else:
+    logger.info("info record %s", "before-warning")
 after_info = {"exists": log_file.exists(), "configured": project_logging._configured}
-logger.warning("first record %s", "probe")
+if mode == "late":
+    project_logging.resume_logging_configuration()
+    project_logging.configure_logging()
+elif mode != "overflow":
+    logger.warning("first record %s", "probe")
 logging.shutdown()
 print(json.dumps({"before": before, "after_info": after_info, "configured": project_logging._configured}))
 """
 
-_RECORD_LINE = re.compile(
-    r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} \[WARNING\] cadrumo\.tests\.first_record: first record probe\n",
-)
+_STAMP = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}"
+_INFO_LINE = rf"{_STAMP} \[INFO\] cadrumo\.tests\.first_record: info record before-warning\n"
+_WARNING_LINE = rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: first record probe\n"
 
 
 def _run_probe(tmp_path: Path, mode: str) -> tuple[dict[str, object], str, Path]:
@@ -65,13 +75,28 @@ def _run_probe(tmp_path: Path, mode: str) -> tuple[dict[str, object], str, Path]
     return report, str(completed.stderr), log_dir / "cadrumo.log"
 
 
-def test_a_logger_obtained_before_configuration_writes_its_first_warning_to_the_log_file(tmp_path: Path) -> None:
+def test_a_warning_configures_logging_and_replays_the_records_held_before_it(tmp_path: Path) -> None:
     report, _, log_file = _run_probe(tmp_path, "normal")
 
     assert report["before"] == {"exists": False, "configured": False}
     assert report["after_info"] == {"exists": False, "configured": False}
     assert report["configured"] is True
-    assert _RECORD_LINE.fullmatch(log_file.read_text(encoding="utf-8"))
+    assert re.fullmatch(_INFO_LINE + _WARNING_LINE, log_file.read_text(encoding="utf-8"))
+
+
+def test_a_host_that_configures_late_still_writes_its_earlier_info_record(tmp_path: Path) -> None:
+    report, _, log_file = _run_probe(tmp_path, "late")
+
+    assert report["after_info"] == {"exists": False, "configured": False}
+    assert report["configured"] is True
+    assert re.fullmatch(_INFO_LINE, log_file.read_text(encoding="utf-8"))
+
+
+def test_held_records_keep_only_the_newest_when_the_buffer_overflows(tmp_path: Path) -> None:
+    _, _, log_file = _run_probe(tmp_path, "overflow")
+
+    held = re.findall(r"held record (\d+)", log_file.read_text(encoding="utf-8"))
+    assert [int(index) for index in held] == list(range(5, 205))
 
 
 def test_a_deferred_process_keeps_the_log_file_closed_and_reports_on_stderr(tmp_path: Path) -> None:

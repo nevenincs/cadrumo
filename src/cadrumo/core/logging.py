@@ -38,6 +38,7 @@ import logging.config
 import logging.handlers
 import re
 import sys
+from collections import deque
 from collections.abc import Iterable, Iterator, Mapping
 from contextvars import ContextVar
 from pathlib import Path
@@ -697,6 +698,7 @@ def configure_logging() -> None:
         # of crashing while its import-time logger tries to open former state.
         # Do not configure a file handler or inspect the rejected root.
         _configured = True
+        _retire_first_record_configuration()
         return
     log_directory_failure = _prepare_log_directory(log_file)
     file_logging_enabled = log_directory_failure is None
@@ -766,6 +768,7 @@ def configure_logging() -> None:
     _install_secret_scrubbing_filters()
 
     _configured = True
+    _flush_pending_records()
 
     if not file_logging_enabled:
         # Surface the degrade at ERROR so it clears the default ERROR-gated
@@ -871,15 +874,23 @@ def resume_logging_configuration() -> None:
     _configuration_deferred = False
 
 
+_PENDING_RECORD_LIMIT = 200
+_pending_records: deque[logging.LogRecord] = deque(maxlen=_PENDING_RECORD_LIMIT)
+_root_level_before_buffering: int | None = None
+
+
 class _ConfigureOnFirstRecordHandler(logging.Handler):
     """Root placeholder that installs the project configuration on first use.
 
     Obtaining a logger must not load settings or open the diagnostic log file:
     most production modules do so at import. Hosts configure explicitly at
-    their process boundary; this placeholder covers a record that reaches the
-    root before any host did. While configuration is deferred or suppressed it
-    stands in for :data:`logging.lastResort`, which a root with any handler no
-    longer reaches.
+    their process boundary; this placeholder covers the time before any host
+    did. A warning or worse configures logging on the spot. Quieter records
+    are held, newest :data:`_PENDING_RECORD_LIMIT` only, and replayed through
+    the real handlers once configuration runs, so a host that configures late
+    still keeps its early diagnostics. While configuration is deferred or
+    suppressed, a warning goes to :data:`logging.lastResort`, which a root
+    with any handler no longer reaches.
     """
 
     _configuring = False
@@ -888,16 +899,19 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         root_logger = logging.getLogger()
         position = root_logger.handlers.index(self) if self in root_logger.handlers else 0
-        if not (_configured or _configuration_deferred or type(self)._configuring):
+        if record.levelno >= logging.WARNING and not (
+            _configured or _configuration_deferred or type(self)._configuring
+        ):
             type(self)._configuring = True
             try:
                 configure_logging()
             finally:
                 type(self)._configuring = False
         if self in root_logger.handlers:
-            if _configured:
-                root_logger.removeHandler(self)
-            _handle_as_last_resort(record)
+            if record.levelno >= logging.WARNING:
+                _handle_as_last_resort(record)
+            else:
+                _pending_records.append(record)
             return
         # ``Logger.callHandlers`` is still walking the root's handler list,
         # which configuration replaced in place; the walk resumes after this
@@ -913,11 +927,41 @@ def _handle_as_last_resort(record: logging.LogRecord) -> None:
         last_resort.handle(record)
 
 
+def _flush_pending_records() -> None:
+    """Replay held records through the handlers configuration installed."""
+    global _root_level_before_buffering
+    _root_level_before_buffering = None
+    root_logger = logging.getLogger()
+    while _pending_records:
+        record = _pending_records.popleft()
+        for handler in root_logger.handlers:
+            if record.levelno >= handler.level:
+                handler.handle(record)
+
+
+def _retire_first_record_configuration() -> None:
+    """Drop the placeholder and its held records when configuration is refused."""
+    global _root_level_before_buffering
+    root_logger = logging.getLogger()
+    for handler in [handler for handler in root_logger.handlers if isinstance(handler, _ConfigureOnFirstRecordHandler)]:
+        root_logger.removeHandler(handler)
+    _pending_records.clear()
+    if _root_level_before_buffering is not None:
+        root_logger.setLevel(_root_level_before_buffering)
+        _root_level_before_buffering = None
+
+
 def _install_first_record_configuration() -> None:
+    global _root_level_before_buffering
     root_logger = logging.getLogger()
     if _configured or any(isinstance(handler, _ConfigureOnFirstRecordHandler) for handler in root_logger.handlers):
         return
     root_logger.addHandler(_ConfigureOnFirstRecordHandler())
+    if root_logger.level == logging.WARNING:
+        # The stdlib default would discard quieter records before the
+        # placeholder could hold them; configuration sets the real level.
+        _root_level_before_buffering = root_logger.level
+        root_logger.setLevel(logging.DEBUG)
 
 
 _install_first_record_configuration()
