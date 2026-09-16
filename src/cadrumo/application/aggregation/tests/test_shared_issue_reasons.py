@@ -50,7 +50,6 @@ def test_renta_ledger_carries_its_domain_specific_reasons() -> None:
         RentaLedgerAggregationIssueReason.UNSUPPORTED_PERIOD.value,
         RentaLedgerAggregationIssueReason.MISSING_CATEGORY.value,
         RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY.value,
-        RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE.value,
         RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE.value,
         RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE.value,
         RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY.value,
