@@ -159,9 +159,13 @@ class LLMCache:
         carries identity-bearing inputs and therefore adopts the DIAGNOSTIC
         rule set, mirroring the run-trace sink's discipline). The redacted
         payload is stored as an encrypted SQL secure object rather than a
-        materialized JSON file. The redaction is idempotent — re-reads of an
-        already-redacted entry stay correct because the cache carries the
-        redacted text only.
+        materialized JSON file.
+
+        A response the redaction altered is not stored at all. A cache hit
+        stands in for the response, and a redacted one is a different
+        response: an invoice read whose tax identifier came back as its hash
+        fails validation on replay, so a re-read of the same document refused
+        what the first read accepted.
 
         Args:
             request: Structured :class:`~llm.LLMRequest`.
@@ -185,12 +189,20 @@ class LLMCache:
             response=response,
             created_at=now(),
         )
+        serialised = entry.model_dump(mode="json")
         redacted = redact_structured(
-            entry.model_dump(mode="json"),
+            serialised,
             rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
         )
         if not is_object_dict(redacted):
             raise LLMCacheError("redacted LLM cache entry must be a JSON object")
+        if redacted.get("response") != serialised["response"]:
+            _log.debug(
+                "llm_cache skip: provider=%s model=%s response carries redacted content",
+                response.provider.value,
+                response.model,
+            )
+            return entry
         # ``redact_structured`` returns ``object``; the guard above promotes it
         # to a mapping with JSON-shape contents. Re-key as ``str`` so the typed
         # boundary holds; ``_payload_for_entry`` treats the mapping opaquely
