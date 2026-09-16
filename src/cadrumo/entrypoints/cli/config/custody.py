@@ -300,6 +300,7 @@ async def _run_logout_operation(profile_id: UUID, *, operation: PinnedAuthorityO
             actor_ref=_LOGOUT_ACTOR_REF,
         )
         await services.submission.start(submission.receipt.operation_id)
+        await services.submission.settled(submission.receipt.operation_id)
     finally:
         await services.shutdown()
 

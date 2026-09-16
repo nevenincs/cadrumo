@@ -100,6 +100,7 @@ async def _submit_and_start(services, journal, request: OperationRequest[GoogleS
         operation_id="a" * 64,
     )
     await services.submission.start(submission.receipt.operation_id)
+    await services.submission.settled(submission.receipt.operation_id)
     return await journal.load(submission.receipt.operation_id), await journal.read_after(
         submission.receipt.operation_id, 0, limit=20
     )

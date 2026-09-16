@@ -299,6 +299,7 @@ def execute_google_sheets_export(
                     actor_ref="operator:modelo-spreadsheet-push",
                 )
                 await services.submission.start(submitted.receipt.operation_id)
+                await services.submission.settled(submitted.receipt.operation_id)
                 observed = await services.observation.observe(
                     OperationObservationRequestV1(
                         operation_id=submitted.receipt.operation_id,
