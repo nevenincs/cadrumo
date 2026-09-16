@@ -10,8 +10,6 @@ adapters:
       errors:
         already_active: AeatAuthenticator ja té una sessió activa; crideu close()
           o reauthenticate() abans d'autenticar de nou.
-        already_active_before_resume: AeatAuthenticator ja té una sessió activa; crideu
-          close() abans de reprendre.
         assertion_failed: L'autenticació AEAT no ha produït una asserció d'inici de
           sessió vàlida.
         capture_requires_active_session: capture_storage_state() requereix la sessió
