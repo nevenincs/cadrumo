@@ -43,8 +43,11 @@ from pydantic import ConfigDict
 #: types) must declare a module-local constant instead. This constant deliberately
 #: does not set ``validate_assignment``; it is the default for frozen value
 #: objects, not for settings models, mutable accumulators, or the CLI JSON schema
-#: registry.
-STRICT_FROZEN_CONFIG: ConfigDict = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+#: registry. Schema construction is deferred to first use so importing a module of
+#: value objects does not pay for validators the process never runs.
+STRICT_FROZEN_CONFIG: ConfigDict = ConfigDict(
+    strict=True, frozen=True, extra="forbid", validate_default=True, defer_build=True
+)
 
 #: Canonical strict, frozen, no-extra-fields configuration that also prevents
 #: Pydantic from echoing rejected input in validation errors. Use it for models

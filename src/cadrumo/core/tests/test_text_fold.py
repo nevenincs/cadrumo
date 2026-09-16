@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+import unicodedata
+
 import pytest
 
-from ..text_fold import ascii_slug, fold_diacritics
+from ..text_fold import (
+    COMBINING_MARK_RANGES,
+    COMBINING_MARK_UNIDATA_VERSION,
+    ascii_slug,
+    combining_mark_ranges_from_unicodedata,
+    fold_diacritics,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -101,3 +109,49 @@ def test_dropping_combining_marks_is_redundant_under_the_ascii_pass() -> None:
     ):
         decomposed = normalize("NFKD", sample).encode("ascii", "ignore").decode("ascii").casefold()
         assert ascii_slug(sample) == slug_run.sub("-", decomposed).strip("-"), sample
+
+
+def test_checked_in_combining_mark_ranges_match_the_live_unicode_database() -> None:
+    """The checked-in ``Mn`` ranges are exactly what the running interpreter derives.
+
+    On failure, replace ``COMBINING_MARK_RANGES`` and
+    ``COMBINING_MARK_UNIDATA_VERSION`` with the values printed here.
+    """
+    live = combining_mark_ranges_from_unicodedata()
+    regenerated = "\n".join(f"    (0x{first:04X}, 0x{last:04X})," for first, last in live)
+    assert unicodedata.unidata_version == COMBINING_MARK_UNIDATA_VERSION, unicodedata.unidata_version
+    assert live == COMBINING_MARK_RANGES, f"COMBINING_MARK_RANGES = (\n{regenerated}\n)"
+
+
+def test_range_derivation_detects_a_dropped_combining_mark() -> None:
+    """A table missing one ``Mn`` codepoint no longer equals the live derivation."""
+    first, last = COMBINING_MARK_RANGES[0]
+    truncated = ((first + 1, last), *COMBINING_MARK_RANGES[1:])
+    assert truncated != combining_mark_ranges_from_unicodedata()
+    assert unicodedata.category(chr(first)) == "Mn"
+
+
+@pytest.mark.parametrize(
+    "sample",
+    [
+        "Declaración",
+        "Coruña",
+        "Ørsted",
+        "ǅemal Ṩ",
+        "ﬁ ﬀ ① ²",
+        "한국어",
+        "नमस्ते",
+        "עִבְרִית",
+        "U\u0308\u0301\u0308\u0301",
+        "e\u0301\u0327",
+        "x\U000e0100y",
+        "\u0345\u1dc0",
+        "",
+    ],
+)
+def test_fold_matches_the_category_scan_it_replaces(sample: str) -> None:
+    """Folding with the checked-in table equals stripping ``Mn`` by live category lookup."""
+    expected = "".join(
+        character for character in unicodedata.normalize("NFKD", sample) if unicodedata.category(character) != "Mn"
+    )
+    assert fold_diacritics(sample) == expected

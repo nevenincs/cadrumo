@@ -30,8 +30,6 @@ from typing import TYPE_CHECKING, Final, cast
 
 from pydantic import BaseModel, ConfigDict
 
-from ..redaction.rules import redact_for_log
-
 if TYPE_CHECKING:
     from ..json_contract import Notice, ResolvedPreconditionAction
 
@@ -350,6 +348,8 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
     """
     if not context:
         return None
+    from ..redaction.rules import redact_for_log
+
     scrubbed: dict[str, str] = {}
     for key, value in sorted(context.items()):
         if key in _INTERNAL_CONTEXT_KEYS:

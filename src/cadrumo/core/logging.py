@@ -642,9 +642,9 @@ def _prepare_log_directory(log_file: Path) -> str | None:
     process cannot create — an inaccessible Windows path the operator's
     account may not write, a path routed under a non-directory, a
     ``PermissionError`` — MUST degrade to stderr-only logging rather than
-    crash CLI startup. Because :func:`get_logger` (and therefore this call)
-    runs at module-import time, an unguarded ``mkdir`` here escapes as a raw
-    Python traceback long before any CLI error boundary exists. Swallowing the
+    crash CLI startup. Because configuration can run on the first log record,
+    before any CLI error boundary exists, an unguarded ``mkdir`` here escapes
+    as a raw Python traceback. Swallowing the
     :exc:`OSError` into a reason string keeps startup alive; the caller
     surfaces the reason as an instructive, redacted diagnostic.
     """
@@ -679,8 +679,8 @@ def configure_logging() -> None:
     stderr-only and records an instructive diagnostic naming the likely
     remedy — it never crashes CLI startup with a raw traceback.
 
-    The function is idempotent so early imports can safely call
-    :func:`get_logger` without duplicating handlers.
+    The function is idempotent, so hosts and the first-record placeholder can
+    both reach it without duplicating handlers.
     """
     global _configured
     if _configured or _is_cli_metadata_invocation():
@@ -871,23 +871,73 @@ def resume_logging_configuration() -> None:
     _configuration_deferred = False
 
 
+class _ConfigureOnFirstRecordHandler(logging.Handler):
+    """Root placeholder that installs the project configuration on first use.
+
+    Obtaining a logger must not load settings or open the diagnostic log file:
+    most production modules do so at import. Hosts configure explicitly at
+    their process boundary; this placeholder covers a record that reaches the
+    root before any host did. While configuration is deferred or suppressed it
+    stands in for :data:`logging.lastResort`, which a root with any handler no
+    longer reaches.
+    """
+
+    _configuring = False
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        root_logger = logging.getLogger()
+        position = root_logger.handlers.index(self) if self in root_logger.handlers else 0
+        if not (_configured or _configuration_deferred or type(self)._configuring):
+            type(self)._configuring = True
+            try:
+                configure_logging()
+            finally:
+                type(self)._configuring = False
+        if self in root_logger.handlers:
+            if _configured:
+                root_logger.removeHandler(self)
+            _handle_as_last_resort(record)
+            return
+        # ``Logger.callHandlers`` is still walking the root's handler list,
+        # which configuration replaced in place; the walk resumes after this
+        # handler's former position, so only the handlers before it are ours.
+        for handler in root_logger.handlers[: position + 1]:
+            if record.levelno >= handler.level:
+                handler.handle(record)
+
+
+def _handle_as_last_resort(record: logging.LogRecord) -> None:
+    last_resort = logging.lastResort
+    if last_resort is not None and record.levelno >= last_resort.level:
+        last_resort.handle(record)
+
+
+def _install_first_record_configuration() -> None:
+    root_logger = logging.getLogger()
+    if _configured or any(isinstance(handler, _ConfigureOnFirstRecordHandler) for handler in root_logger.handlers):
+        return
+    root_logger.addHandler(_ConfigureOnFirstRecordHandler())
+
+
+_install_first_record_configuration()
+
+
 def get_logger(name: str) -> logging.Logger:
-    """Return a configured logger for the given module name.
+    """Return the project logger for the given module name.
 
     Preferred over direct :func:`logging.getLogger` in production modules
-    because it ensures the project defaults are installed and attaches
-    :class:`SecretScrubbingFilter` directly to the returned logger. Startup
-    modules that must use stdlib logging before settings load rely on later
-    propagation through the configured root logger instead.
+    because it attaches :class:`SecretScrubbingFilter` directly to the
+    returned logger. It never configures logging: hosts call
+    :func:`configure_logging` at their process boundary, and a record that
+    reaches the root first installs the configuration itself.
 
     Args:
         name: The name of the module, typically __name__.
 
     Returns:
-        A configured logging.Logger instance.
+        The named logging.Logger instance.
     """
-    if not _configuration_deferred:
-        configure_logging()
     logger = logging.getLogger(name)
     if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in logger.filters):
         logger.addFilter(SecretScrubbingFilter())

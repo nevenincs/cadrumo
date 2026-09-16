@@ -57,6 +57,9 @@ IDENTITY_BESIDE_A_SHORT_WORD = [
     ("la B.1234567.4 en el registro", "B.1234567.4", ["la ", " en el registro"]),
     ("de B-1234567-4 y", "B-1234567-4", ["de ", " y"]),
     ("es 12345678Z en", "12345678Z", ["es ", " en"]),
+    # A digit-bearing profile label beside a real number: the label is the
+    # operator's own text and must survive while the number is still masked.
+    ("Tienda 1234 con DE811234567", "DE811234567", ["Tienda 1234 con "]),
 ]
 
 #: Two identities in one line, each with short neighbours. A fix that recovers
@@ -95,6 +98,13 @@ ORDINARY_OPERATOR_PROSE = [
     "no-such-thing es la respuesta",
     "Total factura 1.234,56 EUR en el registro",
     "BOE-A-2026-12345 es la referencia",
+    # Operator-chosen profile labels pairing a word with a digit run. The IVA
+    # scan joins them (`Probe 3902` -> PR + OBE3902) and the old gate admitted
+    # the result, so these were rewritten to `sha256:` and then quoted back in
+    # a `config login` command that could never match the stored label.
+    "Cli Probe 3902",
+    "Tienda 1234",
+    "Taller 5678 es la sede",
 ]
 
 

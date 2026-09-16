@@ -45,8 +45,6 @@ from typing import overload
 from ..logging import get_logger
 from .grammar import european_thousands_reading_is_ambiguous
 
-_logger = get_logger(__name__)
-
 
 @overload
 def coerce_decimal(value: object, *, default: Decimal) -> Decimal: ...
@@ -89,7 +87,9 @@ def coerce_decimal(
     try:
         return Decimal(str(value))
     except (InvalidOperation, ValueError) as exc:
-        _logger.debug(
+        # Resolved here, not at import: configuring logging opens the log file,
+        # which importing a decimal helper must not do.
+        get_logger(__name__).debug(
             "coerce_decimal: could not parse value, returning configured default",
             extra={
                 "value_type": type(value).__name__,
