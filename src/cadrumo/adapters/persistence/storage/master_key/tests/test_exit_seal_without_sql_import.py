@@ -67,8 +67,10 @@ def test_a_session_opened_without_sql_is_sealed_and_disposed_at_exit(tmp_path: P
         check=False,
     )
 
-    assert completed.returncode == 0, f"child failed: {completed.stderr[-800:]}"
-    assert "Traceback" not in completed.stderr, completed.stderr[-800:]
+    stderr = completed.stderr
+    assert isinstance(stderr, str)
+    assert completed.returncode == 0, f"child failed: {stderr[-800:]}"
+    assert "Traceback" not in stderr, stderr[-800:]
     observed = _JSON_OBJECT_ADAPTER.validate_python(json.loads(evidence.read_text(encoding="utf-8")))
     assert observed == {
         "sealed_before_exit": False,

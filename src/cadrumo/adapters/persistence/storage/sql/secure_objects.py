@@ -1153,6 +1153,38 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             rows = session.execute(stmt).all()
         return {key_by_digest[bytes(raw.object_key)]: int(raw.schema_version) for raw in rows}
 
+    def peek_many_revision_ids(self, namespace: str, object_keys: Iterable[str]) -> Mapping[str, str | None]:
+        """Return the stored revision id of each present natural key without loading ciphertext.
+
+        A key with no row is absent from the result; a present row written
+        before revisions were recorded maps to ``None``.
+        """
+        self._check_session_freshness(namespace)
+        keys = tuple(dict.fromkeys(object_keys))
+        if not keys:
+            return dict[str, str | None]()
+        key_by_digest = {secure_object_key_digest(key): key for key in keys}
+        with session_scope(self._engine) as session:
+            stmt = (
+                text(
+                    "SELECT object_key, revision_id "
+                    "FROM secure_objects WHERE namespace = :namespace AND object_key IN :object_keys",
+                )
+                .bindparams(
+                    bindparam("namespace", value=namespace),
+                    bindparam("object_keys", value=tuple(key_by_digest), expanding=True),
+                )
+                .columns(
+                    object_key=SecureObjectRow.__table__.c.object_key.type,
+                    revision_id=SecureObjectRow.__table__.c.revision_id.type,
+                )
+            )
+            rows = session.execute(stmt).all()
+        return {
+            key_by_digest[bytes(raw.object_key)]: (None if raw.revision_id is None else str(raw.revision_id))
+            for raw in rows
+        }
+
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""
         self._check_session_freshness(namespace)

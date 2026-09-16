@@ -22,6 +22,7 @@ from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import output_language
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -35,32 +36,38 @@ def isolated_language_state(tmp_path: Path) -> Iterator[str]:
     value; storage isolation plus the profile-create span gives the locale
     resolver a real backing store to read from.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-
     test_value = f"output-language-resolver-{tmp_path.name}"
     with (
         override_settings(cadrumo_output_language="", cadrumo_secret_passphrase=test_value),
         isolated_profile_storage_root(tmp_path=tmp_path),
+        # Held for the test body too: seeding and reading the profile resolve
+        # governed facts, as a command does inside its own lease.
+        bundled_indexed_authority().operation() as operation,
     ):
         outcome = register_profile_with_credentials(
             label="Output language resolver",
             passphrase=test_value,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
+            profile_create_context=operation.profile_create_context(),
+            profile_decode_context=operation.profile_decode_context(),
         )
         login_profile(
             name=outcome.label,
             passphrase_callback=test_value.__str__,
-            profile_decode_context=_profile_decode_context_for_test,
+            profile_decode_context=operation.profile_decode_context(),
         )
         yield outcome.profile_id
 
 
 def _seed_profile_language(language: str, *, profile_id: str) -> None:
+    from cadrumo.application.user_profile.language_resolver import refresh_active_profile_output_language
+
     register_minimal_profile(
         profile_id=profile_id,
         overrides={PROFILE_OUTPUT_LANGUAGE_PATH: language},
     )
+    # The seed writes the capsule directly rather than through a production
+    # door, so it refreshes the language snapshot the way those doors do.
+    refresh_active_profile_output_language()
 
 
 def test_output_language_reads_active_profile_without_emitting_bucket_events(
