@@ -932,9 +932,10 @@ def ledger_link(
 
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
-    resolved_id = resolve_id(transaction_repository, transaction_id)
     bucket_id = transaction_repository.bucket_id
+    # Resolving the id decodes stored transactions, so the lease comes first.
     ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx))
+    resolved_id = resolve_id(transaction_repository, transaction_id)
     actor_label = (actor or "operator").strip() or "operator"
 
     try:

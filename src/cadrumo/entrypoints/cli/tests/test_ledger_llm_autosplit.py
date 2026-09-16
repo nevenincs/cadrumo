@@ -19,6 +19,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....application.ledger.llm_classification import reject_llm_suggestion
 from ....application.ledger.llm_classification_ports import LLMClassificationSuggestion
 from ....core.json_contract import NoticeSeverity
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
@@ -118,17 +119,20 @@ def test_list_hide_llm_rejected_retains_unrelated_rows(tmp_path: Path) -> None:
         confidence=Decimal("0.9"),
         reason="recorded review input",
     )
-    rejection = reject_llm_suggestion(
-        suggestion,
-        bucket_id="00000000-0000-4000-8000-000000000000",
-        reason="operator declined the recorded suggestion",
-        actor="operator",
-        source_command="aeat app ledger classify --llm --reject",
-        transaction_repository=TransactionCatalogueRepository(
+    # The rejection is driven through the application service directly, so the
+    # test takes the lease a command would.
+    with bundled_indexed_authority().operation():
+        rejection = reject_llm_suggestion(
+            suggestion,
             bucket_id="00000000-0000-4000-8000-000000000000",
-        ),
-        bucket_event_repository=BucketEventHistoryRepository(),
-    )
+            reason="operator declined the recorded suggestion",
+            actor="operator",
+            source_command="aeat app ledger classify --llm --reject",
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id="00000000-0000-4000-8000-000000000000",
+            ),
+            bucket_event_repository=BucketEventHistoryRepository(),
+        )
     assert rejection.transaction_id == rejected_id
 
     filtered = _invoke(["--format", "json", "app", "ledger", "list", "--hide-llm-rejected"])
