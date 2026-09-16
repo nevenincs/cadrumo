@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.frozen_mapping import FrozenMapping
 from cadrumo.core.hashing import content_hash_hex, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -15,6 +17,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     CandidateFactAuthority,
     validating_governed_facts,
 )
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
@@ -430,3 +433,26 @@ def compile_validated_source_set(source_set: AuthoritySourceSet) -> ValidatedReg
     roots = canonical_authoring_root_pair(source_set.registry_root, source_set.source_evidence_root)
     expected_profile = source_set.profile_schema_path.resolve(strict=True)
     return compile_validated_authority(*roots, profile_schema_path=expected_profile)
+
+
+def admitted_revision_id(
+    authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+    revision_id: RevisionId | None = None,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+) -> str:
+    """Return the revision identifier the authority's snapshot boundary admits."""
+    return str(
+        authority.snapshot(
+            modelo_id,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+        ).revision.id
+    )

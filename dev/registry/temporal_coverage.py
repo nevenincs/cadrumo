@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.ids import (
     RevisionId,
 )
 
+from .compiler.authority import admitted_revision_id
 from .maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 TemporalCoverageStatus = Literal["validated", "refused"]
@@ -283,7 +284,8 @@ def _compose_revision_temporal_coverage(
             failure_detail="the law-selected revision declares no authority grade",
         )
     try:
-        snapshot_revision = authority.admitted_revision_id(
+        snapshot_revision = admitted_revision_id(
+            authority,
             modelo_id,
             filing_year=filing_year,
             period=period,

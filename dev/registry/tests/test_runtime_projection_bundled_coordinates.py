@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 
-from ..compiler.authority import compiled_bundled_authority
+from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -81,7 +81,8 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
                         # Admitting the revision at its own rung above must not
                         # have made it admissible at the filing rung.
                         with pytest.raises(RegistryValidationError):
-                            authority.admitted_revision_id(
+                            admitted_revision_id(
+                                authority,
                                 modelo.id,
                                 filing_year=filing_year,
                                 period=period,

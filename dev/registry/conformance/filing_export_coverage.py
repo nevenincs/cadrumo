@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef, SourceReference
 
+from ..compiler.authority import admitted_revision_id
 from ..compiler.authority_state import source_root_for
 from ..compiler.corpus_catalogue import verify_source_file
 from ..export_proof import (
@@ -442,7 +443,8 @@ def _filing_layout_evidence(
     evidence_by_locator: dict[tuple[str, str], RegistryClosureEvidence] = {}
     for filing_year, period in coordinates:
         try:
-            admitted_revision_id = authority.admitted_revision_id(
+            admitted_revision = admitted_revision_id(
+                authority,
                 modelo_id,
                 filing_year=filing_year,
                 period=period,
@@ -457,11 +459,11 @@ def _filing_layout_evidence(
                     "Supply the exact official layout evidence required by the filing snapshot boundary."
                 ),
             )
-        if admitted_revision_id != revision.id:
+        if admitted_revision != revision.id:
             return _FilingLayoutFailure(
                 reason="cross_limb_disagreement",
                 detail=(
-                    f"{filing_year}/{period}: filing snapshot selected revision {admitted_revision_id!r} instead "
+                    f"{filing_year}/{period}: filing snapshot selected revision {admitted_revision!r} instead "
                     f"of the registered revision {revision.id!r}"
                 ),
                 work_item="registry-temporal-coverage:law-selection",

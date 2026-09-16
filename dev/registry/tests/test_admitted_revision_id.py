@@ -18,7 +18,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..compiler.authority import compiled_bundled_authority
+from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,7 +36,7 @@ def test_it_returns_the_revision_the_snapshot_boundary_admits(authority, modelo,
     """The identifier equals the one the isolated snapshot carries, across unlike modelos."""
     expected = str(authority.snapshot(modelo, filing_year=filing_year, period=period).revision.id)
 
-    assert authority.admitted_revision_id(modelo, filing_year=filing_year, period=period) == expected
+    assert admitted_revision_id(authority, modelo, filing_year=filing_year, period=period) == expected
 
 
 def test_it_refuses_exactly_where_the_snapshot_boundary_refuses(authority) -> None:
@@ -51,7 +51,7 @@ def test_it_refuses_exactly_where_the_snapshot_boundary_refuses(authority) -> No
     with pytest.raises(RegistryValidationError) as snapshot_refusal:
         authority.snapshot("200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.FILING)
     with pytest.raises(RegistryValidationError) as identifier_refusal:
-        authority.admitted_revision_id("200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.FILING)
+        admitted_revision_id(authority, "200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.FILING)
 
     assert str(identifier_refusal.value) == str(snapshot_refusal.value)
 
@@ -63,6 +63,6 @@ def test_it_hands_out_a_plain_string_and_not_registry_state(authority) -> None:
     can skip it only for as long as it returns nothing a caller could mutate, so
     that is asserted rather than assumed from the annotation.
     """
-    admitted = authority.admitted_revision_id("303", filing_year=2026, period="1T")
+    admitted = admitted_revision_id(authority, "303", filing_year=2026, period="1T")
 
     assert type(admitted) is str

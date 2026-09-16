@@ -45,6 +45,7 @@ consumed BY that validation. Housing both here inverted the dependency.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from typing import Annotated, Literal
@@ -55,13 +56,15 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.revision_review import RevisionReviewStatus
-from cadrumo.domain.calculations.registry.authority import RegistryCoverageFacts, ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import (
     BindingId,
     CrossReferenceId,
     LegalRefId,
+    ModeloId,
+    RevisionId,
     SourceRefId,
     WorkbookParityRefId,
 )
@@ -82,9 +85,55 @@ from dev.registry.compiler.schema_family_coverage import (
     CoverageModel,
 )
 
+from ..compiler.authority import admitted_revision_id
 from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 CoverageGateStatus = Literal["satisfied", "gap"]
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryCoverageFacts:
+    """Immutable evidence collections for one admitted filing coordinate."""
+
+    modelo: ModeloId
+    revision: RevisionId
+    filing_year: int
+    period: str
+    legal: tuple[LegalRefId, ...]
+    sources: Mapping[SourceRefId, SourceReference]
+    workbook_parity_refs: tuple[WorkbookParityReference, ...]
+    live_cross_references: tuple[LiveCrossReferenceDecision, ...]
+
+
+def coverage_facts(
+    authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+    revision_id: RevisionId | None = None,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+) -> RegistryCoverageFacts:
+    """Project immutable evidence from the same admitted snapshot consumers read."""
+    snapshot = authority.snapshot(
+        modelo_id,
+        filing_year=filing_year,
+        period=period,
+        on=on,
+        revision_id=revision_id,
+        grade=grade,
+    )
+    return RegistryCoverageFacts(
+        modelo=snapshot.modelo.id,
+        revision=snapshot.revision.id,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+        legal=tuple(snapshot.legal),
+        sources=snapshot.sources,
+        workbook_parity_refs=tuple(snapshot.workbook_parity_refs.values()),
+        live_cross_references=tuple(snapshot.live_cross_references.values()),
+    )
 
 
 class CoverageAuthorityScope(StrEnum):
@@ -514,7 +563,8 @@ def _model_law_coverage_for_coordinate(
     )
     if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
         try:
-            snapshot = authority.coverage_facts(
+            snapshot = coverage_facts(
+                authority,
                 modelo.id,
                 filing_year=filing_year,
                 period=period,
@@ -605,7 +655,8 @@ def audit_registry_construct_evidence(
                     # copy that makes a snapshot expensive was being paid once per
                     # coordinate to build objects nothing read.
                     for filing_year, period in coordinates:
-                        authority.admitted_revision_id(
+                        admitted_revision_id(
+                            authority,
                             modelo.id,
                             filing_year=filing_year,
                             period=period,
