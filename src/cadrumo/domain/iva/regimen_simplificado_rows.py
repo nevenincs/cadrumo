@@ -274,6 +274,15 @@ class M303RegimenSimplificadoScopeDecision(BaseModel):
 
     scope: M303RegimenSimplificadoScope
 
+    @field_validator("scope", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _scope_is_registry_declared(cls, value: object) -> M303RegimenSimplificadoScope:
+        """Translate the persisted scope through the dated composition catalogue."""
+        from ..calculations.registry.iva_schema_vocabulary import require_m303_regimen_simplificado_scope
+
+        return require_m303_regimen_simplificado_scope(value)
+
     @property
     def is_not_claimed(self) -> bool:
         """Whether the registry-declared scope excludes the simplified branch."""
