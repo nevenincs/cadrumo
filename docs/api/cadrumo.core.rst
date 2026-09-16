@@ -129,8 +129,6 @@ Submodules
    cadrumo.core.operator_action_enums
    cadrumo.core.operator_progress
    cadrumo.core.optional_extras
-   cadrumo.core.orden_anual_html
-   cadrumo.core.orden_anual_sections
    cadrumo.core.output_rendering
    cadrumo.core.paths
    cadrumo.core.payment_election
