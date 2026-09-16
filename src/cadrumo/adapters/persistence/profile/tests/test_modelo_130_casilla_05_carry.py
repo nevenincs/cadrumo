@@ -39,6 +39,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.calculations.tests.cross_period_verdict_support import suppressed_pre_activity
+
 from .....application.calculations.cross_period_clean_state import evaluate_cross_period_clean_state
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -305,7 +307,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
     )
 
     assert verdict.clean, f"a 2T-alta first filer must be clean; blockers={verdict.blockers}"
-    suppressed = verdict.suppressed_pre_activity_dependencies
+    suppressed = suppressed_pre_activity(verdict)
     suppressed_origins = {origin_id for dependency in suppressed for origin_id in dependency.requirement.origin_ids}
     assert _CARRY_BINDING_ID in suppressed_origins, (
         "the pre-activity 1T casilla-05 carry requirement must be suppressed as no-prior-obligation"

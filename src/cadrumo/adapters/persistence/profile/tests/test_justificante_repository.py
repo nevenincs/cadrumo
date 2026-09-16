@@ -112,7 +112,7 @@ class TestSaveLoad:
         record = _make_justificante(tmp_path)
         repo.save(record)
         repo.save(record)
-        assert repo.list_csvs() == (record.csv,)
+        assert tuple(sorted(repo.iter_ids())) == (record.csv,)
 
     def test_save_persists_only_to_the_secure_database_object(
         self,
@@ -144,7 +144,7 @@ class TestSaveLoad:
 class TestListIter:
     def test_list_and_iter(self, repo: JustificanteRepository, tmp_path: Path) -> None:
         a, b = _save_two_justificantes(repo, tmp_path)
-        assert set(repo.list_csvs()) == {a.csv, b.csv}
+        assert set(tuple(sorted(repo.iter_ids()))) == {a.csv, b.csv}
         loaded = {r.csv: r for r in repo.iter_justificantes()}
         assert loaded == {a.csv: a, b.csv: b}
 

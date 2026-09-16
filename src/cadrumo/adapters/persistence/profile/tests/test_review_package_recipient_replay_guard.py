@@ -64,11 +64,11 @@ def test_is_consumed_is_false_before_and_true_after_mark_consumed(tmp_path: Path
     nonce_hex = _fresh_nonce_hex()
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="81f3bb9d-313c-444b-9475-9d32310484dc") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
-        assert repository.is_consumed(nonce_hex) is False
+        assert any(record.nonce_hex == nonce_hex for record in repository.load().records) is False
 
         repository.mark_consumed(nonce_hex, consumed_at=_NOW)
 
-        assert repository.is_consumed(nonce_hex) is True
+        assert any(record.nonce_hex == nonce_hex for record in repository.load().records) is True
 
 
 def test_mark_consumed_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
@@ -214,7 +214,7 @@ def test_two_buckets_maintain_independent_ledgers(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bd58b114-6a62-49ff-b412-07122fe6a41f") as profile_two:
         repository_two = RecipientReplayGuardRepository(objects=profile_two.repository)
         # The same nonce value is unconsumed in the second bucket's own ledger.
-        assert repository_two.is_consumed(shared_nonce_hex) is False
+        assert any(record.nonce_hex == shared_nonce_hex for record in repository_two.load().records) is False
         repository_two.mark_consumed(shared_nonce_hex, consumed_at=_NOW)
         assert len(repository_two.load().records) == 1
 

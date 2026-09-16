@@ -40,6 +40,8 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.application.calculations.tests.cross_period_verdict_support import has_non_official_local_chain
+
 from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.calculation_actions import (
@@ -504,7 +506,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
     assert all(d.clean for d in same_year)
     assert all(d.non_official_local_chain_advisory for d in same_year)
     assert all(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE not in d.blockers for d in same_year)
-    assert verdict.has_non_official_local_chain_advisory
+    assert has_non_official_local_chain(verdict)
     # The cross-YEAR dependency is NOT relaxed - the same-year scope is the safety boundary.
     cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != 2026]
     assert all(not d.non_official_local_chain_advisory for d in cross_year)

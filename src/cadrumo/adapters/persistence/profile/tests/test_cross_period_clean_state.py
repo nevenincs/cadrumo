@@ -8,6 +8,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.calculations.tests.cross_period_verdict_support import (
+    has_first_year_fractional_suppression,
+    has_modelo_not_applicable,
+    has_operator_declared_suppression,
+    suppressed_first_year_fractional,
+    suppressed_pre_activity,
+)
+
 from .....application.calculations.cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
@@ -113,7 +121,7 @@ def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: P
         item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory
     }
     assert suffered <= scoped_out, f"suffered deps must be scoped out, got {scoped_out}"
-    assert verdict.has_modelo_not_applicable_advisory is True
+    assert has_modelo_not_applicable(verdict) is True
     assert all(item.clean for item in verdict.dependencies if item.modelo_not_applicable_advisory)
     assert scoped_out.isdisjoint({"130", "131"}), "self-filed pagos fraccionados must NOT be scoped out"
 
@@ -687,7 +695,7 @@ def test_empty_pre_activity_span_produces_no_cross_period_blocker_for_genuine_fi
     assert verdict.requires_clean_state is True
     assert verdict.clean is True
     assert verdict.blockers == ()
-    suppressed = verdict.suppressed_pre_activity_dependencies
+    suppressed = suppressed_pre_activity(verdict)
     assert len(suppressed) == len(verdict.dependencies)
     assert all(evidence.blockers == () for evidence in suppressed)
     assert all(evidence.no_prior_obligation is not None for evidence in suppressed)
@@ -697,7 +705,7 @@ def test_empty_pre_activity_span_produces_no_cross_period_blocker_for_genuine_fi
         and evidence.no_prior_obligation.provenance_kind is NoPriorObligationProvenanceKind.OPERATOR_DECLARED
         for evidence in suppressed
     )
-    assert verdict.has_operator_declared_suppression_advisory is True
+    assert has_operator_declared_suppression(verdict) is True
 
 
 def test_alta_containing_period_stays_in_scope_as_first_obligation(tmp_path: Path) -> None:
@@ -721,7 +729,7 @@ def test_alta_containing_period_stays_in_scope_as_first_obligation(tmp_path: Pat
     assert fourth.suppressed_pre_activity is False
     assert fourth.no_prior_obligation is None
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in fourth.blockers
-    suppressed_periods = {e.requirement.period.registry_token for e in verdict.suppressed_pre_activity_dependencies}
+    suppressed_periods = {e.requirement.period.registry_token for e in suppressed_pre_activity(verdict)}
     assert suppressed_periods == {"1T", "2T", "3T"}
 
 
@@ -747,7 +755,7 @@ def test_activity_start_scoping_applies_to_both_requirement_origins(tmp_path: Pa
             activity_start_date=date(2026, 10, 15),
         )
 
-    relation_suppressed = relation_verdict.suppressed_pre_activity_dependencies
+    relation_suppressed = suppressed_pre_activity(relation_verdict)
     assert relation_suppressed
     assert all(e.requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION for e in relation_suppressed)
     assert {e.requirement.period.registry_token for e in relation_suppressed} == {"1T", "2T"}
@@ -756,7 +764,7 @@ def test_activity_start_scoping_applies_to_both_requirement_origins(tmp_path: Pa
     # self-compensacion registry relation; an alta of 2026-10-15 places 3T strictly
     # before activity start, so BOTH origins suppress it. This proves the scoping is
     # uniform across the two requirement origins on the very same period.
-    previous_filing_suppressed = previous_filing_verdict.suppressed_pre_activity_dependencies
+    previous_filing_suppressed = suppressed_pre_activity(previous_filing_verdict)
     assert previous_filing_suppressed
     assert {e.requirement.period.registry_token for e in previous_filing_suppressed} == {"3T"}
     suppressed_origins = {e.requirement.origin for e in previous_filing_suppressed}
@@ -782,7 +790,7 @@ def test_real_prior_filing_post_dating_alta_still_blocks_anti_tautology(tmp_path
 
     assert verdict.requires_clean_state is True
     assert verdict.clean is False
-    assert verdict.suppressed_pre_activity_dependencies == ()
+    assert suppressed_pre_activity(verdict) == ()
     assert CrossPeriodCleanStateBlocker.MISSING_OBSERVATION in verdict.blockers
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in verdict.blockers
 
@@ -820,9 +828,9 @@ def test_first_year_modalidad_cuota_suppresses_m202_dependency_through_evaluator
         is NoPriorObligationProvenanceKind.NO_FRACTIONAL_PAYMENT_OBLIGATION_FIRST_YEAR
         for e in m202_dependencies
     )
-    assert verdict.has_first_year_fractional_suppression_advisory is True
+    assert has_first_year_fractional_suppression(verdict) is True
     suppressed_periods = {
-        e.requirement.period.registry_token for e in verdict.suppressed_first_year_fractional_dependencies
+        e.requirement.period.registry_token for e in suppressed_first_year_fractional(verdict)
     }
     assert suppressed_periods
 
@@ -845,8 +853,8 @@ def test_mandatory_modalidad_base_keeps_m202_dependency_in_scope_through_evaluat
 
     m202_dependencies = [e for e in verdict.dependencies if e.requirement.source_modelo == "202"]
     assert m202_dependencies
-    assert verdict.suppressed_first_year_fractional_dependencies == ()
-    assert verdict.has_first_year_fractional_suppression_advisory is False
+    assert suppressed_first_year_fractional(verdict) == ()
+    assert has_first_year_fractional_suppression(verdict) is False
     assert any(not e.clean for e in m202_dependencies)
 
 
@@ -865,8 +873,8 @@ def test_incomplete_modality_keeps_m202_dependency_in_scope_through_evaluator(tm
                 activity_start_date=date(2026, 2, 1),
                 modelo_202_modality=modality,
             )
-            assert verdict.suppressed_first_year_fractional_dependencies == ()
-            assert verdict.has_first_year_fractional_suppression_advisory is False
+            assert suppressed_first_year_fractional(verdict) == ()
+            assert has_first_year_fractional_suppression(verdict) is False
             assert verdict.clean is False
 
 
@@ -886,8 +894,8 @@ def test_non_first_year_keeps_m202_dependency_in_scope_through_evaluator(tmp_pat
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
         )
 
-    assert verdict.suppressed_first_year_fractional_dependencies == ()
-    assert verdict.has_first_year_fractional_suppression_advisory is False
+    assert suppressed_first_year_fractional(verdict) == ()
+    assert has_first_year_fractional_suppression(verdict) is False
     assert verdict.clean is False
 
 
