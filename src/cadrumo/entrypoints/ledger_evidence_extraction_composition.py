@@ -72,7 +72,7 @@ def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
                     LedgerPreconditionCondition.EVIDENCE_TEXT_LAYER_AVAILABLE,
                     facts={
                         "pdf_layer_present": False,
-                        "text_layer_extraction_succeeded": False,
+                        "pdf_layer_extraction_succeeded": False,
                     },
                 ),
             ) from exc
