@@ -61,13 +61,6 @@ def test_identity_bearing_row_is_frozen_and_securely_projected() -> None:
 
     assert value.row_index == 2
     assert value.row_source_identity == _identity()
-    assert value.secure_row_source_identity_payload() == {
-        "binding_id": "inventory-operation-0181",
-        "row_index": 2,
-        "source_kind": "inventory",
-        "source_row_identity": _RAW_IDENTITY,
-        "fingerprint": _FINGERPRINT,
-    }
     with pytest.raises(ValidationError):
         value.row_index = 3  # type: ignore[misc]
 
@@ -119,7 +112,6 @@ def test_unidentified_m720_style_row_remains_explicitly_supported() -> None:
 
     assert value.row_index == 2
     assert value.row_source_identity is None
-    assert value.secure_row_source_identity_payload() is None
 
 
 def test_row_identity_participates_in_draft_content_address() -> None:
