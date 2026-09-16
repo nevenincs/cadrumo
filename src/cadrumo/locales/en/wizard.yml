@@ -8,6 +8,7 @@ wizard:
     status:
       created: created
       saved: saved
+      unchanged: unchanged
       updated: updated
   demo:
     description: A demonstration section to test wizard functionality
@@ -20,8 +21,8 @@ wizard:
     blank_secret: Secret value required for %{prompt_key}.
     blank_text: Value required for %{prompt_key}.
     checkbox_required: Select at least one option for %{prompt_key}.
-    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
-      %{choices}.'
+    checkbox_unknown: 'Unrecognised value for %{flag} (%{prompt_key}): %{raw}. Valid
+      options: %{choices}.'
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     eu_eea_country_required: '%{flag} is required when %{condition_flag} indicates
       EU or EEA residence.'
@@ -33,8 +34,8 @@ wizard:
     invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
       is 5 digits (province code 01-52 followed by three digits).'
     invalid_tax_id: 'Invalid NIF/CIF/DNI/NIE for %{prompt_key}: %{raw}. %{detail}'
-    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
-      %{choices}.'
+    select_unknown: 'Unrecognised value for %{flag} (%{prompt_key}): %{raw}. Valid
+      options: %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
     spouse_tax_id_required_joint: '%{flag} is required when %{condition_flag} is joint
       taxation.'
@@ -456,7 +457,8 @@ wizard:
       tax-id:
         help: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
       tax-residence-ccaa:
-        help: 'Tax-residence autonomous community. One of: %{choices}.'
+        help: Tax-residence autonomous community, under the common regime. If the
+          value is not recognised, the error lists the accepted communities.
       tax-residence-jurisdiction-scope:
         help: 'Declared territorial regime: common territory or the not-yet-supported
           foral territory.'
@@ -740,7 +742,7 @@ wizard:
             label: Common territory
           foral_unsupported:
             label: Foral territory (not yet supported)
-        prompt: Which tax territory applies to this Modelo 303?
+        prompt: Which territorial regime applies to your tax residence?
       title: Tax residence
     review:
       registered-non-official-suffix: ' (from censal certificate - not AEAT-verified)'

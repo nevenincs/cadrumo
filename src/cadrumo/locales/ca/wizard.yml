@@ -8,6 +8,7 @@ wizard:
     status:
       created: creat
       saved: desat
+      unchanged: sense canvis
       updated: actualitzat
   demo:
     description: Una secció de demostració per provar la funcionalitat de l'assistent
@@ -20,8 +21,8 @@ wizard:
     blank_secret: Cal un valor secret per a %{prompt_key}.
     blank_text: Cal un valor per a %{prompt_key}.
     checkbox_required: Seleccioneu almenys una opció per a %{prompt_key}.
-    checkbox_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions vàlides:
-      %{choices}.'
+    checkbox_unknown: 'Valor no reconegut per a %{flag} (%{prompt_key}): %{raw}. Opcions
+      vàlides: %{choices}.'
     checkbox_without_choices: La pregunta %{prompt_key} no declara opcions de casella.
     eu_eea_country_required: '%{flag} és obligatori quan %{condition_flag} indica
       residència a la UE o a l''EEE.'
@@ -34,8 +35,8 @@ wizard:
     invalid_postcode: 'Codi postal no vàlid per a %{prompt_key}: %{raw}. Un codi postal
       espanyol té 5 dígits (codi de província 01-52 seguit de tres dígits).'
     invalid_tax_id: 'NIF/NIE/CIF no vàlid per a %{prompt_key}: %{raw}. %{detail}'
-    select_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions vàlides:
-      %{choices}.'
+    select_unknown: 'Valor no reconegut per a %{flag} (%{prompt_key}): %{raw}. Opcions
+      vàlides: %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opcions de selecció.
     spouse_tax_id_required_joint: '%{flag} és obligatori quan %{condition_flag} és
       tributació conjunta.'
@@ -466,7 +467,8 @@ wizard:
       tax-id:
         help: Identificador fiscal (NIF/NIE) del perfil actiu
       tax-residence-ccaa:
-        help: 'Comunitat autònoma de residència fiscal. Una de: %{choices}.'
+        help: Comunitat autònoma de residència fiscal, en territori comú. Si el valor
+          no es reconeix, l'error enumera les comunitats acceptades.
       tax-residence-jurisdiction-scope:
         help: 'Règim territorial declarat: territori comú o territori foral encara
           no compatible.'
@@ -756,7 +758,7 @@ wizard:
             label: Territori comú
           foral_unsupported:
             label: Territori foral (encara no compatible)
-        prompt: Quin territori tributari s'aplica a aquest Model 303?
+        prompt: Quin règim territorial s'aplica a la teva residència fiscal?
       title: Residència fiscal
     review:
       registered-non-official-suffix: ' (del certificat censal - no verificat per

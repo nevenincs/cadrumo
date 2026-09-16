@@ -1257,6 +1257,10 @@ application:
         is %{classification}.
       repository_profile_snapshot_version_unsupported: Profile snapshot schema version
         is newer than this application supports.
+      row_all_values_blank: 'No value was supplied for the ''%{section}'' row. Populate
+        at least one of: %{fields}.'
+      row_unknown_field: 'Section ''%{section}'' declares no such fields: %{unknown}.
+        Available fields: %{fields}.'
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'
@@ -1271,6 +1275,9 @@ application:
       edit_missing_filing_baseline: 'This profile edit would leave filing identity
         details incomplete. Add these flags to the same command and run it again:
         %{missing_flags}.'
+      edit_missing_modelo_requirements: 'The identity details are complete, but this
+        profile declares IVA and still lacks required Modelo 303 fields. Add these
+        flags to the same command and run it again: %{missing_flags}.'
       persist_patch_unknown_question_id: Wizard patch references an unknown question
         id.
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'

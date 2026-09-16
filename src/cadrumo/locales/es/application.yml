@@ -1366,6 +1366,10 @@ application:
         almacenado es %{classification}.
       repository_profile_snapshot_version_unsupported: La versión del esquema de la
         instantánea de perfil es más reciente de lo que admite esta aplicación.
+      row_all_values_blank: 'No se ha indicado ningún valor para la fila de ''%{section}''.
+        Informa al menos un campo de: %{fields}.'
+      row_unknown_field: 'La sección ''%{section}'' no declara estos campos: %{unknown}.
+        Campos disponibles: %{fields}.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'
@@ -1383,6 +1387,9 @@ application:
       edit_missing_filing_baseline: 'Esta edición dejaría incompletos los datos de
         identidad para presentar modelos. Añade estos flags al mismo comando y vuelve
         a ejecutarlo: %{missing_flags}.'
+      edit_missing_modelo_requirements: 'Los datos de identidad están completos, pero
+        este perfil declara IVA y aún le faltan campos obligatorios del Modelo 303.
+        Añade estos flags al mismo comando y vuelve a ejecutarlo: %{missing_flags}.'
       persist_patch_unknown_question_id: El parche del asistente referencia un id
         de pregunta desconocido.
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto

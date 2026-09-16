@@ -8,6 +8,7 @@ wizard:
     status:
       created: létrehozva
       saved: mentve
+      unchanged: változatlan
       updated: frissitett
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
@@ -20,8 +21,8 @@ wizard:
     blank_secret: 'Titkos érték megadása kötelező a következőhöz: %{prompt_key}.'
     blank_text: 'Érték megadása kötelező a következőhöz: %{prompt_key}.'
     checkbox_required: 'Válasszon legalább egy lehetőséget a következőhöz: %{prompt_key}.'
-    checkbox_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes
-      lehetőségek: %{choices}.'
+    checkbox_unknown: 'Ismeretlen érték a következőhöz: %{flag} (%{prompt_key}): %{raw}.
+      Érvényes lehetőségek: %{choices}.'
     checkbox_without_choices: A(z) %{prompt_key} kérdésnél nincsenek jelölőnégyzet-lehetőségek
       megadva.
     eu_eea_country_required: A(z) %{flag} kötelező, ha a(z) %{condition_flag} EU-
@@ -36,8 +37,8 @@ wizard:
       A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
     invalid_tax_id: 'Érvénytelen NIF/CIF/DNI/NIE a következőhöz: %{prompt_key}: %{raw}.
       %{detail}'
-    select_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes
-      lehetőségek: %{choices}.'
+    select_unknown: 'Ismeretlen érték a következőhöz: %{flag} (%{prompt_key}): %{raw}.
+      Érvényes lehetőségek: %{choices}.'
     select_without_choices: A(z) %{prompt_key} kérdésnél nincsenek legördülő-lehetőségek
       megadva.
     spouse_tax_id_required_joint: A(z) %{flag} kötelező, ha a(z) %{condition_flag}
@@ -485,7 +486,8 @@ wizard:
       tax-id:
         help: Adóazonosító (NIF/CIF/DNI/NIE) az aktív profilhoz
       tax-residence-ccaa:
-        help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
+        help: Az adóügyi illetőség autonóm közössége, közös területi rendszerben.
+          Ha az érték nem ismerhető fel, a hibaüzenet felsorolja az elfogadott közösségeket.
       tax-residence-jurisdiction-scope:
         help: 'Nyilatkozott területi rendszer: közös terület vagy még nem támogatott
           forális terület.'
@@ -774,7 +776,7 @@ wizard:
             label: Közös terület
           foral_unsupported:
             label: Forális terület (még nem támogatott)
-        prompt: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
+        prompt: Melyik területi adórendszer vonatkozik az adóügyi illetőségedre?
       title: Adóügyi illetőség
     review:
       registered-non-official-suffix: ' (censal tanúsítványból - az AEAT által nem

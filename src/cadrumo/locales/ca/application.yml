@@ -1367,6 +1367,10 @@ application:
         emmagatzemat és %{classification}.
       repository_profile_snapshot_version_unsupported: La versió de l'esquema de la
         instantània de perfil no és compatible amb aquesta aplicació.
+      row_all_values_blank: 'No s''ha indicat cap valor per a la fila de ''%{section}''.
+        Informa almenys un camp de: %{fields}.'
+      row_unknown_field: 'La secció ''%{section}'' no declara aquests camps: %{unknown}.
+        Camps disponibles: %{fields}.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
@@ -1382,6 +1386,9 @@ application:
       edit_missing_filing_baseline: 'Aquesta edició deixaria incompletes les dades
         d''identitat per presentar models. Afegeix aquests flags a la mateixa ordre
         i torna-la a executar: %{missing_flags}.'
+      edit_missing_modelo_requirements: 'Les dades d''identitat són completes, però
+        aquest perfil declara IVA i encara li falten camps obligatoris del Model 303.
+        Afegeix aquests flags a la mateixa ordre i torna a executar-la: %{missing_flags}.'
       persist_patch_unknown_question_id: El pedaç de l'assistent referència un id
         de pregunta desconegut.
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
