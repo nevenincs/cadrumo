@@ -108,4 +108,4 @@ async def test_aeat_authenticator_full_live_flow() -> None:
         assert assertion.target_url == AEAT_CERTIFICATE_PROTECTED_URL
         assert assertion.final_url == AEAT_CERTIFICATE_PROTECTED_URL
         assert assertion.response_successful is True
-        assert assertion.parsed_nif == aeat_session.identity_nif
+        assert assertion.identity_nif == aeat_session.identity_nif
