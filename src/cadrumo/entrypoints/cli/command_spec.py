@@ -8,8 +8,9 @@ records and resolve deferred targets only at their owning boundary.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
+from importlib import import_module
 from importlib.util import resolve_name
 from types import MappingProxyType
 from typing import Final, Literal, cast
@@ -102,7 +103,6 @@ _graph_by_key = _structure_validation.graph_by_key
 _graph_by_path = _structure_validation.graph_by_path
 _graph_by_schema_identity = _structure_validation.graph_by_schema_identity
 _graph_nodes = _structure_validation.graph_nodes
-_resolve_graph_path = _structure_validation.resolve_graph_path
 _validate_callback_parameters = _structure_validation.validate_callback_parameters
 _validate_command_identity = _structure_validation.validate_command_identity
 _validate_graph = _structure_validation.validate_graph
@@ -614,14 +614,113 @@ class CommandSpecNode:
 
 
 @dataclass(frozen=True, slots=True)
-class CommandSpecGraph:
-    """Validated immutable tree assembled from distributed specifications."""
+class CommandSpecFamily:
+    """Specs declared by one module and attached below an already declared node.
 
-    specs: tuple[CommandSpec, ...]
+    ``mount_key`` names the node whose children the family supplies. The
+    family is imported the first time that node's children are needed, so a
+    command path only loads the declarations along its own subtree.
+    """
+
+    mount_key: str
+    source: DeferredTarget
+
+    def load(self) -> tuple[CommandSpec, ...]:
+        """Import the declaring module and return its specs in declared order."""
+        value: object = import_module(self.source.module)
+        for part in self.source.qualname.split("."):
+            value = getattr(value, part)
+        if isinstance(value, CommandSpec):
+            return (value,)
+        if not isinstance(value, tuple) or not all(isinstance(spec, CommandSpec) for spec in value):
+            raise TypeError(f"command spec family {self.source.identity!r} is not a CommandSpec tuple")
+        return cast(tuple[CommandSpec, ...], value)
+
+
+@dataclass(frozen=True, slots=True)
+class CommandSpecGraph:
+    """Validated immutable tree assembled from distributed specifications.
+
+    ``declared`` holds the specs available up front; ``families`` supply the
+    rest on demand. Subtree queries (:meth:`children`, :meth:`resolve_path`,
+    :meth:`spec`, :meth:`root`) load only the families they reach. Every
+    whole-graph query (:attr:`specs`, :meth:`by_key`, :meth:`nodes`,
+    :meth:`by_path`, :meth:`by_schema_identity`) loads all families first.
+    Each load revalidates the specs loaded so far; the full load validates the
+    complete graph.
+    """
+
+    declared: tuple[CommandSpec, ...]
+    families: tuple[CommandSpecFamily, ...] = ()
+    _loaded: dict[int, tuple[CommandSpec, ...]] = field(default_factory=dict, compare=False, repr=False)
 
     def __post_init__(self) -> None:
-        """Validate key uniqueness, single root, parent references, and path uniqueness, or raise."""
-        _validate_graph(self.specs)
+        """Validate the declared specs, or raise; families validate as they load."""
+        _validate_graph(self.declared)
+
+    def _loaded_specs(self) -> tuple[CommandSpec, ...]:
+        rows = list(self.declared)
+        for index in range(len(self.families)):
+            rows.extend(self._loaded.get(index, ()))
+        return tuple(rows)
+
+    def _load_mount(self, key: str) -> None:
+        pending = [
+            index
+            for index, family in enumerate(self.families)
+            if family.mount_key == key and index not in self._loaded
+        ]
+        if not pending:
+            return
+        loaded = {index: self.families[index].load() for index in pending}
+        candidate = dict(self._loaded)
+        candidate.update(loaded)
+        rows = list(self.declared)
+        for index in range(len(self.families)):
+            rows.extend(candidate.get(index, ()))
+        _validate_graph(tuple(rows))
+        self._loaded.update(loaded)
+
+    def _load_all(self) -> tuple[CommandSpec, ...]:
+        while len(self._loaded) < len(self.families):
+            loaded_keys = {spec.key for spec in self._loaded_specs()}
+            mounts = [
+                family.mount_key
+                for index, family in enumerate(self.families)
+                if index not in self._loaded and family.mount_key in loaded_keys
+            ]
+            if not mounts:
+                missing = sorted(
+                    {family.mount_key for index, family in enumerate(self.families) if index not in self._loaded}
+                )
+                raise ValueError(f"command spec families mount at unknown nodes: {missing!r}")
+            for mount in dict.fromkeys(mounts):
+                self._load_mount(mount)
+        return self._loaded_specs()
+
+    @property
+    def specs(self) -> tuple[CommandSpec, ...]:
+        """Return every command spec in declaration order, loading all families."""
+        return self._load_all()
+
+    def root(self) -> CommandSpec:
+        """Return the single root spec, which is always declared up front."""
+        return next(spec for spec in self.declared if spec.parent_key is None)
+
+    def children(self, key: str) -> tuple[CommandSpec, ...]:
+        """Return the direct children of ``key`` in declaration order."""
+        self._load_mount(key)
+        return tuple(spec for spec in self._loaded_specs() if spec.parent_key == key)
+
+    def spec(self, key: str) -> CommandSpec:
+        """Return the spec for ``key``, loading every family only when it is not yet loaded."""
+        for spec in self._loaded_specs():
+            if spec.key == key:
+                return spec
+        found = self.by_key().get(key)
+        if found is None:
+            raise LookupError(f"unknown command spec key: {key!r}")
+        return found
 
     def by_key(self) -> MappingProxyType[str, CommandSpec]:
         """Return every command spec indexed by its key."""
@@ -636,8 +735,17 @@ class CommandSpecGraph:
         return _graph_by_path(self.specs, node_type=CommandSpecNode)
 
     def resolve_path(self, path: tuple[str, ...]) -> CommandSpec:
-        """Resolve one complete operator path, failing closed on absence."""
-        return _resolve_graph_path(self.specs, path, node_type=CommandSpecNode)
+        """Resolve one complete operator path, loading only the families along it."""
+        root = self.root()
+        if not path or path[0] != root.token:
+            raise LookupError(f"unknown command spec path: {' '.join(path)!r}")
+        current = root
+        for token in path[1:]:
+            match = next((child for child in self.children(current.key) if child.token == token), None)
+            if match is None:
+                raise LookupError(f"unknown command spec path: {' '.join(path)!r}")
+            current = match
+        return current
 
     def by_schema_identity(self) -> MappingProxyType[str, CommandSpec]:
         """Return the unique executable result-schema identity index."""
@@ -663,6 +771,7 @@ __all__ = [
     "BindingState",
     "CommandNodeKind",
     "CommandSpec",
+    "CommandSpecFamily",
     "CommandSpecGraph",
     "CommandSpecNode",
     "DefaultKind",

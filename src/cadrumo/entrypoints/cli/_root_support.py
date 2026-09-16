@@ -56,7 +56,7 @@ def _root_profile_secret_help_lines() -> tuple[str, ...]:
     from ...core.i18n.render import tr
     from .command_spec import OptionSpec
 
-    root = _COMMAND_GRAPH.by_key()["root"]
+    root = _COMMAND_GRAPH.root()
     options = tuple(
         parameter
         for parameter in root.parameters

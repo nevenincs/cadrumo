@@ -66,7 +66,7 @@ def _group_class(graph: CommandSpecGraph, key: str) -> type[CommandSpecTyperGrou
     return type(
         f"CommandSpecTyperGroup_{key}",
         (CommandSpecTyperGroup,),
-        {"lazy_subcommands": _lazy_children(graph, graph.by_key()[key])},
+        {"lazy_subcommands": _lazy_children(graph, graph.spec(key))},
     )
 
 
@@ -412,7 +412,7 @@ class _SpecNodeFactory:
 
 def _lazy_children(graph: CommandSpecGraph, parent: CommandSpec) -> tuple[LazySubcommand, ...]:
     """Compile one node-local immutable child projection from CommandSpec."""
-    children = tuple(spec for spec in graph.specs if spec.parent_key == parent.key)
+    children = graph.children(parent.key)
     return tuple(
         LazySubcommand(
             child.token,
@@ -431,7 +431,7 @@ def _lazy_children(graph: CommandSpecGraph, parent: CommandSpec) -> tuple[LazySu
 
 
 def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
-    spec = graph.by_key()[key]
+    spec = graph.spec(key)
     if spec.handler is not None and spec.handler.state is BindingState.UNAVAILABLE:
         reason = spec.handler.reason_key
         raise InternalInvariantError(tr(reason.value) if reason is not None else f"command {key!r} is unavailable")
@@ -473,16 +473,13 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
 @cache
 def build_command_app(graph: CommandSpecGraph) -> typer.Typer:
     """Compile the sole production command graph into a demand-loaded app."""
-    root = next(spec for spec in graph.specs if spec.kind == "root")
-    return _node_app(graph, root.key)
+    return _node_app(graph, graph.root().key)
 
 
 @cache
 def build_command_subtree(graph: CommandSpecGraph, key: str) -> typer.Typer:
     """Compile one declared subtree for an atomic family migration."""
-    spec = graph.by_key().get(key)
-    if spec is None:
-        raise LookupError(f"unknown command spec key: {key!r}")
+    graph.spec(key)
     return _node_app(graph, key)
 
 
