@@ -7,19 +7,18 @@ import sys
 
 import pytest
 
+from cadrumo.application.operator_surface.contract import get_operator_surface_contract
+from cadrumo.application.operator_surface.models import RootSurfaceName
 from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_APP_FAMILIES = (
-    "diagnostics",
-    "ledger",
-    "live",
-    "modelo",
-    "overview",
-    "quickfile",
-    "registry",
-    "review",
+_APP_FAMILIES = tuple(
+    sorted(
+        family.child
+        for family in get_operator_surface_contract().command_families
+        if family.root is RootSurfaceName.APP
+    )
 )
 
 
