@@ -311,7 +311,6 @@
         "cadrumo.application.ledger.participation_read",
         "cadrumo.application.ledger.party_attribution",
         "cadrumo.application.ledger.party_colocation",
-        "cadrumo.application.ledger.period_filter",
         "cadrumo.application.ledger.persistence_ports",
         "cadrumo.application.ledger.postal_shape_finding",
         "cadrumo.application.ledger.preconditions",
