@@ -655,6 +655,9 @@ errors:
       was recorded outside an active run context.'
     internal_operation_declaration_breach: 'Internal error: an operation executor
       claimed a phase, effect, resource, or interaction its definition does not declare.'
+    internal_operation_unsettled: 'Internal error: the operation stopped before its
+      result could be recorded. It stays open and is closed automatically when its
+      owner lock expires; check the diagnostic logs for the cause.'
     internal_output_rendering: 'Internal error: the command output could not be rendered
       safely.'
     internal_profile_project_answers_not_registered: 'Internal error: project_answers
