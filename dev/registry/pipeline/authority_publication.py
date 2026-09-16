@@ -70,6 +70,21 @@ from ..compiler.source_evidence_fingerprint import (
 _PUBLICATION_LOCK_TIMEOUT: Final = 30.0
 _PUBLICATION_LOCK_RETRY_BACKOFF: Final = 0.05
 
+def require_evidence_closure(artifact: AuthorityArtifact) -> None:
+    """Require every runtime evidence projection to agree with its catalogue."""
+    legal_ids = {item.legal_reference_id for item in artifact.evidence.legal}
+    if legal_ids != set(artifact.catalogues.legal):
+        raise ValueError("authority artifact legal evidence must cover exactly its legal catalogue")
+    required_sources = embedded_source_ids(artifact.catalogues.sources)
+    source_ids = frozenset(item.source_reference_id for item in artifact.evidence.sources)
+    if source_ids != required_sources:
+        raise ValueError("authority artifact source evidence must cover exactly its runtime source catalogue")
+    for item in artifact.evidence.sources:
+        source = artifact.catalogues.sources[item.source_reference_id]
+        if item.payload_sha256 != source.sha256 or len(item.payload) != source.bytes:
+            raise ValueError(f"authority artifact source evidence disagrees with catalogue {source.id!r}")
+
+
 __all__ = [
     "AuthorityDatabaseCurrency",
     "AuthorityDatabaseCurrencyStatus",

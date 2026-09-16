@@ -37,6 +37,7 @@ from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProve
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
+from dev.registry.pipeline.authority_publication import require_evidence_closure
 
 _FORMAT = "cadrumo-development-eager-authority-v1"
 _TAGGED_CONTEXT = {TAGGED_FACT_ATOM_CONTEXT: True}
@@ -50,7 +51,7 @@ class EagerAuthorityBaselineError(ValueError):
 def write_eager_authority_baseline(path: Path, artifact: AuthorityArtifact) -> None:
     """Write canonical eager bytes from the same validated artifact as SQLite."""
     artifact.catalogues.runtime.require_complete()
-    artifact.require_evidence_closure()
+    require_evidence_closure(artifact)
     tax_id_format_from_catalogue(artifact.catalogues.facts)
     payload = _artifact_document(artifact)
     encoded = canonical_json_bytes(
@@ -183,7 +184,7 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         profile_schema=ProfileSchemaDefinition.model_validate(payload["profile_schema"]),
     )
     artifact.catalogues.runtime.require_complete()
-    artifact.require_evidence_closure()
+    require_evidence_closure(artifact)
     return artifact
 
 

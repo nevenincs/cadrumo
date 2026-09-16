@@ -270,8 +270,8 @@ def test_projection_endpoint_index_indexes_numbered_endpoints() -> None:
     revision = _revision(projection_endpoints=(declaration, slotless))
 
     assert revision.projection_endpoint_index()[reference] == (declaration,)
-    assert revision.projection_declarations_for_casilla(_PROJECTION_CASILLA) == (declaration,)
-    assert revision.projection_declarations_for_casilla(_UNKNOWN_CASILLA) == ()
+    assert _projection_declarations_for_casilla(revision, _PROJECTION_CASILLA) == (declaration,)
+    assert _projection_declarations_for_casilla(revision, _UNKNOWN_CASILLA) == ()
 
 
 def test_a_revision_declaring_one_endpoint_twice_is_refused() -> None:
@@ -469,3 +469,15 @@ def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -
         ProjectionEndpointDeclaration.model_validate(
             {**compiled, "projection_ref": {"projection_kind": "m303_prorrata_activity", "slot": "1"}},
         )
+
+
+def _projection_declarations_for_casilla(
+    revision: ModeloRevision,
+    casilla_id: CasillaId,
+) -> tuple[ProjectionEndpointDeclaration, ...]:
+    return tuple(
+        declaration
+        for reference, declarations in revision.projection_endpoint_index().items()
+        if filing_projection_ref_casilla_id(reference) == casilla_id
+        for declaration in declarations
+    )

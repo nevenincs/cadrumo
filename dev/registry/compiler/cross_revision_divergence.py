@@ -33,6 +33,20 @@ _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
 )
 _UNRESOLVED_LOCALIZATION = "<unresolved-localization>"
 
+def covered_fields(kind: CasillaEvolutionKind) -> frozenset[str]:
+    """Return the exact divergence axes an attestation of ``kind`` may explain."""
+    return {
+        CasillaEvolutionKind.UNCHANGED: frozenset[str](),
+        CasillaEvolutionKind.LABEL_EVOLVED: frozenset({"label"}),
+        CasillaEvolutionKind.SECTION_EVOLVED: frozenset({"section"}),
+        CasillaEvolutionKind.REPRESENTATION_EVOLVED: frozenset({"data_type"}),
+        CasillaEvolutionKind.LEGAL_REFS_EVOLVED: frozenset({"legal_refs"}),
+        CasillaEvolutionKind.LABEL_AND_LEGAL_REFS_EVOLVED: frozenset({"label", "legal_refs"}),
+        CasillaEvolutionKind.REPURPOSED: frozenset({"label", "section", "data_type", "semantic_role", "legal_refs"}),
+        CasillaEvolutionKind.RETIRED: frozenset[str](),
+    }[kind]
+
+
 __all__ = ("CrossRevisionCasillaDivergence", "iter_cross_revision_casilla_divergences")
 
 
@@ -130,7 +144,7 @@ def _pair_field_divergences(
             right_continuidad_id=right_casilla.continuidad_id,
             evolution_id=evolution.id if evolution is not None else None,
             evolution_kind=evolution.evolution_kind if evolution is not None else None,
-            evolution_covers_field=evolution is not None and field in evolution.evolution_kind.covered_fields,
+            evolution_covers_field=evolution is not None and field in covered_fields(evolution.evolution_kind),
         )
 
 
@@ -190,7 +204,7 @@ def _matching_evolution(
     for revision in (left_revision, right_revision):
         for evolution in evolutions.get(revision.id, _NO_LINEAGE_EVOLUTIONS).get(continuidad_id, ()):
             if {evolution.from_revision, evolution.to_revision} == {left_revision.id, right_revision.id}:
-                if field in evolution.evolution_kind.covered_fields:
+                if field in covered_fields(evolution.evolution_kind):
                     return evolution
                 fallback = evolution
     return fallback

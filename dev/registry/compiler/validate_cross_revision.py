@@ -24,6 +24,7 @@ from dev.registry.compiler.cross_revision_divergence import (
     iter_cross_revision_casilla_divergences,
 )
 
+from .cross_revision_divergence import covered_fields
 from .validate_cross_revision_evolution import strict_continuity_evolution_failures
 from .validate_cross_revision_lineage_origin import role_exempt_occurrences
 
@@ -305,7 +306,7 @@ def _field_coverage_components(
         nodes_by_revision[node[0]] = (*nodes_by_revision[node[0]], node)
     for revision in modelo.revisions.values():
         for evolution in revision.casilla_continuidad_evolutions:
-            if evolution.continuidad_id != continuidad_id or field not in evolution.evolution_kind.covered_fields:
+            if evolution.continuidad_id != continuidad_id or field not in covered_fields(evolution.evolution_kind):
                 continue
             for left_node in nodes_by_revision[evolution.from_revision]:
                 for right_node in nodes_by_revision[evolution.to_revision]:

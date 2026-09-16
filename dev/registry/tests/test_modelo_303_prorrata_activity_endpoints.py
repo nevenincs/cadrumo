@@ -410,7 +410,7 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
     assert tuple(
         (str(endpoint.projection_ref.casilla_id), endpoint.value)
         for item in projection
-        for endpoint in item.endpoint_values()
+        for endpoint in item.endpoints
     ) == tuple(
         (str(500 + (slot - 1) * 5 + field_index), value)
         for slot in range(1, 6)

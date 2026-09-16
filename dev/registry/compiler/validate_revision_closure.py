@@ -70,7 +70,7 @@ def validate_revision_closure_sections(
         validate_construct_closure(
             prefix,
             revision,
-            member_objects=context.construct_member_objects,
+            member_objects=_construct_member_objects(context),
             legal_refs=legal_refs,
             source_refs=source_refs,
             evidence=evidence,
@@ -143,3 +143,24 @@ def validate_revision_reference_surfaces(
         failures.extend(
             evidence.require_any_source_tier(prefix, owner, evolution.source_refs, _REVISION_REFERENCE_SOURCE_TIERS),
         )
+
+
+def _construct_member_objects(
+    context: RevisionValidationContext,
+) -> Mapping[str, Mapping[str, ConstructMemberObject]]:
+    """Return construct-member indexes grouped by schema kind."""
+    return {
+        "casilla": context.casilla_by_id,
+        "formula": context.formula_by_id,
+        "parameter": context.parameter_by_id,
+        "binding": context.binding_by_id,
+        "export layout": context.export_layout_by_id,
+        "extraction profile": context.extraction_profile_by_id,
+        "cross-reference": context.cross_reference_by_id,
+        "workbook parity reference": context.workbook_parity_by_id,
+        "verification expectation": context.verification_expectation_by_id,
+        "application link": context.application_link_by_id,
+        "deadline window": context.deadline_window_by_id,
+        "filing schedule": context.filing_schedule_by_id,
+        "dependency classification": context.dependency_classification_by_id,
+    }
