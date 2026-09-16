@@ -7,7 +7,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -18,6 +17,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -135,7 +135,7 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(
             observations=[_professional_observation()],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        snapshot = compiled_bundled_authority().snapshot("111", filing_year=2026, period="1T")
+        snapshot = published_authority_operation().snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -191,7 +191,7 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(
             observations=[_administrador_observation()],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        snapshot = compiled_bundled_authority().snapshot("111", filing_year=2026, period="1T")
+        snapshot = published_authority_operation().snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -249,7 +249,7 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(
             observations=[_administrador_wrong_rate_observation()],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        snapshot = compiled_bundled_authority().snapshot("111", filing_year=2026, period="1T")
+        snapshot = published_authority_operation().snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

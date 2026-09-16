@@ -54,7 +54,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -65,6 +64,7 @@ from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_suppor
 from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -596,7 +596,7 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
                 stamped_revision_id=revision_id_for_observation(obs_n),
             )
         )
-        snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
         report = resolve_bindings_from_local_store(
             snapshot_n1,
             repository=repo,
@@ -654,7 +654,7 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
     primary calculation input.
     """
     prior_observation = _year_n_observation_with_explicit_inmuebles_zero()
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
     expected_bindings = {
         _CUENTAS_BASELINE_BINDING: _CUENTAS_N,
         _VALORES_BASELINE_BINDING: _VALORES_N,
@@ -729,7 +729,7 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
                 stamped_revision_id=revision_id_for_observation(obs_n),
             )
         )
-        snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         with (
             _indexed_authority_for_test().operation() as _authority_operation_for_test,
@@ -750,7 +750,7 @@ def _prior_year_baseline_consumer_outcome(
     prior_observation: RegistryModeloObservation | None,
 ) -> tuple[CalculationSourceResolution, CrossPeriodCleanStateVerdict]:
     """Resolve the year-N+1 baselines and the clean-state verdict over one isolated bucket."""
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=CLEAN_STATE_BUCKET_ID):
         repository = CalculationObservationRepository()
         if prior_observation is not None:

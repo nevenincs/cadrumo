@@ -28,9 +28,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -197,7 +197,7 @@ def _calculate_714_from_local_m100(
     repository: CalculationObservationRepository,
     operation: PinnedAuthorityOperation,
 ) -> RegistryCalculationResult:
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=scenario.filing_year, period="0A")
+    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=scenario.filing_year, period="0A")
     prefill = resolve_relations_from_local_store(
         snapshot,
         repository=repository,

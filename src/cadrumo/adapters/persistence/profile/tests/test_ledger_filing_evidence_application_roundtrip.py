@@ -12,9 +12,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
@@ -90,7 +90,7 @@ def _revision_with_evidence(
     *, evidence: LedgerFilingEvidence, tx_id: str, operation: PinnedAuthorityOperation
 ) -> CalculationRevision:
     period = Period.from_year_and_code(2025, "1T")
-    registry_snapshot_ref = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").snapshot_ref
+    registry_snapshot_ref = published_authority_operation().snapshot("303", filing_year=2025, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

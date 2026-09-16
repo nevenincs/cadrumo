@@ -35,9 +35,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -116,7 +116,7 @@ def _calculate_303(
     cuota_binding_overrides: Mapping[str, Decimal],
     relation_values: Mapping[RelationId, Decimal],
 ) -> RegistryCalculationResult:
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = relation_prefill_values_as_binding_values(
         snapshot.revision,
         dict(relation_values),
@@ -192,7 +192,7 @@ def _run_carry_chain(
             )
         )
 
-        snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
+        snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo, operation=operation)
         resolved: dict[RelationId, Decimal] = {
             item.relation: item.value for item in relation_values.values if item.value is not None

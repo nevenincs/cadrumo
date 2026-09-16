@@ -9,8 +9,6 @@ from datetime import datetime as _datetime
 from decimal import Decimal as _Decimal
 from pathlib import Path as _Path
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from cadrumo.adapters.inbound.financial.providers.base import ParsedLedgerRow
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository as _BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import (
@@ -19,6 +17,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import (
 from cadrumo.adapters.persistence.profile.modelos_work_units import (
     WorkUnitCatalogueRepository as _WorkUnitCatalogueRepository,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import (
     TransactionCatalogueRepository as _TransactionCatalogueRepository,
 )
@@ -206,7 +205,7 @@ def _persist_verified_revision_citing_transaction(
     source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
     period = Period.from_year_and_code(2026, "1T")
     registry_snapshot_ref = (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot(
             "303",
             filing_year=period.filing_year,

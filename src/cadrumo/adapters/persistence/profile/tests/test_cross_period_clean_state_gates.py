@@ -9,7 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -23,6 +22,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -234,7 +234,7 @@ def _seed_303_cross_period_sources(
     csv_periods: set[str],
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A")
+    snapshot = published_authority_operation().snapshot("390", filing_year=2025, period="0A")
     source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
     for requirement in cross_period_dependency_requirements(snapshot):
         source_casilla_ids_by_period.setdefault(
@@ -249,7 +249,7 @@ def _seed_303_cross_period_sources(
             else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
         )
         evidence_reference_id = f"AEAT-{period}"
-        source_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period=period)
+        source_snapshot = published_authority_operation().snapshot("303", filing_year=2025, period=period)
         if evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF:
             _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=2025)
         work_unit = create_work_unit(

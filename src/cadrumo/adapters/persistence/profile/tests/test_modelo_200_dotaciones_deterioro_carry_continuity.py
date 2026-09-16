@@ -35,10 +35,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
@@ -151,7 +151,7 @@ def _calculate_200(
     relation_values: dict[RelationId, Decimal],
     obs_repo: CalculationObservationRepository,
 ) -> RegistryCalculationResult:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
@@ -182,7 +182,7 @@ def _calculate_200(
 
 
 def _resolve_relations(*, filing_year: int, obs_repo: CalculationObservationRepository) -> dict[RelationId, Decimal]:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     with bundled_indexed_authority().operation() as operation:

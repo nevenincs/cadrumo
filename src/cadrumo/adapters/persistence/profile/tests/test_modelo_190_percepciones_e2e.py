@@ -15,7 +15,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.percepciones_observations_repository import (
@@ -76,7 +77,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
                 _obs("22222222J", RetencionClave.from_registry("A")),
             ],
         )
-        snapshot = compiled_bundled_authority().snapshot("190", filing_year=2024, period="0A")
+        snapshot = published_authority_operation().snapshot("190", filing_year=2024, period="0A")
         resolution = WithholdingSourceResolver(ports=ports).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,

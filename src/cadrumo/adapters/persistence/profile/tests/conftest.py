@@ -25,11 +25,19 @@ from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from ._invoice_confirmation_test_support import InvoiceAuthorityFixture
 from .ledger_action_persistence_support import _BUCKET_ID
+from .published_authority_support import release_published_authority_operation
 
 # These suites exercise the profile-bound secure-object adapter through an
 # explicitly requested runtime.  The fixture body is composed by the outer
 # persistence test owner, not by an application test package.
 secure_engine = default_bucket_runtime_profile_fixture(autouse=False, name="secure_engine")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _published_authority_lease() -> Iterator[None]:
+    """Release the per-worker published authority lease seeded snapshots use."""
+    yield
+    release_published_authority_operation()
 
 
 @pytest.fixture

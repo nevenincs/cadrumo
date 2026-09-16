@@ -37,7 +37,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -48,6 +47,7 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -311,7 +311,7 @@ def _import_official_filing_evidence(
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, dict[str, str]]:
     wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, filing_repo = repos
-    source_snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
+    source_snapshot = published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period)
     source_work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
@@ -433,7 +433,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(
         stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=2025, period="0A"),
     )
 
-    q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = published_authority_operation().snapshot("130", filing_year=2026, period="2T")
     report = _resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     )
@@ -470,7 +470,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos, *, operatio
         stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=2025, period="0A"),
     )
 
-    q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = published_authority_operation().snapshot("130", filing_year=2026, period="2T")
     resolved = _resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values
@@ -560,7 +560,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
         source_metadata=m100_source_metadata,
     )
 
-    q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = published_authority_operation().snapshot("130", filing_year=2026, period="2T")
     resolved = _resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values
@@ -695,7 +695,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         )
     )
 
-    snapshot_3t = compiled_bundled_authority().snapshot("130", filing_year=2026, period="3T")
+    snapshot_3t = published_authority_operation().snapshot("130", filing_year=2026, period="3T")
     resolved = _resolve_bindings_from_local_store(
         snapshot_3t, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values

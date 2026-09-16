@@ -48,9 +48,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.calculations.iva_compensation_annual_partition import (
@@ -200,7 +200,7 @@ def _calculate_303_quarter(
     supplies the R2 profile-gap workaround facts and a zero prior-period carry,
     resolves bound casilla inputs, then evaluates the engine.
     """
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+    snapshot = published_authority_operation().snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         _303_CARRY_BINDING: Decimal("0"),
         _303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
@@ -263,7 +263,7 @@ def _calculate_390_annual(
     describe the same ejercicio, so they must agree. Returns the result plus
     its produced-value count.
     """
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
+    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period="0A")
     with bundled_indexed_authority().operation() as operation:
         relation_vals = resolve_relations_from_local_store(snapshot, operation=operation, repository=repository)
         relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}

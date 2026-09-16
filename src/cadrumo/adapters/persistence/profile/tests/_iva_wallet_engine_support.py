@@ -9,7 +9,6 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -22,6 +21,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
 )
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
@@ -83,7 +83,7 @@ def _filing_instance_evidence(period: Period, *, operation: PinnedAuthorityOpera
 
 @cache
 def _snapshot_303(*, filing_year: int = _TARGET_YEAR, period: str = _TARGET_PERIOD) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+    return published_authority_operation().snapshot("303", filing_year=filing_year, period=period)
 
 
 @contextmanager

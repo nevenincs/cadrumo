@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._export_test_support import (
     _M130_RESULT_CASILLA,
@@ -14,6 +13,7 @@ from cadrumo.adapters.persistence.profile.tests._export_test_support import (
     _M303_RESULT_CASILLA,
     _profile,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.application.modelo.action_errors import (
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
@@ -48,7 +48,7 @@ _BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"
 
 
 def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         modelo,
         filing_year=period.filing_year,
         period=period.registry_token,

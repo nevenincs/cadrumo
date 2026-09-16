@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -47,15 +45,11 @@ def seed_revision_citing_transaction(
 ) -> str:
     """Seed one real revision in ``state`` that cites ``transaction_id``."""
     period = Period.from_year_and_code(2026, period_code)
-    registry_snapshot_ref = (
-        compiled_bundled_authority()
-        .snapshot(
-            "303",
-            filing_year=period.filing_year,
-            period=period.registry_token,
-        )
-        .snapshot_ref
-    )
+    registry_snapshot_ref = operation.snapshot(
+        "303",
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    ).snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",

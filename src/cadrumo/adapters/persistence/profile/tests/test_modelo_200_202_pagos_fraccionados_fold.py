@@ -16,9 +16,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -56,7 +56,7 @@ def _m202_observation(
 
 
 def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepository) -> dict[RelationId, Decimal]:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     with bundled_indexed_authority().operation() as operation:
@@ -114,7 +114,7 @@ def _all_m202_relation_values(
     *,
     first_year_cuota: bool,
 ) -> dict[RelationId, Decimal | None]:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     with bundled_indexed_authority().operation() as operation:

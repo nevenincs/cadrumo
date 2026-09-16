@@ -36,7 +36,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -63,6 +62,7 @@ from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     _verify_revision,
     calculation_ports_for_test,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
@@ -580,7 +580,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(
     )
     _persist_prior_303(CalculationObservationRepository())
 
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
     context = CalculationSourceContext(
         bucket_id=work_unit_303.bucket_id,
         modelo="303",
@@ -652,7 +652,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(
     )
     _persist_prior_303(CalculationObservationRepository())
 
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,
@@ -674,7 +674,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(
 def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate() -> None:
     """The wallet carve-out is scoped to the exact M303 revision coordinate."""
 
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
     reused_binding_id = MODELO_303_IVA_COMPENSATION_BINDING_ID
     assert (
         iva_wallet_owned_binding_ids_for_revision(

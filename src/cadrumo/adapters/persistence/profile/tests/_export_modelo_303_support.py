@@ -6,8 +6,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -19,6 +17,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.tests._export_test_support import _seed_profile, _synthetic_valid_nif
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -94,7 +93,7 @@ def external_filing_observations(*, casilla_values, snapshot):
 
 
 def _m303_snapshot_ref(period: str) -> RegistrySnapshotRef:
-    return compiled_bundled_authority().snapshot("303", filing_year=2026, period=period).snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2026, period=period).snapshot_ref
 
 
 def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
@@ -257,7 +256,7 @@ def _seed_modelo_303_1t_clean_state(
         bucket_event_repository = BucketEventHistoryRepository(
             objects=secure_object_repository_for_bucket(bucket_id),
         )
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
     source_casilla_ids = sorted(
         {
             casilla_id
@@ -270,7 +269,7 @@ def _seed_modelo_303_1t_clean_state(
     )
     assert source_casilla_ids, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)}
-    source_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    source_snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
     persist_justificante_metadata(
         "JUST30320261T",
         modelo="303",
@@ -437,7 +436,7 @@ def _build_verified_modelo_303_revision(
         tax_id=taxpayer_nif,
         profile_overrides={"identity.surnames": "Test Surnames"},
     )
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     event_repo = BucketEventHistoryRepository()

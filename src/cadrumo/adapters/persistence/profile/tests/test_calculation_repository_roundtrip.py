@@ -28,7 +28,8 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
@@ -79,7 +80,7 @@ _DECL_PERIODO_CODE = "1T"
 @cache
 def _registry_snapshot_ref() -> RegistrySnapshotRef:
     # Compiled on first use, not at import: collection must stay cheap.
-    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2026, period="1T").snapshot_ref
 
 
 @cache

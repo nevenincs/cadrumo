@@ -7,7 +7,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -62,6 +61,7 @@ from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_suppor
 from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
     snapshot_390 as _snapshot_390,
 )
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_clean_state import (
     cross_period_dependency_inventory,
@@ -103,7 +103,7 @@ def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: P
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = _evaluate_clean_state(
-            compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A"),
+            published_authority_operation().snapshot("100", filing_year=2024, period="0A"),
         )
 
     # M115 (arrendamiento retenciones) was retired as a dormant M100
@@ -121,7 +121,7 @@ def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: P
 def test_m100_pagos_fraccionados_conditional_on_economic_activity(tmp_path: Path) -> None:
     """130/131 scope out for a declared employee and stay enforced otherwise."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        snap = compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A")
+        snap = published_authority_operation().snapshot("100", filing_year=2024, period="0A")
 
         def evaluate_activity_state(
             taxpayer_files_economic_activity: bool | None,
@@ -154,7 +154,7 @@ def test_m100_pagos_fraccionados_scopes_out_mutually_exclusive_m131(tmp_path: Pa
     """A direct-estimation autonomo owes M130, not M131, so only M130 stays enforced."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = _evaluate_clean_state(
-            compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A"),
+            published_authority_operation().snapshot("100", filing_year=2025, period="0A"),
             taxpayer_files_economic_activity=True,
             not_applicable_source_modelos=frozenset({"131"}),
         )
@@ -171,7 +171,7 @@ def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp
     """An explicit zero prior BIN does not require prior M100 evidence."""
     zero_binding = "renta-base-liquidable-negativa-general-anterior"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+        snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
         verdict = _evaluate_clean_state(
             snapshot,
             taxpayer_files_economic_activity=False,
@@ -198,7 +198,7 @@ def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp
 
 def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        snapshot = compiled_bundled_authority().snapshot("180", filing_year=2026, period="0A")
+        snapshot = published_authority_operation().snapshot("180", filing_year=2026, period="0A")
 
     requirements = cross_period_dependency_requirements(snapshot)
 
@@ -217,7 +217,7 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
 
 
 def test_cross_period_requirements_preserve_previous_filing_presence_policy() -> None:
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_authority_operation().snapshot("130", filing_year=2026, period="1T")
     binding = next(
         binding
         for binding in snapshot.revision.bindings
@@ -735,8 +735,8 @@ def test_activity_start_scoping_applies_to_both_requirement_origins(tmp_path: Pa
     while trapped on the other.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        relation_snapshot = compiled_bundled_authority().snapshot("180", filing_year=2026, period="0A")
-        previous_filing_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T")
+        relation_snapshot = published_authority_operation().snapshot("180", filing_year=2026, period="0A")
+        previous_filing_snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="4T")
 
         relation_verdict = _evaluate_clean_state(
             relation_snapshot,
@@ -789,7 +789,7 @@ def test_real_prior_filing_post_dating_alta_still_blocks_anti_tautology(tmp_path
 
 @cache
 def _snapshot_202() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("202", filing_year=2026, period="2P")
+    return published_authority_operation().snapshot("202", filing_year=2026, period="2P")
 
 
 def test_first_year_modalidad_cuota_suppresses_m202_dependency_through_evaluator(tmp_path: Path) -> None:

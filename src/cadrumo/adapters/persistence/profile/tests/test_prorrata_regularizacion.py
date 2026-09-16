@@ -19,7 +19,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -29,6 +28,7 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.prorrata_regularizacion import (
     build_prorrata_declared_volume_divergence_advisory,
@@ -136,7 +136,7 @@ def _ledger_observation(
 
 
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
+    snapshot = published_authority_operation().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
     return str(snapshot.revision.id)
 
 
@@ -151,7 +151,7 @@ def _seed_verified_m303_settlement(
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
     period = Period.from_year_and_code(_SETTLEMENT_YEAR, _SETTLEMENT_PERIOD)
-    registry_snapshot = compiled_bundled_authority().snapshot(
+    registry_snapshot = published_authority_operation().snapshot(
         Modelo("303").value,
         filing_year=_SETTLEMENT_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -237,7 +237,7 @@ def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() ->
     assert "declared_sin_derecho_volume" in applicability.evidence_kinds
     assert diagnostic is not None
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         Modelo("303").value,
         filing_year=_SETTLEMENT_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -269,7 +269,7 @@ def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_dif
     assert diagnostic is not None
     assert diagnostic.source_kind == BindingSourceKind.PRORRATA_REGULARIZACION.value
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         Modelo("303").value,
         filing_year=_SETTLEMENT_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -300,7 +300,7 @@ def test_projection_feeds_m303_casilla_44_from_declared_volume_definitive_percen
 
     assert projection.result.prorrata_definitiva_pct == declared_definitive_percentage
     assert projection.operaciones_sin_derecho_deduccion == Decimal("50000.00")
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         Modelo("303").value,
         filing_year=_SETTLEMENT_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -566,7 +566,7 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
     One year per shipped revision window, so a newly-shipped revision cannot
     slip past this refusal by simply not being enumerated here.
     """
-    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
+    snapshot = published_authority_operation().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
 
     assert str(snapshot.revision.id) == revision_id
     assert "61" not in declared_casilla_ids(snapshot.revision)
@@ -577,7 +577,7 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
 def test_modelo_303_period_below_the_support_floor_refuses() -> None:
     """A filing year below the registry support floor refuses instead of projecting."""
     with pytest.raises(NoRevisionForPeriodError, match="year=2020"):
-        compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2020, period="4T")
+        published_authority_operation().snapshot(Modelo("303").value, filing_year=2020, period="4T")
 
 
 def test_advisory_is_silent_when_no_sin_derecho_operations() -> None:

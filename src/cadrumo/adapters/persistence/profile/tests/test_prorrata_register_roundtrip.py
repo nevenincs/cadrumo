@@ -32,7 +32,8 @@ from pathlib import Path
 
 import pydantic
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
@@ -67,7 +68,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
-    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
+    return (
+        published_authority_operation().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
+    )
 
 
 def test_repository_satisfies_the_revisioned_prorrata_port(tmp_path: Path) -> None:

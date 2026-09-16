@@ -54,13 +54,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -113,7 +113,7 @@ _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
 def _snapshot(filing_year: int) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
+    return published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
 
 
 def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:

@@ -58,7 +58,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -71,6 +70,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -204,7 +204,7 @@ def _calculate_and_verify_m210_inmobiliaria(
     ``isolated_runtime_profile`` provisioning passes over the same ``tmp_path``.
     """
     with _secure_backend(tmp_path):
-        snapshot = compiled_bundled_authority().snapshot(_M210, filing_year=_FILING_YEAR, period=_PERIOD_CODE)
+        snapshot = published_authority_operation().snapshot(_M210, filing_year=_FILING_YEAR, period=_PERIOD_CODE)
         work_repo, calc_repo, event_repo = _repositories()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

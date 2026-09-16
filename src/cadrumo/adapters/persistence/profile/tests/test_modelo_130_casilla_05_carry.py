@@ -38,13 +38,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_clean_state import evaluate_cross_period_clean_state
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -137,7 +137,7 @@ def _prior_m130(period: str, *, casilla_07: Decimal, casilla_16: Decimal | None)
 
 
 def _resolve_casilla_05(obs_repo: CalculationObservationRepository, *, target_period: str) -> Decimal | None:
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=_FILING_YEAR, period=target_period)
+    snapshot = published_authority_operation().snapshot("130", filing_year=_FILING_YEAR, period=target_period)
     observations = tuple(
         payload.observation for source_modelo in ("130", "100") for payload in obs_repo.iter_modelo(source_modelo)
     )
@@ -290,7 +290,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
     to a provenance-marked no-prior-obligation zero rather than a missing-observation
     blocker, so the verdict is clean for a genuine first filer.
     """
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=_FILING_YEAR, period="2T")
+    snapshot = published_authority_operation().snapshot("130", filing_year=_FILING_YEAR, period="2T")
     # Activity starts mid-2T; the 1T period (ending 2026-03-31) is strictly prior.
     verdict = evaluate_cross_period_clean_state(
         snapshot,

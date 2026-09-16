@@ -41,7 +41,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -51,6 +50,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -297,7 +297,7 @@ def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Re
     # the local store — it auto-pulls renta year N's M100 net income — then run
     # a real calculation with it. Nothing about the prior-year income is
     # re-keyed by hand.
-    snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
+    snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
     with bundled_indexed_authority().operation() as operation:
         resolved = resolve_bindings_from_local_store(
             snapshot_n1,

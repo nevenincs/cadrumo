@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -20,6 +19,7 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import (
 )
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
@@ -65,7 +65,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def _prior_m303_snapshot_ref():
-    return compiled_bundled_authority().snapshot("303", filing_year=2024, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2024, period="4T").snapshot_ref
 
 
 def _raw_transaction(

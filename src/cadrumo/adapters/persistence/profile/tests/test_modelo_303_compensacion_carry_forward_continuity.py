@@ -50,10 +50,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
@@ -196,7 +196,7 @@ def _calculate_303(
     totals; manual casilla inputs against the form-number boxes 27/45 are no
     longer read and the engine refuses computed-casilla inputs.
     """
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = relation_prefill_values_as_binding_values(
         snapshot.revision,
         dict(relation_values),
@@ -284,7 +284,7 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         observation_repository = CalculationObservationRepository()
-        source_snapshot = compiled_bundled_authority().snapshot(
+        source_snapshot = published_authority_operation().snapshot(
             _MODELO,
             filing_year=_YEAR_2024,
             period=_EARLY_2024_PERIOD,
@@ -311,7 +311,7 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
             )
         )
 
-        target_snapshot = compiled_bundled_authority().snapshot(
+        target_snapshot = published_authority_operation().snapshot(
             _MODELO,
             filing_year=_YEAR_2024,
             period=_LATE_2024_PERIOD,
@@ -388,7 +388,7 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
             row_statement=statement,
             mutate=mutate,
         )
-        target_snapshot = compiled_bundled_authority().snapshot(
+        target_snapshot = published_authority_operation().snapshot(
             _MODELO,
             filing_year=_YEAR_2024,
             period=_LATE_2024_PERIOD,
@@ -456,7 +456,7 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
             )
         )
 
-        snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
+        snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(
             snapshot_n1,
             repository=obs_repo,
@@ -507,7 +507,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
 
         # Year N+1 — 1T: the carry resolves from the local store (cross-renta
         # wrap), lands in casilla 110, and a real calculation runs with it.
-        snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
+        snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(
             snapshot_n1,
             repository=obs_repo,

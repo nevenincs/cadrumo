@@ -84,12 +84,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
@@ -306,7 +306,7 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
     """
     _seed_m200_sociedad_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         _M200,
         filing_year=_FILING_YEAR,
         period="0A",
@@ -460,7 +460,7 @@ def _calculate_m202(secure_objects: SecureObjectRepository, *, period: str) -> B
     """
     _seed_sociedad_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period=period)
+    snapshot = published_authority_operation().snapshot(_M202, filing_year=_FILING_YEAR, period=period)
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -569,7 +569,7 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     _seed_sociedad_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
+    snapshot = published_authority_operation().snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

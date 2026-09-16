@@ -53,13 +53,13 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
@@ -312,7 +312,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     store on the live path. Mirrors the non-profile zero-default in
     ``test_modelo_100_pagos_fraccionados_fold_in_live._non_relation_zero_bindings``.
     """
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -341,7 +341,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
     """
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

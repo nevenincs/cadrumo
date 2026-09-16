@@ -31,7 +31,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -42,6 +41,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -218,7 +218,7 @@ def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -247,7 +247,7 @@ def _calculate_m100_annual(
     bucket_event_repo = BucketEventHistoryRepository(objects=objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",

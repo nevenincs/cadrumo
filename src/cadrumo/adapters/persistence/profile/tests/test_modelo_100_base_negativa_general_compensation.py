@@ -23,7 +23,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -34,6 +33,7 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
@@ -209,7 +209,7 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
 
 
 def _snapshot():
-    return compiled_bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD)
+    return published_authority_operation().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD)
 
 
 def _v(revision: CalculationRevision, casilla: CasillaId) -> Decimal:
@@ -244,7 +244,7 @@ def test_base_liquidable_negative_compensation_surfaces_cite_art50_not_art48_or_
 
 @pytest.mark.parametrize("filing_year", [2024, 2025])
 def test_opening_and_applied_base_liquidable_casillas_cite_art50(filing_year: int) -> None:
-    revision = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD).revision
+    revision = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD).revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
 
     for casilla_id in (_PENDIENTE_INICIO, _APLICADO):

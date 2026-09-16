@@ -53,12 +53,12 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
@@ -252,7 +252,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, operation:
     pre-seeded for the work-unit readiness gate; assertions still come solely
     from the seeded M303 observation store.
     """
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
+    snapshot = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="390",

@@ -6,10 +6,10 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
@@ -33,7 +33,7 @@ runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=Fals
 
 
 def _revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+    return published_authority_operation().snapshot("100", filing_year=2025, period="0A").revision
 
 
 def _context(revision: ModeloRevision) -> CalculationSourceContext:

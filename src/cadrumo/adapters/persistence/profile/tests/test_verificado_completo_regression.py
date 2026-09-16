@@ -28,7 +28,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -43,6 +42,7 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -117,7 +117,7 @@ _PROFILE_LABEL = "M130 verification test"
 
 def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
     """Read required manual casillas from the real registry — no duplication."""
-    snap = compiled_bundled_authority().snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
+    snap = published_authority_operation().snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
     return tuple(c.id for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
@@ -226,7 +226,7 @@ def _seed_clean_cross_period_sources_for_m130(
     bucket_event_repository: BucketEventHistoryRepository,
     operation: PinnedAuthorityOperation,
 ) -> CalculationObservationRepository:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -234,7 +234,7 @@ def _seed_clean_cross_period_sources_for_m130(
     observation_repository = CalculationObservationRepository()
     for requirement in cross_period_dependency_requirements(snapshot):
         values = {casilla_id: Decimal("0") for casilla_id in requirement.source_casilla_ids}
-        source_snapshot = compiled_bundled_authority().snapshot(
+        source_snapshot = published_authority_operation().snapshot(
             requirement.source_modelo,
             filing_year=requirement.filing_year,
             period=requirement.period.registry_token,

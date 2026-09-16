@@ -8,11 +8,11 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
@@ -76,7 +76,7 @@ _DEFAULT_FLOW = IvaFlowDirection.from_registry("repercutido")
 
 @cache
 def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
+    return published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obligation(
