@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
@@ -207,7 +208,8 @@ class ProfileFieldMutationOperationExecutor:
         await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[1])
-        record = apply_manager_profile_field_mutation(
+        record = await asyncio.to_thread(
+            apply_manager_profile_field_mutation,
             profile_id=str(payload.profile_id),
             path=payload.path,
             value=payload.value,
@@ -238,7 +240,8 @@ class ProfileRepeatableRowMutationOperationExecutor:
         values = {item.field_key: item.value for item in payload.values}
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(_PROFILE_REPEATABLE_ROW_MUTATION_PHASES[1])
-        mutation = add_profile_repeatable_section_row(
+        mutation = await asyncio.to_thread(
+            add_profile_repeatable_section_row,
             profile_id=str(payload.profile_id),
             section_key=payload.section_key,
             values=values,
@@ -275,7 +278,8 @@ class ProfileBundleExportOperationExecutor:
             try:
                 await context.events.effect(OperationEffect.UNKNOWN)
                 await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[2])
-                result = export_profile_bundle(
+                result = await asyncio.to_thread(
+                    export_profile_bundle,
                     ProfileBundleExportRequest(
                         profile_name=None,
                         destination=payload.destination,
@@ -306,7 +310,9 @@ class ProfileLogoutOperationExecutor:
         await context.events.phase(_PROFILE_LOGOUT_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(_PROFILE_LOGOUT_PHASES[1])
-        signed_out = logout_active_profile()
+        # The revocation takes the root pointer lock and deletes files; the session it
+        # closes is bound process-wide, so the worker thread sees and clears it.
+        signed_out = await asyncio.to_thread(logout_active_profile)
         await context.events.effect(OperationEffect.UPDATED if signed_out is not None else OperationEffect.NONE)
         await context.events.phase(_PROFILE_LOGOUT_PHASES[2])
         return request.subject_ref
