@@ -1306,9 +1306,26 @@ tui:
       available_empty: '%{label} - %{detail}'
       locked: Locked - unlock the selected profile to view this information
       never_captured: Not captured yet
+      reason:
+        workbench:
+          calendar:
+            aeat_reader_unavailable: Not captured yet - appears after the first AEAT
+              Sync
+          home:
+            actions_projector_unavailable: Unavailable - next actions appear once
+              every ledger area has been checked
+            agenda_projector_unavailable: Unavailable - the filing calendar could
+              not be worked out
+            declarations_resume_projector_unavailable: Unavailable - the declarations
+              to resume could not be read
+            messages_never_pulled: Not captured yet - AEAT messages appear after the
+              first AEAT Sync
+          ledger:
+            snapshot_projector_unavailable: Unavailable - shown once every ledger
+              area has been checked
       stale: Stale - the last local snapshot needs refresh
       stale_observed: '%{label}; last observed %{observed_at}'
-      unavailable: Unavailable - this source cannot be read in the current session
+      unavailable: Unavailable - this information cannot be shown right now
     declaration_state:
       discarded: Discarded
       draft: Draft

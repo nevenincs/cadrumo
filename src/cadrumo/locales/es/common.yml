@@ -1347,9 +1347,26 @@ tui:
       available_empty: '%{label} - %{detail}'
       locked: Bloqueado - desbloquea el perfil seleccionado para ver esta información
       never_captured: Todavía sin capturar
+      reason:
+        workbench:
+          calendar:
+            aeat_reader_unavailable: Todavía sin capturar - aparece tras la primera
+              Sincronización AEAT
+          home:
+            actions_projector_unavailable: No disponible - las próximas acciones aparecen
+              cuando se han comprobado todas las áreas del libro
+            agenda_projector_unavailable: No disponible - no se pudo calcular el calendario
+              de presentación
+            declarations_resume_projector_unavailable: No disponible - no se pudieron
+              leer las declaraciones que retomar
+            messages_never_pulled: Todavía sin capturar - los mensajes de la AEAT
+              aparecen tras la primera Sincronización AEAT
+          ledger:
+            snapshot_projector_unavailable: No disponible - se muestra cuando se han
+              comprobado todas las áreas del libro
       stale: Desactualizado - la última copia local necesita actualizarse
       stale_observed: '%{label}; última observación %{observed_at}'
-      unavailable: No disponible - esta fuente no puede leerse en la sesión actual
+      unavailable: No disponible - esta información no puede mostrarse ahora
     declaration_state:
       discarded: Descartada
       draft: Borrador

@@ -1327,9 +1327,26 @@ tui:
       available_empty: '%{label} - %{detail}'
       locked: Zárolva - oldd fel a kiválasztott profilt az adatok megtekintéséhez
       never_captured: Még nincs rögzítve
+      reason:
+        workbench:
+          calendar:
+            aeat_reader_unavailable: Még nincs rögzítve - az első AEAT-szinkron után
+              jelenik meg
+          home:
+            actions_projector_unavailable: Nem elérhető - a következő teendők akkor
+              jelennek meg, ha a főkönyv minden területét ellenőrizték
+            agenda_projector_unavailable: Nem elérhető - a benyújtási naptárt nem
+              sikerült kiszámítani
+            declarations_resume_projector_unavailable: Nem elérhető - a folytatandó
+              bevallásokat nem sikerült beolvasni
+            messages_never_pulled: Még nincs rögzítve - az AEAT-üzenetek az első AEAT-szinkron
+              után jelennek meg
+          ledger:
+            snapshot_projector_unavailable: Nem elérhető - akkor jelenik meg, ha a
+              főkönyv minden területét ellenőrizték
       stale: Elavult - a legutóbbi helyi pillanatkép frissítést igényel
       stale_observed: '%{label}; utolsó megfigyelés: %{observed_at}'
-      unavailable: Nem elérhető - ez a forrás nem olvasható a jelenlegi munkamenetben
+      unavailable: Nem elérhető - ez az információ most nem jeleníthető meg
     declaration_state:
       discarded: Elvetve
       draft: Piszkozat
