@@ -507,6 +507,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         usage_ratio_id=transaction.usage_ratio_id,
         prorrata_reference=transaction.prorrata_reference,
         purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
+        invoice_id=transaction.invoice_id,
         attachment_ids=transaction.attachment_ids,
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,

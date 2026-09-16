@@ -398,6 +398,7 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
     purchase_invoice_evidence_id: str | None = None
+    invoice_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
