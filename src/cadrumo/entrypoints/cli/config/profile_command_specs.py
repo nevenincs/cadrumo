@@ -53,7 +53,6 @@ from ._spec_policies import (
 
 if TYPE_CHECKING:
     from ....application.wizard.models import WizardFlow
-    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _LANG = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
 _CAPABILITY = ValueContract(DeferredTarget("....core.capabilities", "ServiceCapability", __package__))
@@ -974,11 +973,4 @@ def profile_command_specs_for_flow(flow: WizardFlow) -> tuple[CommandSpec, ...]:
     return tuple(projected)
 
 
-def build_profile_command_specs(operation: PinnedAuthorityOperation) -> tuple[CommandSpec, ...]:
-    """Build profile command specs from one caller-held authority operation."""
-    from ....application.wizard.catalogue import build_setup_flow
-
-    return profile_command_specs_for_flow(build_setup_flow(operation))
-
-
-__all__ = ["PROFILE_COMMAND_SPECS", "build_profile_command_specs", "profile_command_specs_for_flow"]
+__all__ = ["PROFILE_COMMAND_SPECS", "profile_command_specs_for_flow"]
