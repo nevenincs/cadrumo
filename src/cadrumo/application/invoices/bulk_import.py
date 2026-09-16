@@ -339,7 +339,9 @@ def _parse_bulk_row_retention_rate(
     A book prints the rate either as a percentage (``15``) or as a fraction
     (``0.15``); a value above one is read as a percentage. A rate is only
     accepted beside the amount it produced: the amount is what the document
-    states, and the importer never computes it from the rate.
+    states, and the importer never computes it from the rate. A zero rate with
+    no amount is a book saying nothing was withheld, and is read as no
+    retención rather than refused.
     """
     rate = _parse_optional_row_decimal(
         raw_row,
@@ -347,7 +349,7 @@ def _parse_bulk_row_retention_rate(
         row_number=row_number,
         decimal_separator=decimal_separator,
     )
-    if rate is None:
+    if rate is None or (rate == 0 and retencion_amount is None):
         return None
     if retencion_amount is None:
         raise _RowParseError(
