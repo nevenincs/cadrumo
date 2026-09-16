@@ -38,6 +38,7 @@ from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_mapping
 from ..calculations.registry.concepto_ingreso import require_concepto_ingreso
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ..calculations.registry.iva_schema_vocabulary import require_iva_exemption_article
@@ -839,9 +840,12 @@ class Transaction(BaseModel):
         """
         if self.counterparty_country is None:
             return None
+        # Resolving the catalogue stays outside the refusal below: a missing
+        # authority scope is not evidence that the country is outside the Union.
+        catalogue = resolve_eu_member_state_catalogue()
         try:
-            return require_eu_member_state(self.counterparty_country)
-        except (TypeError, ValueError, RegistryValidationError):
+            return catalogue.require(self.counterparty_country)
+        except RegistryValidationError:
             return None
 
     @model_validator(mode="after")
