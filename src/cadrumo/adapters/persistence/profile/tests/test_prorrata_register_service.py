@@ -34,7 +34,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture

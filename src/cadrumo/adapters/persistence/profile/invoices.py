@@ -26,7 +26,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ....domain.invoices.errors import InvoicePersistenceError
 from ....domain.invoices.models import InvoiceCatalogue
 from ..storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
@@ -237,6 +237,18 @@ class InvoiceCatalogueRepository:
         caller added in between.
         """
         return self._storage.load_revisioned()
+
+    def load_revision(self) -> str | None:
+        """Return the catalogue's stored revision without decrypting it.
+
+        The absent catalogue has the absent-object revision, the same one
+        :meth:`load_revisioned` reports for it. ``None`` means the stored row
+        predates recorded revisions, and a caller must treat it as changed.
+        """
+        revisions = self._objects.peek_many_revision_ids(self._storage.namespace, (self._storage.object_key,))
+        if self._storage.object_key not in revisions:
+            return ABSENT_SECURE_OBJECT_REVISION_ID
+        return revisions[self._storage.object_key]
 
     def to_secure_object_write(
         self,
