@@ -1445,13 +1445,6 @@ def _optional_decimal(value: str | None) -> Decimal | None:
     return None if value is None else Decimal(value)
 
 
-def _wire_row_payload(row: BaseModel) -> dict[str, object]:
-    """Dump one domain detail row with its amounts as their exact characters."""
-    return {
-        key: str(value) if isinstance(value, Decimal) else value for key, value in row.model_dump(mode="python").items()
-    }
-
-
 class _WireDetailRowMirror(BaseModel):
     """Shared inverse for the per-modelo detail-row wire mirrors.
 
