@@ -60,6 +60,7 @@ if TYPE_CHECKING:
     from .evidence import PurchaseInvoiceEvidenceService
     from .evidence_input_ports import EvidenceDocumentShapeProbe
     from .evidence_ports import LedgerEvidencePorts
+    from .evidence_textlayer_ports import EvidenceTextLayerPorts
     from .extraction_draft_store import StoredExtractionDraft
     from .invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
     from .invoice_draft_records import InvoiceDraft
@@ -358,23 +359,48 @@ def summarise_batch(
     )
 
 
-def _reads_without_a_model(data: bytes, *, document_shape_probe: EvidenceDocumentShapeProbe) -> bool:
-    """Return whether these bytes carry a machine-readable record needing no model.
+def _reads_without_a_model(
+    data: bytes,
+    *,
+    document_shape_probe: EvidenceDocumentShapeProbe,
+    text_layer_ports: EvidenceTextLayerPorts,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Return whether these bytes read completely without a model.
+
+    Two shapes do: a machine-readable record, and a text-layer PDF whose label
+    rules read every required field. The second asks the same predicate the
+    extractor applies before calling its text model, so the two cannot disagree.
 
     Derived from the bytes through the one shared shape probe, never from the
     filename or the stored MIME type — a ZUGFeRD invoice and a photograph of a
     receipt are both ``application/pdf``, and the label cannot tell them apart.
 
-    This deliberately does NOT reproduce the extractor's routing. It asks one
-    question the shape probe already answers, and every other document is
-    treated as possibly needing a model. A structured record whose payload turns
-    out to be malformed falls through to a reading path inside the extractor and
-    may then need one after all; that is the conservative direction, because the
-    cost is a refusal the operator sees rather than a model load nobody admitted.
+    Every other document is treated as possibly needing a model. A structured
+    record whose payload turns out to be malformed falls through to a reading
+    path inside the extractor and may then need one after all; that is the
+    conservative direction, because the cost is a refusal the operator sees
+    rather than a model load nobody admitted.
     """
-    from ...core.document_shape import STRUCTURED_DOCUMENT_SHAPES
+    from ...core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+    from .invoice_label_reader import text_layer_reads_completely_by_labels
 
-    return document_shape_probe(data) in STRUCTURED_DOCUMENT_SHAPES
+    shape = document_shape_probe(data)
+    if shape in STRUCTURED_DOCUMENT_SHAPES:
+        return True
+    if shape is DocumentShape.PDF_TEXT_LAYER:
+        # Classification runs before the per-item guard, so a document that
+        # cannot be read here must not end the run: it is classified as needing
+        # a model and its own item reports whatever the read then refuses with.
+        try:
+            return text_layer_reads_completely_by_labels(
+                data,
+                text_layer_ports=text_layer_ports,
+                operation=operation,
+            )
+        except Exception:
+            return False
+    return False
 
 
 def _reader_role_for(data: bytes, *, document_shape_probe: EvidenceDocumentShapeProbe) -> ModelRole | None:
@@ -671,7 +697,12 @@ def run_evidence_batch(
             continue
         content_address = sha256_hex(data)
         probe = extraction_ports.evidence_input_ports.document_shape_probe
-        if _reads_without_a_model(data, document_shape_probe=probe):
+        if _reads_without_a_model(
+            data,
+            document_shape_probe=probe,
+            text_layer_ports=extraction_ports.text_layer_ports,
+            operation=operation,
+        ):
             deterministic.add(content_address)
         role = _reader_role_for(data, document_shape_probe=probe)
         if role is not None:

@@ -57,7 +57,11 @@ from .operations.registry import (
     OperationSchemaBindingV1,
 )
 from .operator_actions.models import PreconditionVerdict
-from .provisioning_contracts import ProvisioningFactValue
+from .provisioning_contracts import (
+    ProvisioningFactValue,
+    ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
+)
 from .provisioning_host import (
     InstallerRunner,
     RuntimeInstaller,
@@ -78,6 +82,7 @@ __all__ = [
     "LOCAL_READER_OPERATION_DEFINITION_ID",
     "LOCAL_READER_OPERATION_SUBJECT",
     "LOCAL_READER_PULL_PROGRESS_UNIT",
+    "LocalReaderFactV1",
     "LocalReaderInstallOutcome",
     "LocalReaderInstallOutcomeV1",
     "LocalReaderModelOutcome",
@@ -100,6 +105,8 @@ __all__ = [
     "build_local_reader_setup_request",
     "build_local_reader_start_request",
     "build_local_reader_verify_request",
+    "local_reader_fact_mapping",
+    "local_reader_public_verdict",
     "local_reader_setup_phase",
 ]
 
@@ -331,6 +338,59 @@ class LocalReaderProvisionOutcome(BaseModel):
 _PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
 
+class LocalReaderFactV1(BaseModel):
+    """One locale-neutral provisioning fact, as an immutable key/value pair."""
+
+    model_config = _PUBLIC_CONFIG
+
+    key: str = Field(min_length=1, max_length=128)
+    value: str | int | bool
+
+
+def _public_facts(facts: Mapping[str, ProvisioningFactValue]) -> tuple[LocalReaderFactV1, ...]:
+    return tuple(LocalReaderFactV1(key=key, value=value) for key, value in sorted(facts.items()))
+
+
+def local_reader_fact_mapping(facts: tuple[LocalReaderFactV1, ...]) -> dict[str, str | int | bool]:
+    """Return published facts as the mapping a frontend payload carries."""
+    return {fact.key: fact.value for fact in facts}
+
+
+def local_reader_public_verdict(
+    failed_condition_id: str | None, verdict_facts: tuple[LocalReaderFactV1, ...]
+) -> PreconditionVerdict | None:
+    """Rebuild the provisioning refusal a public result names, or ``None`` when nothing was refused.
+
+    Every provisioning refusal is a no-recovery runtime observation over its
+    condition and facts, so the condition and the evidence facts are the whole
+    verdict; the projector refuses to publish one that would not rebuild exactly.
+    """
+    if failed_condition_id is None:
+        return None
+    return provisioning_no_recovery_verdict(
+        ProvisioningPreconditionCondition(failed_condition_id), facts=local_reader_fact_mapping(verdict_facts)
+    )
+
+
+def _verdict_condition(verdict: PreconditionVerdict | None) -> str | None:
+    return None if verdict is None else verdict.failed_condition_id
+
+
+def _verdict_facts(verdict: PreconditionVerdict | None) -> tuple[LocalReaderFactV1, ...]:
+    if verdict is None:
+        return ()
+    (evidence,) = verdict.evidence
+    published: dict[str, ProvisioningFactValue] = {}
+    for key, value in evidence.values.items():
+        if not isinstance(value, str | int | bool):
+            raise ValueError("provisioning refusal evidence must be locale-neutral scalars")
+        published[key] = value
+    facts = _public_facts(published)
+    if local_reader_public_verdict(verdict.failed_condition_id, facts) != verdict:
+        raise ValueError("provisioning refusal does not rebuild from its public condition and facts")
+    return facts
+
+
 class LocalReaderModelOutcomeV1(BaseModel):
     """Public projection of one model outcome."""
 
@@ -348,8 +408,9 @@ class LocalReaderModelOutcomeV1(BaseModel):
     answered: bool
     elapsed_ms: NonNegativeInt | None = None
     failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
-    facts: Mapping[str, str | int | bool]
-    precondition_verdict: PreconditionVerdict | None = None
+    facts: tuple[LocalReaderFactV1, ...]
+    verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
+    verdict_facts: tuple[LocalReaderFactV1, ...]
 
 
 class LocalReaderInstallOutcomeV1(BaseModel):
@@ -389,8 +450,9 @@ class LocalReaderProvisionPublicResultV1(BaseModel):
     models: tuple[LocalReaderModelOutcomeV1, ...]
     steps: tuple[LocalReaderSetupStepOutcomeV1, ...]
     stopped_step: LocalReaderSetupStep | None = None
-    facts: Mapping[str, str | int | bool]
-    precondition_verdict: PreconditionVerdict | None = None
+    facts: tuple[LocalReaderFactV1, ...]
+    verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
+    verdict_facts: tuple[LocalReaderFactV1, ...]
 
 
 def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV1:
@@ -407,8 +469,9 @@ def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV1:
         answered=item.answered,
         elapsed_ms=item.elapsed_ms,
         failed_condition_id=item.failed_condition_id,
-        facts=dict(item.facts),
-        precondition_verdict=item.precondition_verdict,
+        facts=_public_facts(item.facts),
+        verdict_condition_id=_verdict_condition(item.precondition_verdict),
+        verdict_facts=_verdict_facts(item.precondition_verdict),
     )
 
 
@@ -442,8 +505,9 @@ def _project_result(result: BaseModel, terminal_receipt: OperationTerminalReceip
             for step in outcome.steps
         ),
         stopped_step=outcome.stopped_step,
-        facts=dict(outcome.facts),
-        precondition_verdict=outcome.precondition_verdict,
+        facts=_public_facts(outcome.facts),
+        verdict_condition_id=_verdict_condition(outcome.precondition_verdict),
+        verdict_facts=_verdict_facts(outcome.precondition_verdict),
     )
 
 
@@ -715,6 +779,7 @@ class LocalReaderProvisionExecutor:
         install: LocalReaderInstallOutcome | None = None
         runtime_started = False
         stopped: LocalReaderSetupStep | None = None
+        refusal: LocalReaderProvisionOutcome | None = None
 
         def record(step: LocalReaderSetupStep, state: LocalReaderSetupStepState, failed: str | None = None) -> None:
             nonlocal stopped
@@ -740,6 +805,7 @@ class LocalReaderProvisionExecutor:
             installed = await self._install(consent=consent)
             install = installed.install
             if not installed.succeeded:
+                refusal = installed
                 record(LocalReaderSetupStep.INSTALL, LocalReaderSetupStepState.FAILED, installed.failed_condition_id)
             elif install is not None and install.already_installed:
                 record(LocalReaderSetupStep.INSTALL, LocalReaderSetupStepState.UNCHANGED)
@@ -751,6 +817,7 @@ class LocalReaderProvisionExecutor:
             started = await self._start()
             runtime_started = started.runtime_started
             if not started.succeeded:
+                refusal = started
                 record(LocalReaderSetupStep.START, LocalReaderSetupStepState.FAILED, started.failed_condition_id)
             else:
                 record(
@@ -791,6 +858,8 @@ class LocalReaderProvisionExecutor:
             models=tuple(models),
             steps=tuple(steps),
             stopped_step=stopped,
+            facts={} if refusal is None else dict(refusal.facts),
+            precondition_verdict=None if refusal is None else refusal.precondition_verdict,
         )
 
 
