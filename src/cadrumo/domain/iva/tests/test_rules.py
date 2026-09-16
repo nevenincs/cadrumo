@@ -105,9 +105,8 @@ def test_iva_citation_rejects_an_unresolved_claim_with_no_reason() -> None:
 def test_iva_citation_rejects_an_unresolved_claim_that_carries_a_quotation() -> None:
     """Text parked under unresolved grounding is never read against the corpus.
 
-    ``verify_catalogue_against_legal`` skips the empty-quotation check for this state by
-    design, so a candidate quotation stored here would read as evidence to
-    anyone printing the field while the record itself says it has none.
+    A candidate quotation stored here would read as evidence to anyone printing
+    the field while the record itself says it has none.
     """
     with pytest.raises(ValidationError, match="must not carry a quotation"):
         IvaCitation.model_validate(
