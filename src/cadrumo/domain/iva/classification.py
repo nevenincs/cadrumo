@@ -45,7 +45,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, NamedTuple, Self
+from typing import TYPE_CHECKING, NamedTuple, Self, TypeGuard
 
 from pydantic import Field, GetCoreSchemaHandler, model_validator
 from pydantic_core import CoreSchema, core_schema
@@ -942,6 +942,34 @@ def _compile_classification_predicate(
     return lambda criteria: all(condition(criteria) for condition in conditions)
 
 
+def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Narrow one runtime component to an object-keyed mapping before validation."""
+    return isinstance(value, Mapping)
+
+
+def _registry_reverse_charge_by_category(operation: PinnedAuthorityOperation) -> Mapping[str, bool]:
+    """Read each IVA category's inversión-del-sujeto-pasivo flag from the published regulations."""
+    from ..calculations.registry.runtime_catalogues import PublishedIvaRegulation
+
+    loaded = operation.runtime_catalogue("iva_regulations")
+    if not _is_object_mapping(loaded):
+        raise IvaValidationError("indexed authority IVA regulation component has an invalid shape")
+    flags: dict[str, bool] = {}
+    for category, regulation in loaded.items():
+        if not isinstance(category, str) or not isinstance(regulation, PublishedIvaRegulation):
+            raise IvaValidationError("indexed authority IVA regulation component has an invalid shape")
+        flags[category] = regulation.requires_reverse_charge
+    return MappingProxyType(flags)
+
+
+def _requires_reverse_charge(flags: Mapping[str, bool], category: IvaCategory) -> bool:
+    """Return the registry's reverse-charge flag, refusing a rule category with no regulation."""
+    flag = flags.get(category.value)
+    if flag is None:
+        raise IvaValidationError(f"IVA classification category {category.value!r} has no published regulation")
+    return flag
+
+
 def resolve_iva_classification_inputs(
     *,
     effective_date: date,
@@ -982,6 +1010,7 @@ def resolve_iva_classification_inputs(
     if not rate_territories:
         raise IvaValidationError("IVA classification mapping rate_territories must not be empty")
 
+    reverse_charge_by_category = _registry_reverse_charge_by_category(operation)
     rules: list[IvaClassificationRule] = []
     for rule_id in _classification_csv(entries, "rule_order"):
         prefix = f"rule.{rule_id}"
@@ -1012,7 +1041,9 @@ def resolve_iva_classification_inputs(
                 category=category,
                 description=_required_classification_entry(entries, f"{prefix}.label"),
                 consumes=consumes,
-                requires_reverse_charge=category is not None and "reverse_charge" in category.value,
+                requires_reverse_charge=(
+                    category is not None and _requires_reverse_charge(reverse_charge_by_category, category)
+                ),
             ),
         )
     return IvaClassificationInputs(

@@ -237,6 +237,13 @@ valid_to = 2026-12-31
 quoted_text = "Artículo 15. Concepto de adquisición intracomunitaria de bienes. Uno. Se entenderá por adquisición intracomunitaria de bienes: a) La obtención del poder de disposición sobre bienes muebles corporales expedidos o transportados al territorio de aplicación"
 retrieval_date = 2026-04-13
 
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-84"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+quoted_text = "a) Las entregas subsiguientes a las adquisiciones intracomunitarias a que se refiere el artículo 26, apartado Tres, de esta Ley, cuando hayan comunicado al empresario o profesional que las realiza el número de identificación"
+retrieval_date = 2026-04-13
+
 [[regulations]]
 category = "export_third_country_zero_rated"
 requires_reverse_charge = false
@@ -272,7 +279,7 @@ retrieval_date = 2026-06-29
 
 [[regulations]]
 category = "import_third_country"
-requires_reverse_charge = true
+requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
