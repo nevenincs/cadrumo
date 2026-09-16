@@ -7,8 +7,8 @@ use this plaintext-file helper.
 POSIX: ``chmod 0o700`` is sufficient. Windows: the DACL is rewritten in
 process to what ``icacls.exe /inheritance:r /grant:r <user>:<rights>`` would
 leave -- inherited ACEs stripped and the DACL protected, explicit ACEs kept,
-and the operator's full-control grant set with ``SetEntriesInAcl``'s
-``SET_ACCESS`` rule. The operator is resolved from ``DOMAIN\\user`` and then
+and the operator's same-flag allow ACE replaced by (or joined by) a
+full-control grant. The operator is resolved from ``DOMAIN\\user`` and then
 ``user`` so it works on standalone machines and domain-joined hosts.
 
 The Windows branch reads ``USERDOMAIN`` as operating-system ambient context
@@ -55,45 +55,59 @@ def _dacl_of(descriptor: PySECURITY_DESCRIPTOR) -> PyACL | None:
 
 
 def _grant_operator_full_control(path: Path, account: str, *, inheritable: bool) -> None:
-    """Rewrite ``path``'s DACL as ``icacls /inheritance:r /grant:r account:F`` would.
+    """Rewrite ``path``'s DACL as ``icacls /inheritance:r /grant:r account:F`` leaves it.
 
-    Inherited ACEs are dropped and the DACL is protected; explicit ACEs are
-    kept, and ``SET_ACCESS`` replaces the account's explicit allow ACE carrying
-    the same inheritance flags in place, or appends one.
+    Inherited ACEs are dropped and the DACL is protected. Explicit ACEs keep
+    their order; the account's explicit allow ACE carrying the same
+    inheritance flags is replaced in place by the full-control grant, which is
+    otherwise appended. The account's deny ACEs and its allow ACEs with other
+    flags are kept, which is where this differs from ``SetEntriesInAcl``'s
+    ``SET_ACCESS``. Only plain allow and deny ACEs are copied; any other
+    explicit ACE type raises and is logged by the best-effort caller.
     """
     import ntsecuritycon
     import win32security
 
     operator_sid = win32security.LookupAccountName(None, account)[0]
+    grant_flags = (
+        win32security.OBJECT_INHERIT_ACE | win32security.CONTAINER_INHERIT_ACE
+        if inheritable
+        else win32security.NO_INHERITANCE
+    )
     descriptor = win32security.GetNamedSecurityInfo(
         str(path), win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION
     )
     current = _dacl_of(descriptor)
-    explicit = win32security.ACL() if current is None else current
-    for index in reversed(range(explicit.GetAceCount())):
-        if explicit.GetAce(index)[0][1] & win32security.INHERITED_ACE:
-            explicit.DeleteAce(index)
-    grant = {
-        "AccessPermissions": ntsecuritycon.FILE_ALL_ACCESS,
-        "AccessMode": win32security.SET_ACCESS,
-        "Inheritance": (
-            win32security.OBJECT_INHERIT_ACE | win32security.CONTAINER_INHERIT_ACE
-            if inheritable
-            else win32security.NO_INHERITANCE
-        ),
-        "Trustee": {
-            "TrusteeForm": win32security.TRUSTEE_IS_SID,
-            "TrusteeType": win32security.TRUSTEE_IS_USER,
-            "Identifier": operator_sid,
-        },
-    }
+    rewritten = win32security.ACL()
+    granted = False
+    aces = () if current is None else tuple(current.GetAce(index) for index in range(current.GetAceCount()))
+    for ace in aces:
+        (ace_type, ace_flags), mask, sid = ace[0], ace[1], ace[-1]
+        if ace_flags & win32security.INHERITED_ACE:
+            continue
+        if ace_type == ntsecuritycon.ACCESS_ALLOWED_ACE_TYPE and sid == operator_sid and ace_flags == grant_flags:
+            if not granted:
+                rewritten.AddAccessAllowedAceEx(
+                    win32security.ACL_REVISION, grant_flags, ntsecuritycon.FILE_ALL_ACCESS, operator_sid
+                )
+                granted = True
+        elif ace_type == ntsecuritycon.ACCESS_ALLOWED_ACE_TYPE:
+            rewritten.AddAccessAllowedAceEx(win32security.ACL_REVISION, ace_flags, mask, sid)
+        elif ace_type == ntsecuritycon.ACCESS_DENIED_ACE_TYPE:
+            rewritten.AddAccessDeniedAceEx(win32security.ACL_REVISION, ace_flags, mask, sid)
+        else:
+            raise ValueError(f"explicit ACE type {ace_type} cannot be carried over")
+    if not granted:
+        rewritten.AddAccessAllowedAceEx(
+            win32security.ACL_REVISION, grant_flags, ntsecuritycon.FILE_ALL_ACCESS, operator_sid
+        )
     win32security.SetNamedSecurityInfo(
         str(path),
         win32security.SE_FILE_OBJECT,
         win32security.DACL_SECURITY_INFORMATION | win32security.PROTECTED_DACL_SECURITY_INFORMATION,
         None,
         None,
-        explicit.SetEntriesInAcl((grant,)),
+        rewritten,
         None,
     )
 
