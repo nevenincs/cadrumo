@@ -14,7 +14,7 @@ from typing import Final
 
 import typer
 
-TUI_ROOT_MODULE: Final[str] = "..tui"
+TUI_ROOT_MODULE: Final[str] = "cadrumo.entrypoints.tui"
 
 
 def tui_root_command(executable: str = sys.executable) -> list[str]:
