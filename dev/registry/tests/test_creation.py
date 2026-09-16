@@ -423,7 +423,7 @@ def test_an_operator_supplied_operation_date_survives_to_a_declared_devengo_rank
         reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(recorded.invoice.invoice_id)
         assert reloaded is not None
         assert reloaded.operation_date == date(2026, 3, 28)
-        assert reloaded.operation_date_role is InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
+        assert reloaded.operation_date_role == InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
 
         devengo = resolve_invoice_devengo(reloaded)
         assert devengo.devengo_date == date(2026, 3, 28)
@@ -760,7 +760,7 @@ def test_omitting_the_line_set_still_synthesises_the_single_line() -> None:
     )
 
     assert len(invoice.lines) == 1
-    assert invoice.lines[0].iva_rate is IvaRate.from_registry("RATE_21")
+    assert invoice.lines[0].iva_rate == IvaRate.from_registry("RATE_21")
     assert invoice.iva_total == Decimal("210.00")
     assert invoice.grand_total == Decimal("1210.00")
 
@@ -802,7 +802,7 @@ def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_pa
         restored = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
 
     assert restored is not None
-    assert restored.invoice_class is InvoiceClass.from_registry("RECTIFICATIVA")
+    assert restored.invoice_class == InvoiceClass.from_registry("RECTIFICATIVA")
     assert restored.series == "R"
     assert restored.rectifies_invoice_number == "F-2026-0044"
     assert restored.recargo_amount == Decimal("52.00")
@@ -860,7 +860,7 @@ def test_the_default_invoice_class_is_still_ordinaria() -> None:
         currency="EUR",
     )
 
-    assert invoice.invoice_class is InvoiceClass.from_registry("ORDINARIA")
+    assert invoice.invoice_class == InvoiceClass.from_registry("ORDINARIA")
     assert invoice.series is None
     assert invoice.recargo_amount is None
     assert invoice.grand_total == Decimal("1210.00")
