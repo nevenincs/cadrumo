@@ -324,8 +324,9 @@ cli:
           az oszlop kell.
         import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
           tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
-          taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
-        import_file_not_found: 'A fájl nem található: {path}'
+          taxable_base, valamint opcionálisan iva_rate/retencion_amount/retencion_rate/currency/country_code/notes).
+          A retencion_rate csak a hozzá tartozó retencion_amount mellett fogadható
+          el.
         import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
         import_unmapped_columns: 'nem importált oszlopok, mert egyetlen számlamező
           sem felelt meg nekik: {columns}'
@@ -2037,7 +2038,8 @@ cli:
           végződésűnek kell lennie.
         help: 'Profil biztonsagi mentese lezart, AEAD-titkositott archivumba, vagy
           egy archivum vizsgalata; visszaallitas: ''aeat config profile archive import''.'
-        import_file_help: A helyreallitando, meg kozze nem tett kapszulakonyvtar utvonala.
+        import_file_help: A visszaállítandó lezárt archívum vagy kapszulakönyvtár
+          útvonala.
         import_help: Újra közzétesz egy profilkapszulát könyvtárból vagy lezárt archívumból
           a jelszó igazolásával.
         import_label_help: A helyreallitott profil megjeleno neve.
@@ -2069,6 +2071,9 @@ cli:
           export_suffix: A célútvonalnak '{suffix}' végződésűnek kell lennie. Futtasd
             újra a parancsot ilyen végződésű --output értékkel; egyetlen profil sem
             került beolvasásra.
+          export_target_exists: A célútvonalon már van fájl, és a biztonsági mentés
+            sosem kerül felülírásra. Válassz másik --output értéket, vagy előbb helyezd
+            át a meglévő fájlt; egyetlen profil sem került beolvasásra.
       bundle_flow:
         export_section_title: Profilcsomag exportálása
         import_section_title: Profilcsomag importálása
@@ -2274,21 +2279,41 @@ cli:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     provision:
-      help: 'A helyi következtetés előkészítésének kezelése: jelentés, modellletöltés,
-        készenlét-ellenőrzés.'
+      help: 'A helyi dokumentumolvasó kezelése: futtatókörnyezet állapota, telepítés,
+        indítás, modellletöltés, ellenőrzés és eltávolítás.'
+      install:
+        confirm_help: Hozzájárulás a csomagkezelős telepítés letöltéséhez és futtatásához.
+          Enélkül semmi sem települ.
+        help: A helyi futtatókörnyezet telepítése a platform csomagkezelőjével (Windowson
+          winget, macOS-en Homebrew). Ha már telepítve van, nem tesz semmit; Linuxon
+          a telepítés az operátor feladata.
       pull:
-        help: Modell letöltése a helyi futtatókörnyezetbe. Letöltés előtt elutasít,
-          ha nem lenne betölthető.
+        help: Modellek letöltése a helyi futtatókörnyezetbe, alapértelmezés szerint
+          minden olvasószerepkör modelljéé, hacsak a --role vagy a --model nem szűkíti.
+          Letöltés előtt elutasít, ha egy modell nem lenne betölthető.
         model_help: A letöltendő modell futtatókörnyezeti azonosítója. Alapértelmezés
           a szerepkörhöz választott modell.
+      remove:
+        help: Egy Cadrumo által kiválasztott modell törlése a helyi futtatókörnyezet
+          tárolójából, a felszabadított hely jelentésével.
+        model_help: A törlendő modell futtatókörnyezeti azonosítója. Csak a Cadrumo
+          által kiválasztott modellek törölhetők.
       report:
         help: Jelentés a mért hardverről, a szerepkörhöz választott modellről és a
           betölthetőségről.
-      role_help: A kezelendő modellszerepkör (képátírás, szövegkinyerés, táblázatos
-        leképezés).
+      role_help: 'A kezelendő modellszerepkör (képátírás, szövegkinyerés, táblázatos
+        leképezés, teljesítés jellegére tett javaslat). Alapértelmezés: minden szerepkör.'
+      start:
+        help: Elindítja a telepített helyi futtatókörnyezetet, ha a beállított helyi
+          végpont nem válaszol. Ha már válaszol, nem tesz semmit.
+      status:
+        help: Jelenti, hogy a helyi futtatókörnyezet telepítve van-e és válaszol-e,
+          valamint hogy az egyes olvasószerepkörök modelljei telepítve vannak-e. Csak
+          olvas.
       verify:
-        help: Ellenőrzi, hogy a modell be van töltve és időkorláton belül válaszol
-          egy egyszerű kérésre.
+        help: Ellenőrzi, hogy a modellek betöltődnek és időkorláton belül válaszolnak
+          egy egyszerű kérésre, alapértelmezés szerint minden olvasószerepkör modelljére,
+          hacsak a --role vagy a --model nem szűkíti.
         model_help: Az ellenőrizendő modell futtatókörnyezeti azonosítója. Alapértelmezés
           a szerepkörhöz választott modell.
     repair:
@@ -2601,6 +2626,7 @@ cli:
       commands: Parancsok
       error: Hiba
       options: Kapcsolók
+    path_not_found: a(z) '{path}' elérési út nem létezik, vagy nem olvasható fájl.
     try_for_help: 'Súgóért futtassa: [blue]''{command_path} {help_option}''[/].'
     usage_prefix: 'Használat: '
   ledger:
@@ -2917,14 +2943,13 @@ cli:
       file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
         importálva lett.'
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
-      likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy már
-        a főkönyvben lévő tranzakcióéval, de a leírás eltér, ami ugyanazon mozgás
-        más fájlból vagy formátumból származó valószínű duplikátumát jelzi. Ezek a
-        sorok felülvizsgálatot igényelnek.'
+      likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy,
+        a könyvben már szereplő vagy ebben a fájlban korábbi tranzakcióéval, ezért
+        ugyanaz a mozgás kétszer rögzítve lehet. Ezeket a sorokat át kell nézni.'
       no_rows_imported: 'Nem importáltak bejegyzéseket: a fájl sikeresen elemzett,
         de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie
         (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'
-      provider_help: 'Kivonatformátum-szolgáltató. Elismert értékek: {providers}'
+      provider_help: Kivonatformátum-szolgáltató.
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Bejegyzések ellenőrzése importálás után.
       verify_source_help: Az importált sorok ellenőrzésére használt eredeti fájl.
@@ -3230,11 +3255,14 @@ cli:
           és CADRUMO_SECRET_STORE_DIR értékét. A profil titkát --profile-secrets-stdin
           vagy --profile-secrets-fd, a parancs titkát --secrets-stdin vagy --secrets-fd
           kapcsolóval adja át.
+        profile_archive: A profil mentése lezárt archívumba, vagy egy archívum visszaállítása.
         profile_delete: Helyileg tárolt profil törlése.
         profile_history: Az append-only profil eseménytörténet megtekintése.
-        profile_list: Profiladatok listázása.
+        profile_list: A regisztrált profilok listázása, az aktív megjelölésével.
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
         profile_logout: Az aktív profil munkamenetének lezárása.
+        profile_passphrase: Az aktív profil jelszavának módosítása.
+        profile_recovery: Az aktív profil helyreállítási kódjának kezelése.
         profile_status: Az aktív profil készültségének megjelenítése.
         profile_view: Egy profil adatainak megjelenítése (alapértelmezésben az aktív
           profilé).

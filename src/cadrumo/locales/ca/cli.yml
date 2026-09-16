@@ -329,8 +329,8 @@ cli:
           necessita la columna.
         import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
-          iva_rate/currency/country_code/notes).
-        import_file_not_found: 'Fitxer no trobat: {path}'
+          iva_rate/retencion_amount/retencion_rate/currency/country_code/notes). Un
+          retencion_rate només s'accepta juntament amb el seu retencion_amount.
         import_help: Crea factures del catàleg en lot des d'un fitxer CSV o XLSX.
         import_unmapped_columns: 'columnes no importades perquè cap camp de factura
           hi va coincidir: {columns}'
@@ -2047,7 +2047,8 @@ cli:
         export_out_help: Camí de destinació de l'arxiu. El nom ha d'acabar en '.cadrumo-bucket.tar.gz'.
         help: Copia de seguretat d'un perfil en un arxiu segellat i xifrat AEAD, o
           inspeccio d'un; restaura'l amb 'aeat config profile archive import'.
-        import_file_help: Cami al directori de la capsula sense publicar que es restaurara.
+        import_file_help: Camí del fitxer segellat o del directori de càpsula que
+          es vol restaurar.
         import_help: Torna a publicar una càpsula de perfil des d'un directori o un
           arxiu segellat demostrant-ne la contrasenya.
         import_label_help: Nom visible del perfil restaurat.
@@ -2078,6 +2079,9 @@ cli:
           export_suffix: El camí de destinació ha d'acabar en '{suffix}'. Torna a
             executar l'ordre amb un --output que faci servir aquesta terminació; no
             s'ha llegit cap perfil.
+          export_target_exists: Ja hi ha un fitxer al camí de destinació i una còpia
+            de seguretat no se sobreescriu mai. Tria un altre --output o mou primer
+            el fitxer existent; no s'ha llegit cap perfil.
       bundle_flow:
         export_section_title: Exporta el paquet de perfil
         import_section_title: Importa el paquet de perfil
@@ -2278,21 +2282,41 @@ cli:
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
     provision:
-      help: 'Gestiona l''aprovisionament d''inferència local: informe, descàrrega
-        de models i verificació.'
+      help: 'Gestiona el lector local de documents: estat del runtime, instal·lació,
+        arrencada, descàrrega, verificació i eliminació de models.'
+      install:
+        confirm_help: Accepta descarregar i executar la instal·lació del gestor de
+          paquets. Sense aquesta opció no s'instal·la res.
+        help: Instal·la el runtime local amb el gestor de paquets de la plataforma
+          (winget a Windows, Homebrew a macOS). No fa res si ja està instal·lat; a
+          Linux la instal·lació queda a càrrec de l'operador.
       pull:
-        help: Descarrega un model al runtime local. Rebutja abans de descarregar si
+        help: Descarrega models al runtime local, el de cada funció del lector llevat
+          que --role o --model ho acotin. Rebutja abans de descarregar si un model
           no es podria carregar.
         model_help: Identificador del model que es descarregarà. Per defecte, el model
           seleccionat per a la funció.
+      remove:
+        help: Elimina del magatzem del runtime local un model seleccionat per Cadrumo
+          i informa de l'espai recuperat.
+        model_help: Identificador del model que s'eliminarà. Només es poden eliminar
+          models seleccionats per Cadrumo.
       report:
         help: Informa del maquinari mesurat, el model seleccionat per funció i si
           es pot carregar ara.
       role_help: Funció del model sobre la qual actuar (transcripció d'imatges, extracció
-        de text, mapatge tabular).
+        de text, mapatge tabular, proposta de naturalesa del subministrament). Per
+        defecte, totes.
+      start:
+        help: Arrenca el runtime local instal·lat quan l'endpoint local configurat
+          no respon. No fa res si ja respon.
+      status:
+        help: Informa de si el runtime local està instal·lat i respon, i de si el
+          model de cada funció del lector està instal·lat. Només llegeix.
       verify:
-        help: Verifica que un model està carregat i respon una consulta trivial dins
-          d'un límit de temps.
+        help: Verifica que els models es carreguen i responen una consulta trivial
+          dins d'un límit de temps, el de cada funció del lector llevat que --role
+          o --model ho acotin.
         model_help: Identificador del model que es verificarà. Per defecte, el model
           seleccionat per a la funció.
     repair:
@@ -2617,6 +2641,7 @@ cli:
       commands: Ordres
       error: Error
       options: Opcions
+    path_not_found: la ruta '{path}' no existeix o no és un fitxer llegible.
     try_for_help: Proveu [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
     usage_prefix: 'Ús: '
   ledger:
@@ -2939,15 +2964,15 @@ cli:
       file_refused: 'Extracte rebutjat i omès: {file}. La resta de la carpeta s''ha
         importat.'
       help: Importar extractes bancaris o registres al llibre comptable
-      likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
-        amb una transacció ja present al llibre, però tenen una descripció diferent,
-        fet que indica un probable duplicat del mateix moviment procedent d''un altre
-        fitxer o format. Aquestes files requereixen revisió.'
+      likely_duplicates: '{count} fila(es) importada(es) coincideixen en data i import
+        amb un altre moviment ja present al llibre o anterior en aquest fitxer, així
+        que poden ser el mateix moviment registrat dues vegades. Aquestes files requereixen
+        revisió.'
       no_rows_imported: 'No s''ha importat cap entrada: l''arxiu s''ha analitzat però
         no contenia files de dades. Un CSV bancari ha de tenir una fila de capçalera
         amb una columna de data, import i descripció seguida d''almenys una fila de
         dades.'
-      provider_help: 'Proveïdor del format de l''extracte. Valors reconeguts: {providers}'
+      provider_help: Proveïdor del format de l'extracte.
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
       verify_source_help: Fitxer original usat per verificar les files importades.
@@ -3241,11 +3266,15 @@ cli:
         paragraph_storage_isolation: Per aïllar l'estat, definiu CADRUMO_LOCAL_STORAGE_ROOT
           i CADRUMO_SECRET_STORE_DIR. Passeu secrets de perfil amb --profile-secrets-stdin
           o --profile-secrets-fd, i secrets de l'ordre amb --secrets-stdin o --secrets-fd.
+        profile_archive: Fes una còpia del perfil en un fitxer segellat, o restaura'n
+          una.
         profile_delete: Elimina un perfil emmagatzemat localment.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
-        profile_list: Llistar els perfils de contribuent disponibles.
+        profile_list: Llista els perfils registrats i marca l'actiu.
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
         profile_logout: Tanca la sessió del perfil actiu.
+        profile_passphrase: Canvia la contrasenya del perfil actiu.
+        profile_recovery: Gestiona el codi de recuperació del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
         profile_view: Mostrar les dades d'un perfil (per defecte, el perfil actiu).
         reset_resume: Reprèn una operació de reinici incompleta.

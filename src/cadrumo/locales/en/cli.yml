@@ -306,8 +306,8 @@ cli:
           so a book mixing domestic and foreign counterparties needs the column instead.
         import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, and optional
-          iva_rate/currency/country_code/notes).
-        import_file_not_found: 'File not found: {path}'
+          iva_rate/retencion_amount/retencion_rate/currency/country_code/notes). A
+          retencion_rate is accepted only beside its retencion_amount.
         import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
         import_unmapped_columns: 'columns not imported because no invoice field matched
           them: {columns}'
@@ -1907,7 +1907,7 @@ cli:
           '.cadrumo-bucket.tar.gz'.
         help: Back up a profile to a sealed, AEAD-encrypted archive, or inspect one;
           restore it with 'aeat config profile archive import'.
-        import_file_help: Path to the unpublished capsule directory to restore.
+        import_file_help: Path to the sealed archive or capsule directory to restore.
         import_help: Republish a profile capsule from a directory or a sealed archive,
           proving its passphrase.
         import_label_help: Display name for the restored profile.
@@ -1936,6 +1936,9 @@ cli:
         refusal:
           export_suffix: The destination path must end with '{suffix}'. Re-run the
             command with an --output using that ending; no profile was read.
+          export_target_exists: A file already exists at the destination path, and
+            a backup is never overwritten. Choose another --output or move the existing
+            file first; no profile was read.
       bundle_flow:
         export_section_title: Export profile bundle
         import_section_title: Import profile bundle
@@ -2125,20 +2128,39 @@ cli:
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
     provision:
-      help: 'Manage local inference provisioning: report, pull models, verify readiness.'
+      help: 'Manage the local document reader: runtime status, install, start, model
+        pull, verify and remove.'
+      install:
+        confirm_help: Agree to download and run the package-manager install. Without
+          it nothing is installed.
+        help: Install the local runtime with the platform package manager (winget
+          on Windows, Homebrew on macOS). Does nothing when it is already installed;
+          Linux installs are left to the operator.
       pull:
-        help: Download a model into the local runtime. Refuses before downloading
-          when it could not be loaded.
+        help: Download models into the local runtime, every reader role's model unless
+          --role or --model narrows it. Refuses before downloading when a model could
+          not be loaded.
         model_help: Runtime identifier of the model to download. Defaults to the model
           selected for the role.
+      remove:
+        help: Delete a model Cadrumo selected from the local runtime's store and report
+          the space reclaimed.
+        model_help: Runtime identifier of the model to delete. Only models Cadrumo
+          selected can be deleted.
       report:
         help: Report measured hardware, the model selected per role, and whether it
           can be loaded now.
       role_help: Model role to act on (vision transcription, text extraction, tabular
-        mapping).
+        mapping, supply-nature proposal). Defaults to every role.
+      start:
+        help: Start the installed local runtime when the configured local endpoint
+          is not answering. Does nothing when it already answers.
+      status:
+        help: Report whether the local runtime is installed and answering, and whether
+          each reader role's model is installed. Reads only.
       verify:
-        help: Verify a model is loaded and answers a trivial prompt within a time
-          bound.
+        help: Verify models load and answer a trivial prompt within a time bound,
+          every reader role's model unless --role or --model narrows it.
         model_help: Runtime identifier of the model to verify. Defaults to the model
           selected for the role.
     repair:
@@ -2427,6 +2449,7 @@ cli:
       commands: Commands
       error: Error
       options: Options
+    path_not_found: the path '{path}' does not exist or is not a readable file.
     try_for_help: Try [blue]'{command_path} {help_option}'[/] for help.
     usage_prefix: 'Usage: '
   ledger:
@@ -2731,14 +2754,13 @@ cli:
       file_refused: 'Statement refused and skipped: {file}. The rest of the folder
         was imported.'
       help: Import bank statements or records into the accounting ledger
-      likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
-        already in the ledger but have a different description, indicating a likely
-        duplicate of the same movement from another file or format. These rows require
-        review.'
+      likely_duplicates: '{count} imported row(s) share a date and amount with another
+        transaction already in the ledger or earlier in this file, so they may be
+        the same movement recorded twice. These rows require review.'
       no_rows_imported: 'No entries were imported: the file parsed but contained no
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
-      provider_help: 'Statement format provider. Recognised values: {providers}'
+      provider_help: Statement format provider.
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
       verify_source_help: Original file used to verify imported rows.
@@ -3022,11 +3044,14 @@ cli:
           and CADRUMO_SECRET_STORE_DIR. Pass profile secrets through --profile-secrets-stdin
           or --profile-secrets-fd, and command secrets through --secrets-stdin or
           --secrets-fd.
+        profile_archive: Back the profile up to a sealed archive, or restore one.
         profile_delete: Delete a locally stored profile.
         profile_history: Inspect the append-only profile event history.
-        profile_list: List profile facts.
+        profile_list: List registered profiles and mark the active one.
         profile_login: Log in to a profile and make it the active one.
         profile_logout: Close the active profile session.
+        profile_passphrase: Change the active profile's passphrase.
+        profile_recovery: Manage the active profile's recovery code.
         profile_status: Show active profile readiness.
         profile_view: Show one profile's facts (defaults to the active profile).
         reset_resume: Continue an incomplete reset operation.
