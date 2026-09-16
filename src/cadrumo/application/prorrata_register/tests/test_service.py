@@ -125,9 +125,9 @@ def test_record_aeat_autorizada_preserves_sector_and_regime(
 
     entry = updated.entry_for(2026, sector_id="arrendamiento")
     assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime.from_registry("especial")
+    assert entry.regime == ProrrataRegisterRegime.from_registry("especial")
     assert entry.provisional_percentage == Decimal("58")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert entry.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
     assert entry.authorisation_reference == "AEAT-AUTH-2026-SECTOR-02"
 
 
@@ -160,7 +160,7 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(
 
     assert resolution.resolved
     assert resolution.percentage == Decimal("63")
-    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert resolution.provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
 
 
 def test_resolve_provisional_uses_ladder_for_inicio_candidate(
@@ -192,7 +192,7 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(
 
     assert resolution.resolved
     assert resolution.percentage == Decimal("55")
-    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("inicio_actividad")
+    assert resolution.provenance == ProrrataProvisionalProvenance.from_registry("inicio_actividad")
 
 
 def test_resolve_provisional_filters_candidates_to_requested_sector(
@@ -230,4 +230,4 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(
 
     assert resolution.resolved
     assert resolution.percentage == Decimal("80")
-    assert resolution.provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
+    assert resolution.provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
