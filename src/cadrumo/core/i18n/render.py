@@ -17,7 +17,7 @@ from contextvars import ContextVar
 from functools import lru_cache
 from pathlib import Path
 from string import Formatter
-from typing import IO, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import i18n
 import yaml
@@ -27,6 +27,7 @@ from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VA
 from ..logging import get_logger
 from ..product_identity import PRODUCT_IDENTITY, normalise_product_identity_references
 from ..type_guards import is_object_mapping
+from ._lazy_catalogue import _load_yaml_handle
 
 if TYPE_CHECKING:
     from ._lazy_catalogue import LazyLocaleCatalogue
@@ -557,7 +558,7 @@ def locale_map(locale: str) -> Mapping[str, str | None]:
         monolith = override / f"{locale}.yml"
         if monolith.is_file():
             with monolith.open("r", encoding="utf-8") as handle:
-                return _flatten_translations(_load_locale_yaml(handle))
+                return _flatten_translations(_load_yaml_handle(handle))
     return _packaged_locale_map(locale)
 
 
@@ -569,15 +570,6 @@ def _packaged_locale_map(locale: str) -> LazyLocaleCatalogue:
     locales_root = Path(str(resource))
     shard_dir = locales_root / locale
     return LazyLocaleCatalogue(locale, shard_dir=shard_dir)
-
-
-def _load_locale_yaml(handle: IO[str]) -> object:
-    # CSafeLoader C-accelerates only scanning/parsing; PyYAML's higher-level
-    # "construct Python objects from the parsed node tree" step is always
-    # pure Python and scales with node count. The packaged catalogues now
-    # carry a large modelo.schema.* block (compiled casilla labels/help,
-    # see domain.calculations.registry._modelo_localization).
-    return yaml.load(handle, Loader=yaml.CSafeLoader) or {}
 
 
 def _flatten_translations(value: object, prefix: str = "") -> dict[str, str | None]:
