@@ -13,6 +13,15 @@ from urllib.parse import urlsplit
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.lorca_reduction import resolve_lorca_reduction
+from cadrumo.domain.calculations.registry.m303_orden_constants import (
+    EXPECTED_ACTIVITY_COUNT,
+    EXPECTED_MODULE_DISTRIBUTION,
+    EXTRACTOR_VERSION,
+)
+from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from dev.docs.preprocess.orden_anual_html import (
     OrdenAnualIvaActivityTable,
     OrdenAnualIvaAgriculturalIndex,
@@ -27,15 +36,6 @@ from dev.docs.preprocess.orden_anual_html import (
     extract_orden_anual_iva_authority,
     orden_anual_iva_authority_units,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.lorca_reduction import resolve_lorca_reduction
-from cadrumo.domain.calculations.registry.m303_orden_constants import (
-    EXPECTED_ACTIVITY_COUNT,
-    EXPECTED_MODULE_DISTRIBUTION,
-    EXTRACTOR_VERSION,
-)
-from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from dev.docs.preprocess.schema import render_corpus_sidecar_text
 
 from .m303_orden_raw_models import (
