@@ -100,7 +100,6 @@ _validate_policy_types = _policy_validation.validate_policy_types
 _validate_policy_write_route = _policy_validation.validate_policy_write_route
 
 _graph_by_key = _structure_validation.graph_by_key
-_graph_by_path = _structure_validation.graph_by_path
 _graph_by_schema_identity = _structure_validation.graph_by_schema_identity
 _graph_nodes = _structure_validation.graph_nodes
 _validate_callback_parameters = _structure_validation.validate_callback_parameters
@@ -643,9 +642,10 @@ class CommandSpecGraph:
 
     ``declared`` holds the specs available up front; ``families`` supply the
     rest on demand. Subtree queries (:meth:`children`, :meth:`resolve_path`,
-    :meth:`spec`, :meth:`node`, :meth:`root`) load only the families they reach. Every
+    :meth:`spec`, :meth:`node`, :meth:`root`) load only the families they reach, and
+    :meth:`find_schema_identity` stops loading once its identity is found. Every
     whole-graph query (:attr:`specs`, :meth:`by_key`, :meth:`nodes`,
-    :meth:`by_path`, :meth:`by_schema_identity`) loads all families first.
+    :meth:`by_schema_identity`) loads all families first.
     Each load revalidates the specs loaded so far; the full load validates the
     complete graph.
     """
@@ -679,22 +679,51 @@ class CommandSpecGraph:
         _validate_graph(tuple(rows))
         self._loaded.update(loaded)
 
+    def _loadable_mounts(self) -> tuple[str, ...]:
+        """Return, in family declaration order, the unloaded mounts whose node is already loaded."""
+        if len(self._loaded) == len(self.families):
+            return ()
+        loaded_keys = {spec.key for spec in self._loaded_specs()}
+        mounts = [
+            family.mount_key
+            for index, family in enumerate(self.families)
+            if index not in self._loaded and family.mount_key in loaded_keys
+        ]
+        if not mounts:
+            missing = sorted(
+                {family.mount_key for index, family in enumerate(self.families) if index not in self._loaded}
+            )
+            raise ValueError(f"command spec families mount at unknown nodes: {missing!r}")
+        return tuple(dict.fromkeys(mounts))
+
     def _load_all(self) -> tuple[CommandSpec, ...]:
-        while len(self._loaded) < len(self.families):
-            loaded_keys = {spec.key for spec in self._loaded_specs()}
-            mounts = [
-                family.mount_key
-                for index, family in enumerate(self.families)
-                if index not in self._loaded and family.mount_key in loaded_keys
-            ]
-            if not mounts:
-                missing = sorted(
-                    {family.mount_key for index, family in enumerate(self.families) if index not in self._loaded}
-                )
-                raise ValueError(f"command spec families mount at unknown nodes: {missing!r}")
-            for mount in dict.fromkeys(mounts):
+        while mounts := self._loadable_mounts():
+            for mount in mounts:
                 self._load_mount(mount)
         return self._loaded_specs()
+
+    def find_schema_identity(self, identity: str) -> CommandSpecNode | None:
+        """Return the node whose targeted result schema is ``identity``.
+
+        Loaded specs are searched first; otherwise families are loaded one
+        mount at a time, in declaration order, until the identity appears or
+        the graph is complete.
+        """
+        while True:
+            match = next(
+                (
+                    spec
+                    for spec in self._loaded_specs()
+                    if spec.result_schema.state is SchemaState.TARGET and spec.result_schema.identity == identity
+                ),
+                None,
+            )
+            if match is not None:
+                return self.node(match.key)
+            mounts = self._loadable_mounts()
+            if not mounts:
+                return None
+            self._load_mount(mounts[0])
 
     @property
     def specs(self) -> tuple[CommandSpec, ...]:
@@ -738,10 +767,6 @@ class CommandSpecGraph:
     def nodes(self) -> tuple[CommandSpecNode, ...]:
         """Return every command spec paired with its derived operator path."""
         return _graph_nodes(self.specs, node_type=CommandSpecNode)
-
-    def by_path(self) -> MappingProxyType[tuple[str, ...], CommandSpec]:
-        """Return the exact derived operator-path index."""
-        return _graph_by_path(self.specs, node_type=CommandSpecNode)
 
     def resolve_path(self, path: tuple[str, ...]) -> CommandSpec:
         """Resolve one complete operator path, loading only the families along it."""

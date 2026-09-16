@@ -248,7 +248,7 @@ def test_entry_point_injects_and_rebuilds_the_installed_search_provider() -> Non
         app = pilot.app
         assert isinstance(app, CadrumoTuiApp)
         assert app.workbench_search_service is initial
-        app._rebuild_workbench_search()
+        await app._rebuild_workbench_search()
         assert app.workbench_search_service is refreshed
         assert app.workbench_search_refusal_code is None
         app.exit()

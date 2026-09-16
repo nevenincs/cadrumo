@@ -33,7 +33,7 @@ def test_prompt_registry_seed_contains_required_prompts() -> None:
     """Seeded registry should include the prompts expected by downstream work."""
 
     registry = PromptRegistry.seeded()
-    assert set(registry.prompt_ids()) == {
+    assert set({item.id for item in registry.definitions.values()}) == {
         "translation_v1",
         "casilla_extract_v1",
         "manual_rule_extract_v1",

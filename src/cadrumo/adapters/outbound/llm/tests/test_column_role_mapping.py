@@ -216,8 +216,8 @@ def test_an_unlabelled_header_becomes_unmapped_and_the_file_still_maps() -> None
     assert len(proposal.roles) == len(headers)
     assert proposal.roles[headers.index("destinatario")] is FieldRole.UNMAPPED
     assert {column.header for column in proposal.unmapped_columns} == {"destinatario", "tipo_retencion"}
-    assert proposal.mapped_column_count == len(headers) - 2
-    assert FieldRole.TAXABLE_BASE in proposal.mapped_roles()
+    assert sum(1 for role in proposal.roles if role is not FieldRole.UNMAPPED) == len(headers) - 2
+    assert FieldRole.TAXABLE_BASE in frozenset(role for role in proposal.roles if role is not FieldRole.UNMAPPED)
 
 
 def test_an_explicit_unmapped_choice_is_reported_not_refused() -> None:
@@ -240,7 +240,7 @@ def test_every_column_unlabelled_still_yields_a_proposal() -> None:
 
     assert proposal.roles == tuple([FieldRole.UNMAPPED] * len(headers))
     assert len(proposal.unmapped_columns) == len(headers)
-    assert proposal.mapped_column_count == 0
+    assert sum(1 for role in proposal.roles if role is not FieldRole.UNMAPPED) == 0
 
 
 # ── Double claims and phantom columns ────────────────────────────────────────
@@ -284,7 +284,7 @@ def test_a_claim_about_an_absent_column_is_reported_not_applied() -> None:
     )
 
     assert [item.column_index for item in proposal.unknown_column_claims] == [99]
-    assert FieldRole.CURRENCY not in proposal.mapped_roles()
+    assert FieldRole.CURRENCY not in frozenset(role for role in proposal.roles if role is not FieldRole.UNMAPPED)
     assert proposal.roles[0] is FieldRole.INVOICE_DATE
 
 
@@ -491,4 +491,4 @@ def test_an_out_of_allow_list_reply_from_the_real_transport_still_imports(tmp_pa
 
     assert [item.proposed_role for item in proposal.rejected_role_proposals] == ["totally_invented_role"]
     assert proposal.roles[4] is FieldRole.UNMAPPED
-    assert proposal.mapped_column_count == 2
+    assert sum(1 for role in proposal.roles if role is not FieldRole.UNMAPPED) == 2

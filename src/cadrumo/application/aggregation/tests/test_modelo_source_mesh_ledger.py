@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.aggregation import BindingSourceKind
@@ -548,7 +549,7 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
     )
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     with pytest.raises(AggregationValidationError) as exc_info:
         _ledger_iva_resolver(
@@ -588,7 +589,7 @@ def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority(
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     )
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
@@ -636,7 +637,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
         iva_amount=Decimal("2100.00"),
         operation_date=date(2025, 3, 28),
     )
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     def _resolve(code: str) -> CalculationSourceResolution:
         return _ledger_iva_resolver(
@@ -689,7 +690,7 @@ def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transac
         linked_transaction_ids=(transaction.transaction_id,),
     )
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
@@ -743,7 +744,7 @@ def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_
         operation_date=date(2025, 2, 5),
     )
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,
@@ -1033,7 +1034,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     invoice = _invoice(initial.transaction_id)
     linked = _renta_transaction("renta-linked", purchase_invoice_evidence_id=invoice.invoice_id)
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         ports=_catalogue_read_ports(invoice_repository=invoice_repo, transaction_repository=tx_repo),
@@ -1170,7 +1171,7 @@ def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota() -> Non
         counterparty_country="DE",
         counterparty_tax_id="DE345678901",
     )
-    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
 
     with pytest.raises(AggregationValidationError) as exc_info:
         _ledger_iva_resolver(
@@ -1214,7 +1215,7 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
         issued_at=date(2025, 2, 10),
         taxable_base=Decimal("10000.00"),
     )
-    invoice_repo.save(InvoiceCatalogue.from_invoices((exempt,)))
+    invoice_repo.save(build_invoice_catalogue((exempt,)))
 
     resolution = _ledger_iva_resolver(
         transaction_repository=tx_repo,

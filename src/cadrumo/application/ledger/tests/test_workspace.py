@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+
 from ....core.period import Period
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -127,7 +130,7 @@ def _project(transaction: Transaction):
         preflight=None,
         review=_review(transaction),
         transactions=TransactionCatalogue.from_transactions((transaction,)),
-        invoices=InvoiceCatalogue.from_invoices((_invoice(),)),
+        invoices=build_invoice_catalogue((_invoice(),)),
         revisions={},
         work_units=WorkUnitCatalogue(),
         evidence_pending_review=0,
@@ -329,7 +332,7 @@ def test_foreign_invoice_is_refused_before_any_reconciliation_reader() -> None:
             preflight=None,
             review=_review(transaction),
             transactions=TransactionCatalogue.from_transactions((transaction,)),
-            invoices=InvoiceCatalogue.from_invoices((foreign,)),
+            invoices=build_invoice_catalogue((foreign,)),
             revisions={},
             work_units=WorkUnitCatalogue(),
             evidence_pending_review=0,
@@ -433,7 +436,7 @@ def test_affected_declarations_keep_natural_addresses_counts_and_deterministic_o
         bucket_id=_BUCKET_ID,
         revisions={revision.calculation_revision_id: revision for revision in revisions},
         transactions=TransactionCatalogue(),
-        work_units=WorkUnitCatalogue.from_work_units(tuple(units)),
+        work_units=build_work_unit_catalogue(tuple(units)),
         staleness_reader=lambda **_kwargs: tuple(reversed(tuple(zip(revisions, verdicts, strict=True)))),
     )
 

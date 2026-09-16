@@ -21,6 +21,13 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.calculations.tests.cross_period_verdict_support import (
+    has_first_year_fractional_suppression,
+    has_operator_declared_suppression,
+    suppressed_first_year_fractional,
+    suppressed_pre_activity,
+)
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
@@ -114,8 +121,8 @@ def test_first_year_modalidad_cuota_m202_dependency_qualifies_for_suppression() 
 
     verdict = _verdict(evidence)
     assert verdict.clean is True
-    assert verdict.has_first_year_fractional_suppression_advisory is True
-    assert verdict.suppressed_first_year_fractional_dependencies == (evidence,)
+    assert has_first_year_fractional_suppression(verdict) is True
+    assert suppressed_first_year_fractional(verdict) == (evidence,)
 
 
 def test_mandatory_modalidad_base_m202_dependency_is_not_suppressed() -> None:
@@ -237,8 +244,8 @@ def test_first_year_fractional_facet_is_distinct_from_pre_activity_facet() -> No
 
     # On a verdict carrying both, each advisory flag is driven only by its own facet.
     verdict = _verdict(pre_activity, first_year)
-    assert verdict.has_operator_declared_suppression_advisory is True
-    assert verdict.has_first_year_fractional_suppression_advisory is True
-    assert verdict.suppressed_pre_activity_dependencies == (pre_activity,)
-    assert verdict.suppressed_first_year_fractional_dependencies == (first_year,)
+    assert has_operator_declared_suppression(verdict) is True
+    assert has_first_year_fractional_suppression(verdict) is True
+    assert suppressed_pre_activity(verdict) == (pre_activity,)
+    assert suppressed_first_year_fractional(verdict) == (first_year,)
     assert verdict.clean is True

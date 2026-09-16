@@ -213,9 +213,11 @@ def test_import_computes_eur_equivalent_for_foreign_rows() -> None:
     inspecting the domain field directly.
     """
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     repo = TransactionCatalogueRepository(bucket_id="00000000-0000-4000-8000-000000000000")
-    catalogue = repo.load()
+    with bundled_indexed_authority().operation():
+        catalogue = repo.load()
     foreign = [tx for tx in catalogue.values() if tx.raw.currency in {"GBP", "USD"}]
     eur = [tx for tx in catalogue.values() if tx.raw.currency == "EUR"]
     assert foreign, "persisted catalogue must contain GBP/USD rows"

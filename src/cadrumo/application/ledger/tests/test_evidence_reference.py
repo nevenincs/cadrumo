@@ -18,6 +18,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
@@ -88,7 +90,7 @@ def _invoice(
 
 
 def _catalogue(*invoices: Invoice) -> InvoiceCatalogue:
-    return InvoiceCatalogue.from_invoices(invoices)
+    return build_invoice_catalogue(invoices)
 
 
 def _classify(evidence_id: str, *, records: tuple[PurchaseInvoiceEvidence, ...], invoices: InvoiceCatalogue):
@@ -108,7 +110,7 @@ def test_registered_evidence_record_resolves_to_the_bytes_bearing_space() -> Non
     assert reference.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
     assert reference.record == record
     assert reference.is_acceptable
-    assert reference.carries_document_bytes
+    assert (reference.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE)
 
 
 def test_received_catalogue_invoice_is_acceptable_but_carries_no_bytes() -> None:
@@ -125,7 +127,7 @@ def test_received_catalogue_invoice_is_acceptable_but_carries_no_bytes() -> None
     assert reference.outcome is EvidenceReferenceOutcome.CATALOGUE_INVOICE
     assert reference.invoice == invoice
     assert reference.is_acceptable
-    assert not reference.carries_document_bytes
+    assert reference.outcome is not EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
 
 
 def test_evidence_record_wins_when_an_id_could_match_both_spaces() -> None:
@@ -149,7 +151,7 @@ def test_unknown_id_resolves_unresolved_and_is_not_acceptable() -> None:
 
     assert reference.outcome is EvidenceReferenceOutcome.UNRESOLVED
     assert not reference.is_acceptable
-    assert not reference.carries_document_bytes
+    assert reference.outcome is not EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE
     assert reference.record is None
     assert reference.invoice is None
 

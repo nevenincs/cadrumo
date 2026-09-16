@@ -10,15 +10,11 @@ from typing import TYPE_CHECKING, TypedDict
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from ....application.storage.calc_sheets.records import (
-    OperatorInput,
-    SheetExportMetadata,
     SheetRelationProvenanceValue,
 )
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.period import Period
-from ....core.time.utc import coerce_utc_aware
 from ....domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -72,10 +68,6 @@ class OperatorEdit(BaseModel):
     display_number: str
     label: str
     value: Decimal | str | bool | None = None
-
-    def to_operator_input(self) -> OperatorInput:
-        """Project onto the canonical :class:`OperatorInput` shape."""
-        return OperatorInput(casilla_id=self.casilla_id, value=self.value)
 
 
 class BindingEdit(BaseModel):
@@ -151,24 +143,6 @@ class PullMetadata(BaseModel):
     engine_version: str
     registry_sha: str
     exported_at: str | None = None
-
-    def to_sheet_export_metadata(self) -> SheetExportMetadata | None:
-        """Project onto a strict :class:`SheetExportMetadata` when stamped."""
-        if not self.exported_at:
-            return None
-        try:
-            exported_at = coerce_utc_aware(datetime.fromisoformat(self.exported_at))
-        except ValueError:
-            return None
-        return SheetExportMetadata(
-            modelo_id=self.modelo_id,
-            revision_id=self.revision_id,
-            filing_year=self.filing_year,
-            period=Period.from_year_and_code(self.filing_year, self.period),
-            engine_version=self.engine_version,
-            registry_sha=self.registry_sha,
-            exported_at=exported_at,
-        )
 
 
 class MetadataMatchState(StrEnum):

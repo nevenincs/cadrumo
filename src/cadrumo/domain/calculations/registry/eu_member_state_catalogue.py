@@ -6,10 +6,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ...iva.schema import EUMemberState
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import (
     GovernedFactSource,
     cache_governed_projection,
@@ -17,6 +18,8 @@ from .governed_fact_scope import (
     validating_governed_facts,
 )
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "EU member-state catalogue"
 
 _FACT_ID = "eu-member-state-catalogue"
 _ORDER_KEY = "member_state.order"
@@ -75,15 +78,12 @@ class EuMemberStateCatalogue:
         return next(definition for definition in self.definitions if definition.token == token)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"EU member-state catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"EU member-state catalogue {key!r} must contain unique tokens")
     return values

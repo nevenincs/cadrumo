@@ -72,6 +72,7 @@ from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .work_profile import ModeloWorkProfile
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"
 
@@ -110,6 +111,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     *,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm Madrid nacimiento/adopción eligibility for an indeterminate unit.
 
@@ -148,6 +150,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     fact_index = _load_fact_index(
         bucket_id,
         operation=operation,
+        profile=profile,
     )
     if fact_index is None:
         return None
@@ -191,8 +194,11 @@ def _load_fact_index(
     bucket_id: str,
     *,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
 ) -> dict[str, UserProfileFactValue] | None:
     """Return the bucket's profile fact index, or ``None`` when no profile exists."""
+    if profile is not None:
+        return profile_fact_index(profile.record, profile.profile_decode_context.schema)
     try:
         repository = ProfileRecordRepository.for_current_session(
             bucket_id,
@@ -210,6 +216,7 @@ def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
     *,
     work_unit: WorkUnit,
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> ModeloVerificationFinding | None:
     """Convenience wrapper reading ``bucket_id`` off a :class:`WorkUnit`."""
     return madrid_nacimiento_adopcion_eligibility_advisory_finding(
@@ -217,6 +224,7 @@ def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
         casilla_values,
         bucket_id=work_unit.bucket_id,
         operation=operation,
+        profile=profile,
     )
 
 

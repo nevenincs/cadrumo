@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity
@@ -30,7 +32,7 @@ from ....domain.filing.schema import (
     registry_schema_version,
 )
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -298,7 +300,7 @@ def test_invoices_pending_severity_mapping(tmp_path: Path) -> None:
         (PaymentStatus.PARTIALLY_PAID, ("a" * 64,), ReviewSeverity.NORMAL),
     )
     for index, (payment_status, linked, expected_severity) in enumerate(cases, start=10):
-        catalogue = InvoiceCatalogue.from_invoices(
+        catalogue = build_invoice_catalogue(
             (
                 _invoice(
                     invoice_number=f"INV-SEVERITY-{index}",
@@ -315,7 +317,7 @@ def test_invoices_pending_severity_mapping(tmp_path: Path) -> None:
 
 
 def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
-    catalogue = InvoiceCatalogue.from_invoices(
+    catalogue = build_invoice_catalogue(
         (
             _invoice(
                 invoice_number="INV-A",
@@ -333,7 +335,7 @@ def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
 
 
 def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
-    catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
+    catalogue = build_invoice_catalogue((_invoice(),))
     items = invoices_pending(
         ports=draft_review_ports(invoices=catalogue),
     )
@@ -342,7 +344,7 @@ def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
 
 
 def test_invoices_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
-    other_catalogue = InvoiceCatalogue.from_invoices((_invoice(invoice_number="INV-OTHER"),))
+    other_catalogue = build_invoice_catalogue((_invoice(invoice_number="INV-OTHER"),))
     other_items = invoices_pending(
         ports=draft_review_ports(invoices=other_catalogue),
     )

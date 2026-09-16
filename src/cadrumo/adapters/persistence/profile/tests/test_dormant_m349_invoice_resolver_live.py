@@ -32,7 +32,8 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
@@ -142,7 +143,7 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
         )
         for number, country, tax_id, issued_at, base_total in _M349_INVOICES
     )
-    invoice_repo.save(InvoiceCatalogue.from_invoices(invoices))
+    invoice_repo.save(build_invoice_catalogue(invoices))
 
     # Non-vacuity: the casilla under test binds the invoice source, and the seeded
     # bases are distinct so a copy/contamination cannot satisfy the sum.

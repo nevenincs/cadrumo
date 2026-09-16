@@ -1708,6 +1708,7 @@ tui:
     choose_role: Válassz egy feladatot a táblázatban a modell letöltéséhez, betöltéséhez,
       ellenőrzéséhez vagy eltávolításához.
     column:
+      fitness: Modellpróba
       installed: Telepítve
       loaded: Betöltve
       model: Modell
@@ -1727,6 +1728,11 @@ tui:
       remove_title: Eltávolítod ezt a modellt?
     extraction_not_ready: A számladokumentumok még nem olvashatók be ezen a gépen.
     extraction_ready: A számladokumentumok beolvashatók ezen a gépen.
+    fitness:
+      fit: megfelelő
+      not_verified: nincs ellenőrizve
+      timed_out: időtúllépés
+      unfit: nem megfelelő
     host: 'Futtatókörnyezet: {endpoint} · telepítve: {installed} · válaszol: {reachable}
       · verzió: {version}'
     install: Futtatókörnyezet telepítése
@@ -1860,6 +1866,7 @@ tui:
       quit: Kilépés
       quit_help: Kilépés a Cadrumóból; a profil munkamenete változatlan marad
     title: Cadrumo terminálmunkamenet
+    updating: A munkaterület frissítése…
   search:
     action:
       classify_ledger: Főkönyv osztályozása

@@ -524,36 +524,6 @@ class AeatAuthenticator:
                     self._inflight_pages = 0
                     self._inflight_drained.set()
 
-    async def capture_storage_state(self, session: AeatSession) -> Path:
-        """Persist the active Playwright state and :class:`PersistedSessionMetadata`."""
-        async with self._lifecycle.work(), self._lock:
-            if self.active_session != session:
-                raise AeatLoginAssertionError(
-                    "capture_storage_state() requires the currently active authenticated session",
-                    translated_message="adapters.auth.authenticator.errors.capture_requires_active_session",
-                )
-            return await self._capture_storage_state_locked(session)
-
-    async def resume_from_storage_state(
-        self,
-        path: Path,
-    ) -> AeatSession:
-        """Resume a certificate :class:`AeatSession` from encrypted storage.
-
-        The persisted browser state and :class:`PersistedSessionMetadata` are
-        validated before a :class:`CertificateContextProvisioner` opens a
-        context with the restored storage state. A successful live probe
-        refreshes ``authenticated_at`` and ``idle_deadline`` before the
-        session is returned.
-        """
-        async with self._lifecycle.work(), self._lock:
-            if self._context is not None or self._browser_session is not None:
-                raise AuthValidationError(
-                    "AeatAuthenticator already has an active session; call close() before resuming another one",
-                    translated_message="adapters.auth.authenticator.errors.already_active_before_resume",
-                )
-            return await self._resume_from_storage_state_locked(path)
-
     def describe(self) -> AuthProviderDescription:
         """Return an :class:`AuthProviderDescription` with a safe summary of the configured provider.
 
@@ -776,7 +746,7 @@ class AeatAuthenticator:
         certificate_subject = session.certificate_subject
         if certificate_thumbprint is None or certificate_subject is None:
             raise AeatLoginAssertionError(
-                "capture_storage_state() requires a certificate-backed session",
+                "storage-state capture requires a certificate-backed session",
                 translated_message="adapters.auth.authenticator.errors.capture_requires_certificate",
             )
         metadata = PersistedSessionMetadata(

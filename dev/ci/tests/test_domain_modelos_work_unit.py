@@ -44,8 +44,8 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.errors import ModeloValidationError
 from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.modelos.work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
@@ -316,15 +316,6 @@ def test_catalogue_rejects_key_record_mismatch() -> None:
         WorkUnitCatalogue(work_units={bad_key: unit})
 
 
-def test_catalogue_from_work_units_rejects_duplicate_ids() -> None:
-    """Building a catalogue from an iterable with two records under
-    the same id fails fast."""
-
-    unit = _build_unit()
-    with pytest.raises(ModeloValidationError, match=r"duplicate work_unit_id"):
-        WorkUnitCatalogue.from_work_units((unit, unit))
-
-
 def test_upsert_returns_a_new_catalogue_and_leaves_original_unchanged() -> None:
     unit = _build_unit()
     catalogue = WorkUnitCatalogue()
@@ -370,7 +361,7 @@ def test_create_work_unit_applies_default_or_explicit_name(repo: WorkUnitCatalog
 
 def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalogueRepository) -> None:
     repo.save(
-        WorkUnitCatalogue.from_work_units(
+        build_work_unit_catalogue(
             tuple(
                 _build_unit(
                     bucket_id=bucket,
@@ -398,7 +389,7 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
 
 def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository) -> None:
     repo.save(
-        WorkUnitCatalogue.from_work_units(
+        build_work_unit_catalogue(
             (
                 _build_unit(
                     bucket_id=_WORK_UNIT_BUCKET_A_ID,

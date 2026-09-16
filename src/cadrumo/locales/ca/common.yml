@@ -1720,6 +1720,7 @@ tui:
     choose_role: Tria una tasca de la taula per baixar, carregar, comprovar o eliminar-ne
       el model.
     column:
+      fitness: Prova del model
       installed: Instal·lat
       loaded: Carregat
       model: Model
@@ -1740,6 +1741,11 @@ tui:
     extraction_not_ready: Encara no es poden llegir documents de factura en aquest
       equip.
     extraction_ready: Els documents de factura es poden llegir en aquest equip.
+    fitness:
+      fit: apte
+      not_verified: sense verificar
+      timed_out: temps esgotat
+      unfit: no apte
     host: 'Runtime a {endpoint} · instal·lat: {installed} · respon: {reachable} ·
       versió {version}'
     install: Instal·la el runtime
@@ -1873,6 +1879,7 @@ tui:
       quit: Surt
       quit_help: Surt de Cadrumo; la sessió del perfil queda com està
     title: 'Cadrumo: sessió de terminal'
+    updating: S'està actualitzant l'àrea de treball…
   search:
     action:
       classify_ledger: Classifica el llibre major

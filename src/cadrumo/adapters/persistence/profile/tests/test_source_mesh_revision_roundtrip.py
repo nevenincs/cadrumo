@@ -35,6 +35,8 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+
 from .....adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -53,7 +55,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from .....domain.modelos.codes import ModeloCode
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -107,7 +109,7 @@ def _repository_with_parent_work_unit(secure_objects: SecureObjectRepository) ->
         created_at=_NOW,
         updated_at=_NOW,
     )
-    WorkUnitCatalogueRepository(objects=secure_objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
+    WorkUnitCatalogueRepository(objects=secure_objects).save(build_work_unit_catalogue((work_unit,)))
     return CalculationRevisionCatalogueRepository(objects=secure_objects)
 
 

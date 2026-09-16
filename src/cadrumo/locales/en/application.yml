@@ -193,10 +193,6 @@ application:
         local_recurrence_modelo_303_only: Local IVA compensation recurrence is reconstructed
           only for Modelo 303; modelo {modelo} was supplied.
         modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
-        modelo_390_only: IVA compensation annual summary only accepts Modelo 390 observations.
-        observed_casilla_ids_noncanonical: IVA compensation observations must use
-          the casilla identifiers declared by modelo {modelo} revision {revision};
-          {casilla_ids} are not declared.
         repository_backend_split: The Modelo 303 observation store and the IVA compensation
           history store must share one encrypted backend so both writes settle together.
         seed_conflict: An IVA compensation state already exists for this period; seeding

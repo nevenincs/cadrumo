@@ -73,26 +73,3 @@ def test_engine_exposes_no_remote_write_methods(tmp_path: Path) -> None:
     assert not (tmp_path / "submissions").exists()
 
 
-def test_load_submission_roundtrips_real_encrypted_record(tmp_path: Path) -> None:
-    engine = _build_engine(tmp_path)
-    filing = _historical_filing()
-    SubmissionRepository().save(filing)
-
-    assert engine.load_submission(filing.submission_id) == filing
-
-
-def test_load_submission_rejects_traversal_id(tmp_path: Path) -> None:
-    with pytest.raises(SubmissionError, match="path separators"):
-        _build_engine(tmp_path).load_submission("../escape")
-
-
-def test_list_submissions_filters_real_encrypted_records(tmp_path: Path) -> None:
-    engine = _build_engine(tmp_path)
-    first = _historical_filing(draft_label="draft-1", modelo="130")
-    second = _historical_filing(draft_label="draft-2", modelo="303")
-    repository = SubmissionRepository()
-    repository.save(first)
-    repository.save(second)
-
-    assert engine.list_submissions(modelo="130") == (first,)
-    assert engine.list_submissions(modelo="999") == ()

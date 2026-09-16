@@ -27,7 +27,6 @@ import pytest
 from ....storage.errors import StorageValidationError
 from .._secure_object_schema import (
     build_revision_ancestor_ids,
-    coerce_raw_bytes,
     database_bytes,
     parse_revision_ancestor_ids,
 )
@@ -36,30 +35,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _REVISION = "a" * 64
 _OTHER_REVISION = "b" * 64
-
-
-def test_a_payload_column_of_the_wrong_type_is_refused() -> None:
-    """DISCRIMINATING: a column holding neither bytes nor text.
-
-    SQLite is dynamically typed, so an integer in a BLOB column is a shape the
-    driver will hand back. Coercing it -- to its digits, or to an empty value
-    -- would feed the decryption path something that is not ciphertext.
-    """
-    with pytest.raises(StorageValidationError, match="raw_bytes"):
-        coerce_raw_bytes(1234)
-
-
-def test_the_payload_column_still_accepts_every_shape_the_driver_returns() -> None:
-    """ANTI-TAUTOLOGY: the refusal must not reject legitimate returns.
-
-    The same column comes back as ``bytes``, ``bytearray`` or ``memoryview``
-    depending on driver and query path, and as ``str`` through a text query.
-    A guard that refused any of these would break reads it is meant to serve.
-    """
-    assert coerce_raw_bytes(b"payload") == b"payload"
-    assert coerce_raw_bytes(bytearray(b"payload")) == b"payload"
-    assert coerce_raw_bytes(memoryview(b"payload")) == b"payload"
-    assert coerce_raw_bytes("payload") == b"payload"
 
 
 def test_an_unparseable_ancestry_column_is_refused() -> None:

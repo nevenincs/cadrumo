@@ -151,9 +151,9 @@ from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .identifier_evolutions import IdentifierEvolution
 from .lineage_attestation import LineageAttestation
-from .modelo_inception import DeclaredInception, ModeloInceptionField, UnauthoredBefore
+from .modelo_inception import ModeloInceptionField
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
-from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
+from .modelo_pending_orden import PendingEjercicioOrdenes
 from .restated_families import RestatedFamilyDeclaration
 from .revision_contracts import (
     DeclaredPredecessor,
@@ -1357,40 +1357,10 @@ class ModeloDefinition(RegistryModel):
     )
     pending_ejercicio_ordenes: PendingEjercicioOrdenes = ()
 
-    def pending_orden_for(self, filing_year: int) -> PendingEjercicioOrden | None:
-        """Return the declaration excusing a filing year, if the modelo made one.
-
-        A year with no revision and no declaration here is an open gap. A year
-        with one is legally-not-yet: the Orden approving it has not been
-        published, so nobody can author it and nothing is owed until it is.
-        """
-        return next(
-            (entry for entry in self.pending_ejercicio_ordenes if entry.filing_year == filing_year),
-            None,
-        )
-
     revisions: Annotated[Mapping[RevisionId, ModeloRevision], FROZEN_MAPPING]
     # Set only on a directory-selected view: consumer models re-run this
     # validator on the same instance without the construction context.
     _directory_revision_ids: frozenset[str] | None = PrivateAttr(default=None)
-
-    @property
-    def first_answerable_filing_year(self) -> int | None:
-        """Return the earliest filing year this modelo answers for, if declared.
-
-        Absence is not zero and not the earliest authored revision: an
-        undeclared inception means the modelo has made no claim about how far
-        back it reaches, which is a different state from reaching back to its
-        first edition. Callers that need the distinction must ask for
-        :attr:`inception` itself.
-        """
-        match self.inception:
-            case DeclaredInception(filing_year=filing_year):
-                return filing_year
-            case UnauthoredBefore(earliest_authored=earliest):
-                return earliest
-            case _:
-                return None
 
     def get_title(self, locale: str) -> str:
         """Resolve the Modelo title from the shared catalogue."""

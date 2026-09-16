@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 from cadrumo.domain.categories.proportionality import ProportionalityKind
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
@@ -325,7 +326,7 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
@@ -344,7 +345,7 @@ def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
@@ -364,7 +365,7 @@ def test_purchase_invoice_evidence_from_other_bucket_is_reported_as_issue() -> N
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
@@ -391,7 +392,7 @@ def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((refund,)),
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,

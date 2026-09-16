@@ -130,22 +130,6 @@ def test_profile_eligible_count_ignores_out_of_window_and_non_cohabiting() -> No
     assert profile.madrid_nacimiento_adopcion_eligible_count(2025, context=_CONTEXT) == 2
 
 
-def test_profile_weighted_count_embeds_prorrateo() -> None:
-    """Two eligible children, one under shared custody → weighted count 1 + 0,5 = 1,5."""
-    profile = RentaFamilyProfile(
-        descendientes=(
-            _child(birth=date(2024, 6, 1)),
-            _child(birth=date(2025, 1, 1), shared=True),
-        ),
-    )
-    assert profile.madrid_nacimiento_adopcion_weighted_count(2025, context=_CONTEXT) == Decimal("1.5")
-
-
-def test_profile_weighted_count_zero_when_no_eligible_descendants() -> None:
-    profile = RentaFamilyProfile(descendientes=(_child(birth=date(2019, 1, 1)),))
-    assert profile.madrid_nacimiento_adopcion_weighted_count(2025, context=_CONTEXT) == Decimal("0")
-
-
 def test_unidad_familiar_otros_miembros_base_is_zero_for_single_filer() -> None:
     """The single/monoparental filer's other-members base is zero; the filer's own
     base (0435 + 0460) is added by the registry formula."""

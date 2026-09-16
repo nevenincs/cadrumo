@@ -14,7 +14,7 @@ from cadrumo.application.ledger.actions_lifecycle import reset_ledger_catalogue
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .ledger_action_create_support import ledger_ports_for_test
@@ -33,7 +33,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = purchase_invoice()
-    invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
+    invoice_repository.save(build_invoice_catalogue((purchase_evidence,)))
     with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
@@ -73,7 +73,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
             occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
         )
     invoice_repository.save(
-        InvoiceCatalogue.from_invoices(
+        build_invoice_catalogue(
             (purchase_evidence.model_copy(update={"linked_transaction_ids": (first.ref.transaction_id,)}),),
         ),
     )

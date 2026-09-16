@@ -16,6 +16,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.models import Attachment
 from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
@@ -122,7 +123,7 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     other_bucket_invoice = purchase_invoice().model_copy(update={"bucket_id": _OTHER_BUCKET_ID})
-    invoice_repository.save(InvoiceCatalogue.from_invoices((other_bucket_invoice,)))
+    invoice_repository.save(build_invoice_catalogue((other_bucket_invoice,)))
 
     with (
         pytest.raises(TransactionValidationError, match="command bucket"),
@@ -242,7 +243,7 @@ def test_attach_rejects_purchase_evidence_from_other_bucket(secure_objects: Secu
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     other_bucket_invoice = purchase_invoice().model_copy(update={"bucket_id": _OTHER_BUCKET_ID})
-    invoice_repository.save(InvoiceCatalogue.from_invoices((other_bucket_invoice,)))
+    invoice_repository.save(build_invoice_catalogue((other_bucket_invoice,)))
     transaction_id = _seed_evidence_free_transaction(secure_objects, idempotency_key="attach-cross-bucket-evidence")
 
     with (

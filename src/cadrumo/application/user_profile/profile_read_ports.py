@@ -28,12 +28,4 @@ class ProfileReadPorts:
     path_values: ProfilePathValuesReadPort
 
 
-class ProfileReadPortsFactory(Protocol):
-    """Construct profile-read capabilities for one profile bucket."""
-
-    def __call__(self, *, bucket_id: str) -> ProfileReadPorts:
-        """Return the required profile projection capability."""
-        ...
-
-
-__all__ = ["ProfilePathValuesReadPort", "ProfileReadPorts", "ProfileReadPortsFactory"]
+__all__ = ["ProfilePathValuesReadPort", "ProfileReadPorts"]

@@ -121,7 +121,7 @@ class TestEmptyState:
         assert repo.envelope_path_for("abc123").as_posix().endswith("cadrumo.domain.filing.drafts/abc123")
 
     def test_list_draft_ids_empty(self, repo: ModeloDraftRepository) -> None:
-        assert repo.list_draft_ids() == ()
+        assert tuple(sorted(repo.iter_ids())) == ()
 
 
 class TestSaveLoad:
@@ -140,13 +140,13 @@ class TestSaveLoad:
         draft = _make_draft()
         repo.save(draft)
         repo.save(draft)
-        assert repo.list_draft_ids() == (draft.draft_id,)
+        assert tuple(sorted(repo.iter_ids())) == (draft.draft_id,)
 
 
 class TestListAndIter:
     def test_list_returns_persisted_ids_sorted(self, repo: ModeloDraftRepository) -> None:
         d1, d2 = _save_two_drafts(repo)
-        ids = repo.list_draft_ids()
+        ids = tuple(sorted(repo.iter_ids()))
         assert set(ids) == {d1.draft_id, d2.draft_id}
         assert ids == tuple(sorted(ids))
 

@@ -13,13 +13,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ....domain.iva.flow import IvaFlowDirection, IvaSettlementSide
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "IVA flow catalogue"
 
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
@@ -144,22 +146,19 @@ class IvaFlowDirectionCatalogue:
         return self.deducible_token in self.settlement_sides_for(value)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IVA flow catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"IVA flow catalogue {key!r} must contain unique tokens")
     return values
 
 
 def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    value = _required(entries, key)
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     refs = tuple(token.strip() for token in value.split(",") if token.strip())
     if not refs or len(refs) != len(set(refs)):
         raise RegistryValidationError(f"IVA flow catalogue {key!r} must contain unique legal references")
@@ -213,12 +212,12 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
     for raw_token in settlement_tokens:
         token = IvaSettlementSide.from_registry(raw_token)
         prefix = f"{_SETTLEMENT_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IVA settlement side {raw_token!r} declares a mismatched value")
         settlement_definitions.append(
             IvaSettlementSideDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
             ),
         )
@@ -227,15 +226,15 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
 
     settlement_choice_set = frozenset(item.token for item in settlement_definitions)
     devengada_token = IvaSettlementSide.from_registry(
-        _required(entries, f"{_SETTLEMENT_PREFIX}devengada.value"),
+        required_mapping_entry(entries, f"{_SETTLEMENT_PREFIX}devengada.value", subject=_ENTRY_SUBJECT),
     )
     deducible_token = IvaSettlementSide.from_registry(
-        _required(entries, f"{_SETTLEMENT_PREFIX}deducible.value"),
+        required_mapping_entry(entries, f"{_SETTLEMENT_PREFIX}deducible.value", subject=_ENTRY_SUBJECT),
     )
     if devengada_token not in settlement_choice_set or deducible_token not in settlement_choice_set:
         raise RegistryValidationError("IVA flow catalogue names an undeclared settlement-side predicate")
 
-    no_settlement_token = _required(entries, _NO_SETTLEMENT_KEY)
+    no_settlement_token = required_mapping_entry(entries, _NO_SETTLEMENT_KEY, subject=_ENTRY_SUBJECT)
     if no_settlement_token in settlement_tokens:
         raise RegistryValidationError("IVA flow catalogue no-settlement token collides with a settlement side")
 
@@ -243,9 +242,9 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
     for raw_token in _csv(entries, _FLOW_ORDER_KEY):
         token = IvaFlowDirection.from_registry(raw_token)
         prefix = f"{_FLOW_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IVA flow direction {raw_token!r} declares a mismatched value")
-        raw_sides = _required(entries, f"{prefix}settlement_sides")
+        raw_sides = required_mapping_entry(entries, f"{prefix}settlement_sides", subject=_ENTRY_SUBJECT)
         if raw_sides == no_settlement_token:
             settlement_sides: frozenset[IvaSettlementSide] = frozenset[IvaSettlementSide]()
         else:
@@ -268,7 +267,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
         flow_definitions.append(
             IvaFlowDirectionDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
                 settlement_sides=settlement_sides,
             ),
@@ -279,7 +278,7 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
     declared_flows = frozenset(item.token for item in flow_definitions)
 
     def _flow_pointer(key: str) -> IvaFlowDirection:
-        token = IvaFlowDirection.from_registry(_required(entries, key))
+        token = IvaFlowDirection.from_registry(required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT))
         if token not in declared_flows:
             raise RegistryValidationError(f"IVA flow catalogue pointer {key!r} names an undeclared flow")
         return token

@@ -17,6 +17,7 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from .....adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -50,7 +51,6 @@ from .....domain.buckets.event import BucketEventHistoryCatalogue
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
-from .....domain.invoices.models import InvoiceCatalogue
 from .....domain.modelos.work_unit import WorkUnitCatalogue
 from .....domain.transactions.models import TransactionCatalogue
 from .....domain.usage_ratios.model import UsageRatioProfile
@@ -207,7 +207,7 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("invoices", lambda: InvoiceCatalogueRepository().load()),
     ("filing_drafts", lambda: ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load("d" * 64)),
     ("submission", lambda: SubmissionRepository().list_submission_ids()),
-    ("justificante", lambda: JustificanteRepository().list_csvs()),
+    ("justificante", lambda: tuple(sorted(JustificanteRepository().iter_ids()))),
     (
         "filing_history",
         lambda: ModeloHistoryRepository(
@@ -442,7 +442,7 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
     justificante_b = _justificante(tmp_path, _BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((_invoice(_BUCKET_A_ID),)))
+        InvoiceCatalogueRepository().save(build_invoice_catalogue((_invoice(_BUCKET_A_ID),)))
         ModeloDraftRepository(bucket_id=_BUCKET_A_ID).save(draft_a)
         SubmissionRepository().save(submission_a)
         JustificanteRepository().save(justificante_a)
@@ -451,8 +451,8 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
         assert InvoiceCatalogueRepository().load().invoices == {}
         assert ModeloDraftRepository(bucket_id=_BUCKET_B_ID).load(draft_a.draft_id) is None
         assert SubmissionRepository().list_submission_ids() == ()
-        assert JustificanteRepository().list_csvs() == ()
-        InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((_invoice(_BUCKET_B_ID),)))
+        assert tuple(sorted(JustificanteRepository().iter_ids())) == ()
+        InvoiceCatalogueRepository().save(build_invoice_catalogue((_invoice(_BUCKET_B_ID),)))
         ModeloDraftRepository(bucket_id=_BUCKET_B_ID).save(draft_b)
         SubmissionRepository().save(submission_b)
         JustificanteRepository().save(justificante_b)
@@ -462,7 +462,7 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
         loaded_draft_a = ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load(draft_a.draft_id)
         loaded_draft_b = ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load(draft_b.draft_id)
         submissions = SubmissionRepository().list_submission_ids()
-        csvs = JustificanteRepository().list_csvs()
+        csvs = tuple(sorted(JustificanteRepository().iter_ids()))
 
     assert tuple(invoice.invoice_number for invoice in invoices.values()) == (f"INV-{_BUCKET_A_ID.upper()}",)
     assert loaded_draft_a == draft_a

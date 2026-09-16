@@ -366,18 +366,6 @@ class InventorySourceResolver:
             owned_sources=self.owned_sources,
         )
 
-    def _template_refusal(
-        self,
-        binding_ids: tuple[str, ...],
-        message: str,
-    ) -> CalculationSourceResolution:
-        return _template_refusal_resolution(
-            binding_ids,
-            message,
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-        )
-
     def _storage_refusal(self, binding_ids: tuple[str, ...]) -> CalculationSourceResolution:
         return _storage_refusal_resolution(
             binding_ids,

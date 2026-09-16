@@ -55,16 +55,6 @@ class ModeloApprovalCadence(StrEnum):
 
     PER_EJERCICIO_ORDEN = "per_ejercicio_orden"
 
-    @classmethod
-    def registry_declarations(cls) -> Mapping[str, str]:
-        """Return the registry-owned declarations for this cadence token."""
-        prefix = f"approval_cadence.{cls.value}."
-        return {
-            key.removeprefix(prefix): value
-            for key, value in pending_orden_vocabulary().items()
-            if key.startswith(prefix)
-        }
-
 
 ModeloApprovalCadenceField = Annotated[
     ModeloApprovalCadence, BeforeValidator(coerce_enum_member(ModeloApprovalCadence))

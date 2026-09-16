@@ -186,22 +186,6 @@ def test_workspace_contributing_capture_refuses_owner_and_projection_schema_drif
         mismatched_capture.require_contract(changed_contract)
 
 
-def test_workspace_epochs_make_an_aba_value_transition_observable_without_payload_identity() -> None:
-    contract = _contract(ModeloWorkspaceContributorKindV1.CALCULATION)
-    first_value = _projection()
-    returned_value = _projection()
-    first = _epoch(contract.contributor.owner, 11)
-    changed = _epoch(contract.contributor.owner, 12)
-    returned = _epoch(contract.contributor.owner, 13)
-
-    assert first_value == returned_value
-    assert changed.require_successor_of(first) is changed
-    assert returned.require_successor_of(changed) is returned
-    assert returned != first
-    with pytest.raises(ValueError, match="must advance"):
-        first.require_successor_of(returned)
-
-
 @pytest.mark.parametrize(
     "epoch_values",
     (
@@ -215,23 +199,6 @@ def test_workspace_epoch_accepts_only_complete_current_schema_v2(
 ) -> None:
     with pytest.raises(ValidationError):
         ModeloWorkspaceEpochV1.model_validate({"owner": "calculation.owner", "generation": 1, **epoch_values})
-
-
-@pytest.mark.parametrize("generation", (11, 10, 9))
-def test_workspace_epoch_refuses_cross_domain_coordinates_before_generation_comparison(
-    generation: int,
-) -> None:
-    predecessor = _epoch("calculation.owner", 10)
-    different_domain = ModeloWorkspaceEpochV1(
-        owner="calculation.owner",
-        comparison_domain="c" * 64,
-        generation=generation,
-    )
-
-    with pytest.raises(ValueError, match="comparison domain"):
-        different_domain.require_successor_of(predecessor)
-    with pytest.raises(ValueError, match="comparison domain"):
-        predecessor.require_current(different_domain)
 
 
 def test_workspace_epoch_currentness_requires_an_exact_same_domain_coordinate() -> None:
@@ -259,10 +226,6 @@ def test_registry_port_captures_the_admission_specific_projection() -> None:
         assert isinstance(captured.projection, ModeloWorkspaceRegistryProjectionV1)
         assert (captured.projection.inspection is None) != (captured.projection.snapshot is None)
         captured.require_contract(port.producer_contract)
-
-        stamp, epoch = port.read_current_stamp_and_epoch()
-        assert stamp == captured.stamp
-        assert epoch.generation == captured.epoch.generation
 
 
 def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() -> None:

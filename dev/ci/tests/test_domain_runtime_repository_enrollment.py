@@ -14,7 +14,8 @@ from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -99,7 +100,7 @@ def test_invoice_repository_default_uses_runtime_created_bucket_store(tmp_path: 
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         invoice = _invoice(bucket_id)
-        original = InvoiceCatalogue.from_invoices((invoice,))
+        original = build_invoice_catalogue((invoice,))
         InvoiceCatalogueRepository(bucket_id=bucket_id).save(original)
 
         loaded = InvoiceCatalogueRepository(bucket_id=bucket_id).load()

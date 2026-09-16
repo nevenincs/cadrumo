@@ -19,6 +19,8 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.bucket_pointer import resolve_active_bucket_id
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.transactions.models import TransactionCatalogue
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.inventory import FIXTURES_DIR
 from ._isolated_profile_storage_fixtures import recorded_fx_isolated_backend
@@ -41,6 +43,12 @@ def _import_statement(source: Path, *, json_format: bool = False) -> Result:
     return _invoke(args)
 
 
+def _stored_catalogue(bucket_id: str) -> TransactionCatalogue:
+    # The test reads the store itself, outside any command, so it takes the lease a command would.
+    with bundled_indexed_authority().operation():
+        return TransactionCatalogueRepository(bucket_id=bucket_id).load()
+
+
 def _ledger_rows() -> list[dict[str, Any]]:
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
@@ -53,7 +61,7 @@ def test_cli_import_converts_foreign_rows_to_eur() -> None:
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+    catalogue = _stored_catalogue(bucket_id)
     transactions = list(catalogue.values())
 
     foreign = [t for t in transactions if t.raw.currency in {"GBP", "USD"}]
@@ -105,7 +113,7 @@ def test_view_single_foreign_row_surfaces_value_in_eur_and_fx_rate() -> None:
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+    catalogue = _stored_catalogue(bucket_id)
     foreign = [t for t in catalogue.values() if t.raw.currency in {"GBP", "USD"}]
     assert foreign, "revolut corpus must contain a GBP/USD row to view"
     target = foreign[0]
@@ -134,7 +142,7 @@ def test_view_single_eur_row_keeps_fx_fields_null() -> None:
     assert _import_statement(_CORPUS / "revolut-multi.csv").exit_code == 0
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+    catalogue = _stored_catalogue(bucket_id)
     eur = [t for t in catalogue.values() if t.raw.currency == "EUR"]
     assert eur, "revolut corpus must contain an EUR row"
     target = eur[0]
@@ -264,7 +272,7 @@ def test_import_records_fx_rate_provenance_through_persistence() -> None:
     assert res.exit_code == 0, res.output
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+    catalogue = _stored_catalogue(bucket_id)
     foreign = [t for t in catalogue.values() if t.raw.currency in {"GBP", "USD"}]
     assert foreign
     for t in foreign:

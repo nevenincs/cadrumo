@@ -24,6 +24,8 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
@@ -158,7 +160,7 @@ def _linked(
         transaction.transaction_id,
         invoice.invoice_id,
     )
-    return catalogue, InvoiceCatalogue.from_invoices((invoice,))
+    return catalogue, build_invoice_catalogue((invoice,))
 
 
 def test_a_linked_sales_invoice_puts_casilla_01_on_the_base_not_the_cash() -> None:
@@ -413,7 +415,7 @@ def test_a_one_directional_link_is_refused() -> None:
 
     aggregation = aggregate_renta_income_ledger(
         transactions,
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
@@ -438,7 +440,7 @@ def test_an_invoice_spanning_several_transactions_is_refused() -> None:
 
     aggregation = aggregate_renta_income_ledger(
         transactions,
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",
@@ -515,7 +517,7 @@ def test_an_instalment_paid_invoice_still_declares_its_cash() -> None:
 
     aggregation = aggregate_renta_income_ledger(
         transactions,
-        InvoiceCatalogue.from_invoices((invoice,)),
+        build_invoice_catalogue((invoice,)),
         bucket_id=_BUCKET,
         period=_QUARTER,
         modelo="130",

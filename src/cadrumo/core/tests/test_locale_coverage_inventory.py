@@ -41,7 +41,6 @@ _OPERATOR_ERROR_LOCALE_KEYS: frozenset[str] = frozenset(
         "adapters.auth.authenticator.errors.session_stale",
         "adapters.auth.authenticator.errors.no_active_context",
         "adapters.auth.authenticator.errors.capture_requires_active_session",
-        "adapters.auth.authenticator.errors.already_active_before_resume",
         "adapters.auth.authenticator.errors.no_context_capture_storage",
         "adapters.auth.authenticator.errors.capture_requires_certificate",
         "adapters.auth.authenticator.errors.persisted_session_verification_failed",

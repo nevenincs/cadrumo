@@ -9,6 +9,7 @@ authority.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Iterable
 from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, Final, override
@@ -89,6 +90,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
     CSS = tokenised(
         BASE_CSS
         + """
+    #root-updating { display: none; padding: $cadrumo-space-0 $cadrumo-gutter; }
     #root-account-refusal, #root-navigation-refusal {
         height: auto;
         color: $warning;
@@ -131,6 +133,8 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._refresh_home = refresh_home
         self._workbench_search_service = workbench_search_service
         self._refresh_workbench_search = refresh_workbench_search
+        self._returning_home = False
+        """Whether a return to Home is re-reading the generation off the event loop."""
         self._refresh_destination_catalogue = refresh_destination_catalogue
         self._account_factories = account_factories
         self._home_refresh_refusal_code: str | None = None
@@ -185,6 +189,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             yield Static("", id="root-account-refusal", markup=False)
             yield Static("", id="root-navigation-refusal", markup=False)
             yield Static(tr("tui.root.no_areas"), id="root-no-areas", markup=False)
+            yield Static(tr("tui.root.updating"), id="root-updating", markup=False)
         yield Footer(compact=True)
 
     def on_mount(self) -> None:
@@ -535,10 +540,28 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._replace_destination(HomeScreen(projection, restore_target=semantic_focus))
 
     def _on_destination_dismissed(self, _: None) -> None:
-        """Return from a real child dismissal through the projection refresh door."""
-        self._rebuild_workbench_search()
-        self._rebuild_destination_catalogue()
-        self._show_home(self._home_semantic_focus)
+        """Return from a real child dismissal through the projection refresh door.
+
+        The refresh reads a whole new generation, which takes seconds on a real
+        profile, so it runs off the event loop and the rest of the return
+        continues on the loop once it lands. A second return while one is out
+        joins it rather than reading the store again.
+        """
+        if self._returning_home:
+            return
+        self._returning_home = True
+        self.query_one("#root-updating", Static).display = True
+        self.run_worker(self._return_home(), group="root-return-home")
+
+    async def _return_home(self) -> None:
+        try:
+            await self._rebuild_workbench_search()
+            self._rebuild_destination_catalogue()
+            self._show_home(self._home_semantic_focus)
+        finally:
+            self._returning_home = False
+            if self.is_running:
+                self.query_one("#root-updating", Static).display = False
 
     def _rebuild_destination_catalogue(self) -> None:
         """Re-admit destinations against the generation the factories now read.
@@ -560,17 +583,22 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._destination_catalogue = refreshed
         self._active_destination_catalogue = refreshed
 
-    def _rebuild_workbench_search(self) -> None:
-        """Replace search only after the owning child has authoritatively returned."""
+    async def _rebuild_workbench_search(self) -> None:
+        """Replace search only after the owning child has authoritatively returned.
+
+        The capture behind the refresh reads a whole generation, so it runs on
+        a worker thread and only the replacement happens on the event loop.
+        """
         refresh_workbench_search = self._refresh_workbench_search
-        if refresh_workbench_search is not None:
-            try:
-                refreshed = refresh_workbench_search()
-            except Exception:  # projection failures must not leak protected diagnostics
-                self._workbench_search_refusal_code = "workbench.search.refresh_unavailable"
-                return
-            self._workbench_search_service = refreshed
-            self._workbench_search_refusal_code = None
+        if refresh_workbench_search is None:
+            return
+        try:
+            refreshed = await asyncio.to_thread(refresh_workbench_search)
+        except Exception:  # projection failures must not leak protected diagnostics
+            self._workbench_search_refusal_code = "workbench.search.refresh_unavailable"
+            return
+        self._workbench_search_service = refreshed
+        self._workbench_search_refusal_code = None
 
     def replace_workspace_body(self, screen: Screen[None], /) -> None:
         """Show another body of the destination the operator is already inside.

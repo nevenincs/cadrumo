@@ -86,12 +86,12 @@ class LedgerImportDoor:
     operation: PinnedAuthorityOperation
 
     async def preview(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
-        """Read without writing."""
-        return self._run(request, dry_run=True)
+        """Read without writing, off the event loop: a parser import alone can take a second."""
+        return await asyncio.to_thread(self._run, request, dry_run=True)
 
     async def apply(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
-        """Write through the same services the CLI import verbs use."""
-        return self._run(request, dry_run=False)
+        """Write through the same services the CLI import verbs use, off the event loop."""
+        return await asyncio.to_thread(self._run, request, dry_run=False)
 
     def _run(self, request: LedgerImportRequestV1, *, dry_run: bool) -> LedgerImportOutcomeV1:
         if request.source_kind is LedgerImportSourceKind.BANK_STATEMENT:
@@ -241,6 +241,9 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
     """Bind the sole catalogue-invoice writer to the signed-in profile."""
 
     async def add(entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
+        return await asyncio.to_thread(record, entry)
+
+    def record(entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
         from ...adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
         from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 
@@ -337,10 +340,13 @@ class LedgerEvidenceDoor:
         settled = self._settled() if records else (frozenset(), frozenset())
         return tuple(self._row(record, settled) for record in records)
 
-    async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
-        """Register one document; its bytes go to secure storage, never a path reference."""
+    def _add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
         result = self._service().add(bucket_id=self.profile_id, source_path=source_path, actor=_ACTOR)
         return self._row(result.record, self._settled())
+
+    async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
+        """Register one document off the event loop; its bytes go to secure storage, never a path reference."""
+        return await asyncio.to_thread(self._add, source_path)
 
     def _reading(self) -> tuple[LedgerEvidencePorts, InvoiceDraftExtractionPorts, tuple[RegimeLegend, ...]]:
         """Compose what one on-host read needs, exactly as the CLI evidence verbs do."""

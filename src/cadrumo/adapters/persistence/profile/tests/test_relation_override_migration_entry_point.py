@@ -32,6 +32,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -45,7 +46,7 @@ from .....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_revision_override_migration import rekey_calculation_revision_overrides
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
@@ -153,7 +154,7 @@ def _catalogue(revision: CalculationRevision) -> CalculationRevisionCatalogue:
 
 def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
     WorkUnitCatalogueRepository(objects=profile.repository).save(
-        WorkUnitCatalogue.from_work_units(
+        build_work_unit_catalogue(
             (
                 WorkUnit(
                     work_unit_id=_work_unit_id(),

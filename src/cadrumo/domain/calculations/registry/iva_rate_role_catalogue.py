@@ -6,13 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Final, Self
 
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .facts.schema import FactSelector
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "IVA rate-role catalogue"
 
 if TYPE_CHECKING:
     pass
@@ -97,22 +99,19 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IVA rate-role catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"IVA rate-role catalogue {key!r} must contain unique tokens")
     return values
 
 
 def _bool(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key).lower()
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
         return True
     if value == "false":
@@ -139,7 +138,7 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaRateRoleCatalogue:
     for raw_token in _csv(entries, _ORDER_KEY):
         token = IvaRateRole.from_registry(raw_token)
         prefix = f"{_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(
                 f"IVA rate-role token {raw_token!r} declares a mismatched value",
             )
@@ -152,7 +151,7 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaRateRoleCatalogue:
         )
     if not definitions:
         raise RegistryValidationError("IVA rate-role catalogue must declare at least one role")
-    default_token = _required(entries, _DEFAULT_KEY)
+    default_token = required_mapping_entry(entries, _DEFAULT_KEY, subject=_ENTRY_SUBJECT)
     defaults = tuple(item for item in definitions if item.is_default)
     if len(defaults) != 1:
         raise RegistryValidationError("IVA rate-role catalogue must declare exactly one default role")

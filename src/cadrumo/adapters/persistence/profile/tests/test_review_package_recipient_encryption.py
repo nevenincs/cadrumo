@@ -591,7 +591,7 @@ def test_replay_guard_refuses_a_second_presentation_of_the_same_envelope_nonce(t
             recipient_encryption=_CRYPTO_CAPABILITY,
         )
         assert second_pass.package_bytes == package_bytes
-        assert guard.is_consumed(envelope.envelope_nonce_hex) is True
+        assert any(record.nonce_hex == envelope.envelope_nonce_hex for record in guard.load().records) is True
 
         with pytest.raises(RecipientPackageReplayedError):
             guard.mark_consumed(envelope.envelope_nonce_hex, consumed_at=_NOW)

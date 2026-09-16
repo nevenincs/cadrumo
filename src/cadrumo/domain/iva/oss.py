@@ -6,11 +6,14 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "OSS/IOSS regime mapping"
 
 _FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
 _ORDER_KEY = "regime.order"
@@ -111,15 +114,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"OSS/IOSS regime mapping is missing {key!r}")
-    return value.strip()
-
-
 def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    tokens = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not tokens or len(set(tokens)) != len(tokens):
         raise RegistryValidationError(f"OSS/IOSS regime mapping {key!r} must declare unique tokens")
     return tokens
@@ -154,17 +154,17 @@ def resolve_oss_ioss_regime_catalogue(
         definitions.append(
             OssIossRegimeDefinition(
                 token=OssIossRegime(token),
-                description=_required(entries, f"{prefix}.description"),
-                articles=_required(entries, f"{prefix}.articles"),
-                filing_cadence=_required(entries, f"{prefix}.filing_cadence"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                articles=required_mapping_entry(entries, f"{prefix}.articles", subject=_ENTRY_SUBJECT),
+                filing_cadence=required_mapping_entry(entries, f"{prefix}.filing_cadence", subject=_ENTRY_SUBJECT),
                 transaction_kinds=_csv_tokens(entries, f"{prefix}.transaction_kinds"),
                 intrinsic_value_ceiling_eur=entries.get(ceiling_key),
             ),
         )
     return OssIossRegimeCatalogue(
         definitions=tuple(definitions),
-        common_semantics=_required(entries, _COMMON_SEMANTICS_KEY),
-        selector_key=_required(entries, _SELECTOR_KEY),
+        common_semantics=required_mapping_entry(entries, _COMMON_SEMANTICS_KEY, subject=_ENTRY_SUBJECT),
+        selector_key=required_mapping_entry(entries, _SELECTOR_KEY, subject=_ENTRY_SUBJECT),
     )
 
 

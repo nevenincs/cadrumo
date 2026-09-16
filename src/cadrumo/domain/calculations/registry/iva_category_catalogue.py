@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ...iva.schema import IvaCategory
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "IVA category catalogue"
 
 _FACT_ID = "iva-category-component-catalogue"
 _ORDER_KEY = "category.order"
@@ -119,15 +122,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"IVA category catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"IVA category catalogue {key!r} must contain unique tokens")
     return values
@@ -172,12 +172,14 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
     definitions: list[IvaCategoryDefinition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
         token = IvaCategory(raw_token)
-        if _required(entries, f"{_VALUE_PREFIX}{raw_token}.value") != raw_token:
+        if required_mapping_entry(entries, f"{_VALUE_PREFIX}{raw_token}.value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"IVA category token {raw_token!r} declares a mismatched value")
         definitions.append(
             IvaCategoryDefinition(
                 token=token,
-                description=_required(entries, f"{_VALUE_PREFIX}{raw_token}.description"),
+                description=required_mapping_entry(
+                    entries, f"{_VALUE_PREFIX}{raw_token}.description", subject=_ENTRY_SUBJECT
+                ),
             ),
         )
     declared = frozenset(definition.token for definition in definitions)

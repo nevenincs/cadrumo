@@ -85,6 +85,7 @@ def test_ledger_ratios_unset_refuses_when_no_override_exists() -> None:
     assert result.exit_code != 0, result.output
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_ratios_payloads_refuse_unknown_category_and_kind() -> None:
     """The ratios transport payloads reuse the canonical closed sets.
 

@@ -21,7 +21,7 @@ from textual.containers import Horizontal
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Footer, Static
 
-from ....application.local_reader import LocalReaderRoleStatus, LocalReaderStatus
+from ....application.local_reader import LocalReaderRoleStatus, LocalReaderStatus, RoleFitnessState
 from ....application.local_reader_operation import LocalReaderProvisionPublicResultV1, LocalReaderSetupStep
 from ....application.operations.composition import OperationComposedServices
 from ....application.operations.frontend_requests import (
@@ -65,6 +65,18 @@ _CHECKLIST_LOCALE_KEYS: Final = {
     "models_loaded": "tui.local_reader.checklist.models_loaded",
     "verified": "tui.local_reader.checklist.verified",
 }
+_FITNESS_LOCALE_KEYS: Final[dict[RoleFitnessState, str]] = {
+    RoleFitnessState.FIT: "tui.local_reader.fitness.fit",
+    RoleFitnessState.UNFIT: "tui.local_reader.fitness.unfit",
+    RoleFitnessState.TIMED_OUT: "tui.local_reader.fitness.timed_out",
+    RoleFitnessState.NOT_VERIFIED: "tui.local_reader.fitness.not_verified",
+}
+#: What each state that is not a pass means, in the same words `config provision status` uses.
+_FITNESS_EXPLANATION_KEYS: Final[dict[RoleFitnessState, str]] = {
+    RoleFitnessState.UNFIT: "provisioning.condition.role_model_fit_for_role",
+    RoleFitnessState.TIMED_OUT: "provisioning.condition.role_model_fitness_within_timeout",
+    RoleFitnessState.NOT_VERIFIED: "provisioning.condition.role_model_fitness_verified",
+}
 _ACTOR_REF: Final = "operator:tui-local-reader"
 _LOCAL_READER_CSS = tokenised("""
 .local-reader-actions { height: auto; margin: $cadrumo-space-0; }
@@ -86,14 +98,24 @@ def _answer(value: bool | None) -> str:
     return tr("tui.local_reader.answer.yes") if value else tr("tui.local_reader.answer.no")
 
 
-def local_reader_role_cells(row: LocalReaderRoleStatus) -> tuple[str, str, str, str, str]:
-    """One role's table cells: role, model, installed, loaded, ready."""
+def local_reader_role_cells(row: LocalReaderRoleStatus) -> tuple[str, str, str, str, str, str]:
+    """One role's table cells: role, model, installed, loaded, model check, ready."""
     return (
         tr(_ROLE_LOCALE_KEYS[row.role]),
         row.model or tr("tui.local_reader.no_model"),
         _answer(row.installed),
         _answer(row.resident),
+        "-" if row.fitness is None else tr(_FITNESS_LOCALE_KEYS[row.fitness]),
         _answer(row.ready),
+    )
+
+
+def local_reader_fitness_lines(status: LocalReaderStatus) -> tuple[str, ...]:
+    """Explain every role whose model check did not pass; "not verified" never reads as "unfit"."""
+    return tuple(
+        f"{tr(_ROLE_LOCALE_KEYS[row.role])}: {tr(_FITNESS_EXPLANATION_KEYS[row.fitness], model=row.model or '-')}"
+        for row in status.roles
+        if row.fitness is not None and row.fitness in _FITNESS_EXPLANATION_KEYS
     )
 
 
@@ -340,6 +362,7 @@ class LocalReaderScreen(Screen[None]):
                 yield Button(tr("tui.local_reader.install"), id="local-reader-install")
                 yield Button(tr("tui.local_reader.start"), id="local-reader-start")
             yield ContentDataTable[str](id="local-reader-roles", cursor_type="row", zebra_stripes=True)
+            yield Static("", id="local-reader-fitness", markup=False)
             yield Static(tr("tui.local_reader.choose_role"), id="local-reader-selection", markup=False)
             with Horizontal(classes="local-reader-actions"):
                 yield Button(tr("tui.local_reader.pull"), id="local-reader-pull", disabled=True)
@@ -360,6 +383,7 @@ class LocalReaderScreen(Screen[None]):
             "tui.local_reader.column.model",
             "tui.local_reader.column.installed",
             "tui.local_reader.column.loaded",
+            "tui.local_reader.column.fitness",
             "tui.local_reader.column.ready",
         ):
             table.add_column(tr(key))
@@ -402,6 +426,7 @@ class LocalReaderScreen(Screen[None]):
         table.clear()
         for row in status.roles:
             table.add_row(*local_reader_role_cells(row), key=row.role.value)
+        self.query_one("#local-reader-fitness", Static).update("\n".join(local_reader_fitness_lines(status)))
         if self.selected_role is not None:
             index = next(
                 (index for index, row in enumerate(table.ordered_rows) if row.key.value == self.selected_role.value),
@@ -524,6 +549,7 @@ __all__ = [
     "OperationLocalReaderDoor",
     "local_reader_checklist",
     "local_reader_checklist_cells",
+    "local_reader_fitness_lines",
     "local_reader_role_cells",
     "local_reader_setup_notice",
     "local_reader_summary_lines",

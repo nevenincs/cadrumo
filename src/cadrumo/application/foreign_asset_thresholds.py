@@ -56,11 +56,6 @@ class ForeignAssetDeclarationThreshold:
     caller of this module currently reaches.
     """
 
-    @property
-    def is_operator_attested(self) -> bool:
-        """Whether the figures rest on a revision a human has signed off."""
-        return self.revision_review_status is RevisionReviewStatus.OPERATOR_REVIEWED
-
 
 def foreign_asset_declaration_thresholds(
     *,

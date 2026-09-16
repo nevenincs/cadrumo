@@ -109,6 +109,7 @@ from .source_mesh import CalculationSourceDiagnostic
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.deadlines.models import TaxpayerProfile
+    from ..modelo.work_profile import ModeloWorkProfile
 
 #: Diagnostic ``source_kind`` for a fixed-rate administrator withholding whose
 #: amount matches neither authority-selected rate.
@@ -325,6 +326,7 @@ def _profile_suggests_sectoral_activity(
     bucket_id: str | None,
     *,
     profile_decode_context: ProfileDecodeContext | None = None,
+    profile: ModeloWorkProfile | None = None,
 ) -> bool | None:
     """Return whether the active profile hints at a sectoral activity.
 
@@ -348,15 +350,20 @@ def _profile_suggests_sectoral_activity(
     must never decide whether one fires -- see
     :func:`inferred_actividad_retencion_rate_advisory_observations`.
     """
-    if bucket_id is None or profile_decode_context is None:
+    if profile is not None:
+        from ..user_profile.projections import projection_for_taxpayer
+
+        taxpayer = projection_for_taxpayer(profile.record, schema=profile.profile_decode_context.schema)
+    elif bucket_id is None or profile_decode_context is None:
         return None
-    profile = _load_profile_for_bucket(bucket_id, profile_decode_context=profile_decode_context)
-    if profile is None:
+    else:
+        taxpayer = _load_profile_for_bucket(bucket_id, profile_decode_context=profile_decode_context)
+    if taxpayer is None:
         return None
-    declared_hint = _declared_activity_hint(profile)
+    declared_hint = _declared_activity_hint(taxpayer)
     if declared_hint is not None:
         return declared_hint
-    return _profile_regime_hint(profile)
+    return _profile_regime_hint(taxpayer)
 
 
 def _sectoral_match_message(
@@ -482,6 +489,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
     bucket_id: str | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
     resolver_id: str | None = None,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisories for inferred retención against governed activity rates.
 
@@ -521,6 +529,8 @@ def inferred_actividad_retencion_rate_advisory_observations(
             attributed.
             ``None`` (or an absent/unreadable profile) simply yields the
             could-not-be-checked wording; it never suppresses a diagnostic.
+        profile: The bucket's profile when the calculation already loaded it;
+            when omitted, the wording reads it from ``bucket_id``.
 
     Per row rather than aggregated, unlike the ungrounded-substrate advisory: the
     firing set is meant to be small and the actionable unit is one transaction
@@ -549,6 +559,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
                 sectoral_hint = _profile_suggests_sectoral_activity(
                     bucket_id,
                     profile_decode_context=profile_decode_context,
+                    profile=profile,
                 )
             diagnostics.append(
                 _sectoral_rate_diagnostic(

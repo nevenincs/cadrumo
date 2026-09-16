@@ -1,16 +1,10 @@
 """IVA compensation period states carry the canonical content-digest shape.
 
 ``IvaCompensationPeriodState.source_artefact_sha256`` identifies the filed
-artefact the state was read from and flows into compensation history and the
-annual cross-check. Bounded only to 64 characters it accepted any 64-character
+artefact the state was read from and flows into compensation history. Bounded only to 64 characters it accepted any 64-character
 string, so a non-digest was persistable beside otherwise valid history and
 later resolvable as if it content-addressed the artefact. It is now
 :data:`~cadrumo.core.identity.ContentDigest`.
-
-The application-side twin of this contract --
-``IvaCompensationAnnualSummary.source_artefact_sha256``, which redeclared the
-same field independently -- is covered by
-``application/calculations/tests/test_iva_compensation_artefact_digest.py``.
 
 Anti-tautology: ``"z" * 64`` and ``"A" * 64`` both satisfy the previous length
 bound exactly, so a guard that only checked length accepts them and fails this

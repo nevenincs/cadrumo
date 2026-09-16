@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ...contribuyente.renta_codes import SituacionFamiliar
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "family-situation vocabulary"
 
 _FACT_ID = "lirpf-family-situation-vocabulary"
 _ORDER_KEY = "situacion_familiar.order"
@@ -74,29 +77,30 @@ class SituacionFamiliarCatalogue:
         return next(item for item in self.definitions if item.token == token)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"family-situation vocabulary is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"family-situation vocabulary {key!r} must contain unique tokens")
     return values
 
 
 def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"family-situation vocabulary {key!r} must contain unique legal references")
     return values
 
 
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key).lower()
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value not in {"true", "false"}:
         raise RegistryValidationError(f"family-situation vocabulary {key!r} must be true or false")
     return value == "true"
@@ -162,12 +166,12 @@ def resolve_situacion_familiar_catalogue(
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError("family-situation vocabulary contains an invalid token") from exc
         prefix = f"{_PREFIX}{raw_token}"
-        if _required(entries, f"{prefix}{_VALUE_SUFFIX}") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}{_VALUE_SUFFIX}", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"family-situation token {raw_token!r} declares a mismatched value")
         definitions.append(
             SituacionFamiliarDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}{_DESCRIPTION_SUFFIX}"),
+                description=required_mapping_entry(entries, f"{prefix}{_DESCRIPTION_SUFFIX}", subject=_ENTRY_SUBJECT),
                 legal_refs=_refs(entries, f"{prefix}{_LEGAL_REFS_SUFFIX}"),
                 monoparental_required=_boolean(entries, f"{prefix}{_MONOPARENTAL_SUFFIX}"),
             ),

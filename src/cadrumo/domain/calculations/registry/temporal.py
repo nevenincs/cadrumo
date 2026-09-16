@@ -210,11 +210,6 @@ class RevisionTemporalResolution[RevisionT: _SelectableRevision]:
     authored_filing_year: int
     projection_direction: TemporalProjectionDirection
 
-    @property
-    def is_projected(self) -> bool:
-        """Return whether the selected source differs from the requested year."""
-        return self.projection_direction is not TemporalProjectionDirection.AUTHORED
-
 
 def _supported_filing_year(
     filing_year: int,

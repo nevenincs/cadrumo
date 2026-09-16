@@ -13,13 +13,15 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
-from typing import overload
+from typing import Final, overload
 
 from ....domain.iva.prorrata import InputClassification, ProrrataKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "prorrata vocabulary"
 
 _FACT_ID = "renta-iva-deduction-ratio-policy"
 _KIND_ORDER_KEY = "prorrata.kind_order"
@@ -155,13 +157,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"prorrata vocabulary is missing {key!r}")
-    return value.strip()
-
-
 def _optional(entries: Mapping[str, str], key: str) -> str | None:
     value = entries.get(key)
     if value is None:
@@ -171,14 +166,18 @@ def _optional(entries: Mapping[str, str], key: str) -> str | None:
 
 
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"prorrata vocabulary {key!r} must contain unique tokens")
     return values
 
 
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key).lower()
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
         return True
     if value == "false":
@@ -227,14 +226,14 @@ def resolve_prorrata_kind_catalogue(
     definitions: list[ProrrataKindDefinition] = []
     for raw_token in _csv(entries, _KIND_ORDER_KEY):
         prefix = f"{_KIND_PREFIX}{raw_token}"
-        declared_value = _required(entries, f"{prefix}.value")
+        declared_value = required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
             raise RegistryValidationError(f"prorrata kind {raw_token!r} declares a mismatched value")
         definitions.append(
             ProrrataKindDefinition(
                 token=ProrrataKind.from_registry(declared_value),
-                description=_required(entries, f"{prefix}.description"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
                 period_required=_boolean(entries, f"{prefix}.period_required"),
                 annual_only=_boolean(entries, f"{prefix}.annual_only"),
             ),
@@ -297,7 +296,7 @@ def resolve_input_classification_catalogue(
     definitions: list[InputClassificationDefinition] = []
     for raw_token in _csv(entries, _INPUT_ORDER_KEY):
         prefix = f"{_INPUT_PREFIX}{raw_token}"
-        declared_value = _required(entries, f"{prefix}.value")
+        declared_value = required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
             raise RegistryValidationError(f"input classification {raw_token!r} declares a mismatched value")
         uses_general_percentage = _boolean(entries, f"{prefix}.uses_general_percentage")
@@ -321,13 +320,15 @@ def resolve_input_classification_catalogue(
         definitions.append(
             InputClassificationDefinition(
                 token=InputClassification.from_registry(declared_value),
-                description=_required(entries, f"{prefix}.description"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
                 deductible_percentage=fixed_percentage,
                 uses_general_percentage=uses_general_percentage,
             ),
         )
-    default = InputClassification.from_registry(_required(entries, _INPUT_DEFAULT_KEY))
+    default = InputClassification.from_registry(
+        required_mapping_entry(entries, _INPUT_DEFAULT_KEY, subject=_ENTRY_SUBJECT)
+    )
     catalogue = InputClassificationCatalogue(
         definitions=tuple(definitions),
         default_classification=default,

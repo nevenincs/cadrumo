@@ -25,7 +25,6 @@ from ....application.operations.frontend_contracts import (
     OperationResponseControlResultV1,
     OperationResponseMutationResultV1,
     OperationReviewProjectionResultV1,
-    OperationWorkspaceRefreshTargetResultV1,
 )
 from ....application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from ....application.operations.frontend_requests import (
@@ -36,14 +35,11 @@ from ....application.operations.frontend_requests import (
     OperationResponseControlRequestV1,
     OperationResponseRejectRequestV1,
     OperationReviewProjectionRequestV1,
-    OperationWorkspaceRefreshTargetRequestV1,
 )
 from ....application.operations.interactions import OperationActorReference
 from ....application.operations.models import OperationId, OperationRevision
 from ....application.operations.persistence.replay import OperationReplayLimit
 from ....application.operations.projection_services import OperationResponseControlService
-from ....application.operations.registry import OperationSchemaIdentityV1
-from ....core.identity.digest import ContentDigest
 
 _DEFAULT_PAGE_LIMIT: OperationReplayLimit = 256
 
@@ -118,23 +114,6 @@ class OperationController:
         """Detach this frontend while the operation continues running durably."""
         return await self.services.detach.detach(
             OperationDetachRequestV1(operation_id=self.operation_id, expected_revision=expected_revision)
-        )
-
-    async def resolve_workspace_refresh[RefreshTargetT: BaseModel](
-        self,
-        *,
-        terminal_revision: OperationRevision,
-        definition_contract_digest: ContentDigest,
-        target_schema: OperationSchemaIdentityV1,
-    ) -> OperationWorkspaceRefreshTargetResultV1[RefreshTargetT]:
-        """Resolve the safe typed Workspace-refresh target after settlement."""
-        return await self.services.refresh.resolve(
-            OperationWorkspaceRefreshTargetRequestV1(
-                operation_id=self.operation_id,
-                terminal_revision=terminal_revision,
-                definition_contract_digest=definition_contract_digest,
-                target_schema=target_schema,
-            )
         )
 
 

@@ -9,6 +9,7 @@ from functools import cache
 import pytest
 
 import cadrumo.application.aggregation.modelo_bindings as modelo_bindings
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from .....application.aggregation.errors import AggregationValidationError
 from .....application.aggregation.source_mesh import CalculationSourceContext
@@ -131,7 +132,7 @@ def test_the_screen_now_catches_a_recargo_absent_from_the_ledger(
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo.save(
-        InvoiceCatalogue.from_invoices(
+        build_invoice_catalogue(
             (_recargo_invoice("RECARGO-1T", issued_at=date(2025, 2, 10), taxable_base=Decimal("10000.00")),),
         ),
     )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 from typing import override
@@ -34,7 +35,7 @@ from ....application.operations.persistence.replay import (
 from ....core.directory_scan import (
     scan_directory,
 )
-from ....core.locks import exclusive_file_lock, exclusive_file_lock_async
+from ....core.locks import exclusive_file_lock
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
@@ -123,29 +124,12 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         if not self._validate_existing_root():
             return None
         with exclusive_file_lock(self.lock_target):
-            return self.read_observation_unlocked(operation_id, request)
-
-    def read_observation_root_present(self) -> bool:
-        """Tell whether the journal root exists, without taking the lock."""
-        return self._validate_existing_root()
-
-    def read_observation_unlocked(
-        self,
-        operation_id: str,
-        request: _OperationReplayRequest,
-    ) -> OperationObservationMaterialization | None:
-        """Read one record and its observation with the journal lock already held.
-
-        Split out so an awaitable caller can hold the same lock through
-        :func:`exclusive_file_lock_async` instead of blocking its event
-        loop inside the synchronous acquisition.
-        """
-        try:
-            record = super().load(operation_id)
-        except RepositoryError:
-            if self.is_absent(operation_id):
-                return None
-            raise
+            try:
+                record = super().load(operation_id)
+            except RepositoryError:
+                if self.is_absent(operation_id):
+                    return None
+                raise
         return _observation_materialization_from_record(record, request)
 
     def is_absent(self, operation_id: str) -> bool:
@@ -259,7 +243,14 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
 
 
 class OperationJournalRepository(OperationJournal, OperationEventStream, OperationObservationReader):
-    """Async operation-journal port over the atomic filesystem substrate."""
+    """Async operation-journal port over the atomic filesystem substrate.
+
+    Every port call runs the synchronous substrate -- its lock wait and its
+    file reads and writes -- on a worker thread, so a frontend's event loop
+    stays responsive while a journal operation waits on contention or disk.
+    The thread inherits the caller's context, so the settings and storage
+    route in effect for the caller are the ones the substrate reads.
+    """
 
     def __init__(self, *, storage_root: Path) -> None:
         """Bind the repository to the configured secure storage root."""
@@ -268,16 +259,17 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
     @override
     async def load(self, operation_id: str) -> OperationPersistedSnapshot:
         """Load the latest credential-free snapshot for one operation."""
-        return self._repository.load(operation_id).snapshot
+        record = await asyncio.to_thread(self._repository.load, operation_id)
+        return record.snapshot
 
     @override
     async def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> str | None:
-        return self._repository.resolve_idempotency(claim)
+        return await asyncio.to_thread(self._repository.resolve_idempotency, claim)
 
     @override
     async def create(self, snapshot: OperationPersistedSnapshot, *, lease: OperationOwnerLease) -> str:
         """Create a complete initial journal before making an idempotency replay visible."""
-        return self._repository.create(snapshot, lease=lease)
+        return await asyncio.to_thread(self._repository.create, snapshot, lease=lease)
 
     @override
     async def read_after(
@@ -289,6 +281,9 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
     ) -> OperationReplayPage:
         """Return one bounded, exclusive page from retained event history."""
         request = _OperationReplayRequest(cursor=cursor, limit=limit)
+        return await asyncio.to_thread(self._read_after_blocking, operation_id, request)
+
+    def _read_after_blocking(self, operation_id: str, request: _OperationReplayRequest) -> OperationReplayPage:
         try:
             record = self._repository.load(operation_id)
         except RepositoryError:
@@ -312,19 +307,15 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
     ) -> OperationObservationMaterialization:
         """Return snapshot, replay, and progress facts anchored to one locked record.
 
-        The lock is acquired through the awaitable twin because the sole
-        caller is a UI poll worker on the interface event loop: the
-        synchronous acquisition parks that loop in ``time.sleep`` for the
-        whole contention window, stalling every other task on it, and
-        cannot be cancelled when the operator closes the surface.
+        The caller is typically a poll worker on an interface event loop, so
+        the lock wait and the read both run on a worker thread; cancelling the
+        awaiting task returns control at once while the bounded read finishes.
         """
-        if not self._repository.read_observation_root_present():
-            raise OperationObservationUnknownOperationError(operation_id)
-        async with exclusive_file_lock_async(self._repository.lock_target):
-            materialization = self._repository.read_observation_unlocked(
-                operation_id,
-                _OperationReplayRequest(cursor=after_cursor, limit=limit),
-            )
+        materialization = await asyncio.to_thread(
+            self._repository.read_observation,
+            operation_id,
+            _OperationReplayRequest(cursor=after_cursor, limit=limit),
+        )
         if materialization is None:
             raise OperationObservationUnknownOperationError(operation_id)
         return materialization
@@ -338,7 +329,7 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         lease: OperationOwnerLease,
     ) -> None:
         """Atomically advance an existing snapshot through the typed substrate."""
-        self._repository.commit(snapshot, expected_revision=expected_revision, lease=lease)
+        await asyncio.to_thread(self._repository.commit, snapshot, expected_revision=expected_revision, lease=lease)
 
     def is_absent(self, operation_id: str) -> bool:
         """Distinguish an absent record from a present but unreadable record."""

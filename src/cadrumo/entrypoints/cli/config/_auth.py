@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 import typer
 
@@ -19,8 +19,13 @@ from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ....application.auth.operator_probe_ports import OperatorProbePorts
     from ....application.auth.operator_results import AuthConfigureResult
     from ....application.auth.operator_scope_ports import OperatorScopePorts
+    from ....application.operator_actions.models import PreconditionVerdict
+    from ....application.state_projection_ports import StateProjectionReadPorts
+    from ....core.json_contract import ResolvedPreconditionAction
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
@@ -169,15 +174,30 @@ def auth_configure(
     emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
 
 
-def auth_status(
+class _OperatorAuthRead[ResultT](Protocol):
+    def __call__(
+        self,
+        provider: str | None = None,
+        *,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        operator_probe_ports: OperatorProbePorts,
+        operator_scope_ports: OperatorScopePorts,
+        read_ports: StateProjectionReadPorts,
+        operation: PinnedAuthorityOperation,
+    ) -> ResultT: ...
+
+
+class _PreconditionBearingResult(Protocol):
+    @property
+    def active_profile_precondition_verdict(self) -> PreconditionVerdict | None: ...
+
+
+def _read_operator_auth[ResultT](
     ctx: typer.Context,
-    provider: str | None = None,
-    output_language: OutputLanguage | None = None,
-) -> None:
-    """Show the configured local authentication state."""
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.operator import inspect_operator_auth
-    from ..config_payloads import AuthStatusPayload
+    provider: str | None,
+    read: _OperatorAuthRead[ResultT],
+) -> ResultT:
+    """Run one operator auth read, refusing an unknown provider slot."""
     from ..state_projection_support import (
         authority_operation,
         certificate_secret_backend_factory,
@@ -187,7 +207,7 @@ def auth_status(
     )
 
     try:
-        result = inspect_operator_auth(
+        return read(
             provider,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
             operator_probe_ports=operator_probe_ports(ctx),
@@ -200,11 +220,26 @@ def auth_status(
             translated_message="cli.config.auth.unknown_provider",
             context={"provider": provider or ""},
         ) from exc
-    precondition_action = (
-        resolve_cli_precondition_action(result.active_profile_precondition_verdict)
-        if result.active_profile_precondition_verdict is not None
-        else None
-    )
+
+
+def _active_profile_precondition_action(result: _PreconditionBearingResult) -> ResolvedPreconditionAction | None:
+    """Resolve the active-profile precondition a read result carries, if any."""
+    verdict = result.active_profile_precondition_verdict
+    return resolve_cli_precondition_action(verdict) if verdict is not None else None
+
+
+def auth_status(
+    ctx: typer.Context,
+    provider: str | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Show the configured local authentication state."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.auth.operator import inspect_operator_auth
+    from ..config_payloads import AuthStatusPayload
+
+    result = _read_operator_auth(ctx, provider, inspect_operator_auth)
+    precondition_action = _active_profile_precondition_action(result)
     envelope_result = AuthStatusPayload.from_result(
         result,
         active_profile_precondition_action=precondition_action,
@@ -254,33 +289,9 @@ def auth_test(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import test_operator_auth
     from ..config_payloads import AuthTestPayload
-    from ..state_projection_support import (
-        authority_operation,
-        certificate_secret_backend_factory,
-        operator_probe_ports,
-        operator_scope_ports,
-        state_projection_read_ports,
-    )
 
-    try:
-        result = test_operator_auth(
-            provider,
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            operator_probe_ports=operator_probe_ports(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-            read_ports=state_projection_read_ports(ctx),
-            operation=authority_operation(ctx),
-        )
-    except KeyError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider or ""},
-        ) from exc
-    precondition_action = (
-        resolve_cli_precondition_action(result.active_profile_precondition_verdict)
-        if result.active_profile_precondition_verdict is not None
-        else None
-    )
+    result = _read_operator_auth(ctx, provider, test_operator_auth)
+    precondition_action = _active_profile_precondition_action(result)
     envelope_result = AuthTestPayload.from_test_result(
         result,
         active_profile_precondition_action=precondition_action,

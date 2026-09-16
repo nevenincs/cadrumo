@@ -274,11 +274,6 @@ class AeatSyncWorkspaceZoneStateV1(BaseModel):
     sources: tuple[AeatSyncWorkspaceSourceObservationV1, ...]
     item_count: NonNegativeInt | None
 
-    @property
-    def measured_count(self) -> NonNegativeInt | None:
-        """Return the count only when at least one source was observable."""
-        return self.item_count
-
 
 class AeatSyncWorkspaceActionRowV1(BaseModel):
     """Public immutable capability provenance shared by every workspace row."""
@@ -410,11 +405,6 @@ class AeatSyncWorkspaceNotificationRowV1(BaseModel):
     def issue_date(self) -> date:
         """Return the notification issue date."""
         return self.issued_on
-
-    @property
-    def read_date(self) -> date | None:
-        """Return the optional notification read date."""
-        return self.read_on
 
     @model_validator(mode="after")
     def _coherent(self) -> Self:

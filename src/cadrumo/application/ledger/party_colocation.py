@@ -124,16 +124,6 @@ class PartyColocationResolution(BaseModel):
 
     outcomes: dict[str, PartyAttributionOutcome] = Field(default_factory=dict)
 
-    def outcome_for(self, field: str) -> PartyAttributionOutcome:
-        """Return the outcome for *field*, defaulting to ``UNRESOLVED``.
-
-        A field this resolution never considered reads as unresolved rather than
-        attributed. That direction is deliberate: the default has to be the one
-        that keeps the stamp, so a field slipping out of the enrolled set fails
-        toward the advisory instead of toward a silent clean bill.
-        """
-        return self.outcomes.get(field, PartyAttributionOutcome.UNRESOLVED)
-
     @property
     def contradicted_fields(self) -> tuple[str, ...]:
         """Return the fields the document filed under the wrong party."""

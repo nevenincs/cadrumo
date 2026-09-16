@@ -6,13 +6,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .spending_category import SpendingCategory, SpendingCategoryFamily
+
+_ENTRY_SUBJECT: Final = "spending category catalogue"
 
 _FACT_ID = "categories.profile"
 _SCOPE_SELECTOR = FactSelector(name="scope", value="spending_category_catalogue")
@@ -89,15 +92,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"spending category catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    tokens = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not tokens or len(tokens) != len(set(tokens)):
         raise RegistryValidationError(f"spending category catalogue {key!r} must contain unique tokens")
     return tokens

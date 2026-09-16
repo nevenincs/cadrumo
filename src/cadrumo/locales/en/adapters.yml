@@ -9,8 +9,6 @@ adapters:
       errors:
         already_active: AeatAuthenticator already has an active session; call close()
           or reauthenticate() before authenticating again.
-        already_active_before_resume: AeatAuthenticator already has an active session;
-          call close() before resuming.
         assertion_failed: Fresh AEAT authentication did not produce a valid login
           assertion.
         capture_requires_active_session: capture_storage_state() requires the currently

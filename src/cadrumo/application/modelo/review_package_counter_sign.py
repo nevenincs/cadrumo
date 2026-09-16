@@ -92,21 +92,6 @@ class CounterSignedReceipt(BaseModel):
     counter_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     counter_signed_at: UtcInstant
 
-    @property
-    def counter_signed_message(self) -> bytes:
-        """Return the exact byte string the counter-signature covers.
-
-        Reconstructing this independently of :func:`counter_sign_review_package`
-        lets :func:`verify_counter_signed_receipt` recompute the signed message
-        from the receipt's own fields rather than trusting a cached value, so a
-        receipt whose ``note`` was edited after counter-signing fails
-        verification instead of silently re-approving different text.
-        """
-        return _counter_signed_message(
-            signature_hex=self.original_signature.signature_hex,
-            note=self.note,
-        )
-
 
 def _counter_signed_message(*, signature_hex: str, note: str) -> bytes:
     """Return the canonical byte string a counter-signature is minted over.

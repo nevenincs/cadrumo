@@ -7,11 +7,14 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
+from typing import Final
 
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "Lorca reduction fact"
 
 _FACT_ID = "liva-orden-lorca-reduction"
 _EXERCISE_KEY = "reduction.ejercicio"
@@ -54,13 +57,6 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"Lorca reduction fact is missing {key!r}")
-    return value.strip()
-
-
 def _single_evidence(values: tuple[str, ...], label: str) -> str:
     if len(values) != 1 or not values[0].strip():
         raise RegistryValidationError(f"Lorca reduction fact must declare exactly one {label}")
@@ -68,7 +64,11 @@ def _single_evidence(values: tuple[str, ...], label: str) -> str:
 
 
 def _periods(entries: Mapping[str, str]) -> tuple[str, ...]:
-    values = tuple(value.strip() for value in _required(entries, _CALCULATION_PERIODS_KEY).split(",") if value.strip())
+    values = tuple(
+        value.strip()
+        for value in required_mapping_entry(entries, _CALCULATION_PERIODS_KEY, subject=_ENTRY_SUBJECT).split(",")
+        if value.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError("Lorca reduction calculation periods must be unique non-empty tokens")
     return values
@@ -83,7 +83,7 @@ def _required_text(resolved: ResolvedMappingFact, *, source_ref: str) -> tuple[s
 
 def _decimal(entries: Mapping[str, str], key: str) -> Decimal:
     try:
-        value = Decimal(_required(entries, key))
+        value = Decimal(required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT))
     except InvalidOperation as exc:
         raise RegistryValidationError(f"Lorca reduction fact has a non-decimal {key!r}") from exc
     if value < 0:
@@ -128,32 +128,32 @@ def resolve_lorca_reduction(
         authority=selected,
     )
     try:
-        ejercicio = int(_required(entries, _EXERCISE_KEY))
+        ejercicio = int(required_mapping_entry(entries, _EXERCISE_KEY, subject=_ENTRY_SUBJECT))
     except ValueError as exc:
         raise RegistryValidationError("Lorca reduction fact has a non-integer ejercicio") from exc
     if effective_date.year != ejercicio:
         raise RegistryValidationError("Lorca reduction fact exercise does not match its query date")
-    source_content_digest = _required(entries, _SOURCE_CONTENT_DIGEST_KEY)
+    source_content_digest = required_mapping_entry(entries, _SOURCE_CONTENT_DIGEST_KEY, subject=_ENTRY_SUBJECT)
     if len(source_content_digest) != 64 or any(
         character not in "0123456789abcdef" for character in source_content_digest
     ):
         raise RegistryValidationError("Lorca reduction source content digest must be lowercase SHA-256")
-    if _required(entries, _LEGAL_REF_KEY) != legal_ref:
+    if required_mapping_entry(entries, _LEGAL_REF_KEY, subject=_ENTRY_SUBJECT) != legal_ref:
         raise RegistryValidationError("Lorca reduction payload legal reference disagrees with variant evidence")
-    if _required(entries, _SOURCE_REF_KEY) != source_ref:
+    if required_mapping_entry(entries, _SOURCE_REF_KEY, subject=_ENTRY_SUBJECT) != source_ref:
         raise RegistryValidationError("Lorca reduction payload source reference disagrees with variant evidence")
     return LorcaReductionDefinition(
         ejercicio=ejercicio,
-        municipality=_required(entries, _MUNICIPALITY_KEY),
-        annex_scope=_required(entries, _ANNEX_SCOPE_KEY),
+        municipality=required_mapping_entry(entries, _MUNICIPALITY_KEY, subject=_ENTRY_SUBJECT),
+        annex_scope=required_mapping_entry(entries, _ANNEX_SCOPE_KEY, subject=_ENTRY_SUBJECT),
         percentage=_decimal(entries, _PERCENTAGE_KEY),
         calculation_periods=_periods(entries),
         legal_ref=legal_ref,
         source_ref=source_ref,
         source_content_digest=source_content_digest,
         required_text=required_text,
-        article=_required(entries, _ARTICLE_KEY),
-        section=_required(entries, _SECTION_KEY),
+        article=required_mapping_entry(entries, _ARTICLE_KEY, subject=_ENTRY_SUBJECT),
+        section=required_mapping_entry(entries, _SECTION_KEY, subject=_ENTRY_SUBJECT),
     )
 
 

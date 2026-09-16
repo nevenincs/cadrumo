@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.prorrata_exclusions import Art104TresExclusion
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "art. 104.Tres mapping"
 
 _FACT_ID = "renta-iva-deduction-ratio-policy"
 _ORDER_KEY = "art104_tres.exclusion_order"
@@ -80,15 +83,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"art. 104.Tres mapping is missing {key!r}")
-    return value.strip()
-
-
 def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    tokens = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    tokens = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not tokens or len(set(tokens)) != len(tokens):
         raise RegistryValidationError(f"art. 104.Tres mapping {key!r} must declare unique non-empty tokens")
     return tokens
@@ -128,7 +128,7 @@ def resolve_art104_tres_exclusion_catalogue(
     definitions: list[Art104TresExclusionDefinition] = []
     for token in ordered:
         prefix = f"art104_tres.exclusion.{token}"
-        kind = _required(entries, f"{prefix}.kind")
+        kind = required_mapping_entry(entries, f"{prefix}.kind", subject=_ENTRY_SUBJECT)
         expected_kind = "operator_declared" if token in operator else "auto_derived"
         if kind != expected_kind:
             raise RegistryValidationError(
@@ -137,9 +137,9 @@ def resolve_art104_tres_exclusion_catalogue(
         definitions.append(
             Art104TresExclusionDefinition(
                 token=token,
-                article=_required(entries, f"{prefix}.article"),
-                legal_ref=_required(entries, f"{prefix}.legal_ref"),
-                description=_required(entries, f"{prefix}.description"),
+                article=required_mapping_entry(entries, f"{prefix}.article", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 kind=kind,
             ),
         )

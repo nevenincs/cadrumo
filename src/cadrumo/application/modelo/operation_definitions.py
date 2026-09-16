@@ -25,7 +25,7 @@ from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
+from typing import TYPE_CHECKING, Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator
 
@@ -1445,13 +1445,6 @@ def _optional_decimal(value: str | None) -> Decimal | None:
     return None if value is None else Decimal(value)
 
 
-def _wire_row_payload(row: BaseModel) -> dict[str, object]:
-    """Dump one domain detail row with its amounts as their exact characters."""
-    return {
-        key: str(value) if isinstance(value, Decimal) else value for key, value in row.model_dump(mode="python").items()
-    }
-
-
 class _WireDetailRowMirror(BaseModel):
     """Shared inverse for the per-modelo detail-row wire mirrors.
 
@@ -1469,11 +1462,6 @@ class _WireDetailRowMirror(BaseModel):
     """
 
     model_config = _WIRE_CONFIG
-
-    @classmethod
-    def from_row(cls, row: BaseModel) -> Self:
-        """Mirror one domain detail row onto its wire form."""
-        return cls.model_validate(_wire_row_payload(row))
 
 
 class Modelo184MemberRowWireV1(_WireDetailRowMirror):

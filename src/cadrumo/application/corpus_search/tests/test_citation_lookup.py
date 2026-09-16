@@ -97,31 +97,6 @@ def test_resolve_corpus_text_refuses_unknown_reference(lookup: CitationLookup) -
         lookup.resolve_corpus_text("corpus/normatives/html/does-not-exist.html#a1")
 
 
-def test_component_reader_loads_only_the_requested_legal_evidence(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    reference = authority_operation.legal_reference("ley-58-2003:art-27.2")
-    anchored_text = authority_operation.legal_evidence("ley-58-2003:art-27.2").anchored_text
-    evidence = PublishedLegalEvidence(
-        legal_reference_id=str(reference.id),
-        anchored_text=anchored_text,
-        text_sha256=sha256_hex(anchored_text.encode("utf-8")),
-    )
-    query = EvidenceComponentQuery(
-        reference_id=str(reference.id),
-        kind=AuthorityComponentKind.LEGAL_EVIDENCE,
-    )
-    reader = FakeAuthorityComponentReader({query: evidence})
-    lookup = CitationLookup.from_component_reader(
-        {str(reference.id): reference},
-        reader=reader,
-        pin=reader.pin(),
-    )
-
-    assert lookup.resolve(str(reference.id)).verbatim_text == anchored_text
-    assert reader.loads == [query]
-
-
 def test_operation_loads_selected_reference_then_its_evidence_pointwise(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:

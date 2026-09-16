@@ -10,7 +10,6 @@ from ...application.modelo.action_errors import (
     WorkUnitNotFoundError,
 )
 from ...application.modelo.profile_readiness_gate import (
-    ModeloWorkProfile,
     load_modelo_work_profile,
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
@@ -36,6 +35,7 @@ from ...application.modelo.work_lifecycle import (
     list_work_units,
     rename_work_unit,
 )
+from ...application.modelo.work_profile import ModeloWorkProfile
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.i18n.render import tr

@@ -252,32 +252,6 @@ class RegistryQueryService:
             support=self._authority.catalogues.supported_filing_years,
         )
 
-    def revision_for_period(
-        self,
-        modelo: str,
-        *,
-        period: str | None = None,
-        as_of: date | None = None,
-    ) -> ModeloRevision:
-        """Return the revision selected by an unscoped inspection query."""
-        return self._resolve_revision(modelo, period=period, as_of=as_of).revision
-
-    def revision_for_year(
-        self,
-        modelo: str,
-        *,
-        filing_year: int,
-        as_of: date | None = None,
-    ) -> ModeloRevision:
-        """Return the canonical year-scoped revision for metadata consumers."""
-        definition = self._authority.validate_modelo(modelo.strip())
-        return select_revision_for_year(
-            definition,
-            filing_year=filing_year,
-            on=as_of,
-            support=self._authority.catalogues.supported_filing_years,
-        )
-
     def revision_by_id(self, modelo: str, revision_id: str) -> ModeloRevision:
         """Return one exact revision component by canonical identity."""
         normalized = Modelo(modelo).value
@@ -307,7 +281,7 @@ class RegistryQueryService:
         Bulk walks are intentionally named and deterministic.  They are for
         source inventories and other diagnostics that genuinely need every
         revision; ordinary runtime consumers should use
-        :meth:`revision_for_scope` or :meth:`revision_for_period`.
+        :meth:`revision_for_scope`.
         """
         selected = self._authority.modelos
         if modelo_codes is not None:

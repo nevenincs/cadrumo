@@ -8,9 +8,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.errors import InvoiceLinkError
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -25,7 +27,7 @@ def test_link_invoice_transaction_catalogues_roundtrips_bidirectional_link() -> 
     transaction = _transaction()
 
     result = link_invoice_transaction_catalogues(
-        InvoiceCatalogue.from_invoices([invoice]),
+        build_invoice_catalogue([invoice]),
         TransactionCatalogue.from_transactions([transaction]),
         invoice_id=invoice.invoice_id,
         transaction_id=transaction.transaction_id.upper(),
@@ -46,7 +48,7 @@ def test_link_invoice_transaction_catalogues_reports_missing_transaction_context
 
     with pytest.raises(InvoiceLinkError) as exc_info:
         link_invoice_transaction_catalogues(
-            InvoiceCatalogue.from_invoices([invoice]),
+            build_invoice_catalogue([invoice]),
             TransactionCatalogue(),
             invoice_id=invoice.invoice_id,
             transaction_id="missing-transaction",

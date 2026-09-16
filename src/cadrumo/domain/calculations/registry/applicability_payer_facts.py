@@ -7,13 +7,15 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ...deadlines.models import TaxpayerProfile
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "payer applicability fact"
 
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
@@ -87,13 +89,6 @@ _PAYER_FACT_PROFILE_KEYS: Mapping[PayerFact, tuple[str, ...]] = MappingProxyType
 )
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"payer applicability fact is missing {key!r}")
-    return value.strip()
-
-
 def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     entries: dict[str, str] = {}
     for entry in resolved.payload.entries:
@@ -136,14 +131,22 @@ def _selected_mapping_entries(
 
 
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"payer applicability fact {key!r} must contain unique tokens")
     return values
 
 
 def _pipe(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split("|") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split("|")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"payer applicability fact {key!r} must contain unique references")
     return values
@@ -153,14 +156,14 @@ def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
     definitions: list[PayerFactProjection] = []
     for raw_token in _csv(entries, _ORDER_KEY):
         prefix = f"{_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"payer applicability fact {raw_token!r} declares a mismatched value")
         legal_refs = _pipe(entries, f"{prefix}legal_refs")
         definitions.append(
             PayerFactProjection(
                 token=raw_token,
-                profile_key=_required(entries, f"{prefix}profile_key"),
-                label=_required(entries, f"{prefix}label"),
+                profile_key=required_mapping_entry(entries, f"{prefix}profile_key", subject=_ENTRY_SUBJECT),
+                label=required_mapping_entry(entries, f"{prefix}label", subject=_ENTRY_SUBJECT),
                 legal_refs=legal_refs,
             ),
         )

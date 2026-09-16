@@ -2,9 +2,7 @@
 
 Covers:
 - DescendantInfo.custodia_compartida field: default False, accepted True
-- RentaFamilyProfile.custodia_compartida_count derived property
 - RentaFamilyProfile.minimo_prorrata_factor per-descendant factor
-- RentaFamilyProfile.custodia_compartida_advisory (tr-based string or None)
 - DescendantInfo roundtrip via facts with custodia_compartida=True
 - parse_descendiente_flag CUSTODIA= key acceptance
 - Two-progenitor scenario: each gets 50 % of the mínimo
@@ -94,17 +92,6 @@ def test_custodia_compartida_field_cases() -> None:
 
 
 # ---------------------------------------------------------------------------
-# RentaFamilyProfile.custodia_compartida_count
-# ---------------------------------------------------------------------------
-
-
-def test_custodia_compartida_count_cases() -> None:
-    for case_id, descendants, expected in _custodia_count_cases():
-        p = RentaFamilyProfile(descendientes=descendants)
-        assert p.custodia_compartida_count(FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT) == expected, case_id
-
-
-# ---------------------------------------------------------------------------
 # RentaFamilyProfile.minimo_prorrata_factor
 # ---------------------------------------------------------------------------
 
@@ -173,21 +160,6 @@ def test_antitautology_without_custodia_full_minimo() -> None:
 # ---------------------------------------------------------------------------
 # Advisory
 # ---------------------------------------------------------------------------
-
-
-def test_advisory_antitautology_custodia_vs_no_custodia() -> None:
-    """The advisory differs between a custodia and a non-custodia profile."""
-    with_custodia = RentaFamilyProfile(
-        descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),),
-    )
-    without_custodia = RentaFamilyProfile(
-        descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),),
-    )
-    advisory = with_custodia.custodia_compartida_advisory(FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT)
-    assert advisory is not None
-    assert isinstance(advisory, str)
-    assert len(advisory) > 0
-    assert without_custodia.custodia_compartida_advisory(FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT) is None
 
 
 # ---------------------------------------------------------------------------

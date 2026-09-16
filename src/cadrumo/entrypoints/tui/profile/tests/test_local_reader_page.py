@@ -30,6 +30,7 @@ from .....application.local_reader import (
     LocalReaderRoleStatus,
     LocalReaderStatus,
     RoleFitnessOutcome,
+    RoleFitnessState,
 )
 from .....application.local_reader_operation import (
     LocalReaderProvisionPublicResultV1,
@@ -57,6 +58,7 @@ from ..local_reader import (
     LocalReaderScreen,
     OperationLocalReaderDoor,
     local_reader_checklist,
+    local_reader_fitness_lines,
     local_reader_role_cells,
 )
 
@@ -160,7 +162,8 @@ def test_an_unmeasured_answer_never_reads_as_not_installed() -> None:
         cells = local_reader_role_cells(row)
     assert cells[2] == "not measured"
     assert cells[3] == "not measured"
-    assert cells[4] == "no"
+    assert cells[4] == "-"
+    assert cells[5] == "no"
 
 
 def test_checklist_keeps_unmeasured_steps_unmeasured() -> None:
@@ -427,3 +430,39 @@ def test_setup_through_the_real_door_reports_the_step_that_stopped_it(tmp_path: 
 
         asyncio.run(run())
         assert _Runtime.residents == set()
+
+
+def _probed_status(fitness: RoleFitnessState) -> LocalReaderStatus:
+    base = _status()
+    row = base.roles[0].model_copy(update={"fitness": fitness})
+    return base.model_copy(update={"roles": (row,)})
+
+
+@pytest.mark.parametrize(
+    ("fitness", "cell", "explained"),
+    [
+        (RoleFitnessState.FIT, "fit", None),
+        (RoleFitnessState.UNFIT, "unfit", "could not be used to read an invoice"),
+        (RoleFitnessState.TIMED_OUT, "timed out", "did not finish its test answer"),
+        (RoleFitnessState.NOT_VERIFIED, "not verified", "This does not mean the model is unfit"),
+    ],
+)
+def test_each_fitness_state_reads_as_itself(fitness: RoleFitnessState, cell: str, explained: str | None) -> None:
+    status = _probed_status(fitness)
+    with override_settings(cadrumo_output_language="en"):
+        cells = local_reader_role_cells(status.roles[0])
+        lines = local_reader_fitness_lines(status)
+
+    assert cells[4] == cell
+    if explained is None:
+        assert lines == ()
+    else:
+        (line,) = lines
+        assert line.startswith("Documents with text: ")
+        assert explained in line
+        assert _TEXT in line
+
+
+def test_the_verified_checklist_row_follows_extraction_readiness_not_a_fit_verdict() -> None:
+    status = _probed_status(RoleFitnessState.FIT)
+    assert dict(local_reader_checklist(status))[LocalReaderChecklistItem.VERIFIED] is None, "runtime unmeasured"

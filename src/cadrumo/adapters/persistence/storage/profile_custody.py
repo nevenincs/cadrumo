@@ -62,8 +62,6 @@ from ....domain.user_profile.errors import (
     UserProfileValidationError,
 )
 from ....domain.user_profile.values import UserProfileSnapshot
-from ..profile.buckets import BucketEventHistoryRepository
-from ..profile.snapshots import SecureSnapshotRepository
 from ._kdf_salt import KDF_SALT_BYTES
 from .bucket.directory_layout import bucket_paths
 from .bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
@@ -161,15 +159,11 @@ from .master_key.kdf_params import (
 )
 from .master_key.master_key_derivation import derive_kek_with_params
 from .recovery_key import canonical_recovery_code, generate_recovery_key
-from .runtime_repository import (
-    secure_object_repository_for_bucket,
-    secure_object_repository_for_staged_bucket,
-)
 from .secure_object_namespaces import USER_PROFILE_SNAPSHOT_NAMESPACE, USER_PROFILE_VALUE_NAMESPACE
-from .sql.secure_objects import SecureObjectRepository
 
 if TYPE_CHECKING:
     from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
+    from .sql.secure_objects import SecureObjectRepository
 
 
 def _capsule_relative(category: StorageCategory) -> Path:
@@ -266,6 +260,10 @@ class _PersistenceProfileSnapshotStore:
         objects: SecureObjectRepository | None,
         profile_decode_context: ProfileDecodeContext,
     ) -> None:
+        # The SQL-backed persistence stack loads only when a profile is read,
+        # never for a run that only lists or names profiles.
+        from ..profile.snapshots import SecureSnapshotRepository
+
         def not_found(snapshot_id: str) -> Exception:
             return ProfileSnapshotNotFoundError(context={"snapshot_id": snapshot_id})
 
@@ -787,6 +785,8 @@ class _PersistenceProfileCustody:
         objects: ProfileCustodySecureObjectRepositoryPort | None = None,
         profile_decode_context: ProfileDecodeContext,
     ) -> ProfileSnapshotPersistencePort:
+        from .sql.secure_objects import SecureObjectRepository
+
         resolved = (
             None if objects is None else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
         )
@@ -993,6 +993,8 @@ class _PersistenceProfileCustody:
         root: Path,
         database_file: Path | None = None,
     ) -> Generator[ProfileCustodySecureObjectRepositoryPort]:
+        from .runtime_repository import secure_object_repository_for_bucket, secure_object_repository_for_staged_bucket
+
         active = current_active_bucket_session()
         if database_file is None and session_serves_bucket(active, str(profile_id)):
             settings = Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(profile_id))
@@ -1030,6 +1032,9 @@ class _PersistenceProfileCustody:
         *,
         objects: ProfileCustodySecureObjectRepositoryPort | None = None,
     ) -> ProfileCustodyBucketEventHistoryPort:
+        from ..profile.buckets import BucketEventHistoryRepository
+        from .sql.secure_objects import SecureObjectRepository
+
         resolved = (
             None if objects is None else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
         )

@@ -1,8 +1,4 @@
 profile:
-  descendiente:
-    custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for
-      shared custody in %{count} dependent(s). Each parent declares half the applicable
-      mínimo (casillas 0513/0514 and, where applicable, 0515/0516).
   errors:
     foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
       under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does

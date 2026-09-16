@@ -335,7 +335,8 @@ def test_runtime_materializes_factory_defaults_for_arguments_and_options() -> No
     ).default
 
     for parameter in (argument, option):
-        assert parameter.default is None
+        # Typer refuses any literal other than its Ellipsis marker beside a factory.
+        assert parameter.default is ...
         assert parameter.default_factory is not None
         assert parameter.default_factory() == public_default_factory()
 

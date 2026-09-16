@@ -180,24 +180,6 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
         )
 
 
-def test_invoice_counterparty_eu_member_state_accessor() -> None:
-    """Counterparty country is normalized and exposed as a typed EU member when applicable."""
-    cases = (
-        ("DE", "DE123456789", "DE", EUMemberState.from_registry("de"), True),
-        ("US", "US123456789", "US", None, False),
-        ("fr", "FR12345678901", "FR", EUMemberState.from_registry("fr"), True),
-    )
-    for raw_country, tax_id, stored_country, expected_state, expected_is_member in cases:
-        invoice = _valid_invoice(
-            counterparty_country=raw_country,
-            counterparty_tax_id=tax_id,
-        )
-
-        assert invoice.counterparty_country == stored_country
-        assert invoice.counterparty_eu_member_state == expected_state
-        assert invoice.counterparty_is_eu_member is expected_is_member
-
-
 def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
     """Invoice.iva_category is now strongly-typed IvaCategory | None
     instead of free-form str | None. Pydantic coerces string inputs

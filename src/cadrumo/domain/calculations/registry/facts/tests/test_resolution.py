@@ -10,7 +10,13 @@ from pydantic import TypeAdapter, ValidationError
 
 from ...errors import RegistryValidationError
 from ...schema_base import DateAxis, SourceCitation
-from ..resolution import GovernedFactQuery, ResolvedGovernedFact, ScalarFactQuery, resolve_governed_fact
+from ..resolution import (
+    GovernedFactQuery,
+    ResolvedGovernedFact,
+    ScalarFactQuery,
+    required_mapping_entry,
+    resolve_governed_fact,
+)
 from ..schema import (
     FactOwnership,
     FactSelector,
@@ -433,3 +439,15 @@ def test_omitted_fact_bounds_materialize_to_the_support_floor_and_ceiling() -> N
 
     assert window.valid_from == date(2020, 1, 1)
     assert window.valid_to == date(2026, 12, 31)
+
+
+def test_a_required_mapping_entry_is_returned_stripped() -> None:
+    assert required_mapping_entry({"order": "  a,b  "}, "order", subject="demo catalogue") == "a,b"
+
+
+@pytest.mark.parametrize("entries", [{}, {"order": ""}, {"order": "   "}])
+def test_an_absent_or_blank_mapping_entry_is_refused_in_the_subjects_words(entries: dict[str, str]) -> None:
+    with pytest.raises(RegistryValidationError) as raised:
+        required_mapping_entry(entries, "order", subject="demo catalogue")
+
+    assert str(raised.value) == "demo catalogue is missing 'order'"

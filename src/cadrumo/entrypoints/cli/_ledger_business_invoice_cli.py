@@ -275,6 +275,7 @@ def invoice_add(
     ``modelo aggregate --received-invoice-retencion`` routes to Modelo 111 for
     a received invoice.
     """
+    authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
     catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
     # An explicitly stated treatment WINS over the one derived from the M349
@@ -561,6 +562,9 @@ def invoice_import(
     with its row number and the failing field; the remaining valid rows still
     import.
     """
+    # Every row is validated against dated registry rates, so the whole import
+    # runs under the invocation's lease.
+    authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
     catalogue_ports = catalogue_creation_ports_factory(ctx)(bucket_id=bucket_id)
     source, result, mapping_reasons = _run_invoice_import(
@@ -654,6 +658,7 @@ def invoice_list(
     """List the rich reconciliation catalogue invoices for the active bucket."""
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
+    authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
     catalogue = InvoiceCatalogueRepository(bucket_id=bucket_id).load()
     wanted = None if kind is None else kind
@@ -690,6 +695,7 @@ def invoice_view(
     linking or removing it. A not-found id, or a prefix matching more than one
     invoice, is a typed refusal naming the candidates — never a silent miss.
     """
+    authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
     lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
     invoice = resolve_catalogue_invoice_from_repository(invoice_id=invoice_id, ports=lifecycle_ports.read_ports)
@@ -717,6 +723,7 @@ def invoice_remove(
         raise bad(
             tr("cli.app.ledger.invoice.yes_required"),
         )
+    authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
     lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
     result = remove_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id, ports=lifecycle_ports)
@@ -752,6 +759,7 @@ def invoice_update(
     correction is a remove followed by a create, which the remove verb guards
     by refusing to delete a linked record.
     """
+    authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
     patch = CatalogueInvoicePatch(
         counterparty_name=counterparty_name,

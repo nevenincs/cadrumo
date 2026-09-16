@@ -94,6 +94,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -295,7 +297,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
             "linked_transaction_ids": (tx_id,),
         },
     )
-    invoices = InvoiceCatalogue.from_invoices((invoice,))
+    invoices = build_invoice_catalogue((invoice,))
     tx = Transaction.model_validate(
         {**tx_provisional.model_dump(mode="python"), "purchase_invoice_evidence_id": invoice.invoice_id},
     )

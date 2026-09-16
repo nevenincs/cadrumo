@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeGuard
+from typing import TYPE_CHECKING, TypeGuard
 
 from pydantic import ValidationError
 
@@ -20,7 +20,6 @@ from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, Secure
 from ...core.time.clock import now as utc_now
 from ...domain.buckets.event import BucketEvent
 from ...domain.buckets.event_repository import append_bucket_event
-from .profile.buckets import BucketEventHistoryRepository
 from .storage.crypto.encrypted_columns import secure_object_key_digest
 from .storage.envelope.contract import Envelope
 from .storage.errors import (
@@ -30,13 +29,11 @@ from .storage.errors import (
     SecureObjectRevisionConflictError,
     StorageError,
 )
-from .storage.runtime_repository import (
-    secure_object_repository_for_active_bucket,
-    secure_object_repository_for_cold_bootstrap_state,
-)
 from .storage.schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
 from .storage.secure_object_namespaces import WORKFLOW_RUN_NAMESPACE, WORKFLOW_STATE_NAMESPACE
-from .storage.sql.secure_objects import SecureObjectRepository
+
+if TYPE_CHECKING:
+    from .storage.sql.secure_objects import SecureObjectRepository
 
 _logger = get_logger(__name__)
 
@@ -51,6 +48,8 @@ _RUN_SENSITIVITY = WORKFLOW_RUN_NAMESPACE.sensitivity
 
 def _secure_objects(store: WorkflowSecureObjectStorePort) -> SecureObjectRepository:
     """Narrow the structural application handle to this adapter's concrete store."""
+    from .storage.sql.secure_objects import SecureObjectRepository
+
     if not isinstance(store, SecureObjectRepository):
         raise TypeError("workflow secure-object store is not owned by the persistence adapter")
     return store
@@ -193,6 +192,8 @@ class _PersistenceWorkflow:
         store: WorkflowSecureObjectStorePort,
         events: tuple[BucketEvent, ...],
     ) -> SecureObjectWrite:
+        from .profile.buckets import BucketEventHistoryRepository
+
         repository = BucketEventHistoryRepository(objects=_secure_objects(store))
         catalogue, revision_id = repository.load_revisioned()
         for event in events:
@@ -256,11 +257,25 @@ class _PersistenceWorkflow:
         return tuple(runs)
 
 
+# The SQL store stack loads when a store is first opened, so composing this
+# adapter costs nothing for a run that never reaches profile persistence.
+def _active_bucket_store() -> WorkflowSecureObjectStorePort:
+    from .storage.runtime_repository import secure_object_repository_for_active_bucket
+
+    return secure_object_repository_for_active_bucket()
+
+
+def _cold_bootstrap_store() -> WorkflowSecureObjectStorePort:
+    from .storage.runtime_repository import secure_object_repository_for_cold_bootstrap_state
+
+    return secure_object_repository_for_cold_bootstrap_state()
+
+
 def build_workflow_persistence_port() -> WorkflowPersistencePort:
     """Build the stateless concrete workflow persistence adapter."""
     return _PersistenceWorkflow(
-        active_store_factory=secure_object_repository_for_active_bucket,
-        cold_bootstrap_store_factory=secure_object_repository_for_cold_bootstrap_state,
+        active_store_factory=_active_bucket_store,
+        cold_bootstrap_store_factory=_cold_bootstrap_store,
     )
 
 

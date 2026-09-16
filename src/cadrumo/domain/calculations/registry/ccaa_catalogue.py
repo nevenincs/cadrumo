@@ -6,13 +6,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.text_fold import fold_diacritics
 from ...contribuyente.ccaa import CCAA
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "CCAA catalogue"
 
 _FACT_ID = "renta-ccaa-tax-residence-catalogue"
 _CCAA_ORDER_KEY = "ccaa.order"
@@ -117,22 +120,19 @@ def _normalize_token(value: str) -> str:
     return fold_diacritics(value.strip().casefold().replace(" ", "_").replace("-", "_"))
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"CCAA catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"CCAA catalogue {key!r} must contain unique tokens")
     return values
 
 
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key)
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     if value not in {"true", "false"}:
         raise RegistryValidationError(f"CCAA catalogue {key!r} must be true or false")
     return value == "true"
@@ -174,9 +174,9 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
         if token != raw_token:
             raise RegistryValidationError(f"CCAA token {raw_token!r} is not canonical")
         prefix = f"{_CCAA_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"CCAA token {raw_token!r} declares a mismatched value")
-        member_name = _required(entries, f"{prefix}member_name").upper()
+        member_name = required_mapping_entry(entries, f"{prefix}member_name", subject=_ENTRY_SUBJECT).upper()
         definitions.append(
             CcaaDefinition(token=CCAA.from_registry(raw_token), member_name=member_name),
         )
@@ -194,10 +194,10 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
         if normalized_alias != alias:
             raise RegistryValidationError(f"CCAA ISO alias {alias!r} must be uppercase")
         prefix = f"{_ISO_PREFIX}{alias}."
-        target = CCAA.from_registry(_required(entries, f"{prefix}value"))
+        target = CCAA.from_registry(required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT))
         if target not in token_set:
             raise RegistryValidationError(f"CCAA ISO alias {alias!r} targets an undeclared token")
-        if target != CCAA.from_registry(_required(entries, f"{prefix}ccaa")):
+        if target != CCAA.from_registry(required_mapping_entry(entries, f"{prefix}ccaa", subject=_ENTRY_SUBJECT)):
             raise RegistryValidationError(f"CCAA ISO alias {alias!r} has inconsistent target metadata")
         if alias in iso_aliases:
             raise RegistryValidationError(f"duplicate CCAA ISO alias {alias!r}")
@@ -209,8 +209,8 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
         raise RegistryValidationError("foral aliases must remain outside the common-regime CCAA vocabulary")
     excluded_territories = frozenset(_normalize_token(value) for value in _csv(entries, _EXCLUDED_ORDER_KEY))
     for territory in excluded_territories:
-        _required(entries, f"{_EXCLUDED_PREFIX}{territory}.classification")
-        _required(entries, f"{_EXCLUDED_PREFIX}{territory}.iso_aliases")
+        required_mapping_entry(entries, f"{_EXCLUDED_PREFIX}{territory}.classification", subject=_ENTRY_SUBJECT)
+        required_mapping_entry(entries, f"{_EXCLUDED_PREFIX}{territory}.iso_aliases", subject=_ENTRY_SUBJECT)
     if not foral_aliases <= excluded_territories:
         raise RegistryValidationError("every foral alias must identify an excluded territory")
     foral_cli_aliases = tuple(
@@ -219,11 +219,13 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
         if _boolean(entries, f"{_FORAL_PREFIX}{alias}.operator_choice")
     )
     for alias in raw_foral_aliases:
-        target = _normalize_token(_required(entries, f"{_FORAL_PREFIX}{alias}.value"))
+        target = _normalize_token(
+            required_mapping_entry(entries, f"{_FORAL_PREFIX}{alias}.value", subject=_ENTRY_SUBJECT)
+        )
         if target not in excluded_territories:
             raise RegistryValidationError(f"foral alias {alias!r} targets an undeclared excluded territory")
-        _required(entries, f"{_FORAL_PREFIX}{alias}.classification")
-    default_token = CCAA.from_registry(_required(entries, _CCAA_DEFAULT_KEY))
+        required_mapping_entry(entries, f"{_FORAL_PREFIX}{alias}.classification", subject=_ENTRY_SUBJECT)
+    default_token = CCAA.from_registry(required_mapping_entry(entries, _CCAA_DEFAULT_KEY, subject=_ENTRY_SUBJECT))
     if default_token not in token_set:
         raise RegistryValidationError("CCAA catalogue default token is not in the common-regime order")
     return CcaaCatalogue(

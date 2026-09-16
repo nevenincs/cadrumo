@@ -10,8 +10,6 @@ adapters:
         already_active: Az AeatAuthenticator már rendelkezik aktív munkamenettel;
           hívja meg a close() vagy reauthenticate() metódust az újabb hitelesítés
           előtt.
-        already_active_before_resume: Az AeatAuthenticator már aktív munkamenettel
-          rendelkezik; folytatás előtt hívja meg a close() metódust.
         assertion_failed: Az AEAT hitelesítés nem hozott létre érvényes bejelentkezési
           állítást.
         capture_requires_active_session: A capture_storage_state() az aktuálisan aktív

@@ -10,8 +10,6 @@ adapters:
       errors:
         already_active: AeatAuthenticator ya tiene una sesión activa; llame a close()
           o reauthenticate() antes de autenticar de nuevo.
-        already_active_before_resume: AeatAuthenticator ya tiene una sesión activa;
-          llame a close() antes de reanudar.
         assertion_failed: La autenticación AEAT no produjo una aserción de inicio
           de sesión válida.
         capture_requires_active_session: capture_storage_state() requiere la sesión

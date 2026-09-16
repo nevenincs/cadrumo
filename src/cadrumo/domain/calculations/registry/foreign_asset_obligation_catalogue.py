@@ -6,14 +6,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ....core.aggregation import ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "foreign-asset obligation taxonomy"
 
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
@@ -75,7 +77,7 @@ class ForeignAssetObligationCatalogue:
         except ValueError as exc:
             raise RegistryValidationError(f"unknown foreign-asset class {asset_class!r}") from exc
         key = f"{_ASSET_CLASS_PREFIX}{asset_class_member.value}.group"
-        return self.require(_required(self.declarations, key))
+        return self.require(required_mapping_entry(self.declarations, key, subject=_ENTRY_SUBJECT))
 
     def groups_established_by_legal_refs(
         self,
@@ -86,15 +88,12 @@ class ForeignAssetObligationCatalogue:
         return frozenset(definition.token for definition in self.groups if definition.establishing_legal_ref in cited)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"foreign-asset obligation taxonomy is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"foreign-asset obligation taxonomy {key!r} must contain unique tokens")
     return values
@@ -148,13 +147,15 @@ def _catalogue(entries: Mapping[str, str]) -> ForeignAssetObligationCatalogue:
     for raw_token in _csv(entries, _GROUP_ORDER_KEY):
         token = ForeignAssetObligationGroup.from_registry(raw_token)
         prefix = f"{_GROUP_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"foreign-asset obligation group {raw_token!r} declares a mismatched value")
         definitions.append(
             ForeignAssetObligationDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
-                establishing_legal_ref=_required(entries, f"{prefix}establishing_legal_ref"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
+                establishing_legal_ref=required_mapping_entry(
+                    entries, f"{prefix}establishing_legal_ref", subject=_ENTRY_SUBJECT
+                ),
             ),
         )
     if len({item.token for item in definitions}) != len(definitions):

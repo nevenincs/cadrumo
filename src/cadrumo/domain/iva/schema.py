@@ -14,7 +14,7 @@ locale-resolved form.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -172,78 +172,34 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
         return str(value)
 
 
-class IvaExemptionArticle(str):
+class _OpaqueRegistryToken(str):
+    """Opaque registry-projected token exposed to Pydantic as non-empty text."""
+
+    __slots__ = ()
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the opaque token as a non-empty string to Pydantic."""
+        from pydantic_core import core_schema
+
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+
+    @property
+    def value(self) -> str:
+        """Return the opaque token for string-oriented serialization."""
+        return str(self)
+
+
+class IvaExemptionArticle(_OpaqueRegistryToken):
     """Opaque registry-projected IVA exemption-article token."""
 
     __slots__ = ()
 
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
-        """Expose the opaque token as a non-empty string to Pydantic."""
-        from pydantic_core import core_schema
 
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
-
-    @property
-    def value(self) -> str:
-        """Return the opaque token for string-oriented serialization."""
-        return str(self)
-
-    def registry_declarations(
-        self,
-        on_date: date | None = None,
-        *,
-        authority: GovernedFactSource | None = None,
-    ) -> Mapping[str, str]:
-        """Return this token's registry-owned description and legal references."""
-        from ..calculations.registry.iva_schema_vocabulary import resolve_iva_exemption_article_catalogue
-
-        definition = resolve_iva_exemption_article_catalogue(
-            effective_date=on_date,
-            authority=authority,
-        ).definition(self)
-        return {
-            "value": definition.token.value,
-            "description": definition.description,
-            "legal_refs": ",".join(definition.legal_refs),
-        }
-
-
-class IvaArt69DosService(str):
+class IvaArt69DosService(_OpaqueRegistryToken):
     """Opaque registry-projected Art. 69.Dos service token."""
 
     __slots__ = ()
-
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
-        """Expose the opaque token as a non-empty string to Pydantic."""
-        from pydantic_core import core_schema
-
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
-
-    @property
-    def value(self) -> str:
-        """Return the opaque token for string-oriented serialization."""
-        return str(self)
-
-    def registry_declarations(
-        self,
-        on_date: date | None = None,
-        *,
-        authority: GovernedFactSource | None = None,
-    ) -> Mapping[str, str]:
-        """Return this token's registry-owned description and legal references."""
-        from ..calculations.registry.iva_schema_vocabulary import resolve_iva_art69_dos_service_catalogue
-
-        definition = resolve_iva_art69_dos_service_catalogue(
-            effective_date=on_date,
-            authority=authority,
-        ).definition(self)
-        return {
-            "value": definition.token.value,
-            "description": definition.description,
-            "legal_refs": ",".join(definition.legal_refs),
-        }
 
 
 class EUMemberState(str):

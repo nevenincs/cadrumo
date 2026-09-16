@@ -82,10 +82,13 @@ def _list_transactions() -> list[dict[str, Any]]:
 def _stored_transaction(transaction_id: str) -> Any:
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ....core.bucket_pointer import resolve_active_bucket_id
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
-    return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions[transaction_id]
+    # The test reads the store itself, outside any command, so it takes the lease a command would.
+    with bundled_indexed_authority().operation():
+        return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions[transaction_id]
 
 
 def _classify_with_tax_facts(transaction_id: str) -> None:

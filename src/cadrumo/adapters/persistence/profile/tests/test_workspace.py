@@ -13,6 +13,7 @@ from dev.registry.tests.profile_schema_support import (
 )
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 if TYPE_CHECKING:
@@ -184,7 +185,7 @@ def _corrupt_stored_revision(
     generation-superseding write: by constructing the catalogue directly,
     never by asking Workspace to accept a hand-picked mismatch.
     """
-    from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue, derive_work_unit_id
+    from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
     payload = work_unit.model_dump()
     payload.update(
@@ -197,7 +198,7 @@ def _corrupt_stored_revision(
         ),
         revision_id=corrupted_revision_id,
     )
-    repository.save(WorkUnitCatalogue.from_work_units((WorkUnit(**payload),)))
+    repository.save(build_work_unit_catalogue((WorkUnit(**payload),)))
 
 
 def _exact_target(work_unit: WorkUnit):

@@ -6,13 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ...bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "LIVA capital-goods vocabulary"
 
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
@@ -113,24 +115,13 @@ class BienInversionCatalogue:
             )
         return token
 
-    def is_real_estate_kind(self, value: object) -> bool:
-        """Return whether a value is the registry's real-estate kind."""
-        return self.require_kind(value) == self.real_estate_kind
-
-    def is_subject_not_exempt_regime(self, value: object) -> bool:
-        """Return whether a value is the taxable disposal regime."""
-        return self.require_disposal_regime(value) == self.subject_not_exempt_regime
-
-
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"LIVA capital-goods vocabulary is missing {key!r}")
-    return value.strip()
-
 
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"LIVA capital-goods vocabulary {key!r} must contain unique tokens")
     return values
@@ -187,7 +178,7 @@ def _selected_mapping_entries(
 
 def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
     try:
-        minimum_year = int(_required(entries, _MINIMUM_ACQUISITION_YEAR_KEY))
+        minimum_year = int(required_mapping_entry(entries, _MINIMUM_ACQUISITION_YEAR_KEY, subject=_ENTRY_SUBJECT))
     except ValueError as exc:
         raise RegistryValidationError("LIVA capital-goods minimum acquisition year must be an integer") from exc
     if minimum_year < 1:
@@ -197,12 +188,12 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
     for raw_token in _csv(entries, _KIND_ORDER_KEY):
         token = BienInversionKind.from_registry(raw_token)
         prefix = f"{_KIND_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"bien-inversion kind {raw_token!r} declares a mismatched value")
         kind_definitions.append(
             BienInversionKindDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
         )
@@ -213,12 +204,12 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
     for raw_token in _csv(entries, _DISPOSAL_REGIME_ORDER_KEY):
         token = BienInversionDisposalRegime.from_registry(raw_token)
         prefix = f"{_DISPOSAL_REGIME_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"bien-inversion disposal regime {raw_token!r} declares a mismatched value")
         disposal_definitions.append(
             BienInversionDisposalRegimeDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
         )
@@ -230,13 +221,17 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
         minimum_acquisition_year=minimum_year,
         kinds=tuple(kind_definitions),
         disposal_regimes=tuple(disposal_definitions),
-        real_estate_kind=BienInversionKind.from_registry(_required(entries, _KIND_REAL_ESTATE_KEY)),
-        non_real_estate_kind=BienInversionKind.from_registry(_required(entries, _KIND_NON_REAL_ESTATE_KEY)),
+        real_estate_kind=BienInversionKind.from_registry(
+            required_mapping_entry(entries, _KIND_REAL_ESTATE_KEY, subject=_ENTRY_SUBJECT)
+        ),
+        non_real_estate_kind=BienInversionKind.from_registry(
+            required_mapping_entry(entries, _KIND_NON_REAL_ESTATE_KEY, subject=_ENTRY_SUBJECT)
+        ),
         subject_not_exempt_regime=BienInversionDisposalRegime.from_registry(
-            _required(entries, _DISPOSAL_REGIME_SUBJECT_NOT_EXEMPT_KEY),
+            required_mapping_entry(entries, _DISPOSAL_REGIME_SUBJECT_NOT_EXEMPT_KEY, subject=_ENTRY_SUBJECT),
         ),
         exempt_or_outside_scope_regime=BienInversionDisposalRegime.from_registry(
-            _required(entries, _DISPOSAL_REGIME_EXEMPT_OR_OUTSIDE_SCOPE_KEY),
+            required_mapping_entry(entries, _DISPOSAL_REGIME_EXEMPT_OR_OUTSIDE_SCOPE_KEY, subject=_ENTRY_SUBJECT),
         ),
     )
     if set(catalogue.kind_choices) != {item.token for item in kind_definitions}:

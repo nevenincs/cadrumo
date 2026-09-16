@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.descendant_relacion import DescendantRelacion
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "descendant relationship catalogue"
 
 _FACT_ID = "lirpf-art-81-maternity-descendant-relations"
 _ORDER_KEY = "catalogue.ids"
@@ -65,15 +68,12 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"descendant relationship catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"descendant relationship catalogue {key!r} must contain unique tokens")
     return values
@@ -107,8 +107,12 @@ def resolve_descendant_relacion_catalogue(
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
     try:
         relations = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _ORDER_KEY))
-        default_token = DescendantRelacion.from_registry(_required(entries, _DEFAULT_KEY))
-        adoption_token = DescendantRelacion.from_registry(_required(entries, _ADOPTION_KEY))
+        default_token = DescendantRelacion.from_registry(
+            required_mapping_entry(entries, _DEFAULT_KEY, subject=_ENTRY_SUBJECT)
+        )
+        adoption_token = DescendantRelacion.from_registry(
+            required_mapping_entry(entries, _ADOPTION_KEY, subject=_ENTRY_SUBJECT)
+        )
         maternity_tokens = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _MATERNITY_KEY))
         entitling_tokens = tuple(DescendantRelacion.from_registry(raw) for raw in _csv(entries, _ENTITLING_KEY))
     except (TypeError, ValueError) as exc:

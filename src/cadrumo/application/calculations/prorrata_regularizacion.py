@@ -229,15 +229,6 @@ class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
     #: proposal is never a silent substitution of the declared volumes.
     art_104_tres_excluded_ledger_ids: tuple[str, ...] = ()
 
-    @property
-    def diverges(self) -> bool:
-        """Report whether any declared annual volume disagrees with its ledger counterpart."""
-        return (
-            self.declared_volume_total != self.ledger_volume_total
-            or self.declared_volume_con_derecho != self.ledger_volume_con_derecho
-            or self.declared_volume_sin_derecho != self.ledger_volume_sin_derecho
-        )
-
 
 class ProrrataApplicabilityProjection(BaseModel):
     """Fail-closed-to-visible prorrata applicability evidence for one ejercicio.

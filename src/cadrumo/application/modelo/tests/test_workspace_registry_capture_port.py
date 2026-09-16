@@ -8,7 +8,7 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ..workspace_producers import ModeloWorkspaceRegistryPortV1, RegistryAuthorityCapturePort
+from ..workspace_producers import RegistryAuthorityCapturePort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,11 +48,3 @@ def test_captures_from_two_leases_of_one_generation_compare_current() -> None:
     assert capture.require_current(current) is capture
 
 
-def test_a_capture_stamps_a_workspace_epoch_the_workspace_accepts() -> None:
-    with bundled_indexed_authority().operation() as operation:
-        port = ModeloWorkspaceRegistryPortV1(authority=operation, modelo_id="130", filing_year=2026, period="1T")
-        captured = port.capture_projection_with_epoch()
-        _stamp, current_epoch = port.read_current_stamp_and_epoch()
-
-    assert captured.epoch.generation >= 1
-    assert captured.epoch.require_current(current_epoch) is captured.epoch

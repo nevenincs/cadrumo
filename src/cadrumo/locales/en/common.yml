@@ -1686,6 +1686,7 @@ tui:
     choose_role: Choose a task in the table to download, load, check or remove its
       model.
     column:
+      fitness: Model check
       installed: Installed
       loaded: Loaded
       model: Model
@@ -1705,6 +1706,11 @@ tui:
       remove_title: Remove this model?
     extraction_not_ready: Invoice documents can't be read on this machine yet.
     extraction_ready: Invoice documents can be read on this machine.
+    fitness:
+      fit: fit
+      not_verified: not verified
+      timed_out: timed out
+      unfit: unfit
     host: 'Runtime at {endpoint} · installed: {installed} · answering: {reachable}
       · version {version}'
     install: Install runtime
@@ -1838,6 +1844,7 @@ tui:
       quit: Quit
       quit_help: Leave Cadrumo; the profile's session stays as it is
     title: Cadrumo terminal session
+    updating: Updating the workbench…
   search:
     action:
       classify_ledger: Classify ledger

@@ -53,7 +53,7 @@ from cadrumo.domain.calculations.registry.authority import (
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _bundled_indexed_authority,
 )
-from cadrumo.domain.invoices.models import InvoiceCatalogue as _InvoiceCatalogue
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol as _CalculationRevisionCatalogueRepositoryProtocol,
 )
@@ -182,7 +182,7 @@ def drive_create_manual_transaction(secure_objects: _SecureObjectRepository) -> 
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = _InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = purchase_invoice()
-    invoice_repository.save(_InvoiceCatalogue.from_invoices((purchase_evidence,)))
+    invoice_repository.save(build_invoice_catalogue((purchase_evidence,)))
     command = _ManualLedgerTransactionCommand(
         bucket_id=_BUCKET_ID,
         booked_date=date(2026, 5, 2),

@@ -20,6 +20,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....core.hashing import content_hash_hex
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
@@ -50,8 +52,8 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
 
 
 def test_invoice_catalogue_fingerprint_changes_when_an_invoice_changes() -> None:
-    before = InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"))])
-    after = InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("250.00"))])
+    before = build_invoice_catalogue([_invoice("2026-0001", taxable_base=Decimal("100.00"))])
+    after = build_invoice_catalogue([_invoice("2026-0001", taxable_base=Decimal("250.00"))])
 
     assert _invoice_catalogue_fingerprint(before) != _invoice_catalogue_fingerprint(after)
 
@@ -59,18 +61,18 @@ def test_invoice_catalogue_fingerprint_changes_when_an_invoice_changes() -> None
 def test_invoice_catalogue_fingerprint_is_deterministic_and_order_independent() -> None:
     invoice_a = _invoice("2026-0001", taxable_base=Decimal("100.00"))
     invoice_b = _invoice("2026-0002", taxable_base=Decimal("200.00"))
-    one_order = InvoiceCatalogue.from_invoices([invoice_a, invoice_b])
-    other_order = InvoiceCatalogue.from_invoices([invoice_b, invoice_a])
+    one_order = build_invoice_catalogue([invoice_a, invoice_b])
+    other_order = build_invoice_catalogue([invoice_b, invoice_a])
 
     assert _invoice_catalogue_fingerprint(one_order) == _invoice_catalogue_fingerprint(other_order)
-    rebuilt = InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00")), invoice_b])
+    rebuilt = build_invoice_catalogue([_invoice("2026-0001", taxable_base=Decimal("100.00")), invoice_b])
     assert _invoice_catalogue_fingerprint(rebuilt) == _invoice_catalogue_fingerprint(one_order)
 
 
 def test_invoice_catalogue_fingerprint_distinguishes_empty_from_populated() -> None:
     empty = _invoice_catalogue_fingerprint(InvoiceCatalogue())
     populated = _invoice_catalogue_fingerprint(
-        InvoiceCatalogue.from_invoices([_invoice("2026-0001", taxable_base=Decimal("100.00"))]),
+        build_invoice_catalogue([_invoice("2026-0001", taxable_base=Decimal("100.00"))]),
     )
 
     assert empty != populated
@@ -80,7 +82,7 @@ def test_invoice_catalogue_fingerprint_distinguishes_empty_from_populated() -> N
 def test_invoice_catalogue_fingerprint_has_core_canonical_digest_parity() -> None:
     invoice_a = _invoice("2026-0001", taxable_base=Decimal("100.00"))
     invoice_b = _invoice("2026-0002", taxable_base=Decimal("200.00"))
-    catalogue = InvoiceCatalogue.from_invoices([invoice_b, invoice_a])
+    catalogue = build_invoice_catalogue([invoice_b, invoice_a])
     payload = [
         invoice.model_dump(mode="json") for invoice in sorted(catalogue.values(), key=lambda item: item.invoice_id)
     ]

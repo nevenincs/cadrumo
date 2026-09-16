@@ -4,7 +4,8 @@ Collects the protocol-neutral inventory rows the application-owned
 reconciliation consumes -- live leaves, result schemas, input schemas, mounted
 families, profile policies, surface exposures and declared exclusions -- and
 caches one frozen :class:`OperatorSurfaceReconciliation` per CLI invocation on
-the Click context ``meta`` mapping.
+the Click context ``meta`` mapping. A single action target is reconciled from
+the same row projections without loading the command families it cannot reach.
 
 See Also:
     :class:`~cadrumo.application.operator_surface.OperatorSurfaceReconciliation`
@@ -34,8 +35,9 @@ if TYPE_CHECKING:
         ResultSchemaInventoryRow,
         SurfaceExposureInventoryRow,
     )
+    from .command_spec import CommandSpec, CommandSpecNode
 
-__all__ = ["current_operator_surface_reconciliation"]
+__all__ = ["current_operator_surface_reconciliation", "operator_surface_target_reconciliation"]
 
 _OPERATOR_SURFACE_RECONCILIATION_META_KEY = "cadrumo.operator_surface_reconciliation"
 
@@ -105,10 +107,13 @@ def _current_operator_surface_root_landing_schema_keys() -> frozenset[str]:
     from .command_specs import COMMAND_GRAPH
 
     return frozenset(
-        identity
-        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
-        if spec.kind in NON_LEAF_COMMAND_KINDS and identity.startswith("root.")
+        identity for identity, spec in COMMAND_GRAPH.by_schema_identity().items() if _is_root_landing(identity, spec)
     )
+
+
+def _is_root_landing(command_key: str, spec: CommandSpec) -> bool:
+    """Return whether a result identity names a root/group landing callback."""
+    return spec.kind in NON_LEAF_COMMAND_KINDS and command_key.startswith("root.")
 
 
 def _current_operator_surface_live_leaf_rows(
@@ -117,16 +122,30 @@ def _current_operator_surface_live_leaf_rows(
     primary_paths: Mapping[str, tuple[str, ...]],
 ) -> tuple[LiveLeafInventoryRow, ...]:
     """Project live command identities and their canonical callback paths."""
-    from ...application.operator_surface.manifest import LiveLeafInventoryRow
-
     return tuple(
-        LiveLeafInventoryRow(
-            subject_leaf_key=command_key,
+        _live_leaf_row(
+            command_key,
             canonical_cli_path=primary_paths[command_key],
-            alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
-            provenance="CommandSpecGraph input-schema resolution",
+            alias_cli_paths=callback_aliases_by_key.get(command_key, set()),
         )
         for command_key in sorted(command_keys)
+    )
+
+
+def _live_leaf_row(
+    command_key: str,
+    *,
+    canonical_cli_path: tuple[str, ...],
+    alias_cli_paths: set[tuple[str, ...]],
+) -> LiveLeafInventoryRow:
+    """Project one live command identity and its canonical callback path."""
+    from ...application.operator_surface.manifest import LiveLeafInventoryRow
+
+    return LiveLeafInventoryRow(
+        subject_leaf_key=command_key,
+        canonical_cli_path=canonical_cli_path,
+        alias_cli_paths=tuple(sorted(alias_cli_paths)),
+        provenance="CommandSpecGraph input-schema resolution",
     )
 
 
@@ -134,15 +153,17 @@ def _current_operator_surface_result_schema_rows(
     schema_references: tuple[CommandSchemaRef, ...],
 ) -> tuple[ResultSchemaInventoryRow, ...]:
     """Project each CommandSpec result-schema reference without inference."""
+    return tuple(_result_schema_row(reference.command, reference.schema_name) for reference in schema_references)
+
+
+def _result_schema_row(command_key: str, schema_name: str) -> ResultSchemaInventoryRow:
+    """Project one CommandSpec result-schema reference without inference."""
     from ...application.operator_surface.manifest import ResultSchemaInventoryRow
 
-    return tuple(
-        ResultSchemaInventoryRow(
-            subject_leaf_key=reference.command,
-            schema_name=reference.schema_name,
-            provenance="CommandSpecGraph through command_schema_refs",
-        )
-        for reference in schema_references
+    return ResultSchemaInventoryRow(
+        subject_leaf_key=command_key,
+        schema_name=schema_name,
+        provenance="CommandSpecGraph through command_schema_refs",
     )
 
 
@@ -150,15 +171,20 @@ def _current_operator_surface_input_schema_rows(
     input_schemas: Mapping[str, VerbInputSchema],
 ) -> tuple[InputSchemaInventoryRow, ...]:
     """Project required input names from each verified verb input schema."""
+    return tuple(
+        _input_schema_row(command_key, tuple(parameter.name for parameter in schema.required_inputs))
+        for command_key, schema in sorted(input_schemas.items())
+    )
+
+
+def _input_schema_row(command_key: str, required_input_names: tuple[str, ...]) -> InputSchemaInventoryRow:
+    """Project one command's required input names."""
     from ...application.operator_surface.manifest import InputSchemaInventoryRow
 
-    return tuple(
-        InputSchemaInventoryRow(
-            subject_leaf_key=command_key,
-            required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
-            provenance="VerbInputSchema.required_inputs",
-        )
-        for command_key, schema in sorted(input_schemas.items())
+    return InputSchemaInventoryRow(
+        subject_leaf_key=command_key,
+        required_input_names=required_input_names,
+        provenance="VerbInputSchema.required_inputs",
     )
 
 
@@ -177,40 +203,34 @@ def _current_operator_surface_mounted_family_rows() -> tuple[MountedFamilyInvent
     )
 
 
-def _current_operator_surface_profile_policy_classification(
-    command_key: str,
-    root_landing_schema_keys: frozenset[str],
-) -> str:
-    """Classify a command from the graph root landing and write-route policy."""
-    from .command_schema import command_registration_policy
-
-    if command_key in root_landing_schema_keys:
-        return "non_profile_bound"
-    return (
-        "profile_bound_write"
-        if command_registration_policy(command_key).write_route == "profile-bound"
-        else "non_profile_bound"
-    )
-
-
 def _current_operator_surface_profile_policy_rows(
     command_keys: tuple[str, ...],
     root_landing_schema_keys: frozenset[str],
 ) -> tuple[ProfilePolicyInventoryRow, ...]:
     """Project graph/policy profile classification and external exposure."""
-    from ...application.operator_surface.manifest import ProfilePolicyInventoryRow
+    from .command_schema import command_registration_policy
 
     return tuple(
-        ProfilePolicyInventoryRow(
-            subject_leaf_key=command_key,
-            classification=_current_operator_surface_profile_policy_classification(
-                command_key,
-                root_landing_schema_keys,
-            ),
-            should_expose_externally=command_key not in root_landing_schema_keys,
-            provenance="CommandSpec policy plus root landing graph classification",
+        _profile_policy_row(
+            command_key,
+            root_landing=command_key in root_landing_schema_keys,
+            write_route=command_registration_policy(command_key).write_route,
         )
         for command_key in sorted(command_keys)
+    )
+
+
+def _profile_policy_row(command_key: str, *, root_landing: bool, write_route: str) -> ProfilePolicyInventoryRow:
+    """Classify one command from the graph root landing and write-route policy."""
+    from ...application.operator_surface.manifest import ProfilePolicyInventoryRow
+
+    return ProfilePolicyInventoryRow(
+        subject_leaf_key=command_key,
+        classification=(
+            "profile_bound_write" if not root_landing and write_route == "profile-bound" else "non_profile_bound"
+        ),
+        should_expose_externally=not root_landing,
+        provenance="CommandSpec policy plus root landing graph classification",
     )
 
 
@@ -264,26 +284,37 @@ def _current_operator_surface_exposures(
     command_keys: tuple[str, ...],
 ) -> tuple[SurfaceExposureInventoryRow, ...]:
     """Project which registry command keys an operator surface may expose."""
-    from ...application.operator_surface.manifest import SurfaceExposureInventoryRow
     from .verb_input_schema import is_exposable_command
 
     return tuple(
-        SurfaceExposureInventoryRow(
-            subject_leaf_key=command_key,
-            exposed=is_exposable_command(command_key),
-            provenance="is_exposable_command",
-        )
+        _surface_exposure_row(command_key, exposed=is_exposable_command(command_key))
         for command_key in sorted(command_keys)
+    )
+
+
+def _surface_exposure_row(command_key: str, *, exposed: bool) -> SurfaceExposureInventoryRow:
+    """Project whether one command key may be exposed by an operator surface."""
+    from ...application.operator_surface.manifest import SurfaceExposureInventoryRow
+
+    return SurfaceExposureInventoryRow(
+        subject_leaf_key=command_key,
+        exposed=exposed,
+        provenance="is_exposable_command",
     )
 
 
 def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRow, ...]:
     """Project the declared root-landing omissions into reconciliation evidence."""
+    return _root_landing_exclusions(tuple(sorted(_current_operator_surface_root_landing_schema_keys())))
+
+
+def _root_landing_exclusions(command_keys: tuple[str, ...]) -> tuple[ExplicitExclusionInventoryRow, ...]:
+    """Project root-landing omissions for ``command_keys`` into reconciliation evidence."""
     from ...application.operator_surface.manifest import ExplicitExclusionInventoryRow, ReconciliationSurface
 
     return tuple(
         exclusion
-        for command_key in sorted(_current_operator_surface_root_landing_schema_keys())
+        for command_key in command_keys
         for exclusion in (
             ExplicitExclusionInventoryRow(
                 subject_leaf_key=command_key,
@@ -350,3 +381,50 @@ def current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
     if ctx is not None:
         ctx.meta[_OPERATOR_SURFACE_RECONCILIATION_META_KEY] = reconciliation
     return reconciliation
+
+
+def _operator_surface_target_node(command_key: str) -> CommandSpecNode:
+    """Find the graph node that owns ``command_key``, loading only the families searched."""
+    from .command_specs import COMMAND_GRAPH
+
+    node = COMMAND_GRAPH.find_schema_identity(command_key)
+    if node is None:
+        raise LookupError(f"unknown command schema identity: {command_key}")
+    return node
+
+
+def operator_surface_target_reconciliation(command_key: str) -> OperatorSurfaceReconciliation:
+    """Reconcile the one live leaf that owns ``command_key``.
+
+    The rows are the projections :func:`current_operator_surface_reconciliation`
+    joins for that leaf, validated by the same application reconciler, so an
+    action resolved here carries the identical target. Only the families on the
+    search path to the target are loaded; completeness of the whole surface
+    remains the concern of the full reconciliation.
+    """
+    from ...application.operator_surface.manifest import reconcile_operator_surface_inventory
+    from .command_schema import command_required_input_names
+    from .verb_input_schema import is_exposable_command_spec
+
+    node = _operator_surface_target_node(command_key)
+    spec = node.spec
+    target = spec.result_schema.target
+    if target is None:
+        raise LookupError(f"command schema identity has no result-schema target: {command_key}")
+    canonical_cli_path = node.path[1:]
+    root_landing = _is_root_landing(command_key, spec)
+    return reconcile_operator_surface_inventory(
+        live_leaves=(_live_leaf_row(command_key, canonical_cli_path=canonical_cli_path, alias_cli_paths=set()),),
+        result_schemas=(_result_schema_row(command_key, target.qualname),),
+        input_schemas=(_input_schema_row(command_key, command_required_input_names(spec)),),
+        mounted_families=tuple(
+            family
+            for family in _current_operator_surface_mounted_family_rows()
+            if family.identity == canonical_cli_path[:2]
+        ),
+        profile_policies=(
+            _profile_policy_row(command_key, root_landing=root_landing, write_route=spec.policy.write_route),
+        ),
+        surface_exposures=(_surface_exposure_row(command_key, exposed=is_exposable_command_spec(spec)),),
+        exclusions=_root_landing_exclusions((command_key,) if root_landing else ()),
+    )

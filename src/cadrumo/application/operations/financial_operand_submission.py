@@ -38,7 +38,6 @@ from .financial_operand import (
     OperationTransientFinancialOperandAccess,
     OperationTransientFinancialOperandAcknowledgement,
     OperationTransientFinancialOperandDeclaration,
-    OperationTransientFinancialOperandExpiry,
     OperationTransientFinancialOperandRefusal,
     OperationTransientFinancialOperandRelease,
     OperationTransientFinancialOperandRequirement,
@@ -48,7 +47,6 @@ from .financial_operand_custody import (
     OperationFinancialOperandCustodyState,
     advance_custody,
     open_custody,
-    reconcile_on_restart,
 )
 
 if TYPE_CHECKING:
@@ -342,20 +340,6 @@ class OperationTransientFinancialOperandBroker:
                 released_at=self._clock(),
             )
 
-    def expire_lapsed(
-        self,
-        *,
-        now: datetime,
-    ) -> tuple[OperationTransientFinancialOperandExpiry, ...]:
-        """Settle every wait whose declared lifetime has elapsed."""
-        with self._lock:
-            lapsed = [wait for wait in self._waits.values() if now >= wait.requirement.expires_at]
-            expiries: list[OperationTransientFinancialOperandExpiry] = []
-            for wait in lapsed:
-                self.release(wait.requirement)
-                expiries.append(OperationTransientFinancialOperandExpiry(requirement=wait.requirement, expired_at=now))
-            return tuple(expiries)
-
     async def settle(
         self,
         requirement: OperationTransientFinancialOperandRequirement,
@@ -383,21 +367,6 @@ class OperationTransientFinancialOperandBroker:
             ]
         for requirement in requirements:
             await self.settle(requirement, now=now)
-
-    async def reconcile_owner_restart(
-        self,
-        *,
-        now: datetime,
-    ) -> tuple[OperationFinancialOperandCustodyCheckpoint, ...]:
-        """Settle every durable wait an earlier process left unfinished."""
-        settled: list[OperationFinancialOperandCustodyCheckpoint] = []
-        for checkpoint in await self._custody.unsettled():
-            successor = reconcile_on_restart(checkpoint, now=now)
-            if successor is checkpoint:
-                continue
-            await self._custody.advance(checkpoint, successor)
-            settled.append(successor)
-        return tuple(settled)
 
     def close(self) -> None:
         """Drop every held amount and refuse further declarations."""

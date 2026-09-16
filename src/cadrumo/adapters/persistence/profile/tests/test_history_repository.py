@@ -122,11 +122,6 @@ class TestListIter:
         _save_two_histories(repo)
         assert repo.list_modelos() == ("130", "303")
 
-    def test_iter_histories_yields_tuples(self, repo: ModeloHistoryRepository) -> None:
-        h130, h303 = _save_two_histories(repo)
-        loaded = dict(repo.iter_histories())
-        assert loaded == {"130": h130, "303": h303}
-
 
 class TestDelete:
     def test_delete_removes(self, repo: ModeloHistoryRepository) -> None:
@@ -223,51 +218,6 @@ class TestRowIdentity:
 
         with pytest.raises(FilingHistoryPersistenceError):
             _new_repository(_active_bucket_runtime).load("303")
-
-    def test_iteration_refuses_a_history_filed_under_another_modelo_key(
-        self,
-        repo: ModeloHistoryRepository,
-        _active_bucket_runtime: TestRuntimeProfile,
-    ) -> None:
-        """Enumeration is bound by the same rule, so a substituted row cannot hide in a list."""
-        h130 = _make_history(modelo="130")
-        repo.save(h130)
-        repo.save(_make_history(modelo="303"))
-
-        envelope = Envelope[ModeloHistory](
-            schema_version=ModeloHistoryRepository.schema_version,
-            written_at=_FOREIGN_CLASS_WRITTEN_AT,
-            classification=ModeloHistoryRepository.sensitivity,
-            payload=h130,
-        )
-        _active_bucket_runtime.repository.save(
-            namespace=ModeloHistoryRepository.namespace,
-            object_key="303",
-            classification=ModeloHistoryRepository.sensitivity,
-            schema_version=ModeloHistoryRepository.schema_version,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
-
-        with pytest.raises(FilingHistoryPersistenceError):
-            tuple(_new_repository(_active_bucket_runtime).iter_histories())
-
-    def test_correctly_keyed_histories_still_load_and_enumerate(
-        self,
-        repo: ModeloHistoryRepository,
-        _active_bucket_runtime: TestRuntimeProfile,
-    ) -> None:
-        """Positive control: the refusal above is the substitution, not the fixture.
-
-        Without this the wrong-key tests would also pass if ``save`` were simply
-        broken and no readable row existed at all.
-        """
-        h130, h303 = _save_two_histories(repo)
-
-        fresh = _new_repository(_active_bucket_runtime)
-        assert fresh.load("130") == h130
-        assert fresh.load("303") == h303
-        assert dict(fresh.iter_histories()) == {"130": h130, "303": h303}
 
 
 class TestUnsafeModelo:

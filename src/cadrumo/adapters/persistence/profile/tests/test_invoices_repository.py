@@ -16,9 +16,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from .....domain.invoices.enums import IvaRate, PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
@@ -100,7 +102,7 @@ class TestInvoiceCatalogueRoundTrip:
     def test_invoice_round_trip_preserves_model_order_and_values(self) -> None:
         for invoice_numbers in (("INV-001",), ("INV-001", "INV-002", "INV-003")):
             invoices = [_invoice(invoice_number=invoice_number) for invoice_number in invoice_numbers]
-            original = InvoiceCatalogue.from_invoices(invoices)
+            original = build_invoice_catalogue(invoices)
             InvoiceCatalogueRepository().save(original)
 
             reloaded = InvoiceCatalogueRepository().load()
@@ -108,8 +110,8 @@ class TestInvoiceCatalogueRoundTrip:
             assert tuple(reloaded.values()) == tuple(original.values())
 
     def test_resave_overwrites_atomically(self) -> None:
-        first = InvoiceCatalogue.from_invoices([_invoice("INV-A")])
-        second = InvoiceCatalogue.from_invoices([_invoice("INV-B")])
+        first = build_invoice_catalogue([_invoice("INV-A")])
+        second = build_invoice_catalogue([_invoice("INV-B")])
         repo = InvoiceCatalogueRepository()
         repo.save(first)
         repo.save(second)

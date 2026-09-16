@@ -7,12 +7,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.identity.nif_iva import NifIvaFormatSpec, NifIvaPrefix
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "NIF-IVA catalogue"
 
 _FACT_ID = "nif-iva-country-format-catalogue"
 _ORDER_KEY = "nif_iva.order"
@@ -88,15 +91,12 @@ class NifIvaCatalogue:
         return self.definition(value).iso_country
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"NIF-IVA catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"NIF-IVA catalogue {key!r} must contain unique tokens")
     return values
@@ -132,21 +132,21 @@ def _resolve_entries(
 
 def _definition(entries: Mapping[str, str], raw_prefix: str) -> NifIvaDefinition:
     key = f"{_PREFIX}{raw_prefix}."
-    if _required(entries, f"{key}value") != raw_prefix:
+    if required_mapping_entry(entries, f"{key}value", subject=_ENTRY_SUBJECT) != raw_prefix:
         raise RegistryValidationError(f"NIF-IVA prefix {raw_prefix!r} declares a mismatched value")
     prefix = NifIvaPrefix.from_registry(raw_prefix)
-    iso_country = _required(entries, f"{key}iso_country").upper()
+    iso_country = required_mapping_entry(entries, f"{key}iso_country", subject=_ENTRY_SUBJECT).upper()
     iso_aliases = tuple(alias.upper() for alias in _csv(entries, f"{key}iso_aliases"))
     if iso_country not in iso_aliases:
         raise RegistryValidationError(f"NIF-IVA prefix {raw_prefix!r} omits its canonical ISO country")
-    pattern = _required(entries, f"{key}pattern")
+    pattern = required_mapping_entry(entries, f"{key}pattern", subject=_ENTRY_SUBJECT)
     if not pattern.startswith("^") or not pattern.endswith("$"):
         raise RegistryValidationError(f"NIF-IVA prefix {raw_prefix!r} pattern must be anchored")
     try:
         compiled = re.compile(pattern)
     except re.error as exc:
         raise RegistryValidationError(f"NIF-IVA prefix {raw_prefix!r} pattern is invalid") from exc
-    example = _required(entries, f"{key}example")
+    example = required_mapping_entry(entries, f"{key}example", subject=_ENTRY_SUBJECT)
     if compiled.fullmatch(example) is None:
         raise RegistryValidationError(f"NIF-IVA prefix {raw_prefix!r} example does not match its pattern")
     return NifIvaDefinition(
@@ -155,9 +155,9 @@ def _definition(entries: Mapping[str, str], raw_prefix: str) -> NifIvaDefinition
         iso_aliases=iso_aliases,
         spec=NifIvaFormatSpec(
             prefix=prefix,
-            country_name=_required(entries, f"{key}country_name"),
+            country_name=required_mapping_entry(entries, f"{key}country_name", subject=_ENTRY_SUBJECT),
             pattern=compiled,
-            description=_required(entries, f"{key}description"),
+            description=required_mapping_entry(entries, f"{key}description", subject=_ENTRY_SUBJECT),
             example=example,
         ),
     )
@@ -191,11 +191,6 @@ def resolve_nif_iva_catalogue(
     return _catalogue(_resolve_entries(effective_date=coordinate, authority=authority))
 
 
-def iso_country_for_nif_iva_prefix(prefix: NifIvaPrefix) -> str:
-    """Return the catalogue country for a projected IVA prefix."""
-    return resolve_nif_iva_catalogue().iso_country_for_prefix(prefix)
-
-
 def nif_iva_format_for_country(iso_country: str) -> NifIvaFormatSpec | None:
     """Return the published structural format for a country, when declared."""
     return resolve_nif_iva_catalogue().format_for_country(iso_country)
@@ -204,7 +199,6 @@ def nif_iva_format_for_country(iso_country: str) -> NifIvaFormatSpec | None:
 __all__ = [
     "NifIvaCatalogue",
     "NifIvaDefinition",
-    "iso_country_for_nif_iva_prefix",
     "nif_iva_format_for_country",
     "resolve_nif_iva_catalogue",
 ]

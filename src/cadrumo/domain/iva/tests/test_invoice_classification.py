@@ -74,41 +74,6 @@ def test_classify_invoice_rejects_not_subject_rate() -> None:
         classify_invoice_line_for_iva(iva_rate=IvaRate.from_registry("NOT_SUBJECT"), invoice_kind=InvoiceKind.ISSUED)
 
 
-def test_classification_record_contributes_to_devengada_for_repercutido() -> None:
-    classification = classify_invoice_line_for_iva(
-        iva_rate=IvaRate.from_registry("RATE_21"), invoice_kind=InvoiceKind.ISSUED
-    )
-    assert classification.contributes_to_devengada is True
-    assert classification.contributes_to_deducible is False
-    assert classification.is_reverse_charge is False
-
-
-def test_classification_record_contributes_to_deducible_for_soportado() -> None:
-    classification = classify_invoice_line_for_iva(
-        iva_rate=IvaRate.from_registry("RATE_21"), invoice_kind=InvoiceKind.RECEIVED
-    )
-    assert classification.contributes_to_devengada is False
-    assert classification.contributes_to_deducible is True
-    assert classification.is_reverse_charge is False
-
-
-def test_classification_record_contributes_to_both_sides_for_autorepercutido() -> None:
-    """Reverse-charge operations contribute to BOTH cornerstones on the
-    same operation (LIVA art 84.Uno.2). Callers construct the record
-    directly for these cases."""
-    classification = IvaInvoiceClassification(
-        category=IvaCategory("intra_community_acquisition_reverse_charge"),
-        rate_kind=IvaRateKind("general"),
-        flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
-        settlement_sides=frozenset(
-            {IvaSettlementSide.from_registry("devengada"), IvaSettlementSide.from_registry("deducible")}
-        ),
-    )
-    assert classification.contributes_to_devengada is True
-    assert classification.contributes_to_deducible is True
-    assert classification.is_reverse_charge is True
-
-
 def test_classification_record_validates_settlement_sides_against_flow() -> None:
     """Constructor must reject inconsistent (flow_direction,
     settlement_sides) pairs — guards against drift between the two

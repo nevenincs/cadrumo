@@ -187,7 +187,6 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
     MISSING_CATEGORY = "missing_category"
     UNKNOWN_CATEGORY = "unknown_category"
-    CATEGORY_OUTSIDE_FIRST_SLICE = "category_outside_first_slice"
     MISSING_CATEGORY_PROFILE = "missing_category_profile"
     OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
     MISSING_PURCHASE_INVOICE_EVIDENCE = "missing_purchase_invoice_evidence"

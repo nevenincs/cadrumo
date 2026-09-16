@@ -98,7 +98,7 @@ def test_a_correctly_keyed_record_round_trips(tmp_path: Path) -> None:
         repository.save(record)
 
         assert repository.load(_CSV_A) == record
-        assert repository.list_csvs() == (_CSV_A,)
+        assert tuple(sorted(repository.iter_ids())) == (_CSV_A,)
 
 
 def test_loading_a_mis_keyed_row_refuses_instead_of_returning_another_record(tmp_path: Path) -> None:

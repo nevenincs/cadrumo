@@ -33,7 +33,8 @@ from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CA
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....core.aggregation import IntracomOperationType
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
@@ -101,8 +102,7 @@ def test_catalogue_create_then_link_succeeds_bidirectionally() -> None:
 
     # The link is persisted and bidirectional: the rich invoice now cites the
     # transaction, and the transaction cites the invoice (no one-sided link).
-    catalogue = InvoiceCatalogueRepository().load()
-    stored = catalogue.get(invoice_id)
+    stored = _stored_invoice(invoice_id)
     assert stored is not None, "catalogue invoice missing after link"
     assert stored.linked_transaction_ids == (transaction_id,), stored.linked_transaction_ids
 
@@ -134,29 +134,37 @@ def test_link_refuses_cross_bucket_catalogue_invoice() -> None:
     """
     transaction_id = _add_outgoing_transaction()
 
-    foreign_invoice = build_catalogue_invoice(
-        bucket_id="some-other-bucket",
-        kind=InvoiceKind.RECEIVED,
-        counterparty_name="Foreign SL",
-        counterparty_tax_id=_RECEIVED_COUNTERPARTY_CIF,
-        counterparty_country="ES",
-        invoice_number="2026-9999",
-        issued_at=date(2026, 3, 10),
-        taxable_base=Decimal("100.00"),
-        iva_rate=Decimal("21"),
-        currency="EUR",
-        rate_provider=recorded_ecb_rate_provider(),
-    )
-    _write_raw_catalogue(InvoiceCatalogue.from_invoices([foreign_invoice]))
+    with bundled_indexed_authority().operation():
+        foreign_invoice = build_catalogue_invoice(
+            bucket_id="some-other-bucket",
+            kind=InvoiceKind.RECEIVED,
+            counterparty_name="Foreign SL",
+            counterparty_tax_id=_RECEIVED_COUNTERPARTY_CIF,
+            counterparty_country="ES",
+            invoice_number="2026-9999",
+            issued_at=date(2026, 3, 10),
+            taxable_base=Decimal("100.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+            rate_provider=recorded_ecb_rate_provider(),
+        )
+        _write_raw_catalogue(InvoiceCatalogue.from_invoices([foreign_invoice]))
 
     linked = invoke_cached_cli(
         ["app", "ledger", "link", transaction_id, "--invoice-id", foreign_invoice.invoice_id],
     )
     assert linked.exit_code != 0, linked.output
     # The guard refused before writing: the invoice must not cite the transaction.
-    reloaded = _load_raw_catalogue().get(foreign_invoice.invoice_id)
+    with bundled_indexed_authority().operation():
+        reloaded = _load_raw_catalogue().get(foreign_invoice.invoice_id)
     assert reloaded is not None
     assert reloaded.linked_transaction_ids == (), reloaded.linked_transaction_ids
+
+
+def _stored_invoice(invoice_id: str) -> Invoice | None:
+    # The test reads the store itself, outside any command, so it takes the lease a command would.
+    with bundled_indexed_authority().operation():
+        return InvoiceCatalogueRepository().load().get(invoice_id)
 
 
 def _write_raw_catalogue(catalogue: InvoiceCatalogue) -> None:
@@ -222,7 +230,7 @@ def test_catalogue_create_stamps_intra_community_category() -> None:
     assert result.exit_code == 0, result.output
     invoice_id = _line_value(result.output, "invoice_id")
 
-    stored = InvoiceCatalogueRepository().load().get(invoice_id)
+    stored = _stored_invoice(invoice_id)
     assert stored is not None, "catalogue invoice missing after create"
     assert stored.iva_category == IvaCategory("intra_community_supply")
     assert stored.operation_type is IntracomOperationType.E
@@ -256,7 +264,7 @@ def test_catalogue_create_stamps_service_operation_type() -> None:
     assert result.exit_code == 0, result.output
     invoice_id = _line_value(result.output, "invoice_id")
 
-    stored = InvoiceCatalogueRepository().load().get(invoice_id)
+    stored = _stored_invoice(invoice_id)
     assert stored is not None, "catalogue invoice missing after create"
     assert stored.operation_type is IntracomOperationType.S
     assert stored.iva_category == IvaCategory("intra_community_service_supply")

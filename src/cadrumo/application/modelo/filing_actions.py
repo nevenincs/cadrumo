@@ -80,7 +80,10 @@ from .filing_action_ports import FilingActionPorts
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
-from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
+from .m303_regimen_simplificado_scope import (
+    m303_regimen_simplificado_annual_summary_applies_to_profile,
+    taxpayer_profile_for_work,
+)
 from .preconditions import build_modelo_work_file_unverified_revision_failure
 from .prior_domiciliation import resolveprior_domiciliation_election
 from .result_disposition_resolution import resolve_modelo_result_disposition
@@ -93,6 +96,7 @@ from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
+    from .work_profile import ModeloWorkProfile
 
 
 class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
@@ -135,6 +139,7 @@ def file_modelo_revision(
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
     clock: datetime | None = None,
+    profile: ModeloWorkProfile | None = None,
 ) -> ModeloRecord:
     """Mark a verified-complete revision as the current internal filed answer.
 
@@ -203,6 +208,9 @@ def file_modelo_revision(
         workflow_runs_dir: Optional workflow runs directory override.
         settings: Optional settings override.
         clock: Optional UTC timestamp override.
+        profile: The work profile the calling command already loaded for the
+            revision's bucket. When omitted, this entry loads it once; every
+            profile read below uses that record.
 
     Returns:
         The newly created local :class:`ModeloRecord` in
@@ -268,13 +276,22 @@ def file_modelo_revision(
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.FILE,
     )
+    if profile is None:
+        from .profile_readiness_gate import load_modelo_work_profile
+
+        profile = load_modelo_work_profile(
+            bucket_id=work_unit.bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
     validate_m303_regimen_simplificado_annual_summary_target_revision(
         target_work_unit=work_unit,
         target_revision=target,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+            taxpayer_profile_for_work(profile),
+        ),
         operation=operation,
     )
     if target.state is CalculationRevisionState.PRESENTADO:
@@ -319,6 +336,7 @@ def file_modelo_revision(
         ports=ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
         operation=operation,
+        profile=profile,
     )
 
     now = clock or _utc_now()
@@ -409,6 +427,7 @@ def _require_filing_preconditions(
     ports: FilingActionPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
     operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
 ) -> None:
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
@@ -420,6 +439,7 @@ def _require_filing_preconditions(
         work_unit,
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
+        profile=profile,
     )
     _require_persisted_required_bindings_resolved(
         work_unit=work_unit, revision=target, action="file", operation=operation

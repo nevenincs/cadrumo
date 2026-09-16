@@ -384,23 +384,6 @@ class ValidatedRegistryAuthority:
         """Assert that this already-published authority is available."""
         return None
 
-    def modelo_has_engine(self, modelo_id: str) -> bool:
-        """Return whether ``modelo_id`` declares a calculation surface.
-
-        A modelo "has an engine" when any of its revisions declares an
-        application-link whose ``surface`` is ``"calculation"`` — the
-        registry's own marker that a runtime calculation consumer is wired
-        for the modelo. Returns ``False`` for an unknown modelo.
-        """
-        modelo = self._modelos_by_id.get(modelo_id)
-        if modelo is None:
-            return False
-        return any(
-            link.surface == "calculation"
-            for revision in modelo.revisions.values()
-            for link in revision.application_links
-        )
-
     def snapshot(
         self,
         modelo_id: str,

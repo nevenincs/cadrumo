@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime
 
@@ -79,8 +80,11 @@ class OperationSecureReferenceRepository:
         ).encode(UTF_8_ENCODING)
 
     async def put(self, operand: BaseModel, *, written_at: datetime) -> ContentDigest:
-        """Encrypt ``operand`` under its exact typed-content digest."""
+        """Encrypt ``operand`` under its exact typed-content digest, off the awaiting loop."""
         validate_utc_aware(written_at)
+        return await asyncio.to_thread(self._put, operand, written_at)
+
+    def _put(self, operand: BaseModel, written_at: datetime) -> ContentDigest:
         payload = self._serialized_operand(operand)
         reference = sha256_hex(payload)
         objects = self._repository()
@@ -108,7 +112,14 @@ class OperationSecureReferenceRepository:
         reference: ContentDigest,
         operand_type: type[OperandT],
     ) -> OperandT:
-        """Load, re-hash, and strictly hydrate one typed secure operand."""
+        """Load, re-hash, and strictly hydrate one typed secure operand, off the awaiting loop."""
+        payload = await asyncio.to_thread(self._verified_payload, reference)
+        try:
+            return operand_type.model_validate_json(payload, strict=True)
+        except ValidationError as exc:
+            raise RepositoryError("operation secure reference payload does not match requested operand type") from exc
+
+    def _verified_payload(self, reference: ContentDigest) -> bytes:
         record = self._repository().load(
             self._namespace.namespace,
             reference,
@@ -118,10 +129,7 @@ class OperationSecureReferenceRepository:
         if record is None:
             raise RepositoryError("operation secure reference is absent")
         self._require_matching_digest(reference, record.payload)
-        try:
-            return operand_type.model_validate_json(record.payload, strict=True)
-        except ValidationError as exc:
-            raise RepositoryError("operation secure reference payload does not match requested operand type") from exc
+        return record.payload
 
     @staticmethod
     def _require_matching_digest(reference: ContentDigest, payload: bytes) -> None:

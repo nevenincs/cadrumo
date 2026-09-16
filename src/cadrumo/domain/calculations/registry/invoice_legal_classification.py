@@ -6,13 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ...invoices.enums import InvoiceClass, InvoiceOperationDateRole
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "invoice legal-classification catalogue"
 
 if TYPE_CHECKING:
     from .authority import ValidatedRegistryAuthority
@@ -113,39 +115,24 @@ class InvoiceLegalClassificationCatalogue:
             )
         return token
 
-    def invoice_class_definition(self, value: object) -> InvoiceClassDefinition:
-        """Return the full legal definition for one invoice class."""
-        token = self.require_invoice_class(value)
-        for definition in self.invoice_classes:
-            if definition.token == token:
-                return definition
-        raise RegistryValidationError(f"invoice class {str(token)!r} has no registry definition")
-
-    def operation_date_role_definition(self, value: object) -> InvoiceOperationDateRoleDefinition:
-        """Return the full legal definition for one operation-date role."""
-        token = self.require_operation_date_role(value)
-        for definition in self.operation_date_roles:
-            if definition.token == token:
-                return definition
-        raise RegistryValidationError(f"invoice operation-date role {str(token)!r} has no registry definition")
-
-
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"invoice legal-classification catalogue is missing {key!r}")
-    return value.strip()
-
 
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"invoice legal-classification catalogue {key!r} must contain unique tokens")
     return values
 
 
 def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(
             f"invoice legal-classification catalogue {key!r} must contain unique legal references",
@@ -207,7 +194,7 @@ def _pointer(
     *,
     label: str,
 ) -> str:
-    value = _required(entries, key)
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT)
     if value not in choices:
         raise RegistryValidationError(f"invoice legal-classification {label} pointer {key!r} is undeclared")
     return value
@@ -219,12 +206,12 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
     for raw_token in invoice_class_order:
         token = InvoiceClass.from_registry(raw_token)
         prefix = f"{_INVOICE_CLASS_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"invoice class {raw_token!r} declares a mismatched value")
         invoice_classes.append(
             InvoiceClassDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
             ),
         )
@@ -236,12 +223,12 @@ def _catalogue(entries: Mapping[str, str]) -> InvoiceLegalClassificationCatalogu
     for raw_token in operation_date_role_order:
         token = InvoiceOperationDateRole.from_registry(raw_token)
         prefix = f"{_OPERATION_DATE_ROLE_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"invoice operation-date role {raw_token!r} declares a mismatched value")
         operation_date_roles.append(
             InvoiceOperationDateRoleDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
             ),
         )

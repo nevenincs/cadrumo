@@ -549,16 +549,6 @@ class CrossPeriodCleanStateVerdict(BaseModel):
         return any(item.modelo_not_applicable_advisory for item in self.dependencies)
 
     @property
-    def has_zero_value_previous_filing_advisory(self) -> bool:
-        """True when an explicit zero previous-filing carry was scoped out."""
-        return any(item.zero_value_previous_filing_advisory for item in self.dependencies)
-
-    @property
-    def has_m111_no_retenciones_no_obligation_advisory(self) -> bool:
-        """True when any M111 source period was scoped out as no-retenciones/no-obligation."""
-        return any(item.m111_no_retenciones_no_obligation_advisory for item in self.dependencies)
-
-    @property
     def suppressed_pre_activity_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
         """Return dependencies scoped out as no-prior-obligation pre-activity.
 

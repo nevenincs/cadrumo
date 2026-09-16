@@ -998,23 +998,6 @@ class TransactionCatalogueRepository:
                 for transaction_id, filing_date, eligible_from, eligible_to in rows
             }
 
-    def rebuild_date_index(self) -> int:
-        """Rebuild this bucket's plaintext date index from the encrypted catalogue.
-
-        The index is derived and rebuildable
-        (``aeat-ledger-contract``): correctness
-        never depends on it, so this is an explicit maintenance/recovery
-        operation, not something callers need on the normal read/write path.
-        Performs a full :meth:`load` (decrypting every row once) and rewrites
-        the index rows for this bucket to exactly match it.
-
-        Returns:
-            The number of index rows written for this bucket.
-        """
-        catalogue = self.load()
-        self._sync_date_index(catalogue)
-        return len(catalogue.transactions)
-
     def _date_index_candidate_ids(self, start: date, end: date) -> set[str] | None:
         """Return the candidate transaction ids in ``[start, end]`` per the plaintext index.
 

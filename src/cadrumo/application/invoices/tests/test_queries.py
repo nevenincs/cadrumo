@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.invoice_link import LinkInconsistencyDirection
 from ....domain.invoices.enums import PaymentStatus
@@ -41,7 +42,7 @@ def test_consistency_query_reports_one_sided_transaction_link() -> None:
         invoice.invoice_id,
     )
 
-    inconsistencies = verify_link_consistency(InvoiceCatalogue.from_invoices([invoice]), drifted_transactions)
+    inconsistencies = verify_link_consistency(build_invoice_catalogue([invoice]), drifted_transactions)
 
     assert len(inconsistencies) == 1
     assert inconsistencies[0].invoice_id == invoice.invoice_id
@@ -53,7 +54,7 @@ def test_repository_consistency_query_reads_both_required_catalogue_ports() -> N
     invoice = _invoice()
     transaction = _transaction()
     linked = link_invoice_transaction_catalogues(
-        InvoiceCatalogue.from_invoices([invoice]),
+        build_invoice_catalogue([invoice]),
         TransactionCatalogue.from_transactions([transaction]),
         invoice_id=invoice.invoice_id,
         transaction_id=transaction.transaction_id,

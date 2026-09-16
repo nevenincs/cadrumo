@@ -157,39 +157,6 @@ class ModeloWorkspaceReadSession:
             return ModeloWorkspaceCompletePageV1()
         return ModeloWorkspaceBoundedPageV1(shown=len(bounded.records), page_size=bounded.page_size)
 
-    def is_stale_against(self, projection: ModeloWorkspaceProjectionV1) -> bool:
-        """Report whether a later read names a DIFFERENT workspace than this session.
-
-        Whole-session, never per-facet: the semantic axes are shared by
-        every facet in a projection, so if they moved, no facet of this
-        session is still describing the same thing. Invalidating one facet
-        and keeping the rest would leave a screen showing two workspaces at
-        once.
-        """
-        return semantic_identity(projection) != self.identity
-
-    def is_locale_only_refresh(self, projection: ModeloWorkspaceProjectionV1) -> bool:
-        """Report whether a later read is the same workspace in another language.
-
-        Both halves are required. The semantic axes must be IDENTICAL, and
-        a locale axis must have MOVED. Asserting only the first half would
-        hold just as well if the refresh had done nothing at all, so it
-        would prove the axes separable without ever separating them.
-
-        The moved axis is the locale SUMMARY, never
-        ``baseline.locale_catalogue_digest``. That digest is not a reliable
-        discriminator: when the requested language has no entry for the key,
-        resolution falls back to Spanish and reports the SPANISH shard's
-        digest, so a Spanish read and an English read that fell back carry
-        the SAME digest while genuinely differing in requested language.
-        The summary keeps ``requested_language`` distinct from
-        ``resolved_language`` precisely so the fallback stays visible, which
-        is what makes it the honest axis to compare.
-        """
-        if semantic_identity(projection) != self.identity:
-            return False
-        return projection.locale != self.projection.locale
-
 
 def open_workspace_read_session(projection: ModeloWorkspaceProjectionV1) -> ModeloWorkspaceReadSession:
     """Open the canonical immutable session from an already-admitted projection.

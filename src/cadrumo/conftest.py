@@ -15,10 +15,12 @@ Marker-contract and live-import gating are owned by the repo-root
 from __future__ import annotations
 
 import ast
+import contextvars
 import os
 import sys
 import tempfile
 from collections.abc import Iterator, Mapping
+from contextlib import ExitStack
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -75,11 +77,36 @@ _SRC_CADRUMO_ROOT: Path = Path(__file__).resolve().parent
 
 @pytest.fixture(scope="session")
 def operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease the published authority generation for the session, as runtime reads it."""
+    """Lease the published authority generation for the session, as runtime reads it.
+
+    The lease is entered in a private context. Entered in the session's own
+    context, it would leave the governed-fact scope set for every later test
+    in the worker, so a test that forgot its lease passed or failed by the
+    order it ran in. Tests that request this fixture get the scope from
+    :func:`_scope_tests_that_request_the_operation`; a wider-scoped fixture
+    that computes under it enters ``validating_governed_facts`` itself.
+    """
     from .domain.calculations.registry.authority import bundled_indexed_authority
 
-    with bundled_indexed_authority().operation() as pinned:
-        yield pinned
+    lease_context = contextvars.copy_context()
+    with ExitStack() as lease:
+        pinned = lease_context.run(lease.enter_context, bundled_indexed_authority().operation())
+        try:
+            yield pinned
+        finally:
+            lease_context.run(lease.close)
+
+
+@pytest.fixture(autouse=True)
+def _scope_tests_that_request_the_operation(request: pytest.FixtureRequest) -> Iterator[None]:
+    """Scope governed facts to the session lease for exactly the tests that ask for it."""
+    if "operation" not in request.fixturenames:
+        yield
+        return
+    from .domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+    with validating_governed_facts(request.getfixturevalue("operation")):
+        yield
 
 
 @pytest.fixture

@@ -944,43 +944,6 @@ def _activity_start_proves_first_iva_period(
     return bool(partition.suppressed) and not partition.in_scope
 
 
-def lazily_reconcile_local_iva_compensation_for_work_unit(
-    work_unit: WorkUnit,
-    *,
-    snapshot: RegistrySnapshot,
-    operation: PinnedAuthorityOperation,
-    repository: IvaWalletDecisionRepositoryProtocol,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    persist: bool = True,
-) -> IvaCompensationReconciliationDecision | None:
-    """Auto-derive and persist the local-authority Modelo 303 compensation decision.
-
-    Calculate's prior-compensation gate requires a persisted
-    :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`.
-    In the seed-only local authority case, the local Modelo 303 recurrence is the
-    authority, so derive and persist the decision here instead of refusing
-    calculation.
-
-    The :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` supplies the
-    Modelo 303 revision context for the reconciliation service. Missing local
-    recurrence is treated as ``first_period_zero`` only when the work unit's
-    profile activity-start date scopes every Modelo 303 compensation dependency
-    out as pre-activity; otherwise the reconciliation remains a blocking
-    missing-authority state.
-    """
-    if work_unit.modelo != Modelo("303"):
-        return None
-    return _reconcile_local_iva_compensation(
-        work_unit,
-        snapshot=snapshot,
-        operation=operation,
-        repository=repository,
-        observation_repository=observation_repository,
-        persist=persist,
-        profile_values=_profile_path_values_for_bucket(work_unit.bucket_id),
-    )
-
-
 def _reconcile_local_iva_compensation(
     work_unit: WorkUnit,
     *,
@@ -1349,7 +1312,6 @@ __all__ = [
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
     "apply_iva_compensation_decision_binding",
-    "lazily_reconcile_local_iva_compensation_for_work_unit",
     "load_persisted_iva_compensation_decision_for_work_unit",
     "require_persisted_iva_compensation_decision_for_work_unit",
     "require_persisted_iva_compensation_decision_matches_revision",

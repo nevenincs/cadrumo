@@ -20,6 +20,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from .....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from .....application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
@@ -30,7 +32,7 @@ from .....application.invoices.catalogue_lifecycle import (
 )
 from .....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from .....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
-from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
 from .....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ...storage.tests.secure_sql import isolated_runtime_profile
@@ -68,7 +70,7 @@ def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
 def test_resolve_catalogue_invoice_by_full_id_and_unambiguous_prefix() -> None:
     """An exact id wins, and a prefix matching exactly one invoice resolves."""
     invoice = _build("2026-0142")
-    catalogue = InvoiceCatalogue.from_invoices([invoice])
+    catalogue = build_invoice_catalogue([invoice])
 
     assert resolve_catalogue_invoice(catalogue, invoice.invoice_id) == invoice
     # A short prefix of a single-record catalogue is unambiguous.
@@ -77,7 +79,7 @@ def test_resolve_catalogue_invoice_by_full_id_and_unambiguous_prefix() -> None:
 
 def test_resolve_catalogue_invoice_blank_id_refused() -> None:
     """A blank id is refused with the typed required-id error, not a miss."""
-    catalogue = InvoiceCatalogue.from_invoices([_build("2026-0142")])
+    catalogue = build_invoice_catalogue([_build("2026-0142")])
     with pytest.raises(InvoiceNotFoundError) as exc:
         resolve_catalogue_invoice(catalogue, "   ")
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_id_required"
@@ -85,7 +87,7 @@ def test_resolve_catalogue_invoice_blank_id_refused() -> None:
 
 def test_resolve_catalogue_invoice_not_found_names_the_id() -> None:
     """An id matching no invoice raises the localized not-found error with context."""
-    catalogue = InvoiceCatalogue.from_invoices([_build("2026-0142")])
+    catalogue = build_invoice_catalogue([_build("2026-0142")])
     with pytest.raises(InvoiceNotFoundError) as exc:
         resolve_catalogue_invoice(catalogue, "deadbeefdeadbeef")
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_not_found"
@@ -102,7 +104,7 @@ def test_resolve_catalogue_invoice_ambiguous_prefix_names_candidates() -> None:
     silently pick one.
     """
     shared_char, members = _two_invoices_sharing_a_prefix()
-    catalogue = InvoiceCatalogue.from_invoices(members)
+    catalogue = build_invoice_catalogue(members)
 
     with pytest.raises(InvoiceValidationError) as exc:
         resolve_catalogue_invoice(catalogue, shared_char)
@@ -182,7 +184,7 @@ def test_remove_catalogue_invoice_refuses_linked_record(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         linked_invoice = _build("2026-0142", linked=(transaction_id,))
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
-        repository.save(InvoiceCatalogue.from_invoices([linked_invoice]))
+        repository.save(build_invoice_catalogue([linked_invoice]))
 
         with pytest.raises(InvoiceValidationError) as exc:
             remove_catalogue_invoice(
@@ -263,7 +265,7 @@ def test_a_correction_keeps_the_invoice_id_and_its_transaction_links(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         original = _linked_invoice(_BUCKET_ID)
         repo = InvoiceCatalogueRepository(objects=profile.repository)
-        repo.save(InvoiceCatalogue.from_invoices((original,)))
+        repo.save(build_invoice_catalogue((original,)))
 
         result = update_catalogue_invoice(
             bucket_id=_BUCKET_ID,
@@ -300,7 +302,7 @@ def test_a_correction_that_breaks_an_invariant_refuses(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         original = _linked_invoice(_BUCKET_ID)
         repo = InvoiceCatalogueRepository(objects=profile.repository)
-        repo.save(InvoiceCatalogue.from_invoices((original,)))
+        repo.save(build_invoice_catalogue((original,)))
 
         with pytest.raises((InvoiceValidationError, ValidationError)):
             update_catalogue_invoice(
@@ -320,7 +322,7 @@ def test_an_empty_correction_refuses(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         original = _linked_invoice(_BUCKET_ID)
         repo = InvoiceCatalogueRepository(objects=profile.repository)
-        repo.save(InvoiceCatalogue.from_invoices((original,)))
+        repo.save(build_invoice_catalogue((original,)))
 
         with pytest.raises(InvoiceValidationError) as exc:
             update_catalogue_invoice(
@@ -374,7 +376,7 @@ def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> No
     from .....core.errors.error_codes import resolve_error_message
 
     transaction_id = "b" * 64
-    catalogue = InvoiceCatalogue.from_invoices([_build("2026-0142")])
+    catalogue = build_invoice_catalogue([_build("2026-0142")])
     shared_char, members = _two_invoices_sharing_a_prefix()
 
     raised: list[InvoiceNotFoundError | InvoiceValidationError] = []
@@ -384,13 +386,13 @@ def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> No
         raised.append(exc.value)
 
     with pytest.raises(InvoiceValidationError) as ambiguous:
-        resolve_catalogue_invoice(InvoiceCatalogue.from_invoices(members), shared_char)
+        resolve_catalogue_invoice(build_invoice_catalogue(members), shared_char)
     raised.append(ambiguous.value)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         linked_invoice = _build("2026-0143", linked=(transaction_id,))
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
-        repository.save(InvoiceCatalogue.from_invoices([linked_invoice]))
+        repository.save(build_invoice_catalogue([linked_invoice]))
 
         with pytest.raises(InvoiceValidationError) as linked:
             remove_catalogue_invoice(

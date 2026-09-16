@@ -18,7 +18,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.models import Attachment
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
 from .ledger_action_persistence_support import (
@@ -37,7 +37,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = purchase_invoice()
-    invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
+    invoice_repository.save(build_invoice_catalogue((purchase_evidence,)))
     with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
@@ -61,7 +61,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
     invoice_repository.save(
-        InvoiceCatalogue.from_invoices(
+        build_invoice_catalogue(
             (purchase_evidence.model_copy(update={"linked_transaction_ids": (created.ref.transaction_id,)}),),
         ),
     )

@@ -6,12 +6,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "third-party declaration role catalogue"
 
 _FACT_ID = "third-party-declaration-role-catalogue"
 _ORDER_KEY = "role.order"
@@ -82,15 +85,12 @@ class ThirdPartyDeclarationRoleCatalogue:
         return frozenset(self.selections[normalized])
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"third-party declaration role catalogue is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(
             f"third-party declaration role catalogue {key!r} must contain unique tokens",
@@ -133,14 +133,14 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
     for raw_token in _csv(entries, _ORDER_KEY):
         token = ThirdPartyDeclarationRole.from_registry(raw_token)
         prefix = f"{_ROLE_PREFIX}{raw_token}."
-        if _required(entries, f"{prefix}value") != raw_token:
+        if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(
                 f"third-party declaration role {raw_token!r} declares a mismatched value",
             )
         definitions.append(
             ThirdPartyDeclarationRoleDefinition(
                 token=token,
-                description=_required(entries, f"{prefix}description"),
+                description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
         )

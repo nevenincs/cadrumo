@@ -34,9 +34,11 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
+from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -197,7 +199,7 @@ def _walkthrough(
         invoice_catalogue=invoice_catalogue or InvoiceCatalogue.model_validate({}),
         evidence_records=evidence_records,
         preflight_report=preflight_report,
-        work_unit_catalogue=WorkUnitCatalogue.from_work_units(work_units),
+        work_unit_catalogue=build_work_unit_catalogue(work_units),
     )
 
 
@@ -335,7 +337,7 @@ def test_evidence_step_does_not_count_incoming_business_income_as_expense(
 def test_invoices_step_reflects_period_scoped_invoice_catalogue(
     _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
+    catalogue = build_invoice_catalogue((_invoice(),))
 
     walkthrough = _walkthrough(_tx_repository, invoice_catalogue=catalogue, operation=operation)
     invoices_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.REGISTER_INVOICES)
@@ -371,7 +373,7 @@ def test_ready_for_calculation_true_only_when_every_step_is_done(
         purchase_invoice_evidence_id="ev-001",
     )
     _tx_repository.save(TransactionCatalogue.from_transactions((fully_ready_row,)))
-    catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
+    catalogue = build_invoice_catalogue((_invoice(),))
 
     not_ready = _walkthrough(
         _tx_repository, invoice_catalogue=catalogue, evidence_records=(_evidence(),), operation=operation

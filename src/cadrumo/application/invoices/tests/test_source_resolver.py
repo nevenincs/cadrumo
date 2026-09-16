@@ -13,6 +13,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+
 from ....core.aggregation import BindingSourceKind, IntracomOperationType
 from ....core.period import Period
 from ....domain.calculations.registry.temporal import select_revision
@@ -145,7 +147,7 @@ def test_source_resolver_projects_an_invoice_through_the_reader_port() -> None:
     modelo = next(candidate for candidate in _modelos if candidate.id == "349")
     revision = select_revision(modelo, filing_year=2026, period="1T")
 
-    resolution = _resolver(InvoiceCatalogue.from_invoices([invoice])).resolve(
+    resolution = _resolver(build_invoice_catalogue([invoice])).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="349",

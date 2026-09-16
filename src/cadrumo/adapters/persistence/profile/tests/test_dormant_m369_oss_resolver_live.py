@@ -68,6 +68,7 @@ from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedg
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.schema import IvaRateKind
@@ -302,7 +303,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
     invoice_repo.save(
-        InvoiceCatalogue.from_invoices(
+        build_invoice_catalogue(
             (
                 _m369_invoice(
                     invoice_number=f"OSS-EXT-{period_token}",
@@ -463,7 +464,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
         ambient_invoice_repo = InvoiceCatalogueRepository(objects=runtime.repository)
         invoice_repo = InvoiceCatalogueRepository(objects=injected_objects)
         invoice_repo.save(
-            InvoiceCatalogue.from_invoices(
+            build_invoice_catalogue(
                 (
                     _m369_invoice(
                         invoice_number="OSS-DE-SERV-001",
@@ -583,7 +584,7 @@ def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
     revision = _revision("369", _M369_REVISION)
     invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
     invoice_repo.save(
-        InvoiceCatalogue.from_invoices(
+        build_invoice_catalogue(
             (
                 _m369_invoice(
                     invoice_number="OSS-DE-Q1-OPERATION",
@@ -742,7 +743,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
     tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
     invoice_repo.save(
-        InvoiceCatalogue.from_invoices(
+        build_invoice_catalogue(
             (
                 _m369_invoice(
                     invoice_number="OSS-FR-GOODS-UNROUTED-001",
@@ -880,7 +881,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
     tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
     invoice_repo.save(
-        InvoiceCatalogue.from_invoices(
+        build_invoice_catalogue(
             (
                 _m369_invoice(
                     invoice_number="OSS-FR-GOODS-ZERO-001",

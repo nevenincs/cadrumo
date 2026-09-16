@@ -48,6 +48,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349CountryPrefixContextError, Modelo349OperadorRow
@@ -105,7 +106,7 @@ class _InMemoryCatalogueReader:
     """Adapter-test-owned reader fake for public resolver projections."""
 
     def __init__(self, invoices: Sequence[Invoice]) -> None:
-        self._catalogue = InvoiceCatalogue.from_invoices(tuple(invoices))
+        self._catalogue = build_invoice_catalogue(tuple(invoices))
 
     def load(self) -> InvoiceCatalogue:
         return self._catalogue
@@ -285,7 +286,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         base_total=Decimal("250.00"),
         iva_category=IvaCategory("domestic_zero"),
     )
-    repository.save(InvoiceCatalogue.from_invoices((declarable, other_bucket, domestic)))
+    repository.save(build_invoice_catalogue((declarable, other_bucket, domestic)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -329,7 +330,7 @@ def test_invoice_catalogue_source_resolver_folds_received_acquisition_for_m349(
         iva_category=IvaCategory("intra_community_acquisition_reverse_charge"),
         linked_transaction_ids=("2" * 64,),
     )
-    repository.save(InvoiceCatalogue.from_invoices((acquisition,)))
+    repository.save(build_invoice_catalogue((acquisition,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -394,7 +395,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         iva_total=Decimal("521.54"),
     )
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(InvoiceCatalogue.from_invoices((collectible, payable, floor_control)))
+    repository.save(build_invoice_catalogue((collectible, payable, floor_control)))
     resolver = _resolver(repository)
     m347_revision = _modelo_revision("347", "2011-2024")
 
@@ -446,7 +447,7 @@ def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_
 ) -> None:
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(
-        InvoiceCatalogue.from_invoices(
+        build_invoice_catalogue(
             (
                 _invoice(
                     bucket_id=secure_profile.bucket_id,
@@ -492,7 +493,7 @@ def test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349(
         base_total=Decimal("3000.00"),
         iva_category=IvaCategory("intra_community_supply"),
     )
-    repository.save(InvoiceCatalogue.from_invoices((declarable,)))
+    repository.save(build_invoice_catalogue((declarable,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -525,7 +526,7 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
         base_total=Decimal("3000.00"),
         iva_category=IvaCategory("intra_community_supply"),
     )
-    repository.save(InvoiceCatalogue.from_invoices((declarable,)))
+    repository.save(build_invoice_catalogue((declarable,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -592,7 +593,7 @@ def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
         fx_rate_date=date(2026, 1, 15),
         fx_rate_source=ECB_RATE_SOURCE_ID,
     )
-    repository.save(InvoiceCatalogue.from_invoices((converted,)))
+    repository.save(build_invoice_catalogue((converted,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -632,7 +633,7 @@ def test_unconverted_foreign_invoice_is_withheld_from_projection(
         iva_category=IvaCategory("intra_community_supply"),
         currency="GBP",
     )
-    repository.save(InvoiceCatalogue.from_invoices((unconverted,)))
+    repository.save(build_invoice_catalogue((unconverted,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -787,7 +788,7 @@ def test_capability_parity_m349_declares_every_intracommunity_capability(
     tests and is exactly what a parity proof exists to catch.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(InvoiceCatalogue.from_invoices(_capability_bucket_invoices(_BUCKET_ID)))
+    repository.save(build_invoice_catalogue(_capability_bucket_invoices(_BUCKET_ID)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -834,7 +835,7 @@ def test_capability_parity_m347_excludes_the_intracommunity_operations(
     counterparty under an ORDINARY operation still reaches the declaration.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(InvoiceCatalogue.from_invoices(_capability_bucket_invoices(_BUCKET_ID)))
+    repository.save(build_invoice_catalogue(_capability_bucket_invoices(_BUCKET_ID)))
 
     resolution = _resolver(repository).resolve(
         CalculationSourceContext(
@@ -875,7 +876,7 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
         iva_category=IvaCategory("export_third_country_zero_rated"),
     )
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(InvoiceCatalogue.from_invoices((export_sale,)))
+    repository.save(build_invoice_catalogue((export_sale,)))
 
     resolution = _resolver(repository).resolve(
         CalculationSourceContext(
@@ -1680,7 +1681,7 @@ def test_the_informativas_are_unaffected_by_that_divergence(
     uncategorised record would fail rather than pass.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(InvoiceCatalogue.from_invoices((_same_facts_invoice(with_category=False),)))
+    repository.save(build_invoice_catalogue((_same_facts_invoice(with_category=False),)))
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="347",
@@ -1780,7 +1781,7 @@ def test_an_inferred_entrega_clave_is_disclosed_when_the_bucket_also_holds_an_im
     importation, so the guess could be wrong and the operator is told.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(InvoiceCatalogue.from_invoices((_ic_supply_without_operation_type(), _third_country_import())))
+    repository.save(build_invoice_catalogue((_ic_supply_without_operation_type(), _third_country_import())))
 
     resolution = _m349_resolution(repository)
 
@@ -1813,7 +1814,7 @@ def test_the_same_supply_is_silent_when_the_taxpayer_never_imports(
     rejected.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(InvoiceCatalogue.from_invoices((_ic_supply_without_operation_type(),)))
+    repository.save(build_invoice_catalogue((_ic_supply_without_operation_type(),)))
 
     assert _inferred_clave_reasons(_m349_resolution(repository)) == []
 
@@ -1832,7 +1833,7 @@ def test_a_stated_operation_type_is_never_disclosed_as_inferred(
     stated = _ic_supply_without_operation_type().model_copy(
         update={"operation_type": IntracomOperationType.E},
     )
-    repository.save(InvoiceCatalogue.from_invoices((stated, _third_country_import())))
+    repository.save(build_invoice_catalogue((stated, _third_country_import())))
 
     assert _inferred_clave_reasons(_m349_resolution(repository)) == []
 
@@ -1864,7 +1865,7 @@ def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
         iva_category=IvaCategory("intra_community_supply"),
         currency="GBP",
     )
-    repository.save(InvoiceCatalogue.from_invoices((unconverted,)))
+    repository.save(build_invoice_catalogue((unconverted,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -2233,7 +2234,7 @@ def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
         base_total=Decimal("1000.00"),
         iva_category=IvaCategory("intra_community_supply"),
     )
-    repository.save(InvoiceCatalogue.from_invoices((unattributed,)))
+    repository.save(build_invoice_catalogue((unattributed,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
@@ -2272,7 +2273,7 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
         base_total=Decimal("500.00"),
         iva_category=IvaCategory("intra_community_supply"),
     )
-    repository.save(InvoiceCatalogue.from_invoices((foreign,)))
+    repository.save(build_invoice_catalogue((foreign,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))

@@ -6,13 +6,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
+from typing import Final
 
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
 from .proportionality import ProportionalityKind, StatutoryCapPeriod
+
+_ENTRY_SUBJECT: Final = "proportionality vocabulary"
 
 _FACT_ID = "categories.profile"
 _SCOPE_SELECTOR = FactSelector(name="scope", value="proportionality_vocabulary")
@@ -41,11 +44,6 @@ class ProportionalityCatalogue:
     def all_kinds(self) -> frozenset[ProportionalityKind]:
         """Return every kind declared by the selected authority."""
         return frozenset(self.kinds)
-
-    @property
-    def all_periods(self) -> frozenset[StatutoryCapPeriod]:
-        """Return every cap period declared by the selected authority."""
-        return frozenset(self.periods)
 
     def require_kind(self, value: object) -> ProportionalityKind:
         """Return one canonical projected kind or refuse it."""
@@ -80,22 +78,19 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
     return MappingProxyType(entries)
 
 
-def _required(entries: Mapping[str, str], key: str) -> str:
-    value = entries.get(key)
-    if value is None or not value.strip():
-        raise RegistryValidationError(f"proportionality vocabulary is missing {key!r}")
-    return value.strip()
-
-
 def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    values = tuple(
+        token.strip()
+        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
+        if token.strip()
+    )
     if not values or len(values) != len(set(values)):
         raise RegistryValidationError(f"proportionality vocabulary {key!r} must contain unique tokens")
     return values
 
 
 def _bool(entries: Mapping[str, str], key: str) -> bool:
-    value = _required(entries, key).lower()
+    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
     if value == "true":
         return True
     if value == "false":
@@ -132,7 +127,7 @@ def resolve_proportionality_catalogue(
     kinds: list[ProportionalityKind] = []
     for raw_token in _csv(entries, _KIND_ORDER_KEY):
         prefix = f"{_KIND_PREFIX}{raw_token}."
-        declared_value = _required(entries, f"{prefix}value")
+        declared_value = required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
             raise RegistryValidationError(
                 f"proportionality kind {raw_token!r} declares mismatched value {declared_value!r}",
@@ -143,7 +138,7 @@ def resolve_proportionality_catalogue(
     periods: list[StatutoryCapPeriod] = []
     for raw_token in _csv(entries, _PERIOD_ORDER_KEY):
         prefix = f"{_PERIOD_PREFIX}{raw_token}."
-        declared_value = _required(entries, f"{prefix}value")
+        declared_value = required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
             raise RegistryValidationError(
                 f"statutory-cap period {raw_token!r} declares mismatched value {declared_value!r}",

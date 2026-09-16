@@ -133,6 +133,21 @@ def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
     return tuple(str(choice) for choice in declared)
 
 
+def parameter_is_required(parameter: ParameterSpec) -> bool:
+    """Return whether a caller must supply ``parameter`` to invoke its command."""
+    return parameter.default.kind is DefaultKind.REQUIRED
+
+
+def operator_parameters(spec: CommandSpec) -> tuple[ParameterSpec, ...]:
+    """Return the parameters a command exposes to operators, in declared order."""
+    return tuple(parameter for parameter in spec.parameters if not parameter.hidden)
+
+
+def command_required_input_names(spec: CommandSpec) -> tuple[str, ...]:
+    """Return the operator input names ``spec`` requires, in declared order."""
+    return tuple(parameter.name for parameter in operator_parameters(spec) if parameter_is_required(parameter))
+
+
 def _parameter(parameter: ParameterSpec) -> CommandParameterMetadata:
     cli_flag, off_flag = _parameter_flags(parameter)
     json_type = _json_type(parameter)
@@ -142,7 +157,7 @@ def _parameter(parameter: ParameterSpec) -> CommandParameterMetadata:
         cli_flag,
         off_flag,
         json_type,
-        parameter.default.kind is DefaultKind.REQUIRED,
+        parameter_is_required(parameter),
         isinstance(parameter, OptionSpec) and (parameter.is_flag or json_type == "boolean"),
         isinstance(parameter, OptionSpec) and parameter.multiple,
         _choices(parameter),
@@ -205,7 +220,7 @@ def _target_command_registration_metadata(
     schema = spec.result_schema
     if schema.state is not SchemaState.TARGET or schema.identity is None or schema.target is None:
         return None
-    parameters = tuple(_parameter(parameter) for parameter in spec.parameters if not parameter.hidden)
+    parameters = tuple(_parameter(parameter) for parameter in operator_parameters(spec))
     return CommandRegistrationMetadata(
         schema.identity,
         schema.target.qualname,
@@ -363,8 +378,11 @@ __all__ = [
     "command_registration_metadata",
     "command_registration_policy",
     "command_registration_projection",
+    "command_required_input_names",
     "command_schema_refs",
     "command_schema_type",
     "command_schema_types",
     "machine_secret_payload_metadata",
+    "operator_parameters",
+    "parameter_is_required",
 ]
