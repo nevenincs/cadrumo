@@ -8,7 +8,7 @@ from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputEr
 from ...application.ledger.preconditions import LedgerPreconditionCondition
 from ..ledger_evidence_extraction_composition import evidence_text_layer_ports
 
-pytestmark = [pytest.mark.unit]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_an_unreadable_pdf_is_a_typed_text_layer_refusal() -> None:
