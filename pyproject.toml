@@ -31,6 +31,9 @@ dependencies = [
   "cadrumo-data-manuals==0.5.1", # x-release-please-version
   "cadrumo-data-official==0.5.1", # x-release-please-version
   "mcp>=2,<3",
+  # Rust-backed TOML parser behind the canonical `cadrumo.core.toml` boundary,
+  # the only place TOML is parsed; several times faster than the stdlib parser.
+  "rtoml>=0.13.0,<1",
   # Capability-gated integrations live in [project.optional-dependencies].
   # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
   # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
@@ -346,10 +349,8 @@ exclude = [
   "src/cadrumo/_data/corpus/**/*.xlsx",
   "src/cadrumo/_data/corpus/**/*.zip",
 ]
-# The recovery-key BIP-39 wordlist is shipped as package data so
-# `importlib.resources.files()` can locate it at runtime in installed
-# wheels; `py.typed` marks the package PEP 561 typed so consumers read the
-# inline types; `external_constants.toml` carries the curated leaf constants.
+# `py.typed` marks the package PEP 561 typed so consumers read the inline
+# types; `external_constants.toml` carries the curated leaf constants.
 include = [
   # Release tooling creates these only after the full development compiler has
   # validated the authored registry and published the resulting authority.
@@ -358,7 +359,6 @@ include = [
   "src/cadrumo/_data/registry/authority/authority.current.json",
   "src/cadrumo/_data/registry/authority/authority-*.sqlite3",
   "src/cadrumo/py.typed",
-  "src/cadrumo/adapters/persistence/storage/_bip39_wordlist.txt",
   "src/cadrumo/core/external_constants.toml",
   "src/cadrumo_harness/py.typed",
   "src/cadrumo_harness/_data/**",
@@ -402,9 +402,6 @@ managed-torch-direct-dependency = true
 registry = [
   # Registry load-census tooling imports grimp directly for the executed import graph.
   "grimp>=3.15,<4",
-  # Rust-backed TOML parser used only by development registry writers and
-  # render tooling; production reads use the stdlib `tomllib` boundary.
-  "rtoml>=0.13.0,<1",
 ]
 dev = [
   { include-group = "registry" },
@@ -482,7 +479,7 @@ dev = [
   # as a string.
   "types-lxml>=2025.3.30",
   "ruff>=0.16.7",
-  # Repository-wide YAML syntax/style linting; TOML parsing uses stdlib tomllib.
+  # Repository-wide YAML syntax/style linting; TOML parsing goes through the rtoml-backed `cadrumo.core.toml` boundary.
   "yamllint>=1.38,<2",
   "ty>=0.0.81",
   # Vault tooling — contributor-only; not imported by src/cadrumo/ and never
@@ -908,6 +905,11 @@ convention = "google"
 "src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py" = ["S106"]
 "src/cadrumo/core/classification/policies.py" = ["S105"]
 "src/cadrumo/core/file_permissions.py" = ["S603"]
+# The supervised KDF worker argv is `sys.executable -m` plus this package's
+# own worker module and integer descriptor handles the supervisor just opened.
+# Nothing user-, environment-, or file-supplied reaches it; Ruff cannot infer
+# that the argv is literal.
+"src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py" = ["S603"]
 "src/cadrumo/domain/auth/apoderamientos/catalogue.py" = ["S105"]
 "dev/registry/_workbook_parity.py" = ["S603"]
 "src/cadrumo/domain/deadlines/festivos.py" = ["S105"]

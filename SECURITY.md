@@ -119,9 +119,10 @@ two backends:
   AES-256-GCM.
 
 The master key is never written in cleartext. A guard refuses to run under the
-insecure in-memory provider when a real taxpayer identifier is present. Lost
-access to the keychain or passphrase is recoverable through a BIP-39 recovery
-mnemonic minted at setup; the mnemonic itself is never persisted to disk.
+insecure in-memory provider when a real taxpayer identifier is present. A
+forgotten profile passphrase is recoverable only when the operator opted in to
+a recovery code (``aeat config profile recovery enable``); the code wraps the
+same data key under an independent Argon2id derivation and is never persisted.
 
 ### Compiled-extension hardening on Homebrew Linux arm64
 
