@@ -49,7 +49,7 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
         table.add_column(ledger_copy("tui.ledger.column.next"), key="next")
         for row in self.controller.review_rows():
             table.add_row(
-                str(row.transaction_id)[:12],
+                self.controller.entry_label(row.transaction_id),
                 review_status_label(row.review_status),
                 ledger_copy("tui.ledger.review.open"),
                 key=row.transaction_id,

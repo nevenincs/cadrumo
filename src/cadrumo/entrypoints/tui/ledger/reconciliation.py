@@ -93,13 +93,18 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
 
     def _populate_suggestion_table(self, table: DataTable[str]) -> None:
         """Render canonical match evidence and retain each semantic pair as its row key."""
-        table.add_column(ledger_copy("tui.ledger.reconciliation.entry"), key="entry", width=12)
-        table.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), key="invoice", width=12)
+        table.add_column(ledger_copy("tui.ledger.reconciliation.entry"), key="entry", width=28)
+        table.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), key="invoice", width=22)
         table.add_column(ledger_copy("tui.ledger.reconciliation.match_evidence"), key="evidence", width=38)
         for row in self.controller.projection.invoice_reconciliations:
             table.add_row(
-                str(row.transaction_id)[:12],
-                str(row.invoice_id)[:12],
+                self.controller.entry_label(row.transaction_id),
+                # The projection carries no invoice number; the issuer and total name it.
+                ledger_copy(
+                    "tui.ledger.reconciliation.invoice_label",
+                    counterparty=row.invoice_counterparty,
+                    total=row.invoice_total,
+                ),
                 self._match_evidence(row),
                 key=f"{row.transaction_id}:{row.invoice_id}",
                 height=3,
@@ -136,7 +141,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
             if direction_key is None:
                 raise ValueError("unsupported canonical link inconsistency direction")
             table.add_row(
-                str(row.transaction_id)[:12],
+                self.controller.entry_label(row.transaction_id),
                 str(row.invoice_id)[:12],
                 ledger_copy(direction_key),
                 key=f"{row.transaction_id}:{row.invoice_id}",
