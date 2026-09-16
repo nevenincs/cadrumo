@@ -7,8 +7,13 @@ The boundaries between the actions are the design:
 * **install** — installs the runtime through the platform package manager, only with ``--confirm``.
 * **start** — starts an installed local runtime that is not answering.
 * **pull** — an explicit model-acquisition operation, every role's model by default.
+* **load** — loads pulled models into memory so the first read does not pay the cold start.
 * **verify** — a model readiness observation, every role's model by default.
 * **remove** — deletes a Cadrumo-selected model from the runtime's store.
+* **setup** — install (only with ``--confirm``), start, pull, load and verify as one run.
+
+Install, load, remove and setup run through the supervised ``local-reader.provision``
+operation, the same one the TUI submits, so this module only projects its result.
 
 **Nothing here is implicit.** No inference path reaches these verbs; an operator
 runs them. A model acquisition or runtime install is explicit, never a side
@@ -21,6 +26,7 @@ typed condition and evidence. Cadrumo never touches a process it does not own.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import TYPE_CHECKING
 
@@ -33,6 +39,8 @@ from .provision_payloads import (
     ProvisionContentionPayload,
     ProvisionInstallResult,
     ProvisionLastPullPayload,
+    ProvisionLoadItemPayload,
+    ProvisionLoadResult,
     ProvisionModelPayload,
     ProvisionPullItemPayload,
     ProvisionPullResult,
@@ -41,6 +49,9 @@ from .provision_payloads import (
     ProvisionReportResult,
     ProvisionRoleStatusPayload,
     ProvisionRuntimePayload,
+    ProvisionSetupModelPayload,
+    ProvisionSetupResult,
+    ProvisionSetupStepPayload,
     ProvisionStartResult,
     ProvisionStatusResult,
     ProvisionVerifyItemPayload,
@@ -50,14 +61,22 @@ from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ....application.local_reader import RoleModelTarget
+    from ....application.local_reader_operation import (
+        LocalReaderModelOutcomeV1,
+        LocalReaderProvisionPublicResultV1,
+        LocalReaderProvisionRequest,
+    )
+    from ....application.operations.models import OperationRequest
     from ....application.operator_actions.models import PreconditionVerdict
     from ....application.provisioning import HardwareProfile
 
 __all__ = [
     "provision_install",
+    "provision_load",
     "provision_pull",
     "provision_remove",
     "provision_report",
+    "provision_setup",
     "provision_start",
     "provision_status",
     "provision_verify",
@@ -162,6 +181,151 @@ def provision_verify(
     _emit_provision_verify(ctx, model=model, role=role)
 
 
+def provision_load(
+    ctx: typer.Context,
+    model: str | None = None,
+    role: ModelRole | None = None,
+) -> None:
+    """Load pulled models into memory, refusing before the load when it is not admitted."""
+    _emit_provision_load(ctx, model=model, role=role)
+
+
+def provision_setup(ctx: typer.Context, confirm: bool = False) -> None:
+    """Install (with ``--confirm``), start, pull, load and verify the local reader in one run."""
+    _emit_provision_setup(ctx, confirm=confirm)
+
+
+def _run_reader_operation(
+    request: OperationRequest[LocalReaderProvisionRequest],
+) -> LocalReaderProvisionPublicResultV1:
+    """Submit one provisioning request through supervision and return its public result."""
+    from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
+    from ....application.local_reader_operation import LocalReaderProvisionPublicResultV1
+    from ....application.operations.frontend_requests import (
+        OperationObservationRequestV1,
+        OperationObservationSuccessV1,
+        OperationResultProjectionRequestV1,
+        OperationResultProjectionSuccessV1,
+    )
+    from ....core.errors.hierarchy import InternalInvariantError
+    from ....core.operations import OperationTerminalCondition
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
+    from ...operation_composition import compose_operation_dependencies
+
+    async def run() -> LocalReaderProvisionPublicResultV1:
+        with bundled_indexed_authority().operation() as authority_operation:
+            services = compose_operation_dependencies(
+                authority_operation=authority_operation,
+                operator_scope_ports=build_operator_scope_ports(),
+            )
+            try:
+                submitted = await services.submission.submit(request, actor_ref=_ACTOR_REF)
+                await services.submission.start(submitted.receipt.operation_id)
+                observed = await services.observation.observe(
+                    OperationObservationRequestV1(
+                        operation_id=submitted.receipt.operation_id,
+                        after_cursor=0,
+                        page_limit=64,
+                    )
+                )
+                if not isinstance(observed, OperationObservationSuccessV1):
+                    raise InternalInvariantError("local reader provisioning observation is unavailable")
+                projection = observed.projection
+                result_schema = projection.definition_contract.result_schema
+                if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED or result_schema is None:
+                    raise InternalInvariantError(
+                        f"local reader provisioning did not settle ({projection.diagnostic_ref or 'no diagnostic'})"
+                    )
+                resolved = await services.result.resolve(
+                    OperationResultProjectionRequestV1(
+                        operation_id=projection.operation_id,
+                        terminal_revision=projection.revision,
+                        definition_contract_digest=projection.definition_contract.definition_contract_digest,
+                        result_schema=result_schema,
+                    )
+                )
+                if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
+                    resolved.projection, LocalReaderProvisionPublicResultV1
+                ):
+                    raise InternalInvariantError("local reader provisioning result is unavailable")
+                return resolved.projection
+            finally:
+                await services.shutdown()
+
+    return asyncio.run(run())
+
+
+_ACTOR_REF = "operator:cli-config-provision"
+
+
+def _roles(item: LocalReaderModelOutcomeV1) -> list[str]:
+    return [role.value for role in item.roles]
+
+
+def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
+    """Load every resolved model and emit the envelope, exiting 2 unless all are loaded."""
+    from ....application.local_reader_operation import build_local_reader_load_request
+
+    outcome = _run_reader_operation(build_local_reader_load_request(role, model))
+    items = [
+        ProvisionLoadItemPayload(
+            model=item.model,
+            roles=_roles(item),
+            loaded=item.succeeded,
+            already_loaded=item.already_satisfied,
+            elapsed_ms=item.elapsed_ms,
+            facts=item.facts,
+            precondition_action=_action(item.precondition_verdict),
+        )
+        for item in outcome.models
+    ]
+    result = ProvisionLoadResult(loaded=outcome.succeeded, models=items)
+    emit_envelope(ctx, command="config.provision.load", result=result, lines=_provision_result_lines(result))
+    if not result.loaded:
+        raise typer.Exit(code=2)
+
+
+def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
+    """Run the one-shot setup and emit its per-step envelope, exiting 2 when a step stopped it."""
+    from ....application.local_reader_operation import build_local_reader_setup_request
+
+    outcome = _run_reader_operation(build_local_reader_setup_request(consent=confirm))
+    result = ProvisionSetupResult(
+        succeeded=outcome.succeeded,
+        stopped_step=None if outcome.stopped_step is None else outcome.stopped_step.value,
+        steps=[
+            ProvisionSetupStepPayload(
+                step=step.step.value,
+                state=step.state.value,
+                failed_condition_id=step.failed_condition_id,
+            )
+            for step in outcome.steps
+        ],
+        runtime_started=outcome.runtime_started,
+        install_consented=confirm,
+        models=[
+            ProvisionSetupModelPayload(
+                step=item.step.value,
+                model=item.model,
+                roles=_roles(item),
+                succeeded=item.succeeded,
+                already_satisfied=item.already_satisfied,
+                bytes_fetched=item.bytes_fetched,
+                elapsed_ms=item.elapsed_ms,
+                facts=item.facts,
+                precondition_action=_action(item.precondition_verdict),
+            )
+            for item in outcome.models
+            if item.step is not None
+        ],
+        facts=outcome.facts,
+        precondition_action=_action(outcome.precondition_verdict),
+    )
+    emit_envelope(ctx, command="config.provision.setup", result=result, lines=_provision_result_lines(result))
+    if not result.succeeded:
+        raise typer.Exit(code=2)
+
+
 def _selected_provision_models(
     profile: HardwareProfile,
     resident_names: list[str],
@@ -173,6 +337,7 @@ def _selected_provision_models(
     of all of them -- so the splat read as passing a str where a bool was expected,
     and checked nothing.
     """
+    from ....application.local_reader import runtime_model_names_match
     from ....application.provisioning import select_model_for_role
     from ....core.model_catalogue import ModelRole
 
@@ -180,7 +345,10 @@ def _selected_provision_models(
     primary = None
     for role in ModelRole:
         selection = select_model_for_role(role, profile=profile)
-        resident = any(name.startswith(selection.runtime_id or "\x00") for name in resident_names)
+        runtime_id = selection.runtime_id
+        resident = runtime_id is not None and any(
+            runtime_model_names_match(name, runtime_id) for name in resident_names
+        )
         models.append(
             ProvisionModelPayload(
                 role=role.value,
@@ -397,21 +565,23 @@ def _emit_provision_status(ctx: typer.Context) -> None:
 
 def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
     """Install the runtime when consented and emit the envelope, exiting 2 unless installed."""
-    from ....adapters.outbound.model_runtime.process_control import run_runtime_installer
-    from ....application.provisioning_host import install_runtime
+    from ....application.local_reader_operation import build_local_reader_install_request
 
-    outcome = install_runtime(consent=confirm, run=run_runtime_installer)
+    outcome = _run_reader_operation(build_local_reader_install_request(consent=confirm))
+    install = outcome.install
+    if install is None:  # pragma: no cover - the install action always records its outcome
+        raise AssertionError
     result = ProvisionInstallResult(
-        installed=outcome.installed,
-        already_installed=outcome.already_installed,
-        installer=outcome.installer.value,
-        consented=outcome.consented,
-        installer_exit_code=outcome.installer_exit_code,
+        installed=install.installed,
+        already_installed=install.already_installed,
+        installer=install.installer.value,
+        consented=install.consented,
+        installer_exit_code=install.installer_exit_code,
         facts=outcome.facts,
         precondition_action=_action(outcome.precondition_verdict),
     )
     emit_envelope(ctx, command="config.provision.install", result=result, lines=_provision_result_lines(result))
-    if not outcome.installed:
+    if not install.installed:
         raise typer.Exit(code=2)
 
 
@@ -435,36 +605,24 @@ def _emit_provision_start(ctx: typer.Context) -> None:
 
 def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
     """Remove the resolved model and emit the envelope, exiting 2 unless every removal was confirmed."""
-    from ....application.provisioning_runtime import remove_runtime_model
+    from ....application.local_reader_operation import build_local_reader_remove_request
 
     if model is None and role is None:
         raise typer.BadParameter("--model or --role is required", param_hint="--model/--role")
-    items: list[ProvisionRemoveItemPayload] = []
-    for target in _targets(role, model):
-        roles = [served.value for served in target.roles]
-        if target.model is None:
-            items.append(
-                ProvisionRemoveItemPayload(
-                    roles=roles,
-                    removed=False,
-                    facts=target.selection_facts,
-                    precondition_action=resolve_cli_precondition_action(_selection_refusal(target)),
-                )
-            )
-            continue
-        outcome = remove_runtime_model(target.model)
-        items.append(
-            ProvisionRemoveItemPayload(
-                model=outcome.model,
-                roles=roles,
-                removed=outcome.removed,
-                was_installed=outcome.was_installed,
-                freed_bytes=outcome.freed_bytes,
-                facts=outcome.facts,
-                precondition_action=_action(outcome.precondition_verdict),
-            )
+    outcome = _run_reader_operation(build_local_reader_remove_request(role, model))
+    items = [
+        ProvisionRemoveItemPayload(
+            model=item.model,
+            roles=_roles(item),
+            removed=item.succeeded,
+            was_installed=item.was_installed,
+            freed_bytes=item.freed_bytes,
+            facts=item.facts,
+            precondition_action=_action(item.precondition_verdict),
         )
-    result = ProvisionRemoveResult(removed=bool(items) and all(item.removed for item in items), models=items)
+        for item in outcome.models
+    ]
+    result = ProvisionRemoveResult(removed=outcome.succeeded, models=items)
     emit_envelope(ctx, command="config.provision.remove", result=result, lines=_provision_result_lines(result))
     if not result.removed:
         raise typer.Exit(code=2)

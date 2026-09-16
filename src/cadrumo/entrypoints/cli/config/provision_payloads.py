@@ -218,10 +218,74 @@ class ProvisionRemoveResult(OutputSchema):
     models: list[ProvisionRemoveItemPayload] = []
 
 
-__all__ = [
-    "ProvisionContentionPayload",
+class ProvisionLoadItemPayload(OutputSchema):
+    """One model load, or one role whose selection refused before any load.
+
+    ``already_loaded`` marks a model that was resident before the request, so
+    nothing was sent to the runtime.
+    """
+
+    model: NonEmptyStr | None = None
+    roles: list[str] = []
+    loaded: bool
+    already_loaded: bool = False
+    elapsed_ms: int | None = None
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+
+class ProvisionLoadResult(OutputSchema):
+    """JSON envelope for ``aeat config provision load``; ``loaded`` is true only when every item loaded."""
+
+    loaded: bool
+    models: list[ProvisionLoadItemPayload] = []
+
+
+class ProvisionSetupStepPayload(OutputSchema):
+    """One setup step: ``unchanged``, ``changed``, ``failed`` or ``not_reached``."""
+
+    step: NonEmptyStr
+    state: NonEmptyStr
+    failed_condition_id: str | None = None
+
+
+class ProvisionSetupModelPayload(OutputSchema):
+    """What one setup step did to one model, or one role whose selection refused."""
+
+    step: NonEmptyStr
+    model: NonEmptyStr | None = None
+    roles: list[str] = []
+    succeeded: bool
+    already_satisfied: bool = False
+    bytes_fetched: int | None = None
+    elapsed_ms: int | None = None
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+
+class ProvisionSetupResult(OutputSchema):
+    """JSON envelope for ``aeat config provision setup``.
+
+    ``stopped_step`` names the step that failed; every later step is
+    ``not_reached``. ``precondition_action`` resolves the install or start
+    refusal when one of those steps stopped the run.
+    """
+
+    succeeded: bool
+    stopped_step: str | None = None
+    steps: list[ProvisionSetupStepPayload] = []
+    runtime_started: bool = False
+    install_consented: bool
+    models: list[ProvisionSetupModelPayload] = []
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+
+__all__ = [    "ProvisionContentionPayload",
     "ProvisionInstallResult",
     "ProvisionLastPullPayload",
+    "ProvisionLoadItemPayload",
+    "ProvisionLoadResult",
     "ProvisionModelPayload",
     "ProvisionPullItemPayload",
     "ProvisionPullResult",
@@ -230,6 +294,9 @@ __all__ = [
     "ProvisionReportResult",
     "ProvisionRoleStatusPayload",
     "ProvisionRuntimePayload",
+    "ProvisionSetupModelPayload",
+    "ProvisionSetupResult",
+    "ProvisionSetupStepPayload",
     "ProvisionStartResult",
     "ProvisionStatusResult",
     "ProvisionVerifyItemPayload",

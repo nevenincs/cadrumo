@@ -176,6 +176,49 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         handler=_handler("provision_remove"),
         result_schema=_schema("ProvisionRemoveResult", "config.provision.remove"),
     ),
+    CommandSpec(
+        "config_provision_load",
+        "config_provision",
+        "load",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.provision.load.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            OptionSpec(
+                name="model",
+                declarations=("--model",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.config.provision.load.model_help"),
+            ),
+            _ROLE,
+        ),
+        policy=NETWORK_WRITE,
+        handler=_handler("provision_load"),
+        result_schema=_schema("ProvisionLoadResult", "config.provision.load"),
+    ),
+    CommandSpec(
+        "config_provision_setup",
+        "config_provision",
+        "setup",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.provision.setup.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            OptionSpec(
+                name="confirm",
+                declarations=("--confirm",),
+                value=ValueContract(DeferredTarget("builtins", "bool")),
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.config.provision.setup.confirm_help"),
+            ),
+        ),
+        policy=NETWORK_WRITE,
+        handler=_handler("provision_setup"),
+        result_schema=_schema("ProvisionSetupResult", "config.provision.setup"),
+    ),
 )
 
 

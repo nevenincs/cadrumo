@@ -52,7 +52,7 @@ from ._spec_policies import (
 )
 
 if TYPE_CHECKING:
-    from ....application.wizard.models import WizardFlow
+    pass
 
 _LANG = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
 _CAPABILITY = ValueContract(DeferredTarget("....core.capabilities", "ServiceCapability", __package__))
@@ -940,37 +940,4 @@ PROFILE_COMMAND_SPECS = (
 )
 
 
-def profile_command_specs_for_flow(flow: WizardFlow) -> tuple[CommandSpec, ...]:
-    """Return profile command specs with choices projected from ``flow``.
-
-    ``PROFILE_COMMAND_SPECS`` remains import-pure for metadata invocations.  A
-    caller that already holds the operation-scoped setup flow can use this
-    function to build the parser contract from that exact generation; no
-    process-global catalogue or second authority read is introduced.
-    """
-    choices_by_parameter: dict[str, tuple[str, ...]] = {
-        question.id.replace("-", "_"): tuple(choice.value for choice in question.choices)
-        for section in flow.sections
-        for question in section.questions
-        if question.choices
-    }
-    projected: list[CommandSpec] = []
-    for spec in PROFILE_COMMAND_SPECS:
-        if spec.key not in {"config_profile_create", "config_profile_edit"}:
-            projected.append(spec)
-            continue
-        parameters: list[ArgumentSpec | OptionSpec] = []
-        for parameter in spec.parameters:
-            if not isinstance(parameter, OptionSpec):
-                parameters.append(parameter)
-                continue
-            choices = choices_by_parameter.get(parameter.name)
-            if choices is None:
-                parameters.append(parameter)
-                continue
-            parameters.append(replace(parameter, value=replace(parameter.value, choices=choices)))
-        projected.append(replace(spec, parameters=tuple(parameters)))
-    return tuple(projected)
-
-
-__all__ = ["PROFILE_COMMAND_SPECS", "profile_command_specs_for_flow"]
+__all__ = ["PROFILE_COMMAND_SPECS"]
