@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.i18n.translatable import Translatable as tr
-from ....domain.calculations.registry.ccaa_catalogue import ccaa_choices, foral_cli_choices
+from ....domain.calculations.registry.ccaa_catalogue import ccaa_choices, resolve_ccaa_catalogue
 from ..catalogue import build_setup_flow
 from ..commands import (
     SETUP_OPTION_INFOS,
@@ -157,7 +157,7 @@ def test_tax_residence_ccaa_choices_match_the_ccaa_enum(authority_operation: Pin
     assert isinstance(choice_type, click.Choice)
 
     expected = [member.value for member in ccaa_choices(authority=authority_operation)] + list(
-        foral_cli_choices(authority=authority_operation)
+        resolve_ccaa_catalogue(authority=authority_operation).foral_cli_aliases
     )
     assert list(choice_type.choices) == expected
 
