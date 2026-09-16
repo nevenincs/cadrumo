@@ -287,3 +287,16 @@ def test_a_family_mounted_under_an_undeclared_node_fails_the_full_load() -> None
     assert graph.children("config") == ()
     with pytest.raises(ValueError, match="mount at unknown nodes"):
         graph.by_key()
+
+
+def test_a_node_path_comes_from_its_loaded_ancestors_alone() -> None:
+    graph = CommandSpecGraph(
+        (_root(), _group()),
+        (_family("FAMILY_LEAVES"), _family("ABSENT_FAMILY", mount_key="profile_list")),
+    )
+
+    graph.children("config")
+    node = graph.node("profile_list")
+
+    assert node.path == ("aeat", "config", "list")
+    assert node.spec == _leaf()
