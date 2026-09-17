@@ -181,6 +181,12 @@ def test_discarded_correction_keeps_its_link_while_the_baseline_moves_on() -> No
         ModeloRecordCatalogue(records=still_pending)
 
 
+def test_a_register_reference_needs_an_expediente_or_a_csv() -> None:
+    assert AeatRegisterRef(csv="ABCD1234EFGH5678").expediente_id is None
+    with pytest.raises(ValidationError, match="needs an expediente id or a CSV"):
+        AeatRegisterRef(justificante_number="1300000000001")
+
+
 @pytest.mark.parametrize(
     ("tipo_solicitud", "expected"),
     [
