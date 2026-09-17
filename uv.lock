@@ -3,8 +3,8 @@ revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "(python_full_version >= '3.14' and sys_platform == 'linux') or (python_full_version >= '3.14' and sys_platform == 'win32')",
-    "(python_full_version < '3.14' and sys_platform == 'linux') or (python_full_version < '3.14' and sys_platform == 'win32')",
     "python_full_version >= '3.14' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "(python_full_version < '3.14' and sys_platform == 'linux') or (python_full_version < '3.14' and sys_platform == 'win32')",
     "python_full_version < '3.14' and sys_platform != 'linux' and sys_platform != 'win32'",
 ]
 
@@ -201,7 +201,7 @@ lxml = [
 
 [[package]]
 name = "cadrumo"
-version = "0.5.1"
+version = "0.6.0"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
@@ -469,12 +469,12 @@ registry = [{ name = "grimp", specifier = ">=3.15,<4" }]
 
 [[package]]
 name = "cadrumo-data-manuals"
-version = "0.5.1"
+version = "0.6.0"
 source = { directory = "packaging/cadrumo_data_manuals" }
 
 [[package]]
 name = "cadrumo-data-official"
-version = "0.5.1"
+version = "0.6.0"
 source = { directory = "packaging/cadrumo_data_official" }
 
 [[package]]
