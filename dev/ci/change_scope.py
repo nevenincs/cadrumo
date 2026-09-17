@@ -99,16 +99,12 @@ CHANGE_CLASS_RULES: Final[tuple[ChangeClassRule, ...]] = (
     ChangeClassRule(
         name="authority",
         patterns=("**/authority-*.sqlite3", "**/authority.current.json", "**/authority.current.json.lock"),
-        targets=(
-            "src/cadrumo/application/registry/tests",
-            "src/cadrumo/domain/calculations/registry/tests",
-        ),
+        targets=("src/cadrumo/domain/calculations/registry/tests",),
     ),
     ChangeClassRule(
         name="registry-data",
         patterns=("src/cadrumo/_data/registry/**",),
         targets=(
-            "src/cadrumo/application/registry/tests",
             "src/cadrumo/domain/calculations/registry/tests",
             "src/cadrumo/domain/calculations/registry/facts/tests",
             "dev/registry/tests",
