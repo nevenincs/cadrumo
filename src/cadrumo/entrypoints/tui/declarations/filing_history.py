@@ -25,7 +25,6 @@ from .controller import (
     timestamp_label,
 )
 
-
 _ORIGIN_LOCALE_KEYS: Final[Mapping[FilingOrigin, str]] = {
     FilingOrigin.LOCAL: "tui.declarations.origin.local",
     FilingOrigin.AEAT: "tui.declarations.origin.aeat",
