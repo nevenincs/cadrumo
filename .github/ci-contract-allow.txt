@@ -6,19 +6,21 @@
 #
 # THE GROUPS BELOW ARE THE BURNDOWN ORDER, cheapest and most duplicated first.
 
-# --- runner-plane - belongs to ci-fleet ----------------------------------------
+# --- runner-plane - belongs to the shared runner preflight ---------------------
 # `dev.ci.runner_queue_watchdog` is this repository's own implementation of a
-# check ci-fleet OWNS as `runners/ci/preflight.sh`; replacing it with the
-# rendered copy retires this entry.
+# check the shared runner preflight owns; replacing it with the rendered copy
+# retires this entry.
 release.yml:Fail fast on a lane no online runner can serve
 
 # --- CI-plane bookkeeping ------------------------------------------------------
 # Reads and writes GitHub state through `gh`, `git` or the release automation,
 # or reports a job verdict, and has no local meaning; `gh` is already permitted
 # and these differ only in reaching it through a shell conditional.
-merge-gate.yml:Require lint success
+merge-gate.yml:Require every gate job to succeed
 merge-gate.yml:Refuse fork pull requests
-release-please.yml:Regenerate and push uv.lock onto the release branch
+release-please.yml:Regenerate uv.lock on the release branch
+release-please.yml:Push the regenerated uv.lock onto the release branch
+release-please.yml:Reconcile uv.lock with the released version
 release-please.yml:Open a reconciling pull request when the lockfile drifted
 release-please.yml:Dispatch release proof for the release pull request
 release-please.yml:Dispatch release publication
@@ -27,23 +29,20 @@ release.yml:Require every prove job to succeed
 release.yml:Locate the successful prove run for this version and commit
 release.yml:Require the tap token
 release.yml:Require the bucket repository and token
-release.yml:Commit the formula unless the tap already serves it
-release.yml:Commit the manifest unless the bucket already serves it
+release.yml:Stage the formula unless the tap already serves it
+release.yml:Push the formula to the tap
+release.yml:Stage the manifest unless the bucket already serves it
+release.yml:Push the manifest to the bucket
 release.yml:Require the deploy role before anything else
 release.yml:Alert on failure without touching the release
 release.yml:Report an already published version
 
 # --- pending - a gate with no recipe -------------------------------------------
 # Each is a real gate that a contributor cannot run before pushing.
-#   check-dependency-vulnerabilities  release.yml exports the lock and pipes it
-#                          to `pip-audit` while `just check-dependency-vulnerabilities`
-#                          runs the fleet's own dependency_audit.py - two
-#                          different answers to one question, in one repository
 #   test-live-drift        the GROI live-drift suite, named by path
 aeat-drift-detector.yml:Run GROI live drift tests
 aeat-corpus-staleness.yml:Compare the captured corpus against the official pages
 aeat-corpus-staleness.yml:Fail the run only when the corpus has drifted
-release.yml:Audit dependencies for known CVEs
 release.yml:Packaging performance contracts
 release.yml:Future-directive policy
 release.yml:Emit the prerelease runtime row

@@ -27,42 +27,29 @@ reads a measurement rather than re-deriving one.
   release pull request and dispatches `release.yml`'s prove and publish
   phases.
 
-## The hardware is two machines, not a cloud
+## The runners are shared, not a cloud
 
-Every self-hosted runner in the `nevenincs` fleet lives on one of two hosts.
-`ci-fleet` is the binding declaration; this file only explains what follows for
-cadrumo's workflows.
+Every job runs on a small self-hosted fleet. Two consequences the pins exist
+for:
 
-Hosts are named by role here, not by hostname: `ci-fleet` is where machine
-identity is declared, and what this file needs from a host is its shape.
+**The host's CPUs are not cadrumo's alone.** Other runners and interactive work
+share the machine, so `-n auto` sizes as though the box were idle and
+oversubscribes it. Most of the interpreters measured on the host during queued
+cadrumo runs belonged to other tenants.
 
-| role | shape | notes |
-| --- | --- | --- |
-| the Windows workstation | 12 physical / 24 logical cores, 128 GB | Windows, plus WSL and Docker Desktop. Carries cadrumo's Windows runner AND its Linux X64 container. |
-| the macOS laptop | 6-core laptop | Power-gated by deliberate policy: its runners serve on AC, and clamshell sleep takes them away. Not a fault. |
-
-Two consequences the pins exist for:
-
-**The 24 logical CPUs are not cadrumo's.** That host also runs runners for
-`vaultspec-core`, `vaultspec-rag`, and the vaultspec dashboard, plus the
-operator's own work. `-n auto` reads 24 and sizes as though the box were idle.
-Measured on 2026-09-07 while three cadrumo workflows were queued: 148 running
-Python interpreters, of which only 56 belonged to cadrumo; the rest were other
-tooling, with a median age of 40 hours and one process resident for 142.
-
-**cadrumo has ONE Linux X64 runner.** `fleetctl audit` resolves that selector
-to a single runner shared by every self-hosted Linux job across the three
-lanes above. Anything that holds it blocks everything else on it, which is
-why job duration on that lane matters more than raw throughput.
+**cadrumo has ONE Linux X64 runner.** Every self-hosted Linux job across the
+three lanes above shares it. Anything that holds it blocks everything else on
+it, which is why job duration on that lane matters more than raw throughput.
+The macOS runner is power-gated by policy, so its absence is not a fault.
 
 ## The pins
 
 | where | pin | reason |
 | --- | --- | --- |
-| preflight pytest, Linux and Windows lanes | `-n 8` | A working pin, NOT a derivation. Eight of 24 logical CPUs leaves room for co-resident runners. Nobody has measured the optimum. |
+| preflight pytest, Linux and Windows lanes | `-n 8` | A working pin, NOT a derivation. It leaves room for co-resident runners. Nobody has measured the optimum. |
 | packaging lane pool, Linux | 3 | The lanes are venv- and disk-bound rather than CPU-wide, so more parallelism buys little and costs disk contention. |
 | packaging lane pool, Windows | 2 | Same reasoning, lower because Windows venv installs are slower and the box carries co-resident jobs. |
-| homebrew acquisition matrix | `max-parallel: 2` | Two of its three legs live on the one MacBook. |
+| homebrew acquisition matrix | `max-parallel: 2` | Two of its three legs share one host. |
 | `MAX_WATCH_SECONDS` | 480 | Derived, unlike the others. See below. |
 
 `-n auto` is never correct here and no workflow should reintroduce it.

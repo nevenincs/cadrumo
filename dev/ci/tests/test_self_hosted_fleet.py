@@ -1,8 +1,7 @@
 """Structural gate: every workflow job runs on the self-hosted fleet only.
 
 Operator mandate 2026-07-21: NO hosted/cloud runners were ever authorized —
-expense control is absolute, and the ARM MacBook is the only permitted
-non-workstation avenue. Every ``runs-on`` (including every matrix value
+expense control is absolute. Every ``runs-on`` (including every matrix value
 feeding one, list-dimension or include-row alike, in ``.yml`` and ``.yaml``
 workflows both) must be a self-hosted label set; a GitHub-hosted image
 (``ubuntu-latest``, ``windows-2022``, ``macos-15-intel``,
@@ -16,9 +15,9 @@ mandate above holds without a carve-out.
 
 The carve-out was granted on the ground that publication must not be gated on
 a fleet runner being free, which remains a real property and is now owned
-where it belongs: enrolment and availability are driven by the `ci-fleet`
-repository, which is binding for every `nevenincs` repo, and whose `fleetctl
-guards` audit reports a release guard scheduled onto the fleet it judges. A
+where it belongs: runner enrolment and availability are governed by the
+fleet-wide runner policy, which is binding for every repository on the fleet
+and audits release guards scheduled onto it. A
 cadrumo-local exemption cannot express a fleet-wide policy, and while it stood
 the two surfaces disagreed -- the workflows moved onto the fleet under that
 policy and this gate refused them, so `main` carried a red gate with neither

@@ -386,6 +386,14 @@ check-api-stubs:
 check-workflows:
     @uv run --no-sync python -m dev.actionlint
 
+# Static security audit of workflows and actions: credential persistence,
+# token scope, template injection, cache poisoning. Offline, so it needs no
+# GitHub token.
+[doc('Audit workflow and action security without changing workflows.')]
+[group('check')]
+check-workflow-security:
+    @uvx --from zizmor==1.30.1 zizmor --offline --min-severity medium .github/
+
 [doc('Verify workflow-to-recipe gate contracts without changing repository files.')]
 [group('check')]
 check-gate-contracts:

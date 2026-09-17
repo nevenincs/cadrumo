@@ -19,74 +19,59 @@ concurrency:
   group: merge-gate-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# Pull requests from forks never start a working job: every job that checks out
+# code carries the same-repository condition, and the verdict, which is never
+# skipped, refuses a fork outright. A skipped required check would read as green.
 jobs:
   lint:
     name: "Check: Lint (Linux)"
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
     steps:
-      - name: Refuse fork pull requests
-        id: fork-guard
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
-        shell: bash
-        run: |
-          echo "Pull requests from forks are not run on self-hosted runners."
-          exit 1
-
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
       - name: Set up toolchain
         uses: ./.github/actions/setup
 
       - name: Style
-        if: ${{ !cancelled() && steps.fork-guard.outcome != 'failure' }}
+        if: ${{ !cancelled() }}
         run: just check-style
 
       - name: Formatting
-        if: ${{ !cancelled() && steps.fork-guard.outcome != 'failure' }}
+        if: ${{ !cancelled() }}
         run: just check-format
 
       - name: Type checks
-        if: ${{ !cancelled() && steps.fork-guard.outcome != 'failure' }}
+        if: ${{ !cancelled() }}
         run: just check-types
 
       - name: Workflow definitions
-        if: ${{ !cancelled() && steps.fork-guard.outcome != 'failure' }}
+        if: ${{ !cancelled() }}
         run: just check-workflows
 
+      - name: Workflow security
+        if: ${{ !cancelled() }}
+        run: just check-workflow-security
+
   gate:
-    name: "Check: Merge gate (Linux)"
+    name: "Check: Scoped gate (Linux)"
     needs: lint
-    if: ${{ !cancelled() }}
+    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && needs.lint.result == 'success' }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 60
     env:
       CADRUMO_PYTEST_WORKERS: "8"
       GATE_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'origin/main' }}
     steps:
-      - name: Require lint success
-        id: lint-result
-        if: ${{ needs.lint.result != 'success' }}
-        shell: bash
-        env:
-          LINT_RESULT: ${{ needs.lint.result }}
-        run: |
-          echo "Lint job result was '$LINT_RESULT'; the merge gate requires success."
-          exit 1
-
-      - name: Refuse fork pull requests
-        id: fork-guard
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
-        shell: bash
-        run: |
-          echo "Pull requests from forks are not run on self-hosted runners."
-          exit 1
-
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up just
         uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
@@ -94,7 +79,7 @@ jobs:
           tool: just@1.38.0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           version: "0.11.29"
           enable-cache: false
@@ -111,7 +96,7 @@ jobs:
 
       - name: Set up toolchain
         id: setup
-        if: ${{ !cancelled() && steps.lint-result.outcome != 'failure' && steps.fork-guard.outcome != 'failure' }}
+        if: ${{ !cancelled() }}
         uses: ./.github/actions/setup
 
       - name: Registry gate
@@ -128,3 +113,30 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
         run: just test-gate base="$GATE_BASE"
+
+  verdict:
+    name: "Check: Merge gate (Linux)"
+    needs: [lint, gate]
+    if: ${{ !cancelled() }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Refuse fork pull requests
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        shell: bash
+        run: |
+          echo "Pull requests from forks are refused; no gate job ran."
+          exit 1
+
+      - name: Require every gate job to succeed
+        shell: bash
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          failed="$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key)=\(.value.result)"' <<<"$NEEDS")"
+          if [ -n "$failed" ]; then
+            echo "The merge gate requires every job to succeed; not successful: $(tr '\n' ' ' <<<"$failed")"
+            exit 1
+          fi
+          echo "every merge gate job succeeded"
