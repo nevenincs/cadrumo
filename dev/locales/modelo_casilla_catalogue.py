@@ -80,7 +80,7 @@ _PLACEHOLDER: Final = re.compile(
 )
 
 #: A value that a length limit cut mid-text and closed with an ellipsis.
-_TRUNCATED: Final = re.compile(r"[\w,;:]\s?(?:\.\.\.|…)\s*$")
+_TRUNCATED: Final = re.compile(r"\S\s?(?:\.\.\.|…)\s*$")
 #: Repeated spaces, or whitespace opening or closing a value; line breaks are authored.
 _IRREGULAR_WHITESPACE: Final = re.compile(r"[ \t]{2,}|^\s|\s$")
 #: Spanish texts whose official record design is itself cut short with an ellipsis;
@@ -90,6 +90,12 @@ SOURCE_TRUNCATED_SPANISH: Final[frozenset[str]] = frozenset(
         # Modelo 714 design, box [35].
         "Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo ganancias y pérdidas "
         "patrimoniales...",
+        # Modelo 100 box [1908]: the design names a different annex in each edition
+        # (B.8, B.9, B.11), so the completed text would differ between editions that
+        # share this key. The registry refuses that divergence until a casilla
+        # continuity evolution declares it, so the shared text stays cut short.
+        "Por inversión en adquisición de acciones y participaciones sociales como consecuencia de acuerdos de "
+        "constitución de sociedades o ampliación de capital en las sociedades mercantiles (importe de la ...",
     }
 )
 #: Per locale, the marks a word-by-word glossary pass leaves: Hungarian suffix
