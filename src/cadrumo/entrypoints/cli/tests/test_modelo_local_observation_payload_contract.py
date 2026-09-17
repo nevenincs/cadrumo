@@ -24,6 +24,7 @@ _CAPTURED_AT = datetime(2026, 6, 1, 8, 0, tzinfo=UTC)
 
 def _kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
+        "action": "recorded",
         "modelo": "130",
         "filing_year": 2026,
         "period": Period.from_year_and_code(2026, "1T"),
@@ -34,6 +35,8 @@ def _kwargs(**overrides: object) -> dict[str, object]:
         "casilla_count": 1,
         "captured_at": _CAPTURED_AT,
         "captured_by": "operator-manual",
+        "reason": "synthetic reconstruction",
+        "observation_layers": {"effective_source_kind": ObservationSourceKind.OPERATOR_MANUAL},
         "official_evidence": False,
         "filing_record_created": False,
         "aeat_accepted": False,
@@ -86,3 +89,32 @@ def test_rejects_a_true_non_official_flag(field: str) -> None:
     """Every non-official flag is pinned False; this action never produces AEAT evidence."""
     with pytest.raises(ValidationError):
         FilingRecordLocalObservationResult.model_validate({**_kwargs(), field: True})
+
+
+def test_accepts_a_clear_without_values() -> None:
+    """A cleared override carries no revision, source kind or values."""
+    result = FilingRecordLocalObservationResult.model_validate(
+        {
+            **_kwargs(action="cleared", casilla_values={}, casilla_count=0),
+            "revision_id": None,
+            "source_kind": None,
+        },
+    )
+
+    assert result.action == "cleared"
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"action": "cleared"},
+        {"casilla_values": {}, "casilla_count": 0},
+        {"casilla_count": 2},
+        {"reason": ""},
+        {"action": "replaced"},
+    ],
+)
+def test_rejects_an_action_shape_the_command_never_emits(overrides: dict[str, object]) -> None:
+    """A clear with values, a record without values, a miscount, or a blank reason is refused."""
+    with pytest.raises(ValidationError):
+        FilingRecordLocalObservationResult.model_validate(_kwargs(**overrides))

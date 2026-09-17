@@ -80,7 +80,13 @@ from ...domain.calculations.registry.withholding_bindings import WithholdingClav
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
+from ...domain.modelos.filing_record import (
+    AeatConfirmationState,
+    ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecordStatus,
+)
 from ...domain.modelos.filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -89,6 +95,11 @@ from ...domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from ._decimal_wire import DecimalWireText
+from ._filing_chain_payloads import (
+    AeatRegisterRefPayload,
+    FilingReconciliationPayload,
+    ObservationLayersPayload,
+)
 from ._modelo_revision_payload_parts import (
     CalculationRevisionProjectionFields,
     DetailRowPayload,
@@ -415,7 +426,12 @@ class ModeloRecordPayload(OutputSchema):
     period: Period
     filed_at: UtcInstant
     filed_by: ModeloActorLabel
+    member_nif: str | None = None
     notes: FilingNotes | None = None
+    origin: FilingOrigin
+    confirmation: AeatConfirmationState
+    declaration_kind: FilingDeclarationKind
+    aeat_register: AeatRegisterRefPayload | None = None
     aeat_accepted: bool = False
     status: ModeloRecordStatus
     superseded_at: datetime | None = None
@@ -429,6 +445,8 @@ class ModeloRecordPayload(OutputSchema):
     @pydantic_validation_boundary
     def _validate_filing_record_grounding(self) -> ModeloRecordPayload:
         """Keep the JSON projection aligned with the filing-record invariant."""
+        if self.aeat_accepted != (self.confirmation is AeatConfirmationState.CONFIRMADA):
+            raise ValueError("AEAT acceptance must follow the confirmation state")
         if self.aeat_accepted != (self.external_evidence is not None):
             raise ValueError("AEAT acceptance and external evidence must be supplied together")
         if self.status is ModeloRecordStatus.VIGENTE:
@@ -823,9 +841,14 @@ class ModeloRecordListResult(OutputSchema):
 
 
 class ModeloRecordShowResult(ModeloRecordPayload):
-    """Filing-record detail returned by ``aeat app modelo filing-record view``."""
+    """Filing-record detail returned by ``aeat app modelo filing-record view``.
+
+    ``observation_layers`` shows the official and pending-local observations
+    stored for the record's coordinate, and the audit of any operator override.
+    """
 
     operation: str = "modelo.filing_record.show"
+    observation_layers: ObservationLayersPayload
 
 
 class VerificationReportListResult(OutputSchema):
@@ -890,6 +913,7 @@ class FilingRecordImportResult(ModeloRecordPayload):
     """
 
     operation: str = "modelo.filing_record.import"
+    reconciliation: FilingReconciliationPayload
 
     @computed_field
     @property
@@ -937,30 +961,47 @@ class FilingRecordImportResult(ModeloRecordPayload):
 class FilingRecordLocalObservationResult(OutputSchema):
     """Result emitted by ``aeat app modelo filing-record observe-local``.
 
-    The payload mirrors
-    :class:`ModeloLocalObservationResult`:
-    values are stored in the calculation-observation repository for prefill.
+    ``action`` says whether the operator recorded a pending-local override or
+    cleared one. A recorded override mirrors
+    :class:`ModeloLocalObservationResult`; a clear carries no values.
+    ``observation_layers`` is the coordinate's state after the write, so the
+    override audit and any official layer it sits above stay visible.
     ``official_evidence``, ``filing_record_created``, and ``aeat_accepted``
-    are pinned ``False`` -- :func:`~application.modelo.local_observation_actions.record_operator_local_observation`
-    never stamps a ``ModeloRecord`` or :class:`ExternalEvidence` for this
-    action, so the envelope cannot be constructed to look like AEAT-backed
-    evidence.
+    are pinned ``False``: this command never stamps a ``ModeloRecord`` or
+    :class:`ExternalEvidence`, so the envelope cannot be constructed to look
+    like AEAT-backed evidence.
     """
 
     operation: str = "modelo.filing_record.observe_local"
+    action: Literal["recorded", "cleared"]
     modelo: str
     filing_year: int
     period: Period
-    revision_id: RevisionId
+    revision_id: RevisionId | None = None
     observation_key: str
-    source_kind: ObservationSourceKind
-    casilla_values: dict[CasillaId, DecimalWireText]
-    casilla_count: NonNegativeInt
+    source_kind: ObservationSourceKind | None = None
+    casilla_values: dict[CasillaId, DecimalWireText] = {}
+    casilla_count: NonNegativeInt = 0
     captured_at: datetime
     captured_by: NonEmptyStr
+    reason: NonEmptyStr
+    observation_layers: ObservationLayersPayload
     official_evidence: Literal[False] = False
     filing_record_created: Literal[False] = False
     aeat_accepted: Literal[False] = False
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_action_shape(self) -> FilingRecordLocalObservationResult:
+        """A recorded override carries its values and revision; a clear carries none."""
+        recorded = self.action == "recorded"
+        if recorded and (self.revision_id is None or self.source_kind is None or not self.casilla_values):
+            raise ValueError("a recorded local observation carries its revision, source kind and values")
+        if not recorded and (self.revision_id is not None or self.source_kind is not None or self.casilla_values):
+            raise ValueError("a cleared local observation carries no revision, source kind or values")
+        if self.casilla_count != len(self.casilla_values):
+            raise ValueError("casilla_count must equal the number of casilla values")
+        return self
 
 
 class ModeloCasillaResult(OutputSchema):

@@ -11,9 +11,14 @@ from __future__ import annotations
 
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 import typer
 
+from ...application.calculations.observations_repository import (
+    CalculationObservationRepositoryProtocol,
+    observation_key,
+)
 from ...application.modelo.action_errors import (
     ExternalModeloImportError,
     ModeloLocalObservationError,
@@ -33,8 +38,14 @@ from ...application.modelo.filing_actions import (
     list_filing_records,
     list_verification_reports,
 )
+from ...application.modelo.filing_chain_reconciliation import (
+    FilingReconciliationOutcome,
+    FilingReconciliationResult,
+)
 from ...application.modelo.local_observation_actions import (
+    OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
     ModeloLocalObservationResult,
+    clear_operator_local_observation,
     record_operator_local_observation,
 )
 from ...application.modelo.local_observation_spreadsheet import (
@@ -45,10 +56,20 @@ from ...application.modelo.work_lifecycle import get_work_unit
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n.render import tr
+from ...core.json_contract import Notice
 from ...core.period import Period, PeriodError
+from ...core.time.clock import now as utc_now
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloValidationError
-from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
+from ...domain.modelos.filing_record import ExternalEvidenceKind
+from ._filing_chain_payloads import (
+    ObservationLayersPayload,
+    filing_reconciliation_lines,
+    filing_reconciliation_notices,
+    filing_reconciliation_payload,
+    observation_layers_lines,
+    observation_layers_payload,
+)
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     parse_casilla_override,
@@ -70,7 +91,7 @@ from ._modelo_rendering import (
     verification_report_lines,
     verification_report_payload,
 )
-from .common import active_bucket_id_or_refuse, declared_tax_id, emit_envelope
+from .common import active_bucket_id_or_refuse, declared_tax_id, emit_envelope, notice_lines
 from .state_projection_support import authority_operation, calculation_action_ports_factory, filing_action_ports_factory
 
 
@@ -143,7 +164,7 @@ def _import_record(
     evidence_reference_id: str,
     actor: str,
     file: Path | None,
-) -> ModeloRecord:
+) -> FilingReconciliationResult:
     """Load profile identity and delegate one external-evidence import path."""
     try:
         from ...application.workflow.persistence import workflow_state_repository
@@ -215,7 +236,8 @@ def filing_record_list(
         f"modelo_filter\t{modelo_code or ''}",
         f"include_superseded\t{include_superseded}",
         f"record_count\t{len(records)}",
-        "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",
+        "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\torigin\tconfirmation\t"
+        "declaration_kind\tamends_filing_record_id\taeat_expediente_id\tfiled_at\tfiled_by",
     ]
     lines.extend(
         "\t".join(
@@ -226,6 +248,11 @@ def filing_record_list(
                 str(record.filing_year),
                 record.period.registry_token,
                 record.status.value,
+                record.origin.value,
+                record.confirmation.value,
+                record.declaration_kind.value,
+                record.amends_filing_record_id or "",
+                record.aeat_register.expediente_id if record.aeat_register is not None else "",
                 record.filed_at.isoformat(),
                 record.filed_by,
             )
@@ -236,16 +263,34 @@ def filing_record_list(
 
 
 def filing_record_show(ctx: typer.Context, filing_record_id: str) -> None:
-    """View one filing record by id."""
+    """View one filing record with both observation layers of its coordinate."""
+    bucket_id = active_bucket_id_or_refuse()
     try:
         record = get_filing_record(
             filing_record_id,
-            ports=filing_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse()),
+            ports=filing_action_ports_factory(ctx)(bucket_id=bucket_id),
         )
     except ModeloRecordNotFoundError as exc:
         raise _bad_from_error(exc) from exc
-    result = ModeloRecordShowResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
-    lines = ["operation\tmodelo.filing_record.show", *filing_record_lines(record)]
+    observation_repository = calculation_action_ports_factory(ctx)(
+        bucket_id=record.bucket_id,
+        operation=authority_operation(ctx),
+    ).observation_repository
+    layers = observation_layers_payload(
+        observation_repository.load_observation_layers(
+            str(record.modelo),
+            record.period,
+            member_nif=record.member_nif,
+        ),
+    )
+    result = ModeloRecordShowResult.model_validate(
+        {**filing_record_payload(record).model_dump(mode="python"), "observation_layers": layers},
+    )
+    lines = [
+        "operation	modelo.filing_record.show",
+        *filing_record_lines(record),
+        *observation_layers_lines(layers),
+    ]
     emit_envelope(ctx, command="modelo.filing_record.view", result=result, lines=lines)
 
 
@@ -270,7 +315,7 @@ def filing_record_import(
     """
     validated_work_unit_id = _work_unit_id(work_unit_id)
     casilla_values = _import_input_values(set_overrides, file)
-    record = _import_record(
+    reconciliation = _import_record(
         ctx=ctx,
         work_unit_id=validated_work_unit_id,
         casilla_values=casilla_values,
@@ -279,17 +324,38 @@ def filing_record_import(
         actor=actor,
         file=file,
     )
+    notices = filing_reconciliation_notices((reconciliation,))
+    if reconciliation.outcome is FilingReconciliationOutcome.UNVERIFIABLE or reconciliation.filing_record_id is None:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.filing_record.import_unverifiable",
+                modelo=reconciliation.modelo,
+                period=reconciliation.period.registry_token,
+                filing_year=reconciliation.filing_year,
+            ),
+        )
+    record = get_filing_record(
+        reconciliation.filing_record_id,
+        ports=filing_action_ports_factory(ctx)(bucket_id=reconciliation.bucket_id),
+    )
     # The payload derives the evidence kind and reference from the record's own
-    # external evidence, so the record is the only source passed.
-    result = FilingRecordImportResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
+    # external evidence, so the in-force AEAT-backed record is the source passed.
+    result = FilingRecordImportResult.model_validate(
+        {
+            **filing_record_payload(record).model_dump(mode="python"),
+            "reconciliation": filing_reconciliation_payload(reconciliation),
+        },
+    )
     lines = [
-        "operation\tmodelo.filing_record.import",
-        f"evidence_kind\t{evidence_kind.value}",
-        f"evidence_reference_id\t{evidence_reference_id}",
+        "operation	modelo.filing_record.import",
+        f"evidence_kind	{evidence_kind.value}",
+        f"evidence_reference_id	{evidence_reference_id}",
         *filing_record_lines(record),
+        *filing_reconciliation_lines((reconciliation,)),
+        *notice_lines(notices),
     ]
-    lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
-    emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
+    lines.append("filing_disambiguation	(imported AEAT-attested baseline)")
+    emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines, notices=notices)
 
 
 def _local_observation_values(
@@ -319,6 +385,13 @@ def _local_observation_values(
     return casilla_values
 
 
+def _local_observation_repository(ctx: typer.Context) -> CalculationObservationRepositoryProtocol:
+    return calculation_action_ports_factory(ctx)(
+        bucket_id=active_bucket_id_or_refuse(),
+        operation=authority_operation(ctx),
+    ).observation_repository
+
+
 def _record_local_observation(
     *,
     ctx: typer.Context,
@@ -326,27 +399,99 @@ def _record_local_observation(
     year: int,
     period: Period,
     casilla_values: dict[CasillaId, Decimal],
-    actor: str | None,
-    replace_official_evidence: bool,
-) -> ModeloLocalObservationResult:
-    """Delegate the validated local observation to its application owner."""
+    actor: str,
+    reason: str,
+) -> tuple[ModeloLocalObservationResult, ObservationLayersPayload]:
+    """Record the validated override and read the coordinate's layers back."""
+    repository = _local_observation_repository(ctx)
     try:
-        calculation_ports = calculation_action_ports_factory(ctx)(
-            bucket_id=active_bucket_id_or_refuse(),
-            operation=authority_operation(ctx),
-        )
-        return record_operator_local_observation(
+        recorded = record_operator_local_observation(
             modelo=modelo,
             filing_year=year,
             period=period,
             casilla_values=casilla_values,
-            actor=actor or _actor(),
-            replace_official_evidence=replace_official_evidence,
-            repository=calculation_ports.observation_repository,
+            actor=actor,
+            reason=reason,
+            repository=repository,
             operation=authority_operation(ctx),
         )
     except ModeloLocalObservationError as exc:
         raise _bad_from_error(exc) from exc
+    return recorded, observation_layers_payload(repository.load_observation_layers(modelo, period))
+
+
+def _clear_local_observation(
+    *,
+    ctx: typer.Context,
+    modelo: str,
+    year: int,
+    period: Period,
+    actor: str,
+    reason: str,
+) -> ObservationLayersPayload:
+    """Clear the operator override and read the coordinate's layers back."""
+    repository = _local_observation_repository(ctx)
+    try:
+        clear_operator_local_observation(
+            modelo,
+            year,
+            period,
+            member_nif=None,
+            reason=reason,
+            actor=actor,
+            repository=repository,
+        )
+    except ModeloLocalObservationError as exc:
+        raise _bad_from_error(exc) from exc
+    return observation_layers_payload(repository.load_observation_layers(modelo, period))
+
+
+def _observe_local_notice(action: Literal["recorded", "cleared"]) -> Notice:
+    message = (
+        tr("cli.app.modelo.filing_record.observe_local_recorded_notice")
+        if action == "recorded"
+        else tr("cli.app.modelo.filing_record.observe_local_cleared_notice")
+    )
+    return advisory_notice(
+        "modelo.filing_record.observe_local.non_official"
+        if action == "recorded"
+        else "modelo.filing_record.observe_local.cleared",
+        message,
+        context={
+            "source_kind": OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND.value,
+            "official_evidence": "false",
+            "filing_record_created": "false",
+        },
+    )
+
+
+def _emit_local_observation(
+    ctx: typer.Context,
+    *,
+    result: FilingRecordLocalObservationResult,
+    notice: Notice,
+) -> None:
+    lines = [
+        "operation\tmodelo.filing_record.observe_local",
+        f"action\t{result.action}",
+        f"modelo\t{result.modelo}",
+        f"filing_year\t{result.filing_year}",
+        f"period\t{result.period.registry_token}",
+        f"revision_id\t{result.revision_id or ''}",
+        f"observation_key\t{result.observation_key}",
+        f"source_kind\t{result.source_kind.value if result.source_kind is not None else ''}",
+        "official_evidence\tFalse",
+        "filing_record_created\tFalse",
+        "aeat_accepted\tFalse",
+        f"captured_at\t{result.captured_at.isoformat()}",
+        f"captured_by\t{result.captured_by}",
+        f"reason\t{result.reason}",
+        "casilla_id\tvalue",
+        *(f"{casilla_id}\t{value}" for casilla_id, value in result.casilla_values.items()),
+        *observation_layers_lines(result.observation_layers),
+        *notice_lines((notice,)),
+    ]
+    emit_envelope(ctx, command="modelo.filing_record.observe_local", result=result, lines=lines, notices=[notice])
 
 
 def filing_record_observe_local(
@@ -354,80 +499,74 @@ def filing_record_observe_local(
     modelo: str,
     year: int,
     period: str,
+    reason: str,
     actor: str | None = None,
     set_overrides: list[str] | None = None,
     file: Path | None = None,
-    replace_official_evidence: bool = False,
+    clear: bool = False,
 ) -> None:
-    """Record non-official local observations for later calculation prefill.
+    """Record or clear an operator override of a period's observation.
 
-    The command parses canonical :class:`CasillaId` decimal values from
-    ``--set`` flags and/or a ``--file`` spreadsheet (CSV or XLSX,
-    ``casilla_code,value`` columns), delegates to
-    :func:`record_operator_local_observation`, and emits
-    :class:`FilingRecordLocalObservationResult` plus an advisory
-    :class:`Notice`. It deliberately creates no
-    :class:`ModeloRecord` and supplies no official AEAT
-    evidence for filing-grade clean-state checks — the local reconstruction
-    stays non-official regardless of transport (``--set`` or ``--file``).
+    Recording parses canonical :class:`CasillaId` decimal values from ``--set``
+    flags and/or a ``--file`` spreadsheet (CSV or XLSX, ``casilla_code,value``
+    columns) and stores them, with the operator and ``--reason``, as the
+    pending-local layer above any official AEAT observation. ``--clear``
+    removes that override so readers see the official layer again. Neither
+    mode creates a :class:`ModeloRecord` or supplies official AEAT evidence.
     """
     modelo_code = _modelo_code(modelo)
     filing_period = _filing_period(year, period)
+    resolved_actor = actor or _actor()
+    if clear:
+        if file is not None or set_overrides:
+            raise typer.BadParameter(tr("cli.app.modelo.filing_record.observe_local_clear_values_error"))
+        layers = _clear_local_observation(
+            ctx=ctx,
+            modelo=str(modelo_code),
+            year=year,
+            period=filing_period,
+            actor=resolved_actor,
+            reason=reason,
+        )
+        result = FilingRecordLocalObservationResult(
+            action="cleared",
+            modelo=str(modelo_code),
+            filing_year=year,
+            period=filing_period,
+            observation_key=observation_key(str(modelo_code), filing_period),
+            captured_at=utc_now(),
+            captured_by=resolved_actor,
+            reason=reason,
+            observation_layers=layers,
+        )
+        _emit_local_observation(ctx, result=result, notice=_observe_local_notice("cleared"))
+        return
     casilla_values = _local_observation_values(file, set_overrides)
-    local_observation = _record_local_observation(
+    recorded, layers = _record_local_observation(
         ctx=ctx,
         modelo=str(modelo_code),
         year=year,
         period=filing_period,
         casilla_values=casilla_values,
-        actor=actor,
-        replace_official_evidence=replace_official_evidence,
+        actor=resolved_actor,
+        reason=reason,
     )
     result = FilingRecordLocalObservationResult(
-        modelo=local_observation.modelo,
-        filing_year=local_observation.filing_year,
-        period=local_observation.period,
-        revision_id=local_observation.revision_id,
-        observation_key=local_observation.observation_key,
-        source_kind=local_observation.source_kind,
-        casilla_values={
-            casilla_id: str(value) for casilla_id, value in sorted(local_observation.casilla_values.items())
-        },
-        casilla_count=len(local_observation.casilla_values),
-        captured_at=local_observation.captured_at,
-        captured_by=local_observation.captured_by,
+        action="recorded",
+        modelo=recorded.modelo,
+        filing_year=recorded.filing_year,
+        period=recorded.period,
+        revision_id=recorded.revision_id,
+        observation_key=recorded.observation_key,
+        source_kind=recorded.source_kind,
+        casilla_values={casilla_id: str(value) for casilla_id, value in sorted(recorded.casilla_values.items())},
+        casilla_count=len(recorded.casilla_values),
+        captured_at=recorded.captured_at,
+        captured_by=recorded.captured_by,
+        reason=reason,
+        observation_layers=layers,
     )
-    notice_message = (
-        "Operator-supplied local observation recorded for calculation prefill only; "
-        "it is not AEAT evidence and no filing record was created."
-    )
-    notice = advisory_notice(
-        "modelo.filing_record.observe_local.non_official",
-        notice_message,
-        context={
-            "source_kind": local_observation.source_kind,
-            "official_evidence": "false",
-            "filing_record_created": "false",
-        },
-    )
-    lines = [
-        "operation\tmodelo.filing_record.observe_local",
-        f"modelo\t{local_observation.modelo}",
-        f"filing_year\t{local_observation.filing_year}",
-        f"period\t{local_observation.period.registry_token}",
-        f"revision_id\t{local_observation.revision_id}",
-        f"observation_key\t{local_observation.observation_key}",
-        f"source_kind\t{local_observation.source_kind}",
-        "official_evidence\tFalse",
-        "filing_record_created\tFalse",
-        "aeat_accepted\tFalse",
-        f"captured_at\t{local_observation.captured_at.isoformat()}",
-        f"captured_by\t{local_observation.captured_by}",
-        "casilla_id\tvalue",
-    ]
-    lines.extend((f"{casilla_id}\t{value}" for casilla_id, value in sorted(local_observation.casilla_values.items())))
-    lines.append(f"WARNING\t{notice_message}")
-    emit_envelope(ctx, command="modelo.filing_record.observe_local", result=result, lines=lines, notices=[notice])
+    _emit_local_observation(ctx, result=result, notice=_observe_local_notice("recorded"))
 
 
 def verification_report_list(ctx: typer.Context, calculation_revision_id: str | None = None) -> None:

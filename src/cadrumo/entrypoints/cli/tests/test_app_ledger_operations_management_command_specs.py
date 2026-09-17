@@ -964,7 +964,12 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
             _expected_option("taxable_base", "--taxable-base", "cli.ledger.update.taxable_base_help"),
             _expected_option("iva_rate", "--iva-rate", "cli.ledger.update.iva_rate_help"),
             _expected_option("iva_amount", "--iva-amount", "cli.ledger.update.iva_amount_help"),
-            _expected_option("irpf_category", "--irpf-category", "cli.ledger.update.irpf_category_help"),
+            _expected_option(
+                "irpf_category",
+                "--irpf-category",
+                "cli.ledger.update.irpf_category_help",
+                value_hooks=("cadrumo.entrypoints.cli.common:IRPF_CATEGORY_CHOICE", None, None, None),
+            ),
             _expected_option("notes", "--notes", "cli.ledger.update.notes_help"),
             _expected_option("group", "--group", "cli.ledger.update.group_help"),
             _expected_option("actor", "--actor", "cli.ledger.add.actor_help"),

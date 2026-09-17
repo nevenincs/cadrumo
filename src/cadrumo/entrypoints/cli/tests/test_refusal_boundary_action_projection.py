@@ -35,6 +35,7 @@ from ....core.operator_action_enums import (
     ActionEvidenceProvenance,
 )
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
+from ....core.redaction.rules import redact_for_log
 from ..common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, command_error_boundary
 from ._english_locale_fixture import english_locale_fixture
@@ -127,8 +128,10 @@ def test_corrupt_active_profile_pointer_projects_the_canonical_repair_action(tmp
 
     assert result.exit_code == get_error_exit_code(ErrorCategory.INTEGRITY), result.output
     error = json.loads(result.stderr)["error"]
+    # The run directory is random and can hold a segment shaped like a NIF, which
+    # the error boundary redacts like any other; the path is compared as rendered.
     assert error["context"] == {
-        "path": str(pointer_file),
+        "path": redact_for_log(str(pointer_file)),
         "pointer_corrupt": "true",
         "root_fallback_refused": "true",
     }
