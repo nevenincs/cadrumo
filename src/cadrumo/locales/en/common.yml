@@ -104,6 +104,8 @@ aggregation:
       unsupported_period: Unsupported modelo period for ledger aggregation.
   oss_ioss:
     errors:
+      exterior_country_code_undeclared: The member state of consumption has no declared
+        Modelo 369 country code, so its services cannot be declared on this modelo.
       exterior_rate_kind_unsupported: The one-stop-shop external scheme only accepts
         services at the standard or reduced rate of the member state of consumption.
         The supplied observation declares another rate kind, which cannot be aggregated

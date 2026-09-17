@@ -112,6 +112,9 @@ aggregation:
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
   oss_ioss:
     errors:
+      exterior_country_code_undeclared: El Estado miembro de consumo no tiene un código
+        de país declarado para el modelo 369, por lo que sus servicios no se pueden
+        declarar en este modelo.
       exterior_rate_kind_unsupported: El régimen exterior de la ventanilla única sólo
         admite servicios al tipo general o reducido del Estado miembro de consumo.
         La observación aportada declara otro tipo de gravamen, que no puede agregarse

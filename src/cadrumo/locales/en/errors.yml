@@ -553,6 +553,7 @@ errors:
     integrity_apoderado_configuration_identity: The stored apoderado configuration
       does not belong to the profile it was read from.
     integrity_cadrumo_core_validation: An internal data-integrity check failed.
+    integrity_cadrumo_toml_decode: A TOML document could not be parsed.
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
     integrity_corpus_anchor_resolution: A bundled corpus anchor does not resolve to
       exactly one extracted unit.

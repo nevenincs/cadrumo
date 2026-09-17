@@ -102,6 +102,8 @@ aggregation:
       unsupported_period: Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.
   oss_ioss:
     errors:
+      exterior_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
+        369-es modelo országkódja, ezért szolgáltatásai nem vallhatók be ezen a modelón.
       exterior_rate_kind_unsupported: Az egyablakos rendszer külső sémája csak a fogyasztás
         szerinti tagállam általános vagy kedvezményes adómértékével nyújtott szolgáltatásokat
         fogadja el. A megadott megfigyelés más adómérték-típust jelöl, amely ebben

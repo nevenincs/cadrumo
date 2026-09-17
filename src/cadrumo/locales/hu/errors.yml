@@ -562,6 +562,7 @@ errors:
     integrity_apoderado_configuration_identity: A tárolt apoderado-beállítás nem ahhoz
       a profilhoz tartozik, amelyből beolvasták.
     integrity_cadrumo_core_validation: Belső adatintegritás-ellenőrzés meghiúsult.
+    integrity_cadrumo_toml_decode: Egy TOML-dokumentum nem dolgozható fel.
     integrity_cli_output_schema: A CLI kimeneti séma nyilvántartása helytelenül van
       konfigurálva.
     integrity_corpus_anchor_resolution: Egy csomagolt korpuszhorgony nem pontosan

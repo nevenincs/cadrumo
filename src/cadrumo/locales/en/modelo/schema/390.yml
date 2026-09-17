@@ -887,17 +887,17 @@ modelo:
             help: Tax information about tax information in casilla 661 of Modelo 390.
             label: Deductible VAT under a final administrative decision or court judgment
               at rates no longer in force - deductible VAT amount
+          iva-importacion-diferimiento:
+            help: 'Tax information about tax information in casilla 659 of Modelo
+              390 References: [659].'
+            label: Annual settlement result - Import VAT assessed by Customs (only
+              taxpayers electing deferred payment) [659]
           iva-isp-interior-base:
             help: Tax information about tax information in casilla 27 of Modelo 390.
             label: Taxable base of accrued reverse-charge VAT on domestic transactions
           iva-isp-interior-cuota:
             help: Tax information about tax information in casilla 28 of Modelo 390.
             label: Accrued reverse-charge VAT on domestic transactions
-          iva-iva-importacion-diferimiento:
-            help: 'Tax information about tax information in casilla 659 of Modelo
-              390 References: [659].'
-            label: Annual settlement result - Import VAT assessed by Customs (only
-              taxpayers electing deferred payment) [659]
           iva-liquidaciones-total-a-ingresar:
             help: Tax information for casilla 95 of Modelo 390.
             label: Total amounts payable from the year's VAT self-assessments

@@ -1149,8 +1149,29 @@ application:
         EUR no se integra en la casilla %{casilla_id}.
       cross_casilla_invariant_violated: Se incumple el invariante entre casillas %{predicate_id}
         declarado por el registro en esta revisión.
+      cross_period_activity_start_missing: El modelo %{target_modelo} %{target_filing_year}
+        %{target_period} necesita una fecha de inicio de actividad declarada.
       cross_period_dependency_unclean: 'El modelo de origen %{source_modelo} %{source_filing_year}
         %{source_period} no está limpio para %{origin_ids}: %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'El modelo %{source_modelo}
+        %{source_filing_year} %{source_period} queda fuera de alcance: la actividad
+        comenzó el %{activity_start_date}.'
+      cross_period_m111_no_retenciones: El modelo %{source_modelo} %{source_filing_year}
+        %{source_period} no declara retenciones para %{target_modelo} %{target_filing_year}
+        %{target_period}.
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} modelo(s) origen no son aplicables a este
+          contribuyente: %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: El modelo %{source_modelo} %{source_filing_year} %{source_period}
+          se apoya en una cadena local (%{origin_code}), no en evidencia oficial de
+          la AEAT.
+      cross_period_operator_declared_suppression: El modelo %{source_modelo} %{source_filing_year}
+        %{source_period} se suprime por declaración del contribuyente (%{origin_code}),
+        con fecha de inicio de actividad %{activity_start_date}.
+      cross_period_zero_value_previous_filing: El modelo %{source_modelo} %{source_filing_year}
+        %{source_period} aporta un valor cero a %{target_modelo} %{target_filing_year}
+        %{target_period}.
       cuota_less_ledger_row_base_missing: La transacción %{transaction_id} de la categoría
         de IVA %{iva_category_code} no tiene base declarable.
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: el bien

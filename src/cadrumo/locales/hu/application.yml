@@ -1096,9 +1096,29 @@ application:
         jövedelem nem épül be a(z) %{casilla_id} rovatba.
       cross_casilla_invariant_violated: A nyilvántartás által deklarált %{predicate_id}
         rovatközi invariáns sérül ebben a revízióban.
+      cross_period_activity_start_missing: A(z) %{target_modelo} %{target_filing_year}
+        %{target_period} modelóhoz bejelentett tevékenységkezdési dátum szükséges.
       cross_period_dependency_unclean: 'A(z) %{source_modelo} %{source_filing_year}
         %{source_period} forrásmodelo nem tiszta ehhez: %{origin_ids}; akadályok:
         %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} modelo hatókörön kívül esik: a tevékenység %{activity_start_date}
+        napon kezdődött.'
+      cross_period_m111_no_retenciones: 'A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} modelo nem vall be forrásadót ehhez: %{target_modelo} %{target_filing_year}
+        %{target_period}.'
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} forrásmodelo nem alkalmazható erre az adózóra:
+          %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: A(z) %{source_modelo} %{source_filing_year} %{source_period} modelo
+          helyi láncon alapul (%{origin_code}), nem hivatalos AEAT bizonyítékon.
+      cross_period_operator_declared_suppression: A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} modelo az adózó nyilatkozata alapján elnyomva (%{origin_code}),
+        a bejelentett tevékenységkezdés %{activity_start_date}.
+      cross_period_zero_value_previous_filing: 'A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} modelo nulla értéket visz át ide: %{target_modelo} %{target_filing_year}
+        %{target_period}.'
       cuota_less_ledger_row_base_missing: A(z) %{transaction_id} tranzakciónak a(z)
         %{iva_category_code} áfakategóriában nincs bevallható alapja.
       foreign_asset_redeclaration: '%{modelo_code} modelo %{filing_year}: a(z) %{group_code}

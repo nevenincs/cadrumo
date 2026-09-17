@@ -109,6 +109,9 @@ aggregation:
       unsupported_period: Període de model no admès per a l'agregació del llibre.
   oss_ioss:
     errors:
+      exterior_country_code_undeclared: L'Estat membre de consum no té cap codi de
+        país declarat per al model 369, de manera que els seus serveis no es poden
+        declarar en aquest model.
       exterior_rate_kind_unsupported: El règim exterior de la finestreta única només
         admet serveis al tipus general o reduït de l'Estat membre de consum. L'observació
         aportada declara un altre tipus de gravamen, que no es pot agregar en aquest

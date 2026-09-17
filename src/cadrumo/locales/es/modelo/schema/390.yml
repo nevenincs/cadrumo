@@ -1181,6 +1181,12 @@ modelo:
               no vigentes - Cuota deducible.'
             label: Cuotas deducibles en virtud de resolución administrativa o sentencia
               firmes con tipos no vigentes - Cuota deducible
+          iva-importacion-diferimiento:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              liquidación anual - IVA a la importación liquidado por la Aduana (sólo
+              sujetos pasivos con opción de diferimiento) [659].'
+            label: Resultado liquidación anual - IVA a la importación liquidado por
+              la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]
           iva-isp-interior-base:
             help: 'Consulte la información correspondiente a la casilla: Base imponible
               IVA autorepercutido en operaciones interiores con inversión del sujeto
@@ -1193,12 +1199,6 @@ modelo:
               (LIVA art 84.Uno.2; oficial casilla 13).'
             label: Cuota IVA autorepercutida en operaciones interiores con inversion
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
-          iva-iva-importacion-diferimiento:
-            help: 'Consulte la información correspondiente a la casilla: Resultado
-              liquidación anual - IVA a la importación liquidado por la Aduana (sólo
-              sujetos pasivos con opción de diferimiento) [659].'
-            label: Resultado liquidación anual - IVA a la importación liquidado por
-              la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]
           iva-liquidaciones-total-a-ingresar:
             help: 'Consulte la información correspondiente a la casilla: Total resultados
               a ingresar de las autoliquidaciones de IVA del ejercicio.'

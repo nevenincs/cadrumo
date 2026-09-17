@@ -1150,8 +1150,28 @@ application:
         EUR no s'integra a la casella %{casilla_id}.
       cross_casilla_invariant_violated: S'incompleix l'invariant entre caselles %{predicate_id}
         declarat pel registre en aquesta revisió.
+      cross_period_activity_start_missing: El model %{target_modelo} %{target_filing_year}
+        %{target_period} necessita una data d'inici d'activitat declarada.
       cross_period_dependency_unclean: 'El model d''origen %{source_modelo} %{source_filing_year}
         %{source_period} no està net per a %{origin_ids}: %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'El model %{source_modelo} %{source_filing_year}
+        %{source_period} queda fora d''abast: l''activitat va començar el %{activity_start_date}.'
+      cross_period_m111_no_retenciones: El model %{source_modelo} %{source_filing_year}
+        %{source_period} no declara retencions per a %{target_modelo} %{target_filing_year}
+        %{target_period}.
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} model(s) origen no són aplicables a aquest
+          contribuent: %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: El model %{source_modelo} %{source_filing_year} %{source_period}
+          es basa en una cadena local (%{origin_code}), no en evidència oficial de
+          l'AEAT.
+      cross_period_operator_declared_suppression: El model %{source_modelo} %{source_filing_year}
+        %{source_period} se suprimeix per declaració del contribuent (%{origin_code}),
+        amb data d'inici d'activitat %{activity_start_date}.
+      cross_period_zero_value_previous_filing: El model %{source_modelo} %{source_filing_year}
+        %{source_period} aporta un valor zero a %{target_modelo} %{target_filing_year}
+        %{target_period}.
       cuota_less_ledger_row_base_missing: La transacció %{transaction_id} de la categoria
         d'IVA %{iva_category_code} no té base declarable.
       foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el bé a l''estranger
