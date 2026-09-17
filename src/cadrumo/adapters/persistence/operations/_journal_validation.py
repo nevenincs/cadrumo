@@ -13,6 +13,7 @@ from ....application.operations.persistence.events import (
     OperationTerminalEvent,
 )
 from ....application.operations.persistence.journal import OperationPersistedSnapshot
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ..storage.errors import RepositoryError
 
@@ -39,6 +40,7 @@ class OperationJournalRecord(BaseModel):
         return self.snapshot.started_at
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_history(self) -> OperationJournalRecord:
         _raise_if(
             any(event.identity != self.snapshot.identity for event in self.history),
