@@ -15,6 +15,7 @@ from __future__ import annotations
 import ast
 
 import pytest
+
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadAgricolaSimplificado,
