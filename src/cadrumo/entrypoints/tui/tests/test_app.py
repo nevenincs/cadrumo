@@ -124,7 +124,10 @@ async def test_navigate_to_refuses_unavailable_destination_without_replacing_hom
     )
 
     async with app.run_test() as pilot:
+        # Home is pushed after startup; capture it only once it is mounted.
+        await pilot.pause()
         home = app.screen
+        assert home.id == "home-screen"
 
         app.navigate_to(target)
         await pilot.pause()
@@ -161,7 +164,10 @@ async def test_navigate_to_refuses_a_factory_invocation_failure_without_replacin
     )
 
     async with app.run_test() as pilot:
+        # Home is pushed after startup; capture it only once it is mounted.
+        await pilot.pause()
         home = app.screen
+        assert home.id == "home-screen"
 
         app.navigate_to(target)
         await pilot.pause()
