@@ -14,9 +14,9 @@ at the domain boundary.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.time.clock import today_madrid
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import BindingId
@@ -46,7 +46,7 @@ def _registry_m130_retenciones_route(
         MappingFactQuery(
             fact_id="m130-retenciones-output-routing",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

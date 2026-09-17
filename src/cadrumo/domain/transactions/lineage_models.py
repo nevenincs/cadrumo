@@ -94,6 +94,7 @@ class DecisionProvenance(BaseModel):
 
     @field_validator("reason")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_reason(cls, value: str) -> str:
         """Trim the free-text reason while allowing the empty string."""
         return value.strip()
@@ -161,6 +162,7 @@ class ClassificationHistoryEntry(BaseModel):
 
     @field_validator("reason")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_reason(cls, value: str) -> str:
         """Trim free-text reasons while allowing the empty string."""
         return value.strip()
@@ -179,6 +181,7 @@ class ClassificationHistoryEntry(BaseModel):
 
     @field_validator("notes")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_notes(cls, value: str) -> str:
         """Trim free-text notes while allowing the empty string."""
         return value.strip()
@@ -281,6 +284,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     @field_validator("reason")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_reason(cls, value: str) -> str:
         return value.strip()
 

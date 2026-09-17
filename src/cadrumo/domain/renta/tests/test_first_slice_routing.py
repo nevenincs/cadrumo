@@ -20,6 +20,7 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.errors import NoRevisionForPeriodError
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     renta_first_slice_binding_target_casillas,
 )
@@ -193,17 +194,30 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
 
 
 def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: PinnedAuthorityOperation) -> None:
-    """Every Modelo 100 revision's snapshot passes referential integrity.
+    """Every supported Modelo 100 revision's snapshot passes referential integrity.
 
-    This is the real end-to-end proof for the fix: building a snapshot
-    for the 2020-2022 revisions (which declare no first-slice ledger
-    bindings) must not raise, even though casilla ``0195`` -- part of
-    the universal routing table's codomain -- does not exist on those
-    revisions. Building 2023-2025 must also succeed. A regression back
-    to checking the universal codomain against every revision's own
-    casilla set reproduces the exact defect this test guards against.
+    This is the real end-to-end proof for the fix: building a snapshot for a
+    revision that declares no first-slice ledger bindings (2022) must not
+    raise, even though casilla ``0195`` -- part of the universal routing
+    table's codomain -- does not exist on it. Building 2023-2025 must also
+    succeed. A regression back to checking the universal codomain against
+    every revision's own casilla set reproduces the exact defect this test
+    guards against.
+
+    The years come from the published support envelope; an authored revision
+    below its floor is stored history and must be refused, not built.
     """
+    directory = operation.modelo_directory("100")
+    floor = directory.supported_filing_years.floor
+    authored_years = sorted(int(revision.id) for revision in directory.revisions)
+    supported = [year for year in authored_years if year >= floor]
+    assert 2022 in supported
+    assert 2025 in supported
 
-    for year in (2020, 2021, 2022, 2023, 2024, 2025):
+    for year in supported:
         snapshot = operation.snapshot(Modelo("100"), filing_year=year, period="0A")
         assert snapshot.revision.id == str(year)
+
+    for year in (year for year in authored_years if year < floor):
+        with pytest.raises(NoRevisionForPeriodError):
+            operation.snapshot(Modelo("100"), filing_year=year, period="0A")

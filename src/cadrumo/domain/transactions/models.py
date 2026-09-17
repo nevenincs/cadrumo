@@ -501,6 +501,7 @@ class Transaction(BaseModel):
 
     @field_validator("raw", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_raw_field(cls, value: object) -> object:
         """Accept a ``RawTransaction`` or a JSON-shaped/python-native mapping.
 
@@ -607,6 +608,7 @@ class Transaction(BaseModel):
 
     @field_validator("operation_date", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_operation_date(cls, value: object) -> object:
         if isinstance(value, str):
             return parse_iso8601_date(value)
@@ -624,6 +626,7 @@ class Transaction(BaseModel):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_decimal_field(cls, value: object) -> object:
         """Accept a JSON-decoded ``Decimal`` string alongside a real ``Decimal``."""
         if isinstance(value, str):
@@ -632,6 +635,7 @@ class Transaction(BaseModel):
 
     @field_validator("iva_rate")
     @classmethod
+    @pydantic_validation_boundary
     def _iva_rate_is_a_fraction_not_a_percentage(cls, value: Decimal | None) -> Decimal | None:
         """Refuse an IVA rate that was supplied as a percentage.
 
@@ -659,6 +663,7 @@ class Transaction(BaseModel):
 
     @field_validator("classified_at", "created_at", "modified_at", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_datetime_field(cls, value: object) -> object:
         """Accept a JSON-decoded ISO-8601 datetime string alongside a real ``datetime``."""
         if isinstance(value, str):
@@ -675,6 +680,7 @@ class Transaction(BaseModel):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_collection_field(cls, value: object) -> object:
         """Freeze a JSON-decoded list into the declared tuple shape.
 
@@ -736,6 +742,7 @@ class Transaction(BaseModel):
 
     @field_validator("notes", "classification_reason")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_text(cls, value: str) -> str:
         """Trim free-text fields while allowing the empty string."""
         return value.strip()
@@ -1095,6 +1102,7 @@ class TransactionCatalogue(BaseModel):
 
     @field_validator("transactions")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_transactions(cls, value: Mapping[str, Transaction]) -> Mapping[str, Transaction]:
         """Freeze the catalogue mapping to preserve immutability."""
         return MappingProxyType(dict(value))

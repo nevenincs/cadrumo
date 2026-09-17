@@ -8,6 +8,8 @@ typed registry projection before using it as a calculation selector.
 
 from __future__ import annotations
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
+
 __all__ = ["RentalReductionArt232Tier"]
 
 
@@ -26,7 +28,7 @@ class RentalReductionArt232Tier(str):
         """Expose the opaque token as a string to Pydantic."""
         from pydantic_core import core_schema
 
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
+        return core_schema.no_info_after_validator_function(pydantic_validation_boundary(cls), core_schema.str_schema())
 
     @property
     def value(self) -> str:
