@@ -41,14 +41,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_REF: ${{ inputs.ref }}
-        run: |
-          set -euo pipefail
-          resolved="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${INPUT_REF}" --jq .sha)"
-          if [ "$resolved" != "$GITHUB_SHA" ]; then
-            echo "::error::prove ref ${INPUT_REF} resolves to ${resolved}, but this run is at ${GITHUB_SHA}"
-            exit 1
-          fi
-          echo "prove ref ${INPUT_REF} is ${GITHUB_SHA}"
+        # gh exits non-zero when the jq program raises, so a ref that has moved
+        # past (or never was) the dispatched commit fails the whole prove run.
+        run: >-
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${INPUT_REF}"
+          --jq "if .sha == \"${GITHUB_SHA}\" then .sha else error(\"prove ref resolves to \" + .sha + \", not ${GITHUB_SHA}\") end"
 
   merge-gate:
     name: "Check: Merge gate (Linux)"
