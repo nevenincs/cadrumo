@@ -8,7 +8,7 @@ related:
   - '[[2026-09-17-github-actions-adr]]'
 modified: '2026-09-17'
 body_schema: body-v2
-body_hash: 'sha256:fe20b14bae1570e2b13b2b9f5a1c2bd992a7bef3c302d1c5d06f368b1af10046'
+body_hash: 'sha256:60ccbb4f2ca507a55e633dcc08f5d8f25da8b8b1f2e22f9eec984d79e88b2d34'
 ---
 
 # `github-actions` plan
@@ -98,6 +98,7 @@ Remove superseded workflows, legacy definitions and layout-pinned contract tests
 
 Turn on the owner-side external configuration that makes the lanes binding.
 
+- [ ] `P05.S23` - Require approval for workflow runs from all outside contributors in the repository Actions settings so fork pull requests never reach self-hosted runners; `.github/workflows/merge-gate.yml`.
 - [ ] `P05.S07` - Provision the GitHub App and its repository secrets for release-please; `.github/workflows/release-please.yml`.
 - [ ] `P05.S08` - Move the PyPI trusted-publisher entry to the release workflow; `.github/workflows/release.yml`.
 - [ ] `P05.S09` - Add the pull-request and required-status-checks rules for the merge-gate context with up-to-date branches to the protect-main ruleset; `.github/workflows/merge-gate.yml`.
