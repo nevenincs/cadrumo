@@ -266,8 +266,9 @@ def stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | 
     """Stage a one-revision published modelo only when check needs the witness.
 
     The witness is staged in registry shape with the published authored facts
-    beside it, because loading a modelo validates its bindings against the
-    governed facts of the registry that holds it and refuses without them.
+    and shared legal catalogues beside it, because loading a modelo validates
+    its bindings against the governed facts and filing-year envelope of the
+    registry that holds it and refuses without them.
     """
     source_registry_root = bundled_path("registry", "aeat")
     source_modelo_root = source_registry_root / "modelos" / modelo
@@ -276,6 +277,7 @@ def stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | 
         return None
     staged_registry_root = root / "published-registry" / "aeat"
     shutil.copytree(source_registry_root / "facts", staged_registry_root / "facts")
+    shutil.copytree(source_registry_root / "legal", staged_registry_root / "legal")
     staged = stage_isolated_edition(
         source_modelo_root,
         staged_registry_root / "modelos" / modelo,
