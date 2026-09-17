@@ -171,7 +171,7 @@ command-invocation counts and duration, local-LLM-run counts and duration, and
 error-kind occurrence frequency. ``error_kind`` on
 :class:`~core.telemetry.schema.TelemetryEventPayload` is always a short closed label
 (an exception class name such as ``"LLMClassifierError"``, mirroring
-:attr:`~adapters.outbound.llm.run_telemetry.error_kind`) -- never raw
+:attr:`~adapters.persistence.llm.run_telemetry.error_kind`) -- never raw
 exception text, a file path, a NIF, or any other operator-controlled content.
 No entry here declares a counter/timing keyed by anything financial, personal,
 or free-text; extending this registry with such a key is refused structurally

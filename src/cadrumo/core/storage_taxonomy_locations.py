@@ -179,7 +179,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_USAGE,
         "llm-usage",
-        consumer_module="adapters/outbound/llm/usage.py",
+        consumer_module="adapters/persistence/llm/usage.py",
         settings_field="cadrumo_llm_usage_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -188,7 +188,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_RUN_TELEMETRY,
         "llm-run-telemetry",
-        consumer_module="adapters/outbound/llm/run_telemetry.py",
+        consumer_module="adapters/persistence/llm/run_telemetry.py",
         settings_field="cadrumo_llm_run_telemetry_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -210,7 +210,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_CACHE,
         "cache/llm-cache",
-        consumer_module="adapters/outbound/llm/cache.py",
+        consumer_module="adapters/persistence/llm/cache.py",
         settings_field="cadrumo_llm_cache_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.CACHE,
