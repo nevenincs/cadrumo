@@ -10,7 +10,7 @@ richer surfaces of its sibling subpackages.
 - :class:`DeadlineWindowChecker` — narrow surface over
   :mod:`cadrumo.domain.deadlines` used by preflight.
    - :class:`ModeloFindingLike` / :class:`ModeloDraftLike` — narrow filing draft surfaces;
-  :class:`domain.filing.ModeloDraft` structurally conforms to
+  :class:`domain.filing.schema.ModeloDraft` structurally conforms to
   :class:`ModeloDraftLike`.
 - :class:`SubmissionRepositoryProtocol` — the read-side persistence port.
 
@@ -48,7 +48,7 @@ class AuthProviderProbe(Protocol):
         ...
 
     def describe(self) -> AuthProviderDescription:
-        """Return the active provider's :class:`core.AuthProviderDescription`."""
+        """Return the active provider's :class:`core.auth_provider.AuthProviderDescription`."""
         ...
 
 
@@ -85,7 +85,7 @@ class ModeloFindingLike(Protocol):
 class ModeloDraftLike(Protocol):
     """Narrow surface over a filing draft.
 
-    :class:`domain.filing.ModeloDraft` structurally conforms to
+    :class:`domain.filing.schema.ModeloDraft` structurally conforms to
     this Protocol so the engine can accept either the real draft or any
     Protocol-conforming hand-rolled class in tests.
 
@@ -142,7 +142,7 @@ class SubmissionRepositoryProtocol(Protocol):
     The concrete
     :class:`~cadrumo.adapters.persistence.profile.submission.SubmissionRepository`
     lives in the persistence adapter and inherits from the adapter-layer
-    :class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository`. This
+    :class:`~cadrumo.adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`. This
     Protocol captures only the surface the engine consumes so the domain
     depends inward on this port, and the application layer constructs the
     concrete repository and injects it into :class:`SubmissionEngine`.

@@ -1,7 +1,7 @@
 """Narrow exceptions for the cross-modelo reconciliation domain.
 
 Justificante parse failures are surfaced via
-:class:`domain.justificante.JustificanteParseError`; this module
+:class:`domain.justificante.errors.JustificanteParseError`; this module
 defines reconciliation-specific failures only.
 """
 

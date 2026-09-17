@@ -1,13 +1,13 @@
 """Lightweight validation error base for root domain value objects.
 
-Defines :class:`DomainValidationError`, the :class:`core.errors.CadrumoError`
+Defines :class:`DomainValidationError`, the :class:`core.errors.hierarchy.CadrumoError`
 subclass that also behaves as :exc:`ValueError` so Pydantic validators can
 surface invalid domain identifiers and models as validation failures.
 
 This module is not a catch-all domain error hierarchy. Focused domain packages
 own their package-specific error trees and register those classes with
 the central error registry. The root validation base exists for lightweight
-cross-domain primitives such as :class:`domain.ModeloIdentifier`, where
+cross-domain primitives such as :class:`domain.identifiers.ModeloIdentifier`, where
 importing a larger package-specific authority would be the wrong dependency.
 """
 

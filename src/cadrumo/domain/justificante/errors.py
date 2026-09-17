@@ -60,7 +60,7 @@ class JustificanteError(PdfModeloImportError):
 class JustificanteParseError(PdfExtractionCoverageMixin, JustificanteError):
     """Raised when a PDF cannot be parsed into a :class:`Justificante`.
 
-    Mirrors :class:`adapters.inbound.declaracion.DeclaracionParseError`'s
+    Mirrors :class:`adapters.inbound.declaracion.errors.DeclaracionParseError`'s
     structured-attribute shape (via the shared :class:`PdfExtractionCoverageMixin`)
     so callers can assert on typed attributes rather than parsing the message
     string.

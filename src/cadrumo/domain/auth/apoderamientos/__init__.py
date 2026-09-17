@@ -12,11 +12,11 @@ The subpackage only owns the scope vocabulary and validation rules; its
 initializer exports no symbols. Persisted
 represented-party configuration, active-bucket routing, and the permanent
 refusal of live AEAT-side apoderamiento mutation are application concerns owned
-by :class:`application.auth.ApoderadoService`.
+by :class:`application.auth.apoderado_service.ApoderadoService`.
 
 See Also:
     - :mod:`domain.auth` for the inert parent namespace.
-    - :class:`application.auth.ApoderadoService` for the encrypted
+    - :class:`application.auth.apoderado_service.ApoderadoService` for the encrypted
       bucket-scoped configuration service that consumes these parsed scope
       codes.
     - :mod:`entrypoints.cli.config._apoderado` for CLI commands that

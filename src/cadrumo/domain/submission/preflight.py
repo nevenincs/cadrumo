@@ -6,12 +6,12 @@ browser work begins. Every failure raises
 :class:`SubmissionPreflightError`; the happy path is silent.
 
 See Also:
-    :class:`~cadrumo.domain.submission.SubmissionEngine`
+    :class:`~cadrumo.domain.submission.engine.SubmissionEngine`
         Public read-only engine that owns this preflight runner.
-    :class:`~cadrumo.domain.submission.DeadlineWindowChecker`
+    :class:`~cadrumo.domain.submission.protocols.DeadlineWindowChecker`
         Gate-3 protocol used only when the caller has not skipped the filing
         window check.
-    :class:`~cadrumo.application.workflow.WorkflowPurpose`
+    :class:`~cadrumo.application.workflow.run_models.WorkflowPurpose`
         Application policy input that decides whether workflow callers pass
         ``skip_deadline_window`` for local verification or filing.
 """

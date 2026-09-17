@@ -125,7 +125,7 @@ class ModeloBindingValue(BaseModel):
     Carries the same regulatory grounding the casilla half exposes via
     :class:`ModeloCasillaProvenance`: ``legal_refs`` and ``source_refs``
     populated from the binding definition, plus a typed
-    :class:`~core.BindingSourceKind` ``source`` (replacing the former
+    :class:`~core.aggregation.BindingSourceKind` ``source`` (replacing the former
     free-text provenance string) so a bound value is operator-traceable at
     parity with a computed casilla.
 
@@ -134,8 +134,8 @@ class ModeloBindingValue(BaseModel):
         value: The scalar value carried for this binding.
         kind: Provenance kind — literal input, computed, inherited, etc.
         source: Typed registry binding source kind (e.g.
-            :attr:`~core.BindingSourceKind.MANUAL_INPUT`,
-            :attr:`~core.BindingSourceKind.LEDGER_IVA_AGGREGATION`).
+            :attr:`~core.aggregation.BindingSourceKind.MANUAL_INPUT`,
+            :attr:`~core.aggregation.BindingSourceKind.LEDGER_IVA_AGGREGATION`).
         legal_refs: Legal references carried from the binding definition.
         source_refs: Source references carried from the binding definition.
         row_index: 1-based row index for multi-row (detail-record) bindings.
@@ -231,7 +231,7 @@ class ModeloValidationFinding(BaseModel):
 ModeloDraftContentAddress = Hex16Str
 """A filing draft's short content address, as :func:`compute_modelo_draft_id` mints it.
 
-Assigned from the canonical :data:`~core.Hex16Str` primitive rather than
+Assigned from the canonical :data:`~core.hex.Hex16Str` primitive rather than
 re-declaring the constraint, per the discipline that module documents.
 """
 
@@ -249,7 +249,7 @@ class ModeloApprovalBasis(BaseModel):
     address (the approval path assigns it straight from
     :attr:`ModeloDraft.draft_id`), while the other seven are full SHA-256
     hex-64 digests of upstream state. Typing all eight as
-    :data:`~core.identity.ContentDigest` would refuse the value the approval
+    :data:`~core.identity.digest.ContentDigest` would refuse the value the approval
     path actually writes.
     """
 
@@ -470,7 +470,7 @@ def compute_modelo_draft_id(
 
     Args:
         modelo: Modelo string ID.
-        period: Typed :class:`~core.Period` for the filing period.
+        period: Typed :class:`~core.period.Period` for the filing period.
         profile_tax_id: Validated taxpayer tax ID.
         snapshot_ref: Typed registry snapshot coordinate this draft was
             built against.

@@ -1,6 +1,6 @@
 """Closed enumerations for attachment records.
 
-Defines the closed taxonomy used by :class:`domain.attachments.Attachment`
+Defines the closed taxonomy used by :class:`domain.attachments.models.Attachment`
 to classify what an attachment is (:class:`AttachmentKind`) and where it came
 from (:class:`AttachmentSource`).
 """
@@ -13,7 +13,7 @@ from enum import StrEnum
 class AttachmentKind(StrEnum):
     """Closed taxonomy of supported attachment document kinds.
 
-    Used by :attr:`domain.attachments.Attachment.kind` to disambiguate
+    Used by :attr:`domain.attachments.models.Attachment.kind` to disambiguate
     payload semantics for downstream renderers, validators, and reporting.
 
     Attributes:
@@ -47,7 +47,7 @@ class AttachmentKind(StrEnum):
 class AttachmentSource(StrEnum):
     """Closed taxonomy of channels an attachment can originate from.
 
-    Used by :attr:`domain.attachments.Attachment.source` to record where
+    Used by :attr:`domain.attachments.models.Attachment.source` to record where
     bytes were captured from for provenance and re-fetch logic.
 
     Attributes:

@@ -4,7 +4,7 @@ This package owns the RECORD SHAPE of one honoured consent decision --
 :class:`EvidenceConsentLedgerEntry` -- and the natural key it is stored under,
 :func:`evidence_consent_ledger_entry_object_key`. It owns nothing else: the
 encrypted append-and-read store is
-:class:`adapters.outbound.llm.EvidenceConsentLedger`, the per-invocation
+:class:`adapters.outbound.llm.consent_ledger.EvidenceConsentLedger`, the per-invocation
 consent carrier is :class:`llm.EvidenceConsentToken`, and the gate whose
 honoured decisions produce these rows is :func:`llm.cloud_evidence_read_permitted`.
 

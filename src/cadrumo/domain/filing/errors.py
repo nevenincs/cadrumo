@@ -1,6 +1,6 @@
 """Domain errors for the :mod:`domain.filing` subpackage.
 
-Every exception inherits from :class:`~core.errors.CadrumoError` so
+Every exception inherits from :class:`~core.errors.hierarchy.CadrumoError` so
 callers can catch the project-wide base.
 """
 
@@ -26,7 +26,7 @@ class FilingValidationError(ModeloDraftError, CoreValidationError):
     draft. The schema models also raise it from their cross-field validators for
     a record that is structurally malformed: a provenance kind contradicting its
     own value, an identity that is not its own content address, or two identity
-    Its registered ancestry includes :class:`~core.errors.CoreValidationError`
+    Its registered ancestry includes :class:`~core.errors.hierarchy.CoreValidationError`
     under the filing error family. Pydantic model validators translate the
     registered failure to ``ValueError`` at their narrow boundary, yielding a
     :class:`pydantic.ValidationError` for structurally malformed records.
