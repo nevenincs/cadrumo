@@ -55,7 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _registry_toml_payload() -> dict[str, object]:
     """Return the bundled ``external_constants.toml`` parsed to a mapping."""
 
-    toml_path = Path(__file__).parents[1] / "external_constants.toml"
+    toml_path = repo_path("src/cadrumo/core/external_constants.toml")
     loaded = parse_toml(toml_path.read_text(encoding="utf-8"))
     payload: dict[str, object] = {}
     for key, value in loaded.items():
@@ -468,10 +468,10 @@ def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures
     """Remote guard/parity/oracle tests must import configured URLs or declared canaries."""
 
     checked_paths = (
-        repo_path("src/cadrumo/domain/calculations/registry/tests/test_remote_state_guard.py"),
-        repo_path("src/cadrumo/domain/calculations/registry/tests/test_oracle_parity.py"),
-        repo_path("src/cadrumo/domain/calculations/registry/tests/test_groi_oracle.py"),
-        repo_path("src/cadrumo/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py"),
+        repo_path("dev/registry/tests/test_remote_state_guard.py"),
+        repo_path("dev/registry/tests/test_oracle_parity.py"),
+        repo_path("dev/registry/tests/test_groi_oracle.py"),
+        repo_path("dev/registry/tests/test_aeat_nif_iva_oracle.py"),
     )
     offenders = _token_literal_offenders(
         files=((path, _tree_for_path(path, source_tree_ast)) for path in checked_paths),
@@ -586,7 +586,8 @@ def test_live_iva_declaration_timeout_must_leave_outer_surface_headroom() -> Non
         )
 
     (violation,) = refusal.value.errors()
-    raised = violation["ctx"]["error"]
+    # The validation boundary keeps the registered refusal as the cause.
+    raised = violation["ctx"]["error"].__cause__
     assert isinstance(raised, CoreValidationError)
     context = raised.context or {}
     assert context["capture_timeout_ms"] == 180_000

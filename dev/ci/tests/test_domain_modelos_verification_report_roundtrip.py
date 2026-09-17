@@ -18,10 +18,12 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.classification.policies import SensitivityClass
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -29,6 +31,7 @@ from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -39,6 +42,7 @@ from cadrumo.domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from cadrumo.domain.modelos.verification_repository import VerificationReportPersistenceError
+from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -63,7 +67,6 @@ _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 15, 0, tzinfo=UTC)
 _FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 20, 0, tzinfo=UTC)
 
 
-_WORK_UNIT_ID = "9" * 64
 _REVISION_CREATED_AT = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
@@ -81,8 +84,27 @@ def _persist_parent_revision() -> str:
     The fixture therefore stores a real parent rather than naming a synthetic
     id, so the roundtrip exercises the production shape.
     """
+    period = Period.from_year_and_code(_REGISTRY_SNAPSHOT_REF.modelo_year, _REGISTRY_SNAPSHOT_REF.period)
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo=_REGISTRY_SNAPSHOT_REF.modelo,
+            filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
+            period=period,
+            revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=_REGISTRY_SNAPSHOT_REF.modelo,
+        filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
+        period=period,
+        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        name="303-2026-1T",
+        created_at=_REVISION_CREATED_AT,
+        updated_at=_REVISION_CREATED_AT,
+    )
+    WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).save(build_work_unit_catalogue((work_unit,)))
     revision_id = derive_calculation_revision_id(
-        work_unit_id=_WORK_UNIT_ID,
+        work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
@@ -91,7 +113,7 @@ def _persist_parent_revision() -> str:
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
-        work_unit_id=_WORK_UNIT_ID,
+        work_unit_id=work_unit.work_unit_id,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         created_at=_REVISION_CREATED_AT,

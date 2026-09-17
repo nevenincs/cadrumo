@@ -14,7 +14,7 @@ from cadrumo.adapters.persistence.profile.submission import (
     SubmissionRepository,
 )
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
-from cadrumo.adapters.persistence.storage.errors import ClassificationError
+from cadrumo.adapters.persistence.storage.errors import ClassificationError, PathContainmentError
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
@@ -23,7 +23,7 @@ from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 #: The capsule authority resolves a bucket id as a UUID, so a readable slug
 #: cannot stand in for one. Matches the constant sibling suites declare.
@@ -223,7 +223,7 @@ class TestUnsafeSubmissionIds:
         for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
             try:
                 repo.envelope_path_for(bad)
-            except ValueError:
+            except PathContainmentError:
                 continue
             pytest.fail(f"unsafe submission id {bad!r} was accepted")
 

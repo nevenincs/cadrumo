@@ -94,7 +94,7 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import UTF_8
-from dev.sanitizer.residual_identity import ResidualKind, checksum_valid_spans
+from dev.sanitizer.residual_identity import ResidualKind, checksum_valid_spans, identity_authority_scope
 from dev.source_tree import repository_files as _visible_repository_files
 
 _UTF_8: Final[str] = UTF_8
@@ -552,20 +552,21 @@ def scan_tree(
     suppressed: Counter[str] = Counter()
     unreadable: list[str] = []
     scanned = 0
-    for candidate in _candidates(repo_root, files, DATA_SUFFIXES):
-        text = _read_text(candidate.path)
-        if text is None:
-            unreadable.append(candidate.relative)
-            continue
-        fragments = matching_fragments(candidate.relative)
-        if fragments:
-            hits = _file_findings(text, candidate, selected)
-            for fragment in fragments:
-                suppressed[fragment] += len(hits)
-            continue
-        scanned += 1
-        tier = findings if candidate.tracking in BLOCKING_TRACKING else operator
-        tier.extend(_file_findings(text, candidate, selected))
+    with identity_authority_scope():
+        for candidate in _candidates(repo_root, files, DATA_SUFFIXES):
+            text = _read_text(candidate.path)
+            if text is None:
+                unreadable.append(candidate.relative)
+                continue
+            fragments = matching_fragments(candidate.relative)
+            if fragments:
+                hits = _file_findings(text, candidate, selected)
+                for fragment in fragments:
+                    suppressed[fragment] += len(hits)
+                continue
+            scanned += 1
+            tier = findings if candidate.tracking in BLOCKING_TRACKING else operator
+            tier.extend(_file_findings(text, candidate, selected))
     return TreeScan(
         findings=_ordered(findings),
         operator_findings=_ordered(operator),
@@ -594,14 +595,15 @@ def advisory_findings(
     """
     selected = kinds if kinds is not None else BLOCKING_KINDS
     findings: list[TreeFinding] = []
-    for candidate in _candidates(repo_root, files, SCANNED_SUFFIXES):
-        in_narrative = candidate.path.suffix.lower() in NARRATIVE_SUFFIXES
-        if not in_narrative and not matching_fragments(candidate.relative):
-            continue
-        text = _read_text(candidate.path)
-        if text is None:
-            continue
-        findings.extend(_file_findings(text, candidate, selected))
+    with identity_authority_scope():
+        for candidate in _candidates(repo_root, files, SCANNED_SUFFIXES):
+            in_narrative = candidate.path.suffix.lower() in NARRATIVE_SUFFIXES
+            if not in_narrative and not matching_fragments(candidate.relative):
+                continue
+            text = _read_text(candidate.path)
+            if text is None:
+                continue
+            findings.extend(_file_findings(text, candidate, selected))
     return _ordered(findings)
 
 
