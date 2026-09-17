@@ -467,13 +467,13 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
     The result is projected from the exact Spanish member-state, tier, role,
     and devengo-date fact. No rate is parsed from the persisted token.
 
-    Resolving through :func:`cadrumo.domain.iva.lookup_rate` instead would
+    Resolving through :func:`cadrumo.domain.iva.lookup.lookup_rate` instead would
     answer a different question and silently return a different number. That
     function deliberately skips ``supersedes_tier_default`` records, because a
     rate applying to only part of a tier's supplies cannot say what the tier
     means -- so a coexisting transitional line never computes from the ordinary
     tier default.
-    :func:`cadrumo.domain.iva.rate_kinds_for_declared_rate` is the inverse
+    :func:`cadrumo.domain.iva.lookup.rate_kinds_for_declared_rate` is the inverse
     authority built for this direction and does see those records.
 
     Args:
@@ -497,7 +497,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
             all: it carries the general and reducido records well before the
             super-reducido ones.
             The registry-declared zero slot is never refused, because
-            :func:`~cadrumo.domain.iva.rate_kinds_for_declared_rate` answers
+            :func:`~cadrumo.domain.iva.lookup.rate_kinds_for_declared_rate` answers
             ZERO on every date -- Spain zero-rates on three permanent grounds
             the rate table cannot express, so its silence there is incomplete
             coverage rather than a statement that zero-rating was unlawful.

@@ -1,8 +1,8 @@
 """Generic IVA classification mechanics (issuer / customer / kind / direction).
 
 Layered on top of the :mod:`cadrumo.domain.iva` substrate (the
-:class:`cadrumo.domain.iva.IvaCategory` enum, :class:`cadrumo.domain.iva.IvaRateRecord`
-records, and :func:`cadrumo.domain.iva.lookup_rate`), this module adds the
+:class:`cadrumo.domain.iva.schema.IvaCategory` enum, :class:`cadrumo.domain.iva.schema.IvaRateRecord`
+records, and :func:`cadrumo.domain.iva.lookup.lookup_rate`), this module adds the
 classification axes needed to tag a transaction deterministically based on
 the parties' tax residency, the customer's IVA status, the transaction kind,
 and the invoice direction.
@@ -124,7 +124,7 @@ class PartyFact(StrEnum):
     Attributes:
         IVA_IDENTIFICATION_STATE: The Member State under whose IVA
             identification the party operates, carried as
-            :class:`cadrumo.domain.iva.EUMemberState`. Registration evidence
+            :class:`cadrumo.domain.iva.schema.EUMemberState`. Registration evidence
             settles it decisively, because registration is precisely what it
             asserts.
         TERRITORIAL_ESTABLISHMENT: Where the party has its *sede de actividad
@@ -562,7 +562,7 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
         kind: Kind of supply.
         direction: ``ISSUED`` or ``RECEIVED``.
         issuer_identification_state: The
-            :class:`cadrumo.domain.iva.EUMemberState` under whose IVA
+            :class:`cadrumo.domain.iva.schema.EUMemberState` under whose IVA
             identification the issuer operates, where established. Optional
             independently of :attr:`issuer_residency`: an EU establishment does
             not supply an identification and an identification does not supply
@@ -623,15 +623,15 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
 class IvaClassificationResult(IvaStrictFrozen):
     """Output record returned by :func:`classify_iva`.
 
-    Exposes the matched :class:`cadrumo.domain.iva.IvaCategory`, the resolved
-    :class:`cadrumo.domain.iva.IvaRateRecord` (or ``None`` for rate-irrelevant
+    Exposes the matched :class:`cadrumo.domain.iva.schema.IvaCategory`, the resolved
+    :class:`cadrumo.domain.iva.schema.IvaRateRecord` (or ``None`` for rate-irrelevant
     categories), a reverse-charge flag, the matched rule identifier, and any
     free-form note the resolver emits (typically used for fall-through
     documentation).
 
     Attributes:
         category: Resolved IVA category.
-        rate: Applicable :class:`cadrumo.domain.iva.IvaRateRecord`, when relevant.
+        rate: Applicable :class:`cadrumo.domain.iva.schema.IvaRateRecord`, when relevant.
         requires_reverse_charge: ``True`` when the rule triggers
             *inversión del sujeto pasivo*.
         matched_rule_id: Stable rule identifier (e.g.
