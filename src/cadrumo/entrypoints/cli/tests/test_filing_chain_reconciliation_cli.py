@@ -25,7 +25,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
 from ... import live_state_composition
-from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
+from ._m130_source_support import seed_m130_income_transaction
 from ._modelo_work_ux_support import operator_profile_facts
 from ._recorded_sede_filed_port import (
     RecordedPresentation,
@@ -206,7 +206,6 @@ def test_filing_chain_reconciles_pulls_amendments_and_overrides(scenario: _Scena
         modelo="130", filing_year=year, period="3T", revision=scenario.revision_id("3T")
     )
     seed_m130_income_transaction(amount=Decimal("30000.00"), filing_year=year, source_key="chain-q3")
-    seed_m130_expense_transaction(amount=Decimal("12000.00"), filing_year=year, source_key="chain-q3")
     calculated = _ok(
         "app", "modelo", "work", "calculate", q3_work_unit_id,
         "--casilla", "06=0.00",
