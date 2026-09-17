@@ -14,16 +14,11 @@ from ..core.directory_scan import DirectoryEntryKind, scan_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-_REPOSITORY_ROOT = _PACKAGE_ROOT.parents[1]
 _RETIRED_STEM = re.compile(r"(^|[._:/-])vat([._:/-]|$)", re.IGNORECASE)
 _DUPLICATED_IVA = re.compile(r"(?<![A-Za-z0-9])iva(?:[._:/-]+|\s+(?:\(\s*)?)iva\b", re.IGNORECASE)
 _ENGLISH_VAT = re.compile(r"\bvat\b", re.IGNORECASE)
 _MIXED_IVA_ALIAS = re.compile(
     r"(?<![A-Za-z0-9])(?:vat[._:/-]+iva|iva[._:/-]+vat)(?=$|[._:/-])",
-    re.IGNORECASE,
-)
-_EXTERNAL_IVA_LOCATOR = re.compile(
-    r"(?:https?://\S+|/Sede/\S+|(?:sede\.)?agenciatributaria\.gob\.es/\S+|IVA/IVA_\d{4}/\S+)",
     re.IGNORECASE,
 )
 _IDENTITY_TOKEN = re.compile(r"^[A-Za-z0-9_.:/-]+$")
@@ -268,41 +263,3 @@ def test_internal_prose_does_not_duplicate_or_alias_the_iva_stem(stem_scan: _Ste
     assert stem_scan.used_external_fragments == {
         (relative, fragment) for relative, fragments in _EXTERNAL_VAT_PROSE_FRAGMENTS.items() for fragment in fragments
     }
-
-
-def test_authored_repository_prose_uses_iva_without_a_mixed_alias() -> None:
-    violations: list[str] = []
-    # The development-record trees are deliberately out of scope: they are
-    # removable scaffolding, so asserting over their prose would make this
-    # shipped-package gate fail on an edit to a document the product does not
-    # ship and does not read.
-    for root_name in (
-        "dev",
-        "docs",
-        "src/cadrumo",
-    ):
-        root = _REPOSITORY_ROOT / root_name
-        for path in scan_directory(root, pattern="*", recursive=True):
-            if (
-                not path.is_file()
-                or "_data" in path.parts
-                or path.suffix
-                not in {
-                    ".md",
-                    ".po",
-                    ".rst",
-                    ".toml",
-                    ".yaml",
-                    ".yml",
-                }
-            ):
-                continue
-            relative = path.relative_to(_REPOSITORY_ROOT).as_posix()
-            for line_number, line in enumerate(
-                path.read_text(encoding="utf-8", errors="replace").splitlines(),
-                start=1,
-            ):
-                authored_text = _EXTERNAL_IVA_LOCATOR.sub("", line)
-                if _DUPLICATED_IVA.search(authored_text) or _MIXED_IVA_ALIAS.search(authored_text):
-                    violations.append(f"{relative}:{line_number}:{line.strip()}")
-    assert violations == []

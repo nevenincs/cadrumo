@@ -252,6 +252,8 @@ def _defined_names(path: Path) -> set[str] | None:
             names.update(target.id for target in node.targets if isinstance(target, ast.Name))
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
+        elif isinstance(node, ast.TypeAlias):
+            names.add(node.name.id)
     return names
 
 

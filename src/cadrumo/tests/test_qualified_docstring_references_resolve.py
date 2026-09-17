@@ -114,9 +114,9 @@ def _declared_names(node: ast.AST) -> frozenset[str]:
         return frozenset(target.id for target in node.targets if isinstance(target, ast.Name))
     if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
         return frozenset({node.target.id})
-    if isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+    if isinstance(node, ast.TypeAlias):
         return frozenset({node.name.id})
-    return frozenset()
+    return frozenset[str]()
 
 
 def _references() -> list[tuple[str, int, str]]:

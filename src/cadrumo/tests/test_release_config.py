@@ -49,7 +49,7 @@ CONFIG_PATH = repo_path("release-please-config.json")
 MANIFEST_PATH = repo_path(".release-please-manifest.json")
 CHANGELOG_PATH = repo_path("CHANGELOG.md")
 PYPROJECT_PATH = repo_path("pyproject.toml")
-INIT_PATH = repo_path("src/cadrumo/__init__.py")
+PACKAGE_VERSION_PATH = repo_path("src/cadrumo/core/package_version.py")
 RELEASE_CHECKLIST_PATH = repo_path("docs/_release_checklist.yaml")
 RELEASE_NOTES_TEMPLATE_PATH = repo_path("docs/_release_notes_template.md")
 RELEASING_PATH = repo_path("RELEASING.md")
@@ -74,6 +74,7 @@ class ReleasePleasePackage(BaseModel):
     release_type: str = Field(alias="release-type")
     changelog_path: str = Field(alias="changelog-path")
     extra_files: list[str] = Field(default_factory=list, alias="extra-files")
+    component: str | None = None
 
 
 class ReleasePleaseConfig(BaseModel):
@@ -195,7 +196,7 @@ class ReleaseChecklist(BaseModel):
     audit_state_gate: AuditStateGateChecklist
 
 
-_VERSION_RE: re.Pattern[str] = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
+_VERSION_RE: re.Pattern[str] = re.compile(r"^PACKAGE_VERSION\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
 
 
 def _read_pyproject_version() -> str:
@@ -203,9 +204,9 @@ def _read_pyproject_version() -> str:
     return str(data["project"]["version"])
 
 
-def _read_init_version() -> str:
-    match = _VERSION_RE.search(INIT_PATH.read_text(encoding="utf-8"))
-    assert match, f"__version__ not found in {INIT_PATH}"
+def _read_package_version() -> str:
+    match = _VERSION_RE.search(PACKAGE_VERSION_PATH.read_text(encoding="utf-8"))
+    assert match, f"PACKAGE_VERSION not found in {PACKAGE_VERSION_PATH}"
     version = match.group(1)
     if not isinstance(version, str):
         raise AssertionError("version regex returned a non-string value")
@@ -246,7 +247,7 @@ def test_release_please_config_is_well_formed() -> None:
     root_pkg = config.packages["."]
     assert root_pkg.package_name == "cadrumo"
     assert root_pkg.release_type == "python"
-    assert "src/cadrumo/__init__.py" in root_pkg.extra_files
+    assert "src/cadrumo/core/package_version.py" in root_pkg.extra_files
 
     types = {section.type for section in config.changelog_sections}
     # The project-relevant commit types must all have a rendering decision
@@ -286,14 +287,15 @@ def test_changelog_exists_and_non_empty() -> None:
 
 
 def test_version_surfaces_agree() -> None:
-    """pyproject.toml, ``__init__.py``, and the manifest agree on one version."""
+    """pyproject.toml, ``core/package_version.py``, and the manifest agree on one version."""
     pyproject_version = _read_pyproject_version()
-    init_version = _read_init_version()
+    package_version = _read_package_version()
     manifest_payload = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     manifest_version = manifest_payload["."]
 
-    assert pyproject_version == init_version == manifest_version, (
-        f"version drift: pyproject={pyproject_version!r}, __init__={init_version!r}, manifest={manifest_version!r}"
+    assert pyproject_version == package_version == manifest_version, (
+        f"version drift: pyproject={pyproject_version!r}, package_version={package_version!r}, "
+        f"manifest={manifest_version!r}"
     )
 
 

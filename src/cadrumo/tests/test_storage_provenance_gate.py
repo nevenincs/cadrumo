@@ -141,7 +141,7 @@ PERMITTED_PRODUCERS: Final[frozenset[tuple[str, str]]] = frozenset(
         # Settings derivation: turns each root-derived member's declared
         # subpath into that field's default. It iterates the declaration
         # directly rather than carrying a table of its own.
-        ("core/config.py", "Settings._resolve_output_dirs_under_storage_root"),
+        ("core/_config_validation.py", "resolve_output_dirs_under_storage_root"),
         # The on-disk-name pin. It must build the expected location from its own
         # oracle to measure the validator, and routing it through the accessor
         # would make it assert that the accessor equals itself -- deleting the

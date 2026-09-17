@@ -62,7 +62,9 @@ def _selected_authority_database() -> str:
     """Return the database file name the authority descriptor selects."""
 
     descriptor = json.loads((_AUTHORITY_ROOT / "authority.current.json").read_text(encoding="utf-8"))
-    return descriptor["database"]
+    database = descriptor["database"]
+    assert isinstance(database, str), f"authority descriptor database must be a string, found: {database!r}"
+    return database
 
 
 def _iter_budget_data_files() -> Iterator[Path]:

@@ -181,7 +181,7 @@ def _bound_names(tree: ast.AST) -> frozenset[str]:
                 names.update(element.id for element in ast.walk(target) if isinstance(element, ast.Name))
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
-        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+        elif isinstance(node, ast.TypeAlias):
             names.add(node.name.id)
     return frozenset(names)
 
@@ -197,7 +197,7 @@ def _source_bound_names(path: Path) -> frozenset[str]:
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (OSError, SyntaxError):
-        return frozenset()
+        return frozenset[str]()
     return _bound_names(tree)
 
 
