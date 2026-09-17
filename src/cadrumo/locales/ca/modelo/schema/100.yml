@@ -2294,9 +2294,9 @@ modelo:
               d'aigua» per completar aquesta autoliquidació.
             label: Per inversions en dispositivos domésticos d'estalvi d'aigua
           irpf-deduccion-murcia-donaciones-investigacion-biosanitaria:
-            help: Indiqueu o reviseu «Per donatius per a l'investigació biosanitaria»
+            help: Indiqueu o reviseu «Per donatius per a l'investigació biosanitària»
               per completar aquesta autoliquidació.
-            label: Per donatius per a l'investigació biosanitaria
+            label: Per donatius per a l'investigació biosanitària
           irpf-deduccion-murcia-donaciones-patrimonio-cultura:
             label: Per donatius per a la protecció del patrimoni cultural de la Regió
               de Múrcia o promoció d'activitats culturals, artístiques, socials, científic-tecnológicas
@@ -2452,6 +2452,8 @@ modelo:
             help: 'Indiqueu o reviseu «Tipus d''activitat/es realitzada/s: clau indicativa»
               per completar aquesta autoliquidació.'
             label: 'Tipus d''activitat/es realitzada/s: clau indicativa'
+          irpf-ed-arrendamientos-canones:
+            label: Arrendaments i cànons
           irpf-ed-autoconsumo:
             label: Autoconsum de béns i serveis
           irpf-ed-cobros-pagos-flag:
@@ -2472,6 +2474,10 @@ modelo:
             label: Despeses financeres
           irpf-ed-indemnizaciones:
             label: Indemnitzacions
+          irpf-ed-ingresos-explotacion:
+            label: Ingressos d'explotació
+          irpf-ed-ingresos-subvenciones-capital:
+            label: Imputació d'ingressos per subvencions de capital
           irpf-ed-ingresos-subvenciones-corrientes:
             label: Ingressos per subvencions corrents
           irpf-ed-modalidad-clave:
@@ -2480,6 +2486,8 @@ modelo:
             label: Informació fiscal de la casella
           irpf-ed-mutualidades-alternativas-titular:
             label: Aportacions a mutualitats alternatives del titular de l'activitat
+          irpf-ed-otros-consumos-explotacion:
+            label: Altres consums d'explotació
           irpf-ed-otros-gastos-personal:
             label: Altres despeses de personal
           irpf-ed-otros-ingresos:
@@ -2496,6 +2504,8 @@ modelo:
             label: Provisions fiscalment deduïbles
           irpf-ed-rdto-neto-previo-reduccion:
             label: Rendiment net d'activitats econòmiques en estimació directa
+          irpf-ed-reparaciones-conservacion:
+            label: Reparacions i conservació
           irpf-ed-seguridad-social-empresa:
             label: Seguretat Social a càrrec de l'empresa
           irpf-ed-seguridad-social-titular:
@@ -4433,6 +4443,10 @@ modelo:
           irpf-rendimiento-act-eco-eo-resto-rdto-neto:
             label: Rendiment net d'activitats econòmiques en estimació objectiva excepte
               agrícoles, ramaderes i forestals
+          irpf-rendimiento-capital-inmobiliario-amortizacion-bienes-muebles:
+            label: Amortització de béns mobles
+          irpf-rendimiento-capital-inmobiliario-amortizacion-casos-especiales:
+            label: Amortització en casos especials
           irpf-rendimiento-capital-inmobiliario-gasto-comunidad:
             label: Despeses de comunitat
           irpf-rendimiento-capital-inmobiliario-gasto-otros:
@@ -4449,6 +4463,8 @@ modelo:
             label: Informació fiscal de la casella
           irpf-rendimiento-trabajo-gasto-sindicato:
             label: Quotes satisfetes a sindicats
+          irpf-rendimiento-trabajo-reduccion-gastos-generales:
+            label: Quantia aplicable amb caràcter general
           irpf-rendimientos-trabajo-contribuyente-titular:
             label: Contribuent que obté els rendiments
           irpf-rentas-exentas-base-ahorro:
@@ -4684,7 +4700,6 @@ modelo:
             '0023':
               help: Indiqueu o reviseu «Quantia aplicable amb caràcter general» per
                 completar aquesta autoliquidació.
-              label: Quantia aplicable amb caràcter general
             '0025':
               help: Indiqueu o reviseu «Rendiment net reduït» per completar aquesta
                 autoliquidació.
@@ -4908,7 +4923,6 @@ modelo:
             '0117':
               help: Indiqueu o reviseu «Amortització de béns mobles» per completar
                 aquesta autoliquidació.
-              label: Amortització de béns mobles
             0118:
               help: Indiqueu o reviseu «Onerosa (compravenda, permuta, etc.)» per
                 completar aquesta autoliquidació.
@@ -4956,7 +4970,6 @@ modelo:
             '0132':
               help: Indiqueu o reviseu «Amortització en casos especials» per completar
                 aquesta autoliquidació.
-              label: Amortització en casos especials
             '0133':
               help: Indiqueu o reviseu «Onerosa (compravenda, permuta, etc.)» per
                 completar aquesta autoliquidació.
@@ -5063,7 +5076,6 @@ modelo:
             '0171':
               help: Indiqueu o reviseu «Ingressos d'explotació» per completar aquesta
                 autoliquidació.
-              label: Ingressos d'explotació
             '0172':
               help: Indiqueu o reviseu «Ingressos financers derivats de l'ajornament
                 o fraccionament d'operacions realitzades en el desenvolupament de
@@ -5076,7 +5088,6 @@ modelo:
             '0174':
               help: Indiqueu o reviseu «Imputació d'ingressos per subvencions de capital»
                 per completar aquesta autoliquidació.
-              label: Imputació d'ingressos per subvencions de capital
             '0175':
               help: Indiqueu o reviseu «Autoconsum de béns i serveis» per completar
                 aquesta autoliquidació.
@@ -5114,7 +5125,6 @@ modelo:
             0183:
               help: Indiqueu o reviseu «Altres consums d'explotació» per completar
                 aquesta autoliquidació.
-              label: Altres consums d'explotació
             0184:
               help: Indiqueu o reviseu «Sous i salaris» per completar aquesta autoliquidació.
             0185:
@@ -5146,11 +5156,9 @@ modelo:
             0192:
               help: Indiqueu o reviseu «Arrendaments i cànons» per completar aquesta
                 autoliquidació.
-              label: Arrendaments i cànons
             0193:
               help: Indiqueu o reviseu «Reparacions i conservació» per completar aquesta
                 autoliquidació.
-              label: Reparacions i conservació
             0194:
               help: Indiqueu o reviseu «Subministraments (luz, agua, gas, telefonía
                 e internet)» per completar aquesta autoliquidació.
@@ -23569,14 +23577,14 @@ modelo:
               help: Indiqueu o reviseu «Ascendent NIF» per completar aquesta autoliquidació.
               label: Ascendent NIF
             DPFNAC_C:
-              help: Indiqueu o reviseu «Conjuge data de naixement» per completar aquesta
+              help: Indiqueu o reviseu «Cònjuge data de naixement» per completar aquesta
                 autoliquidació.
               label: Cònjuge data de naixement
             DPFNAC_D:
               help: Introduïu la data de naixement del primer declarant.
               label: Primer declarant data de naixement
             DPGMIN_C:
-              help: Indiqueu o reviseu «Conjuge grau de discapacitat» per completar
+              help: Indiqueu o reviseu «Cònjuge grau de discapacitat» per completar
                 aquesta autoliquidació.
               label: Cònjuge grau de discapacitat
             DPGMIN_D:
@@ -23584,14 +23592,14 @@ modelo:
                 completar aquesta autoliquidació.
               label: Primer declarant grau de discapacitat
             DPNIF_C:
-              help: Indiqueu o reviseu «Conjuge NIF» per completar aquesta autoliquidació.
+              help: Indiqueu o reviseu «Cònjuge NIF» per completar aquesta autoliquidació.
               label: Cònjuge NIF
             DPNIF_D:
               help: Indiqueu o reviseu «Primer declarant NIF» per completar aquesta
                 autoliquidació.
               label: Primer declarant NIF
             DP_APENOM_C:
-              help: Indiqueu o reviseu «Conjuge cognoms i nom» per completar aquesta
+              help: Indiqueu o reviseu «Cònjuge cognoms i nom» per completar aquesta
                 autoliquidació.
               label: Cònjuge cognoms i nom
             DP_APENOM_D:
@@ -23658,9 +23666,9 @@ modelo:
                 autoliquidació.
               label: Fill o descendent NIF
             NORESIDENTE:
-              help: Indiqueu o reviseu «Conjuge no resident no contribuent IRPF» per
+              help: Indiqueu o reviseu «Cònjuge no resident no contribuent IRPF» per
                 completar aquesta autoliquidació.
-              label: Conjuge no resident no contribuent IRPF
+              label: Cònjuge no resident no contribuent IRPF
             PCTMINASDLG:
               help: Indiqueu o reviseu «Ascendent clau de discapacitat» per completar
                 aquesta autoliquidació.
@@ -23670,11 +23678,11 @@ modelo:
                 per completar aquesta autoliquidació.
               label: Fills menors de 18 anys a la unitat familiar
             RESIDENTEUE:
-              help: Indiqueu o reviseu «Conjuge resident UE o EEE» per completar aquesta
+              help: Indiqueu o reviseu «Cònjuge resident UE o EEE» per completar aquesta
                 autoliquidació.
               label: Cònjuge resident UE o EEE
             SEXO_C:
-              help: Indiqueu o reviseu «Conjuge sexe» per completar aquesta autoliquidació.
+              help: Indiqueu o reviseu «Cònjuge sexe» per completar aquesta autoliquidació.
               label: Cònjuge sexe
             SEXO_D:
               help: Indiqueu o reviseu «Primer declarant sexe» per completar aquesta
@@ -23685,9 +23693,9 @@ modelo:
                 autoliquidació.
               label: Tipus de tributació
             ZCCAD:
-              help: Indiqueu o reviseu «Comunitat Autonoma de residència» per completar
+              help: Indiqueu o reviseu «Comunitat Autònoma de residència» per completar
                 aquesta autoliquidació.
-              label: Comunitat Autonoma de residència
+              label: Comunitat Autònoma de residència
             ZRUE2:
               help: Indiqueu o reviseu «País UE o EEE del cònjuge» per completar aquesta
                 autoliquidació.
@@ -23809,8 +23817,6 @@ modelo:
               help: Indiqueu o reviseu «Rendiment net del treball» per completar aquesta
                 autoliquidació.
               label: Rendiment net del treball
-            '0023':
-              label: Quantia aplicable amb caràcter general
             '0024':
               help: Indiqueu o reviseu «Quantitats aportades per l'empresa a sistemes
                 de previsió social per decisió del treballador» per completar aquesta
@@ -24015,8 +24021,6 @@ modelo:
               help: Indiqueu o reviseu «Tributs recàrrecs i taxes» per completar aquesta
                 autoliquidació.
               label: Tributs recàrrecs i taxes
-            '0117':
-              label: Amortització de béns mobles
             '0121':
               help: Indiqueu o reviseu «Data de transmissió, en el seu cas, en l'exercici
                 2025, de l'immoble (dia, mes i any)» per completar aquesta autoliquidació.
@@ -24032,8 +24036,6 @@ modelo:
               help: Indiqueu o reviseu «Amortització de l'immoble i la millora» per
                 completar aquesta autoliquidació.
               label: Amortització de l'immoble i la millora
-            '0132':
-              label: Amortització en casos especials
             '0134':
               help: Indiqueu o reviseu «Lucrativa (herència, llegat, donació, etc.)»
                 per completar aquesta autoliquidació.
@@ -24118,14 +24120,10 @@ modelo:
             '0164':
               help: Indiqueu o reviseu «Resta» per completar aquesta autoliquidació.
               label: Resta
-            '0171':
-              label: Ingressos d'explotació
             '0172':
               help: Indiqueu o reviseu «Ingressos financers derivats de l'ajornament
                 o fraccionament» per completar aquesta autoliquidació.
               label: Ingressos financers derivats de l'ajornament o fraccionament
-            '0174':
-              label: Imputació d'ingressos per subvencions de capital
             '0176':
               help: Indiqueu o reviseu «IVA meritat» per completar aquesta autoliquidació.
               label: IVA meritat
@@ -24146,8 +24144,6 @@ modelo:
               help: Indiqueu o reviseu «Variació d'existències per disminució d'existències
                 finals» per completar aquesta autoliquidació.
               label: Variació d'existències per disminució d'existències finals
-            0183:
-              label: Altres consums d'explotació
             0189:
               help: Indiqueu o reviseu «Aportacions a sistemes de previsió social
                 del personal empleat» per completar aquesta autoliquidació.
@@ -24156,10 +24152,6 @@ modelo:
               help: Indiqueu o reviseu «Despeses de manutenció del contribuent» per
                 completar aquesta autoliquidació.
               label: Despeses de manutenció del contribuent
-            0192:
-              label: Arrendaments i cànons
-            0193:
-              label: Reparacions i conservació
             0194:
               help: Indiqueu o reviseu «Subministraments» per completar aquesta autoliquidació.
               label: Subministraments
@@ -28333,11 +28325,6 @@ modelo:
               help: Indiqueu o reviseu «Primer declarant grau de discapacitat» per
                 completar aquesta autoliquidació.
               label: Primer declarant grau de discapacitat
-            DPNIF_C:
-              help: Indiqueu o reviseu «Cònjuge NIF» per completar aquesta autoliquidació.
-            DP_APENOM_C:
-              help: Indiqueu o reviseu «Cònjuge cognoms i nom» per completar aquesta
-                autoliquidació.
             ECIVIL:
               help: Indiqueu o reviseu «Primer declarant estat civil a 31/12/2025»
                 per completar aquesta autoliquidació.

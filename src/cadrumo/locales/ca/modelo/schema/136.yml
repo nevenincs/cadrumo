@@ -115,7 +115,7 @@ modelo:
             organizador-denominacion:
               help: Informació fiscal de la casella del Modelo 136.
             organizador-pais:
-              help: 'Consulteu la informació de la casella: Pais del organismo o entitat
+              help: 'Consulteu la informació de la casella: País del organismo o entitat
                 organizadora.'
             periodo-declaracion:
               help: 'Consulteu la informació de la casella: Període.'

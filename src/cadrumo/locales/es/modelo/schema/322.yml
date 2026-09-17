@@ -218,7 +218,7 @@ modelo:
           iva-cuota-soportada-interiores:
             label: Cuota IVA soportado en operaciones interiores corrientes
           iva-resultado-regimen-general:
-            label: Resultado del regimen general (cuota devengada - cuota deducible)
+            label: Resultado del régimen general (cuota devengada - cuota deducible)
           m322-actividad-otras-1-codigo:
             help: Se cumplimenta exclusivamente en el ultimo periodo de la declaración.
           m322-actividad-otras-1-epigrafe-iae:
@@ -241,8 +241,10 @@ modelo:
             help: Se cumplimenta exclusivamente en el ultimo periodo de la declaración.
           m322-actividad-principal-codigo:
             help: Se cumplimenta exclusivamente en el ultimo periodo de la declaración.
+            label: Código de actividad - Principal
           m322-actividad-principal-epigrafe-iae:
             help: Se cumplimenta exclusivamente en el ultimo periodo de la declaración.
+            label: Epígrafe IAE - Principal
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la:
             label: 'Actividades con regímenes de deducción diferenciados. IVA deducible:
               Grupo 1. Compensaciones en régimen especial de la agricultura, ganadería
@@ -994,10 +996,6 @@ modelo:
               label: Código de actividad - Otras 5ª
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
               label: Epígrafe IAE - Otras 5ª
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              label: Código de actividad - Principal
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              label: Epígrafe IAE - Principal
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
               label: Identificación. ¿Es destinatario de operaciones a las que se
                 aplique el régimen especial del criterio de caja?
@@ -1482,8 +1480,8 @@ modelo:
           casilla:
             '112':
               label: Liquidación (continuación). Pago a cuenta de entregas de gasolinas,
-                gasóleos y biocarburantes posteriores a la ultimacion del regimen
-                de deposito distinto del aduanero [112]
+                gasóleos y biocarburantes posteriores a la ultimación del régimen
+                de depósito distinto del aduanero [112]
             '165':
               label: Liquidación. IVA DEVENGADO. Resto de operaciones en régimen general.
                 Base imponible [165]
@@ -1519,32 +1517,28 @@ modelo:
               label: Liquidación (continuación). IVA a la importación liquidado por
                 la Aduana pendiente de ingreso. [77]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              label: Codigo de actividad - Otras 1a
+              label: Código de actividad - Otras 1a
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              label: Epigrafe IAE - Otras 1a
+              label: Epígrafe IAE - Otras 1a
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              label: Codigo de actividad - Otras 2a
+              label: Código de actividad - Otras 2a
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              label: Epigrafe IAE - Otras 2a
+              label: Epígrafe IAE - Otras 2a
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              label: Codigo de actividad - Otras 3a
+              label: Código de actividad - Otras 3a
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              label: Epigrafe IAE - Otras 3a
+              label: Epígrafe IAE - Otras 3a
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              label: Codigo de actividad - Otras 4a
+              label: Código de actividad - Otras 4a
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              label: Epigrafe IAE - Otras 4a
+              label: Epígrafe IAE - Otras 4a
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              label: Codigo de actividad - Otras 5a
+              label: Código de actividad - Otras 5a
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              label: Epigrafe IAE - Otras 5a
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              label: Codigo de actividad - Principal
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              label: Epigrafe IAE - Principal
+              label: Epígrafe IAE - Otras 5a
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
               label: Derecho a deducir el pago a cuenta de entregas de gasolinas,
-                gasoleos y biocarburantes
+                gasóleos y biocarburantes
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
               label: Destinatario de operaciones acogidas al criterio de caja
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
@@ -1556,9 +1550,9 @@ modelo:
             x-chim6r1ectp7as3f5lp6ur0:
               label: Dominante o dependiente
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              label: 'Aplicacion de la prorrata especial: opcion o revocacion'
+              label: 'Aplicación de la prorrata especial: opción o revocación'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              label: Inscrito en el Registro de devolucion mensual
+              label: Inscrito en el Registro de devolución mensual
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
               label: Acogido a la modalidad del articulo 163 sexies.Cinco LIVA
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:

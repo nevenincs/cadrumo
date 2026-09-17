@@ -1227,7 +1227,7 @@ tui:
         late: Late
         unknown: Unknown
     column:
-      aeat_accepted: AEAT acceptance observed
+      aeat_confirmation: AEAT confirmation
       aeat_evidence: AEAT evidence
       availability: Availability
       calculation: Current calculation
@@ -1240,6 +1240,16 @@ tui:
       result: Result
       updated: Updated
       when: Date
+    confirmation:
+      confirmada: Confirmed
+      descartada: Discarded
+      discrepante: Discrepant
+      pendiente: Pending
+    declaration_kind:
+      complementaria: Complementaria
+      original: Original
+      rectificativa: Rectificativa
+      sustitutiva: Sustitutiva
     destination:
       calendar: Filing calendar
       filing_history: Filing history
@@ -1248,12 +1258,15 @@ tui:
       revisions: Calculation revisions
     empty: Nothing recorded here yet.
     evidence:
+      aeat_csv_register: AEAT CSV register observed
       aeat_justificante_pdf: AEAT receipt PDF observed
       aeat_live_capture: AEAT live observation
       none: No AEAT evidence observed
     filing_history:
-      axes: Local filing status and externally observed AEAT evidence are separate
-        facts.
+      axes: Local filing status, AEAT confirmation and externally observed AEAT evidence
+        are separate facts.
+      chain_detail: 'Origin: {origin} · Type: {kind} · AEAT: {confirmation} · Corrects
+        an earlier declaration: {amends}'
       title: Filing history
     filing_state:
       supersedido: Superseded local record
@@ -1266,10 +1279,16 @@ tui:
       exported: Declaration exported
       external_evidence_imported: External AEAT evidence imported
       filed: Filing recorded locally
+      observation_overridden: Observation overridden by operator
+      observation_override_cleared: Operator override cleared
+      reconciled: Reconciled with AEAT
       renamed: Declaration renamed
       superseded: Filing superseded locally
       verification_refused: Verification refused
       verified: Verification completed
+    origin:
+      aeat: AEAT
+      local: Local
     overview:
       areas: Declaration areas
       declarations: Declarations

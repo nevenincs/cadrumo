@@ -92,6 +92,6 @@ modelo:
         '2025':
           casilla:
             rendimientos-trabajo-superiores-60000:
-              label: Rendimientos integros del trabajo superiores a 60000 euros
+              label: Rendimientos íntegros del trabajo superiores a 60000 euros
           field:
             label: Modelo 345 ejercicio 2025 (Orden HFP/823/2022 y Orden HAC/1430/2025)

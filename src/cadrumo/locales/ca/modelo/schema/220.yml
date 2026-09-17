@@ -1997,10 +1997,10 @@ modelo:
                 De les quals: cedit en arrendament operatiu'
             x-agp34c1g6d0j0c9q60o3cc9l:
               help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
-                3A full 01). Actius financers no destinats a negociació valorats obligatoriament
+                3A full 01). Actius financers no destinats a negociació valorats obligatòriament
                 a valor raonable amb canvis en resultats.'
               label: Balanç consolidat. Actiu (pàg. 3A full 01). Actius financers
-                no destinats a negociació valorats obligatoriament a valor raonable
+                no destinats a negociació valorats obligatòriament a valor raonable
                 amb canvis en resultats
             x-agp34c1g6d0j0c9q60o3cc9m:
               help: 'Dada del model 220, exercici 2024: Balanç consolidat. Actiu (pàg.
@@ -4238,50 +4238,50 @@ modelo:
             x-agp34c1g6l0j0c1q60o36d1m:
               help: Informació fiscal sobre informació fiscal de la casella 00346
                 del Modelo 220.
-              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferències
                 al compte de pèrdues i guanys consolidat. Per valoració d'instruments
                 financers
             x-agp34c1g6l0j0c1q60o36d1n:
               help: Informació fiscal sobre informació fiscal de la casella 00347
                 del Modelo 220.
-              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferències
                 al compte de pèrdues i guanys consolidat. Per valoració d'instruments
                 financers. Actius financers a valor raonable amb canvis en el patrimoni
                 net
             x-agp34c1g6l0j0c1q60o36d1o:
               help: Informació fiscal sobre informació fiscal de la casella 00348
                 del Modelo 220.
-              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferències
                 al compte de pèrdues i guanys consolidat. Per valoració d'instruments
                 financers. Altres ingressos / despeses
             x-agp34c1g6l0j0c1q60o36d1p:
               help: Informació fiscal sobre informació fiscal de la casella 00349
                 del Modelo 220.
-              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferències
                 al compte de pèrdues i guanys consolidat. Per cobertures de fluxos
                 d'efectiu
             x-agp34c1g6l0j0c1q60o36d9g:
               help: Informació fiscal sobre informació fiscal de la casella 00350
                 del Modelo 220.
-              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferències
                 al compte de pèrdues i guanys consolidat. Subvencions, donacions i
                 llegats rebuts
             x-agp34c1g6l0j0c1q60o36d9h:
               help: Informació fiscal sobre informació fiscal de la casella 00351
                 del Modelo 220.
-              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferències
                 al compte de pèrdues i guanys consolidat. Per actius no corrents i
                 passius vinculats, mantinguts per a la venda
             x-agp34c1g6l0j0c1q60o36d9j:
               help: Informació fiscal sobre informació fiscal de la casella 00353
                 del Modelo 220.
-              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferències
                 al compte de pèrdues i guanys consolidat. Efecte impositiu
             x-agp34c1g6l0j0c1q60o36d9k:
               help: Informació fiscal sobre informació fiscal de la casella 00354
                 del Modelo 220.
-              label: Estat d'ingressos i despeses consolidats reconeguts. Transferencies
-                al compte de pèrdues i guanys consolidat. Total transferencia al compte
+              label: Estat d'ingressos i despeses consolidats reconeguts. Transferències
+                al compte de pèrdues i guanys consolidat. Total transferència al compte
                 de pèrdues i guanys consolidat
             x-agp34c1g6l0j0c1q60o36d9l:
               help: Informació fiscal sobre informació fiscal de la casella 00355
@@ -5169,53 +5169,53 @@ modelo:
             x-agp34c1g6t6j0c1q60p34c9p:
               help: Informació fiscal sobre informació fiscal de la casella 02219
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. j6) Ingressos, despeses o rendes que formen part
                 del benefici operatiu que no s'integren en la base imposable
             x-agp34c1g6t6j0c1q60p34chg:
               help: Informació fiscal de la casella 02220 del Modelo 220.
-              label: 'Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: 'Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. m) Límit total a la deducció de despeses financeres
                 netes: en tot cas 1 milió d''euros si el límit a la deducció de despeses
                 financeres netes més l''addició de límit consignada a les lletres
-                k i l es inferior a 1 milió'
+                k i l és inferior a 1 milió'
             x-agp34c1g6t6j0c1q60pj2e9m:
               help: Informació fiscal sobre informació fiscal de la casella 03196
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.5, 67 b) o 83 LIS. a) Despeses financeres del període impositiu
                 derivades de deutes per adquisició de participacions afectats per
                 art. 16.5, 67 b) o 83 LIS (sense signe)
             x-agp34c1g6t6j0c1q60pj2e9n:
               help: Informació fiscal de la casella 03197 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.5, 67 b) o 83 LIS. b) Límit addicional a la deducció de despeses
                 financeres (art. 16.5, 67 b) o 83 LIS) (sense signe)
             x-agp34c1g6t6j0c1q60pj2e9o:
               help: 'Informació fiscal sobre informació fiscal de la casella 03198
                 del Modelo 220 Referències: [b], [a=c1+c2].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.5, 67 b) o 83 LIS. c1) Despeses financeres del període impositiu
                 deduïbles després d'aplicar el límit art. 16.5, 67 b) o 83 LIS (<=
                 [b], [a=c1+c2], >= 0)
             x-agp34c1g6t6j0c1q60pj2e9p:
               help: 'Informació fiscal sobre informació fiscal de la casella 03199
                 del Modelo 220 Referències: [a-c1].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.5, 67 b) o 83 LIS. c2) Despeses financeres del període impositiu
                 no deduïbles després d'aplicar el límit art. 16.5, 67 b) i/o 83 LIS
                 (= [a-c1], >= 0)
             x-agp34c1g6t6j0c1q60pj4c1g:
               help: 'Informació fiscal sobre informació fiscal de la casella 03200
                 del Modelo 220 Referències: [b >= c1+d+e].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.5, 67 b) o 83 LIS. d) Despeses financeres del grup pendents de
                 deduir de períodes anteriors afectades per art. 16.5, 67 b) i/o 83,
                 deduïbles després d'aquest límit ([b >= c1+d+e], >= 0)
             x-agp34c1g6t6j0c1q60pj4c1h:
               help: 'Informació fiscal sobre informació fiscal de la casella 03201
                 del Modelo 220 Referències: [b >= c1+d+e].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.5, 67 b) o 83 LIS. e) Despeses financeres pendents de deduir de
                 períodes anteriors afectades per art. 16.5, 67 b) i/o 83 LIS, deduïbles
                 després d'aquest límit, generades o assumides per les entitats abans
@@ -5224,97 +5224,97 @@ modelo:
             x-agp34c1g6t6j0c1q60pj4c1i:
               help: Informació fiscal sobre informació fiscal de la casella 03202
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. f) Despeses financeres del període impositiu no afectades
                 per art. 16.5, 67 b) i/o 83 LIS (sense signe)
             x-agp34c1g6t6j0c1q60pj4c1j:
               help: 'Informació fiscal sobre informació fiscal de la casella 03203
                 del Modelo 220 Referències: [c1+f].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. g) Despeses financeres del grup del període impositiu
                 (= [c1+f])
             x-agp34c1g6t6j0c1q60pj4c1k:
               help: Informació fiscal sobre informació fiscal de la casella 03204
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. h) Ingressos financers del grup del període impositiu
                 derivats de la cessió a tercers de capitals propis
             x-agp34c1g6t6j0c1q60pj4c1l:
               help: 'Informació fiscal sobre informació fiscal de la casella 03205
                 del Modelo 220 Referències: [g-h].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. i) Despeses financeres netes del grup del període
                 impositiu (= [g-h])
             x-agp34c1g6t6j0c1q60pj4c1m:
               help: 'Informació fiscal sobre informació fiscal de la casella 03206
                 del Modelo 220 Referències: [j1-j2-j3-j4+j5-j6].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. j) Límit a la deducció de despeses financeres netes
                 (= 30% * [j1-j2-j3-j4+j5-j6])
             x-agp34c1g6t6j0c1q60pj4c1n:
               help: Informació fiscal sobre informació fiscal de la casella 03207
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. j1) Resultat d'explotació (signe igual al Compte
                 de Pèrdues i Guanys)
             x-agp34c1g6t6j0c1q60pj4c1o:
               help: Informació fiscal sobre informació fiscal de la casella 03208
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. j2) Amortització de l'immobilitzat (signe igual al
                 Compte de Pèrdues i Guanys)
             x-agp34c1g6t6j0c1q60pj4c1p:
               help: Informació fiscal sobre informació fiscal de la casella 03209
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. j3) Imputació de subvencions d'immobilitzat no financer
                 i altres (signe igual al Compte de Pèrdues i Guanys)
             x-agp34c1g6t6j0c1q60pj4c9g:
               help: Informació fiscal sobre informació fiscal de la casella 03210
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. j4) Deteriorament i resultat per alienacions de l'immobilitzat
                 (signe igual al Compte de Pèrdues i Guanys)
             x-agp34c1g6t6j0c1q60pj4c9h:
               help: Informació fiscal sobre informació fiscal de la casella 03211
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. j5) Ingressos financers de participacions en instruments
                 de patrimoni (signe igual al Compte de Pèrdues i Guanys)
             x-agp34c1g6t6j0c1q60pj4c9i:
               help: Informació fiscal de la casella 03212 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. k) Addició per límit de benefici operatiu no aplicat
                 en els cinc exercicis anteriors generat en el grup
             x-agp34c1g6t6j0c1q60pj4c9j:
               help: Informació fiscal de la casella 03213 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. l) Addició per límit de benefici operatiu no aplicat
                 en els cinc exercicis anteriors, generat o assumit per les entitats
                 abans de la seva incorporació al grup (art. 67 a) i 74.3 b) LIS)
             x-agp34c1g6t6j0c1q60pj4c9k:
               help: 'Informació fiscal sobre informació fiscal de la casella 03214
                 del Modelo 220 Referències: [i=n1+n2].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. n1) Despeses financeres netes del període impositiu
                 deduïbles ([i=n1+n2], >= 0)
             x-agp34c1g6t6j0c1q60pj4c9l:
               help: 'Informació fiscal sobre informació fiscal de la casella 03215
                 del Modelo 220 Referències: [i-n1].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. n2) Despeses financeres netes del període impositiu
                 no deduïbles (= [i-n1], >= 0)
             x-agp34c1g6t6j0c1q60pj4c9m:
               help: 'Informació fiscal sobre informació fiscal de la casella 03216
                 del Modelo 220 Referències: [d].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. o) Despeses financeres del grup pendents de deduir
                 de períodes impositius anteriors afectades per art. 16.5, 67 b) i/o
                 83 LIS, deduïbles després d'aplicar els 2 límits (<= [d], >= 0)
             x-agp34c1g6t6j0c1q60pj4c9n:
               help: 'Informació fiscal sobre informació fiscal de la casella 03217
                 del Modelo 220 Referències: [e].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. p) Despeses financeres pendents de deduir de períodes
                 anteriors afectades per art. 16.5, 67 b) i/o 83 LIS, deduïbles després
                 d'aplicar els 2 límits, generades o assumides per les entitats abans
@@ -5323,13 +5323,13 @@ modelo:
             x-agp34c1g6t6j0c1q60pj4c9o:
               help: Informació fiscal sobre informació fiscal de la casella 03218
                 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. q) Despeses financeres netes del grup pendents de
                 deduir de períodes impositius anteriors no afectades per art. 16.5,
                 67 b) i/o 83 LIS, aplicades
             x-agp34c1g6t6j0c1q60pj4c9p:
               help: Informació fiscal de la casella 03219 del Modelo 220.
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. r) Despeses financeres netes pendents de deduir de
                 períodes anteriors aplicades, no afectades per art. 16.5, 67 b) i/o
                 83 LIS, generades o assumides per les entitats abans de la seva incorporació
@@ -5337,7 +5337,7 @@ modelo:
             x-agp34c1g6t6j0c1q60pj4chg:
               help: 'Informació fiscal sobre informació fiscal de la casella 03220
                 del Modelo 220 Referències: [c2+n2].'
-              label: Limitació en la deduibilitat de despeses financeres. Límit art.
+              label: Limitació en la deduïbilitat de despeses financeres. Límit art.
                 16.1 i 16.2 LIS. Total despeses financeres del període impositiu no
                 deduïbles (= [c2+n2])
             x-agp34c1g710j0c1q60o34chl:

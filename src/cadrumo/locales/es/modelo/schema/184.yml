@@ -6,7 +6,7 @@ modelo:
           actividad-principal-espanola:
             label: ACTIVIDAD PRINCIPAL
           base-deduccion-o-importe:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Base de la deducción / importe
           cesionario-denominacion:
@@ -17,7 +17,7 @@ modelo:
               INVERSIÓN COLECTIVA
           clave-declarado:
             help: Dato declarado en el modelo 184, declaración informativa de entidades
-              en regimen de atribucion de rentas.
+              en régimen de atribución de rentas.
             label: Clave de declarado
           clave-pais-entidad-extranjera:
             label: CLAVE PAÍS
@@ -36,107 +36,107 @@ modelo:
           filing-year:
             label: Ejercicio al que se refiere la declaración
           ganancias-perdidas-patrimoniales-atribuibles:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Ganancias / pérdidas
           gasto-actividad-amortizaciones:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Amortizaciones
           gasto-actividad-arrendamientos-canones:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Arrendamientos y cánones
           gasto-actividad-consumos-explotacion:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Consumos de explotación
           gasto-actividad-gastos-financieros:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Gastos financieros
           gasto-actividad-gastos-personal:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Gastos de personal
           gasto-actividad-otros-gastos-deducibles:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Otros gastos fiscalmente deducibles
           gasto-actividad-provisiones:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Provisiones
           gasto-actividad-reparaciones-conservacion:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Reparaciones y conservación
           gasto-actividad-servicios-profesionales:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Servicios profesionales independientes
           gasto-actividad-suministros:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Suministros
           gasto-actividad-tributos-deducibles:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos de actividades económicas. Tributos fiscalmente deducibles
           gasto-inmobiliario-amortizacion-bienes-muebles:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Amortización de bienes muebles
           gasto-inmobiliario-amortizacion-inmueble:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Amortización del inmueble
           gasto-inmobiliario-cantidades-devengadas-terceros:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Cantidades devengadas por terceros
           gasto-inmobiliario-conservacion-reparacion:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Conservación y reparación
           gasto-inmobiliario-intereses-financiacion:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Intereses y demás gastos de financiación
           gasto-inmobiliario-intereses-gastos-reparacion:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Intereses y gastos de reparación
               y conservación pendientes
           gasto-inmobiliario-otros-gastos-deducibles:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Otros gastos deducibles
           gasto-inmobiliario-primas-seguros:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Primas de seguros
           gasto-inmobiliario-saldos-dudoso-cobro:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Saldos de dudoso cobro
           gasto-inmobiliario-tributos-recargos:
             help: Gasto fiscalmente deducible declarado en el registro de entidad
-              del modelo 184. El diseno lo divide en parte entera y parte decimal.
+              del modelo 184. El diseño lo divide en parte entera y parte decimal.
             label: Gastos del capital inmobiliario. Tributos y recargos
           gastos-deducibles-atribuibles:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Gastos / exceso de rentas negativas
           importe-atribuido-miembro:
             label: IMPORTE (RENDIMIENTO / RETENCIÓN / DEDUCCIÓN)
           importe-neto-cifra-negocios:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Importe neto de la cifra de negocios
           ingresos-integros-atribuibles:
             help: Dato declarado en el modelo 184, declaración informativa de entidades
-              en regimen de atribucion de rentas.
+              en régimen de atribución de rentas.
             label: Ingresos íntegros / importe de rendimientos devengados / resultado
               contable
           miembro-a-31-diciembre:
@@ -157,7 +157,7 @@ modelo:
             label: Apellidos y nombre, razón social o denominación del miembro
           miembro-representante-fiscal-nif:
             help: Dato declarado en el modelo 184, declaración informativa de entidades
-              en regimen de atribucion de rentas.
+              en régimen de atribución de rentas.
             label: NIF del representante fiscal
           naturaleza-inmueble:
             help: Dato del miembro declarado en el registro de tipo 3 del modelo 184.
@@ -174,23 +174,23 @@ modelo:
           persona-relacion:
             label: TELÉFONO
           porcentaje-participacion:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Porcentaje de participación
           porcentaje-reduccion-renta-atribuible:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Porcentaje de reducción
           porcentaje-renta-atribuible-residentes:
             help: Dato declarado en el modelo 184, declaración informativa de entidades
-              en regimen de atribucion de rentas.
+              en régimen de atribución de rentas.
             label: Porcentaje de renta atribuible
           porcentaje-titularidad-inmueble:
             label: PORCENTAJE DE TITULARIDAD DEL INMUEBLE
           provisiones-y-gastos-dificil-justificacion:
             label: PROVISIONES DEDUCIBLES Y GASTOS DE DIFÍCIL JUSTIFICACIÓN
           reduccion-atribuida-miembro:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Reducción
           referencia-catastral:
@@ -201,7 +201,7 @@ modelo:
             label: RENDIMIENTO NETO MINORADO DE ACTIVIDADES AGRÍCOLAS, GANADERAS Y
               FORESTALES EN ESTIMACIÓN OBJETIVA
           rendimiento-neto-previo-estimacion-objetiva:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Rendimiento neto previo de actividades en estimación objetiva
           renta-atribuible-con-derecho-reduccion:
@@ -214,7 +214,7 @@ modelo:
           representante-nombre:
             label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL REPRESENTANTE
           retenciones-ingresos-a-cuenta-atribuibles:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Retenciones e ingresos a cuenta
           situacion-inmueble:
@@ -231,12 +231,12 @@ modelo:
             label: TIPO DE HOJA
           tipo-renta-atribuida-clave:
             label: Clave del tipo de renta atribuida (A=capital mobiliario, C=capital
-              inmobiliario, D=actividades economicas, F=ganancias/perdidas no transmision,
-              G=ganancias/perdidas transmision, I=deducciones IRPF, J=deducciones
-              IS, K=retenciones soportadas, L=exceso rentas negativas paises sin convenio)
+              inmobiliario, D=actividades económicas, F=ganancias/perdidas no transmisión,
+              G=ganancias/perdidas transmisión, I=deducciones IRPF, J=deducciones
+              IS, K=retenciones soportadas, L=exceso rentas negativas países sin convenio)
           tipo-renta-atribuida-subclave:
-            label: Subclave del tipo de renta atribuida (granularidad por origen geografico
-              Espana/extranjero, reducciones aplicables, etc.)
+            label: Subclave del tipo de renta atribuida (granularidad por origen geográfico
+              España/extranjero, reducciones aplicables, etc.)
           tipo-soporte:
             label: TIPO DE SOPORTE
           tipo3-clave:
@@ -257,11 +257,11 @@ modelo:
           tributacion-impuesto-sociedades:
             label: TRIBUTACIÓN EN RÉGIMEN DEL IMPUESTO SOBRE SOCIEDADES
           valor-adquisicion-o-ajustes-disminuciones:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: Valor de adquisición, suscripción o contable
           valor-liquidativo-o-ajustes-aumentos:
-            help: Importe declarado en el modelo 184. El diseno lo divide en parte
+            help: Importe declarado en el modelo 184. El diseño lo divide en parte
               entera y parte decimal.
             label: 'Valor liquidativo / ajustes: aumentos'
       construct:
@@ -428,7 +428,7 @@ modelo:
               help: Casilla 58 del modelo 184, ejercicio 2025.
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
               help: Dato declarado en el modelo 184, declaración informativa de entidades
-                en regimen de atribucion de rentas.
+                en régimen de atribución de rentas.
               label: Número total de registros de entidad
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: Casilla 136-144 del modelo 184, ejercicio 2025.

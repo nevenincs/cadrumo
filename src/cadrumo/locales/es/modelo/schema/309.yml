@@ -81,8 +81,8 @@ modelo:
             help: Casilla 15-18 del modelo 309, ejercicio 2004-2015.
             label: Letras de la etiqueta identificativa
           motivo-declaracion-no-periodica:
-            label: Tipo de trigger (medios de transporte nuevos / régimen agricola
-              / recargo de equivalencia / ejecucion forzosa)
+            label: Tipo de trigger (medios de transporte nuevos / régimen agrícola
+              / recargo de equivalencia / ejecución forzosa)
           mtn-embarcacion-identificacion:
             label: Características y datos técnicos (7) - Embarcaciones - Identificación
               (Nº construcción)
@@ -391,7 +391,7 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 IVA declaración-liquidacion no periodica
+                title: Modelo 309 IVA declaración-liquidación no periódica
           field:
             label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
               primero y tercero). Ad-hoc por trigger de obligacion no periodica.
@@ -508,7 +508,7 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 IVA declaración-liquidacion no periodica
+                title: Modelo 309 IVA declaración-liquidación no periódica
           field:
             label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
               primero y tercero). Ad-hoc por trigger de obligacion no periodica.
@@ -625,7 +625,7 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 IVA declaración-liquidacion no periodica
+                title: Modelo 309 IVA declaración-liquidación no periódica
           field:
             label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
               primero y tercero). Ad-hoc por trigger de obligacion no periodica.

@@ -12,7 +12,7 @@ modelo:
           m189-clave-mercado:
             label: Clave de mercado
           m189-clave-representacion:
-            label: Clave de representacion
+            label: Clave de representación
           m189-clave-titularidad:
             label: Clave de titularidad
           m189-clave-valor:

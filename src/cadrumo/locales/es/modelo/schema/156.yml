@@ -19,47 +19,47 @@ modelo:
             afiliado-nombre:
               label: Apellidos y nombre del afiliado o mutualista
             cotizacion-abril:
-              label: 'Cotizacion de abril: situacion mensual e importe de la cuota
+              label: 'Cotización de abril: situación mensual e importe de la cuota
                 devengada'
             cotizacion-agosto:
-              label: 'Cotizacion de agosto: situacion mensual e importe de la cuota
+              label: 'Cotización de agosto: situación mensual e importe de la cuota
                 devengada'
             cotizacion-diciembre:
-              label: 'Cotizacion de diciembre: situacion mensual e importe de la cuota
+              label: 'Cotización de diciembre: situación mensual e importe de la cuota
                 devengada'
             cotizacion-enero:
-              label: 'Cotizacion de enero: situacion mensual e importe de la cuota
+              label: 'Cotización de enero: situación mensual e importe de la cuota
                 devengada'
             cotizacion-febrero:
-              label: 'Cotizacion de febrero: situacion mensual e importe de la cuota
+              label: 'Cotización de febrero: situación mensual e importe de la cuota
                 devengada'
             cotizacion-julio:
-              label: 'Cotizacion de julio: situacion mensual e importe de la cuota
+              label: 'Cotización de julio: situación mensual e importe de la cuota
                 devengada'
             cotizacion-junio:
-              label: 'Cotizacion de junio: situacion mensual e importe de la cuota
+              label: 'Cotización de junio: situación mensual e importe de la cuota
                 devengada'
             cotizacion-marzo:
-              label: 'Cotizacion de marzo: situacion mensual e importe de la cuota
+              label: 'Cotización de marzo: situación mensual e importe de la cuota
                 devengada'
             cotizacion-mayo:
-              label: 'Cotizacion de mayo: situacion mensual e importe de la cuota
+              label: 'Cotización de mayo: situación mensual e importe de la cuota
                 devengada'
             cotizacion-noviembre:
-              label: 'Cotizacion de noviembre: situacion mensual e importe de la cuota
+              label: 'Cotización de noviembre: situación mensual e importe de la cuota
                 devengada'
             cotizacion-octubre:
-              label: 'Cotizacion de octubre: situacion mensual e importe de la cuota
+              label: 'Cotización de octubre: situación mensual e importe de la cuota
                 devengada'
             cotizacion-septiembre:
-              label: 'Cotizacion de septiembre: situacion mensual e importe de la
+              label: 'Cotización de septiembre: situación mensual e importe de la
                 cuota devengada'
             declaracion-complementaria-sustitutiva:
               label: Declaración complementaria o sustitutiva
             declarante-razon-social:
-              label: Razon social del declarante
+              label: Razón social del declarante
             numero-afiliacion:
-              label: Número de afiliacion
+              label: Número de afiliación
             numero-identificativo-anterior:
               label: Número identificativo de la declaración anterior
             numero-justificante:

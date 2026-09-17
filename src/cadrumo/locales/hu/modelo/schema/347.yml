@@ -43,7 +43,7 @@ modelo:
               üres)
           contraparte-provincia-codigo:
             help: A 347-es modelo contraparte.provincia-codigo. rovata.
-            label: A partner tartomanykodja (ket szamjegy)
+            label: A partner tartománykódja (két számjegy)
           declarante-representante-legal-nif:
             help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
               bevallott adat.

@@ -26,19 +26,19 @@ modelo:
             '06':
               label: Rendimientos del trabajo en especie importe de ingresos a cuenta
             '07':
-              label: Rendimientos de actividades economicas dinerarios número de perceptores
+              label: Rendimientos de actividades económicas dinerarios número de perceptores
             08:
-              label: Rendimientos de actividades economicas dinerarios importe de
+              label: Rendimientos de actividades económicas dinerarios importe de
                 percepciones
             09:
-              label: Rendimientos de actividades economicas dinerarios importe de
+              label: Rendimientos de actividades económicas dinerarios importe de
                 retenciones
             '10':
-              label: Rendimientos de actividades economicas en especie número de perceptores
+              label: Rendimientos de actividades económicas en especie número de perceptores
             '11':
-              label: Rendimientos de actividades economicas en especie valor de percepciones
+              label: Rendimientos de actividades económicas en especie valor de percepciones
             '12':
-              label: Rendimientos de actividades economicas en especie importe de
+              label: Rendimientos de actividades económicas en especie importe de
                 ingresos a cuenta
             '13':
               label: Premios dinerarios número de perceptores
@@ -66,11 +66,11 @@ modelo:
               label: Ganancias patrimoniales forestales en especie importe de ingresos
                 a cuenta
             '25':
-              label: Cesion de derechos de imagen número de perceptores
+              label: Cesión de derechos de imagen número de perceptores
             '26':
-              label: Cesion de derechos de imagen contraprestaciones satisfechas
+              label: Cesión de derechos de imagen contraprestaciones satisfechas
             '27':
-              label: Cesion de derechos de imagen importe de ingresos a cuenta
+              label: Cesión de derechos de imagen importe de ingresos a cuenta
             '28':
               label: Total retenciones e ingresos a cuenta
             '29':

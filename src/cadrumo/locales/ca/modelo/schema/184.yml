@@ -17,7 +17,7 @@ modelo:
               COL·LECTIVA
           clave-declarado:
             help: Dada declarada al model 184, declaració informativa d'entitats en
-              regim d'atribucio de rendes.
+              règim d'atribució de rendes.
             label: Clau de declarat
           clave-pais-entidad-extranjera:
             label: CLAU PAÍS
@@ -40,89 +40,89 @@ modelo:
               i part decimal.
             label: Guanys / pèrdues
           gasto-actividad-amortizaciones:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Amortitzacions
           gasto-actividad-arrendamientos-canones:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Arrendaments i cànons
           gasto-actividad-consumos-explotacion:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Consums d'explotació
           gasto-actividad-gastos-financieros:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Despeses financeres
           gasto-actividad-gastos-personal:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Despeses de personal
           gasto-actividad-otros-gastos-deducibles:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Altres despeses fiscalment deduïbles
           gasto-actividad-provisiones:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Provisions
           gasto-actividad-reparaciones-conservacion:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Reparacions i conservació
           gasto-actividad-servicios-profesionales:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Serveis professionals independents
           gasto-actividad-suministros:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Subministraments
           gasto-actividad-tributos-deducibles:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses d'activitats econòmiques. Tributs fiscalment deduïbles
           gasto-inmobiliario-amortizacion-bienes-muebles:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Amortització de béns mobles
           gasto-inmobiliario-amortizacion-inmueble:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Amortització de l'immoble
           gasto-inmobiliario-cantidades-devengadas-terceros:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Quantitats meritades per tercers
           gasto-inmobiliario-conservacion-reparacion:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Conservació i reparació
           gasto-inmobiliario-intereses-financiacion:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Interessos i altres despeses
               de finançament
           gasto-inmobiliario-intereses-gastos-reparacion:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Interessos i despeses de reparació
               i conservació pendents
           gasto-inmobiliario-otros-gastos-deducibles:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Altres despeses deduïbles
           gasto-inmobiliario-primas-seguros:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Primes d'assegurances
           gasto-inmobiliario-saldos-dudoso-cobro:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Saldos de dubtós cobrament
           gasto-inmobiliario-tributos-recargos:
-            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+            help: Despesa fiscalment deduïble declarada en el registre d'entitat del
               model 184. El disseny la divideix en part entera i part decimal.
             label: Despeses del capital immobiliari. Tributs i recàrrecs
           gastos-deducibles-atribuibles:
@@ -137,7 +137,7 @@ modelo:
             label: Import net de la xifra de negocis
           ingresos-integros-atribuibles:
             help: Dada declarada al model 184, declaració informativa d'entitats en
-              regim d'atribucio de rendes.
+              règim d'atribució de rendes.
             label: Ingressos íntegres / import de rendiments meritats / resultat comptable
           miembro-a-31-diciembre:
             help: Dada del membre declarat en el registre de tipus 3 del model 184.
@@ -157,7 +157,7 @@ modelo:
             label: Cognoms i nom, raó social o denominació del membre
           miembro-representante-fiscal-nif:
             help: Dada declarada al model 184, declaració informativa d'entitats en
-              regim d'atribucio de rendes.
+              règim d'atribució de rendes.
             label: NIF del representant fiscal
           naturaleza-inmueble:
             help: Dada del membre declarat en el registre de tipus 3 del model 184.
@@ -183,7 +183,7 @@ modelo:
             label: Percentatge de reducció
           porcentaje-renta-atribuible-residentes:
             help: Dada declarada al model 184, declaració informativa d'entitats en
-              regim d'atribucio de rendes.
+              règim d'atribució de rendes.
             label: Percentatge de renda atribuïble
           porcentaje-titularidad-inmueble:
             label: PERCENTATGE DE TITULARITAT DE L'IMMOBLE
@@ -428,7 +428,7 @@ modelo:
               help: Casella 58 del model 184, exercici 2025.
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
               help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
+                en règim d'atribució de rendes.
               label: Nombre total de registres d'entitat
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: Casella 136-144 del model 184, exercici 2025.

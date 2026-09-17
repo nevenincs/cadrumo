@@ -176,13 +176,13 @@ modelo:
         '2024':
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: A 193-es modelo 121. rovata, 2024. adóév.
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: A 193-es modelo 235. rovata, 2024. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -197,8 +197,8 @@ modelo:
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               help: A 193-es modelo 175-189. rovata, 2024. adóév.
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1eedqn6t39ehqn8qbmc4:
               help: A 193-es modelo 122. rovata, 2024. adóév.
               label: JUTTATÁS TÍPUSA
@@ -311,13 +311,13 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: A 193-es modelo 121. rovata, 2025. adóév.
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: A 193-es modelo 235. rovata, 2025. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -332,8 +332,8 @@ modelo:
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               help: A 193-es modelo 175-189. rovata, 2025. adóév.
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1eedqn6t39ehqn8qbmc4:
               help: A 193-es modelo 122. rovata, 2025. adóév.
               label: JUTTATÁS TÍPUSA

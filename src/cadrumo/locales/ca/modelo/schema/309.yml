@@ -87,7 +87,7 @@ modelo:
             label: Lletres de l’etiqueta identificativa
           motivo-declaracion-no-periodica:
             help: 'Consulteu la informació de la casella: Tipus de trigger (medios
-              de transporte nuevos / règim agricola / recàrrec d''equivalència / ejecucion
+              de transporte nuevos / règim agrícola / recàrrec d''equivalència / ejecucion
               forzosa).'
             label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
               / recàrrec d'equivalència / execució forçosa)

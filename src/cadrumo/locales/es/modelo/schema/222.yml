@@ -6,130 +6,130 @@ modelo:
           filing-year:
             label: Ejercicio al que se refiere el pago fraccionado
           is-pf-grupo-info-aumento-capital-compensacion-creditos:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Importe excluido por operaciones de
               aumento de capital o fondos propios por compensación de créditos no
               integrado en la base imponible (art. 17.2 LIS)
           is-pf-grupo-info-bonificacion-art-34:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Importe de la bonificación prevista
               en el art. 34 LIS
           is-pf-grupo-info-bonificacion-ley-19-1994:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Importe correspondiente a la bonificación
               prevista en el art. 26 de la Ley 19/1994
           is-pf-grupo-info-minoracion-bonificacion-art-33:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Importe de la minoración correspondiente
               a las rentas que tengan derecho a la bonificación art. 33 LIS
           is-pf-grupo-info-quita-espera-importe-excluido:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Importe excluido por operaciones de
               quita o espera
           is-pf-grupo-info-quita-espera-integrado-base:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Parte integrada en la base imponible
               por operaciones de quita o espera
           is-pf-grupo-info-quita-espera-integrado-cuota:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Parte integrada en la base imponible
               a nivel cuota por operaciones de quita o espera (sólo cooperativas)
           is-pf-grupo-info-regimen-zec-no-computable:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Importe no computable por aplicación
               del régimen fiscal de la ZEC
           is-pf-grupo-info-renta-exenta-cap-xiv-tit-vii:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Importe de renta exenta de las entidades
               que aplican el régimen fiscal especial del Cap. XIV del Tít. VII LIS
           is-pf-grupo-info-reserva-inversiones-canarias:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Importe correspondiente a la reserva
               para inversiones en Canarias
           is-pf-grupo-info-reversion-deterioros:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado del grupo fiscal. Casilla sin número de casilla
-              impreso en el diseno oficial.
+              impreso en el diseño oficial.
             label: Información adicional (6) - Rentas de reversión de deterioros que
               se integran en la base imponible
           is-pf-grupo-informacion-adicional-resultado-consolidado-del-periodo:
-            help: Casilla 35 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 35 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Información adicional (6) - Resultado consolidado del período
           is-pf-grupo-mod-40-2-lis-a-ingresar:
-            help: Casilla 03 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 03 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.2 LIS).
             label: Mod. 40.2 LIS - A Ingresar
           is-pf-grupo-mod-40-2-lis-base-del-pago-fraccionado:
-            help: Casilla 01 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 01 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.2 LIS).
             label: Mod. 40.2 LIS - Base del pago fraccionado
           is-pf-grupo-mod-40-2-lis-resultado-de-la-declaracion-anterior:
-            help: Casilla 02 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 02 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.2 LIS).
             label: Mod. 40.2 LIS - Resultado de la declaración anterior (exclusivamente
               si ésta es complementaria)
           is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-disminuciones:
-            help: Casilla 60 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 60 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Ajustes para la determinación de la base imponible
               del grupo (DA 19ª LIS) - Disminuciones
           is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-grup-aumentos:
-            help: Casilla 59 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 59 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Ajustes para la determinación de la base imponible
               del grupo (DA 19ª LIS) - Aumentos
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-base-del-pago-fraccionado:
-            help: Casilla 16 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 16 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Base del pago fraccionado
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-del-grupo-de-peri:
-            help: Casilla 51 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 51 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Compensación de cuotas negativas
               del grupo de períodos anteriores (sólo cooperativas)
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-individuales-de-p:
-            help: Casilla 58 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 58 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Compensación de cuotas negativas
               individuales de períodos anteriores a la incorporación al grupo (sólo
               cooperativas)
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-del-grupo:
-            help: Casilla 49 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 49 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Dotaciones del art. 11.12
               LIS del grupo (DF 4ª LIS)
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-generadas-previa-a-la:
-            help: Casilla 50 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 50 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Dotaciones del art. 11.12
               LIS generadas previa a la incorporación al grupo (DF 4ª LIS)
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-porcentaje:
-            help: Casilla 17 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 17 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Porcentaje
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-c-disminuciones:
-            help: Casilla 53 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 53 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Reserva de nivelación (art.
               105 LIS) convertido en cuotas - sólo grupos que cumplan los requisitos
@@ -137,7 +137,7 @@ modelo:
               (art. 101 LIS) y apliquen el tipo de gravamen específico previsto para
               estas entidades) - Disminuciones
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-cuotas-aumentos:
-            help: Casilla 52 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 52 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Reserva de nivelación (art.
               105 LIS) convertido en cuotas sólo grupos que cumplan los requisitos
@@ -145,210 +145,210 @@ modelo:
               (art. 101 LIS) y apliquen el tipo de gravamen específico previsto para
               estas entidades) - Aumentos
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo:
-            help: Casilla 18 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 18 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) - Caso general - Resutlado previo - - - +
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-1:
-            help: Casilla 20 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 20 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Base a tipo 1
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-2:
-            help: Casilla 23 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 23 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Base a tipo 2
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-del-pago-fraccionado:
-            help: Casilla 19 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 19 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Base del pago fraccionado
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-bonificaciones-correspondientes-al-periodo-co:
-            help: Casilla 27 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 27 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Bonificaciones correspondientes
               al período computado (total)
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-cantidad-a-ingresar:
-            help: Casilla 34 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 34 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Cantidad a ingresar
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-del-grupo-de:
-            help: Casilla 42 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 42 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Compensación de cuotas
               negativas del grupo de períodos anteriores(sólo cooperativas)
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-individuales:
-            help: Casilla 43 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 43 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Compensación de cuotas
               negativas individuales de períodos anteriores a la incorporación al
               grupo(sólo cooperativas)
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-del-grupo:
-            help: Casilla 54 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 54 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Dotaciones del art.
               11.12 LIS del grupo (DF 4ª LIS)
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-generadas-previa:
-            help: Casilla 57 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 57 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Dotaciones del art.
               11.12 LIS generadas previa a la incorporación al grupo (DF 4ª LIS)
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-1:
-            help: Casilla 22 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 22 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Importe del pago fraccionado
               1
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-2:
-            help: Casilla 25 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 25 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Importe del pago fraccionado
               2
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-pagos-fraccionados-anteriores-correspondiente:
-            help: Casilla 30 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 30 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Pagos fraccionados anteriores
               correspondientes al período computado en Territorio Común (total)
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-1:
-            help: Casilla 21 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 21 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Porcentaje 1
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-2:
-            help: Casilla 24 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 24 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Porcentaje 2
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado:
-            help: Casilla 32 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 32 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Resultado
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-de-la-declaracion-anterior:
-            help: Casilla 31 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 31 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Resultado de la declaración
               anterior (exclusivamente si ésta es complementaria)
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-previo:
-            help: Casilla 26 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 26 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Resultado previo
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-retenciones-e-ingresos-a-cuenta-practicados-s:
-            help: Casilla 28 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 28 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Retenciones e ingresos
               a cuenta (totales) practicados sobre ingresos del período computado
           is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-volumen-de-operaciones-en-territorio-comun:
-            help: Casilla 29 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 29 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Casos específicos - Volumen de operaciones
               en Territorio Común (%)
           is-pf-grupo-mod-40-3-lis-b-2-minimo-a-ingresar:
-            help: Casilla 33 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 33 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Mínimo a ingresar (sólo para empresas con
               CN igual o superior a 10 millones euros)
           is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-solo-grupos-que-cumplan-los-disminuciones:
-            help: Casilla 56 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 56 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Reserva de nivelación (art.105 LIS) (solo
               grupos que cumplan los requisitos para la aplicación de los incentivos
               de empresa de reducida dimensión (art. 101 LIS) y apliquen el tipo de
               gravamen específico previsto para estas entidades) - Disminuciones
           is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-es-aumentos:
-            help: Casilla 55 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 55 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Reserva de nivelación (art. 105 LIS) (solo
               grupos que cumplan los requisitos para la aplicación de los incentivos
               de empresa de reducida dimensión (art. 101 LIS) y apliquen el tipo de
               gravamen específico previsto para estas entidades) - Aumentos
           is-pf-grupo-mod-40-3-lis-base-imponible-previa:
-            help: Casilla 13 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 13 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Base imponible previa
           is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-de-entidades-o-de-grupos:
-            help: Casilla 15 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 15 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Compensación de bases imponibles negativas de entidades
-              o de grupos previos a la integracion al grupo (art.67 y 74.3 LIS)
+              o de grupos previos a la integración al grupo (art.67 y 74.3 LIS)
           is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-del-grupo-de-periodos-an:
-            help: Casilla 14 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 14 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Compensación de bases imponibles negativas del
               grupo de períodos anteriores
           is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-aumentos:
-            help: Casilla 05 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 05 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Corrección por Impuesto sobre Sociedades (IS) -
               Aumentos
           is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-disminuciones:
-            help: Casilla 06 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 06 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Corrección por Impuesto sobre Sociedades (IS) -
               Disminuciones
           is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-corre-aumentos:
-            help: Casilla 11 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 11 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Correcciones diferimiento resultados internos y
-              otras correcc. Consolidacion - Aumentos
+              otras correcc. Consolidación - Aumentos
           is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-disminuciones:
-            help: Casilla 12 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 12 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Correcciones diferimiento resultados internos y
-              otras correcc. Consolidacion - Disminuciones
+              otras correcc. Consolidación - Disminuciones
           is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-del-grupo:
-            help: Casilla 44 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 44 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Dotaciones del art. 11.12 de la LIS del grupo
           is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-generados-a-nivel-individual-o-d:
-            help: Casilla 45 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 45 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Dotaciones del art. 11.12 de la LIS generados a
               nivel individual o de grupo previo a la incorporación al grupo (art.
               67 y 74.3 LIS)
           is-pf-grupo-mod-40-3-lis-remanente-reserva-de-capitalizacion-no-aplicada-por-insuficiencia-d:
-            help: Casilla 46 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 46 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Remanente reserva de capitalización no aplicada
               por insuficiencia de base
           is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-e-disminuciones:
-            help: Casilla 48 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 48 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Reserva de nivelación (art. 105 LIS) (sólo grupos
               que cumplan los requisitos para la aplicación de los incentivos de empresa
               de reducida dimensión (art. 101 LIS) y apliquen el tipo de gravamen
               específico previsto para estas entidades) - Disminuciones
           is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-especi-aumentos:
-            help: Casilla 47 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 47 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Reserva de nivelación (art. 105 LIS) (sólo grupos
               que cumplan los requisitos para la aplicación de los incentivos de empresa
               de reducida dimensión (art. 101 LIS) y apliquen el tipo de gravamen
               específico previsto para estas entidades) Aumentos
           is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-bi-ne-aumentos:
-            help: Casilla 07 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 07 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Resto correcciones al resultado contable, excepto
               comp. BI Negativa ej. Ant - Aumentos
           is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-disminuciones:
-            help: Casilla 08 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 08 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Resto correcciones al resultado contable, excepto
               comp. BI Negativa ej. Ant - Disminuciones
           is-pf-grupo-mod-40-3-lis-reversion-del-30-del-importe-de-los-gastos-amortiz-disminuciones:
-            help: Casilla 37 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 37 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Reversión del 30% del importe de los gastos amortiz
               (exc. emp. reducidas) - Disminuciones
           is-pf-grupo-mod-40-3-lis-suma-de-bases-imponibles-individuales-antes-de-compensar-bases-nega:
-            help: Casilla 10 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 10 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Suma de bases imponibles individuales antes de
               compensar bases negativas de periodos anteriores
           is-pf-grupo-mod-40-3-lis-suma-de-resultados-contables-individuales:
-            help: Casilla 04 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 04 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - Suma de resultados contables individuales (después
               del IS e IC)
           is-pf-grupo-mod-40-3-lis-total-aumentos:
-            help: Casilla 38 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 38 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - TOTAL - Aumentos
           is-pf-grupo-mod-40-3-lis-total-disminuciones:
-            help: Casilla 39 de la liquidacion del pago fraccionado del grupo fiscal
+            help: Casilla 39 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - TOTAL - Disminuciones
           tipo-declaracion:
@@ -372,33 +372,33 @@ modelo:
         2025-y-siguientes:
           casilla:
             '61':
-              help: Casilla 61 de la liquidacion del pago fraccionado del grupo fiscal
+              help: Casilla 61 de la liquidación del pago fraccionado del grupo fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - B.2) - Casos específicos - Base a tipo 3
             '62':
-              help: Casilla 62 de la liquidacion del pago fraccionado del grupo fiscal
+              help: Casilla 62 de la liquidación del pago fraccionado del grupo fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - B.2) - Casos específicos - Porcentaje 3
             '63':
-              help: Casilla 63 de la liquidacion del pago fraccionado del grupo fiscal
+              help: Casilla 63 de la liquidación del pago fraccionado del grupo fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - B.2) - Casos específicos - Importe del pago fraccionado
                 3
             '64':
-              help: Casilla 64 de la liquidacion del pago fraccionado del grupo fiscal
+              help: Casilla 64 de la liquidación del pago fraccionado del grupo fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - B.2) - Casos específicos - Base a tipo 4
             '65':
-              help: Casilla 65 de la liquidacion del pago fraccionado del grupo fiscal
+              help: Casilla 65 de la liquidación del pago fraccionado del grupo fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - B.2) - Casos específicos - Porcentaje 4
             '66':
-              help: Casilla 66 de la liquidacion del pago fraccionado del grupo fiscal
+              help: Casilla 66 de la liquidación del pago fraccionado del grupo fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - B.2) - Casos específicos - Importe del pago fraccionado
                 4
             '67':
-              help: Casilla 67 de la liquidacion del pago fraccionado del grupo fiscal
+              help: Casilla 67 de la liquidación del pago fraccionado del grupo fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - Corrección por Impuesto Complementario (IC) -
                 Aumentos

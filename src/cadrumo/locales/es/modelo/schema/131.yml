@@ -88,7 +88,7 @@ modelo:
             label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
               10)
           minoracion-rendimientos-actividades-economicas:
-            label: Minoracion por rendimientos netos de actividades economicas
+            label: Minoración por rendimientos netos de actividades económicas
           pago-fraccionado-previo:
             label: Suma de pagos fraccionados previos
           pago-fraccionado-previo-agrario:

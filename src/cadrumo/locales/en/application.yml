@@ -160,18 +160,6 @@ application:
         observation_merge_key_conflict: 'Observations for different modelo, year or
           period keys cannot be merged: {primary_modelo} {primary_filing_year} {primary_period}
           against {overlay_modelo} {overlay_filing_year} {overlay_period}.'
-    errors:
-      observation_displaces_official_evidence_app_filing: 'This modelo, year and period
-        already holds evidence captured from AEAT ({existing_source_kind}), so a locally
-        computed filing cannot be saved over it. A local recalculation is not the
-        authority for what was filed: if it is correct, file the correction with AEAT
-        and pull the result back. The captured evidence cannot be recovered through
-        any path this application exposes.'
-      observation_displaces_official_evidence_manual: This modelo, year and period
-        already holds evidence captured from AEAT ({existing_source_kind}). Saving
-        a manual figure here replaces it, and the replaced evidence cannot be recovered
-        through any path this application exposes. Re-run with the replace-official-evidence
-        option if displacing it is intended.
     iva_compensation:
       errors:
         annual_partition_casilla_ids_noncanonical: Modelo 303 compensation observations
