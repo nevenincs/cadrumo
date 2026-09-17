@@ -337,6 +337,7 @@ def _pending_prorrata_resolution(
     *,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
+    prorrata_id: CasillaId | None,
 ) -> CalculationSourceResolution:
     """Refuse projected rows while any in-window good lacks definitive prorrata."""
     return CalculationSourceResolution(
@@ -348,7 +349,8 @@ def _pending_prorrata_resolution(
             resolver_id=resolver_id,
             message=(
                 "bienes_inversion_regularizacion requires current-year definitive prorrata "
-                "casilla declared by the selected revision for every in-window non-disposed good"
+                f"casilla {prorrata_id or 'declared by the selected revision'!r} "
+                "for every in-window non-disposed good"
             ),
         ),
     )
@@ -395,6 +397,7 @@ def _project_regularizaciones(
             binding_ids,
             resolver_id=resolver_id,
             owned_sources=owned_sources,
+            prorrata_id=prorrata_id,
         )
     return _RegularizacionProjections(annual=annual_projection, disposal=disposal_projection)
 
