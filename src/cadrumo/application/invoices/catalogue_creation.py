@@ -1,8 +1,8 @@
 """Application service for creating one rich catalogue :class:`Invoice`.
 
 The operator-facing ``aeat app ledger invoice add`` verb mints a **linkable**
-invoice directly: the :class:`~domain.invoices.Invoice` in the
-:class:`~domain.invoices.InvoiceCatalogue` is the only invoice record, and it
+invoice directly: the :class:`~domain.invoices.models.Invoice` in the
+:class:`~domain.invoices.models.InvoiceCatalogue` is the only invoice record, and it
 carries
 ``linked_transaction_ids`` and is the reconciliation authority ``link`` targets.
 

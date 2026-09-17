@@ -11,7 +11,7 @@ is matched against the filer's own return.
 
 This lives in the application layer for the same reason
 :mod:`~application.invoices.issuer_establishment` does: it is a fact about the
-TAXPAYER, not about the invoice, and :class:`~domain.invoices.Invoice` is a pure
+TAXPAYER, not about the invoice, and :class:`~domain.invoices.models.Invoice` is a pure
 domain record that does not reach into profile state.
 
 The failure this guards is not hypothetical or operator-typo-shaped, and the
@@ -34,16 +34,16 @@ Scope note, stated rather than assumed: this treats a self-naming counterparty
 as always wrong, which holds for every operation this codebase can currently
 record. Autoconsumo (LIVA art. 9) is the one family where a taxpayer documents
 an operation directed at themselves, and it has no
-:class:`~domain.iva.IvaCategory` member here -- the only trace is the
+:class:`~domain.iva.schema.IvaCategory` member here -- the only trace is the
 registry-projected art. 104.Tres prorrata exclusion, which is declared
 "auto-derived from the IVA category" against a category that does not exist. If
 autoconsumo invoicing is ever modelled, THIS is the predicate that must learn
 about it; until then a self-naming counterparty is a misread, not a self-supply.
 
 See Also:
-    :func:`~application.invoices.issuer_established_in_tai`
+    :func:`~application.invoices.issuer_establishment.issuer_established_in_tai`
         Sibling profile-derived invoice predicate.
-    :class:`~domain.deadlines.TaxpayerProfile`
+    :class:`~domain.deadlines.models.TaxpayerProfile`
         Owns the per-taxpayer identity fact; one profile per bucket.
 """
 

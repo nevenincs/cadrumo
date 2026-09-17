@@ -8,7 +8,7 @@ such a file whole, so a book with every required field present imported nothing.
 Resolution is deterministic first: a column whose header is already a canonical
 importer column keeps that field without consulting anything. Only the columns
 left over are put to the semantic mapping lane, once per file, over the closed
-:class:`~core.FieldRole` vocabulary. Exact-first matters for the same reason it
+:class:`~core.field_role.FieldRole` vocabulary. Exact-first matters for the same reason it
 does in the statement lane — a file already written in the product's own
 vocabulary must never depend on a judgement to be read.
 
@@ -18,7 +18,7 @@ derives rather than accepts — still imports every row; the operator is told
 which columns were not used instead of being handed a rejected file.
 
 See Also:
-    :class:`~core.FieldRole`
+    :class:`~core.field_role.FieldRole`
         The closed vocabulary the mapping lane selects from.
     :mod:`.bulk_import`
         Reads the file and applies this resolution to each row.

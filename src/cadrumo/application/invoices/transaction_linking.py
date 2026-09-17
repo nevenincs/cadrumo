@@ -93,14 +93,14 @@ def link_invoice_transaction_repositories(
 
     Both sides of the link commit together: the updated invoice catalogue is
     serialised into a
-    :class:`~cadrumo.adapters.persistence.storage.SecureObjectWrite`
+    :class:`~cadrumo.core.secure_object_write.SecureObjectWrite`
     and handed to
     :meth:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository.save_with_secure_object_writes`
     alongside the transaction-catalogue diff, so both land in the single
-    :meth:`~cadrumo.adapters.persistence.storage.SecureObjectRepository.apply_batch`
+    :meth:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.apply_batch`
     transaction. A crash or error mid-write rolls both back, so the catalogues
     cannot come to rest in the one-sided state
-    :func:`~cadrumo.domain.invoices.verify_link_consistency` reports.
+    :func:`~cadrumo.domain.invoices.service.verify_link_consistency` reports.
 
     Args:
         bucket_id: Profile bucket owning both catalogues.
