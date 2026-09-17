@@ -1688,7 +1688,7 @@ legal_refs = ["ley-35-2006:art-82"]
 
 [[sections.fields]]
 key = "marriage_full_year"
-type = "integer"
+type = "boolean"
 required = false
 sensitivity = "identity"
 effective_dated = false

@@ -7273,3 +7273,24 @@ justification = "none"
 signed = false
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-322-2026"]
+
+[[revisions.2026-y-siguientes.export_layouts.records]]
+id = "modelo-322-envelope-footer"
+record_type = "envelope_footer"
+order = 5
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = "modelo-322-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]

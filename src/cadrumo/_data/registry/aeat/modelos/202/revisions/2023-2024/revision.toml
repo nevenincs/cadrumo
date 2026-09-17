@@ -464,6 +464,12 @@ sequence_removals = {profile_conditions = [0], source_refs = [0]}
 
 [[revisions."2023-2024".family_overrides]]
 family = "live_cross_references"
+selector = {revision = "2019-2022", id = "modelo-202-filed-declarations-read"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "live_cross_references"
 selector = {revision = "2019-2022", id = "modelo-202-static-documentation"}
 fields = {guard_policy_id = "modelo-202-2023-2024-static-documentation-only"}
 sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
@@ -479,8 +485,8 @@ sequence_removals = {source_refs = [0]}
 family = "constructs"
 selector = {revision = "2019-2022", id = "modelo-202-foundation"}
 sequence_additions = {legal_refs = ["orden-hfp-312-2023:art-unico-1-anexo-i"], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "boe-modelo-202-2023-amendment"]}
-sequence_removals = {legal_refs = [5], source_refs = [1, 2, 4]}
-sequence_order = {source_refs = [0, 2, 3, 4, 5, 1, 6]}
+sequence_removals = {legal_refs = [5], source_refs = [0, 1, 2, 4]}
+sequence_order = {source_refs = [1, 2, 3, 4, 0, 5]}
 
 [[revisions."2023-2024".family_overrides]]
 family = "application_links"
@@ -498,6 +504,12 @@ sequence_removals = {source_refs = [0, 1]}
 family = "application_links"
 selector = {revision = "2019-2022", id = "modelo-202-deadline"}
 sequence_additions = {source_refs = ["aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2022", id = "modelo-202-export"}
+sequence_additions = {source_refs = ["aeat-dr-202-2023"]}
 sequence_removals = {source_refs = [0]}
 
 [[revisions."2023-2024".family_overrides]]
