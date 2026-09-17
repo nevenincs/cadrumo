@@ -196,17 +196,7 @@ def activate_profile_override(ctx: typer.Context, profile: str) -> None:
 
     requested = profile.strip()
     if not requested:
-        raise attach_cli_policy_verdict(
-            CliRefusedBoundaryError(
-                translated_message="cli.config.profile.unknown_profile",
-                context={"name": profile},
-            ),
-            verdict=profile_selection_failure_verdict(
-                ProfileSelectionFailure.BLANK,
-                requested_profile=profile,
-            ),
-            requested_leaf=requested_cli_leaf(ctx),
-        )
+        raise unresolved_profile_override_refusal(ctx, profile=profile, blank=True)
     # The label fallback raises ProfileLabelAmbiguousError (a WorkflowError, NOT
     # a ValueError) when two live profiles share the name; refuse clearly rather
     # than arbitrarily picking a bucket.
@@ -228,18 +218,26 @@ def activate_profile_override(ctx: typer.Context, profile: str) -> None:
             requested_leaf=requested_cli_leaf(ctx),
         ) from exc
     if pointer is None:
-        raise attach_cli_policy_verdict(
-            CliRefusedBoundaryError(
-                translated_message="cli.config.profile.unknown_profile",
-                context={"name": requested},
-            ),
-            verdict=profile_selection_failure_verdict(
-                ProfileSelectionFailure.UNKNOWN,
-                requested_profile=requested,
-            ),
-            requested_leaf=requested_cli_leaf(ctx),
-        )
+        raise unresolved_profile_override_refusal(ctx, profile=requested, blank=False)
     ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
+
+
+def unresolved_profile_override_refusal(ctx: typer.Context, *, profile: str, blank: bool) -> Exception:
+    """Build the typed refusal for a blank or unknown root ``--profile`` selection."""
+    from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
+    from .errors import CliRefusedBoundaryError
+
+    return attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": profile},
+        ),
+        verdict=profile_selection_failure_verdict(
+            ProfileSelectionFailure.BLANK if blank else ProfileSelectionFailure.UNKNOWN,
+            requested_profile=profile,
+        ),
+        requested_leaf=requested_cli_leaf(ctx),
+    )
 
 
 def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:

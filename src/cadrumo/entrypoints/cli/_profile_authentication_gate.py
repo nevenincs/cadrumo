@@ -190,6 +190,19 @@ def _configure_root_logging(root_state: dict[str, object]) -> None:
         apply_to_root_logger(log_level)
 
 
+def _resolve_root_profile_override_or_refuse(ctx: typer.Context, raw: str) -> ProfileBucketPointer:
+    """Resolve the root ``--profile`` selection with the root override's typed refusal."""
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ._root_support import unresolved_profile_override_refusal
+
+    if not raw.strip():
+        raise unresolved_profile_override_refusal(ctx, profile=raw, blank=True)
+    try:
+        return _resolve_login_target_or_refuse(raw)
+    except ProfileNotFoundError as error:
+        raise unresolved_profile_override_refusal(ctx, profile=raw.strip(), blank=False) from error
+
+
 def _resolve_profile_targets(
     ctx: typer.Context,
     *,
@@ -215,7 +228,7 @@ def _resolve_profile_targets(
     if explicit_target is None and posture is not ProfileAuthenticationPosture.NOT_APPLICABLE:
         profile_override = root_state.get("profile_override")
         if isinstance(profile_override, str):
-            pointer = _resolve_login_target_or_refuse(profile_override)
+            pointer = _resolve_root_profile_override_or_refuse(ctx, profile_override)
             explicit_target = pointer.bucket_id
             explicit_label = pointer.label
             if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
