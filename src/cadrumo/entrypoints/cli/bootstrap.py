@@ -3,18 +3,6 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ...domain.currency.service import ExchangeRateProvider
-
-
-def _ecb_rate_provider() -> ExchangeRateProvider:
-    # Resolved on first conversion so a command that never converts does not
-    # import the ECB adapter and the settings stack it reads.
-    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-
-    return default_ecb_rate_provider()
 
 
 def main() -> None:
@@ -27,8 +15,8 @@ def main() -> None:
     # value alone.
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
 
-    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...core.logging import defer_logging_configuration, resume_logging_configuration
+    from ..exchange_rate_composition import live_exchange_rate_composition
 
     defer_logging_configuration()
     try:
@@ -36,7 +24,7 @@ def main() -> None:
 
         # The console script is the host that decides conversions use the live
         # ECB reference rates.
-        with bind_exchange_rate_provider_factory(_ecb_rate_provider):
+        with live_exchange_rate_composition():
             cli_main()
     except ModuleNotFoundError as exc:
         # Backstop for a missing optional package whose feature boundary did

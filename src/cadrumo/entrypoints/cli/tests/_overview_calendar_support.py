@@ -28,8 +28,11 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -154,7 +157,9 @@ def _modelo_record_with_external_justificante(
         period=Period.from_year_and_code(2025, "1T"),
         filed_at=filed_at,
         filed_by="aeat-import",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=evidence_kind,

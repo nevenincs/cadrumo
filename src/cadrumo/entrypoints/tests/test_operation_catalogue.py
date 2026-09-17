@@ -76,6 +76,14 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
             "event loop for one session is the job it exists to do"
         ),
     ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/installed_session.py",
+        construct="asyncio.run",
+        reason=(
+            "the installed session is the launcher's production composition root; "
+            "it owns one event loop per admitted profile session"
+        ),
+    ),
 )
 
 

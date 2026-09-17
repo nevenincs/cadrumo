@@ -19,8 +19,11 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
 
     from ....domain.modelos.codes import ModeloCode
     from ....domain.modelos.filing_record import (
+        AeatConfirmationState,
         ExternalEvidence,
         ExternalEvidenceKind,
+        FilingDeclarationKind,
+        FilingOrigin,
         ModeloRecord,
         ModeloRecordStatus,
         derive_filing_record_id,
@@ -52,7 +55,9 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
@@ -161,7 +166,9 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
-        aeat_accepted=False,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
     )
 
@@ -219,7 +226,9 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
         filed_at=filed_at,
         filed_by="operator-A",
         notes=None,
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
