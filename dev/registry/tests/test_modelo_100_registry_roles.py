@@ -1066,8 +1066,11 @@ def test_modelo_100_inmueble_rented_days_are_integer() -> None:
         "0137": "Número de días en que el inmueble accesorio ha estado arrendado",
     }
 
-    for filing_year in range(2020, 2026):
-        revision = modelo.revisions[str(filing_year)]
+    annual_editions = {
+        int(revision_id): revision for revision_id, revision in modelo.revisions.items() if str(revision_id).isdigit()
+    }
+    assert annual_editions, "modelo 100 declares no annual edition, so nothing below is checked"
+    for filing_year, revision in sorted(annual_editions.items()):
         for casilla_id, expected_label in expected_labels.items():
             casilla = next(
                 casilla
@@ -1079,7 +1082,10 @@ def test_modelo_100_inmueble_rented_days_are_integer() -> None:
             assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
             assert casilla.data_type == "integer"
             assert casilla.semantic_role == "irpf_inmueble_dias_arrendado"
-            assert "ley-35-2006:art-23" in casilla.legal_refs
+            # A year-specific edition cites the article's version in force that year.
+            assert any(
+                ref == "ley-35-2006:art-23" or ref.startswith("ley-35-2006:art-23-") for ref in casilla.legal_refs
+            )
             assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
                 casilla.source_refs,
             )

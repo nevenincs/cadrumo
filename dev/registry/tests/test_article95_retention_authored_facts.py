@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -103,15 +104,17 @@ def test_article_95_rate_boundaries_select_the_boe_redaction_value(
     assert resolved.source_refs == (f"boe-rirpf-art-95-{variant_suffix}",)
 
 
-def test_article_95_rates_back_project_before_the_first_captured_redaction() -> None:
-    resolved = _resolve("rirpf-art-95:retencion-actividades-profesionales-general", date(2007, 3, 31))
+def test_article_95_rates_do_not_project_before_the_first_redaction_in_force() -> None:
+    """The first redaction declares when it entered into force, and that is a legal boundary."""
+    first = _REDACTION_STARTS[0]
 
-    assert resolved.projection_direction == "backward"
-    assert resolved.projected_from_date == date(2007, 4, 1)
-    assert resolved.variant_id.endswith("2007-04-01")
+    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
+        _resolve("rirpf-art-95:retencion-actividades-profesionales-general", first - timedelta(days=1))
+
+    resolved = _resolve("rirpf-art-95:retencion-actividades-profesionales-general", first)
     assert resolved.payload.value == Decimal("0.15")
     assert resolved.payload.unit == "fraction"
-    assert resolved.source_refs == ("boe-rirpf-art-95-2007-04-01",)
+    assert resolved.source_refs == (f"boe-rirpf-art-95-{first.isoformat()}",)
 
 
 def test_each_authored_rate_variant_has_its_own_hash_pinned_boe_window() -> None:

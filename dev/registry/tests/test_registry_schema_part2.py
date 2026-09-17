@@ -250,9 +250,11 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
             "application_links": tuple(link for link in communication.application_links if link.surface != "extractor"),
         },
     )
-    modelo_145 = modelo.model_copy(update={"id": "145"})
+    # Every edition of a communication-only modelo communicates; the donor's
+    # other editions still file, so the candidate holds the mutated one alone.
+    modelo_145 = modelo.model_copy(update={"id": "145", "revisions": {mutated.id: mutated}})
 
-    committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo_145, mutated))
+    committed_registry_validator(catalogues).validate_modelo(modelo_145)
 
 
 def test_validator_rejects_non_145_communication_link_for_casillas() -> None:
