@@ -649,7 +649,23 @@ def build_external_filing_observation_payload(
     filing_record_id: str,
     source_headers: tuple[ObservedHeaderFact, ...],
 ) -> ObservationEnvelopePayload | None:
-    """Build the CSV observation envelope when that evidence channel applies."""
+    """Build the CSV observation envelope when that evidence channel applies.
+
+    Args:
+        evidence_kind: The import's evidence channel; only an AEAT register CSV
+            carries an observation envelope.
+        observation_repository: The store that prepares the envelope.
+        work_unit: The filing coordinate the import targets.
+        revision: The imported :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`, whose observations the envelope carries.
+        occurred_at: When the import was captured.
+        cleaned_reference: The canonical register reference.
+        expected_tax_id: The authenticated identity, when one is asserted.
+        filing_record_id: The chain entry the envelope belongs to.
+        source_headers: The register's typed header facts.
+
+    Returns:
+        The prepared envelope, or ``None`` for an evidence channel that has none.
+    """
     if evidence_kind is not ExternalEvidenceKind.AEAT_CSV_REGISTER:
         return None
     return observation_repository.prepare_observation_envelope(
