@@ -627,6 +627,43 @@ class CalculationObservationRepositoryProtocol(Protocol):
         """Persist one validated observation."""
         ...
 
+    def promote_pending_local(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+        source_kind: ObservationSourceKind,
+        source_metadata: Mapping[str, str],
+        captured_at: datetime,
+    ) -> tuple[SecureObjectWrite, ...]:
+        """Prepare the writes that make the pending-local layer the official one.
+
+        Used when AEAT confirms a pending local filing: the pending-local
+        envelope's casilla values become the official layer under the official
+        ``source_kind`` and ``source_metadata``, and the pending-local layer is
+        removed. Removal is expressed as upserts so the writes join the
+        caller's unit of work. Returns ``()`` when the coordinate has no
+        pending-local layer.
+        """
+        ...
+
+    def clear_pending_local(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+        captured_at: datetime,
+    ) -> tuple[SecureObjectWrite, ...]:
+        """Prepare the writes that remove the pending-local layer of one coordinate.
+
+        The official layer is left untouched. Removal is expressed as upserts
+        so the writes join the caller's unit of work. Returns ``()`` when the
+        coordinate has no pending-local layer.
+        """
+        ...
+
     def to_secure_object_write(self, payload: ObservationEnvelopePayload) -> SecureObjectWrite:
         """Prepare one encrypted observation write for an outer transaction."""
         ...
