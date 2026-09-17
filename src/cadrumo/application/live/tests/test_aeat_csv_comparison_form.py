@@ -53,7 +53,7 @@ from ..filed_observation_persistence import (
 from ..filed_observation_ports import FiledObservationArtefactProtocol, FiledObservedCasillaProtocol
 from ..justificante import _existing_capture_evidence_matches_current_csv
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "39039039-0390-4390-8390-390390390390"
 _CLOCK = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)

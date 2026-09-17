@@ -18,7 +18,7 @@ from ..verify import (
 )
 from .verify_test_support import InMemoryVerifyObservationPersistence
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 _BUCKET_A_ID = "60606060-6060-4060-8060-606060606060"

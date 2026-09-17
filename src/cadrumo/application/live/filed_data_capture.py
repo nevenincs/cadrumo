@@ -50,7 +50,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_kind import CasillaValueKind
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
 from ...core.i18n.render import tr
@@ -1455,6 +1455,7 @@ class FiledHistoryDiscoveryPair(BaseModel):
 
     @field_validator("signals")
     @classmethod
+    @pydantic_validation_boundary
     def _canonical_signal_order(
         cls,
         value: tuple[FiledHistoryDiscoverySignal, ...],

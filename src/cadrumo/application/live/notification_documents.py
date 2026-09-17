@@ -44,6 +44,7 @@ from typing import Annotated, Final, Literal
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.config import Settings
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.hex import Hex64Str
 from ...core.identity.aeat_certificado import AeatCertificadoId
@@ -137,6 +138,7 @@ class NotificationDocumentRecord(BaseModel):
     mode: Literal["read"] = "read"
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _a_reading_is_present_or_refused_never_both_nor_neither(self) -> NotificationDocumentRecord:
         """Refuse a custody record that does not say what became of the reading.
 
