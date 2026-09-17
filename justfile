@@ -559,14 +559,6 @@ test-packaging-serial: build-packaging-cohort
 [group('test')]
 test-packaging-artifacts: test-installed-oracles test-packaging-serial test-python-compatibility test-channel-artifacts
 
-# Per-push quick probe: cohort built once plus the single installed core smoke.
-# Deliberately minimal (ten-minute per-push budget); every other flavor lane is
-# a release-campaign proof carried by `test-packaging-portable` / `test-packaging-ci`.
-[doc('Per-push quick probe: cohort built once plus the single installed core smoke check.')]
-[group('test')]
-test-packaging-quick:
-    @uv run --no-sync python -m dev.packaging.campaign --profile quick --skip-preflight
-
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Build the reproducible dev image (.devcontainer/devcontainer.json + Dockerfile).

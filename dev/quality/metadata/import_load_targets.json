@@ -2467,7 +2467,6 @@
         "dev.packaging.installed_tax_oracle",
         "dev.packaging.lane_verification_core",
         "dev.packaging.oracle_emit_cohort",
-        "dev.packaging.proof_cache",
         "dev.packaging.proof_ledger",
         "dev.packaging.python_cohort",
         "dev.packaging.release_cohort",
