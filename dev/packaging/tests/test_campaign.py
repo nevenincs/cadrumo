@@ -312,7 +312,7 @@ def test_passes_that_all_succeed_report_nothing(tmp_path: Path) -> None:
     healthy = PytestPass(
         label="healthy",
         markers="integration",
-        target="dev/packaging/tests/test_homebrew_workflow.py",
+        target="dev/packaging/tests/test_evidence_release_transport.py",
         parallel=False,
     )
 
