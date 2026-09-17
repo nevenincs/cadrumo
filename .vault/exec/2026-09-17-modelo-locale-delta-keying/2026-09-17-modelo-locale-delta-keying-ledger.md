@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec9a8ff392becc9cee90a5c50f9e10e56f2f421505cf23b4000e1e40da8ae746'
+body_hash: 'sha256:fb507bd52fda38a43e2c83f070a7b345d09cc3c705308e639faafbf013df9206'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -83,6 +83,14 @@ related:
 - `S07` `M` `dev/locales/tests/test_locale_translation_honesty.py`
 - `S07` `A` `dev/locales/tests/test_shipped_casilla_catalogue.py`
 - `S07` `verify:` `casilla-audit: stale 0, stranded 0, drift 0, placeholders 0` -> `pass`
+- `S12` `M` `dev/locales/modelo_casilla_catalogue.py`
+- `S12` `M` `dev/locales/fstring_registry.py`
+- `S12` `M` `dev/locales/_signal.py`
+- `S12` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S12` `M` `dev/locales/tests/test_audit.py`
+- `S12` `M` `src/cadrumo/application/modelo/verification_cross_period.py`
+- `S12` `M` `src/cadrumo/locales`
+- `S12` `verify:` `pytest dev/locales` -> `pass`
 
 ## Notes
 
