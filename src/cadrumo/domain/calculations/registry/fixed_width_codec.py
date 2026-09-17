@@ -378,8 +378,20 @@ def parse_fixed_width_export_field(
         raise RegistryValidationError(
             f"export field {field.id!r} expected {field.length} wire characters, got {len(raw)}",
         )
-    validate_export_wire_value(field.value_policy, raw)
     kind = str(getattr(field.kind, "value", field.kind))
+    if (
+        kind not in {"filler", "literal"}
+        and not field.required
+        and field.value_policy is not None
+        and not policy_defines_absent_slot(field.value_policy)
+        and not raw.strip()
+        and raw == _render_absent_slot(field)
+    ):
+        # The renderer writes an optional absent slot as its space fill without
+        # policy validation; parsing reads that same fill back as absence. A zero
+        # fill stays subject to the policy, which may refuse it.
+        return None
+    validate_export_wire_value(field.value_policy, raw)
     if kind == "filler":
         if raw != " " * field.length:
             raise RegistryValidationError(f"filler export field {field.id!r} contains non-space data")
