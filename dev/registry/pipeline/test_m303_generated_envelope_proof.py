@@ -7,7 +7,6 @@ export tree into a positive authority.
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Iterator
 from decimal import Decimal
 from hashlib import sha256
@@ -78,6 +77,7 @@ from ._generated_tree_test_support import isolated_authorities, isolated_authori
 from ._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_validation import GeneratedExportTreeValidationContext
 from .candidate_staging import stage_continuity_metadata
+from .cli import stage_published_modelo
 from .export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
@@ -508,11 +508,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
             check_root,
             revision=tree.revision,
         )
-        published_modelo_root = check_root / "published-registry" / "aeat" / "modelos" / tree.modelo
-        shutil.copytree(bundled_path("registry", "aeat", "modelos", tree.modelo), published_modelo_root)
-        for sibling in (published_modelo_root / "revisions").iterdir():
-            if sibling.name != tree.revision:
-                shutil.rmtree(sibling)
+        published_modelo_root = stage_published_modelo(check_root, modelo=tree.modelo, revision=tree.revision)
         joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
         before = _committed_tree_hashes(tree)
         # While the revision is drift-pinned, check mode REFUSES rather than
