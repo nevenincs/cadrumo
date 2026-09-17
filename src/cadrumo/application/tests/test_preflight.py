@@ -36,7 +36,7 @@ from ..preflight import (
 )
 from ._operator_probe_fakes import fake_operator_probe_ports
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 #: The application probe accepts a caller-supplied positive suffix budget. The
 #: outbound adapter derives its real on-disk budget at its own seam; this
