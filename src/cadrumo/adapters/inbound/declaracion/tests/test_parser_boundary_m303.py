@@ -25,7 +25,7 @@ from ._parser_boundary_support import (
     _expected_period,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 def test_parser_extracts_modelo_303_targets_from_synthetic_fixture() -> None:

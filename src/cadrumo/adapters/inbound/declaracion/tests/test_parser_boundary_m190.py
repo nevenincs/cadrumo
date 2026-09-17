@@ -14,7 +14,7 @@ from ._parser_boundary_support import (
     _expected_period,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 # The three amounts the fixture prints. They are DISTINCT from one another
 # because the specimen this replaced printed the sanitiser's single redaction
@@ -44,6 +44,6 @@ def test_parser_extracts_modelo_190_targets_from_declaration_copy() -> None:
     assert {value.casilla_id: value.printed_value for value in filing.values} == _M190_EXPECTED_VALUES
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "190"
-    assert filing.registry_snapshot_ref.revision_id == "2024-y-siguientes"
+    assert filing.registry_snapshot_ref.revision_id == "2024"
     assert filing.registry_snapshot_ref.modelo_year == 2024
     assert filing.registry_snapshot_ref.period == "0A"

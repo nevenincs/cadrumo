@@ -17,15 +17,18 @@ from __future__ import annotations
 import pytest
 
 from .....tests.inventory import FIXTURES_DIR
+from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
 from ._parser_boundary_m130_support import (
     _M130_CORPUS_GROUND_TRUTH,
     _M130_CORPUS_IDS,
     _M130_CORPUS_PARAMS,
+    _M130_UNSUPPORTED_CORPUS_IDS,
+    _M130_UNSUPPORTED_CORPUS_PARAMS,
 )
 from ._parser_boundary_support import _expected_period
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M130_CORPUS_PARAMS, ids=_M130_CORPUS_IDS)
@@ -60,3 +63,12 @@ def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: in
     assert extracted == expected, (
         f"{pdf_stem}: extracted casillas do not match ground truth.\n  expected: {expected}\n  got:      {extracted}"
     )
+
+
+@pytest.mark.parametrize("pdf_stem,year,period", _M130_UNSUPPORTED_CORPUS_PARAMS, ids=_M130_UNSUPPORTED_CORPUS_IDS)
+def test_parser_refuses_modelo_130_corpus_below_the_supported_floor(pdf_stem: str, year: int, period: str) -> None:
+    """A render for a year outside the support envelope is refused, never resolved."""
+    pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
+
+    with pytest.raises(DeclaracionParseError):
+        parse_declaracion(pdf_path, modelo_override="130", año_override=year, period_override=period)

@@ -13,7 +13,7 @@ from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError, TemplateNotDetectedError
 from ..parser import parse_declaracion
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCaptureFixture) -> None:

@@ -2,26 +2,16 @@ from __future__ import annotations
 
 import pytest
 
+from ._parser_boundary_m303_support import _M303_HISTORICAL_IDS, _M303_HISTORICAL_PARAMS
 from ._verification_chain_support import (
     _assert_m303_printed_resultado_regimen_general_arithmetic,
     _parse_extracted_declaracion_values,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
-@pytest.mark.parametrize(
-    "pdf_stem,year,period",
-    [
-        ("2021-2T", 2021, "2T"),
-        ("2021-3T", 2021, "3T"),
-        ("2021-4T", 2021, "4T"),
-        ("2022-1T", 2022, "1T"),
-        ("2022-2T", 2022, "2T"),
-        ("2022-3T", 2022, "3T"),
-        ("2022-4T", 2022, "4T"),
-    ],
-)
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_HISTORICAL_PARAMS, ids=_M303_HISTORICAL_IDS)
 def test_verification_chain_m303_historical_printed_resultado_regimen_general_arithmetic(
     pdf_stem: str,
     year: int,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,11 +10,19 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.money.rounding import round_to_cents
 from .....core.period import Period
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
+from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from .....domain.calculations.registry.tests.published_authority import (
+    published_authored_revision,
+    published_snapshot,
+    published_supported_filing_years,
+)
 from .....tests.inventory import FIXTURES_DIR
+from ..parser import _select_extraction_profile
 
 pytestmark = [
     pytest.mark.unit,
@@ -47,8 +55,11 @@ __all__ = [
     "_MODELO_840_SYNTHETIC_FIXTURE",
     "_expected_casilla_values",
     "_expected_period",
+    "_filing_year_is_supported",
     "_modelo_130_snapshot",
     "_modelo_snapshot",
+    "_render_extraction_profile",
+    "_split_by_supported_filing_year",
     "_write_declaration_pdf",
 ]
 
@@ -179,6 +190,54 @@ def _modelo_130_snapshot():
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
     return published_snapshot(modelo_id, filing_year=filing_year, period=period)
+
+
+def _split_by_supported_filing_year[CaseT: tuple[object, ...]](
+    cases: Sequence[CaseT],
+    *,
+    year_index: int,
+) -> tuple[tuple[CaseT, ...], tuple[CaseT, ...]]:
+    """Partition corpus cases into admitted and refused filing years.
+
+    The published support envelope is the only authority on which years a
+    declaration may be parsed for; a corpus render below its floor must be
+    refused rather than silently resolved.
+    """
+    admitted = tuple(case for case in cases if _filing_year_is_supported(int(case[year_index])))
+    refused = tuple(case for case in cases if case not in admitted)
+    return admitted, refused
+
+
+def _filing_year_is_supported(filing_year: int) -> bool:
+    support = published_supported_filing_years()
+    return support is None or support.admits_filing_year(filing_year)
+
+
+def _render_extraction_profile(
+    modelo_id: str,
+    *,
+    filing_year: int,
+    period: str,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+) -> tuple[ExtractionProfileDefinition, ModeloRevision]:
+    """Return the declaration profile and revision that govern one render's layout.
+
+    An admitted filing year goes through the production selector. A render
+    below the support envelope cannot be filing-selected, so its layout is read
+    from the authored revision covering its year; the parser boundary refusing
+    that render is asserted separately.
+    """
+    if _filing_year_is_supported(filing_year):
+        snapshot = published_snapshot(modelo_id, filing_year=filing_year, period=period, grade=grade)
+        return _select_extraction_profile(snapshot, extraction_profile_id=None), snapshot.revision
+    revision = published_authored_revision(modelo_id, year=filing_year)
+    profiles = [
+        profile
+        for profile in revision.extraction_profiles
+        if profile.surface == "declaracion_pdf" and "declaration_pdf" in profile.accepted_artefact_kinds
+    ]
+    assert len(profiles) == 1, f"M{modelo_id} {filing_year}: expected one declaration profile, got {profiles}"
+    return profiles[0], revision
 
 
 def _expected_period(filing_year: int, period: str) -> Period:

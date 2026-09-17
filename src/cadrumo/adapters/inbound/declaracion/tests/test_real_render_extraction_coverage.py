@@ -95,12 +95,13 @@ from pathlib import Path
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....tests.inventory import FIXTURES_DIR
 from .._parsers.pdfplumber_backend import extract_pages_text
-from ..parser import _extract_profile_values, _select_extraction_profile
+from ..errors import DeclaracionParseError
+from ..parser import _extract_profile_values, parse_declaracion
+from ._parser_boundary_support import _filing_year_is_supported, _render_extraction_profile
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _ANNEX_DIR = FIXTURES_DIR / "manual_annexes"
 _JUSTIFICANTE_DIR = FIXTURES_DIR / "justificantes"
@@ -282,15 +283,18 @@ def _declaracion_profile(specimen: _AnnexSpecimen | _ReplacementSpecimen):
     A modelo with no declaration profile, or more than one, now raises
     :class:`DeclaracionParseError` from the selector itself rather than a local
     assertion -- the same refusal an operator would meet.
+
+    A replacement specimen below the support envelope reproduces a render whose
+    layout is governed by its own authored revision; filing selection refuses
+    that year, which :func:`test_parser_refuses_reproduced_declaration_below_the_supported_floor`
+    asserts at the parser boundary.
     """
-    snapshot = published_snapshot(
+    return _render_extraction_profile(
         specimen.modelo,
         filing_year=specimen.filing_year,
         period=specimen.period,
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
-    revision = snapshot.revision
-    return _select_extraction_profile(snapshot, extraction_profile_id=None), revision
 
 
 def _extracted_amounts(specimen: _AnnexSpecimen | _ReplacementSpecimen) -> dict[str, object]:
@@ -459,6 +463,25 @@ def test_profile_accepts_the_reproduced_declaration(specimen: _ReplacementSpecim
         f"{specimen.label}: coverage {coverage} below the profile floor {profile.min_coverage}; "
         f"absent: {sorted(declared - covered)}"
     )
+
+
+_UNSUPPORTED_REPLACEMENT_SPECIMENS: tuple[_ReplacementSpecimen, ...] = tuple(
+    specimen for specimen in _REPLACEMENT_SPECIMENS if not _filing_year_is_supported(specimen.filing_year)
+)
+
+
+@pytest.mark.parametrize("specimen", _UNSUPPORTED_REPLACEMENT_SPECIMENS, ids=lambda s: s.label)
+def test_parser_refuses_reproduced_declaration_below_the_supported_floor(
+    specimen: _ReplacementSpecimen,
+) -> None:
+    """A render for a year outside the support envelope is refused, never resolved."""
+    with pytest.raises(DeclaracionParseError):
+        parse_declaracion(
+            specimen.pdf,
+            modelo_override=specimen.modelo,
+            año_override=specimen.filing_year,
+            period_override=specimen.period,
+        )
 
 
 @pytest.mark.parametrize("specimen", _REPLACEMENT_SPECIMENS, ids=lambda s: s.label)

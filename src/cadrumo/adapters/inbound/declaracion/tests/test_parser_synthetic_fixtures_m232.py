@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
 from ._parser_boundary_support import (
     _expected_period,
@@ -16,7 +16,11 @@ from ._parser_synthetic_m232_support import (
     _DECL_EJERCICIO_CASILLA,
     _DECL_TIPO_EJERCICIO_CASILLA,
     _M232_FIXTURE_PARAMS,
+    _M232_OPEN_ENDED_REVISION_ID,
     _M232_PROFILE_CASILLAS,
+    _M232_UNSUPPORTED_FIXTURE_PARAMS,
+    _first_supported_filing_year,
+    _write_modelo_232_declaration_pdf,
 )
 
 pytestmark = [
@@ -25,18 +29,32 @@ pytestmark = [
 ]
 
 
+_FLOOR_YEAR = _first_supported_filing_year()
+# A ``None`` fixture is rendered at the envelope floor: the bundled synthetic
+# fixtures print ejercicios below it, and the open-ended revision covers it.
+_POSITIVE_CASES: tuple[tuple[Path | None, int, str, str], ...] = (
+    *_M232_FIXTURE_PARAMS,
+    (None, _FLOOR_YEAR, _M232_OPEN_ENDED_REVISION_ID, str(_FLOOR_YEAR)),
+)
+
+
 @pytest.mark.parametrize(
     "fixture_path,year,revision_id,expected_ejercicio",
-    _M232_FIXTURE_PARAMS,
-    ids=("2016-2017", "2018-y-siguientes"),
+    _POSITIVE_CASES,
+    ids=[
+        f"{revision_id}-{'bundled' if path is not None else 'rendered'}-{year}"
+        for path, year, revision_id, _ejercicio in _POSITIVE_CASES
+    ],
 )
+@pytest.mark.usefixtures("operation")
 def test_parser_extracts_modelo_232_synthetic_fixture_targets(
-    fixture_path: Path,
+    fixture_path: Path | None,
     year: int,
     revision_id: str,
-    expected_ejercicio: Decimal,
+    expected_ejercicio: str,
+    tmp_path: Path,
 ) -> None:
-    """Round-trip the sanitized M232 synthetic fixtures through both revisions.
+    """Round-trip the M232 synthetic layout inside the support envelope.
 
     Ground truth is the AEAT-published Diseño de Registro for Modelo 232:
       src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_232/files/
@@ -48,6 +66,41 @@ def test_parser_extracts_modelo_232_synthetic_fixture_targets(
       DR23201 row 17: "2.Devengo - Tipo de Ejercicio"
       DR23201 row 20: "2.Devengo - C.N.A.E. actividad principal"
     """
+    if fixture_path is None:
+        fixture_path = tmp_path / f"{year}-0A.pdf"
+        _write_modelo_232_declaration_pdf(fixture_path, ejercicio=year)
+
+    _assert_modelo_232_round_trip(
+        fixture_path,
+        year=year,
+        revision_id=revision_id,
+        expected_ejercicio=expected_ejercicio,
+    )
+
+
+@pytest.mark.parametrize(
+    "fixture_path,year,revision_id,expected_ejercicio",
+    _M232_UNSUPPORTED_FIXTURE_PARAMS,
+    ids=[revision_id for _path, _year, revision_id, _ejercicio in _M232_UNSUPPORTED_FIXTURE_PARAMS],
+)
+def test_parser_refuses_modelo_232_synthetic_fixture_below_the_supported_floor(
+    fixture_path: Path,
+    year: int,
+    revision_id: str,
+    expected_ejercicio: str,
+) -> None:
+    """A fixture for a year outside the support envelope is refused, never resolved."""
+    with pytest.raises(DeclaracionParseError):
+        parse_declaracion(fixture_path, modelo_override="232", año_override=year, period_override="0A")
+
+
+def _assert_modelo_232_round_trip(
+    fixture_path: Path,
+    *,
+    year: int,
+    revision_id: str,
+    expected_ejercicio: str,
+) -> None:
     filing = parse_declaracion(
         fixture_path,
         modelo_override="232",

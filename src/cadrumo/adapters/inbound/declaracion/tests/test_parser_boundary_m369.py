@@ -8,7 +8,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..parser import parse_declaracion
 from ._parser_boundary_support import _MODELO_369_SYNTHETIC_FIXTURE, _expected_period
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio", surface="declaracion_parser_boundary.casilla"

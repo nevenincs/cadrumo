@@ -52,7 +52,6 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....tests.inventory import FIXTURES_DIR
 from .._parsers.pdfplumber_backend import extract_pages_text
 from ..parser import (
@@ -61,8 +60,8 @@ from ..parser import (
     _numeric_casilla_anchors,
     _PdfWord,
     _printed_box_numbers,
-    _select_extraction_profile,
 )
+from ._parser_boundary_support import _render_extraction_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -102,9 +101,7 @@ def _classify_every_target(
     pages_words: tuple[list[_PdfWord], ...],
 ) -> dict[str, tuple[str, str | None, int | None]]:
     """Every target's full outcome, so a substitution cannot hide behind a count."""
-    snapshot = published_snapshot(modelo, filing_year=filing_year, period=period)
-    revision = snapshot.revision
-    profile = _select_extraction_profile(snapshot, extraction_profile_id=None)
+    profile, revision = _render_extraction_profile(modelo, filing_year=filing_year, period=period)
     pages = extract_pages_text(pdf)
     printed = _printed_box_numbers(profile, revision)
     anchors = _numeric_casilla_anchors(profile, revision)

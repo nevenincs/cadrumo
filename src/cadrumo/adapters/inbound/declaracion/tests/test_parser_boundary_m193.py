@@ -13,7 +13,7 @@ from ._parser_boundary_support import (
     _expected_period,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id(
     "decl.total-perceptores", surface="declaracion_parser_boundary.casilla"

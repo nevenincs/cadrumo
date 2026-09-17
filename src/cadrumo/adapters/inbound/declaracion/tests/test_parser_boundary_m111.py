@@ -21,7 +21,7 @@ from ._parser_boundary_support import (
     _modelo_snapshot,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:

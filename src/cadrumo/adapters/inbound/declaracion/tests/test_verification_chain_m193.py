@@ -8,7 +8,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import BindingId
 from ._verification_chain_support import _assert_annual_relation_closure_chain
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 _M123_TOTAL_RENTAS_CASILLA: CasillaId = validated_casilla_id("03")
