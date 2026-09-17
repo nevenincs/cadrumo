@@ -38,7 +38,7 @@ from cadrumo.application.user_profile.capsule_record import (
 )
 from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
 from cadrumo.application.user_profile.custody_transactions import (
-    ProfileCustodyTransactionConflictError,
+    ProfileCustodyTransactionCorruptError,
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.user_profile.profile_record_repository import (
@@ -371,7 +371,8 @@ def test_locked_label_read_refuses_a_fresh_canonical_same_uuid_substitution(tmp_
             previous_label_digest=original.content_digest,
         ).canonical_json_bytes()
     )
-    with pytest.raises(ProfileCustodyTransactionConflictError, match="trusted head"):
+    # A forged label is an integrity failure, not a concurrent change to retry.
+    with pytest.raises(ProfileCustodyTransactionCorruptError, match="trusted head"):
         CommittedProfileRepository(root=tmp_path).load(_PROFILE_ID)
 
 

@@ -72,7 +72,10 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
     assert {node.spec.result_schema.identity for node in adopters} == {
         "config.login",
         "config.passphrase.change",
+        "config.passphrase.reset",
         "config.profile.create",
+        "config.profile.recovery.enable",
+        "config.profile.recovery.disable",
         "config.profile.archive.import",
         "config.auth.certificate.secret.set",
     }

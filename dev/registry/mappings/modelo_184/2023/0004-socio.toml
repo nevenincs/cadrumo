@@ -64,8 +64,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f005"
-kind = "casilla"
-casilla_id = "tipo3.miembro-nif"
+kind = "binding"
+binding = "modelo-184-member-row-nif"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -92,8 +92,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f007"
-kind = "casilla"
-casilla_id = "tipo3.miembro-nombre"
+kind = "binding"
+binding = "modelo-184-member-row-name"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -120,8 +120,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f009"
-kind = "casilla"
-casilla_id = "tipo3.codigo-provincia"
+kind = "binding"
+binding = "modelo-184-member-row-codigo-provincia"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -162,8 +162,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f012"
-kind = "casilla"
-casilla_id = "tipo3.miembro-a-31-diciembre"
+kind = "binding"
+binding = "modelo-184-member-row-miembro-a-31-diciembre"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -176,8 +176,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f013"
-kind = "casilla"
-casilla_id = "tipo3.dias-miembro"
+kind = "binding"
+binding = "modelo-184-member-row-dias-miembro"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -190,8 +190,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f014"
-kind = "casilla"
-casilla_id = "tipo3.porcentaje-participacion"
+kind = "binding"
+binding = "modelo-184-member-row-share"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -204,8 +204,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f015"
-kind = "casilla"
-casilla_id = "tipo3.porcentaje-participacion"
+kind = "binding"
+binding = "modelo-184-member-row-share"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -218,8 +218,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f016"
-kind = "casilla"
-casilla_id = "tipo3.clave"
+kind = "binding"
+binding = "modelo-184-member-row-clave"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -232,8 +232,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f017"
-kind = "casilla"
-casilla_id = "tipo3.subclave"
+kind = "binding"
+binding = "modelo-184-member-row-subclave"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -246,8 +246,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f018"
-kind = "casilla"
-casilla_id = "tipo3.importe"
+kind = "binding"
+binding = "modelo-184-member-row-base-assigned"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -260,8 +260,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f019"
-kind = "casilla"
-casilla_id = "tipo3.reduccion"
+kind = "binding"
+binding = "modelo-184-member-row-reduccion"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -274,8 +274,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f020"
-kind = "casilla"
-casilla_id = "tipo3.reduccion"
+kind = "binding"
+binding = "modelo-184-member-row-reduccion"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -288,8 +288,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f021"
-kind = "casilla"
-casilla_id = "tipo3.domicilio-fiscal"
+kind = "binding"
+binding = "modelo-184-member-row-domicilio-fiscal"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -316,8 +316,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f023"
-kind = "casilla"
-casilla_id = "tipo3.naturaleza-inmueble"
+kind = "binding"
+binding = "modelo-184-member-row-naturaleza-inmueble"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -330,8 +330,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f024"
-kind = "casilla"
-casilla_id = "tipo3.situacion-inmueble"
+kind = "binding"
+binding = "modelo-184-member-row-situacion-inmueble"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -344,8 +344,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f025"
-kind = "casilla"
-casilla_id = "tipo3.referencia-catastral"
+kind = "binding"
+binding = "modelo-184-member-row-referencia-catastral"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -358,8 +358,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f026"
-kind = "casilla"
-casilla_id = "tipo3.clave-declarado"
+kind = "binding"
+binding = "modelo-184-member-row-clave-declarado"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -372,8 +372,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f027"
-kind = "casilla"
-casilla_id = "tipo3.porcentaje-titularidad-inmueble"
+kind = "binding"
+binding = "modelo-184-member-row-porcentaje-titularidad-inmueble"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -386,8 +386,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f028"
-kind = "casilla"
-casilla_id = "tipo3.dias-arrendamiento"
+kind = "binding"
+binding = "modelo-184-member-row-dias-arrendamiento"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -400,8 +400,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f029"
-kind = "casilla"
-casilla_id = "tipo3.rendimiento-neto-previo-eo"
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-previo-eo"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -414,8 +414,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f030"
-kind = "casilla"
-casilla_id = "tipo3.rendimiento-neto-previo-eo"
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-previo-eo"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 
@@ -428,8 +428,8 @@ record_identity = "Tipo 2 - Registro De Socio, Heredero,"
 
 [[entries]]
 export_field_id = "m184-2023.socio.f031"
-kind = "casilla"
-casilla_id = "tipo3.rendimiento-neto-minorado-agricola-eo"
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-minorado-agricola-eo"
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024"]
 

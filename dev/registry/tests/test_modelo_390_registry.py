@@ -292,11 +292,11 @@ def test_modelo_390_construct_links_filing_workbook_parity(revision_id: str) -> 
     assert "modelo-390-filing" in construct.application_links
     assert "modelo-390-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-390-anual",)
-    # Each revision carries ITS OWN year's workbook parity ref. Pinning
-    # `modelo-390-dr-2025` asserted the newest revision's ref on all four, which
-    # is the same era-pinning that the revision-span split exposed elsewhere in
-    # this module.
-    assert f"modelo-390-dr-{revision_id}" in construct.workbook_parity_refs
+    # One parity identity is shared by every edition; each revision's ref points
+    # at ITS OWN year's record design, which is where era-pinning would show.
+    assert "modelo-390-dr" in construct.workbook_parity_refs
+    parity = next(ref for ref in revision.workbook_parity_refs if ref.id == "modelo-390-dr")
+    assert parity.workbook_source == f"aeat-dr-390-{revision_id}"
     assert "ley-37-1992:art-161" in construct.legal_refs
     assert "ley-37-1992:art-104" in construct.legal_refs
     assert "ley-37-1992:art-105" in construct.legal_refs
@@ -508,8 +508,8 @@ def test_modelo_390_declares_prorrata_regularizacion_annual_field(revision_id: s
 
     casilla = casillas[_M390_PRORRATA_REGULARIZACION_CASILLA]
     assert casilla.number == "522"
-    assert casilla.input_kind is InputKind.MANUAL
-    assert casilla.binding is None
+    assert casilla.input_kind is InputKind.BOUND
+    assert casilla.binding == "modelo-390-prorrata-regularizacion-anual"
     assert "ley-37-1992:art-104" in casilla.legal_refs
     assert "ley-37-1992:art-105" in casilla.legal_refs
     assert casilla.export_refs == ("modelo-390-page-04-casilla-regularizacion-prorrata-definitiva",)

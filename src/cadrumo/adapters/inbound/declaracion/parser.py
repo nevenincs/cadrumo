@@ -24,6 +24,7 @@ import io
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -39,7 +40,7 @@ from ....core.text_fold import fold_diacritics
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
-from ....domain.calculations.registry.errors import RegistrySnapshotError
+from ....domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.schema_extraction import (
     BboxAnchorSpec,
@@ -106,6 +107,14 @@ _TAX_ID_BEFORE_LABEL_RE = re.compile(
 )
 _PERIOD_RE = re.compile(
     r"\bPer[ií]odo\s*[:\-]?\s*(?P<period>[1-4]T|0A|[0-1][0-9]|[A-Z0-9]{1,4})\b",
+    re.IGNORECASE,
+)
+# The receipt's own presentation timestamp. AEAT prints it day-first; the
+# synthetic specimens print it ISO. Either reading names one calendar date.
+_PRESENTATION_DATE_RE = re.compile(
+    r"\bFecha\s+(?:y\s+hora\s+)?(?:de\s+)?presentaci[oó]n\s*[:\-]?\s*"
+    r"(?:(?P<iso_year>[0-9]{4})-(?P<iso_month>[0-9]{2})-(?P<iso_day>[0-9]{2})"
+    r"|(?P<day>[0-9]{2})[/\-](?P<month>[0-9]{2})[/\-](?P<year>[0-9]{4}))\b",
     re.IGNORECASE,
 )
 _DECLARANT_ROW_RE = re.compile(
@@ -275,6 +284,7 @@ def _parse_declaracion_pages(
     snapshot = registry_snapshot or _load_registry_snapshot(
         template=template,
         period=period,
+        presented_on=_extract_presentation_date(text),
         operation=operation,
     )
     _validate_snapshot_matches_template(snapshot, template)
@@ -510,22 +520,58 @@ def _validated_tax_id(candidate: str) -> str:
         ) from exc
 
 
+def _extract_presentation_date(text: str) -> date | None:
+    match = _PRESENTATION_DATE_RE.search(text)
+    if match is None:
+        return None
+    if match.group("iso_year") is not None:
+        parts = (match.group("iso_year"), match.group("iso_month"), match.group("iso_day"))
+    else:
+        parts = (match.group("year"), match.group("month"), match.group("day"))
+    try:
+        return date(*(int(part) for part in parts))
+    except ValueError as exc:
+        raise DeclaracionParseError(
+            translated_message="adapters.inbound.declaracion.errors.registry_snapshot_required",
+            context={"error": str(exc)},
+        ) from exc
+
+
 def _load_registry_snapshot(
     *,
     template: TemplateRevision,
     period: str,
+    presented_on: date | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySnapshot:
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
-            return _load_registry_snapshot(template=template, period=period, operation=indexed_operation)
+            return _load_registry_snapshot(
+                template=template,
+                period=period,
+                presented_on=presented_on,
+                operation=indexed_operation,
+            )
     try:
-        return operation.snapshot(
-            template.modelo,
-            filing_year=template.año,
-            period=period,
-            grade=RegistryAuthorityGrade.APPLICABILITY,
-        )
+        try:
+            return operation.snapshot(
+                template.modelo,
+                filing_year=template.año,
+                period=period,
+                grade=RegistryAuthorityGrade.APPLICABILITY,
+            )
+        except AmbiguousRevisionSelectionError:
+            # A year two designs share is decided by the date the receipt
+            # itself was presented; without one the refusal stands.
+            if presented_on is None:
+                raise
+            return operation.snapshot(
+                template.modelo,
+                filing_year=template.año,
+                period=period,
+                on=presented_on,
+                grade=RegistryAuthorityGrade.APPLICABILITY,
+            )
     except RegistrySnapshotError as exc:
         raise DeclaracionParseError(
             translated_message="adapters.inbound.declaracion.errors.registry_snapshot_required",

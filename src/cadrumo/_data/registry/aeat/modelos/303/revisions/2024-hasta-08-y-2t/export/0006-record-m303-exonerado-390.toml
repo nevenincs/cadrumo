@@ -7,7 +7,7 @@ record_type = 'exonerado-390'
 order = 3
 encoding = 'iso-8859-1'
 line_ending = 'crlf'
-required = true
+required = false
 
 [[revisions.2024-hasta-08-y-2t.export_layouts.records.fields]]
 id = 'm303-2024-early.dp30304.f001'

@@ -47,6 +47,8 @@ def test_query_ledger_review_rows_filters_quarter_import_and_issue_events(
             actor="operator-A",
         ),
         ports=import_ports,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
     )
     duplicate_import = import_ledger_source(
         LedgerSourceImportCommand(
@@ -57,6 +59,8 @@ def test_query_ledger_review_rows_filters_quarter_import_and_issue_events(
             actor="operator-A",
         ),
         ports=import_ports,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
     )
 
     assert first_import.import_batch_id is not None

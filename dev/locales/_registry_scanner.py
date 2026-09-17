@@ -28,6 +28,8 @@ from cadrumo.domain.user_profile.labels import profile_schema_locale_keys
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 from dev.registry.compiler.profile_schema import capture_profile_schema
 
+from ._casilla_keys import is_casilla_key
+
 _CATEGORY_LOCALE_PREFIX = "categories.registry."
 _CATEGORY_LOCALIZED_ENTRY_NAMES = frozenset({"display_label", "notes"})
 _CAP_VARIANT_ENTRY_PREFIX = "statutory_cap_variant."
@@ -191,7 +193,11 @@ def scan_modelo_schema_keys() -> set[str]:
     never turn into an apparently complete empty set.
     """
     try:
-        return set(load_modelo_locale_key_projection(bundled_path("registry", "aeat")))
+        return {
+            key
+            for key in load_modelo_locale_key_projection(bundled_path("registry", "aeat"))
+            if not is_casilla_key(key)
+        }
     except LocaleRegistryEnumerationError:
         raise
     except Exception as exc:  # Intentional audit boundary around source reads.

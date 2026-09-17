@@ -21,6 +21,7 @@ is mocked.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 
 import pytest
@@ -41,7 +42,7 @@ _SUBMITTED_AT = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
 
 
 def _filing(draft_id: str) -> ModeloPresentado:
-    submission_id = "0123456789abcdef"
+    submission_id = hashlib.sha256(draft_id.encode("utf-8")).hexdigest()[:16]
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft_id,

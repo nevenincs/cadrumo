@@ -32,7 +32,7 @@ from __future__ import annotations
 SANITIZED_SHAS: frozenset[str] = frozenset(
     {
         # 036: 2025-0A.pdf, 2025-alta.pdf
-        "b9ee9a65069344a09d456dbd820e335b24cbba771988f3dd84b8d1546f4c83bd",
+        "76a81d95fb85d8680ed90c96e9fe1791af3796de6878dc01d131b2efe2183091",
         # (byte-identical to an entry above: 2025-alta.pdf)
         # 100: 2021-0A.pdf, 2022-0A.pdf, 2023-0A.pdf, 2024-0A.pdf, 2025-0A.pdf
         "a983084723897ec5fa75078d62d10f8bf7ec0a47148d90dae7d1a05eb77ab6ab",

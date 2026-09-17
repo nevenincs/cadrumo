@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def test_the_classify_path_reaches_the_local_text_reader() -> None:
-    """The core classify path constructs the local reader when no cloud provider is given.
+    """The classify path is composed with the local reader when no cloud provider is given.
 
     Enrolment gate, not a unit test. Reads the classify seam's own source, so
     it fails if the wiring is removed even while ``LocalTextLLMClassifier``
@@ -44,17 +44,19 @@ def test_the_classify_path_reaches_the_local_text_reader() -> None:
     Before this wiring the same branch raised ``_TEXT_PATH_NEEDS_PROVIDER``,
     making a cloud provider mandatory for any text-layer document.
     """
-    # Import the defining module directly; ledger's package initializer is
-    # inert and owns no symbols.
+    # Import the defining modules directly; package initializers are inert.
+    # The application seam receives its text reader as a port, so the local
+    # reader is wired where the CLI composes that port.
     from .....application.ledger.llm_classification import classify_with_evidence
+    from .....entrypoints.cli import ledger_llm_composition
 
-    source = inspect.getsource(classify_with_evidence)
-
-    assert "LocalTextLLMClassifier" in source, (
+    assert "LocalTextLLMClassifier(" in inspect.getsource(ledger_llm_composition), (
         "the classify path must reach the local text reader; without it a text-layer "
         "document has no on-host route and requires a cloud transport"
     )
-    assert "_TEXT_PATH_NEEDS_PROVIDER" not in source, "the text path must no longer refuse for want of a cloud provider"
+    assert "_TEXT_PATH_NEEDS_PROVIDER" not in inspect.getsource(classify_with_evidence), (
+        "the text path must no longer refuse for want of a cloud provider"
+    )
 
 
 def test_the_local_text_reader_requests_the_local_provider_and_carries_no_images() -> None:

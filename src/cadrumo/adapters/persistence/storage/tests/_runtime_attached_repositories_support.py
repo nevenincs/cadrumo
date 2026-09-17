@@ -364,7 +364,7 @@ def _work_unit(bucket_id: str, label: str) -> WorkUnit:
     now = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
     modelo = ModeloCode("303")
     period = _Period.from_year_and_code(2026, "1T")
-    revision_id = f"revision-{label}"
+    revision_id = str(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref.revision_id)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -394,7 +394,7 @@ def _calculation_revision_id_for(label: str) -> str:
     calculation-revision catalogue, so an unrelated invented id is refused.
     """
     return derive_calculation_revision_id(
-        work_unit_id=_hex(f"work-unit-{label}"),
+        work_unit_id=_work_unit(label, label).work_unit_id,
         input_values_by_casilla_id={_CALCULATION_INPUT_CASILLA: "100.00"},
         binding_overrides={},
         casilla_values={_CALCULATION_OUTPUT_CASILLA: Decimal("100.00")},
@@ -405,7 +405,8 @@ def _calculation_revision_id_for(label: str) -> str:
 
 
 def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
-    work_unit_id = _hex(f"work-unit-{label}")
+    """Return one calculation under the WorkUnit ``_work_unit(label, label)`` persists."""
+    work_unit_id = _work_unit(label, label).work_unit_id
     input_values_by_casilla_id = {_CALCULATION_INPUT_CASILLA: "100.00"}
     values = {_CALCULATION_OUTPUT_CASILLA: Decimal("100.00")}
     revision_id = _calculation_revision_id_for(label)

@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
+from ....domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.verification_report import VerificationReportCatalogue
 from ....domain.modelos.verification_repository import VerificationReportPersistenceError
@@ -71,15 +72,25 @@ class VerificationReportCatalogueRepository:
     :class:`~VerificationReportCatalogueRepositoryProtocol`.
     """
 
-    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+        m303_rectificativa_taxpayer_tax_id: SubjectTaxId | None = None,
+    ) -> None:
         """Bind to a profile bucket's secure-object store, or an injected one.
 
         Args:
             bucket_id: Profile bucket whose encrypted store backs this repository;
                 resolved from the active session when ``None``.
             objects: Optional injected secure-object repository (testing seam).
+            m303_rectificativa_taxpayer_tax_id: Taxpayer identity the calculation
+                catalogue needs to revalidate a stored rectificativa when reports
+                are resolved against it.
         """
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        self._m303_rectificativa_taxpayer_tax_id = m303_rectificativa_taxpayer_tax_id
         if objects is not None:
             self._objects = objects
         else:
@@ -132,7 +143,10 @@ class VerificationReportCatalogueRepository:
             return
         from .modelos_calculation import CalculationRevisionCatalogueRepository
 
-        revisions = CalculationRevisionCatalogueRepository(objects=self._objects).load()
+        revisions = CalculationRevisionCatalogueRepository(
+            objects=self._objects,
+            m303_rectificativa_taxpayer_tax_id=self._m303_rectificativa_taxpayer_tax_id,
+        ).load()
         unresolved = sorted(
             {
                 report.calculation_revision_id

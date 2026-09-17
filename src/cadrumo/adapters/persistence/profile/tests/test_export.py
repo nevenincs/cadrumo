@@ -32,12 +32,14 @@ from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support imp
     empty_modelo_export_ports_for_test,
     modelo_export_ports_for_test,
 )
+from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
+    plant_calculation_revision_unchecked,
+)
 from cadrumo.application.filing.export import export_layout_renderability_reason
 from cadrumo.application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCrossPeriodCleanStateError,
-    WorkUnitRevisionDivergenceError,
 )
 from cadrumo.application.modelo.export import (
     ModeloExportCommand,
@@ -50,7 +52,9 @@ from cadrumo.application.modelo.export import (
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.filing.schema import ModeloCasillaProvenance
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_repository import (
+    CalculationRevisionPersistenceError,
+)
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.errors import ModeloExportError
 
@@ -254,9 +258,11 @@ def test_export_refuses_persisted_registry_revision_divergence(
                 )
             }
         )
-        repository.save(upsert_calculation_revision(repository.load(), stale))
+        plant_calculation_revision_unchecked(repository.load(), stale)
 
-        with pytest.raises(WorkUnitRevisionDivergenceError):
+        # The repository read refuses the planted row before the action reaches
+        # its own divergence check.
+        with pytest.raises(CalculationRevisionPersistenceError, match="disagrees with its parent WorkUnit"):
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=calc_rev_id,

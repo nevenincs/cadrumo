@@ -1,11 +1,11 @@
 """Repository-backed IVA observation projection from ledger catalogues.
 
 This module classifies bucket-local
-:class:`~domain.transactions.TransactionCatalogue` rows into typed
-:class:`~domain.calculations.registry.IvaLedgerObservation` records and
+:class:`~domain.transactions.models.TransactionCatalogue` rows into typed
+:class:`~domain.calculations.registry.ledger_iva_bindings.IvaLedgerObservation` records and
 binding-ready totals. The source-mesh resolver in :mod:`~.modelo_bindings`
 then applies the target
-:class:`~domain.calculations.registry.ModeloRevision`, resolves
+:class:`~domain.calculations.registry.schema.ModeloRevision`, resolves
 ``ledger_iva_aggregation`` bindings, and surfaces source diagnostics for ledger
 rows that no declared binding consumes.
 
@@ -25,7 +25,7 @@ See Also:
     :class:`~application.aggregation.modelo_bindings.LedgerIvaAggregationSourceResolver`
         Source-mesh adapter that calls this projection and records prorrata
         apportionment provenance.
-    :mod:`~application.aggregation.tests.test_iva_ledger_prorrata_apportionment`
+    :mod:`~adapters.persistence.profile.tests.test_iva_ledger_prorrata_apportionment`
         Regression coverage proving the active provisional percentage reduces
         deducible cuotas without reducing bases.
     :mod:`~.renta_ledger`, :mod:`~.renta_income_ledger`, :mod:`~.renta_gasto_ledger`
@@ -250,7 +250,7 @@ class IvaLedgerSectorApportionment(BaseModel):
     observation carries the matching ``sector_id``.
 
     See Also:
-        :class:`~domain.prorrata_register.SectorDefinition`
+        :class:`~domain.prorrata_register.register.SectorDefinition`
             Operator-declared sector this apportionment resolves for.
     """
 
@@ -278,7 +278,7 @@ class IvaLedgerProrrataApportionment(BaseModel):
     ``sector_apportionments`` is the whole-entity register.
 
     See Also:
-        :class:`~core.ProrrataProvisionalProvenance`
+        :class:`~core.prorrata_register.ProrrataProvisionalProvenance`
             Regulated source of the provisional percentage carried on this
             apportionment.
         :func:`resolve_iva_ledger_binding_values`
@@ -673,10 +673,10 @@ def resolve_iva_ledger_binding_values(
     unchanged.
 
     See Also:
-        :func:`~domain.calculations.registry.resolve_ledger_iva_aggregation_binding_values`
+        :func:`~domain.calculations.registry.ledger_iva_bindings.resolve_ledger_iva_aggregation_binding_values`
             Registry selector resolver that produces the unapportioned binding
             values before this wrapper applies prorrata.
-        :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+        :class:`~domain.prorrata_register.register.ProrrataRegisterEntry`
             Source record for the active provisional percentage represented by
             :class:`IvaLedgerProrrataApportionment`.
     """
@@ -728,14 +728,14 @@ def _apply_especial_apportionment(
     Each deducible cuota binding value is recomputed as the sum, over the
     per-classification partitions of ``observations``, of the partition's
     canonically-resolved binding value weighted by that classification's
-    art. 106 deductible percentage (:func:`~domain.iva.deductible_percentage_for`):
+    art. 106 deductible percentage (:func:`~domain.iva.prorrata.deductible_percentage_for`):
     exclusively-deductible at 100%, exclusively-non-deductible at 0%, and
     common-use (and unclassified inputs, the mixed-use default) at the
     ``apportionment.percentage`` general percentage. Non-deducible bindings
     (output cuotas, bases, recargo) keep their unapportioned aggregate.
 
     The partitions are resolved through the SAME canonical registry resolver
-    the general path uses (:func:`~domain.calculations.registry.resolve_ledger_iva_aggregation_binding_values`),
+    the general path uses (:func:`~domain.calculations.registry.ledger_iva_bindings.resolve_ledger_iva_aggregation_binding_values`),
     so especial reuses one aggregation path rather than forking selector logic.
     An all-common (or wholly-unclassified) especial bucket therefore reduces to
     the general-percentage result exactly.
@@ -1228,7 +1228,7 @@ def compute_annual_deducible_totals_by_regime(
     The plumbing for the LIVA art. 103.Dos.2.º mandatory-especial settlement
     check. Aggregates the ejercicio's annual IVA observations ONCE
     (:func:`aggregate_iva_ledger_observations_from_repositories` over the
-    canonical ``0A`` annual :class:`~core.Period`), then resolves
+    canonical ``0A`` annual :class:`~core.period.Period`), then resolves
     :func:`resolve_iva_ledger_binding_values` TWICE over the same observations —
     once with a GENERAL-stamped and once with an ESPECIAL-stamped
     :class:`IvaLedgerProrrataApportionment` at the register's resolved percentage
@@ -1260,7 +1260,7 @@ def compute_annual_deducible_totals_by_regime(
     See Also:
         :class:`AnnualDeducibleTotalsByRegime`
             The frozen record returned.
-        :func:`~application.calculations.build_prorrata_especial_mandatory_advisory`
+        :func:`~application.calculations.prorrata_regularizacion.build_prorrata_especial_mandatory_advisory`
             Consumes the two totals to build the mandatory-especial advisory.
     """
     period = Period.from_year_and_code(ejercicio, "0A")

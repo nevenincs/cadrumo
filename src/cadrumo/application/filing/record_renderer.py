@@ -133,6 +133,11 @@ def _render_rows_for_record(
             for context in projection_plan.contexts
             if context.record is record
         )
+    if any(field.projection_ref is not None for field in record.fields) and not any(
+        context.record is record for context in projection_plan.contexts
+    ):
+        # A projection-owned page whose families produced no content is omitted.
+        return ()
     return tuple(
         (
             row,

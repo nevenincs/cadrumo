@@ -56,6 +56,7 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationExpectationDefinition,
     WorkbookParityReference,
 )
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot_for_validated_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -198,6 +199,8 @@ def _minimal_catalogues() -> RegistryCatalogues:
     return RegistryCatalogues(
         legal={_REFERENCE_LEGAL_ID: _minimal_legal_ref()},
         sources=_minimal_source_refs(),
+        # The published registry-wide declaration, so fixtures follow its span.
+        supported_filing_years=published_supported_filing_years(),
     )
 
 

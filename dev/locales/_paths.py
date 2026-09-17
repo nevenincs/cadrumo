@@ -42,3 +42,8 @@ DOCS_SRC_DIR: Final[Path] = REPO_ROOT / "dev" / "docs"
 #: would report every one of its catalogue keys as an extra key with no
 #: codebase site, for exactly the reason :data:`DOCS_SRC_DIR` exists.
 HARNESS_SRC_DIR: Final[Path] = REPO_ROOT / "src" / "cadrumo_harness"
+
+#: Verified staged catalogue awaiting installation by the casilla collapse.
+#: Its presence means an install was interrupted and must be resumed before any
+#: new plan is computed.
+PENDING_CASILLA_INSTALL_DIR: Final[Path] = REPO_ROOT / "var" / "locales" / "casilla-collapse-pending"

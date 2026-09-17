@@ -171,6 +171,7 @@ def _settled_2025_entry(sector_id: str | None, *, con: str, sin: str) -> Prorrat
         provisional,
         con_derecho_volume=Decimal(con),
         sin_derecho_volume=Decimal(sin),
+        producing_snapshot_ref=_m303_snapshot_ref(2025),
     )
 
 

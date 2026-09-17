@@ -90,7 +90,7 @@ from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor
 #: fields are each prefixed ``Devolución -`` and apply to a refund only. So a
 #: domiciliación filing needs this page for its IBAN alone, and suppressing it
 #: there filed a direct-debit election with no account for AEAT to charge.
-_DID_PAGE_RECORD_TYPE = "page_did"
+_DID_PAGE_RECORD_TYPE = "domiciliacion"
 _M303_CASILLA_111: CasillaId = validated_casilla_id("111", surface="M303 Nota 3 DID predicate")
 _M303_RECTIFICATIVA_HEADER = FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA
 

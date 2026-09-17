@@ -339,6 +339,10 @@ def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio(
             "50",
             "--sector",
             "arrendamiento",
+            "--provenance",
+            "aeat_autorizada",
+            "--reference",
+            "AEAT-PRORRATA-2024-0001",
         ]
     )
     assert elected.exit_code == 0, elected.output

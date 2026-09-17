@@ -2,9 +2,10 @@
 
 Filing envelopes and auxiliary page-zero headers are generated declarations that
 restate a source identity and digest.  This suite exercises both real shipped
-shapes through ``build_snapshot``: a pass proves registry composition accepts
-the authoritative declaration, while each mutation proves the build boundary
-cannot preserve a missing, rebound, mismatched, or stale source claim.
+shapes: a pass through ``build_snapshot`` proves registry composition accepts
+the authoritative declaration, while each mutation proves the compiler's export
+validation, run on the revision the build coordinate selects, cannot preserve a
+missing, rebound, mismatched, or stale source claim.
 """
 
 from __future__ import annotations
@@ -13,7 +14,8 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.validate_exports import validate_embedded_envelope_source_authority
@@ -44,13 +46,16 @@ def _embedded_declaration(layout, declaration_name: str):  # type: ignore[no-unt
 def _case_modelo_and_revision(
     embedded_envelope_case: tuple[str, int, str, str],
 ):  # type: ignore[no-untyped-def]  # reason: test-local tuple unpacking preserves the concrete registry model types at every mutation site
-    modelo_id, _filing_year, _period, declaration_name = embedded_envelope_case
+    modelo_id, filing_year, period, declaration_name = embedded_envelope_case
     modelos, catalogues = _committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
-    revision = next(
-        candidate
-        for candidate in modelo.revisions.values()
-        if any(getattr(layout, declaration_name) is not None for layout in candidate.export_layouts)
+    # The revision the build coordinate selects, so every mutation reaches the
+    # snapshot the build composes rather than an era it never reads.
+    revision = select_revision(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+        support=catalogues.supported_filing_years,
     )
     layout = next(layout for layout in revision.export_layouts if getattr(layout, declaration_name) is not None)
     return modelo, revision, layout, catalogues
@@ -81,6 +86,36 @@ def _build(modelo, catalogues: RegistryCatalogues, *, filing_year: int, period: 
     )
 
 
+def _validate_envelope(
+    modelo: ModeloDefinition,
+    catalogues: RegistryCatalogues,
+    *,
+    filing_year: int,
+    period: str,
+    declaration_name: str,
+) -> None:
+    """Run the compiler's envelope validation on the selected revision and raise its findings."""
+    revision = select_revision(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+        support=catalogues.supported_filing_years,
+    )
+    failures: list[str] = []
+    for layout in revision.export_layouts:
+        if getattr(layout, declaration_name) is None:
+            continue
+        validate_embedded_envelope_source_authority(
+            failures,
+            prefix=f"modelo {modelo.id} revision {revision.id}",
+            layout=layout,
+            source_refs=catalogues.sources,
+            source_root=bundled_path(),
+        )
+    if failures:
+        raise RegistryValidationError("\n".join(failures))
+
+
 def test_real_embedded_envelopes_build_from_their_live_catalogue_authority(
     embedded_envelope_case: tuple[str, int, str, str],
 ) -> None:
@@ -109,7 +144,9 @@ def test_embedded_envelope_refuses_a_missing_canonical_source_identity(
     )
 
     with pytest.raises(RegistryValidationError, match="is absent from the canonical source catalogue"):
-        _build(modelo, missing_catalogues, filing_year=filing_year, period=period)
+        _validate_envelope(
+            modelo, missing_catalogues, filing_year=filing_year, period=period, declaration_name=declaration_name
+        )
 
 
 def test_embedded_envelope_refuses_a_rebound_catalogue_identity(
@@ -130,7 +167,9 @@ def test_embedded_envelope_refuses_a_rebound_catalogue_identity(
     with pytest.raises(
         RegistryValidationError, match="embedded source identity must equal its canonical catalogue key"
     ):
-        _build(modelo, rebound_catalogues, filing_year=filing_year, period=period)
+        _validate_envelope(
+            modelo, rebound_catalogues, filing_year=filing_year, period=period, declaration_name=declaration_name
+        )
 
 
 def test_embedded_envelope_refuses_a_catalogue_source_that_is_not_a_record_design(
@@ -148,7 +187,9 @@ def test_embedded_envelope_refuses_a_catalogue_source_that_is_not_a_record_desig
     )
 
     with pytest.raises(RegistryValidationError, match="not a record-design source"):
-        _build(modelo, non_design_catalogues, filing_year=filing_year, period=period)
+        _validate_envelope(
+            modelo, non_design_catalogues, filing_year=filing_year, period=period, declaration_name=declaration_name
+        )
 
 
 def test_embedded_envelope_source_kind_guard_reports_each_non_design_catalogue_source(
@@ -190,7 +231,9 @@ def test_embedded_envelope_refuses_a_digest_that_disagrees_with_its_catalogue(
     mutated_modelo = _modelo_with_layout(modelo, revision, layout, updated_layout)
 
     with pytest.raises(RegistryValidationError, match="does not match canonical catalogue digest"):
-        _build(mutated_modelo, catalogues, filing_year=filing_year, period=period)
+        _validate_envelope(
+            mutated_modelo, catalogues, filing_year=filing_year, period=period, declaration_name=declaration_name
+        )
 
 
 def test_embedded_envelope_refuses_a_stale_catalogue_digest_after_live_rehash(
@@ -212,4 +255,6 @@ def test_embedded_envelope_refuses_a_stale_catalogue_digest_after_live_rehash(
     mutated_modelo = _modelo_with_layout(modelo, revision, layout, updated_layout)
 
     with pytest.raises(RegistryValidationError, match="fails live canonical re-hash"):
-        _build(mutated_modelo, zero_catalogues, filing_year=filing_year, period=period)
+        _validate_envelope(
+            mutated_modelo, zero_catalogues, filing_year=filing_year, period=period, declaration_name=declaration_name
+        )

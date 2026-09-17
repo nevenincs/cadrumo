@@ -77,7 +77,10 @@ from cadrumo.core.time.clock import now as _now
 from cadrumo.domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 _CREDENTIAL_A = "login-handover-password-a"
@@ -1340,7 +1343,9 @@ _TERMINAL_CRASH_PHASES = frozenset({HandoverPhase.ACTIVATED, HandoverPhase.A_RET
 
 
 @pytest.fixture(scope="module")
-def _registered_handover_profiles(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, str, str]:
+def _registered_handover_profiles(
+    tmp_path_factory: pytest.TempPathFactory, operation: PinnedAuthorityOperation
+) -> tuple[Path, str, str]:
     """Register the two handover profiles once; each caller copies the tree.
 
     The crash-recovery matrix is the same A-to-B handover crashed at five
@@ -1358,7 +1363,12 @@ def _registered_handover_profiles(tmp_path_factory: pytest.TempPathFactory) -> t
     and self-consistent for any child that receives it.
     """
     template_root = tmp_path_factory.mktemp("handover-template")
-    with isolated_profile_storage_root(tmp_path=template_root) as storage_root:
+    # Module-scoped, so it enters the governed-fact scope itself rather than
+    # relying on the per-test scope that is opened after it.
+    with (
+        validating_governed_facts(operation),
+        isolated_profile_storage_root(tmp_path=template_root) as storage_root,
+    ):
         profile_a, profile_b = _register_two_profiles(storage_root)
         pointer = read_pointer(storage_root)
         assert pointer.bucket_id == profile_b, (

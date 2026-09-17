@@ -154,17 +154,36 @@ def _project_layout_records(
             refs=refs,
             producer_snapshot=producer_snapshot,
         )
-        _require_required_projection_occurrence(record, record_contexts)
+        _require_required_projection_occurrence(
+            record,
+            record_contexts,
+            proven_not_applicable=_regimen_record_scoped_out(refs, producer_snapshot),
+        )
         contexts.extend(record_contexts)
         values.extend(record_values)
     return tuple(contexts), tuple(values)
 
 
+def _regimen_record_scoped_out(
+    refs: tuple[FilingProjectionRef, ...],
+    producer_snapshot: FilingProducerSnapshot,
+) -> bool:
+    """Whether the filing evidence explicitly scopes the simplified-regime rows out."""
+    if not refs or not all(isinstance(ref, _REGIMEN_REF_TYPES) for ref in refs):
+        return False
+    facts = _require_m303_projection_facts(producer_snapshot)
+    return facts.regimen_simplificado.scope_decision.is_not_claimed
+
+
 def _require_required_projection_occurrence(
     record: ExportRecordDefinition,
     contexts: tuple[FilingRecordRenderContext, ...],
+    *,
+    proven_not_applicable: bool,
 ) -> None:
-    if not contexts and record.required:
+    # A repeated family whose evidence-bearing scope decision excludes it has
+    # zero occurrences by law, not by omission.
+    if not contexts and record.required and not proven_not_applicable:
         raise FilingExportValidationError(
             f"required projection record {record.id!r} has no applicable emitted occurrence",
         )
@@ -274,6 +293,9 @@ def _project_prorrata_and_differentiated_record(
         prorrata_contexts=prorrata_contexts,
         differentiated_contexts=differentiated_contexts,
     )
+    if not contexts:
+        # A page 5 without prorrata or differentiated-sector content is omitted.
+        return (), ()
     values_by_reference = {value.projection_ref: value for value in (*prorrata_values, *differentiated_values)}
     if len(values_by_reference) != len(prorrata_values) + len(differentiated_values):
         raise FilingExportValidationError(f"projection record {record.id!r} emitted duplicate typed projection values")

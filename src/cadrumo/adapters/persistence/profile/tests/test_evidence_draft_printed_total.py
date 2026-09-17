@@ -71,9 +71,7 @@ _COHERENT_INVOICE_LINES = (
 
 # A recargo de equivalencia invoice (LIVA art. 161): the supplier repercutes
 # 5,20 on the entrega, so the document totals 126,20 while base + cuota is
-# 121,00. The recargo has nowhere to go on the confirm path, so the record
-# understates the document by exactly the surcharge -- which is the whole point
-# of the cross-check.
+# 121,00. The reading path recovers the printed recargo as a component.
 _RECARGO_INVOICE_LINES = (
     "Factura de Acme Suministros SL",
     f"NIF: {_SUPPLIER_CIF}",
@@ -86,14 +84,22 @@ _RECARGO_INVOICE_LINES = (
     "Total factura: 126,20",
 )
 
+# The same document with the surcharge line missing: it totals 126,20 while
+# nothing it prints reaches more than 121,00, so the record understates the
+# document by an amount no component explains -- which is the whole point of
+# the cross-check.
+_UNEXPLAINED_TOTAL_INVOICE_LINES = tuple(
+    line for line in _RECARGO_INVOICE_LINES if not line.startswith("Recargo de equivalencia")
+)
+
 # A real loopback reader. These cases compare a COHERENT document against a
 # RECARGO one, so a single canned reply would answer both identically and the
 # discrepancy assertion would be comparing the stub to itself. Each document is
 # answered with its own printed figures.
 #
-# Deliberately NOT supplying `recargo_amount`: the confirm path is what has
-# nowhere to put the recargo, and that gap is the very thing these cases exist
-# to detect. Supplying it here would repair the document before the code saw it.
+# Deliberately NOT supplying `recargo_amount`: an unexplained printed total is
+# the gap these cases exist to detect. Supplying a component here would repair
+# the document before the code saw it.
 
 _COHERENT_FIELDS = {
     "supplier_tax_id": _SUPPLIER_CIF,
@@ -141,8 +147,8 @@ def _operator_attestations(
     """Answer each blocking finding this document raises, as the operator must.
 
     The confirm boundary refuses a document with an unanswered finding, and a
-    recargo de equivalencia invoice raises an arithmetic-closure finding because
-    the reading path does not recover the surcharge as a component. These cases
+    document whose printed total no component reaches raises an arithmetic-closure
+    finding. These cases
     are about the printed-total cross-check rather than about the gate, so the
     operator step the gate mandates is performed here explicitly --- one
     attestation per finding, each naming why the document is accepted as printed.
@@ -161,7 +167,7 @@ def _operator_attestations(
         FindingResolution(
             blocker_id=blocker.blocker_id,
             action=FindingResolutionAction.ATTEST,
-            note="the document prints a recargo de equivalencia this reading path does not recover as a component",
+            note="the document prints a total its stated components do not reach",
         )
         for blocker in confirmation_blockers(draft)
     )
@@ -196,7 +202,7 @@ def _confirm(
     )
 
 
-def test_a_recargo_invoice_reports_the_printed_total_it_could_not_represent(
+def test_an_unexplained_printed_total_is_reported_against_the_record(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
@@ -205,16 +211,16 @@ def test_a_recargo_invoice_reports_the_printed_total_it_could_not_represent(
     """The document totals 126,20; the record carries 121,00 and says so.
 
     This is the silent under-declaration the cross-check exists to catch: the
-    recargo is a real amount the supplier charged, the record cannot hold it,
-    and before this check the 5,20 simply vanished behind a valid-looking
+    document charges 5,20 that none of its stated components carries, and
+    without this check the difference would vanish behind a valid-looking
     invoice.
     """
     result = _confirm(
-        _RECARGO_INVOICE_LINES,
+        _UNEXPLAINED_TOTAL_INVOICE_LINES,
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
         tmp_path=tmp_path,
-        filename="factura_recargo.pdf",
+        filename="factura_total_sin_desglose.pdf",
         authority=invoice_authority,
     )
 
@@ -222,7 +228,7 @@ def test_a_recargo_invoice_reports_the_printed_total_it_could_not_represent(
     assert result.invoice.grand_total == Decimal("121.00")
 
     discrepancy = result.total_discrepancy
-    assert discrepancy is not None, "a 5,20 recargo must not vanish silently"
+    assert discrepancy is not None, "an unexplained 5,20 must not vanish silently"
     assert discrepancy.printed_total == Decimal("126.20")
     assert discrepancy.recorded_total == Decimal("121.00")
     # Positive difference is the under-declaration direction.
@@ -266,8 +272,8 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
     on the minting branch, an operator who re-ran the command would see a clean
     result for a document that still disagrees with its record.
     """
-    pdf_path = tmp_path / "factura_recargo.pdf"
-    pdf_path.write_bytes(text_pdf_bytes(_RECARGO_INVOICE_LINES))
+    pdf_path = tmp_path / "factura_total_sin_desglose.pdf"
+    pdf_path.write_bytes(text_pdf_bytes(_UNEXPLAINED_TOTAL_INVOICE_LINES))
     svc = _make_svc(isolated_settings, secure_objects)
     record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 

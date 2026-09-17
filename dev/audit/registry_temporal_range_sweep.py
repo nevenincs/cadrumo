@@ -16,7 +16,9 @@ from pathlib import Path
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 
-AUTHORITY = Path("src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml")
+from ..registry.compiler.validate_below_floor_export_refs import SUPPORTED_FILING_YEARS_DECLARATION
+
+AUTHORITY = Path("src/cadrumo/_data/registry/aeat") / SUPPORTED_FILING_YEARS_DECLARATION
 DEFAULT_ROOTS = (Path("src"), Path("dev"), Path("tests"), Path("test"))
 YEAR_RE = re.compile(r"(?<!\d)(20\d{2})(?!\d)")
 POLICY_WORDS = frozenset(

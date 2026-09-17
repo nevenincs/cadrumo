@@ -27,7 +27,7 @@ from ..compiler.authority import compiled_bundled_authority
 from ..conformance.closure_models import RegistryClosureLimb
 from ..conformance.filing_export_coverage import compose_filing_export_coverage
 from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
-from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -112,10 +112,12 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
     assert coordinates <= set(limbs)
 
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     for modelo, revision in filing_revisions:
         for filing_year, period in revision_selection_coordinates(
             revision,
             assessment_horizon=assessment_horizon,
+            assessment_floor=assessment_floor,
         ):
             inspection = authority.inspect_revision(
                 modelo.id,
@@ -185,11 +187,18 @@ def test_modelo_353_revisions_keep_distinct_law_coordinates_and_each_require_pro
         for revision in modelo.revisions.values()
     )
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
+    # A revision wholly below the supported floor has no coordinate to select.
     coordinates_by_revision = {
-        revision.id: revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+        revision.id: coordinates
         for revision, _limb in revision_limbs
+        if (
+            coordinates := revision_selection_coordinates(
+                revision, assessment_horizon=assessment_horizon, assessment_floor=assessment_floor
+            )
+        )
     }
-    assert all(coordinates for coordinates in coordinates_by_revision.values())
+    assert coordinates_by_revision
     assert all(
         authority.inspect_revision(modelo.id, filing_year=filing_year, period=period).revision_id == revision_id
         for revision_id, coordinates in coordinates_by_revision.items()

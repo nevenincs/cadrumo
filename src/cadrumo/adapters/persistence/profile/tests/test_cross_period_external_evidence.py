@@ -278,14 +278,20 @@ def test_filed_history_csv_reference_still_refuses_a_different_receipt(tmp_path:
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
 
-def test_csv_register_evidence_clears_with_matching_justificante_metadata(tmp_path: Path) -> None:
-    """A CSV-register reference clears the gate only when its justificante is enrolled."""
+def test_csv_register_evidence_clears_with_matching_register_reference(tmp_path: Path) -> None:
+    """A CSV-register observation clears the gate when it names its own filing and register reference."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "CSVREG130ABCD01"
-        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_CSV_REGISTER)
 
-        blockers = _external_evidence_blockers(filing, "aeat_csv_register")
+        blockers = _external_evidence_blockers(
+            filing,
+            "aeat_csv_register",
+            source_metadata={
+                "external_evidence_reference_id": csv,
+                "filing_record_id": filing.filing_record_id,
+            },
+        )
 
         assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers

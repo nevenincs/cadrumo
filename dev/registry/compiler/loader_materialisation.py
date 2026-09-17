@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from functools import lru_cache
 from pathlib import Path
 from typing import Final, cast
@@ -124,6 +125,9 @@ _ROW_SOURCE_ADDITIONS_FIELD: Final = "additional_source_refs"
 _ROW_LEGAL_FIELD: Final = "legal_refs"
 _ROW_INHERITED_FROM_FIELD: Final = "inherited_from"
 _ROW_LINEAGE_CLAIM_FIELDS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
+#: Fields whose change can make the stating edition's label no longer the row's.
+#: A storage patch touching none of them keeps the row's label origin.
+_ROW_LABEL_IDENTITY_FIELDS: Final = frozenset({"id", "number", "continuidad_id"})
 
 
 #: The families this loader inherits along a predecessor chain, beyond casillas.
@@ -747,12 +751,13 @@ def _build_modelo_definition_from_data(
             revision_id=revision_id,
             raw_revision=raw_revision_table,
         )
-        if label_origins is not None:
+        text_origins = materialised.text_origins.get(revision_id)
+        if text_origins is not None:
             payload = _enroll_inherited_label_fallbacks(
                 context,
                 modelo_id=str(modelo_id_for_context),
                 payload=payload,
-                label_origins=label_origins,
+                label_origins=text_origins,
             )
         payload = _mark_inherited_casillas(context, payload=payload, label_origins=label_origins)
         payload = _compile_revision_projection_semantics(source_path, payload)
@@ -940,6 +945,14 @@ class _MaterialisedRevisions:
 
     revisions: Mapping[str, object]
     label_origins: Mapping[str, _LabelOrigins]
+    text_origins: Mapping[str, _LabelOrigins] = dataclass_field(default_factory=dict)
+    """Per inheriting edition, the edition whose catalogue holds each row's text.
+
+    It differs from ``label_origins`` only for a row a storage patch restates
+    without changing its label identity: the patch makes the row stated for
+    reference resolution and minimality, but its text still lives where the
+    edition that stated the row put it.
+    """
 
 
 @dataclass(frozen=True, slots=True)
@@ -948,6 +961,7 @@ class _MaterialisedRevision:
 
     table: Mapping[str, object]
     label_origins: _LabelOrigins | None
+    text_origins: _LabelOrigins | None = None
 
 
 def _materialise_revisions(
@@ -1050,6 +1064,7 @@ def _materialise_revisions(
     resolved: dict[str, _MaterialisedRevision] = {}
     materialised: dict[str, object] = dict(raw_revisions)
     label_origins: dict[str, _LabelOrigins] = {}
+    text_origins: dict[str, _LabelOrigins] = {}
     for revision_id in dict.fromkeys((*semantic_named, *storage_named, *family_storage_named)):
         revision = _materialise_revision(
             source_path,
@@ -1063,7 +1078,9 @@ def _materialise_revisions(
         materialised[revision_id] = revision.table
         if revision.label_origins is not None:
             label_origins[revision_id] = revision.label_origins
-    return _MaterialisedRevisions(revisions=materialised, label_origins=label_origins)
+        if revision.text_origins is not None:
+            text_origins[revision_id] = revision.text_origins
+    return _MaterialisedRevisions(revisions=materialised, label_origins=label_origins, text_origins=text_origins)
 
 
 def _materialise_revision(
@@ -1092,17 +1109,19 @@ def _materialise_revision(
         if casilla_baseline_id is None:
             rows = _raw_casilla_rows(source_path, revision_id, table)
             label_origins = None
+            text_origins = None
         else:
             casilla_predecessor = _materialise_revision(
                 source_path, raw_revisions, named, storage_named, family_storage_named, casilla_baseline_id, resolved
             )
             relation = "inheriting from" if predecessor_id is not None else "hydrating casillas from"
-            rows, label_origins = _inherit_casillas(
+            rows, label_origins, text_origins = _inherit_casillas(
                 f"{source_path}: revision {revision_id!r} {relation} {casilla_baseline_id!r}",
                 revision_id=revision_id,
                 predecessor_id=casilla_baseline_id,
                 inherited=_raw_casilla_rows(source_path, casilla_baseline_id, casilla_predecessor.table),
                 inherited_label_origins=casilla_predecessor.label_origins,
+                inherited_text_origins=casilla_predecessor.text_origins,
                 successor=table,
             )
         merged: dict[str, object] = {**table, _INHERITED_SECTION: rows}
@@ -1133,7 +1152,7 @@ def _materialise_revision(
                     if family.singleton and family_members
                     else (None if family.singleton else family_members)
                 )
-        result = _MaterialisedRevision(table=merged, label_origins=label_origins)
+        result = _MaterialisedRevision(table=merged, label_origins=label_origins, text_origins=text_origins)
     resolved[revision_id] = result
     return result
 
@@ -1152,11 +1171,15 @@ def _inherit_casillas(
     predecessor_id: str,
     inherited: tuple[object, ...],
     inherited_label_origins: _LabelOrigins | None,
+    inherited_text_origins: _LabelOrigins | None,
     successor: Mapping[str, object],
-) -> tuple[tuple[object, ...], _LabelOrigins]:
+) -> tuple[tuple[object, ...], _LabelOrigins, _LabelOrigins]:
     """Merge the predecessor's materialised casillas with the successor's stated ones.
 
-    Returns the merged rows and, aligned with them, each row's label origin.
+    Returns the merged rows and, aligned with them, each row's label origin and
+    text origin. A storage patch states a row for every purpose except its
+    text: unless the patch changes the row's label identity, the text origin
+    keeps pointing at the edition that stated the row.
     A kept inherited row takes the origin it already had in the predecessor,
     or the predecessor itself when the predecessor stated it, so the origin of
     a row carried down a chain is the edition that last stated it rather than
@@ -1170,11 +1193,18 @@ def _inherit_casillas(
     stated = as_toml_array(successor.get(_INHERITED_SECTION, ()))
     if stated is None:
         raise RegistryLoadError(f"{context}: casillas must be an array")
-    inherited, inherited_label_origins, storage_overridden = _apply_casilla_storage_delta(
+    carried: list[tuple[str | None, str | None]] = [
+        (
+            None if inherited_label_origins is None else inherited_label_origins[index],
+            None if inherited_text_origins is None else inherited_text_origins[index],
+        )
+        for index in range(len(inherited))
+    ]
+    inherited, carried, storage_overridden, storage_relabelled = _apply_casilla_storage_delta(
         context,
         predecessor_id=predecessor_id,
         inherited=inherited,
-        inherited_label_origins=inherited_label_origins,
+        origins=carried,
         successor=successor,
     )
     retired = _retired_lineages(successor, revision_id)
@@ -1187,7 +1217,7 @@ def _inherit_casillas(
             "carrying it cannot say which one it supersedes",
         )
     rows: list[object] = []
-    label_origins: list[str | None] = []
+    origins: list[tuple[str | None, str | None]] = []
     kept_lineage_by_id: dict[str, str | None] = {}
     superseded: set[str] = set()
     for index, row in enumerate(inherited):
@@ -1196,17 +1226,16 @@ def _inherit_casillas(
             continue
         if lineage is not None and lineage in superseders:
             rows.append(superseders[lineage])
-            label_origins.append(None)
+            origins.append((None, None))
             superseded.add(lineage)
             continue
         rows.append(row if _row_id(row) in storage_overridden else _without_lineage_claims(row))
-        carried_origin = None if inherited_label_origins is None else inherited_label_origins[index]
-        label_origins.append(
-            None
-            if _row_id(row) in storage_overridden
-            else carried_origin
-            if carried_origin is not None
-            else predecessor_id
+        carried_statement, carried_text = carried[index]
+        origins.append(
+            (
+                None if _row_id(row) in storage_overridden else carried_statement or predecessor_id,
+                None if _row_id(row) in storage_relabelled else carried_text or carried_statement or predecessor_id,
+            )
         )
         row_id = _row_id(row)
         if row_id is not None:
@@ -1223,9 +1252,13 @@ def _inherit_casillas(
             )
         if lineage is None or lineage not in superseded:
             rows.append(row)
-            label_origins.append(None)
-    rows, label_origins = _apply_casilla_positions(context, rows, label_origins, successor)
-    return tuple(rows), tuple(label_origins)
+            origins.append((None, None))
+    rows, origins = _apply_casilla_positions(context, rows, origins, successor)
+    return (
+        tuple(rows),
+        tuple(statement for statement, _text in origins),
+        tuple(text for _statement, text in origins),
+    )
 
 
 def _apply_casilla_storage_delta(
@@ -1233,10 +1266,17 @@ def _apply_casilla_storage_delta(
     *,
     predecessor_id: str,
     inherited: tuple[object, ...],
-    inherited_label_origins: _LabelOrigins | None,
+    origins: list[tuple[str | None, str | None]],
     successor: Mapping[str, object],
-) -> tuple[tuple[object, ...], _LabelOrigins | None, frozenset[str]]:
-    """Apply storage-only patches without deriving a continuity relationship."""
+) -> tuple[tuple[object, ...], list[tuple[str | None, str | None]], frozenset[str], frozenset[str]]:
+    """Apply storage-only patches without deriving a continuity relationship.
+
+    Returns the kept rows and their ``(label, text)`` origins, the ids of every
+    patched row, and the ids of the patched rows whose label identity changed.
+    Every patched row loses its label origin; only the last also lose their
+    text origin, because a provenance-only patch leaves the row's text where
+    the edition that stated it put it.
+    """
     raw_overrides = as_toml_array(successor.get("casilla_overrides", ())) or ()
     raw_removals = as_toml_array(successor.get("casilla_removals", ())) or ()
     try:
@@ -1255,8 +1295,9 @@ def _apply_casilla_storage_delta(
     seen: set[str] = set()
     removed: set[str] = set()
     overridden: set[str] = set()
+    relabelled: set[str] = set()
     result = list(inherited)
-    origins = None if inherited_label_origins is None else list(inherited_label_origins)
+    origins = list(origins)
     for declaration in removals:
         selector = declaration.selector
         if str(selector.revision) != predecessor_id:
@@ -1288,22 +1329,28 @@ def _apply_casilla_storage_delta(
             f"{context}: casilla {identity!r}", patched, declaration.fields, declaration.removed_fields
         )
         resulting_id = _row_id(result[by_id[identity]])
+        changes_label_identity = bool(
+            _ROW_LABEL_IDENTITY_FIELDS.intersection(declaration.fields)
+            or _ROW_LABEL_IDENTITY_FIELDS.intersection(declaration.removed_fields)
+        )
         if resulting_id is not None:
             overridden.add(resulting_id)
-        if origins is not None:
-            origins[by_id[identity]] = None
+            if changes_label_identity:
+                relabelled.add(resulting_id)
+        statement, text = origins[by_id[identity]]
+        origins[by_id[identity]] = (None, None if changes_label_identity else text or statement or predecessor_id)
     kept_indexes = [index for index, row in enumerate(result) if (_row_id(row) or "") not in removed]
     kept_rows = tuple(result[index] for index in kept_indexes)
-    kept_origins = None if origins is None else tuple(origins[index] for index in kept_indexes)
-    return kept_rows, kept_origins, frozenset(overridden)
+    kept_origins = [origins[index] for index in kept_indexes]
+    return kept_rows, kept_origins, frozenset(overridden), frozenset(relabelled)
 
 
-def _apply_casilla_positions(
+def _apply_casilla_positions[OriginT](
     context: str,
     rows: list[object],
-    origins: list[str | None],
+    origins: list[OriginT],
     successor: Mapping[str, object],
-) -> tuple[list[object], list[str | None]]:
+) -> tuple[list[object], list[OriginT]]:
     raw = as_toml_array(successor.get("casilla_positions", ())) or ()
     try:
         positions = tuple(CasillaMemberPosition.model_validate(value) for value in raw)

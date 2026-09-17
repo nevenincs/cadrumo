@@ -702,15 +702,16 @@ def test_causante_ccaa_roundtrips_and_defaults_through_repository(repo: WorkUnit
 
     from cadrumo.domain.contribuyente.ccaa import CCAA
 
-    default_unit = _create_action_work_unit(repo)
-    annotated_unit = _create_action_work_unit(repo, period=_P_2026_2T, causante_ccaa=CCAA.MADRID)
+    with bundled_indexed_authority().operation():
+        default_unit = _create_action_work_unit(repo)
+        annotated_unit = _create_action_work_unit(repo, period=_P_2026_2T, causante_ccaa=CCAA.MADRID)
 
-    assert default_unit.causante_ccaa is None
-    assert annotated_unit.causante_ccaa == CCAA.MADRID
+        assert default_unit.causante_ccaa is None
+        assert annotated_unit.causante_ccaa == CCAA.MADRID
 
-    reloaded = repo.load().get(annotated_unit.work_unit_id)
-    assert reloaded is not None
-    assert reloaded.causante_ccaa == CCAA.MADRID
+        reloaded = repo.load().get(annotated_unit.work_unit_id)
+        assert reloaded is not None
+        assert reloaded.causante_ccaa == CCAA.MADRID
 
 
 def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogueRepository) -> None:
@@ -724,8 +725,9 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
 
     from cadrumo.domain.contribuyente.ccaa import CCAA
 
-    first = _create_action_work_unit(repo, causante_ccaa=CCAA.MADRID)
-    second = _create_action_work_unit(repo, causante_ccaa=CCAA.CATALUNA)
+    with bundled_indexed_authority().operation():
+        first = _create_action_work_unit(repo, causante_ccaa=CCAA.MADRID)
+        second = _create_action_work_unit(repo, causante_ccaa=CCAA.CATALUNA)
     # Idempotency: same work_unit_id, first creation wins.
     assert first.work_unit_id == second.work_unit_id
 

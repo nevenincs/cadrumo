@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, observation_key
+from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
@@ -118,8 +119,12 @@ def test_iter_modelo_refuses_an_observation_filed_under_a_foreign_period_key(
             object_key=observation_key("303", Period.from_year_and_code(2025, "1T")),
         )
 
-        with pytest.raises(SecureObjectRowIdentityError):
+        # The scan reports the application-owned degradation; the storage
+        # identity refusal it translates is carried as the cause.
+        with pytest.raises(PersistenceDegradationError) as refusal:
             tuple(repository.iter_modelo("303"))
+
+    assert isinstance(refusal.value.__cause__, SecureObjectRowIdentityError)
 
 
 def test_iter_modelo_yields_an_observation_filed_under_its_own_key(

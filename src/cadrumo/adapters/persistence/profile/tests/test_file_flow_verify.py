@@ -8,6 +8,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
+    plant_calculation_revision_unchecked,
+)
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     _FILE_FLOW_PROFILE_ID,
@@ -52,7 +55,6 @@ from cadrumo.application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     VerificationReportNotFoundError,
-    WorkUnitRevisionDivergenceError,
 )
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
 from cadrumo.application.modelo.filing_actions import get_verification_report, list_verification_reports
@@ -61,7 +63,10 @@ from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_repository import (
+    CalculationRevisionPersistenceError,
+    upsert_calculation_revision,
+)
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.verification_report import (
@@ -112,9 +117,14 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
             )
         }
     )
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), stale))
+    plant_calculation_revision_unchecked(cr_repo.load(), stale)
 
-    with pytest.raises(WorkUnitRevisionDivergenceError), bundled_indexed_authority().operation() as operation:
+    # The repository read refuses the planted row before the action reaches its
+    # own divergence check.
+    with (
+        pytest.raises(CalculationRevisionPersistenceError, match="disagrees with its parent WorkUnit"),
+        bundled_indexed_authority().operation() as operation,
+    ):
         verify_modelo_revision(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),

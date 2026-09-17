@@ -46,6 +46,7 @@ from ._tree_validation import GeneratedExportTreeValidationContext, validate_gen
 from .authority_publication import publish_sqlite_authority_candidate
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
+    drop_cross_edition_evolutions,
     generated_export_bootstrap_target,
     stage_continuity_metadata,
     stage_generated_export_candidate,
@@ -266,8 +267,9 @@ def stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | 
     """Stage a one-revision published modelo only when check needs the witness.
 
     The witness is staged in registry shape with the published authored facts
-    beside it, because loading a modelo validates its bindings against the
-    governed facts of the registry that holds it and refuses without them.
+    and shared legal catalogues beside it, because loading a modelo validates
+    its bindings against the governed facts and filing-year envelope of the
+    registry that holds it and refuses without them.
     """
     source_registry_root = bundled_path("registry", "aeat")
     source_modelo_root = source_registry_root / "modelos" / modelo
@@ -276,6 +278,7 @@ def stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | 
         return None
     staged_registry_root = root / "published-registry" / "aeat"
     shutil.copytree(source_registry_root / "facts", staged_registry_root / "facts")
+    shutil.copytree(source_registry_root / "legal", staged_registry_root / "legal")
     staged = stage_isolated_edition(
         source_modelo_root,
         staged_registry_root / "modelos" / modelo,
@@ -330,8 +333,10 @@ def stage_isolated_edition(
         if entry.name != revision:
             shutil.rmtree(entry)
     if edition.inherits_from is None:
+        drop_cross_edition_evolutions(revisions_root / revision)
         return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
     write_complete_edition(revisions_root / revision, edition)
+    drop_cross_edition_evolutions(revisions_root / revision)
     shutil.copytree(source_locales_root, staged_locales_root)
     manager = LocaleManager(src_dir=staged_locales_root, locales_dir=staged_locales_root)
     for locale in sorted(discover_locale_codes(staged_locales_root)):

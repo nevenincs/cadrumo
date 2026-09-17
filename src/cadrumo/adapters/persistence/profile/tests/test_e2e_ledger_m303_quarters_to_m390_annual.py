@@ -128,7 +128,7 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 
 def _product_software_identity() -> AeatProductSoftwareIdentity:
-    """Test product identity: the withdrawn-layout refusal is judged after it is supplied."""
+    """Test product identity supplied to every export in this module."""
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
         developer_tax_id="Y0000001S",
@@ -289,6 +289,10 @@ def _filing_ports(
         bucket_event_repository=event_repo,
         iva_compensation_decision_repository=wallet_repo,
         observation_repository=observation_repo,
+        # The observation and its compensation history commit in one backend transaction.
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(
+            objects=observation_repo.secure_object_repository,
+        ),
     )
 
 
@@ -702,10 +706,10 @@ def _calculate_and_file_m303_quarter(
     return revision
 
 
-def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
+def test_persisted_m303_ledger_revision_verifies_and_exports(
     secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Persona-like persisted ledger input verifies under the live revision and refuses its withdrawn export."""
+    """Persona-like persisted ledger input verifies under the live revision and exports its fichero."""
     _store_profile(secure_objects)
     stored = _persist_year_of_invoices(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -747,7 +751,7 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
     assert verified.ledger_filing_evidence is not None
 
     output_path = tmp_path / f"modelo-303-{_YEAR}-1T.boe"
-    with pytest.raises(ModeloExportUnsupportedError) as exc_info, bundled_indexed_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=revision.calculation_revision_id,
@@ -771,11 +775,7 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
             clock=_FILE_AT,
         )
 
-    assert exc_info.value.context == {
-        "modelo": "303",
-        "reason": "the registry snapshot has no complete export_layouts definition",
-    }
-    assert not output_path.exists()
+    assert output_path.read_bytes().startswith(b"<T3030")
 
 
 def _calculate_m390_annual(
@@ -822,15 +822,14 @@ def _non_official_local_chain_advisory_periods(report: VerificationReport) -> se
     return periods
 
 
-def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export_refusal(
+def test_irene_sl_2024_local_m303_files_support_m390_verify_and_annual_export(
     secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Irene SL: 2024 M303 late local FILE chain feeds M390 without claiming AEAT acceptance.
 
     This is the persona path that direct observation seeding did not cover:
-    calculate -> verify -> withdrawn-export refusal -> local file for each
-    closed/overdue M303 quarter, then calculate -> verify M390 from those local
-    records and confirm its withdrawn export is refused too.
+    calculate -> verify -> local file for each closed/overdue M303 quarter,
+    then calculate -> verify -> export M390 from those local records.
     The local filing records remain non-official (``aeat_accepted=False``);
     dependent periods surface the non-official-local-chain advisory.
     """
@@ -889,41 +888,6 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
                 operation=operation,
             )
         assert report.granted_verificado_completo is True, report.findings
-
-        quarter_output = tmp_path / f"modelo-303-{_IRENE_YEAR}-{period}.boe"
-        with (
-            pytest.raises(ModeloExportUnsupportedError) as exc_info,
-            bundled_indexed_authority().operation() as operation,
-        ):
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=revision.calculation_revision_id,
-                    output_path=quarter_output,
-                    actor="irene",
-                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                    product_software_identity=_product_software_identity(),
-                ),
-                workflow_profile=workflow_profile,
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    taxpayer_tax_id=_IRENE_TAX_ID,
-                    secure_objects=secure_objects,
-                    work_unit=wu_repo,
-                    calculation=cr_repo,
-                    filing=filing_repo,
-                    verification=verification_repo,
-                    bucket_event=event_repo,
-                    iva_compensation_decision=wallet_repo,
-                    observation=observation_repo,
-                ),
-                operation=operation,
-                clock=_IRENE_FILE_AT,
-            )
-        assert exc_info.value.context == {
-            "modelo": "303",
-            "reason": "the registry snapshot has no complete export_layouts definition",
-        }
-        assert not quarter_output.exists()
 
         with bundled_indexed_authority().operation() as operation:
             filing = file_modelo_revision(
@@ -984,15 +948,15 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
     assert annual_report.granted_verificado_completo is True, annual_report.findings
     assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
 
-    # The annual resumen still verifies from the locally filed quarters, but its
-    # live revision also has no filing-grade fixed-width layout.
+    # The annual resumen verifies from the locally filed quarters and exports.
     annual_output = tmp_path / f"modelo-390-{_IRENE_YEAR}-0A.boe"
-    with pytest.raises(ModeloExportUnsupportedError) as exc_info, bundled_indexed_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=annual.calculation_revision_id,
                 output_path=annual_output,
                 actor="irene",
+                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports_for_test(
@@ -1009,11 +973,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
             operation=operation,
             clock=_IRENE_FILE_AT,
         )
-    assert exc_info.value.context == {
-        "modelo": "390",
-        "reason": "the registry snapshot has no complete export_layouts definition",
-    }
-    assert not annual_output.exists()
+    assert annual_output.read_bytes().startswith(b"<T3900")
 
 
 def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(

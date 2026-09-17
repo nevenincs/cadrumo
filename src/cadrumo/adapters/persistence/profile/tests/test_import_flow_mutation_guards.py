@@ -244,6 +244,8 @@ def test_import_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
         foreign = _guard_work_unit(_GUARD_BUCKET_B)
         wu_repo.save(upsert_work_unit(wu_repo.load(), foreign))
+        # Provisioning the runtime profile records its own bucket event.
+        events_before = bv_repo.load().events
 
         with pytest.raises(WorkUnitNotFoundError):
             import_external_filing_evidence(
@@ -263,7 +265,7 @@ def test_import_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path
         # Nothing advanced, nothing filed, nothing recorded for bucket B.
         assert wu_repo.load().get(foreign.work_unit_id) == foreign
         assert len(cr_repo.load()) == 0
-        assert bv_repo.load().events == {}
+        assert bv_repo.load().events == events_before
 
 
 def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path) -> None:

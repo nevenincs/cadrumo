@@ -3,7 +3,8 @@
 A persisted row validates against registry vocabulary. Decoding it with no
 governed-fact scope fails for that reason alone, and reporting the failure as
 schema drift sent the operator to repair data that is perfectly current. These
-cases persist a real row inside an operation and read it back outside one.
+cases persist a real row inside an operation and read it back outside one;
+they live above the profile test package, which scopes every test to a lease.
 """
 
 from __future__ import annotations
@@ -15,14 +16,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from .....core.errors.hierarchy import InternalInvariantError
-from .....domain.calculations.registry.authority import bundled_indexed_authority
-from .....domain.transactions.enums import BusinessClassification, TransactionDirection
-from .....domain.transactions.errors import StoredTransactionDriftError
-from .....domain.transactions.models import Transaction, TransactionCatalogue
-from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..transactions import TransactionCatalogueRepository
+from ....core.errors.hierarchy import InternalInvariantError
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.errors import StoredTransactionDriftError
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..profile.transactions import TransactionCatalogueRepository
+from ..storage.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -51,10 +52,13 @@ def _transaction() -> Transaction:
     return Transaction.model_validate(
         {
             "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
+            "direction": TransactionDirection.INCOMING,
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "group_label": None,
+            # A registry-vocabulary field: its decode resolves through the
+            # governed income-concept catalogue, so it needs a scope.
+            "concepto_ingreso": "subvencion_corriente",
         }
     )
 

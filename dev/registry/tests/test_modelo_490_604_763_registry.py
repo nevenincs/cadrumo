@@ -120,10 +120,9 @@ def test_committed_definition_legal_authority_and_deadline_windows(
         by_year.setdefault(window.filing_year, []).append(window.period.code)
         expected_periods_by_year.setdefault(window.filing_year, codes)
     if mid == "763":
-        # AEAT's historical catalogue names only 2T/3T for 2012. The missing
-        # first and fourth quarters are refused rather than completed from the
-        # otherwise quarterly cadence.
-        expected_periods_by_year[2012] = ("2T", "3T")
+        # The tax opened mid-2012: its first quarter has no filing window,
+        # and Orden EHA/1881/2011 art. 4 dates the second through fourth.
+        expected_periods_by_year[2012] = ("2T", "3T", "4T")
     for year, found in sorted(by_year.items()):
         assert sorted(found) == sorted(expected_periods_by_year[year]), (
             f"modelo {mid} filing year {year} declares periods {sorted(found)}, "
@@ -163,15 +162,6 @@ def test_committed_definition_legal_authority_and_deadline_windows(
             date(2019, 4, 1),
             date(2019, 4, 30),
         ),
-        (
-            2026,
-            "4T",
-            "2019-y-siguientes",
-            "enrolled-modelo-763-layout",
-            "modelo-763-2026-4t",
-            date(2027, 1, 1),
-            date(2027, 1, 31),
-        ),
     ],
 )
 def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
@@ -183,10 +173,23 @@ def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
     opens_on: date,
     closes_on: date,
 ) -> None:
-    """The selector and deadline stay coupled at every evidence boundary."""
+    """The law selects each design era with its deadline, inside the support envelope or not."""
     modelo, catalogues = _committed_modelo("763")
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
+    revision = select_revision(modelo, filing_year=filing_year, period=period)
+
+    assert revision.id == revision_id
+    assert revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    assert layout_source in revision.source_refs
+    window = next(item for item in revision.deadline_windows if item.id == deadline_id)
+    assert (window.opens_on, window.closes_on) == (opens_on, closes_on)
+
+    support = catalogues.require_supported_filing_years()
+    if not support.admits_filing_year(filing_year):
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=filing_year, period=period, support=support)
+        return
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -195,18 +198,36 @@ def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
         period=period,
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
-
     assert snapshot.revision.id == revision_id
-    assert snapshot.revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY
-    assert layout_source in snapshot.revision.source_refs
     assert layout_source in snapshot.sources
-    window = next(item for item in snapshot.revision.deadline_windows if item.id == deadline_id)
-    assert (window.opens_on, window.closes_on) == (opens_on, closes_on)
 
 
-@pytest.mark.parametrize("filing_year,period", [(2011, "4T"), (2012, "1T"), (2012, "4T")])
+def test_modelo_763_projects_the_current_design_through_every_supported_year() -> None:
+    """Every year the support envelope admits resolves to the open-ended design era."""
+    modelo, catalogues = _committed_modelo("763")
+    open_revisions = [revision for revision in modelo.revisions.values() if revision.valid_to is None]
+    assert len(open_revisions) == 1
+    (current,) = open_revisions
+
+    for filing_year in catalogues.require_supported_filing_years().years:
+        for period in current.period_selector.periods:
+            snapshot = build_snapshot(
+                modelo,
+                catalogues,
+                source_root=bundled_path(),
+                filing_year=filing_year,
+                period=period,
+                grade=RegistryAuthorityGrade.APPLICABILITY,
+            )
+            assert snapshot.revision.id == current.id
+            assert set(current.source_refs) <= set(snapshot.sources) | {
+                ref for ref in current.source_refs if ref not in catalogues.sources
+            }
+
+
+@pytest.mark.parametrize("filing_year,period", [(2011, "4T"), (2012, "1T")])
 def test_modelo_763_refuses_the_unevidenced_opening_coordinates(filing_year: int, period: str) -> None:
-    """The historical design title admits 2012 2T/3T only; no cadence inference fills gaps."""
+    """The tax had no filing window before its second 2012 quarter; no cadence inference fills one."""
     modelo, _catalogues = _committed_modelo("763")
 
     with pytest.raises(NoRevisionForPeriodError):

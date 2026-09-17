@@ -11,6 +11,7 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.iva_compensation_history import iva_compensation_period_key
+from cadrumo.application.calculations.iva_compensation_history_ports import IvaCompensationHistoryPersistenceError
 from cadrumo.core.period import Period
 
 from ._iva_compensation_history_support import _state
@@ -50,10 +51,16 @@ def test_iva_compensation_history_refuses_a_period_payload_rekeyed_under_foreign
             payload=write.payload,
         )
 
-        with pytest.raises(SecureObjectRowIdentityError) as load_error:
+        # The adapter reports the application-owned persistence error; the
+        # storage identity refusal it translates is carried as the cause.
+        with pytest.raises(IvaCompensationHistoryPersistenceError) as load_error:
             repository.load_period(foreign_period)
-        with pytest.raises(SecureObjectRowIdentityError) as list_error:
+        with pytest.raises(IvaCompensationHistoryPersistenceError) as list_error:
             repository.list_periods()
 
-    assert load_error.value.expected_identifier == foreign_key
-    assert list_error.value.expected_identifier == iva_compensation_period_key(state.period)
+    load_cause = load_error.value.__cause__
+    list_cause = list_error.value.__cause__
+    assert isinstance(load_cause, SecureObjectRowIdentityError)
+    assert isinstance(list_cause, SecureObjectRowIdentityError)
+    assert load_cause.expected_identifier == foreign_key
+    assert list_cause.expected_identifier == iva_compensation_period_key(state.period)

@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.cross_period_clean_state import (
     cross_period_dependency_requirements,
@@ -506,11 +507,13 @@ def _seed_source_period_filing(
             evidence_reference_id=evidence_reference_id,
         )
         return
+    values, source_headers = modelo_303_filed_disposition(values, source_locator=evidence_reference_id)
     import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
         casilla_values=values,
         evidence_kind=evidence_kind,
         evidence_reference_id=evidence_reference_id,
+        source_headers=source_headers,
         actor="aeat-import-test",
         expected_tax_id="X1234567L",
         # The M303 source quarters carry operator-selected filing facts

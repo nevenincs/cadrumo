@@ -46,6 +46,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
@@ -140,7 +141,17 @@ def _run(
     return {_c(k): result.values[_c(k)] for k in ("0505", "0521", "0527", "0528", "0530", "0532", "0545")}
 
 
-def _snapshot(authority: ValidatedRegistryAuthority, year: int) -> RegistrySnapshot:
+def _snapshot(authority: ValidatedRegistryAuthority, year: int) -> RegistrySnapshot | None:
+    """Return the era's snapshot, or ``None`` once its refusal outside the support envelope is proven.
+
+    The eras are legal facts; which of them the product serves is the
+    registry's support envelope, whose floor moves. An era below it must be
+    refused rather than calculated.
+    """
+    if not authority.catalogues.require_supported_filing_years().admits_filing_year(year):
+        with pytest.raises(NoRevisionForPeriodError):
+            authority.snapshot("100", filing_year=year, period="0A")
+        return None
     return authority.snapshot("100", filing_year=year, period="0A")
 
 
@@ -150,6 +161,8 @@ def test_separate_escala_estatal_assembly_matches_lirpf_tramos(
 ) -> None:
     """Casilla 0528/0530/0532 implement the art. 64 separate-escala assembly."""
     snapshot = _snapshot(registry_authority, year)
+    if snapshot is None:
+        return
     values = _run(snapshot, year, anualidades=_ANUALIDADES)
 
     c0505 = values[_c("0505")]
@@ -182,6 +195,8 @@ def test_separate_escala_ordering_shortcut_below_separate_below_no_benefit(
 ) -> None:
     """shortcut < separate < no-benefit for the anualidades filer."""
     snapshot = _snapshot(registry_authority, year)
+    if snapshot is None:
+        return
     separate = _run(snapshot, year, anualidades=_ANUALIDADES)
     no_benefit = _run(snapshot, year, anualidades=None)
 
@@ -212,6 +227,8 @@ def test_regime_off_shared_custody_reduces_to_single_escala(
 ) -> None:
     """Flag off (custodia compartida) collapses to the ordinary single escala."""
     snapshot = _snapshot(registry_authority, year)
+    if snapshot is None:
+        return
     off = _run(snapshot, year, anualidades=_ANUALIDADES, flag=Decimal("0"))
     no_benefit = _run(snapshot, year, anualidades=None)
 
@@ -229,6 +246,8 @@ def test_regime_off_shared_custody_reduces_to_single_escala(
 def test_regime_off_when_anualidades_reach_base(registry_authority: ValidatedRegistryAuthority, year: int) -> None:
     """Anualidades >= base liquidable general → régimen off (art. 64 condition)."""
     snapshot = _snapshot(registry_authority, year)
+    if snapshot is None:
+        return
     over = _run(snapshot, year, anualidades=_ANUALIDADES_ABOVE_BASE)
     no_benefit = _run(snapshot, year, anualidades=None)
 
@@ -259,6 +278,8 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
     0527 itself may do so.
     """
     snapshot = _snapshot(registry_authority, 2021)
+    if snapshot is None:
+        return
 
     # Seed the Anexo C pension-contribution fields the retired 2021 sum
     # formula wrongly summed into 0527. They must have zero effect on 0527

@@ -17,7 +17,7 @@ def _is_a_registry_period_token(value: str) -> str:
     """Return ``value`` when it is a bare registry period code, else refuse.
 
     The justificante wire carries the bare token (``"1T"``, ``"0A"``) rather
-    than a structured :class:`~core.Period`, so the JSON contract stays a
+    than a structured :class:`~core.period.Period`, so the JSON contract stays a
     string -- but a string is not a free-form label. Parsing it back through
     the canonical period grammar is what stops ``period='bogus'`` from being
     emitted as a capture's filing period.

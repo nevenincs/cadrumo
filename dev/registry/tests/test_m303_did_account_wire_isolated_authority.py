@@ -242,7 +242,7 @@ source_refs = ["{_SOURCE_REF}"]
 
 [[revisions."{_REVISION_ID}".export_layouts.records]]
 id = "test-owned-m303-page-did"
-record_type = "page_did"
+record_type = "domiciliacion"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"

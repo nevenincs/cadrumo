@@ -12,11 +12,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.adapters.persistence.profile import calculation_observations as observations_adapter_module
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations import errors as errors_module
 from cadrumo.application.calculations import m303_carry_ingress as m303_module
-from cadrumo.application.calculations import observations_repository as observations_module
 from cadrumo.application.calculations.errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
 from cadrumo.application.calculations.m303_carry_ingress import (
     M303CarryIngressError,
@@ -91,12 +91,12 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("header_disposition", "str(header_projection.disposition)"),
         ),
     ),
-    "m303_carry_ingress:_assert_result_sign_compatible:M303CarryIngressError:1": _contract(
+    "m303_carry_ingress:_validate_disposition_result_sign:M303CarryIngressError:1": _contract(
         CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
         (
             ("disposition", "str(disposition)"),
             ("resultado", "str(resultado)"),
-            ("casilla_id", "str(M303_COMPENSATION_RESULTADO_CASILLA)"),
+            ("casilla_id", "str(casilla_ids['result'])"),
         ),
     ),
     "m303_carry_ingress:_require_supplied_pair_matches_derivation:M303CarryIngressError:1": _contract(
@@ -124,7 +124,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("registry_operands", "','.join((str(item) for item in expected_operands))"),
         ),
     ),
-    "observations_repository:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:1": _contract(
+    "calculation_observations:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:1": _contract(
         CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
         (
             ("modelo", "str(observation.modelo)"),
@@ -134,7 +134,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("incoming_source_kind", "payload.source_kind.value"),
         ),
     ),
-    "observations_repository:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:2": _contract(
+    "calculation_observations:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:2": _contract(
         CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
         (
             ("modelo", "str(observation.modelo)"),
@@ -146,7 +146,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
     ),
 }
 
-_TERMINAL_PRODUCER_MODULES: tuple[ModuleType, ...] = (m303_module, observations_module)
+_TERMINAL_PRODUCER_MODULES: tuple[ModuleType, ...] = (m303_module, observations_adapter_module)
 
 
 def _call_name(node: ast.expr) -> str | None:
@@ -457,8 +457,19 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> No
         operand_values=(Decimal("7.00"), Decimal("20.00")),
     )
 
+    registry_mapping = m303_module._selected_registry_mapping(
+        modelo=Modelo("303").value,
+        filing_year=_PERIOD.filing_year,
+        period=_PERIOD.registry_token,
+        operation=published_authority_operation(),
+    )
+
     with pytest.raises(M303CarryIngressError) as raised:
-        resolve_available_compensation_formula_id(revision, contradictory_derivation)
+        resolve_available_compensation_formula_id(
+            revision,
+            contradictory_derivation,
+            registry_mapping=registry_mapping,
+        )
 
     _assert_exact_terminal_contract(
         raised.value,

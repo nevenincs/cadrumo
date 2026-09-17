@@ -64,109 +64,109 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_oauth_flow:require_interactive_terminal:GoogleAuthNonInteractiveError:google OAuth refused: interactive browser consent requires a controlling terminal": _contract(
+    "oauth_flow:require_interactive_terminal:GoogleAuthNonInteractiveError:google OAuth refused: interactive browser consent requires a controlling terminal": _contract(
         GoogleAuthPreconditionCondition.INTERACTIVE_TERMINAL_AVAILABLE,
         (("interactive_terminal_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:require_resolvable_profile_record:GoogleAuthProfileUnboundError:google OAuth refused: active profile bucket pointer could not be resolved": _contract(
+    "oauth_flow:require_resolvable_profile_record:GoogleAuthProfileUnboundError:google OAuth refused: active profile bucket pointer could not be resolved": _contract(
         GoogleAuthPreconditionCondition.PROFILE_IDENTITY_RESOLVED,
         (("profile_bucket_present", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_oauth_flow:require_resolvable_profile_record:GoogleAuthProfileUnboundError:google OAuth refused: active profile record session is unavailable": _contract(
+    "oauth_flow:require_resolvable_profile_record:GoogleAuthProfileUnboundError:google OAuth refused: active profile record session is unavailable": _contract(
         GoogleAuthPreconditionCondition.PROFILE_RECORD_SESSION_AVAILABLE,
         (("profile_record_session_available", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_oauth_flow:credentials_to_records:GoogleAuthScopeInsufficientError:consent screen returned without granting required scopes: {value}": _contract(
+    "oauth_flow:credentials_to_records:GoogleAuthScopeInsufficientError:consent screen returned without granting required scopes: {value}": _contract(
         GoogleAuthPreconditionCondition.REQUIRED_SCOPES_GRANTED,
         (("required_scopes_granted", "False"), ("missing_scope_count", "len(missing)")),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_run_local_server:GoogleAuthNetworkError:google-auth-oauthlib not importable: {value}": _contract(
+    "oauth_flow:_run_local_server:GoogleAuthNetworkError:google-auth-oauthlib not importable: {value}": _contract(
         GoogleAuthPreconditionCondition.OAUTHLIB_AVAILABLE,
         (("oauthlib_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_run_local_server:GoogleAuthNetworkError:OAuth client config refused: {value}": _contract(
+    "oauth_flow:_run_local_server:GoogleAuthNetworkError:OAuth client config refused: {value}": _contract(
         GoogleAuthPreconditionCondition.OAUTH_CLIENT_CONFIG_VALID,
         (("oauth_client_config_valid", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_run_local_server:GoogleAuthLoopbackBindError:loopback receiver failed to bind: {value}": _contract(
+    "oauth_flow:_run_local_server:GoogleAuthLoopbackBindError:loopback receiver failed to bind: {value}": _contract(
         GoogleAuthPreconditionCondition.LOOPBACK_RECEIVER_BOUND,
         (("loopback_receiver_bound", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_raise_local_server_error:GoogleAuthBrowserOpenError:OS browser launcher refused: {value}": _contract(
+    "oauth_flow:_raise_local_server_error:GoogleAuthBrowserOpenError:OS browser launcher refused: {value}": _contract(
         GoogleAuthPreconditionCondition.BROWSER_LAUNCHER_AVAILABLE,
         (("browser_launcher_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_raise_local_server_error:GoogleAuthNetworkError:OAuth endpoint unreachable: {value}": _contract(
+    "oauth_flow:_raise_local_server_error:GoogleAuthNetworkError:OAuth endpoint unreachable: {value}": _contract(
         GoogleAuthPreconditionCondition.OAUTH_ENDPOINT_REACHABLE,
         (("oauth_endpoint_reachable", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_raise_local_server_error:GoogleAuthNetworkError:OAuth local server flow failed: {value}": _contract(
+    "oauth_flow:_raise_local_server_error:GoogleAuthNetworkError:OAuth local server flow failed: {value}": _contract(
         GoogleAuthPreconditionCondition.OAUTH_FLOW_COMPLETED,
         (("oauth_flow_completed", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_decode_email_from_id_token:GoogleAuthScopeInsufficientError:Google did not return an id_token; the OAuth consent did not include the openid+email scopes": _contract(
+    "oauth_flow:_decode_email_from_id_token:GoogleAuthScopeInsufficientError:Google did not return an id_token; the OAuth consent did not include the openid+email scopes": _contract(
         GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_PRESENT,
         (("id_token_present", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_decode_email_from_id_token:GoogleAuthNetworkError:google-auth id_token module not importable: {value}": _contract(
+    "oauth_flow:_decode_email_from_id_token:GoogleAuthNetworkError:google-auth id_token module not importable: {value}": _contract(
         GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_VERIFIER_AVAILABLE,
         (("id_token_verifier_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_decode_email_from_id_token:GoogleAuthNetworkError:id_token verification failed: {value}": _contract(
+    "oauth_flow:_decode_email_from_id_token:GoogleAuthNetworkError:id_token verification failed: {value}": _contract(
         GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_VERIFIED,
         (("id_token_verified", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_oauth_flow:_decode_email_from_id_token:GoogleAuthScopeInsufficientError:id_token verified but carries no `email` claim": _contract(
+    "oauth_flow:_decode_email_from_id_token:GoogleAuthScopeInsufficientError:id_token verified but carries no `email` claim": _contract(
         GoogleAuthPreconditionCondition.IDENTITY_EMAIL_PRESENT,
         (("id_token_email_present", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_impersonation:resolve_impersonated_credentials:GoogleAuthAdcUnavailableError:google-auth is not importable: {value}": _contract(
+    "impersonation:resolve_impersonated_credentials:GoogleAuthAdcUnavailableError:google-auth is not importable: {value}": _contract(
         GoogleAuthPreconditionCondition.ADC_CLIENT_AVAILABLE,
         (("adc_client_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_impersonation:resolve_impersonated_credentials:GoogleAuthAdcUnavailableError:Application Default Credentials not found: {value}": _contract(
+    "impersonation:resolve_impersonated_credentials:GoogleAuthAdcUnavailableError:Application Default Credentials not found: {value}": _contract(
         GoogleAuthPreconditionCondition.ADC_AVAILABLE,
         (("adc_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_impersonation:resolve_impersonated_credentials:GoogleAuthImpersonationRefusedError:IAM refused to mint an impersonated token for {value}: {value}": _contract(
+    "impersonation:resolve_impersonated_credentials:GoogleAuthImpersonationRefusedError:IAM refused to mint an impersonated token for {value}: {value}": _contract(
         GoogleAuthPreconditionCondition.IAM_CREDENTIAL_MINTED,
         (("iam_token_minted", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_impersonation:_ensure_source_credential_is_fresh:GoogleAuthAdcStaleError:Application Default Credentials could not be refreshed: {value}": _contract(
+    "impersonation:_ensure_source_credential_is_fresh:GoogleAuthAdcStaleError:Application Default Credentials could not be refreshed: {value}": _contract(
         GoogleAuthPreconditionCondition.ADC_SOURCE_FRESH,
         (("adc_source_fresh", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
