@@ -166,9 +166,9 @@ ssh <macos-build-host> '
 ## Capability verification
 
 `uv run --no-sync python -m dev.containers.runner_capabilities` checks that a
-runner carries what the workflows assume. The `host-capabilities` job of
-`.github/workflows/runner-fleet-health.yml` runs it on every host-install runner;
-the container runners are covered instead by `just test-runner-image`.
+runner carries what the workflows assume. Run it by hand on each
+host-install runner; the container runners are covered instead by
+`just test-runner-image`.
 
 What counts as "assumed" is measured, not guessed. Parsing the `run:` blocks of
 every workflow shows `uv`, `just`, and `node` are each installed by a pinned
@@ -346,10 +346,9 @@ once for both; the ARM host builds its own natively. `--target runner` means the
 Python-based `dev` stage is never built, so neither build pulls the multi-gigabyte
 dependency set.
 
-- **Linux X64 host:** `just build-runner-image`, or the `runner-image` job of
-  `.github/workflows/runner-fleet-health.yml`, which also reclaims the tagged
-  image afterwards (the hygiene hook prunes only DANGLING images, so a tagged
-  build would otherwise leave gigabytes behind on a space-constrained box).
+- **Linux X64 host:** `just build-runner-image`. Remove the tagged image
+  afterwards: the hygiene hook prunes only DANGLING images, so a tagged build
+  would otherwise leave gigabytes behind on a space-constrained box.
 - **ARM host:** build on the HOST, not inside the runner container — that
   container has no docker socket, so it cannot build. Copy the `Dockerfile` and
   `dev/runners/runner-entry-linux.sh` across, preserving the relative path, and

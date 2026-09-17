@@ -4,12 +4,13 @@ A Cadrumo release is cut by merging a pull request. There is no dispatch to star
 no rehearsal mode, and no sealed candidate to retire afterwards.
 
 `release-please` watches `main`, keeps a release pull request up to date from the
-conventional commits merged since the last release, and does the whole release when that
-pull request merges: it computes the version, writes the version surfaces and the
-changelog, tags `vX.Y.Z`, creates the GitHub release, and dispatches the publish
-workflow. The publish workflow builds the three distributions from that tag, refuses any
-file the index would reject, proves the sealed files on every stable runtime across Linux,
-macOS and Windows, and uploads to PyPI with Trusted Publishing.
+conventional commits merged since the last release, and dispatches `release.yml` in its
+prove phase against that pull request's branch. The prove run builds the release cohort
+once, refuses any file the index would reject, and proves the sealed files on every stable
+runtime and channel across Linux, macOS and Windows. When the pull request merges,
+release-please writes the version surfaces and the changelog, tags `vX.Y.Z`, creates the
+GitHub release, and dispatches `release.yml` in its publish phase, which reuses the proven
+cohort and uploads it to PyPI with Trusted Publishing.
 
 PyPI is the primary target. Homebrew and Scoop are downstream of what it serves.
 
@@ -19,9 +20,8 @@ PyPI is the primary target. Homebrew and Scoop are downstream of what it serves.
 | --- | --- | --- |
 | Propose | `release-please.yml` | Keeps a release pull request current from conventional commits on `main` |
 | Release | `release-please.yml` | On merge: writes version surfaces and changelog, tags `vX.Y.Z`, creates the GitHub release |
-| Build | `publish.yml` | Builds the three distributions from the tag and refuses any file at or over the index cap |
-| Prove | `publish.yml` | Installs the sealed distributions on every stable inventory runtime across Linux, macOS and Windows |
-| Publish | `publish.yml` | Uploads every distribution to PyPI over OIDC, without rebuilding |
+| Prove | `release.yml` (`phase=prove`) | Runs the merge gate and full suites, builds and seals the cohort once, and proves it on every runtime and channel |
+| Publish | `release.yml` (`phase=publish`) | Locates the proven cohort for the tag, uploads it to PyPI over OIDC without rebuilding, then updates and reacquires the channels |
 
 The workflow runs and their logs are the authoritative operational record.
 
@@ -35,7 +35,7 @@ All three carry the same four values:
 | --- | --- |
 | Owner | `nevenincs` |
 | Repository | `cadrumo` |
-| Workflow | `publish.yml` |
+| Workflow | `release.yml` |
 | Environment | `pypi` |
 
 Which registration form to use is decided by the index, not by preference. A name the
@@ -55,7 +55,7 @@ run is what demonstrates them. An upload is per-file, so a distribution whose bi
 missing or misspelled is refused on its own while the others succeed, and re-running the
 workflow against the same tag reconciles the partial upload. Remove any obsolete
 registration naming
-`pypi-upload.yml` or `publish-release.yml`. The `pypi` environment is the OIDC trust
+`publish.yml`, `pypi-upload.yml` or `publish-release.yml`. The `pypi` environment is the OIDC trust
 anchor and must exist on the repository; the workflow does not require environment
 reviewers.
 
@@ -150,67 +150,25 @@ independent reproducibility coordinate.
 
 ## Release-candidate evidence
 
-The channel descriptors declare distribution evidence rows, and the release readiness
-gate refuses a release until every declared row is present and passing. Those rows come
-from one place: the `Cadrumo Packaging Smoke` workflow, dispatched by hand. It never runs
-on push, because the three-OS matrix is the most expensive workflow in the repository.
-
-Dispatch it after the release PR has merged, against the tag that merge created.
+The distribution evidence rows the readiness gate requires come from the prove run of
+`release.yml` that release-please dispatches for the release pull request. Every row in
+that run is bound to the one cohort it built. To prove the pull request again, dispatch
+the same phase against its branch:
 
 ```console
-gh workflow run packaging-smoke.yml --repo nevenincs/cadrumo --ref v<VERSION>
+gh workflow run release.yml --repo nevenincs/cadrumo --ref <RELEASE_BRANCH> \
+  -f phase=prove -f ref=<RELEASE_BRANCH> -f version=<VERSION>
 ```
 
-Then mint the acquisition rows from that run, naming the commit it built:
-
-```console
-gh workflow run packaging-homebrew.yml --repo nevenincs/cadrumo --ref main \
-  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<SMOKE_HEAD_SHA>
-gh workflow run packaging-scoop.yml --repo nevenincs/cadrumo --ref main \
-  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<SMOKE_HEAD_SHA>
-```
-
-The timing is not a preference. The readiness gate binds every distribution-evidence row
-to the cohort that produced it, and refuses unless that cohort's source commit equals the
-checked-out commit and its tag equals `v<VERSION>`. Only the merged release commit
-satisfies both: release-please creates the tag when the PR MERGES, so on the release
-branch itself no tag points at the commit, the cohort records no tag at all, and the gate
-refuses every row:
-
-```text
-[BLOCK] distribution-evidence-complete: cohort tag None does not match version tag 'v<VERSION>'
-```
-
-A campaign dispatched against `main` after later commits have landed fails the other half,
-because the cohort's commit is no longer what is checked out:
-
-```text
-[BLOCK] distribution-evidence-complete: cohort commit <COMMIT> does not match checked-out commit <COMMIT>
-```
-
-The acquisition lanes agree independently: each resolves its source run's commit against
-main's history and refuses one that is not on it, so a release-branch commit is rejected
-there too, before any row is written.
-
-Run the readiness gate with the tag checked out, not `main`, or the commit comparison
-fails against a tree the cohort was never built from. All seven rows must come from ONE
-smoke run: the gate compares the whole cohort binding, so rows mixed across two campaigns
-are refused.
-
-The cohort seal itself does not refuse a version some destination already owns. Building a
-cohort uploads nothing, and between releases the commit legitimately declares the version
-that is already published, so the seal refuses only a version recorded in the burned
-ledger. The collision rules are asked once, by `publish.yml`, immediately before the
-upload.
-
-The matrix needs all three self-hosted runner shapes online — Linux x64, Windows x64 and
-macOS ARM64. Confirm before dispatching, or the jobs queue until they are cancelled:
+The prove run needs all three self-hosted runner shapes online — Linux x64, Windows x64
+and macOS ARM64. A queue watchdog cancels the run when a lane has no runner, but confirm
+before dispatching:
 
 ```console
 gh api repos/nevenincs/cadrumo/actions/runners --jq '.runners[] | "\(.status)  \(.name)"'
 ```
 
-Merge the release PR once the campaign is green.
+Merge the release PR once the prove run is green.
 
 ## Release
 
@@ -219,14 +177,15 @@ Merge the open release PR. Everything else follows from that merge.
 ```console
 gh pr list --repo nevenincs/cadrumo --label "autorelease: pending"
 gh run list --repo nevenincs/cadrumo --workflow release-please.yml --limit 5
-gh run list --repo nevenincs/cadrumo --workflow publish.yml --limit 5
+gh run list --repo nevenincs/cadrumo --workflow release.yml --limit 5
 ```
 
-If `publish.yml` did not start within a minute of the release being created, the
-dispatch step failed. Start it by hand against the tag that was cut:
+If the publish phase of `release.yml` did not start within a minute of the release being
+created, the dispatch step failed. Start it by hand against the tag that was cut:
 
 ```console
-gh workflow run publish.yml --repo nevenincs/cadrumo -f tag=v<VERSION>
+gh workflow run release.yml --repo nevenincs/cadrumo --ref v<VERSION> \
+  -f phase=publish -f ref=v<VERSION> -f version=<VERSION>
 ```
 
 ## Verify the published release
@@ -308,8 +267,9 @@ the index serves.
 
 ## Authorities
 
-- `.github/workflows/release-please.yml` — computes the version, cuts the release, dispatches publication
-- `.github/workflows/publish.yml` — sole publication authority
+- `.github/workflows/release-please.yml` — computes the version, cuts the release, dispatches proof and publication
+- `.github/workflows/release.yml` — sole proof and publication authority
+- `.github/workflows/merge-gate.yml` — the required pull request verdict, reused by the prove phase
 - `dev/smoke/smoke_check.py` — the check that proves an installed artifact
 - `dev/packaging/_distribution_limits.py` — the index file cap, declared once
 - `SECURITY.md` — private security reporting
