@@ -474,6 +474,10 @@ modelo:
             label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
               bevételek és ráfordítások - Több időszak között felosztandó adóbevételek
               - Tartalékok [00481]
+          00482:
+            label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
+              bevételek és ráfordítások - Több időszak között felosztandó adóbevételek
+              - Saját részvények és üzletrészek [00482]
           00483:
             label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
               bevételek és ráfordítások - Több időszak között felosztandó adóbevételek
@@ -541,6 +545,10 @@ modelo:
             label: Saját tőke változásainak kimutatása (III) - Saját tőkében elszámolt
               bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
               és ráfordítások - Saját tőkén belüli kiigazítások [00503]
+          '00504':
+            label: Saját tőke változásainak kimutatása (III) - Saját tőkében elszámolt
+              bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
+              és ráfordítások - Kapott támogatások, adományok és hagyományok [00504]
           '00505':
             label: Saját tőke változásainak kimutatása (III) - Saját tőkében elszámolt
               bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
@@ -755,6 +763,10 @@ modelo:
             label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
               tulajdonosokkal - Üzleti kombinációból eredő saját tőke növekedése (csökkenése)
               - Tartalékok [00593]
+          00594:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - Üzleti kombinációból eredő saját tőke növekedése (csökkenése)
+              - Saját részvények és üzletrészek [00594]
           00595:
             label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
               tulajdonosokkal - Üzleti kombinációból eredő saját tőke növekedése (csökkenése)
@@ -2068,6 +2080,10 @@ modelo:
             label: Elszámolás II - Eredménykimutatás eredményének korrekciói - Az
               átruházott szervezet által az adócsoporton belül keletkezett és kompenzált
               negatív adóalapok - Növelések [01275]
+          '01276':
+            label: Elszámolás II - Az eredménykimutatás eredményének korrekciói -
+              Az átruházott szervezet által az adócsoporton belül keletkezett és kompenzált
+              negatív adóalapok - Csökkentések [01276]
           01280:
             label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Kettős
               adóztatás levonásai - Az évben keletkezett és alkalmazott belföldi kettős
@@ -2534,6 +2550,10 @@ modelo:
             label: Követelések vagy egyéb eszközök értékvesztési ráfordításai - Keletkezés
               éve - 2007 i anteriors - Halasztott adókövetelések átalakítására alkalmazott
               ráfordítások [01475]
+          '01477':
+            label: Követelések vagy egyéb eszközök értékvesztési ráfordításai - Keletkezés
+              éve - 2008 a 2015 - Időszak elején beépítésre váró ráfordítások - Amelyek
+              nem teljesítették az adóügyi levonhatósági feltételeket [01477]
           01478:
             label: Követelések vagy egyéb eszközök értékvesztési ráfordításai - Keletkezés
               éve - 2008 a 2015 - Időszak elején beépítésre váró ráfordítások - Amelyek
@@ -2673,6 +2693,11 @@ modelo:
               alapokból keletkezett tárgyieszköz-levonás összege'
             label: 'Betudott összegek: A betudott Kanári-szigeteki beruházási levonási
               alapokból keletkezett tárgyieszköz-levonás összege'
+          '01536':
+            label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
+              érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 33.
+              átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés éve
+              - Összesen - Az időszakban alkalmazott DTA [01536]
           '01537':
             label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
               érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS 33.
@@ -2715,6 +2740,10 @@ modelo:
             label: Elszámolás I - Eredménykimutatás eredményének korrekciói részletezve
               - Lakóhely áthelyezése az Európai Unió vagy az EGT tagállamaiba (LIS
               19.1 cikk) - Csökkenések [01573]
+          '01574':
+            label: Elszámolás II - Az eredménykimutatás eredményének korrekciói -
+              A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba történő
+              lakóhely-áthelyezéstől eltérő ügyletek - Növelések [01574]
           01586:
             label: Elszámolás IV - Önbevallás eredménye - Állam [01586]
           01587:
@@ -2882,6 +2911,22 @@ modelo:
             label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
               történő lakóhely-áthelyezéstől eltérő ügyletek - Csökkenés - Év végén
               függőben lévő egyenleg [01688]
+          01692:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
+              nem nyújtott adományokkal. - Függőben lévő/keletkezett levonás [01692]
+          01693:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
+              nem nyújtott adományokkal. - Ebben az elszámolásban alkalmazva [01693]
+          01695:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
+              nyújtott adományokkal - Függőben lévő/keletkezett levonás [01695]
+          01696:
+            label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
+              - Adományok részösszege 2015-2025, ugyanazon szervezetnek ismételten
+              nyújtott adományokkal - Ebben az elszámolásban alkalmazva [01696]
           01698:
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - Összesen - Függőben lévő/keletkezett levonás [01698]
@@ -3040,6 +3085,10 @@ modelo:
             label: Elszámolás II - Az eredménykimutatás eredményének korrekciói -
               Belföldi illetőségű jogalanyok osztalékának vagy nyereségrészesedésének
               mentessége (LIS 21.11. cikk) - Csökkentések [01764]
+          '01765':
+            label: Elszámolás II - Az eredménykimutatás eredményének korrekciói -
+              Nem belföldi illetőségű jogalanyok osztalékának vagy nyereségrészesedésének
+              mentessége (LIS 21.11. cikk) - Csökkentések [01765]
           '01767':
             label: Szövetkezeti rendszer - A kvóták kompenzációjának részletezése.
               2017 Az időszak elején alkalmazásra váró [01767]
@@ -3345,6 +3394,10 @@ modelo:
             label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
               értékvesztési korrekciói (LIS DT 16.1 és 2. cikk) - Csökkenés - Évi
               korrekciók - Időleges (az évben keletkezett) [01867]
+          01868:
+            label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
+              értékvesztési korrekciói (LIS DT 16.1 és 2. cikk) - Csökkenés - Évi
+              korrekciók - Átmeneti (korábbi időszakokból eredő) [01868]
           01869:
             label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
               értékvesztési korrekciói (LIS DT 16.1 és 2. cikk) - Csökkenés - Év végén
@@ -4709,6 +4762,14 @@ modelo:
           '02406':
             label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben -
               Keletkezési év 2021 - Jövőbeli időszakokban alkalmazandó [02406]
+          '02407':
+            label: Állami és tartományi adóhatóságok együttes adóztatása - Eltérés
+              a hatósági állásponttól egyes helyesbítő önadózási esetekben, amelyek
+              más rovatokba nem tartoznak - Bizkaia [02407]
+          02408:
+            label: Állami és tartományi adóhatóságok együttes adóztatása - Eltérés
+              a hatósági állásponttól egyes helyesbítő önadózási esetekben, amelyek
+              más rovatokba nem tartoznak - Navarra [02408]
           02409:
             label: Pénzügyi ráfordítások levonhatóságának korlátozása. levonásra váró
               pénzügyi ráfordítások - Keletkezés éve 2024 - Időszak elején alkalmazásra
@@ -4994,6 +5055,11 @@ modelo:
             label: A LIS 13.1. cikke szerinti értékvesztési veszteség, amelyre nem
               vonatkozik a LIS 11.12. cikke sem a DT 33.1. cikke - Csökkenés - Év
               végén függőben lévő egyenleg [02660]
+          02669:
+            label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint a
+              LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
+              a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Csökkenés - Az időszak
+              elején fennálló egyenleg [02669]
           '02670':
             label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint a
               LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
@@ -5473,6 +5539,14 @@ modelo:
             label: Nem belföldi illetőségű jogalanyok értékpapír-átruházásából származó
               jövedelem mentessége (LIS 21.3, 21.10. cikk és DT 40. cikk) - Csökkenés
               - Év végén függőben lévő egyenleg [03000]
+          '03001':
+            label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
+              értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
+              - Növekedés - Évi korrekciók - Végleges [03001]
+          '03004':
+            label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
+              értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
+              - Növekedés - Az időszak elején fennálló egyenleg [03004]
           '03005':
             label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
               értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
@@ -5485,6 +5559,10 @@ modelo:
             label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, nem belföldi
               jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
               mentessége - Növekedés - Év végén függőben lévő egyenleg [03015]
+          '03020':
+            label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, nem belföldi
+              jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
+              mentessége - Csökkenés - Év végén függőben lévő egyenleg [03020]
           '03021':
             label: Külföldi jövedelmek mentessége (LIS 22. cikk) - Növekedés - Évi
               korrekciók - Végleges [03021]
@@ -5544,6 +5622,10 @@ modelo:
           '03050':
             label: Takarékpénztárak és banki alapítványok jótékonysági-szociális tevékenysége
               (LIS 24. cikk) - Csökkenés - Év végén függőben lévő egyenleg [03050]
+          03059:
+            label: Az adóalany által viselt külföldi adó, amely nem vonható le, mivel
+              kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
+              (LIS 31.2. cikk) - Csökkenés - Az időszak elején fennálló egyenleg [03059]
           '03060':
             label: Az adóalany által viselt külföldi adó, amely nem vonható le, mivel
               kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
@@ -5614,6 +5696,10 @@ modelo:
             label: Ideiglenes vállalati társulás, külföldön működő UTE mentes jövedelmeinek
               korrekciói (LIS 45.2. cikk) - Növekedés - Évi korrekciók - Végleges
               [03091]
+          03093:
+            label: Ideiglenes vállalati társulás, külföldön működő UTE mentes jövedelmeinek
+              korrekciói (LIS 45.2. cikk) - Növekedés - Évi korrekciók - Átmeneti
+              (korábbi időszakokból eredő) [03093]
           03094:
             label: Ideiglenes vállalati társulás, külföldön működő UTE mentes jövedelmeinek
               korrekciói (LIS 45.2. cikk) - Növekedés - Az időszak elején fennálló
@@ -7049,6 +7135,10 @@ modelo:
             label: Kutatási és fejlesztési tevékenységhez rendelt tárgyi eszközök
               értékcsökkenése (LIS 12.3. b) cikk) - Növekedés - Évi korrekciók - Átmeneti
               (korábbi időszakokból eredő) [02593]
+          is-correccion-amortizacion-inmovilizado-idi-temporaria-anteriores-disminucion:
+            label: Kutatási és fejlesztési tevékenységhez rendelt tárgyi eszközök
+              értékcsökkenése (LIS 12.3. b) cikk) - Csökkenés - Évi korrekciók - Átmeneti
+              (korábbi időszakokból eredő) [02598]
           is-correccion-amortizacion-inmovilizado-idi-temporaria-ejercicio-aumento:
             label: Kutatási és fejlesztési tevékenységhez rendelt tárgyi eszközök
               értékcsökkenése (LIS 12.3. b) cikk) - Növekedés - Évi korrekciók - Időleges
@@ -7294,6 +7384,11 @@ modelo:
               LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
               a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Növekedés - Évi korrekciók
               - Végleges [02661]
+          is-correccion-deterioro-art13-1-provisiones-permanente-disminucion:
+            label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint a
+              LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
+              a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Csökkenés - Évi korrekciók
+              - Végleges [02666]
           is-correccion-deterioro-art13-1-provisiones-saldo-final:
             label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint a
               LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
@@ -7384,6 +7479,10 @@ modelo:
             label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
               értékvesztési vesztesége (LIS 15. k) cikk) - Növekedés - Évi korrekciók
               - Átmeneti (korábbi időszakokból eredő) [02853]
+          is-correccion-deterioro-valores-participaciones-entidades-temporaria-anteriores-disminucion:
+            label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
+              értékvesztési vesztesége (LIS 15. k) cikk) - Csökkenés - Évi korrekciók
+              - Átmeneti (korábbi időszakokból eredő) [02858]
           is-correccion-deterioro-valores-participaciones-entidades-temporaria-ejercicio-aumento:
             label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
               értékvesztési vesztesége (LIS 15. k) cikk) - Növekedés - Évi korrekciók
@@ -7602,6 +7701,10 @@ modelo:
             label: Az adóalany által viselt külföldi adó, amely nem vonható le, mivel
               kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
               (LIS 31.2. cikk) - Növekedés - Évi korrekciók - Végleges [03051]
+          is-correccion-impuesto-extranjero-deduccion-doble-imposicion-permanente-disminucion:
+            label: Az adóalany által viselt külföldi adó, amely nem vonható le, mivel
+              kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
+              (LIS 31.2. cikk) - Csökkenés - Évi korrekciók - Végleges [03056]
           is-correccion-impuesto-extranjero-deduccion-doble-imposicion-saldo-final:
             label: Az adóalany által viselt külföldi adó, amely nem vonható le, mivel
               kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
@@ -7899,6 +8002,10 @@ modelo:
             label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
               történő lakóhely-áthelyezéstől eltérő ügyletek - Növekedés - Évi korrekciók
               - Időleges (az évben keletkezett) [01678]
+          is-correccion-operaciones-art19-otras-temporaria-ejercicio-disminucion:
+            label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
+              történő lakóhely-áthelyezéstől eltérő ügyletek - Csökkenés - Évi korrekciók
+              - Időleges (az évben keletkezett) [01686]
           is-correccion-operaciones-aumento-capital-fondos-propios-permanente-aumento:
             label: Tőke- vagy saját tőke-emelési műveletek követelések kompenzációja
               révén (LIS 17.2. cikk) - Növekedés - Évi korrekciók - Végleges [02901]
@@ -8057,6 +8164,10 @@ modelo:
             label: Nyugdíjakkal kapcsolatos ráfordítások és tartalékok, amelyekre
               nem vonatkozik a LIS 11.12. cikke (LIS 14.1, 14.6 és 14.8. cikk) - Növekedés
               - Évi korrekciók - Átmeneti (korábbi időszakokból eredő) [02733]
+          is-correccion-pensiones-provisiones-no-deducibles-temporaria-anteriores-disminucion:
+            label: Nyugdíjakkal kapcsolatos ráfordítások és tartalékok, amelyekre
+              nem vonatkozik a LIS 11.12. cikke (LIS 14.1, 14.6 és 14.8. cikk) - Csökkenés
+              - Évi korrekciók - Átmeneti (korábbi időszakokból eredő) [02738]
           is-correccion-pensiones-provisiones-no-deducibles-temporaria-ejercicio-aumento:
             label: Nyugdíjakkal kapcsolatos ráfordítások és tartalékok, amelyekre
               nem vonatkozik a LIS 11.12. cikke (LIS 14.1, 14.6 és 14.8. cikk) - Növekedés
@@ -8340,6 +8451,10 @@ modelo:
             label: Javak és jogok értékelése. Átszervezési műveletek különleges szabályozása
               (LIS VII. cím VII. fejezet) - Növekedés - Az időszak elején fennálló
               egyenleg [03144]
+          is-correccion-valoracion-bienes-derechos-regimen-especial-temporaria-ejercicio-aumento:
+            label: Javak és jogok értékelése. Átszervezési műveletek különleges szabályozása
+              (LIS VII. cím VII. fejezet) - Növekedés - Évi korrekciók - Időleges
+              (az évben keletkezett) [03142]
           is-correcciones-aumentos:
             label: Elszámolás II - Az eredménykimutatás eredményének korrekciói -
               Vállalkozások ideiglenes társulása, külföldön működő UTE adómentes jövedelmének
@@ -10123,22 +10238,10 @@ modelo:
                 - Belföldi illetőségű jogalanyok osztalékaira vagy nyereségrészesedéseire
                 vonatkozó mentesség (LIS 21.1., 21.10. cikk és 40. átmeneti rendelkezés)
                 - Csökkentések [00370]
-            00482:
-              label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
-                bevételek és ráfordítások - Több időszak között felosztandó adóbevételek
-                - Saját részvények és üzletrészek [00482]
             00496:
               label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
                 bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
                 és ráfordítások - Saját részvények és üzletrészek [00496]
-            '00504':
-              label: Saját tőke változásainak kimutatása (III) - Saját tőkében elszámolt
-                bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
-                és ráfordítások - Kapott támogatások, adományok és hagyományok [00504]
-            00594:
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - Üzleti kombinációból eredő saját tőke növekedése
-                (csökkenése) - Saját részvények és üzletrészek [00594]
             '00775':
               label: Elszámolás I - Az eredménykimutatás eredményének korrekciói -
                 Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
@@ -10556,10 +10659,6 @@ modelo:
                 és 16.2 cikk szerinti korlát - n) Korábbi adómegállapítási időszakokból
                 levonásra váró pénzügyi ráfordítások, a LIS 16.5 és/vagy 83. cikke
                 által nem érintve, felhasználva [01259]
-            '01276':
-              label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
-                - Az átruházott szervezet által az adócsoporton belül keletkezett
-                és kompenzált negatív adóalapok - Csökkentések [01276]
             '01300':
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -10711,11 +10810,6 @@ modelo:
                 Keletkezés éve - 2007 i anteriors - Jövőbeli időszakokban beépítésre
                 váró ráfordítások - Amelyek nem teljesítették az adóügyi levonhatósági
                 feltételeket [01476]
-            '01477':
-              label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
-                Keletkezés éve - 2008 a 2015 - Időszak elején beépítésre váró ráfordítások
-                - Amelyek nem teljesítették az adóügyi levonhatósági feltételeket
-                [01477]
             '01524':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
@@ -10787,11 +10881,6 @@ modelo:
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
                 éve - Összesen - Az időszak elején felhasználásra váró halasztott
                 adókövetelések teljes összege [01535]
-            '01536':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
-                éve - Összesen - Az időszakban alkalmazott DTA [01536]
             01539:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
@@ -10950,10 +11039,6 @@ modelo:
                 130. cikk - Keletkezés éve - Összesen - Jövőbeli időszakokban felhasználásra
                 váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
                 joga nélkül [01570]
-            '01574':
-              label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
-                - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
-                történő lakóhely-áthelyezéstől eltérő ügyletek - Növelések [01574]
             '01575':
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
                 - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
@@ -11177,39 +11262,15 @@ modelo:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(****)
                 egyéb levonások a kiemelt közérdekű eseményeket támogató programokhoz
                 kapcsolódóan - Jövőbeli időszakokban alkalmazandó [01685]
-            01686:
-              label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
-                történő lakóhely-áthelyezéstől eltérő ügyletek - Csökkenés - Évi korrekciók
-                - Időleges (az évben keletkezett) [01686]
             01687:
               label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
                 történő lakóhely-áthelyezéstől eltérő ügyletek - Csökkenés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő) [01687]
-            01692:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - Adományok részösszege 2015-2025, ugyanazon szervezetnek
-                ismételten nem nyújtott adományokkal. - Függőben lévő/keletkezett
-                levonás [01692]
-            01693:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - Adományok részösszege 2015-2025, ugyanazon szervezetnek
-                ismételten nem nyújtott adományokkal. - Ebben az elszámolásban alkalmazva
-                [01693]
             01694:
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
                 adományok - Adományok részösszege 2015-2025, ugyanazon szervezetnek
                 ismételten nem nyújtott adományokkal. - Jövőbeli időszakokban alkalmazandó
                 [01694]
-            01695:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - Adományok részösszege 2015-2025, ugyanazon szervezetnek
-                ismételten nyújtott adományokkal - Függőben lévő/keletkezett levonás
-                [01695]
-            01696:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - Adományok részösszege 2015-2025, ugyanazon szervezetnek
-                ismételten nyújtott adományokkal - Ebben az elszámolásban alkalmazva
-                [01696]
             01697:
               label: Nonprofit szervezeteknek adott adományok levonása - Általános
                 adományok - Adományok részösszege 2015-2025, ugyanazon szervezetnek
@@ -11285,10 +11346,6 @@ modelo:
                 130. cikk - Keletkezés éve - 2018 - Jövőbeli időszakokban felhasználásra
                 váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
                 joga nélkül [01762]
-            '01765':
-              label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
-                - Nem belföldi illetőségű jogalanyok osztalékának vagy nyereségrészesedésének
-                mentessége (LIS 21.11. cikk) - Csökkentések [01765]
             01793:
               label: Elszámolás IV - Az időszak befizetendő vagy visszatérítendő adója
                 - A tőkejövedelmen és a városi ingatlanok bérbeadásán kívüli tételek
@@ -11307,10 +11364,6 @@ modelo:
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
                 - A kikötői hatóságok által tárgyi eszköz átruházásából szerzett jövedelem
                 (LIS DA 68. cikk, 6/2018. törvény) - Csökkentések [01824]
-            01868:
-              label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
-                értékvesztési korrekciói (LIS DT 16.1 és 2. cikk) - Csökkenés - Évi
-                korrekciók - Átmeneti (korábbi időszakokból eredő) [01868]
             01886:
               label: 'Hajók és hajózási társaságok Kanári-szigeteki különleges rendszere:
                 a negatív adóalapok beszámításának részletezése - A különleges adóalap
@@ -11579,14 +11632,6 @@ modelo:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Eltérés
                 a hatósági állásponttól egyes helyesbítő önadózási esetekben, amelyek
                 más rovatokba nem tartoznak - Gipuzkoa [02379]
-            '02407':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Eltérés
-                a hatósági állásponttól egyes helyesbítő önadózási esetekben, amelyek
-                más rovatokba nem tartoznak - Bizkaia [02407]
-            02408:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Eltérés
-                a hatósági állásponttól egyes helyesbítő önadózási esetekben, amelyek
-                más rovatokba nem tartoznak - Navarra [02408]
             02418:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
@@ -11724,10 +11769,6 @@ modelo:
               label: Immateriális javak és goodwill értékcsökkenése (LIS 12.2 cikk)
                 és DT 13.1 LIS szerinti amortizáció - Csökkenés - Évi korrekciók -
                 Átmeneti (korábbi időszakokból eredő) [02588]
-            02598:
-              label: Kutatási és fejlesztési tevékenységhez rendelt tárgyi eszközök
-                értékcsökkenése (LIS 12.3. b) cikk) - Csökkenés - Évi korrekciók -
-                Átmeneti (korábbi időszakokból eredő) [02598]
             '02662':
               label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint
                 a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
@@ -11738,11 +11779,6 @@ modelo:
                 a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
                 a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Növekedés - Évi
                 korrekciók - Átmeneti (korábbi időszakokból eredő) [02663]
-            '02666':
-              label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint
-                a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
-                a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Csökkenés - Évi
-                korrekciók - Végleges [02666]
             '02667':
               label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint
                 a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
@@ -11753,11 +11789,6 @@ modelo:
                 a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
                 a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Csökkenés - Évi
                 korrekciók - Átmeneti (korábbi időszakokból eredő) [02668]
-            02669:
-              label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint
-                a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
-                a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Csökkenés - Az időszak
-                elején fennálló egyenleg [02669]
             '02672':
               label: Tárgyi eszközök, ingatlanbefektetések és immateriális javak értékvesztési
                 vesztesége, beleértve a cégértéket (LIS 13.2. a) cikk és DT 15. cikk)
@@ -11812,11 +11843,6 @@ modelo:
                 szerinti értékvesztési veszteségre és a tartalékokra/ráfordításokra
                 (LIS 14.1 és 14.2. cikk) - Csökkenés - Évi korrekciók - Átmeneti (korábbi
                 időszakokból eredő) [02728]
-            02738:
-              label: Nyugdíjakkal kapcsolatos ráfordítások és tartalékok, amelyekre
-                nem vonatkozik a LIS 11.12. cikke (LIS 14.1, 14.6 és 14.8. cikk) -
-                Csökkenés - Évi korrekciók - Átmeneti (korábbi időszakokból eredő)
-                [02738]
             02786:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
@@ -11887,10 +11913,6 @@ modelo:
               label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
                 értékvesztési vesztesége (LIS 15. k) cikk) - Növekedés - Év végén
                 függőben lévő egyenleg - Átmeneti (korábbi időszakokból eredő) [02855]
-            02858:
-              label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
-                értékvesztési vesztesége (LIS 15. k) cikk) - Csökkenés - Évi korrekciók
-                - Átmeneti (korábbi időszakokból eredő) [02858]
             02982:
               label: Belföldi illetőségű jogalanyok értékpapír-átruházásából származó
                 jövedelem mentessége (LIS 21.3, 21.10. cikk és DT 40. cikk) - Növekedés
@@ -11924,10 +11946,6 @@ modelo:
               label: Nem belföldi illetőségű jogalanyok értékpapír-átruházásából származó
                 jövedelem mentessége (LIS 21.3, 21.10. cikk és DT 40. cikk) - Csökkenés
                 - Évi korrekciók - Átmeneti (korábbi időszakokból eredő) [02998]
-            '03001':
-              label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
-                értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
-                - Növekedés - Évi korrekciók - Végleges [03001]
             '03002':
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
@@ -11937,10 +11955,6 @@ modelo:
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
                 - Növekedés - Évi korrekciók - Átmeneti (korábbi időszakokból eredő)
                 [03003]
-            '03004':
-              label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
-                értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
-                - Növekedés - Az időszak elején fennálló egyenleg [03004]
             '03006':
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
@@ -11994,10 +12008,6 @@ modelo:
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, nem belföldi
                 jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
                 mentessége - Csökkenés - Az időszak elején fennálló egyenleg [03019]
-            '03020':
-              label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, nem belföldi
-                jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
-                mentessége - Csökkenés - Év végén függőben lévő egyenleg [03020]
             '03052':
               label: Az adóalany által viselt külföldi adó, amely nem vonható le,
                 mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
@@ -12008,10 +12018,6 @@ modelo:
                 mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
                 (LIS 31.2. cikk) - Növekedés - Évi korrekciók - Átmeneti (korábbi
                 időszakokból eredő) [03053]
-            '03056':
-              label: Az adóalany által viselt külföldi adó, amely nem vonható le,
-                mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
-                (LIS 31.2. cikk) - Csökkenés - Évi korrekciók - Végleges [03056]
             '03057':
               label: Az adóalany által viselt külföldi adó, amely nem vonható le,
                 mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
@@ -12022,19 +12028,10 @@ modelo:
                 mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
                 (LIS 31.2. cikk) - Csökkenés - Évi korrekciók - Átmeneti (korábbi
                 időszakokból eredő) [03058]
-            03059:
-              label: Az adóalany által viselt külföldi adó, amely nem vonható le,
-                mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
-                (LIS 31.2. cikk) - Csökkenés - Az időszak elején fennálló egyenleg
-                [03059]
             '03061':
               label: A nemzetközi kettős adóztatás enyhítése alá eső osztalék kifizetésének
                 alapjául szolgáló nyereséget terhelő külföldi adó (LIS 32.1 cikk)
                 - Növekedés - Évi korrekciók - Végleges [03061]
-            03093:
-              label: Ideiglenes vállalati társulás, külföldön működő UTE mentes jövedelmeinek
-                korrekciói (LIS 45.2. cikk) - Növekedés - Évi korrekciók - Átmeneti
-                (korábbi időszakokból eredő) [03093]
             03098:
               label: Ideiglenes vállalati társulás, külföldön működő UTE mentes jövedelmeinek
                 korrekciói (LIS 45.2. cikk) - Csökkenés - Évi korrekciók - Átmeneti
@@ -12117,10 +12114,6 @@ modelo:
               label: Kockázatitőke-társaságok és -alapok, valamint regionális ipari
                 fejlesztési társaságok (LIS VII. cím IV. fejezet) - Csökkenés - Évi
                 korrekciók - Átmeneti (korábbi időszakokból eredő) [03138]
-            '03142':
-              label: Javak és jogok értékelése. Átszervezési műveletek különleges
-                szabályozása (LIS VII. cím VII. fejezet) - Növekedés - Évi korrekciók
-                - Időleges (az évben keletkezett) [03142]
             '03143':
               label: Javak és jogok értékelése. Átszervezési műveletek különleges
                 szabályozása (LIS VII. cím VII. fejezet) - Növekedés - Évi korrekciók
@@ -12181,7 +12174,7 @@ modelo:
             '00077':
               label: Egyes járművek és új töltőinfrastruktúrák gyorsított értékcsökkenése
                 (LIS 18. kiegészítő rendelkezés, RDL 5/2023 és RDL 7/2026) - Növelés
-                - Az időszak korrekciói - Ideiglenes (eredettel a ...
+                - Az időszak korrekciói - Ideiglenes (eredettel a tárgyévben)
             00091:
               label: 'A Kanári-szigeteki hajók és hajózási vállalkozások különleges
                 rendszere: a negatív adóalapok kompenzációjának részletezése - 2024.
@@ -12194,7 +12187,7 @@ modelo:
             00097:
               label: 'A Kanári-szigeteki hajók és hajózási vállalkozások különös rendszere:
                 negatív adóalapok kompenzációjának részletezése - 2024. évi egyéb
-                tevékenységek adóalapjának kompenzációja - Ebben alkalmazva ...'
+                tevékenységek adóalapjának kompenzációja - Ebben alkalmazva'
             00098:
               label: 'A Kanári-szigeteki hajók és hajózási vállalkozások különleges
                 rendszere: a negatív adóalapok kompenzációjának részletezése - 2024.
@@ -12205,22 +12198,10 @@ modelo:
                 részletezése - Rezidens jogalanyok osztalékainak vagy nyereségrészesedéseinek
                 mentessége (LIS 21.1., 21.10. cikk és 40. átmeneti rendelkezés) -
                 Csökkenések
-            00482:
-              label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
-                bevételek és ráfordítások - Több időszak között felosztandó adóbevételek
-                - Saját részvények és üzletrészek [0...
             00496:
               label: Saját tőke változásainak kimutatása (II) - Saját tőkében elszámolt
                 bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
-                és ráfordítások - Saját részvények és üzletrészek...
-            '00504':
-              label: Saját tőke változásainak kimutatása (III) - Saját tőkében elszámolt
-                bevételek és ráfordítások - Saját tőkében elszámolt egyéb bevételek
-                és ráfordítások - Kapott támogatások, adományok és hagyományok [0...
-            00594:
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - Üzleti kombinációból eredő saját tőke növekedése
-                (csökkenése) - Saját részvények és üzletrészek [...
+                és ráfordítások - Saját részvények és üzletrészek
             '00775':
               label: I. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Egyes járművek és új töltési infrastruktúrák gyorsított
@@ -12248,7 +12229,7 @@ modelo:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
                 - Keletkezés éve - 2025(*) - Az időszak elején függőben lévő pozitív
-                nettó adókötelezettség-többlet...
+                nettó adókötelezettség-többlet
             00878:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
@@ -12262,7 +12243,7 @@ modelo:
             00881:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2023 Beruházások
                 nyugat-afrikai területeken, propaganda- és reklámköltségek (19/1994.
-                törvény 27 bis cikk) (TAP) - Időszakokban alkalmazandó ...
+                törvény 27 bis cikk) (TAP) - Időszakokban alkalmazandó
             00882:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Pozitív nettó adókötelezettség többlete
@@ -12373,7 +12354,7 @@ modelo:
             00974:
               label: Nonprofit szervezeteknek adott adományok levonása - Az adóidőszak
                 nonprofit szervezeteknek adott adományai utáni levonás alapja - Az
-                adóidőszakban szervezeteknek adott adományok ...
+                adóidőszakban szervezeteknek adott adományok
             00975:
               label: Nonprofit szervezeteknek nyújtott adományok levonása - Kiemelt
                 mecenatúra-tevékenységekre és más, növelt levonásra jogosító célokra
@@ -12435,7 +12416,7 @@ modelo:
             '01005':
               label: Elszámolás I - Eredménykimutatás eredményének korrekciói - Immateriális
                 javak és goodwill értékcsökkenése (LIS 12.2 cikk) és DT 13.1 LIS szerinti
-                amortizáció - Növelések ...
+                amortizáció - Növelések
             '01006':
               label: I. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Immateriális javak és a cégérték amortizációja (LIS
@@ -12589,7 +12570,7 @@ modelo:
             '01177':
               label: 'Kanári-szigeteki hajók és hajózási vállalkozások különös rendszere:
                 negatív adóalapok kompenzációjának bontása - Egyéb tevékenységek adóalap-kompenzációja
-                2023 - Ebben alkalmazva ...'
+                2023 - Ebben alkalmazva'
             '01200':
               label: 'A Kanári-szigeteki hajók és hajózási vállalkozások különleges
                 rendszere: a negatív adóalapok kompenzációjának részletezése - 2023.
@@ -12598,8 +12579,8 @@ modelo:
             '01240':
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.5
                 és/vagy 83. cikk szerinti korlát - a) Az adóidőszak pénzügyi ráfordításai,
-                amelyek az art. 16.5 által érintett részesedésszerzési tartozásokból
-                erednek ...
+                amelyek az art. 16.5 és/vagy 83. cikk által érintett részesedésszerzési
+                tartozásokból erednek (előjel nélkül)
             '01242':
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.5
                 és/vagy 83. cikk szerinti korlát - c1) A 16.5 és/vagy 83. cikk szerinti
@@ -12620,10 +12601,6 @@ modelo:
                 és 16.2. cikke szerinti korlát - n) Korábbi adóidőszakokból levonásra
                 váró, a 16.5. és/vagy 83. cikk által nem érintett, alkalmazott pénzügyi
                 ráfordítások
-            '01276':
-              label: Elszámolás II - Eredménykimutatás eredményének korrekciói - Az
-                átruházott szervezet által az adócsoporton belül keletkezett és kompenzált
-                negatív adóalapok - Csökkentések [0...
             '01300':
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -12684,12 +12661,10 @@ modelo:
               label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
                 Keletkezés éve - 2007 és korábbiak - Időszak elején beépítésre váró
                 ráfordítások - Amelyek teljesítették az adóügyi levonhatósági feltételeket
-                ...
             01409:
               label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
                 Keletkezés éve - 2007 és korábbiak - Időszak elején beépítésre váró
                 ráfordítások - Amelyek teljesítették az adóügyi levonhatósági feltételeket
-                ...
             '01414':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -12753,14 +12728,9 @@ modelo:
                 ráfordítások - Amelyek nem teljesítették az adójogi levonhatóság feltételeit
             '01476':
               label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
-                Keletkezés éve - 2007 i anteriors - Jövőbeli időszakokban beépítésre
+                Keletkezés éve - 2007 és korábbiak - Jövőbeli időszakokban beépítésre
                 váró ráfordítások - Amelyek nem teljesítették az adóügyi levonhatósági
-                feltételeket ...
-            '01477':
-              label: Követelések vagy egyéb eszközök értékvesztési ráfordításai -
-                Keletkezés éve - 2008 a 2015 - Időszak elején beépítésre váró ráfordítások
-                - Amelyek nem teljesítették az adóügyi levonhatósági feltételeket
-                [01...
+                feltételeket
             '01524':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -12776,7 +12746,7 @@ modelo:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
-                éve - 2007 i anteriors - DTA átalakítva ...
+                éve - 2007 és korábbiak - DTA átalakítva követeléssé
             '01527':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -12829,11 +12799,6 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
                 éve - Összesen - Az időszak elején alkalmazásra váró AID teljes összege
-            '01536':
-              label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
-                érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
-                33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
-                éve - Total - Az időszakban alkalmazott DTA [01...
             01539:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -12946,17 +12911,18 @@ modelo:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - Összesen - Az időszak elején alkalmazásra
-                váró AID...
+                váró AID - Érvényesíthető követeléssé történő átalakításra jogosult
             '01564':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - Összesen - Az időszak elején alkalmazásra
-                váró AID...
+                váró AID - Adóterhelés-többlet miatt érvényesíthető követeléssé történő
+                átalakításra jogosult
             '01565':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - Összesen - Az időszak elején alkalmazásra
-                váró AID...
+                váró AID - Nem jogosult érvényesíthető követeléssé történő átalakításra
             '01567':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -12978,18 +12944,15 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - Összesen - Jövőbeli időszakokban alkalmazásra
                 váró AID - Érvényesíthető követeléssé alakítási jog nélkül
-            '01574':
-              label: Elszámolás II - Eredménykimutatás eredményének korrekciói részletezve
-                - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
-                történő lakóhely-áthelyezéstől eltérő ügyletek - Növekedések [0...
             '01575':
               label: Elszámolás II - Eredménykimutatás eredményének korrekciói részletezve
                 - A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
-                történő lakóhely-áthelyezéstől eltérő ügyletek - Csökken...
+                történő lakóhely-áthelyezéstől eltérő ügyletek - Csökkenések
             '01576':
               label: Elszámolás III - Adóalap - A Kanári-szigeteki hajók és hajózási
                 társaságok különleges rendszere - Az adóalap azon része, amely a rendszer
-                hatálya alá tartozó tevékenységekből származik...
+                hatálya alá tartozó tevékenységekből származik, a kiegyenlítési tartalék
+                után - Csökkenések
             '01577':
               label: Elszámolás III - Adóalap - A Kanári-szigeteki hajók és hajózási
                 társaságok különleges rendszere - Az adóalap azon része, amely az
@@ -13026,11 +12989,13 @@ modelo:
             01584:
               label: Elszámolás IV - Helyesbítő bevallás - Az Adóügynökség által korábbi
                 önbevallások vagy megfelelő közigazgatási adómegállapítások feldolgozása
-                következtében megállapított visszatérítés...
+                következtében megállapított visszatérítés a 2025-ös adóidőszakra vonatkozóan
+                - Állam
             01585:
               label: Elszámolás IV - Helyesbítő bevallás - Az Adóügynökség által korábbi
                 önbevallások vagy megfelelő közigazgatási adómegállapítások feldolgozása
-                következtében megállapított visszatérítés...
+                következtében megállapított visszatérítés a 2025-ös adóidőszakra vonatkozóan
+                - Tartományi hatóságok/Navarra (Összesen)
             01589:
               label: II. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
                 részletezése - Az adózó által viselt külföldi adó, amely nem levonható,
@@ -13045,7 +13010,7 @@ modelo:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
-                éve - Összesen 2008-2015 - DTA átalakítva ...
+                éve - Összesen 2008-2015 - DTA átalakítva követeléssé
             '01607':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: Fizetendő összeg korábbi önbevallások vagy megfelelő közigazgatási
@@ -13066,38 +13031,42 @@ modelo:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: Az Adóügynökség által megállapított visszatérítés korábbi
                 önbevallások vagy megfelelő közigazgatási adómegállapítások feldolgozása
-                következtében ...'
+                következtében, a 2025-ös adóidőszakra vonatkozóan - Araba/Álava'
             '01612':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: Az Adóügynökség által megállapított visszatérítés korábbi
                 önbevallások vagy megfelelő közigazgatási adómegállapítások feldolgozása
-                következtében ...'
+                következtében, a 2025-ös adóidőszakra vonatkozóan - Gipuzkoa'
             '01613':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: Az Adóügynökség által megállapított visszatérítés korábbi
                 önbevallások vagy megfelelő közigazgatási adómegállapítások feldolgozása
-                következtében ...'
+                következtében, a 2025-ös adóidőszakra vonatkozóan - Bizkaia'
             '01623':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: Az Adóügynökség által megállapított visszatérítés korábbi
                 önbevallások vagy megfelelő közigazgatási adómegállapítások feldolgozása
-                következtében ...'
+                következtében, a 2025-ös adóidőszakra vonatkozóan - Navarra'
             '01650':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: a LIS 19.1 cikk szerinti első részletet tartalmazó önbevallási
-                eredmény korábbi önbevallásból vagy adómegállapításból...'
+                eredmény korábbi önbevallásból vagy a 2025-ös adóidőszakra vonatkozó
+                megfelelő közigazgatási adómegállapításból - Araba/Álava'
             '01651':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: a LIS 19.1 cikk szerinti első részletet tartalmazó önbevallási
-                eredmény korábbi önbevallásból vagy adómegállapításból...'
+                eredmény korábbi önbevallásból vagy a 2025-ös adóidőszakra vonatkozó
+                megfelelő közigazgatási adómegállapításból - Gipuzkoa'
             '01652':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: a LIS 19.1 cikk szerinti első részletet tartalmazó önbevallási
-                eredmény korábbi önbevallásból vagy adómegállapításból...'
+                eredmény korábbi önbevallásból vagy a 2025-ös adóidőszakra vonatkozó
+                megfelelő közigazgatási adómegállapításból - Bizkaia'
             '01653':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: a LIS 19.1 cikk szerinti első részletet tartalmazó önbevallási
-                eredmény korábbi önbevallásból vagy adómegállapításból...'
+                eredmény korábbi önbevallásból vagy a 2025-ös adóidőszakra vonatkozó
+                megfelelő közigazgatási adómegállapításból - Navarra'
             01658:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -13125,7 +13094,7 @@ modelo:
             '01663':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Kifizetés - G...'
+                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Kifizetés - Gipuzkoa'
             '01664':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -13137,15 +13106,15 @@ modelo:
             '01666':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Beszámítás...'
+                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Beszámítás - Araba/Álava'
             '01667':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Beszámítás...'
+                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Beszámítás - Gipuzkoa'
             01668:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Beszámítás...'
+                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Beszámítás - Bizkaia'
             01669:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -13153,15 +13122,15 @@ modelo:
             '01670':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Fizetendő...'
+                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Fizetendő - Araba/Álava'
             '01671':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Fizetendő...'
+                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Fizetendő - Gipuzkoa'
             '01672':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Fizetendő...'
+                követeléssé (LIS 130. cikk) - Átalakítás eredménye: Fizetendő - Bizkaia'
             '01673':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -13182,37 +13151,15 @@ modelo:
               label: Bizonyos tevékenységek ösztönzésére szolgáló levonások - 2026(****)
                 Kivételes közérdekű eseményeket támogató programokhoz kapcsolódó egyéb
                 levonások - Jövőbeli időszakokban alkalmazandó
-            01686:
-              label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
-                történő lakóhely-áthelyezéstől eltérő ügyletek - Csökkenés - Évi korrekciók
-                - Időleges (az évben keletkezett) [01...
             01687:
               label: A LIS 19. cikke szerinti, az Európai Unió vagy az EGT tagállamaiba
                 történő székhelyáthelyezéstől eltérő ügyletek - Csökkenés - Az adóévi
                 korrekciók - Időbeli jellegű (korábbi adóévekből eredő)
-            01692:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - 2015-2025 adományok részösszege ugyanazon szervezetnek
-                adott ismételt adományok nélkül. - Függőben lévő/keletkezett levonás
-                [0...
-            01693:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - 2015-2025 adományok részösszege ugyanazon szervezetnek
-                adott ismételt adományok nélkül. - Ebben az elszámolásban alkalmazva
-                [0...
             01694:
               label: Nonprofit szervezeteknek nyújtott adományok levonása - Általános
                 jellegű adományok - 2015-2025 közötti adományok részösszege, ugyanazon
                 szervezetnek adott ismételt adományok nélkül. - Jövőbeli időszakokban
                 alkalmazandó
-            01695:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - 2015-2025 adományok részösszege ugyanazon szervezetnek
-                adott ismételt adományokkal - Függőben lévő/keletkezett levonás [01...
-            01696:
-              label: Nonprofit szervezeteknek adott adományok levonása - Általános
-                adományok - 2015-2025 adományok részösszege ugyanazon szervezetnek
-                adott ismételt adományokkal - Ebben az elszámolásban alkalmazva [01...
             01697:
               label: Nonprofit szervezeteknek nyújtott adományok levonása - Általános
                 jellegű adományok - 2015-2025 közötti adományok részösszege, ugyanazon
@@ -13221,21 +13168,22 @@ modelo:
               label: Nonprofit szervezeteknek nyújtott adományok levonása - Kiemelt
                 mecenatúra-tevékenységekre és más, növelt levonásra jogosító célokra
                 adott adományok - 2015-2025 közötti adományok részösszege, ismétlés
-                nélkül...
+                nélkül - Függőben lévő/keletkezett levonás
             '01705':
               label: Nonprofit szervezeteknek nyújtott adományok levonása - Kiemelt
                 mecenatúra-tevékenységekre és más, növelt levonásra jogosító célokra
                 adott adományok - 2015-2025 közötti adományok részösszege, ismétlés
-                nélkül...
+                nélkül - Ebben a bevallásban alkalmazva
             '01706':
               label: Nonprofit szervezeteknek nyújtott adományok levonása - Kiemelt
                 mecenatúra-tevékenységekre és más, növelt levonásra jogosító célokra
                 adott adományok - 2015-2025 közötti adományok részösszege, ismétlés
-                nélkül...
+                nélkül - Jövőbeli időszakokban alkalmazandó
             01729:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecénási
                 tevékenységekre és más, növelt levonásra jogosító adományok - 2015-2025
-                részösszeg ismétléssel ...
+                részösszeg ismétléssel, ugyanazon szervezetnek nyújtott adományok
+                esetén - Függőben lévő/keletkezett levonás
             '01742':
               label: Bizonyos járművek és új töltési infrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés RDL 4/2024) - Növekedés - Évi korrekciók
@@ -13282,10 +13230,6 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
                 130. cikk - Keletkezés éve - 2018 - Jövőbeli időszakokban alkalmazásra
                 váró AID - Érvényesíthető követeléssé alakítási jog nélkül
-            '01765':
-              label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
-                - Nem belföldi illetőségű jogalanyok osztalékának vagy nyereségrészesedésének
-                mentessége (LIS 21.11. cikk) - Csökkentések
             01793:
               label: IV. elszámolás - Az időszak befizetendő vagy visszatérítendő
                 adója - Az ingó tőkejövedelmektől vagy a városi ingatlanok bérbeadásától
@@ -13306,10 +13250,6 @@ modelo:
                 részletezése - A kikötői hatóságok által a tárgyi eszközök átruházásából
                 szerzett jövedelmek (6/2018. sz. törvény 68. kiegészítő rendelkezése)
                 - Csökkenések
-            01868:
-              label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
-                értékvesztési korrekciói (LIS DT 16.1 és 2. cikk) - Csökkenés - Évi
-                korrekciók - Átmeneti (korábbi időszakokból eredő)
             01886:
               label: 'Kanári-szigeteki hajók és hajózási vállalkozások különös rendszere:
                 negatív adóalapok kompenzációjának bontása - Különleges adóalap-kompenzáció
@@ -13317,7 +13257,7 @@ modelo:
             01887:
               label: III. elszámolás - Adóalap - A Kanári-szigeteki hajók és hajózási
                 vállalkozások különleges rendszere - A korábbi időszakok negatív adóalapjainak
-                beszámítása a rendszer szerinti adóalap-rész terhére...
+                beszámítása a rendszer szerinti adóalap-rész terhére
             01888:
               label: 'Kanári-szigeteki hajók és hajózási vállalkozások különös rendszere:
                 negatív adóalapok kompenzációjának bontása - Különleges adóalap-kompenzáció
@@ -13337,23 +13277,23 @@ modelo:
             01899:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2022 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             01918:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2018 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             01921:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2019 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             01924:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2020 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             01927:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2021 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             01930:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2025(*)
                 Nyugat-afrikai területi beruházások és reklám- és propagandaköltségek
@@ -13383,15 +13323,15 @@ modelo:
             02083:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2015 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             02086:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2016 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             02090:
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2017 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             '02100':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -13540,7 +13480,7 @@ modelo:
             '02307':
               label: Az eredménykimutatás eredményét érintő korrekciók részletezése
                 - Az adóévi eredménykimutatás eredményét érintő korrekciók - Korábbi
-                adóévekből eredő időbeli korrekció - Növekmények...
+                adóévekből eredő időbeli korrekció - Növekmények
             02308:
               label: Az eredmény korrekcióinak részletezése - Az adóévi eredménykimutatás
                 eredményének korrekciói - Korábbi adóévekből eredő időbeli jellegű
@@ -13563,14 +13503,6 @@ modelo:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Igazgatási
                 kritérium-eltérés a helyesbítő önadózás egyes eseteiben, amelyeket
                 nem kell más rovatban feltüntetni - Gipuzkoa
-            '02407':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Igazgatási
-                kritérium-eltérés a helyesbítő önadózás egyes eseteiben, amelyeket
-                nem kell más rovatban feltüntetni - Bizkaia
-            02408:
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Igazgatási
-                kritérium-eltérés a helyesbítő önadózás egyes eseteiben, amelyeket
-                nem kell más rovatban feltüntetni - Navarra
             02418:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -13628,11 +13560,13 @@ modelo:
             '02475':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2015-2025
-                részösszeg ismétléssel ...
+                részösszeg ismétléssel, ugyanazon szervezetnek nyújtott adományok
+                esetén - Ebben a bevallásban alkalmazva
             '02476':
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2015-2025
-                részösszeg ismétléssel ...
+                részösszeg ismétléssel, ugyanazon szervezetnek nyújtott adományok
+                esetén - Jövőbeli időszakokban alkalmazandó
             02486:
               label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
                 (LIS 19.1 cikk) - Az önadózás eredménye a LIS 19.1. cikke szerinti
@@ -13689,10 +13623,6 @@ modelo:
               label: Immateriális javak és goodwill értékcsökkenése (LIS 12.2 cikk)
                 és DT 13.1 LIS szerinti amortizáció - Csökkenés - Évi korrekciók -
                 Átmeneti (korábbi időszakokból eredő)
-            02598:
-              label: Kutatási és fejlesztési tevékenységhez rendelt tárgyi eszközök
-                értékcsökkenése (LIS 12.3. b) cikk) - Csökkenés - Évi korrekciók -
-                Átmeneti (korábbi időszakokból eredő)
             '02662':
               label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint
                 a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
@@ -13703,11 +13633,6 @@ modelo:
                 a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
                 a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Növekedés - Évi
                 korrekciók - Időleges (az évben keletkezett)
-            '02666':
-              label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint
-                a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
-                a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Csökkenés - Évi
-                korrekciók - Végleges
             '02667':
               label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint
                 a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
@@ -13718,11 +13643,6 @@ modelo:
                 a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
                 a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Csökkenés - Évi
                 korrekciók - Időleges (az évben keletkezett)
-            02669:
-              label: A LIS 13.1. cikke szerinti értékvesztési veszteség, valamint
-                a LIS 14.1 és 14.2. cikke szerinti tartalékok és ráfordítások, amelyekre
-                a LIS 11.12. cikke és DT 33.1. cikke vonatkozik - Csökkenés - Az időszak
-                elején fennálló egyenleg
             '02672':
               label: Tárgyi eszközök, ingatlanbefektetések és immateriális javak értékvesztési
                 vesztesége, beleértve a cégértéket (LIS 13.2. a) cikk és DT 15. cikk)
@@ -13775,10 +13695,6 @@ modelo:
                 szerinti értékvesztési veszteségre és a tartalékokra/ráfordításokra
                 (LIS 14.1 és 14.2. cikk) - Csökkenés - Évi korrekciók - Időleges (az
                 évben keletkezett)
-            02738:
-              label: Nyugdíjakkal kapcsolatos ráfordítások és tartalékok, amelyekre
-                nem vonatkozik a LIS 11.12. cikke (LIS 14.1, 14.6 és 14.8. cikk) -
-                Csökkenés - Évi korrekciók - Átmeneti (korábbi időszakokból eredő)
             02786:
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -13845,10 +13761,6 @@ modelo:
               label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
                 értékvesztési vesztesége (LIS 15. k) cikk) - Növekedés - Év végén
                 függőben lévő egyenleg - Átmeneti (korábbi időszakokból eredő)
-            02858:
-              label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
-                értékvesztési vesztesége (LIS 15. k) cikk) - Csökkenés - Évi korrekciók
-                - Átmeneti (korábbi időszakokból eredő)
             02982:
               label: Belföldi illetőségű jogalanyok értékpapír-átruházásából származó
                 jövedelem mentessége (LIS 21.3, 21.10. cikk és DT 40. cikk) - Növekedés
@@ -13881,10 +13793,6 @@ modelo:
               label: Nem belföldi illetőségű jogalanyok értékpapír-átruházásából származó
                 jövedelem mentessége (LIS 21.3, 21.10. cikk és DT 40. cikk) - Csökkenés
                 - Évi korrekciók - Átmeneti (korábbi időszakokból eredő)
-            '03001':
-              label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
-                értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
-                - Növekedés - Évi korrekciók - Végleges
             '03002':
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
@@ -13893,10 +13801,6 @@ modelo:
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
                 - Növekedés - Évi korrekciók - Időleges (az évben keletkezett)
-            '03004':
-              label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
-                értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
-                - Növekedés - Az időszak elején fennálló egyenleg
             '03006':
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
@@ -13951,10 +13855,6 @@ modelo:
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, nem belföldi
                 jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
                 mentessége - Csökkenés - Az időszak elején fennálló egyenleg
-            '03020':
-              label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, nem belföldi
-                jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
-                mentessége - Csökkenés - Év végén függőben lévő egyenleg
             '03052':
               label: Az adóalany által viselt külföldi adó, amely nem vonható le,
                 mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
@@ -13965,10 +13865,6 @@ modelo:
                 mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
                 (LIS 31.2. cikk) - Növekedés - Évi korrekciók - Időleges (az évben
                 keletkezett)
-            '03056':
-              label: Az adóalany által viselt külföldi adó, amely nem vonható le,
-                mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
-                (LIS 31.2. cikk) - Csökkenés - Évi korrekciók - Végleges
             '03057':
               label: Az adóalany által viselt külföldi adó, amely nem vonható le,
                 mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
@@ -13979,18 +13875,10 @@ modelo:
                 mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
                 (LIS 31.2. cikk) - Csökkenés - Évi korrekciók - Időleges (az évben
                 keletkezett)
-            03059:
-              label: Az adóalany által viselt külföldi adó, amely nem vonható le,
-                mivel kettős adóztatás elleni levonással érintett jövedelmekre vonatkozik
-                (LIS 31.2. cikk) - Csökkenés - Az időszak elején fennálló egyenleg
             '03061':
               label: Külföldi adó azon nyereségen, amelyből a nemzetközi kettős adóztatás
                 elleni levonás tárgyát képező osztalékot fizetik (LIS 32.1. cikk)
                 - Növekedés - Évi korrekciók
-            03093:
-              label: Ideiglenes vállalati társulás, külföldön működő UTE mentes jövedelmeinek
-                korrekciói (LIS 45.2. cikk) - Növekedés - Évi korrekciók - Átmeneti
-                (korábbi időszakokból eredő)
             03098:
               label: Ideiglenes vállalati társulás, külföldön működő UTE mentes jövedelmeinek
                 korrekciói (LIS 45.2. cikk) - Csökkenés - Évi korrekciók - Átmeneti
@@ -14072,10 +13960,6 @@ modelo:
               label: Kockázatitőke-társaságok és -alapok, valamint regionális ipari
                 fejlesztési társaságok (LIS VII. cím IV. fejezet) - Csökkenés - Évi
                 korrekciók - Átmeneti (korábbi időszakokból eredő)
-            '03142':
-              label: Javak és jogok értékelése. Átszervezési műveletek különleges
-                szabályozása (LIS VII. cím VII. fejezet) - Növekedés - Évi korrekciók
-                - Időleges (az évben keletkezett)
             '03143':
               label: Javak és jogok értékelése. Átszervezési műveletek különleges
                 szabályozása (LIS VII. cím VII. fejezet) - Növekedés - Évi korrekciók
@@ -14289,7 +14173,7 @@ modelo:
             '03447':
               label: Egyes tevékenységek ösztönzésére szolgáló levonások - 2024 Nyugat-afrikai
                 területi beruházások és reklám- és propagandaköltségek (19/1994. törvény
-                27 bis. cikk) (TAP) - Időszakokban alkalmazandó ...
+                27 bis. cikk) (TAP) - Időszakokban alkalmazandó
             03448:
               help: Függőben lévő vagy keletkezett levonás - Barcelona Music Lab.
                 El Futuro de la Música (BM)

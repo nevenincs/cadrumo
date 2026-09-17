@@ -468,6 +468,10 @@ modelo:
             label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
               reconeguts en patrimoni net - Ingressos fiscals a distribuir en diversos
               exercicis - Reserves [00481]
+          00482:
+            label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
+              reconeguts en patrimoni net - Ingressos fiscals a distribuir en diversos
+              exercicis - Accions i participacions en patrimoni pròpies [00482]
           00483:
             label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
               reconeguts en patrimoni net - Ingressos fiscals a distribuir en diversos
@@ -535,6 +539,10 @@ modelo:
             label: Estat de canvis en el patrimoni net (III) - Ingressos i despeses
               reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
               en patrimoni net - Ajustos en patrimoni net [00503]
+          '00504':
+            label: Estat de canvis en el patrimoni net (III) - Ingressos i despeses
+              reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
+              en patrimoni net - Subvencions, donacions i llegats rebuts [00504]
           '00505':
             label: Estat de canvis en el patrimoni net (III) - Ingressos i despeses
               reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
@@ -746,6 +754,10 @@ modelo:
             label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
               o propietaris - Increment (reducció) de patrim. net de combinació de
               negocis - Reserves [00593]
+          00594:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Increment (reducció) de patrim. net de combinació de
+              negocis - Accions i participacions en patrimoni pròpies [00594]
           00595:
             label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
               o propietaris - Increment (reducció) de patrim. net de combinació de
@@ -2070,6 +2082,10 @@ modelo:
             label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
               - BI negatives generades dins del grup fiscal per l’entitat transmesa
               i que hagin estat compensades - Augments [01275]
+          '01276':
+            label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
+              - BI negatives generades dins del grup fiscal per l’entitat transmesa
+              i que hagin estat compensades - Disminucions [01276]
           01280:
             label: Liquidació III - Bonificacions/Deduccions doble imposició - Deduccions
               per doble imposició - D.I. interna generada i aplicada en l’exercici
@@ -2536,6 +2552,10 @@ modelo:
             label: Dotacions deteriorament crèdits o altres actius - Exercici generació
               - 2007 i anteriors - Dotacions aplicades conversió actius imp. diferit
               [01475]
+          '01477':
+            label: Dotacions deteriorament crèdits o altres actius - Exercici generació
+              - 2008 a 2015 - Dotacions pendents integració a principi període - Que
+              no han complert condicions deduïbilitat fiscal [01477]
           01478:
             label: Dotacions deteriorament crèdits o altres actius - Exercici generació
               - 2008 a 2015 - Dotacions pendents integració a principi període - Que
@@ -2669,6 +2689,10 @@ modelo:
               per bases de deducció per inversió a Canàries imputades'
             label: 'Imports imputats: Import de la deducció generada per actius fixos
               per bases de deducció per inversió a Canàries imputades'
+          '01536':
+            label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
+              - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
+              - Total - AID aplicats en el període [01536]
           '01537':
             label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
               - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
@@ -2708,6 +2732,10 @@ modelo:
             label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
               - Canvi de residència a Estats membres de la Unió Europea o EEE (art.
               19.1 LIS) - Disminucions [01573]
+          '01574':
+            label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
+              - Operacions de l’art. 19 LIS diferents del canvi de residència a Estats
+              membres de la Unió Europea o EEE - Augments [01574]
           01586:
             label: Liquidació IV - Resultat de l’autoliquidació - Estat [01586]
           01587:
@@ -2876,6 +2904,23 @@ modelo:
             label: Operacions de l’art. 19 LIS diferents del canvi de residència a
               Estats membres de la Unió Europea o EEE - Disminució - Saldo pendent
               a fi d’exercici [01688]
+          01692:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - Subtotal de donacions 2015 a 2025 sense reiteració
+              de donacions a una mateixa entitat. - Deducció pendent/generada [01692]
+          01693:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - Subtotal de donacions 2015 a 2025 sense reiteració
+              de donacions a una mateixa entitat. - Aplicat en aquesta liquidació
+              [01693]
+          01695:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - Subtotal de donacions 2015 a 2025 amb reiteració
+              de donacions a una mateixa entitat - Deducció pendent/generada [01695]
+          01696:
+            label: Deducció donatius entitats sense fins lucratius - Donacions de
+              caràcter general - Subtotal de donacions 2015 a 2025 amb reiteració
+              de donacions a una mateixa entitat - Aplicat en aquesta liquidació [01696]
           01698:
             label: Deducció donatius entitats sense ànim de lucre - Donacions de caràcter
               general - Total - Deducció pendent/generada [01698]
@@ -3032,6 +3077,10 @@ modelo:
             label: Liquidació II - Detall de correccions del resultat del compte de
               pèrdues i guanys - Exempció sobre dividends o participacions en beneficis
               d'entitats residents (art. 21.11 LIS) - Disminucions [01764]
+          '01765':
+            label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
+              - Exempció sobre dividends o participacions en beneficis d'entitats
+              no residents (art. 21.11 LIS) - Disminucions [01765]
           '01767':
             label: Règ. cooperatives - Detall de compensació de quotes. 2017 Pendent
               d'aplicació al principi del període [01767]
@@ -3330,6 +3379,10 @@ modelo:
             label: Ajustaments per deteriorament de valors repr. de participacions
               en el capital o fons propis (DT 16a.1 i 2 LIS) - Disminució - Correccions
               de l'exercici - Temporànies (amb origen en l'exercici) [01867]
+          01868:
+            label: Ajustaments per deteriorament de valors repr. de participacions
+              en el capital o fons propis (DT 16a.1 i 2 LIS) - Disminució - Correccions
+              de l'exercici - Temporànies (amb origen en exercicis anteriors) [01868]
           01869:
             label: Ajustaments per deteriorament de valors repr. de participacions
               en el capital o fons propis (DT 16a.1 i 2 LIS) - Disminució - Saldo
@@ -4641,6 +4694,14 @@ modelo:
           '02406':
             label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
               de generació 2021 - Pendent d'aplicació en períodes futurs [02406]
+          '02407':
+            label: Tributació conjunta Estat i Adm. forals - Discrepància de criteri
+              administratiu per a determinats supòsits d'autoliquidació rectificativa
+              que no s'hagin d'incloure en altres caselles - Bizkaia [02407]
+          02408:
+            label: Tributació conjunta Estat i Adm. forals - Discrepància de criteri
+              administratiu per a determinats supòsits d'autoliquidació rectificativa
+              que no s'hagin d'incloure en altres caselles - Navarra [02408]
           02409:
             label: Limitació de la deduïbilitat de despeses financeres. Despeses financeres
               pendents de deduir - Exercici de generació 2024 - Pendent d'aplicació
@@ -4916,6 +4977,10 @@ modelo:
             label: Pèrdues per deteriorament de l'art. 13.1 LIS no afectada per l'art.
               11.12 ni per DT 33a.1 LIS - Disminució - Saldo pendent a fi d'exercici
               [02660]
+          02669:
+            label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
+              (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
+              - Disminució - Saldo pendent a principi d'exercici [02669]
           '02670':
             label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
               (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
@@ -5392,6 +5457,14 @@ modelo:
             label: Exempció sobre la renda obtinguda en la transmissió de valors d'entitats
               no residents (art. 21.3, 21.10 i DT 40a LIS) - Disminució - Saldo pendent
               a fi d'exercici [03000]
+          '03001':
+            label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
+              21.10 i DT 40a LIS diferents de transmissions de valors d'entitats residents
+              - Augment - Correccions de l'exercici - Permanents [03001]
+          '03004':
+            label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
+              21.10 i DT 40a LIS diferents de transmissions de valors d'entitats residents
+              - Augment - Saldo pendent a principi d'exercici [03004]
           '03005':
             label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
               21.10 i DT 40a LIS diferents de transmissions de valors d'entitats residents
@@ -5404,6 +5477,10 @@ modelo:
             label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
               21.10 i DT 40a LIS diferents de transmissions de valors d'entitats no
               residents - Augment - Saldo pendent a fi d'exercici [03015]
+          '03020':
+            label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
+              21.10 i DT 40a LIS diferents de transmissions de valors d'entitats no
+              residents - Disminució - Saldo pendent a fi d'exercici [03020]
           '03021':
             label: Exempció de rendes a l'estranger (art. 22 LIS) - Augment - Correccions
               de l'exercici - Permanents [03021]
@@ -5464,6 +5541,10 @@ modelo:
           '03050':
             label: Obra beneficosocial de les caixes d'estalvis i fundacions bancàries
               (art. 24 LIS) - Disminució - Saldo pendent a fi d'exercici [03050]
+          03059:
+            label: Impost estranger suportat pel contribuent, no deduïble per afectar
+              rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
+              - Saldo pendent a principi d'exercici [03059]
           '03060':
             label: Impost estranger suportat pel contribuent, no deduïble per afectar
               rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
@@ -5536,6 +5617,10 @@ modelo:
             label: Unió temporal d'empreses, ajustaments per rendes exemptes d'UTE
               que opera a l'estranger (art. 45.2 LIS) - Augment - Correccions de l'exercici
               - Permanents [03091]
+          03093:
+            label: Unió temporal d'empreses, ajustaments per rendes exemptes d'UTE
+              que opera a l'estranger (art. 45.2 LIS) - Augment - Correccions de l'exercici
+              - Temporànies (amb origen en exercicis anteriors) [03093]
           03094:
             label: Unió temporal d'empreses, ajustaments per rendes exemptes d'UTE
               que opera a l'estranger (art. 45.2 LIS) - Augment - Saldo pendent a
@@ -6973,6 +7058,10 @@ modelo:
             label: Amortització de l'immobilitzat afecte a activitats de recerca i
               desenvolupament (art. 12.3 b) LIS) - Augment - Correccions de l'exercici
               - Temporànies (amb origen en exercicis anteriors) [02593]
+          is-correccion-amortizacion-inmovilizado-idi-temporaria-anteriores-disminucion:
+            label: Amortització de l'immobilitzat afecte a activitats de recerca i
+              desenvolupament (art. 12.3 b) LIS) - Disminució - Correccions de l'exercici
+              - Temporànies (amb origen en exercicis anteriors) [02598]
           is-correccion-amortizacion-inmovilizado-idi-temporaria-ejercicio-aumento:
             label: Amortització de l'immobilitzat afecte a activitats de recerca i
               desenvolupament (art. 12.3 b) LIS) - Augment - Correccions de l'exercici
@@ -7223,6 +7312,10 @@ modelo:
             label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
               (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
               - Augment - Correccions de l'exercici - Permanents [02661]
+          is-correccion-deterioro-art13-1-provisiones-permanente-disminucion:
+            label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
+              (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
+              - Disminució - Correccions de l'exercici - Permanents [02666]
           is-correccion-deterioro-art13-1-provisiones-saldo-final:
             label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
               (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
@@ -7311,6 +7404,10 @@ modelo:
             label: Pèrdues per deteriorament de valors repr. de participacions en
               el capital o fons propis (art. 15 k) LIS) - Augment - Correccions de
               l'exercici - Temporànies (amb origen en exercicis anteriors) [02853]
+          is-correccion-deterioro-valores-participaciones-entidades-temporaria-anteriores-disminucion:
+            label: Pèrdues per deteriorament de valors repr. de participacions en
+              el capital o fons propis (art. 15 k) LIS) - Disminució - Correccions
+              de l'exercici - Temporànies (amb origen en exercicis anteriors) [02858]
           is-correccion-deterioro-valores-participaciones-entidades-temporaria-ejercicio-aumento:
             label: Pèrdues per deteriorament de valors repr. de participacions en
               el capital o fons propis (art. 15 k) LIS) - Augment - Correccions de
@@ -7535,6 +7632,10 @@ modelo:
             label: Impost estranger suportat pel contribuent, no deduïble per afectar
               rendes amb deducció per doble imposició (art. 31.2 LIS) - Augment -
               Correccions de l'exercici - Permanents [03051]
+          is-correccion-impuesto-extranjero-deduccion-doble-imposicion-permanente-disminucion:
+            label: Impost estranger suportat pel contribuent, no deduïble per afectar
+              rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
+              - Correccions de l'exercici - Permanents [03056]
           is-correccion-impuesto-extranjero-deduccion-doble-imposicion-saldo-final:
             label: Impost estranger suportat pel contribuent, no deduïble per afectar
               rendes amb deducció per doble imposició (art. 31.2 LIS) - Augment -
@@ -7835,6 +7936,10 @@ modelo:
             label: Operacions de l’art. 19 LIS diferents del canvi de residència a
               Estats membres de la Unió Europea o EEE - Augment - Correccions de l’exercici
               - Temporàries (amb origen en l’exercici) [01678]
+          is-correccion-operaciones-art19-otras-temporaria-ejercicio-disminucion:
+            label: Operacions de l’art. 19 LIS diferents del canvi de residència a
+              Estats membres de la Unió Europea o EEE - Disminució - Correccions de
+              l'exercici - Temporànies (amb origen en l'exercici) [01686]
           is-correccion-operaciones-aumento-capital-fondos-propios-permanente-aumento:
             label: Operacions d'augment de capital o fons propis per compensació de
               crèdits (art. 17.2 LIS) - Augment - Correccions de l'exercici - Permanents
@@ -7999,6 +8104,10 @@ modelo:
             label: Despeses i provisions per pensions no afectades per l'art. 11.12
               LIS (art. 14.1, 14.6 i 14.8 LIS) - Augment - Correccions de l'exercici
               - Temporànies (amb origen en exercicis anteriors) [02733]
+          is-correccion-pensiones-provisiones-no-deducibles-temporaria-anteriores-disminucion:
+            label: Despeses i provisions per pensions no afectades per l'art. 11.12
+              LIS (art. 14.1, 14.6 i 14.8 LIS) - Disminució - Correccions de l'exercici
+              - Temporànies (amb origen en exercicis anteriors) [02738]
           is-correccion-pensiones-provisiones-no-deducibles-temporaria-ejercicio-aumento:
             label: Despeses i provisions per pensions no afectades per l'art. 11.12
               LIS (art. 14.1, 14.6 i 14.8 LIS) - Augment - Correccions de l'exercici
@@ -8288,6 +8397,10 @@ modelo:
             label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
               (capítol VII del títol VII LIS) - Augment - Saldo pendent a principi
               d'exercici [03144]
+          is-correccion-valoracion-bienes-derechos-regimen-especial-temporaria-ejercicio-aumento:
+            label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
+              (capítol VII del títol VII LIS) - Augment - Correccions de l'exercici
+              - Temporànies (amb origen en l'exercici) [03142]
           is-correcciones-aumentos:
             label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
               - Unió temporal d'empreses, ajustos per rendes exemptes d'UTE que opera
@@ -10063,22 +10176,10 @@ modelo:
               label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
                 - Exempció sobre dividends o participacions en beneficis d'entitats
                 residents (art. 21.1, 21.10 i DT 40a LIS) - Disminucions [00370]
-            00482:
-              label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
-                reconeguts en patrimoni net - Ingressos fiscals a distribuir en diversos
-                exercicis - Accions i participacions en patrimoni pròpies [00482]
             00496:
               label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
                 reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
                 en patrimoni net - Accions i participacions en patrimoni pròpies [00496]
-            '00504':
-              label: Estat de canvis en el patrimoni net (III) - Ingressos i despeses
-                reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
-                en patrimoni net - Subvencions, donacions i llegats rebuts [00504]
-            00594:
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - Increment (reducció) de patrim. net de combinació
-                de negocis - Accions i participacions en patrimoni pròpies [00594]
             '00775':
               label: Liquidació I - Detall correccions resultat cta. pèrdues i guanys
                 - Amortització accelerada de determinats vehicles i de noves infraestructures
@@ -10486,10 +10587,6 @@ modelo:
                 i 16.2 LIS - n) Despeses financeres pendents de deduir de períodes
                 impositius anteriors no afectades per l'art. 16.5 i/o 83 LIS, aplicades
                 [01259]
-            '01276':
-              label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
-                - BI negatives generades dins del grup fiscal per l’entitat transmesa
-                i que hagin estat compensades - Disminucions [01276]
             '01300':
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -10622,10 +10719,6 @@ modelo:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració períodes futurs
                 - Que no han complert condicions deduïbilitat fiscal [01476]
-            '01477':
-              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
-                - 2008 a 2015 - Dotacions pendents integració a principi període -
-                Que no han complert condicions deduïbilitat fiscal [01477]
             '01524':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
@@ -10683,10 +10776,6 @@ modelo:
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
                 - Total - Import total d'AID pendent d'aplicació a l'inici del període
                 [01535]
-            '01536':
-              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-                - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
-                - Total - AID aplicats en el període [01536]
             01539:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
@@ -10819,10 +10908,6 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 Total - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01570]
-            '01574':
-              label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
-                - Operacions de l’art. 19 LIS diferents del canvi de residència a
-                Estats membres de la Unió Europea o EEE - Augments [01574]
             '01575':
               label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
                 - Operacions de l’art. 19 LIS diferents del canvi de residència a
@@ -11028,37 +11113,15 @@ modelo:
               label: Deduccions per incentivar determ. activitats - 2025(****) altres
                 deduccions relatives a programes de suport a esdeveniments d'excepcional
                 interès públic - Pendent d'aplicació en períodes futurs [01685]
-            01686:
-              label: Operacions de l’art. 19 LIS diferents del canvi de residència
-                a Estats membres de la Unió Europea o EEE - Disminució - Correccions
-                de l'exercici - Temporànies (amb origen en l'exercici) [01686]
             01687:
               label: Operacions de l’art. 19 LIS diferents del canvi de residència
                 a Estats membres de la Unió Europea o EEE - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors) [01687]
-            01692:
-              label: Deducció donatius entitats sense fins lucratius - Donacions de
-                caràcter general - Subtotal de donacions 2015 a 2025 sense reiteració
-                de donacions a una mateixa entitat. - Deducció pendent/generada [01692]
-            01693:
-              label: Deducció donatius entitats sense fins lucratius - Donacions de
-                caràcter general - Subtotal de donacions 2015 a 2025 sense reiteració
-                de donacions a una mateixa entitat. - Aplicat en aquesta liquidació
-                [01693]
             01694:
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - Subtotal de donacions 2015 a 2025 sense reiteració
                 de donacions a una mateixa entitat. - Pendent d'aplicació en períodes
                 futurs [01694]
-            01695:
-              label: Deducció donatius entitats sense fins lucratius - Donacions de
-                caràcter general - Subtotal de donacions 2015 a 2025 amb reiteració
-                de donacions a una mateixa entitat - Deducció pendent/generada [01695]
-            01696:
-              label: Deducció donatius entitats sense fins lucratius - Donacions de
-                caràcter general - Subtotal de donacions 2015 a 2025 amb reiteració
-                de donacions a una mateixa entitat - Aplicat en aquesta liquidació
-                [01696]
             01697:
               label: Deducció donatius entitats sense fins lucratius - Donacions de
                 caràcter general - Subtotal de donacions 2015 a 2025 amb reiteració
@@ -11129,10 +11192,6 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 2018 - AID pendents d'aplicació en períodes futurs - Sense dret de
                 conversió en crèdit exigible [01762]
-            '01765':
-              label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
-                - Exempció sobre dividends o participacions en beneficis d'entitats
-                no residents (art. 21.11 LIS) - Disminucions [01765]
             01793:
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Retencions per altres conceptes diferents dels rendiments del capital
@@ -11151,10 +11210,6 @@ modelo:
               label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
                 - Rendes procedents de la transmissió d'immobilitzat obtingudes per
                 les Autoritats Portuàries (DA 68a Llei 6/2018) - Disminucions [01824]
-            01868:
-              label: Ajustaments per deteriorament de valors repr. de participacions
-                en el capital o fons propis (DT 16a.1 i 2 LIS) - Disminució - Correccions
-                de l'exercici - Temporànies (amb origen en exercicis anteriors) [01868]
             01886:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Subtotal
@@ -11417,14 +11472,6 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Discrepància de criteri
                 administratiu per a determinats supòsits d'autoliquidació rectificativa
                 que no s'hagin d'incloure en altres caselles - Gipuzkoa [02379]
-            '02407':
-              label: Tributació conjunta Estat i Adm. forals - Discrepància de criteri
-                administratiu per a determinats supòsits d'autoliquidació rectificativa
-                que no s'hagin d'incloure en altres caselles - Bizkaia [02407]
-            02408:
-              label: Tributació conjunta Estat i Adm. forals - Discrepància de criteri
-                administratiu per a determinats supòsits d'autoliquidació rectificativa
-                que no s'hagin d'incloure en altres caselles - Navarra [02408]
             02418:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
@@ -11556,10 +11603,6 @@ modelo:
               label: Amortització de l'immobilitzat intangible i fons de comerç (art.
                 12.2 LIS) i amortització de la DT 13a.1 LIS - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors) [02588]
-            02598:
-              label: Amortització de l'immobilitzat afecte a activitats de recerca
-                i desenvolupament (art. 12.3 b) LIS) - Disminució - Correccions de
-                l'exercici - Temporànies (amb origen en exercicis anteriors) [02598]
             '02662':
               label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
@@ -11570,10 +11613,6 @@ modelo:
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
                 - Augment - Correccions de l'exercici - Temporànies (amb origen en
                 exercicis anteriors) [02663]
-            '02666':
-              label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
-                (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
-                - Disminució - Correccions de l'exercici - Permanents [02666]
             '02667':
               label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
@@ -11584,10 +11623,6 @@ modelo:
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
                 - Disminució - Correccions de l'exercici - Temporànies (amb origen
                 en exercicis anteriors) [02668]
-            02669:
-              label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
-                (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
-                - Disminució - Saldo pendent a principi d'exercici [02669]
             '02672':
               label: Pèrdues per deteriorament d'IM, inversions immobiliàries i II,
                 inclòs el fons de comerç (art. 13.2 a) i DT 15 LIS) - Augment - Correccions
@@ -11646,10 +11681,6 @@ modelo:
                 de l'art. 13.1 LIS i provisions i despeses (art. 14.1 i 14.2 LIS)
                 - Disminució - Correccions de l'exercici - Temporànies (amb origen
                 en exercicis anteriors) [02728]
-            02738:
-              label: Despeses i provisions per pensions no afectades per l'art. 11.12
-                LIS (art. 14.1, 14.6 i 14.8 LIS) - Disminució - Correccions de l'exercici
-                - Temporànies (amb origen en exercicis anteriors) [02738]
             02786:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
@@ -11712,10 +11743,6 @@ modelo:
                 el capital o fons propis (art. 15 k) LIS) - Augment - Saldo pendent
                 a fi d'exercici - Temporànies (amb origen en exercicis anteriors)
                 [02855]
-            02858:
-              label: Pèrdues per deteriorament de valors repr. de participacions en
-                el capital o fons propis (art. 15 k) LIS) - Disminució - Correccions
-                de l'exercici - Temporànies (amb origen en exercicis anteriors) [02858]
             02982:
               label: Exempció sobre la renda obtinguda en la transmissió de valors
                 d'entitats residents (art. 21.3, 21.10 i DT 40a LIS) - Augment - Correccions
@@ -11754,10 +11781,6 @@ modelo:
                 d'entitats no residents (art. 21.3, 21.10 i DT 40a LIS) - Disminució
                 - Correccions de l'exercici - Temporànies (amb origen en exercicis
                 anteriors) [02998]
-            '03001':
-              label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
-                21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
-                residents - Augment - Correccions de l'exercici - Permanents [03001]
             '03002':
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
@@ -11768,10 +11791,6 @@ modelo:
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
                 residents - Augment - Correccions de l'exercici - Temporànies (amb
                 origen en exercicis anteriors) [03003]
-            '03004':
-              label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
-                21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
-                residents - Augment - Saldo pendent a principi d'exercici [03004]
             '03006':
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
@@ -11827,10 +11846,6 @@ modelo:
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
                 no residents - Disminució - Saldo pendent a principi d'exercici [03019]
-            '03020':
-              label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
-                21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
-                no residents - Disminució - Saldo pendent a fi d'exercici [03020]
             '03052':
               label: Impost estranger suportat pel contribuent, no deduïble per afectar
                 rendes amb deducció per doble imposició (art. 31.2 LIS) - Augment
@@ -11841,10 +11856,6 @@ modelo:
                 rendes amb deducció per doble imposició (art. 31.2 LIS) - Augment
                 - Correccions de l'exercici - Temporànies (amb origen en exercicis
                 anteriors) [03053]
-            '03056':
-              label: Impost estranger suportat pel contribuent, no deduïble per afectar
-                rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
-                - Correccions de l'exercici - Permanents [03056]
             '03057':
               label: Impost estranger suportat pel contribuent, no deduïble per afectar
                 rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
@@ -11855,19 +11866,11 @@ modelo:
                 rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
                 - Correccions de l'exercici - Temporànies (amb origen en exercicis
                 anteriors) [03058]
-            03059:
-              label: Impost estranger suportat pel contribuent, no deduïble per afectar
-                rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
-                - Saldo pendent a principi d'exercici [03059]
             '03061':
               label: Impost estranger sobre els beneficis amb càrrec als quals es
                 paguen els dividends objecte de deducció per doble imposició internacional
                 (art. 32.1 LIS) - Augment - Correccions de l'exercici - Permanents
                 [03061]
-            03093:
-              label: Unió temporal d'empreses, ajustaments per rendes exemptes d'UTE
-                que opera a l'estranger (art. 45.2 LIS) - Augment - Correccions de
-                l'exercici - Temporànies (amb origen en exercicis anteriors) [03093]
             03098:
               label: Unió temporal d'empreses, ajustaments per rendes exemptes d'UTE
                 que opera a l'estranger (art. 45.2 LIS) - Disminució - Correccions
@@ -11954,10 +11957,6 @@ modelo:
                 industrial regional (capítol IV del títol VII LIS) - Disminució -
                 Correccions de l'exercici - Temporànies (amb origen en exercicis anteriors)
                 [03138]
-            '03142':
-              label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
-                (capítol VII del títol VII LIS) - Augment - Correccions de l'exercici
-                - Temporànies (amb origen en l'exercici) [03142]
             '03143':
               label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
                 (capítol VII del títol VII LIS) - Augment - Correccions de l'exercici
@@ -12015,7 +12014,7 @@ modelo:
             '00077':
               label: Amortització accelerada de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 5/2023 i RDL 7/2026) - Augment - Correccions
-                de l'exercici - Temporànies (amb origen en el ...
+                de l'exercici - Temporànies (amb origen en l'exercici)
             00091:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
@@ -12030,7 +12029,7 @@ modelo:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
                 de base imposable resta d''activitats any 2024 - Aplicat en aquesta
-                ...'
+                liquidació'
             00098:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
@@ -12040,22 +12039,10 @@ modelo:
               label: Liquidació II - Detall correccions resultat cta. pèrdues i guanys
                 - Exempció sobre dividends o participacions en beneficis d'entitats
                 residents (art. 21.1, 21.10 i DT 40a LIS) - Disminucions
-            00482:
-              label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
-                reconeguts en patrimoni net - Ingressos fiscals a distribuir en diversos
-                exercicis - Accions i participacions en patrimoni pròpies [0...
             00496:
               label: Estat de canvis en el patrimoni net (II) - Ingressos i despeses
                 reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
-                en patrimoni net - Accions i participacions en patrimoni pròpies...
-            '00504':
-              label: Estat de canvis en el patrimoni net (III) - Ingressos i despeses
-                reconeguts en patrimoni net - Altres ingressos i despeses reconeguts
-                en patrimoni net - Subvencions, donacions i llegats rebuts [0...
-            00594:
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - Increment (reducció) de patrim. net de combinació
-                de negocis - Accions i participacions en patrimoni pròpies [...
+                en patrimoni net - Accions i participacions en patrimoni pròpies
             '00775':
               label: Liquidació I - Detall correccions resultat cta. pèrdues i guanys
                 - Amortització accelerada de determinats vehicles i de noves infraestructures
@@ -12094,7 +12081,7 @@ modelo:
             00881:
               label: Deducc. per incentivar determ. activitats - 2023 Inversions en
                 territ. Àfrica Occidental i despeses de propaganda i publicitat (art.
-                27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes ...
+                27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes futurs
             00882:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2025(*) - Excés
@@ -12213,7 +12200,7 @@ modelo:
               label: Deducció donatius entitats sense fins lucratius - Base de la
                 deducció per donacions a entitats sense fins lucratius del període
                 impositiu - Donacions del període impositiu efectuades a entitats
-                ...
+                sense fins lucratius
             00975:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -12276,7 +12263,7 @@ modelo:
             '01005':
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Amortització de l'immobilitzat intangible i fons de comerç (art.
-                12.2 LIS) i amortització de la DT 13a.1 LIS - Augments ...
+                12.2 LIS) i amortització de la DT 13a.1 LIS - Augments
             '01006':
               label: Liquidació I - Detall correccions resultat cte. pèrdues i guanys
                 - Amortització de l'immobilitzat intangible i fons de comerç (art.
@@ -12427,7 +12414,7 @@ modelo:
             '01177':
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
-                de base imposable resta activitats any 2023 - Aplicat en aquesta ...'
+                de base imposable resta activitats any 2023 - Aplicat en aquesta liquidació'
             '01200':
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
@@ -12436,7 +12423,8 @@ modelo:
             '01240':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - a) Despeses financeres del període impositiu derivades
-                de deutes per adquisició de particip. afectades per l’art. 16.5 ...
+                de deutes per adquisició de particip. afectades per l'art. 16.5 i/o
+                83 LIS (sense signe)
             '01242':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - c1) Despeses financeres període impositiu deduïbles després
@@ -12455,10 +12443,6 @@ modelo:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - n) Despeses financeres pendents de deduir de períodes
                 impositius anteriors no afectades per art. 16.5 i/o 83 LIS aplicades
-            '01276':
-              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
-                - BI negatives generades dins del grup fiscal per l’entitat transmesa
-                i que hagin estat compensades - Disminucions [0...
             '01300':
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -12524,11 +12508,11 @@ modelo:
             01408:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració a principi període
-                - Que han complert condicions deduïbilitat fiscal ...
+                - Que han complert condicions deduïbilitat fiscal
             01409:
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració a principi període
-                - Que han complert condicions deduïbilitat fiscal ...
+                - Que han complert condicions deduïbilitat fiscal
             '01414':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
@@ -12588,11 +12572,7 @@ modelo:
             '01476':
               label: Dotacions deteriorament crèdits o altres actius - Exercici generació
                 - 2007 i anteriors - Dotacions pendents integració períodes futurs
-                - Que no han complert condicions deduïbilitat fiscal ...
-            '01477':
-              label: Dotacions deteriorament crèdits o altres actius - Exercici generació
-                - 2008 a 2015 - Dotacions pendents integració a principi període -
-                Que no han complert condicions deduïbilitat fiscal [01...
+                - Que no han complert condicions deduïbilitat fiscal
             '01524':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
@@ -12605,7 +12585,7 @@ modelo:
             '01526':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
-                - 2007 i anteriors - AID convertits en ...
+                - 2007 i anteriors - AID convertits en crèdit
             '01527':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
@@ -12648,10 +12628,6 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
                 - Total - Import total AID pendent aplicació a principi de període
-            '01536':
-              label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
-                - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
-                - Total - AID aplicats en el període [01...
             01539:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
@@ -12753,15 +12729,18 @@ modelo:
             '01563':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
-                Total - AID pendents aplicació a principi ...
+                Total - AID pendents aplicació a principi de període - Amb dret a
+                conversió en crèdit exigible
             '01564':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
-                Total - AID pendents aplicació a principi ...
+                Total - AID pendents aplicació a principi de període - Amb dret a
+                conversió en crèdit exigible per excés de quota
             '01565':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
-                Total - AID pendents aplicació a principi ...
+                Total - AID pendents aplicació a principi de període - Sense dret
+                a conversió en crèdit exigible
             '01567':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
@@ -12781,22 +12760,20 @@ modelo:
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
                 Total - AID pendents aplicació períodes futurs - Sense dret a conversió
                 en crèdit exigible
-            '01574':
-              label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
-                - Operacions de l’art. 19 LIS diferents del canvi de residència a
-                Estats membres de la Unió Europea o EEE - Augments [0...
             '01575':
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
-                - Operacions de l’art. 19 LIS diferents del canvi de residència a
-                Estats membres de la Unió Europea o EEE - Disminucion...
+                - Operacions de l'art. 19 LIS diferents del canvi de residència a
+                Estats membres de la Unió Europea o EEE - Disminucions
             '01576':
               label: Liquidació III - Base imposable - Règim especial de vaixells
                 i empreses navilieres a Canàries - Part de la base imposable que procedeixi
-                de la realització d’activitats a les quals s’aplica el règime...
+                de la realització d'activitats a les quals s'aplica el règim especial,
+                després de la reserva d'anivellament - Disminucions
             '01577':
               label: Liquidació III - Base imposable - Règim especial de vaixells
                 i empreses navilieres a Canàries - Part de la base imposable que procedeixi
-                de la realització de la resta d’activitats, després de la rese...
+                de la realització de la resta d'activitats, després de la reserva
+                d'anivellament - Disminucions
             01578:
               label: Liquidació IV - Rectificativa - Resultat a ingressar com a conseqüència
                 de la tramitació d'autoliquidacions anteriors o liquidacions administratives
@@ -12823,13 +12800,15 @@ modelo:
                 de la tramitació d'autoliquidacions anteriors o liquidacions administratives
                 corresponents al període impositiu 2025 - D. Forals/Navarra (Totals)
             01584:
-              label: Liquidació IV - Rectificativa - Devolució acordada per l’Agència
-                Tributària com a conseqüència de la tramitació d’autoliquidacions
-                anteriors o liquidacions administratives corresponents a...
+              label: Liquidació IV - Rectificativa - Devolució acordada per l'Agència
+                Tributària com a conseqüència de la tramitació d'autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu 2025 - Estat
             01585:
-              label: Liquidació IV - Rectificativa - Devolució acordada per l’Agència
-                Tributària com a conseqüència de la tramitació d’autoliquidacions
-                anteriors o liquidacions administratives corresponents a...
+              label: Liquidació IV - Rectificativa - Devolució acordada per l'Agència
+                Tributària com a conseqüència de la tramitació d'autoliquidacions
+                anteriors o liquidacions administratives corresponents al període
+                impositiu 2025 - D. Forals/Navarra (Totals)
             01589:
               label: Liquidació II - Detall correccions resultat cte. pèrdues i guanys
                 - Impost estranger suportat pel contribuent, no deduïble per afectar
@@ -12841,7 +12820,7 @@ modelo:
             01591:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
-                - Total 2008 a 2015 - AID convertits en ...
+                - Total 2008 a 2015 - AID convertits en crèdit
             '01607':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
                 a ingressar com a conseqüència de la tramitació d’autoliquidacions
@@ -12862,38 +12841,42 @@ modelo:
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
                 acordada per l’Agència Tributària com a conseqüència de la tramitació
                 d’autoliquidacions anteriors o liquidacions administratives corresponents
-                ...'
+                al període impositiu 2025 - Araba/Álava'
             '01612':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
                 acordada per l’Agència Tributària com a conseqüència de la tramitació
                 d’autoliquidacions anteriors o liquidacions administratives corresponents
-                ...'
+                al període impositiu 2025 - Gipuzkoa'
             '01613':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
                 acordada per l’Agència Tributària com a conseqüència de la tramitació
                 d’autoliquidacions anteriors o liquidacions administratives corresponents
-                ...'
+                al període impositiu 2025 - Bizkaia'
             '01623':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
                 acordada per l’Agència Tributària com a conseqüència de la tramitació
                 d’autoliquidacions anteriors o liquidacions administratives corresponents
-                ...'
+                al període impositiu 2025 - Navarra'
             '01650':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-                de l’autoliquidació inclòs el 1r fraccionament de l’art. 19.1 LIS
-                procedent d’una autoliquidació anterior o liquidació...'
+                de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
+                procedent d''una autoliquidació anterior o liquidació administrativa
+                corresponent al període impositiu 2025 - Araba/Álava'
             '01651':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-                de l’autoliquidació inclòs el 1r fraccionament de l’art. 19.1 LIS
-                procedent d’una autoliquidació anterior o liquidació...'
+                de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
+                procedent d''una autoliquidació anterior o liquidació administrativa
+                corresponent al període impositiu 2025 - Gipuzkoa'
             '01652':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-                de l’autoliquidació inclòs el 1r fraccionament de l’art. 19.1 LIS
-                procedent d’una autoliquidació anterior o liquidació...'
+                de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
+                procedent d''una autoliquidació anterior o liquidació administrativa
+                corresponent al període impositiu 2025 - Bizkaia'
             '01653':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-                de l’autoliquidació inclòs el 1r fraccionament de l’art. 19.1 LIS
-                procedent d’una autoliquidació anterior o liquidació...'
+                de l''autoliquidació inclòs el 1r fraccionament de l''art. 19.1 LIS
+                procedent d''una autoliquidació anterior o liquidació administrativa
+                corresponent al període impositiu 2025 - Navarra'
             01658:
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
                 per impost diferit en crèdit exigible davant l’Administració tributària
@@ -12915,9 +12898,9 @@ modelo:
                 per impost diferit en crèdit exigible davant l''Administració tributària
                 (art. 130 LIS) - Resultat de conversió: Abonament - Araba/Álava'
             '01663':
-              label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Resultat de conversió: Abonament - G...'
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Abonament - Gipuzkoa'
             '01664':
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
                 per impost diferit en crèdit exigible davant l''Administració tributària
@@ -12927,33 +12910,33 @@ modelo:
                 per impost diferit en crèdit exigible davant l''Administració tributària
                 (art. 130 LIS) - Resultat de conversió: Abonament - Navarra'
             '01666':
-              label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Resultat de conversió: Compensac...'
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Compensació - Araba/Álava'
             '01667':
-              label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Resultat de conversió: Compensac...'
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Compensació - Gipuzkoa'
             01668:
-              label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Resultat de conversió: Compensac...'
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: Compensació - Bizkaia'
             01669:
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
                 per impost diferit en crèdit exigible davant l''Administració tributària
                 (art. 130 LIS) - Resultat de conversió: Compensació - Navarra'
             '01670':
-              label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Resultat de conversió: A ingressa...'
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: A ingressar - Araba/Álava'
             '01671':
-              label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Resultat de conversió: A ingressa...'
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: A ingressar - Gipuzkoa'
             '01672':
-              label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Resultat de conversió: A ingressa...'
+              label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
+                per impost diferit en crèdit exigible davant l''Administració tributària
+                (art. 130 LIS) - Resultat de conversió: A ingressar - Bizkaia'
             '01673':
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
                 per impost diferit en crèdit exigible davant l''Administració tributària
@@ -12974,36 +12957,15 @@ modelo:
               label: Deducc. per incentivar determ. activitats - 2026(****) Altres
                 deduccions relatives a programes de suport a esdeveniments d'excepcional
                 interès públic - Pendent d'aplicació en períodes futurs
-            01686:
-              label: Operacions de l’art. 19 LIS diferents del canvi de residència
-                a Estats membres de la Unió Europea o EEE - Disminució - Correccions
-                de l’exercici - Temporàries (amb origen en l’exercici) [01...
             01687:
               label: Operacions de l'art. 19 LIS diferents del canvi de residència
                 a estats membres de la Unió Europea o l'EEE - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors)
-            01692:
-              label: Deducció donatius entitats sense ànim de lucre - Donacions de
-                caràcter general - Subtotal donacions 2015 a 2025 sense reiteració
-                de donacions a una mateixa entitat. - Deducció pendent/generada [0...
-            01693:
-              label: Deducció donatius entitats sense ànim de lucre - Donacions de
-                caràcter general - Subtotal donacions 2015 a 2025 sense reiteració
-                de donacions a una mateixa entitat. - Aplicat en aquesta liquidació
-                [0...
             01694:
               label: Deducció donatius entitats sense ànim de lucre - Donacions de
                 caràcter general - Subtotal donacions 2015 a 2025 sense reiteració
                 de donacions a una mateixa entitat. - Pendent d'aplicació en períodes
                 futurs
-            01695:
-              label: Deducció donatius entitats sense ànim de lucre - Donacions de
-                caràcter general - Subtotal donacions 2015 a 2025 amb reiteració de
-                donacions a una mateixa entitat - Deducció pendent/generada [01...
-            01696:
-              label: Deducció donatius entitats sense ànim de lucre - Donacions de
-                caràcter general - Subtotal donacions 2015 a 2025 amb reiteració de
-                donacions a una mateixa entitat - Aplicat en aquesta liquidació [01...
             01697:
               label: Deducció donatius entitats sense ànim de lucre - Donacions de
                 caràcter general - Subtotal donacions 2015 a 2025 amb reiteració de
@@ -13028,7 +12990,8 @@ modelo:
             01729:
               label: Deducció donatius entitats sense ànim de lucre - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
-                incrementada - Subtotal donacions 2015 a 2025 amb reiteració ...
+                incrementada - Subtotal donacions 2015 a 2025 amb reiteració de donacions
+                a una mateixa entitat - Deducció pendent/generada
             '01742':
               label: Llibertat d’amortització de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 4/2024) - Augment - Correccions de l’exercici
@@ -13075,11 +13038,6 @@ modelo:
                 l'Administració tributària - Actius per impost diferit (AID). Art.
                 130 LIS - Exercici de generació - 2018 - AID pendents d'aplicació
                 en períodes futurs - Sense dret a conversió en crèdit exigible
-            '01765':
-              label: Liquidació II - Detall de correccions del resultat del compte
-                de pèrdues i guanys - Exempció sobre dividends o participacions en
-                beneficis d'entitats no residents (art. 21.11 LIS) - Disminucions
-                [01...
             01793:
               label: Liquidació IV - Quota de l'exercici a ingressar o a retornar
                 - Retencions per altres conceptes diferents dels rendiments del capital
@@ -13098,20 +13056,16 @@ modelo:
               label: Liquidació II - Detall de correccions del resultat del compte
                 de pèrdues i guanys - Rendes procedents de la transmissió d'immobilitzat
                 obtingudes per les Autoritats Portuàries (DA 68a Llei 6/2018) - Disminucions
-            01868:
-              label: Ajustaments per deteriorament de valors repr. de participacions
-                en el capital o fons propis (DT 16a.1 i 2 LIS) - Disminució - Correccions
-                de l'exercici - Temporànies (amb origen en exercicis anteriors) [0...
             01886:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Subtotal
                 de compensació de base imposable especial - Pendent d''aplicació a
-                ...'
+                principi del període/generada en el període'
             01887:
               label: Liquidació III - Base imposable - Règim especial de vaixells
                 i empreses navilieres a Canàries - Compensació de bases imposables
                 negatives de períodes anteriors de la part de base imposable règim
-                ...
+                especial
             01888:
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Subtotal
@@ -13136,27 +13090,27 @@ modelo:
               label: Deduccions per incentivar determ. activitats - 2022 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             01918:
               label: Deduccions per incentivar determ. activitats - 2018 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             01921:
               label: Deduccions per incentivar determ. activitats - 2019 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             01924:
               label: Deduccions per incentivar determ. activitats - 2020 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             01927:
               label: Deduccions per incentivar determ. activitats - 2021 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             01930:
               label: Deduccions per incentivar determ. activitats - 2025(*) Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
@@ -13183,22 +13137,22 @@ modelo:
             02080:
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2025: Finançador: deducció per espectacles en viu d''arts escèniques
-                i musicals a Canàries generada en el període impositiu ...'
+                i musicals a Canàries generada en el període impositiu'
             02083:
               label: Deduccions per incentivar determ. activitats - 2015 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             02086:
               label: Deduccions per incentivar determ. activitats - 2016 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             02090:
               label: Deduccions per incentivar determ. activitats - 2017 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             '02100':
               label: Conversió d'actius per impost diferit en crèdit exigible davant
                 l'Administració tributària - Actius per impost diferit (AID). Art.
@@ -13268,22 +13222,22 @@ modelo:
               label: Liquidació II - Detall de correccions del resultat del compte
                 de pèrdues i guanys - Exempció sobre la renda obtinguda en els supòsits
                 de l'art. 21.3, 21.10 i DT 40a LIS diferents de transmissions de valors
-                ...
+                d'entitats residents - Augments
             02187:
               label: Liquidació II - Detall de correccions del resultat del compte
                 de pèrdues i guanys - Exempció sobre la renda obtinguda en els supòsits
                 de l'art. 21.3, 21.10 i DT 40a LIS diferents de transmissions de valors
-                ...
+                d'entitats residents - Disminucions
             02188:
               label: Liquidació II - Detall de correccions del resultat del compte
                 de pèrdues i guanys - Exempció sobre la renda obtinguda en els supòsits
                 de l'art. 21.3, 21.10 i DT 40a LIS diferents de transmissions de valors
-                ...
+                d'entitats no residents - Augments
             02189:
               label: Liquidació II - Detall de correccions del resultat del compte
                 de pèrdues i guanys - Exempció sobre la renda obtinguda en els supòsits
                 de l'art. 21.3, 21.10 i DT 40a LIS diferents de transmissions de valors
-                ...
+                d'entitats no residents - Disminucions
             02268:
               label: Conversió d'actius per impost diferit en crèdit exigible davant
                 l'Administració tributària - Actius per impost diferit (AID). Art.
@@ -13345,11 +13299,11 @@ modelo:
             '02304':
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
-                temporània amb origen en l'exercici - Disminucions...
+                temporània amb origen en l'exercici - Disminucions
             '02307':
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
-                temporània amb origen en exercicis anteriors - Augments...
+                temporània amb origen en exercicis anteriors - Augments
             02308:
               label: Detall de correccions del resultat de pèrdues i guanys - Correccions
                 al resultat del compte de pèrdues i guanys de l'exercici - Correcció
@@ -13372,15 +13326,7 @@ modelo:
             02379:
               label: Tributació conjunta Estat i Adm. Forals - Discrepància de criteri
                 administratiu per a determinats supòsits d'autoliquidació rectificativa
-                que no s'hagin d'incloure en altres caselles - Guipúscoa ...
-            '02407':
-              label: Tributació conjunta Estat i Adm. Forals - Discrepància de criteri
-                administratiu per a determinats supòsits d'autoliquidació rectificativa
-                que no s'hagin d'incloure en altres caselles - Biscaia [...
-            02408:
-              label: Tributació conjunta Estat i Adm. Forals - Discrepància de criteri
-                administratiu per a determinats supòsits d'autoliquidació rectificativa
-                que no s'hagin d'incloure en altres caselles - Navarra [...
+                que no s'hagin d'incloure en altres caselles - Guipúscoa
             02418:
               label: Conversió d'actius per impost diferit en crèdit exigible davant
                 l'Administració tributària - Actius per impost diferit (AID). Art.
@@ -13441,11 +13387,14 @@ modelo:
             '02475':
               label: Deducció per donatius a entitats sense fins lucratius - Donacions
                 per a activitats prioritàries de mecenatge i altres amb dret a deducció
-                incrementada - Subtotal de donacions 2015 a 2025 amb reiteració ...
+                incrementada - Subtotal de donacions 2015 a 2025 amb reiteració de
+                donacions a una mateixa entitat - Aplicat en aquesta liquidació
             '02476':
               label: Deducció per donatius a entitats sense fins lucratius - Donacions
                 per a activitats prioritàries de mecenatge i altres amb dret a deducció
-                incrementada - Subtotal de donacions 2015 a 2025 amb reiteració ...
+                incrementada - Subtotal de donacions 2015 a 2025 amb reiteració de
+                donacions a una mateixa entitat - Pendent d'aplicació en períodes
+                futurs
             02486:
               label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
                 residència (art. 19.1 LIS) - Resultat de l'autoliquidació inclòs el
@@ -13487,7 +13436,7 @@ modelo:
             02496:
               label: 'Informació addicional per al càlcul de límits de deduccions
                 - 2025: Productor: deducció per espectacles en viu d''arts escèniques
-                i musicals a Canàries generada en el període impositiu [0...'
+                i musicals a Canàries generada en el període impositiu [02496]'
             02578:
               label: Deducció del 30% de l'import de despeses d'amortització comptable
                 (excloses les empreses de reduïda dimensió) (art. 7 Llei 16/2012)
@@ -13505,10 +13454,6 @@ modelo:
               label: Amortització de l'immobilitzat intangible i fons de comerç (art.
                 12.2 LIS) i amortització de la DT 13a.1 LIS - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors)
-            02598:
-              label: Amortització de l'immobilitzat afecte a activitats de recerca
-                i desenvolupament (art. 12.3 b) LIS) - Disminució - Correccions de
-                l'exercici - Temporànies (amb origen en exercicis anteriors) [02...
             '02662':
               label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
@@ -13519,10 +13464,6 @@ modelo:
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
                 - Augment - Correccions de l'exercici - Temporànies (amb origen en
                 exercicis anteriors)
-            '02666':
-              label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
-                (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
-                - Disminució - Correccions de l'exercici - Permanents [0...
             '02667':
               label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
@@ -13533,10 +13474,6 @@ modelo:
                 (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
                 - Disminució - Correccions de l'exercici - Temporànies (amb origen
                 en exercicis anteriors)
-            02669:
-              label: Pèrdues per deteriorament de l'art. 13.1 LIS i provisions i despeses
-                (art. 14.1 i 14.2 LIS) a què es refereix l'art. 11.12 i DT 33a.1 LIS.
-                - Disminució - Saldo pendent a principi d'exercici [0...
             '02672':
               label: Pèrdues per deteriorament d'IM, inversions immobiliàries i II,
                 inclòs el fons de comerç (art. 13.2 a) i DT 15 LIS) - Augment - Correccions
@@ -13556,11 +13493,13 @@ modelo:
             02682:
               label: Ajustaments per pèrdues per deteriorament de valors representatius
                 de la participació en el capital o fons propis (art. 13.2 b) LIS)
-                - Augment - Correccions de l'exercici - Temporànies (amb origen ...
+                - Augment - Correccions de l'exercici - Temporànies (amb origen en
+                l'exercici)
             02683:
               label: Ajustaments per pèrdues per deteriorament de valors representatius
                 de la participació en el capital o fons propis (art. 13.2 b) LIS)
-                - Augment - Correccions de l'exercici - Temporànies (amb origen ...
+                - Augment - Correccions de l'exercici - Temporànies (amb origen en
+                exercicis anteriors)
             02687:
               label: Ajustaments per pèrdues per deteriorament de valors representatius
                 de la participació en el capital o fons propis (art. 13.2 b) LIS)
@@ -13591,10 +13530,6 @@ modelo:
                 de l'art. 13.1 LIS i provisions i despeses (art. 14.1 i 14.2 LIS)
                 - Disminució - Correccions de l'exercici - Temporànies (amb origen
                 en exercicis anteriors)
-            02738:
-              label: Despeses i provisions per pensions no afectades per l'art. 11.12
-                LIS (art. 14.1, 14.6 i 14.8 LIS) - Disminució - Correccions de l'exercici
-                - Temporànies (amb origen en exercicis anteriors) [02...
             02786:
               label: Conversió d'actius per impost diferit en crèdit exigible davant
                 l'Administració tributària - Actius per impost diferit (AID). Art.
@@ -13661,10 +13596,6 @@ modelo:
               label: Pèrdues per deteriorament de valors repr. de participacions en
                 el capital o fons propis (art. 15 k) LIS) - Augment - Saldo pendent
                 a fi d'exercici - Temporànies (amb origen en exercicis anteriors)...
-            02858:
-              label: Pèrdues per deteriorament de valors repr. de participacions en
-                el capital o fons propis (art. 15 k) LIS) - Disminució - Correccions
-                de l'exercici - Temporànies (amb origen en exercicis anteriors) [02...
             02982:
               label: Exempció sobre la renda obtinguda en la transmissió de valors
                 d'entitats residents (art. 21.3, 21.10 i DT 40a LIS) - Augment - Correccions
@@ -13690,7 +13621,7 @@ modelo:
               label: Exempció sobre la renda obtinguda en la transmissió de valors
                 d'entitats no residents (art. 21.3, 21.10 i DT 40a LIS) - Augment
                 - Correccions de l'exercici - Temporànies (amb origen en exercicis
-                ...
+                anteriors)
             02997:
               label: Exempció sobre la renda obtinguda en la transmissió de valors
                 d'entitats no residents (art. 21.3, 21.10 i DT 40a LIS) - Disminució
@@ -13700,10 +13631,6 @@ modelo:
                 d'entitats no residents (art. 21.3, 21.10 i DT 40a LIS) - Disminució
                 - Correccions de l'exercici - Temporànies (amb origen en exercicis
                 anteriors)
-            '03001':
-              label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
-                21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
-                residents - Augment - Correccions de l'exercici - Permanents [0...
             '03002':
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
@@ -13714,10 +13641,6 @@ modelo:
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
                 residents - Augment - Correccions de l'exercici - Temporànies (amb
                 origen en exercicis anteriors)
-            '03004':
-              label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
-                21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
-                residents - Augment - Saldo pendent a principi d'exercici [0...
             '03006':
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
@@ -13739,7 +13662,7 @@ modelo:
             '03011':
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
-                no residents - Augment - Correccions de l'exercici - Permanents...
+                no residents - Augment - Correccions de l'exercici - Permanents
             '03012':
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
@@ -13753,7 +13676,7 @@ modelo:
             '03014':
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
-                no residents - Augment - Saldo pendent a principi d'exercici...
+                no residents - Augment - Saldo pendent a principi d'exercici
             '03016':
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
@@ -13772,10 +13695,6 @@ modelo:
               label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
                 21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
                 no residents - Disminució - Saldo pendent a principi d'exercici
-            '03020':
-              label: Exempció sobre la renda obtinguda en els supòsits de l'art. 21.3,
-                21.10 i DT 40a LIS diferents de transmissions de valors d'entitats
-                no residents - Disminució - Saldo pendent a fi d'exercici [...
             '03052':
               label: Impost estranger suportat pel contribuent, no deduïble per afectar
                 rendes amb deducció per doble imposició (art. 31.2 LIS) - Augment
@@ -13785,10 +13704,6 @@ modelo:
                 rendes amb deducció per doble imposició (art. 31.2 LIS) - Augment
                 - Correccions de l'exercici - Temporànies (amb origen en exercicis
                 anteriors)
-            '03056':
-              label: Impost estranger suportat pel contribuent, no deduïble per afectar
-                rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
-                - Correccions de l'exercici - Permanents [03...
             '03057':
               label: Impost estranger suportat pel contribuent, no deduïble per afectar
                 rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
@@ -13798,18 +13713,10 @@ modelo:
                 rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
                 - Correccions de l'exercici - Temporànies (amb origen en exercicis
                 anteriors)
-            03059:
-              label: Impost estranger suportat pel contribuent, no deduïble per afectar
-                rendes amb deducció per doble imposició (art. 31.2 LIS) - Disminució
-                - Saldo pendent a principi d'exercici [03...
             '03061':
               label: Impost estranger sobre els beneficis amb càrrec als quals es
                 paguen els dividends objecte de deducció per doble imposició internacional
                 (art. 32.1 LIS) - Augment - Correccions de l'exercici - Permanents
-            03093:
-              label: Unió temporal d'empreses, ajustaments per rendes exemptes d'UTE
-                que opera a l'estranger (art. 45.2 LIS) - Augment - Correccions de
-                l'exercici - Temporànies (amb origen en exercicis anteriors) [...
             03098:
               label: Unió temporal d'empreses, ajustaments per rendes exemptes d'UTE
                 que opera a l'estranger (art. 45.2 LIS) - Disminució - Correccions
@@ -13855,12 +13762,11 @@ modelo:
             03109:
               label: Unió temporal d'empreses, ajustaments per rendes exemptes per
                 participar a l'estranger en fórmules de col·laboració anàlogues a
-                les UTE (art. 45.2 LIS) - Disminució - Saldo pendent a principio de
-                ...
+                les UTE (art. 45.2 LIS) - Disminució - Saldo pendent a principi d'exercici
             '03110':
               label: Unió temporal d'empreses, ajustaments per rendes exemptes per
-                participar a l'estranger en fórmules de col·laboració anàlogues a
-                les UTE (art. 45.2 LIS) - Disminució - Saldo pendent a fin de ejerci...
+                participar a l'estranger en fòrmules de col·laboració anàlogues a
+                les UTE (art. 45.2 LIS) - Disminució - Saldo pendent a final d'exercici
             '03122':
               label: Bases imp. negatives generades dins del grup fiscal per l'ent.
                 transmesa i que hagin estat compensades (art. 62.2 LIS) - Augment
@@ -13886,7 +13792,7 @@ modelo:
             '03133':
               label: Societats i fons de capital risc i societats de desenvolupament
                 industrial regional (capítol IV del títol VII LIS) - Augment - Correccions
-                de l'exercici - Temporànies (amb origen en exercicis ...
+                de l'exercici - Temporànies (amb origen en exercicis anteriors)
             '03137':
               label: Societats i fons de capital risc i societats de desenvolupament
                 industrial regional (capítol IV del títol VII LIS) - Disminució -
@@ -13895,10 +13801,6 @@ modelo:
               label: Societats i fons de capital risc i societats de desenvolupament
                 industrial regional (capítol IV del títol VII LIS) - Disminució -
                 Correccions de l'exercici - Temporànies (amb origen en exercicis anteriors)
-            '03142':
-              label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
-                (capítol VII del títol VII LIS) - Augment - Correccions de l'exercici
-                - Temporànies (amb origen en l'exercici) [0...
             '03143':
               label: Valoració de béns i drets. Règim especial d'operacions de reestructuració
                 (capítol VII del títol VII LIS) - Augment - Correccions de l'exercici
@@ -13965,7 +13867,8 @@ modelo:
             '03405':
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
-                de base imposable especial any 2025(*) - Pendent d''aplicació a ...'
+                de base imposable especial any 2025(*) - Pendent d''aplicació a principi
+                del període/generada en el període'
             '03406':
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
@@ -14108,7 +14011,7 @@ modelo:
               label: Deduccions per incentivar determ. activitats - 2024 Inversions
                 en territ. Àfrica Occidental i despeses de propaganda i publicitat
                 (art. 27 bis Llei 19/1994) (TAP) - Pendent d'aplicació en períodes
-                ...
+                futurs
             03448:
               help: Deducció pendent/generada - Barcelona Music Lab. El Futuro de
                 la Música (BM)

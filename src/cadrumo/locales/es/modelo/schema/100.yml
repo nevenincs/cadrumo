@@ -3267,6 +3267,11 @@ modelo:
             label: Contribuyente que obtiene los premios
           irpf-premios-juegos-publicitarios-contribuyente-titular:
             label: Contribuyente que obtiene los premios
+          irpf-rdto-trabajo-cesion-derechos-autor-anticipo-flag:
+            label: En el caso de los rendimientos derivados de la cesión de la explotación
+              de los derechos de autor, si opta por imputar el anticipo a cuenta de
+              los mismos a medida que vayan devengándose los derechos, consigne una
+              'X'
           irpf-re-agrup-interes-economico-base-imponible-imputada:
             label: Base imponible imputada
           irpf-re-agrup-interes-economico-nif:
@@ -3636,7 +3641,7 @@ modelo:
             label: 'Retribución en especie (no exenta por superar la cuantía prevista
               en al artículo 42.3.f) y pendientes de imputación de acuerdo con lo
               dispuesto en el artículo 14.2.m) de la Ley del impuesto): Ingresos a
-              cuentarepercutidos'
+              cuenta repercutidos'
           irpf-retrib-especie-no-exenta-importe-integro-pendiente-imputacion:
             label: 'Retribución en especie (no exenta por superar la cuantía prevista
               en al artículo 42.3.f) y pendientes de imputación de acuerdo con lo
@@ -3729,11 +3734,6 @@ modelo:
       revision:
         '2020':
           casilla:
-            '0002':
-              label: En el caso de los rendimientos derivados de la cesión de la explotación
-                de los derechos de autor, si opta por imputar el anticipo a cuenta
-                de los mismos a medida que vayan devengándose los derechos, consigne
-                una 'X'
             '0003':
               label: Retribuciones dinerarias (incluidas pensiones compensatorias
                 y anualidades por alimentos no exentas). Importe íntegro
@@ -4183,15 +4183,21 @@ modelo:
             '0443':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2016, pendientes de compensación a 1 de enero de 2020, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0449]) (Cumplimente
+                el anexo C.2)
             '0444':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2017, pendientes de compensación a 1 de enero de 2020, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0450]) (Cumplimente
+                el anexo C.2)
             '0445':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2018, pendientes de compensación a 1 de enero de 2020, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0451]) (Cumplimente
+                el anexo C.2)
             '0446':
               label: Saldos netos negativos de ganancias y pérdidas patrimoniales
                 imputables a 2020, a integrar en la base imponible del ahorro, con
@@ -4200,11 +4206,15 @@ modelo:
             '0447':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2019, pendientes de compensación a 1 de enero de 2020, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0452]) (Cumplimente
+                el anexo C.2)
             0448:
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2019, pendientes de compensación a 1 de enero de 2020, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0442]) (Cumplimente
+                el anexo C.2)
             0449:
               label: Saldos netos negativos de rendimientos del capital mobiliario,
                 de 2016, pendientes de compensación a 1 de enero de 2020, a integrar
@@ -4224,15 +4234,21 @@ modelo:
             '0453':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2016, pendientes de compensación a 1 de enero de 2020, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0439]) (Cumplimente
+                el anexo C.2)
             '0454':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2017, pendientes de compensación a 1 de enero de 2020, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0440]) (Cumplimente
+                el anexo C.2)
             '0455':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2018, pendientes de compensación a 1 de enero de 2020, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0441]) (Cumplimente
+                el anexo C.2)
             '0456':
               label: NIF/NIE del hijo 1(*)
             '0457':
@@ -5858,15 +5874,21 @@ modelo:
             '0443':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2017, pendientes de compensación a 1 de enero de 2021, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0449]) (Cumplimente
+                el anexo C.2)
             '0444':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2018, pendientes de compensación a 1 de enero de 2021, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0450]) (Cumplimente
+                el anexo C.2)
             '0445':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2019, pendientes de compensación a 1 de enero de 2021, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0451]) (Cumplimente
+                el anexo C.2)
             '0446':
               label: Saldos netos negativos de ganancias y pérdidas patrimoniales
                 imputables a 2021, a integrar en la base imponible del ahorro, con
@@ -5875,11 +5897,15 @@ modelo:
             '0447':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2020, pendientes de compensación a 1 de enero de 2021, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0452]) (Cumplimente
+                el anexo C.2)
             0448:
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2020, pendientes de compensación a 1 de enero de 2021, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0442]) (Cumplimente
+                el anexo C.2)
             0449:
               label: Saldos netos negativos de rendimientos del capital mobiliario,
                 de 2017, pendientes de compensación a 1 de enero de 2021, a integrar
@@ -5899,15 +5925,21 @@ modelo:
             '0453':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2017, pendientes de compensación a 1 de enero de 2021, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0439]) (Cumplimente
+                el anexo C.2)
             '0454':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2018, pendientes de compensación a 1 de enero de 2021, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0440]) (Cumplimente
+                el anexo C.2)
             '0455':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2019, pendientes de compensación a 1 de enero de 2021, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0441]) (Cumplimente
+                el anexo C.2)
             '0460':
               label: Base imponible del ahorro ( [0424] - [0436] - [0439] - [0440]
                 - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446]
@@ -5971,7 +6003,9 @@ modelo:
             '0523':
               label: 'Importe del mínimo personal y familiar que forma parte de la
                 base liquidable general a efectos del cálculo del gravamen autonómico::
-                la menor de las cantidades consignadas en las casillas [0505] y ...'
+                la menor de las cantidades consignadas en las casillas [0505] y [0520].
+                (Si la casilla [0505] es negativa o igual a cero, consigne el número
+                cero en la casilla [0523] )'
             '0524':
               label: 'Importe del mínimo personal y familiar que forma parte de la
                 base liquidable del ahorro a efectos del cálculo del gravamen autonómico::
@@ -6125,10 +6159,6 @@ modelo:
             '0755':
               label: 'Por inversiones en producciones cinematográficas y series audiovisuales
                 españolas (art. 36.1 de la LIS): Aplicado en esta declaración'
-            0758:
-              label: 'Por inversión en beneficios (art. 37º del TRLIS, D.T. 24ª LIS)
-                (solo si existe un plan especial de inversión aprobado por la Administración
-                que permita invertir en este ejercicio): Aplicado en esta{0} declaración'
             '0777':
               label: 'Reserva para Inversiones en Canarias 2017 (2)(3): Importe de
                 las dotaciones'
@@ -6213,11 +6243,6 @@ modelo:
             0853:
               label: Por cantidades invertidas en el alquiler de vivienda habitual
                 (se traslada este importe a la casilla [1130] del anexo B.8)
-            0854:
-              label: Por inversión en la adquisición de acciones y participaciones
-                sociales como consecuencia de acuerdos de constitución de sociedades
-                o ampliación de capital en las sociedades mercantiles (se traslada
-                este importe a la casilla [1136] del anexo B.8)
             0872:
               label: Por inversión en acciones de entidades que cotizan en el segmento
                 de empresas en expansión del Mercado Alternativo Bursátil (se traslada
@@ -6315,11 +6340,6 @@ modelo:
               label: Por inversión por un ángel inversor por la adquisición de acciones
                 o participaciones sociales de entidades nuevas o de creación reciente
                 (se traslada este importe a la casilla [1136] del anexo B.8)
-            '1016':
-              label: Por inversión en la adquisición de acciones o participaciones
-                sociales como consecuencia de acuerdos de constitución o ampliación
-                de capital en sociedades mercantiles (se traslada este importe a la
-                casilla [1136] del anexo B.8)
             '1019':
               label: Por arrendamiento de vivienda habitual (se traslada este importe
                 a la casilla [1130] del anexo B.8)
@@ -7125,15 +7145,21 @@ modelo:
             '0443':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2018, pendientes de compensación a 1 de enero de 2022, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0449]) (Cumplimente
+                el anexo C.2)
             '0444':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2019, pendientes de compensación a 1 de enero de 2022, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0450]) (Cumplimente
+                el anexo C.2)
             '0445':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2020, pendientes de compensación a 1 de enero de 2022, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0451]) (Cumplimente
+                el anexo C.2)
             '0446':
               label: Saldos netos negativos de ganancias y pérdidas patrimoniales
                 imputables a 2022, a integrar en la base imponible del ahorro, con
@@ -7142,11 +7168,15 @@ modelo:
             '0447':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2021, pendientes de compensación a 1 de enero de 2022, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0452]) (Cumplimente
+                el anexo C.2)
             0448:
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2021, pendientes de compensación a 1 de enero de 2022, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0442]) (Cumplimente
+                el anexo C.2)
             0449:
               label: Saldos netos negativos de rendimientos del capital mobiliario,
                 de 2018, pendientes de compensación a 1 de enero de 2022, a integrar
@@ -7166,15 +7196,21 @@ modelo:
             '0453':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2018, pendientes de compensación a 1 de enero de 2022, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0439]) (Cumplimente
+                el anexo C.2)
             '0454':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2019, pendientes de compensación a 1 de enero de 2022, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0440]) (Cumplimente
+                el anexo C.2)
             '0455':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2020, pendientes de compensación a 1 de enero de 2022, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0441]) (Cumplimente
+                el anexo C.2)
             '0460':
               label: Base imponible del ahorro ( [0424] - [0436] - [0439] - [0440]
                 - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446]
@@ -7400,10 +7436,6 @@ modelo:
               label: 'Inversiones anticipadas de futuras dotaciones a la RIC, efectuadas
                 en 2022: Inversiones previstas en las letras C y D (2.º a 6.º) del
                 art.º 27.4'
-            0758:
-              label: 'Por inversión en beneficios (art. 37º del TRLIS, D.T. 24ª LIS)
-                (solo si existe un plan especial de inversión aprobado por la Administración
-                que permita invertir en este ejercicio): Aplicado en esta declaración'
             '0764':
               label: '"España País Invitado de Honor en la Feria del Libro de Fráncfort
                 en 2022": Aplicado en esta declaración'
@@ -7494,11 +7526,6 @@ modelo:
             0853:
               label: Por cantidades invertidas en el alquiler de vivienda habitual
                 (se traslada este importe a la casilla [1130] del anexo B.8)
-            0854:
-              label: Por inversión en la adquisición de acciones y participaciones
-                sociales como consecuencia de acuerdos de constitución de sociedades
-                o ampliación de capital en las sociedades mercantiles (se traslada
-                este importe a la casilla [1136] del anexo B.8)
             0872:
               label: Por inversión en acciones de entidades que cotizan en el segmento
                 de empresas en expansión del Mercado Alternativo Bursátil (se traslada
@@ -7595,11 +7622,6 @@ modelo:
               label: Por inversión por un ángel inversor por la adquisición de acciones
                 o participaciones sociales de entidades nuevas o de creación reciente
                 (se traslada este importe a la casilla [1136] del anexo B.8)
-            '1016':
-              label: Por inversión en la adquisición de acciones o participaciones
-                sociales como consecuencia de acuerdos de constitución o ampliación
-                de capital en sociedades mercantiles (se traslada este importe a la
-                casilla [1136] del anexo B.8)
             '1019':
               label: Por arrendamiento de vivienda habitual (se traslada este importe
                 a la casilla [1130] del anexo B.8)
@@ -7844,7 +7866,7 @@ modelo:
               label: 'Aportaciones y contribuciones de 2022 (excepto contribuciones
                 empresariales a seguros colectivos de dependencia) no aplicadas cuyo
                 importe se solicita poder reducir en los 5 ejercicios siguientes:
-                ...'
+                Pendiente de aplicación en ejercicios futuros'
             '1301':
               label: 'Ejercicio 2017: Pendiente de aplicación al principio del periodo'
             '1302':
@@ -8068,7 +8090,7 @@ modelo:
             '1530':
               label: 'Otros trabajos y servicios accesorios realizados por agricultores,
                 ganaderos o titulares de actividades forestales, excepto servicios
-                de cría, guarda y engorde de ganado (aves incluidas): Ingresos ...'
+                de cría, guarda y engorde de ganado (aves incluidas): Ingresos íntegros'
             '1533':
               label: 'Servicios de cría, guarda y engorde de ganado (aves incluidas):
                 Ingresos íntegros'
@@ -8240,11 +8262,6 @@ modelo:
             label: Ejercicio 2022
         '2023':
           casilla:
-            '0002':
-              label: En el caso de los rendimientos derivados de la cesión de la explotación
-                de los derechos de autor, si opta por imputar el anticipo a cuenta
-                de los mismos a medida que vayan devengándose los derechos, marque
-                una 'X'
             '0003':
               label: Retribuciones dinerarias (incluidas las pensiones compensatorias
                 y anualidades por alimentos no exentas). Importe íntegro
@@ -8416,7 +8433,11 @@ modelo:
             '0417':
               label: Si los contribuyentes, socios de entidades no residentes en España,
                 se hayan visto afectados en 2023 por operaciones de fusión, escisión
-                o canje de valores realizadas por dichas entidades regulado ...
+                o canje de valores realizadas por dichas entidades regulado en el
+                Capítulo VII del Título VII de la Ley del Impuesto sobre Sociedades
+                (artículos 48 y 49 del Reglamento de dicho Impuesto) y las entidades
+                no residentes no han aplicado un régimen fiscal similar a éste, marque
+                con una "X" esta casilla
             '0422':
               label: Suma de ganancias patrimoniales ([1608] + [0324] + [0339] + [0354]
                 + [1814] + [1845] + [1846] + [0386] + [0387] + [0390] + [0393] + [0412])
@@ -8472,15 +8493,21 @@ modelo:
             '0443':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2019, pendientes de compensación a 1 de enero de 2023, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0449]) (Cumplimente
+                el anexo C.3)
             '0444':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2020, pendientes de compensación a 1 de enero de 2023, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0450]) (Cumplimente
+                el anexo C.3)
             '0445':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2021, pendientes de compensación a 1 de enero de 2023, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0451]) (Cumplimente
+                el anexo C.3)
             '0446':
               label: Saldos netos negativos de ganancias y pérdidas patrimoniales
                 imputables a 2023, a integrar en la base imponible del ahorro, con
@@ -8489,11 +8516,15 @@ modelo:
             '0447':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2022, pendientes de compensación a 1 de enero de 2023, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0452]) (Cumplimente
+                el anexo C.3)
             0448:
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2022, pendientes de compensación a 1 de enero de 2023, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0442]) (Cumplimente
+                el anexo C.3)
             0449:
               label: Saldos netos negativos de rendimientos del capital mobiliario,
                 de 2019, pendientes de compensación a 1 de enero de 2023, a integrar
@@ -8513,15 +8544,21 @@ modelo:
             '0453':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2019, pendientes de compensación a 1 de enero de 2023, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0439]) (Cumplimente
+                el anexo C.3)
             '0454':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2020, pendientes de compensación a 1 de enero de 2023, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0440]) (Cumplimente
+                el anexo C.3)
             '0455':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2021, pendientes de compensación a 1 de enero de 2023, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0441]) (Cumplimente
+                el anexo C.3)
             '0460':
               label: Base imponible del ahorro ( [0424] - [0436] - [0439] - [0440]
                 - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446]
@@ -8722,10 +8759,6 @@ modelo:
               label: 'Inversiones anticipadas de futuras dotaciones a la RIC, efectuadas
                 en 2023: Inversiones previstas en las letras C y D (2.º a 6.º) del
                 art.º 27.4'
-            0758:
-              label: 'Por inversión en beneficios (art. 37º del TRLIS, D.T. 24ª LIS)
-                (solo si existe un plan especial de inversión aprobado por la Administración
-                que permita invertir en este ejercicio): Aplicado en esta declaración'
             '0770':
               label: Por obtención de subvenciones y ayudas para paliar el impacto
                 provocado por la inflación durante el año 2023
@@ -8821,11 +8854,6 @@ modelo:
             0853:
               label: Por cantidades invertidas en el alquiler de vivienda habitual
                 (se traslada este importe a la casilla [1130] del anexo B.8)
-            0854:
-              label: Por inversión en la adquisición de acciones y participaciones
-                sociales como consecuencia de acuerdos de constitución de sociedades
-                o ampliación de capital en las sociedades mercantiles (se traslada
-                este importe a la casilla [1136] del anexo B.8)
             0872:
               label: Por inversión en acciones de entidades que cotizan en el segmento
                 de empresas en expansión del Mercado Alternativo Bursátil (se traslada
@@ -8915,11 +8943,6 @@ modelo:
               label: Por inversión por un ángel inversor por la adquisición de acciones
                 o participaciones sociales de entidades nuevas o de creación reciente
                 (se traslada este importe a la casilla [1136] del anexo B.8)
-            '1016':
-              label: Por inversión en la adquisición de acciones o participaciones
-                sociales como consecuencia de acuerdos de constitución o ampliación
-                de capital en sociedades mercantiles (se traslada este importe a la
-                casilla [1136] del anexo B.8)
             '1019':
               label: Por arrendamiento de vivienda habitual (se traslada este importe
                 a la casilla [1130] del anexo B.8)
@@ -9147,7 +9170,7 @@ modelo:
               label: 'Aportaciones y contribuciones de 2023 (excepto contribuciones
                 empresariales a seguros colectivos de dependencia) no aplicadas cuyo
                 importe se solicita poder reducir en los 5 ejercicios siguientes:
-                ...'
+                Pendiente de aplicación en ejercicios futuros'
             '1301':
               label: 'Ejercicio 2018: Pendiente de aplicación al principio del periodo'
             '1302':
@@ -9368,7 +9391,7 @@ modelo:
             '1530':
               label: 'Otros trabajos y servicios accesorios realizados por agricultores,
                 ganaderos o titulares de actividades forestales, excepto servicios
-                de cría, guarda y engorde de ganado (aves incluidas): Ingresos ...'
+                de cría, guarda y engorde de ganado (aves incluidas): Ingresos íntegros'
             '1533':
               label: 'Servicios de cría, guarda y engorde de ganado (aves incluidas):
                 Ingresos íntegros'
@@ -9552,10 +9575,6 @@ modelo:
               help: 'Casilla 0002: utilícela cuando se opte por imputar los anticipos
                 de rendimientos por cesión de derechos de autor a medida que se devenguen
                 los derechos.'
-              label: En el caso de los rendimientos derivados de la cesión de la explotación
-                de los derechos de autor, si opta por imputar el anticipo a cuenta
-                de los mismos a medida que vayan devengándose los derechos, marque
-                una 'X'
             '0003':
               help: 'Casilla 0003: importe íntegro de las retribuciones dinerarias,
                 incluidas las pensiones compensatorias y las anualidades por alimentos
@@ -10391,8 +10410,9 @@ modelo:
                 la institución de inversión colectiva.
             0279:
               help: Consigne las ayudas públicas para la primera instalación de jóvenes
-                agricultores del Marco Nacional de Desarrollo Rural destinadas a adquirir
-                una participación en el capital de empresas agr...
+                agricultores previstas en el Marco Nacional de Desarrollo Rural destinadas
+                a adquirir una participación en el capital de empresas agrícolas,
+                por el importe imputable a 2024 (cumplimente el Anexo C.1).
               label: Ayudas públicas para la primera instalación de jóvenes agricultores
                 previstas en el Marco Nacional de Desarrollo Rural destinadas a la
                 adquisición de una participación en el capital de empresas agrícolas.
@@ -10462,9 +10482,8 @@ modelo:
                 C.1) (*)
             '0300':
               help: Consigne otras subvenciones o ayudas para adquirir o rehabilitar
-                la vivienda habitual o reparar defectos estructurales en ella, con
-                el importe imputable a 2024; el texto oficial de origen queda truncado
-                en An...
+                la vivienda habitual o reparar defectos estructurales en ella, por
+                el importe imputable a 2024 (cumplimente el Anexo C.1).
               label: Otras subvenciones o ayudas destinadas a la adquisición o rehabilitación
                 de la vivienda habitual o a la reparación de defectos estructurales
                 en la misma. Importe imputable a 2024 (cumplimente el Anexo C.1) (*)
@@ -10794,7 +10813,7 @@ modelo:
             '0401':
               help: Marque esta casilla cuando el contribuyente haya transmitido inter
                 vivos las acciones o participaciones tras haber trasladado su residencia
-                a otro Estado miembro de la U...
+                a otro Estado miembro de la Unión Europea.
             '0402':
               help: Identifique al contribuyente titular de los valores declarados
                 en esta entrada de cambio de residencia.
@@ -10830,22 +10849,28 @@ modelo:
               help: Este campo totaliza las ganancias patrimoniales por cambio de
                 residencia fuera del territorio español sumando la casilla [0411].
             '0416':
-              help: Marque este campo cuando el contribuyente, como socio de entidades
+              help: Marque esta casilla cuando el contribuyente, como socio de entidades
                 no residentes en España, se haya visto afectado en 2023 por operaciones
                 de fusión, escisión o canje de valores reguladas en el capítulo VII
-                del título VII...
+                del título VII de la Ley del Impuesto sobre Sociedades.
               label: Si los contribuyentes, socios de entidades no residentes en España,
                 se han visto afectados en 2023 por operaciones de fusión, escisión
                 o canje de valores reguladas en el Capítulo VII del Título VII de
                 la Ley del Impuesto sobre Sociedades, marque con una "X" esta casilla
             '0417':
-              help: Marque este campo cuando el contribuyente, como socio de entidades
+              help: Marque esta casilla cuando el contribuyente, como socio de entidades
                 no residentes en España, se haya visto afectado en 2023 por operaciones
                 de fusión, escisión o canje de valores realizadas por dichas entidades
-                reguladas ...
+                reguladas en el capítulo VII del título VII de la Ley del Impuesto
+                sobre Sociedades, y las entidades no residentes no hayan aplicado
+                un régimen fiscal similar.
               label: Si los contribuyentes, socios de entidades no residentes en España,
                 se hayan visto afectados en 2023 por operaciones de fusión, escisión
-                o canje de valores realizadas por dichas entidades regulado ...
+                o canje de valores realizadas por dichas entidades regulado en el
+                Capítulo VII del Título VII de la Ley del Impuesto sobre Sociedades
+                (artículos 48 y 49 del Reglamento de dicho Impuesto) y las entidades
+                no residentes no han aplicado un régimen fiscal similar a éste, marque
+                con una "X" esta casilla
             0418:
               help: Este campo totaliza las ganancias patrimoniales sumando [1606],
                 [0290], [0297], [0306] y [0400].
@@ -10974,7 +10999,9 @@ modelo:
                 aplicable del 25 por ciento.
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2020, pendientes de compensación a 1 de enero de 2024, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0449]) (Cumplimente
+                el anexo C.3)
             '0444':
               help: Consigne el resto de saldos netos negativos de rendimientos de
                 capital mobiliario de 2021 pendientes de compensación a 1 de enero
@@ -10982,7 +11009,9 @@ modelo:
                 aplicable del 25 por ciento.
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2021, pendientes de compensación a 1 de enero de 2024, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0450]) (Cumplimente
+                el anexo C.3)
             '0445':
               help: Consigne el resto de saldos netos negativos de rendimientos de
                 capital mobiliario de 2022 pendientes de compensación a 1 de enero
@@ -10990,7 +11019,9 @@ modelo:
                 aplicable del 25 por ciento.
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2022, pendientes de compensación a 1 de enero de 2024, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0451]) (Cumplimente
+                el anexo C.3)
             '0446':
               help: Consigne o revise la información fiscal en la casilla para completar
                 esta autoliquidación.
@@ -11005,7 +11036,9 @@ modelo:
                 aplicable del 25 por ciento.
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2023, pendientes de compensación a 1 de enero de 2024, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0452]) (Cumplimente
+                el anexo C.3)
             0448:
               help: Consigne el resto de saldos netos negativos de ganancias y pérdidas
                 patrimoniales de 2023 pendientes de compensación a 1 de enero de 2024
@@ -11013,7 +11046,9 @@ modelo:
                 del 25 por ciento.
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2023, pendientes de compensación a 1 de enero de 2024, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0442]) (Cumplimente
+                el anexo C.3)
             0449:
               help: Consigne los saldos netos negativos de rendimientos de capital
                 mobiliario de 2020 pendientes de compensación a 1 de enero de 2024
@@ -11049,7 +11084,9 @@ modelo:
                 del 25 por ciento.
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2020, pendientes de compensación a 1 de enero de 2024, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0439]) (Cumplimente
+                el anexo C.3)
             '0454':
               help: Consigne el resto de saldos netos negativos de ganancias y pérdidas
                 patrimoniales de 2021 pendientes de compensación a 1 de enero de 2024
@@ -11057,7 +11094,9 @@ modelo:
                 del 25 por ciento.
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2021, pendientes de compensación a 1 de enero de 2024, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0440]) (Cumplimente
+                el anexo C.3)
             '0455':
               help: Consigne el resto de saldos netos negativos de ganancias y pérdidas
                 patrimoniales de 2022 pendientes de compensación a 1 de enero de 2024
@@ -11065,7 +11104,9 @@ modelo:
                 del 25 por ciento.
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2022, pendientes de compensación a 1 de enero de 2024, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0441]) (Cumplimente
+                el anexo C.3)
             '0456':
               help: Indique el NIF o NIE del hijo o hija 1 en los datos adicionales
                 de las anualidades por alimentos.
@@ -12347,10 +12388,6 @@ modelo:
               help: Consigne la deducción por inversión en la adquisición de acciones
                 y participaciones sociales derivada de acuerdos de constitución de
                 sociedades o ampliación de capital en sociedades mercantiles.
-              label: Por inversión en la adquisición de acciones y participaciones
-                sociales como consecuencia de acuerdos de constitución de sociedades
-                o ampliación de capital en las sociedades mercantiles (se traslada
-                este importe a la casilla [1136] del anexo B.9)
             0855:
               help: Consigne la deducción por adopción internacional de hijos.
             0856:
@@ -12805,10 +12842,6 @@ modelo:
               help: Consigne la deducción por inversión en la adquisición de acciones
                 o participaciones sociales derivada de acuerdos de constitución o
                 ampliación de capital en sociedades mercantiles.
-              label: Por inversión en la adquisición de acciones o participaciones
-                sociales como consecuencia de acuerdos de constitución o ampliación
-                de capital en sociedades mercantiles (se traslada este importe a la
-                casilla [1136] del anexo B.9)
             '1017':
               help: Consigne la deducción por cuidado de hijos menores de hasta 14
                 años incluidos.
@@ -13679,14 +13712,14 @@ modelo:
                 correspondiente al ejercicio 2023.
               label: 'Ejercicio 2023: Pendiente de aplicación en ejercicios futuros'
             '1299':
-              help: 'Consigne las aportaciones y contribuciones de 2024, excepto las
+              help: Consigne las aportaciones y contribuciones de 2024, excepto las
                 contribuciones empresariales a seguros colectivos de dependencia,
                 no aplicadas cuyo importe se solicita poder reducir en los 5 ejercicios
-                siguientes: ...'
+                siguientes y que quedan pendientes de aplicación en ejercicios futuros.
               label: 'Aportaciones y contribuciones de 2024 (excepto contribuciones
                 empresariales a seguros colectivos de dependencia) no aplicadas cuyo
                 importe se solicita poder reducir en los 5 ejercicios siguientes:
-                ...'
+                Pendiente de aplicación en ejercicios futuros'
             '1300':
               help: Consigne el contribuyente con derecho a la reducción.
             '1301':
@@ -14379,13 +14412,13 @@ modelo:
             '1529':
               help: Consigne el rendimiento base del producto.
             '1530':
-              help: 'Consigne los ingresos de otros trabajos y servicios accesorios
+              help: Consigne los ingresos íntegros de otros trabajos y servicios accesorios
                 realizados por agricultores, ganaderos o titulares de actividades
                 forestales, excepto los servicios de cría, guarda y engorde de ganado,
-                aves incluidas: ...'
+                aves incluidas.
               label: 'Otros trabajos y servicios accesorios realizados por agricultores,
                 ganaderos o titulares de actividades forestales, excepto servicios
-                de cría, guarda y engorde de ganado (aves incluidas): Ingresos ...'
+                de cría, guarda y engorde de ganado (aves incluidas): Ingresos íntegros'
             '1531':
               help: Consigne el índice.
             '1532':
@@ -14455,7 +14488,8 @@ modelo:
             '1557':
               help: Consigne los gastos de formación en que hayan incurrido los contribuyentes
                 que desarrollen trabajos especialmente cualificados, relacionados
-                directa y principalmente con actividades de investigación y desarr...
+                directa y principalmente con actividades de investigación y desarrollo,
+                científicas o de carácter técnico.
             '1558':
               help: Consigne la suma de rendimientos netos reducidos de las actividades
                 agrícolas, ganaderas y forestales en estimación objetiva, como suma
@@ -15597,21 +15631,17 @@ modelo:
             '1967':
               help: Consigne el año en que se percibe la retribución en especie.
             '1968':
-              help: Consigne el valor visible de la retribución en especie pendiente
-                de imputación; la etiqueta de origen autorizada aparece truncada como
-                Valo...
+              help: Consigne la valoración de la retribución en especie no exenta
+                pendiente de imputación.
             '1969':
-              help: Consigne el importe visible del ingreso a cuenta de la retribución
-                en especie pendiente de imputación; la etiqueta de origen autorizada
-                aparece truncada como Ingr...
+              help: Consigne los ingresos a cuenta de la retribución en especie no
+                exenta pendiente de imputación.
             '1970':
-              help: Consigne el importe visible del ingreso a cuenta de la retribución
-                en especie pendiente de imputación; la etiqueta de origen autorizada
-                aparece truncada como Ingr...
+              help: Consigne los ingresos a cuenta repercutidos al perceptor de la
+                retribución en especie no exenta pendiente de imputación.
             '1971':
-              help: Consigne el importe visible de la retribución en especie pendiente
-                de imputación; la etiqueta de origen autorizada aparece truncada como
-                Impo...
+              help: 'Consigne el importe íntegro de la retribución en especie no exenta
+                pendiente de imputación: [1968] + [1969] - [1970].'
             '1972':
               help: Consigne el contribuyente titular del elemento patrimonial transmitido.
             '1973':
@@ -15881,11 +15911,6 @@ modelo:
             label: Ejercicio 2024
         '2025':
           casilla:
-            '0002':
-              label: En el caso de los rendimientos derivados de la cesión de la explotación
-                de los derechos de autor, si opta por imputar el anticipo a cuenta
-                de los mismos a medida que vayan devengándose los derechos, marque
-                una 'X'
             '0003':
               label: Retribuciones dinerarias. Importe integro
             '0004':
@@ -16310,7 +16335,11 @@ modelo:
             '0417':
               label: Si los contribuyentes, socios de entidades no residentes en España,
                 se hayan visto afectados en 2024 por operaciones de fusión, escisión
-                o canje de valores realizadas por dichas entidades regulado ...
+                o canje de valores realizadas por dichas entidades regulado en el
+                Capítulo VII del Título VII de la Ley del Impuesto sobre Sociedades
+                (artículos 48 y 49 del Reglamento de dicho Impuesto) y las entidades
+                no residentes no han aplicado un régimen fiscal similar a éste, marque
+                con una "X" esta casilla
             '0422':
               label: Suma de ganancias patrimoniales ([1608] + [0324] + [2235] + [0339]
                 + [0354] + [1814] + [1845] + [1846] + [0386] + [0387] + [0390] + [0393]
@@ -16367,15 +16396,21 @@ modelo:
             '0443':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2021, pendientes de compensación a 1 de enero de 2025, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0449]) (Cumplimente
+                el anexo C.3)
             '0444':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2022, pendientes de compensación a 1 de enero de 2025, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0450]) (Cumplimente
+                el anexo C.3)
             '0445':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2023, pendientes de compensación a 1 de enero de 2025, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0451]) (Cumplimente
+                el anexo C.3)
             '0446':
               label: Saldos netos negativos de ganancias y pérdidas patrimoniales
                 imputables a 2025, a integrar en la base imponible del ahorro, con
@@ -16384,11 +16419,15 @@ modelo:
             '0447':
               label: Resto de saldos netos negativos de rendimientos de capital mobiliario
                 de 2024, pendientes de compensación a 1 de enero de 2025, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0424]
+                (*) (saldo pendiente no compensado en la casilla [0452]) (Cumplimente
+                el anexo C.3)
             0448:
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2024, pendientes de compensación a 1 de enero de 2025, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0442]) (Cumplimente
+                el anexo C.3)
             0449:
               label: Saldos netos negativos de rendimientos del capital mobiliario,
                 de 2021, pendientes de compensación a 1 de enero de 2025, a integrar
@@ -16408,15 +16447,21 @@ modelo:
             '0453':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2021, pendientes de compensación a 1 de enero de 2025, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0439]) (Cumplimente
+                el anexo C.3)
             '0454':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2022, pendientes de compensación a 1 de enero de 2025, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0440]) (Cumplimente
+                el anexo C.3)
             '0455':
               label: Resto de saldos netos negativos de ganancias y pérdidas patrimoniales
                 de 2023, pendientes de compensación a 1 de enero de 2025, a integrar
-                en la base imponible del ahorro, con el límite del 25 por ...
+                en la base imponible del ahorro, con el límite del 25 por 100 de [0429]
+                (*) (saldo pendiente no compensado en la casilla [0441]) (Cumplimente
+                el anexo C.3)
             '0460':
               label: Base imponible del ahorro ( [0424] - [0436] - [0439] - [0440]
                 - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446]
@@ -16807,7 +16852,7 @@ modelo:
               label: Por arrendamiento de viviendas situadas en municipios afectados
                 por riesgo de despoblamiento en Cantabria que constituyan o vayan
                 a constituir la vivienda habitual del arrendatario (deducción para
-                ...
+                el arrendatario) (importe de la casilla [0646] del anexo B.12)
             0820:
               label: Por gastos de guardería para contribuyentes que tengan su residencia
                 habitual en municipios afectados por riesgo de despoblamiento en Cantabria
@@ -16863,7 +16908,7 @@ modelo:
               label: Por inversión en la adquisición de acciones y participaciones
                 sociales como consecuencia de acuerdos de constitución de sociedades
                 o ampliación de capital en las sociedades mercantiles (importe de
-                ...
+                la casilla [1136] del anexo B.11)
             0872:
               label: Por inversión en acciones de entidades que cotizan en el segmento
                 de empresas en expansión del Mercado Alternativo Bursátil (importe
@@ -17228,7 +17273,7 @@ modelo:
               label: 'Aportaciones y contribuciones de 2025 (excepto contribuciones
                 empresariales a seguros colectivos de dependencia) no aplicadas cuyo
                 importe se solicita poder reducir en los 5 ejercicios siguientes:
-                ...'
+                Pendiente de aplicación en ejercicios futuros'
             '1301':
               label: 'Ejercicio 2020: Pendiente de aplicación al principio del periodo'
             '1302':

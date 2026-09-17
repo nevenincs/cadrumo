@@ -600,6 +600,15 @@ modelo:
             help: Mark this box with an "X" if there is no cadastral reference.
             label: If you do not have a cadastral reference, mark this box with an
               "X"
+          irpf-anexo-b-no-catastral-flag-norcps1:
+            label: If you do not have a cadastral reference, mark this box with an
+              "X"
+          irpf-anexo-b-no-catastral-flag-norcps2:
+            label: If you do not have a cadastral reference, mark this box with an
+              "X"
+          irpf-anexo-b-no-catastral-flag-norcps3:
+            label: If you do not have a cadastral reference, mark this box with an
+              "X"
           irpf-anexo-b-prima-seguro-credito-arrendamiento-cantps1:
             label: Premiums paid
           irpf-anexo-b-prima-seguro-credito-arrendamiento-cantps2:
@@ -840,6 +849,8 @@ modelo:
               early childhood education center.
             label: Tax ID (NIF) of the authorised nursery or early years education
               centre
+          irpf-centro-guarderia-nif-niflr10:
+            label: Tax ID (NIF) of the school, centre or nursery
           irpf-cesion-derechos-imagen-imputacion-contribuyente:
             label: Taxpayer who must carry out the imputation as a result of the assignment
               of image rights
@@ -3086,6 +3097,8 @@ modelo:
             label: If the difference ([0418] - [0419]) is negative
           irpf-integracion-gyp-general-suma-ganancias:
             label: Sum of capital gains ([1606] + [0290] + [0297] + [0306] + [0400])
+          irpf-integracion-gyp-general-suma-perdidas:
+            label: Sum of capital losses ( [1607] + [0307] )
           irpf-intereses-demora-perdida-deduccion-autonomica-incluido-incentivo-empresa-familiar:
             help: 'Late-payment interest on previous deductions: Regional share'
             label: 'Late-payment interest on previous deductions: Regional share'
@@ -3201,6 +3214,10 @@ modelo:
             label: Taxpayer receiving the prizes
           irpf-premios-juegos-publicitarios-contribuyente-titular:
             label: Taxpayer receiving the prizes
+          irpf-rdto-trabajo-cesion-derechos-autor-anticipo-flag:
+            label: In the case of income derived from the assignment of the exploitation
+              of copyright, if you choose to allocate the advance payment on account
+              of that income as the rights accrue, enter an 'X'
           irpf-re-agrup-interes-economico-base-imponible-imputada:
             label: Imputed taxable base
           irpf-re-agrup-interes-economico-nif:
@@ -3258,6 +3275,8 @@ modelo:
             label: 50% Exempt gains (certain urban properties only)
           irpf-re-atrib-gp-exentas-reinversion-nuevas:
             label: Gain exempt through reinvestment in newly or recently created entities
+          irpf-re-atrib-gp-exentas-reinversion-vitalicia:
+            label: Gains exempt due to reinvestment in life annuities
           irpf-re-atrib-gp-no-transmision-ganancias:
             label: Capital gains not arising from transfers, attributed by the entity
           irpf-re-atrib-gp-no-transmision-perdidas:
@@ -3298,6 +3317,9 @@ modelo:
           irpf-re-atrib-retenciones-ganancias:
             label: Attribution of withholdings on capital gains and losses imputable
               to 2020
+          irpf-re-atrib-suma-act-eco:
+            label: Sum of attributed net returns from economic activities (sum of
+              boxes [1583])
           irpf-re-atrib-suma-cap-inmo:
             label: Sum of attributed net returns from real estate capital (sum of
               boxes [1575])
@@ -3311,13 +3333,25 @@ modelo:
             label: Sum of income arising from subordinated-debt securities or preferred
               shares (to be included in the savings taxable base), attributed (sum
               of boxes [1570])
+          irpf-re-atrib-suma-gp-no-transmision-ganancias:
+            label: Sum of attributed capital gains not derived from transfers (to
+              be included in the general taxable base) (sum of boxes [1584])
           irpf-re-atrib-suma-gp-no-transmision-perdidas:
             label: Sum of attributed capital losses not derived from transfers (to
               be included in the general taxable base) (sum of boxes [1585])
+          irpf-re-atrib-suma-gp-perdidas-ahorro:
+            label: Sum of attributed capital losses derived from transfers (to be
+              included in the savings taxable base) (sum of boxes [1596])
+          irpf-re-atrib-suma-gp-transmision-ahorro:
+            label: Sum of attributed capital gains derived from transfers (to be included
+              in the savings taxable base) (sum of boxes [1595])
           irpf-re-iic-denominacion:
             label: Name of the Collective Investment Institution
           irpf-re-iic-imputacion-importe:
             label: Amount of the imputation
+          irpf-re-iic-suma-imputaciones:
+            label: Sum of income imputations from participation in collective investment
+              institutions established in tax havens (sum of boxes [0278])
           irpf-re-imagen-cantidad-imputar:
             label: Amount to be imputed
           irpf-re-imagen-empleador:
@@ -3808,7 +3842,7 @@ modelo:
               label: 'Reduced net real estate capital income: the greater of ([0149]
                 - [0150] - [0151]) and [0152]'
             '0155':
-              label: Sum of imputed property income (sum of boxes [0089])
+              label: Total imputed real estate income (sum of boxes [0089])
             '0156':
               label: Total reduced net real estate capital income (sum of boxes [0154])
             '0172':
@@ -3906,9 +3940,6 @@ modelo:
             '0270':
               label: 'Sum of income imputations under the international tax-transparency
                 regime: (sum of boxes [0269])'
-            0280:
-              label: Sum of income allocations from participation in collective investment
-                institutions established in tax havens (sum of boxes [0278])
             0286:
               label: Amount computable ([0283] + [0284] - [0285])
             0288:
@@ -4006,8 +4037,6 @@ modelo:
             '0417':
               label: If the non-resident entities have not applied a similar tax regime
                 to this one, tick the box
-            0419:
-              label: Sum of capital losses ( [1607] + [0307] )
             '0420':
               label: If the difference ( [0418] - [0419] ) is positive
             '0422':
@@ -4056,26 +4085,31 @@ modelo:
             '0443':
               label: Remaining negative net balances of movable-capital income from
                 2016, pending offset at 1 January 2020, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0449]) (Complete Annex C.2)
             '0444':
               label: Remaining negative net balances of movable-capital income from
                 2017, pending offset at 1 January 2020, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0450]) (Complete Annex C.2)
             '0445':
               label: Remaining negative net balances of movable-capital income from
                 2018, pending offset at 1 January 2020, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0451]) (Complete Annex C.2)
             '0446':
               label: Negative net balances of capital gains and losses attributable
                 to 2020, included in the savings taxable base, limited to 25% of ([0429])
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2019, pending offset at 1 January 2020, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0452]) (Complete Annex C.2)
             0448:
               label: Remaining negative net balances of capital gains and losses from
                 2019, pending offset at 1 January 2020, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0442]) (Complete Annex C.2)
             0449:
               label: Net negative balances of income from movable capital for 2016,
                 pending offset as at 1 January 2020, to be included in the savings
@@ -4095,15 +4129,18 @@ modelo:
             '0453':
               label: Remaining negative net balances of capital gains and losses from
                 2016, pending offset at 1 January 2020, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0439]) (Complete Annex C.2)
             '0454':
               label: Remaining negative net balances of capital gains and losses from
                 2017, pending offset at 1 January 2020, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0440]) (Complete Annex C.2)
             '0455':
               label: Remaining negative net balances of capital gains and losses from
                 2018, pending offset at 1 January 2020, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0441]) (Complete Annex C.2)
             '0456':
               label: NIF/NIE of the hijo 1(*)
             '0457':
@@ -4249,13 +4286,14 @@ modelo:
               label: Sum of regional deductions (transfer the amount from this same
                 casilla in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable)
             '0565':
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.2): State portion'
             '0566':
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.2): Regional
+                portion'
             '0572':
               label: 'Amount of deductions to which entitlement was lost in 2020:
                 State part'
@@ -4304,13 +4342,13 @@ modelo:
               label: Amount of withholdings not actually made which, nevertheless,
                 are considered deductible from the tax liability
             0592:
-              label: Sum of withholdings and payments on account allocated from movable
+              label: Sum of attributed withholdings and payments on account from movable
                 capital (sum of boxes [1597])
             0593:
-              label: Sum of withholdings and payments on account allocated from property
-                capital (sum of boxes [1598])
+              label: Sum of attributed withholdings and payments on account from real
+                estate capital (sum of boxes [1598])
             0594:
-              label: Sum of withholdings and payments on account allocated from economic
+              label: Sum of attributed withholdings and payments on account from economic
                 activities (sum of boxes [1599])
             0595:
               label: Tax liability resulting from the self-assessment ([0587] - [0588]
@@ -4320,8 +4358,7 @@ modelo:
             0597:
               label: For movable-capital income
             0598:
-              label: Sum of withholdings and payments on account (sum of the boxes
-                [0153])
+              label: Sum of withholdings and payments on account (sum of boxes [0153])
             0599:
               label: For income from economic activities (*)
             '0600':
@@ -4509,7 +4546,7 @@ modelo:
             0758:
               label: 'For investment of profits (art. 37º del TRLIS, D.T. 24ª LIS)
                 (only if there is a special investment plan approved by the Administration
-                allowing investment in this tax year): applied in this...'
+                allowing investment in this tax year): applied in this return'
             0759:
               label: 'Deduction for investments in territories of West Africa (art.º
                 27.1.a) bis de la Ley 19/1994): applied in this return'
@@ -4578,14 +4615,25 @@ modelo:
             0813:
               label: For public transport expenses for residents in rural areas at
                 risk of depopulation
+            0814:
+              label: '"Twenty-fifth session of the Conference of the Parties to the
+                United Nations Framework Convention on Climate Change (COP25), fifteenth
+                session of the Conference of the Parties serving as the Meeting of
+                the Parties to the Kyoto Protocol (COP-MOP15) and the second session
+                of the Conference of the Parties serving as the Meeting of the Parties
+                to the Paris Agreement (CMA2) and fifty-first meeting of the Subsidiary
+                Bodies of the Convention, both the Subsidiary Body for Scientific
+                and Technological Advice (SBSTA) and the Subsidiary Body for Implementation
+                (SBI)": Applied in this return'
             0818:
               label: For lease agreements on dwellings located in areas of Cantabria
                 at risk of depopulation and that constitute or are to constitute the
-                tenant's habitual residence (deduction fo...
+                tenant's habitual residence (deduction for the tenant) (transfer the
+                amount from box [0646] of Annex B.8)
             0819:
               label: For lease contracts for homes located in areas of Cantabria at
                 risk of depopulation and which constitute or are to constitute the
-                tenant's main residence (deduction for...
+                tenant's main residence (deduction for the landlord)
             0820:
               label: For nursery expenses for taxpayers whose primary residence is
                 in areas at risk of depopulation
@@ -4665,7 +4713,8 @@ modelo:
             0854:
               label: For investment in the acquisition of shares and equity interests
                 as a result of agreements to incorporate companies or increase capital
-                in commercial companies (this amount is transferr...
+                in commercial companies (this amount is transferred to box [1136]
+                of Annex B.7)
             0863:
               label: For employees, for legal defence expenses relating to the employment
                 relationship
@@ -4816,7 +4865,7 @@ modelo:
             '1016':
               label: For investment in the acquisition of shares or equity interests
                 as a result of agreements to incorporate or increase capital in commercial
-                companies (this amount is transferred to the...
+                companies (this amount is transferred to box [1136] of Annex B.7)
             '1019':
               label: For arrendamiento of primary residence (is traslada este amount
                 to the box [1130] of the anexo B.6)
@@ -4885,8 +4934,6 @@ modelo:
             '1072':
               label: For amounts invested in adaptation works to the primary residence
                 for persons with a disability
-            '1076':
-              label: Tax ID (NIF) of the Escuela, Centro o Guardería Infantil
             '1077':
               label: For the purchase of new electric vehicles
             '1078':
@@ -4982,15 +5029,6 @@ modelo:
             '1178':
               label: Total amount of the amountis invertidas with right to a deduction
                 (sum of the boxes [1150] + [1152])
-            '1190':
-              label: If you do not have a cadastral reference, mark this casilla with
-                an "X"
-            '1195':
-              label: If you do not have a cadastral reference, mark this casilla with
-                an "X"
-            '1200':
-              label: If you do not have a cadastral reference, mark this casilla with
-                an "X"
             '1202':
               label: Premiums paid
             '1203':
@@ -5425,8 +5463,8 @@ modelo:
             '1555':
               label: Reduced net income
             '1563':
-              label: Tick "X" if you have entered a NIF from another country in box
-                [1562]
+              label: Mark an "X" if you entered a Tax ID (NIF) from another country
+                in box [1562]
             '1567':
               label: Reductions applicable (article 26.2 and D.T. 25.ª of the Law
                 of the Impuesto)
@@ -5447,27 +5485,13 @@ modelo:
                 - [1582])
             '1588':
               label: Value of transfer to the that resulta applicable the D.T 9ª
-            '1590':
-              label: Gains exempt through reinvestment of life annuities
             '1592':
               label: Parte of the capital gains susceptibles of reduction (D.T 9ª)
             '1593':
               label: Reductions applicable (D.T. 9ª)
-            '1605':
-              label: Sum of net income from economic activities, attributed (sum of
-                boxes [1583])
-            '1606':
-              label: Sum of capital gains no derived of transfers (to include in the
-                B.I. general), atribuidas (sum of the boxes [1584] )
-            '1608':
-              label: Sum of capital gains derived of transfers (to include in the
-                B.I. of the ahorro), atribuidas (sum of the boxes [1595] )
-            '1609':
-              label: Sum of capital losses derived of transfers (to include in the
-                B.I. of the ahorro), atribuidas (sum of the boxes [1596] )
             '1622':
-              label: Tick "X" if you have entered a NIF from another country in box
-                [1562]
+              label: Mark an "X" if you entered a Tax ID (NIF) from another country
+                in box [1562]
             '1625':
               label: 'Time apportionment: instalment-sale or deferred-price criterion
                 option. Enter an "X"'
@@ -5530,12 +5554,6 @@ modelo:
             label: Tax year 2020
         '2021':
           casilla:
-            0028:
-              label: Interest from financial assets eligible for the Corporate Income
-                Tax transitional bonus
-            0039:
-              label: Reduction for income from certain insurance contracts under transitional
-                provision 4
             '0043':
               label: Total accumulated amount of deferred capital received in 2015,
                 2016, 2017, 2018, 2019 and 2020, whose yield was subject to DT 4.ª
@@ -5576,8 +5594,6 @@ modelo:
               label: Rendimiento net ([0102] - [0104] - [0107] - [0109] - [0110] -
                 [0111] - [0112] - [0113] - [0114] - [0115] - [0116] - [0157] - [0117]
                 - [0131] - [0132] - [0146] - [0147] - [0148])
-            '0155':
-              label: Total imputed real estate income (sum of boxes [0089])
             '0157':
               label: Deductible expense for rent of premises to certain businesses
                 in January, February and March 2021 (Royal Decree-Law 35/2020, of
@@ -5616,14 +5632,8 @@ modelo:
             0279:
               label: Public aid for the first establishment of young farmers provided
                 for in the National Rural Development Framework, intended for the
-                acquisition of a shareholding in the capital of agricultural...
-            0280:
-              label: Sum of income imputations from participation in collective investment
-                institutions established in tax havens (sum of boxes [0278])
-            0285:
-              label: Ingr. to account repercutidos
-            0295:
-              label: Ingr. to account repercutidos
+                acquisition of a shareholding in the capital of agricultural companies.
+                Amount attributable to 2021 (complete Annex C.1) (*)
             0299:
               label: Grants for the purchase of officially protected housing or price-capped
                 housing. Amount attributable to 2021 (complete Annex C.1) (*)
@@ -5650,28 +5660,6 @@ modelo:
               label: Amount global of the transfers efectuadas in 2021
             '0322':
               label: Capital losses attributable to 2021
-            0359:
-              label: Último year of cobro
-            '0365':
-              label: Ganancia patrimonial pending apportionment
-            '0366':
-              label: Pérdida patrimonial pending apportionment
-            0369:
-              label: Ganancia patrimonial pending apportionment
-            '0370':
-              label: Pérdida patrimonial pending apportionment
-            '0373':
-              label: Ganancia patrimonial pending apportionment
-            '0374':
-              label: Pérdida patrimonial pending apportionment
-            '0377':
-              label: Ganancia patrimonial pending apportionment
-            0378:
-              label: Pérdida patrimonial pending apportionment
-            0380:
-              label: Ganancia patrimonial pending apportionment
-            0381:
-              label: Pérdida patrimonial pending apportionment
             0392:
               label: Amount of the capital gain to be allocated to 2021
             0393:
@@ -5687,10 +5675,6 @@ modelo:
             '0400':
               label: Sum of imputación to 2021 of capital gains covered to deferral
                 for reinvestment(sum of the boxes [0399] )
-            0419:
-              label: Sum of capital losses ([1607] + [0307])
-            '0420':
-              label: If the difference ([0418] - [0419]) is positive
             '0426':
               label: Employer contributions (except those arising from employer contributions
                 to collective dependency insurance) (complete annex C.3)
@@ -5744,26 +5728,31 @@ modelo:
             '0443':
               label: Remaining negative net balances of movable-capital income from
                 2017, pending offset at 1 January 2021, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0449]) (Complete Annex C.2)
             '0444':
               label: Remaining negative net balances of movable-capital income from
                 2018, pending offset at 1 January 2021, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0450]) (Complete Annex C.2)
             '0445':
               label: Remaining negative net balances of movable-capital income from
                 2019, pending offset at 1 January 2021, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0451]) (Complete Annex C.2)
             '0446':
               label: Negative net balances of capital gains and losses attributable
                 to 2021, included in the savings taxable base, limited to 25% of ([0429])
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2020, pending offset at 1 January 2021, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0452]) (Complete Annex C.2)
             0448:
               label: Remaining negative net balances of capital gains and losses from
                 2020, pending offset at 1 January 2021, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0442]) (Complete Annex C.2)
             0449:
               label: Net negative balances of income from movable capital for 2017,
                 pending offset as at 1 January 2021, to be included in the savings
@@ -5783,15 +5772,18 @@ modelo:
             '0453':
               label: Remaining negative net balances of capital gains and losses from
                 2017, pending offset at 1 January 2021, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0439]) (Complete Annex C.2)
             '0454':
               label: Remaining negative net balances of capital gains and losses from
                 2018, pending offset at 1 January 2021, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0440]) (Complete Annex C.2)
             '0455':
               label: Remaining negative net balances of capital gains and losses from
                 2019, pending offset at 1 January 2021, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0441]) (Complete Annex C.2)
             '0460':
               label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
@@ -5869,13 +5861,14 @@ modelo:
               label: 'For incentives to promote business investment (transfer the
                 amounts from these same boxes in Annex A.5): Regional part'
             '0565':
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.3): State portion'
             '0566':
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.3): Regional
+                portion'
             '0567':
               label: 'For energy efficiency improvement works on housing (transfer
                 the amount from these same boxes in Annex A.2): State part'
@@ -5897,17 +5890,6 @@ modelo:
             0579:
               label: 'Amount of regional deductions to which entitlement was lost
                 in 2021: Regional part'
-            0592:
-              label: Sum of attributed withholdings and payments on account from movable
-                capital (sum of boxes [1597])
-            0593:
-              label: Sum of attributed withholdings and payments on account from real
-                estate capital (sum of boxes [1598])
-            0594:
-              label: Sum of attributed withholdings and payments on account from economic
-                activities (sum of boxes [1599])
-            0598:
-              label: Sum of withholdings and payments on account (sum of boxes [0153])
             '0600':
               label: Sum of withholdings and payments on account atribuidos of capital
                 gains and losses attributable to 2021 (sum of the boxes [1600])
@@ -6025,6 +6007,16 @@ modelo:
                 year'
             0802:
               label: 'Canary Islands Investment Reserve 2021: year of allocation'
+            0818:
+              label: For lease contracts for homes located in areas of Cantabria at
+                risk of depopulation and which constitute or are to constitute the
+                tenant's main residence (deduction for the tenant) (transfer the amount
+                from box [0646] of Annex B.9)
+            0819:
+              label: For lease contracts for homes located in areas of Cantabria at
+                risk of depopulation and which constitute or are to constitute the
+                tenant's main residence (deduction for the landlord) (only applicable
+                to taxpayers deceased before 31 December 2021)
             0823:
               label: For investments or donations to Social Economy entities established
                 in Cantabria (transfer the amount from box [1179] of Annex B.8)
@@ -6211,8 +6203,6 @@ modelo:
             '1058':
               label: For investments made in entities listed on the Alternative Stock
                 Market (this amount is transferred to box [1142] of Annex B.8)
-            '1076':
-              label: NIF of the Escuela, Centro or Guardería Infantil
             '1078':
               label: Amount paid in 2019 and/or 2020 pending application (for investments
                 in cualquier type of vivienda or edificio dónde is ubique)
@@ -6248,15 +6238,6 @@ modelo:
             '1186':
               label: Amount paid in 2019 and/or 2020 pending application in future
                 tax years
-            '1190':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
-            '1195':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
-            '1200':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
             '1206':
               label: Amount paid in 2021
             '1207':
@@ -6596,35 +6577,15 @@ modelo:
               label: For the purchase or renovation of a primary residence in rural
                 areas at risk of depopulation, for taxpayers up to 35 years old, large
                 families and single-parent families
-            '1563':
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
-            '1590':
-              label: Gains exempt due to reinvestment in life annuities
             '1595':
               label: Capital gains reducidas not exempt attributable to 2021
             '1600':
               label: Atribución of withholdings of capital gains and losses attributable
                 to 2021
-            '1605':
-              label: Sum of attributed net returns from economic activities (sum of
-                boxes [1583])
-            '1606':
-              label: Sum of attributed capital gains not derived from transfers (to
-                be included in the general taxable base) (sum of boxes [1584])
-            '1608':
-              label: Sum of attributed capital gains derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1595])
-            '1609':
-              label: Sum of attributed capital losses derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1596])
             '1610':
               label: Amount generated in 2021
             '1611':
               label: Amount generated in 2021 pending application
-            '1622':
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
             '1639':
               label: Pérdida patrimonial attributable to 2021
             '1650':
@@ -6806,15 +6767,9 @@ modelo:
               label: Amounts contributed by the employer to pension schemes, employer
                 social welfare plans and social welfare mutual funds (except collective
                 dependency insurance), arising from a decision of the employee
-            0028:
-              label: Interest from financial assets eligible for the Corporate Income
-                Tax transitional bonus
             '0037':
               label: 'Tax-deductible expenses: administration and custody expenses
                 for marketable securities only'
-            0039:
-              label: Reduction for income from certain insurance contracts under transitional
-                provision 4
             '0043':
               label: Total accumulated amount of deferred capital received in 2016,
                 2017, 2018, 2019, 2020 and 2021, whose yield was subject to DT 4.ª
@@ -6854,8 +6809,6 @@ modelo:
             '0144':
               label: Amount of improvements made in 2022 to the accessory property
                 (breakdown in Annex D, voluntary completion)
-            '0155':
-              label: Total imputed real estate income (sum of boxes [0089])
             '0157':
               label: Reduction for economic activities carried out on the island of
                 La Palma (Canary Islands)
@@ -6884,9 +6837,11 @@ modelo:
               label: Public aid to holders of assets forming part of Spain's Historical
                 Heritage for conservation or restoration purposes. Amount attributable
                 to 2022 (complete Annex C.1)
-            0280:
-              label: Sum of income imputations from participation in collective investment
-                institutions established in tax havens (sum of boxes [0278])
+            0279:
+              label: Public aid for the first establishment of young farmers provided
+                for in the National Rural Development Framework, intended for the
+                acquisition of a shareholding in the capital of agricultural businesses.
+                Amount attributable to 2022 (complete Annex C.1) (*)
             0286:
               label: Computable amount ([0283] + [0284] - [0285])
             0299:
@@ -6933,10 +6888,6 @@ modelo:
             '0400':
               label: Sum of imputación to 2022 of capital gains covered to deferral
                 for reinvestment(sum of the boxes [0399] )
-            0419:
-              label: Sum of capital losses ([1607] + [0307])
-            '0420':
-              label: If the difference ([0418] - [0419]) is positive
             '0422':
               label: Sum of capital gains ([1608] + [0324] + [0339] + [0354] + [1814]
                 + [1845] + [1846] + [0386] + [0387] + [0390] + [0393] + [0412])
@@ -7000,26 +6951,31 @@ modelo:
             '0443':
               label: Remaining negative net balances of movable-capital income from
                 2018, pending offset at 1 January 2022, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0449]) (Complete Annex C.2)
             '0444':
               label: Remaining negative net balances of movable-capital income from
                 2019, pending offset at 1 January 2022, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0450]) (Complete Annex C.2)
             '0445':
               label: Remaining negative net balances of movable-capital income from
                 2020, pending offset at 1 January 2022, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0451]) (Complete Annex C.2)
             '0446':
               label: Negative net balances of capital gains and losses attributable
                 to 2022, included in the savings taxable base, limited to 25% of ([0429])
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2021, pending offset at 1 January 2022, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0452]) (Complete Annex C.2)
             0448:
               label: Remaining negative net balances of capital gains and losses from
                 2021, pending offset at 1 January 2022, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0442]) (Complete Annex C.2)
             0449:
               label: Net negative balances of income from movable capital for 2018,
                 pending offset as at 1 January 2022, to be included in the savings
@@ -7039,15 +6995,18 @@ modelo:
             '0453':
               label: Remaining negative net balances of capital gains and losses from
                 2018, pending offset at 1 January 2022, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0439]) (Complete Annex C.2)
             '0454':
               label: Remaining negative net balances of capital gains and losses from
                 2019, pending offset at 1 January 2022, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0440]) (Complete Annex C.2)
             '0455':
               label: Remaining negative net balances of capital gains and losses from
                 2020, pending offset at 1 January 2022, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0441]) (Complete Annex C.2)
             '0460':
               label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
@@ -7128,13 +7087,14 @@ modelo:
                 casilla in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable): Regional
                 part'
             '0565':
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.3): State portion'
             '0566':
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.3): Regional
+                portion'
             0568:
               label: 'Increase in net tax liability due to loss of entitlement to
                 apply the tax incentive regulated in Article 33.3.a) of the Tax Law
@@ -7174,17 +7134,6 @@ modelo:
             0586:
               label: 'Increased regional net tax liability ( [0586] = [0571] + [0569]
                 + [0583] + [0577] + [0578] + [0579] + [0581] ): Regional part'
-            0592:
-              label: Sum of attributed withholdings and payments on account from movable
-                capital (sum of boxes [1597])
-            0593:
-              label: Sum of attributed withholdings and payments on account from real
-                estate capital (sum of boxes [1598])
-            0594:
-              label: Sum of attributed withholdings and payments on account from economic
-                activities (sum of boxes [1599])
-            0598:
-              label: Sum of withholdings and payments on account (sum of boxes [0153])
             '0600':
               label: Sum of withholdings and payments on account atribuidos of capital
                 gains and losses attributable to 2022 (sum of the boxes [1600])
@@ -7529,15 +7478,6 @@ modelo:
                 in new or recently created entities (sum of boxes [0808] + [1117])
             '1184':
               label: Amount generated in 2022 pending application
-            '1190':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
-            '1195':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
-            '1200':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
             '1206':
               label: Amount paid in 2022
             '1208':
@@ -7697,7 +7637,8 @@ modelo:
             '1299':
               label: '2022 payments and contributions (except employer contributions
                 to group long-term care insurance) not applied, whose amount is requested
-                to be reducible in the following 5 tax years: ...'
+                to be reducible in the following 5 tax years: Pending application
+                in future tax years'
             '1301':
               label: 'Tax year 2017: pending application to the start of the period'
             '1302':
@@ -7920,7 +7861,7 @@ modelo:
             '1530':
               label: 'Other ancillary work and services carried out by farmers, livestock
                 breeders or holders of forestry activities, except breeding, care
-                and fattening of livestock services (including poultry): Income...'
+                and fattening of livestock services (including poultry): Gross income'
             '1533':
               label: 'Breeding, custody, and fattening services for livestock (including
                 poultry): Gross income'
@@ -7929,35 +7870,15 @@ modelo:
             '1556':
               label: For the purchase or renovation of a primary residence in municipalities
                 at risk of depopulation
-            '1563':
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
-            '1590':
-              label: Gains exempt due to reinvestment in life annuities
             '1595':
               label: Capital gains reducidas not exempt attributable to 2022
             '1600':
               label: Atribución of withholdings of capital gains and losses attributable
                 to 2022
-            '1605':
-              label: Sum of attributed net returns from economic activities (sum of
-                boxes [1583])
-            '1606':
-              label: Sum of attributed capital gains not derived from transfers (to
-                be included in the general taxable base) (sum of boxes [1584])
-            '1608':
-              label: Sum of attributed capital gains derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1595])
-            '1609':
-              label: Sum of attributed capital losses derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1596])
             '1610':
               label: Amount generated in 2022
             '1611':
               label: Amount generated in 2022 pending application
-            '1622':
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
             '1627':
               label: '"Barcelona Music Lab. The future of music": applied in this
                 return'
@@ -8119,15 +8040,9 @@ modelo:
               label: Preliminary net income ([0012] - [0013] - [0014] - [0015] - [0016])
             '0025':
               label: Reduced net income ([0022] - [0057] - [0023])
-            0028:
-              label: Interest from financial assets eligible for the Corporate Income
-                Tax transitional bonus
             '0037':
               label: 'Tax-deductible expenses: administration and custody expenses
                 for marketable securities only'
-            0039:
-              label: Reduction for income from certain insurance contracts under transitional
-                provision 4
             '0043':
               label: Total accumulated amount of deferred capital received in 2015,
                 2016, 2017, 2018, 2019, 2020, 2021 and 2022, whose yield was subject
@@ -8173,8 +8088,6 @@ modelo:
             '0144':
               label: Amount of improvements made in 2023 to the accessory property
                 (breakdown in Annex D, voluntary completion)
-            '0155':
-              label: Total imputed real estate income (sum of boxes [0089])
             '0157':
               label: Reduction for economic activities carried out on the island of
                 La Palma (Canary Islands)
@@ -8212,9 +8125,11 @@ modelo:
               label: Public aid to holders of assets forming part of Spain's Historical
                 Heritage for conservation or restoration purposes. Amount attributable
                 to 2023 (complete Annex C.1)
-            0280:
-              label: Sum of income imputations from participation in collective investment
-                institutions established in tax havens (sum of boxes [0278])
+            0279:
+              label: Public aid for the first establishment of young farmers provided
+                for in the National Rural Development Framework, intended for the
+                acquisition of a shareholding in the capital of agricultural businesses.
+                Amount attributable to 2023 (complete Annex C.1) (*)
             0286:
               label: Computable amount ([0283] + [0284] - [0285])
             0299:
@@ -8277,11 +8192,10 @@ modelo:
             '0417':
               label: If the taxpayers, members of entities not resident in Spain,
                 were affected in 2023 by merger, spin-off or securities-exchange operations
-                carried out by those entities governed ...
-            0419:
-              label: Sum of capital losses ([1607] + [0307])
-            '0420':
-              label: If the difference ([0418] - [0419]) is positive
+                carried out by those entities governed by Chapter VII of Title VII
+                of the Corporate Income Tax Act (articles 48 and 49 of its Regulations),
+                and the non-resident entities have not applied a similar tax regime
+                to this one, mark this box with an "X"
             '0422':
               label: Sum of capital gains ([1608] + [0324] + [0339] + [0354] + [1814]
                 + [1845] + [1846] + [0386] + [0387] + [0390] + [0393] + [0412])
@@ -8335,26 +8249,31 @@ modelo:
             '0443':
               label: Remaining negative net balances of movable-capital income from
                 2019, pending offset at 1 January 2023, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0449]) (Complete Annex C.3)
             '0444':
               label: Remaining negative net balances of movable-capital income from
                 2020, pending offset at 1 January 2023, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0450]) (Complete Annex C.3)
             '0445':
               label: Remaining negative net balances of movable-capital income from
                 2021, pending offset at 1 January 2023, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0451]) (Complete Annex C.3)
             '0446':
               label: Negative net balances of capital gains and losses attributable
                 to 2023, included in the savings taxable base, limited to 25% of ([0429])
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2022, pending offset at 1 January 2023, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0452]) (Complete Annex C.3)
             0448:
               label: Remaining negative net balances of capital gains and losses from
                 2022, pending offset at 1 January 2023, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0442]) (Complete Annex C.3)
             0449:
               label: Net negative balances of income from movable capital for 2019,
                 pending offset as at 1 January 2023, to be included in the savings
@@ -8374,15 +8293,18 @@ modelo:
             '0453':
               label: Remaining negative net balances of capital gains and losses from
                 2019, pending offset at 1 January 2023, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0439]) (Complete Annex C.3)
             '0454':
               label: Remaining negative net balances of capital gains and losses from
                 2020, pending offset at 1 January 2023, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0440]) (Complete Annex C.3)
             '0455':
               label: Remaining negative net balances of capital gains and losses from
                 2021, pending offset at 1 January 2023, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0441]) (Complete Annex C.3)
             '0460':
               label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
@@ -8446,13 +8368,14 @@ modelo:
                 casilla in annex B.1, B.2, B.3, B.4, B.5, B.6, or B7, as applicable):
                 Regional part'
             '0565':
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.3): State portion'
             '0566':
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.3): Regional
+                portion'
             '0567':
               label: 'For works to improve the energy efficiency of dwellings (transfer
                 the amount from these same boxes in Annex A.3): State part'
@@ -8485,17 +8408,6 @@ modelo:
               label: 'Increased net autonomous-community tax liability ([0586] = [0571]
                 + [0569] + [0583] + [0577] + [0578] + [0579] + [0581] + [0504]): Autonomous-community
                 part'
-            0592:
-              label: Sum of attributed withholdings and payments on account from movable
-                capital (sum of boxes [1597])
-            0593:
-              label: Sum of attributed withholdings and payments on account from real
-                estate capital (sum of boxes [1598])
-            0594:
-              label: Sum of attributed withholdings and payments on account from economic
-                activities (sum of boxes [1599])
-            0598:
-              label: Sum of withholdings and payments on account (sum of boxes [0153])
             '0600':
               label: Sum of withholdings and payments on account atribuidos of capital
                 gains and losses attributable to 2023 (sum of the boxes [1600])
@@ -8836,15 +8748,6 @@ modelo:
               label: Amount generated in 2022 pending application
             '1186':
               label: Amount paid in 2020 pending application in future tax years
-            '1190':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
-            '1195':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
-            '1200':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
             '1213':
               label: 'Tax year 2019: pending application at the beginning of the period'
             '1214':
@@ -8998,7 +8901,8 @@ modelo:
             '1299':
               label: '2023 payments and contributions (except employer contributions
                 to group long-term care insurance) not applied, whose amount is requested
-                to be reducible in the following 5 tax years: ...'
+                to be reducible in the following 5 tax years: Pending application
+                in future tax years'
             '1301':
               label: 'Tax year 2018: pending application to the start of the period'
             '1302':
@@ -9218,7 +9122,7 @@ modelo:
             '1530':
               label: 'Other ancillary work and services carried out by farmers, livestock
                 breeders or holders of forestry activities, except breeding, care
-                and fattening of livestock services (including poultry): Income...'
+                and fattening of livestock services (including poultry): Gross income'
             '1533':
               label: 'Breeding, custody, and fattening services for livestock (including
                 poultry): Gross income'
@@ -9227,28 +9131,11 @@ modelo:
             '1556':
               label: For the purchase or renovation of a primary residence in municipalities
                 at risk of depopulation
-            '1563':
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
-            '1590':
-              label: Gains exempt due to reinvestment in life annuities
             '1595':
               label: Capital gains reducidas not exempt attributable to 2023
             '1600':
               label: Atribución of withholdings of capital gains and losses attributable
                 to 2023
-            '1605':
-              label: Sum of attributed net returns from economic activities (sum of
-                boxes [1583])
-            '1606':
-              label: Sum of attributed capital gains not derived from transfers (to
-                be included in the general taxable base) (sum of boxes [1584])
-            '1608':
-              label: Sum of attributed capital gains derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1595])
-            '1609':
-              label: Sum of attributed capital losses derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1596])
             '1610':
               label: 'For investment in a habitual residence considered protected:
                 amount generated in 2022 pending application'
@@ -9256,9 +9143,6 @@ modelo:
               label: 'Protected habitual residence investment deductions (eligible
                 for application in later tax years): amount generated in 2022 pending
                 application'
-            '1622':
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
             '1639':
               label: Pérdida patrimonial attributable to 2023
             '1650':
@@ -9427,15 +9311,9 @@ modelo:
               label: Preliminary net income ([0012] - [0013] - [0014] - [0015] - [0016])
             '0025':
               label: Reduced net income ([0022] - [0057] - [0023])
-            0028:
-              label: Interest from financial assets eligible for the Corporate Income
-                Tax transitional bonus
             '0037':
               label: 'Tax-deductible expenses: administration and custody expenses
                 for marketable securities only'
-            0039:
-              label: Reduction for income from certain insurance contracts under transitional
-                provision 4
             '0043':
               label: Total accumulated amount of deferred capital received in 2015,
                 2016, 2017, 2018, 2019, 2020, 2021, 2023, and 2024 whose income was
@@ -9651,7 +9529,6 @@ modelo:
             '0155':
               help: Report the total imputed real estate income by summing the amounts
                 in box [0089].
-              label: Total imputed real estate income (sum of boxes [0089])
             '0156':
               help: Report the total reduced net real estate capital income by summing
                 the amounts in box [0154].
@@ -10017,15 +9894,18 @@ modelo:
               help: Report the amount to be imputed for the collective investment
                 institution participation.
             0279:
-              help: Report public aid for first establishment of young farmers under
-                the National Rural Development Framework, intended to acquire a stake
-                in the capital of agr... companies.
+              help: Report public aid for the first establishment of young farmers
+                under the National Rural Development Framework intended to acquire
+                a stake in the capital of agricultural companies, for the amount attributable
+                to 2024 (complete Annex C.1).
+              label: Public aid for the first establishment of young farmers provided
+                for in the National Rural Development Framework, intended for the
+                acquisition of a shareholding in the capital of agricultural businesses.
+                Amount attributable to 2024 (complete Annex C.1) (*)
             0280:
               help: This field totals income imputations from participation in collective
                 investment institutions established in tax havens by summing boxes
                 [0278].
-              label: Sum of income imputations from participation in collective investment
-                institutions established in tax havens (sum of boxes [0278])
             0281:
               help: Identify the taxpayer who receives the prizes covered by this
                 section.
@@ -10080,9 +9960,8 @@ modelo:
                 housing. Amount imputable to 2024 (complete Annex C.1) (*)
             '0300':
               help: Report other subsidies or aid for acquiring or rehabilitating
-                the habitual residence or repairing structural defects in it, with
-                the amount imputable to 2024; the official source text is truncated
-                at An...
+                the habitual residence or repairing structural defects in it, for
+                the amount attributable to 2024 (complete Annex C.1).
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
                 imputable to 2024 (complete Annex C.1) (*)
@@ -10384,8 +10263,8 @@ modelo:
                 (sum of boxes [0399])
             '0401':
               help: Mark this box when the taxpayer has transferred the shares or
-                holdings inter vivos after changing residence to another Member State
-                of the U...
+                holdings inter vivos after moving their residence to another Member
+                State of the European Union.
             '0402':
               help: Identify the taxpayer who owns the securities reported in this
                 residence-change entry.
@@ -10419,30 +10298,34 @@ modelo:
               help: This field totals capital gains due to change of residence outside
                 Spanish territory by summing box [0411].
             '0416':
-              help: Mark this field when the taxpayer, as a member of entities not
-                resident in Spain, was affected in 2023 by merger, spin-off or securities-exchange
-                operations governed by Chapter VII of Title VII...
+              help: Mark this box when the taxpayer, as a member of entities not resident
+                in Spain, was affected in 2023 by merger, spin-off or securities-exchange
+                operations governed by Chapter VII of Title VII of the Corporate Income
+                Tax Law.
               label: If the taxpayers, members of entities not resident in Spain,
                 were affected in 2023 by merger, spin-off or securities-exchange operations
                 governed by Chapter VII of Title VII of the Corporate Income Tax Act,
                 tick this box with an "X"
             '0417':
-              help: Mark this field when the taxpayer, as a member of entities not
-                resident in Spain, was affected in 2023 by merger, spin-off or securities-exchange
-                operations carried out by those entities governed ...
+              help: Mark this box when the taxpayer, as a member of entities not resident
+                in Spain, was affected in 2023 by merger, spin-off or securities-exchange
+                operations carried out by those entities and governed by Chapter VII
+                of Title VII of the Corporate Income Tax Law, and the non-resident
+                entities did not apply a similar tax regime.
               label: If the taxpayers, members of entities not resident in Spain,
                 were affected in 2023 by merger, spin-off or securities-exchange operations
-                carried out by those entities governed ...
+                carried out by those entities governed by Chapter VII of Title VII
+                of the Corporate Income Tax Act (articles 48 and 49 of its Regulations),
+                and the non-resident entities have not applied a similar tax regime
+                to this one, mark this box with an "X"
             0418:
               help: This field totals capital gains by summing [1606], [0290], [0297],
                 [0306] and [0400].
             0419:
               help: This field totals capital losses by summing [1607] and [0307].
-              label: Sum of capital losses ([1607] + [0307])
             '0420':
               help: This field reports the positive balance when [0418] minus [0419]
                 is greater than zero.
-              label: If the difference ([0418] - [0419]) is positive
             '0421':
               help: This field reports the negative balance when [0418] minus [0419]
                 is less than zero.
@@ -10557,21 +10440,24 @@ modelo:
                 taxable base, subject to the applicable 25 percent limit.
               label: Remaining negative net balances of movable-capital income from
                 2020, pending offset at 1 January 2024, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0449]) (Complete Annex C.3)
             '0444':
               help: Report the remaining negative net balances of 2021 movable-capital
                 income pending offset at 1 January 2024 to be included in the savings
                 taxable base, subject to the applicable 25 percent limit.
               label: Remaining negative net balances of movable-capital income from
                 2021, pending offset at 1 January 2024, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0450]) (Complete Annex C.3)
             '0445':
               help: Report the remaining negative net balances of 2022 movable-capital
                 income pending offset at 1 January 2024 to be included in the savings
                 taxable base, subject to the applicable 25 percent limit.
               label: Remaining negative net balances of movable-capital income from
                 2022, pending offset at 1 January 2024, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0451]) (Complete Annex C.3)
             '0446':
               help: Indicate or review “Tax information in the box” to complete this
                 self-assessment.
@@ -10584,14 +10470,16 @@ modelo:
                 taxable base, subject to the applicable 25 percent limit.
               label: Remaining negative net balances of movable-capital income from
                 2023, pending offset at 1 January 2024, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0424] (*) (outstanding balance
+                not offset in box [0452]) (Complete Annex C.3)
             0448:
               help: Report the remaining negative net balances of 2023 capital gains
                 and losses pending offset at 1 January 2024 to be included in the
                 savings taxable base, subject to the applicable 25 percent limit.
               label: Remaining negative net balances of capital gains and losses from
                 2023, pending offset at 1 January 2024, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0442]) (Complete Annex C.3)
             0449:
               help: Report negative net balances of 2020 movable-capital income pending
                 offset at 1 January 2024 to be included in the savings taxable base;
@@ -10626,21 +10514,24 @@ modelo:
                 savings taxable base, subject to the applicable 25 percent limit.
               label: Remaining negative net balances of capital gains and losses from
                 2020, pending offset at 1 January 2024, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0439]) (Complete Annex C.3)
             '0454':
               help: Report the remaining negative net balances of 2021 capital gains
                 and losses pending offset at 1 January 2024 to be included in the
                 savings taxable base, subject to the applicable 25 percent limit.
               label: Remaining negative net balances of capital gains and losses from
                 2021, pending offset at 1 January 2024, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0440]) (Complete Annex C.3)
             '0455':
               help: Report the remaining negative net balances of 2022 capital gains
                 and losses pending offset at 1 January 2024 to be included in the
                 savings taxable base, subject to the applicable 25 percent limit.
               label: Remaining negative net balances of capital gains and losses from
                 2022, pending offset at 1 January 2024, to be included in the savings
-                taxable base, limited to 25 per ...
+                taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
+                not offset in box [0441]) (Complete Annex C.3)
             '0456':
               help: Enter the NIF or NIE for child 1 in the additional data for maintenance
                 annuities.
@@ -10985,16 +10876,17 @@ modelo:
               help: Enter the state-part deduction applicable to family units formed
                 by tax residents in EU or EEA Member States, using the amount transferred
                 from the corresponding annex boxes.
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.3): State portion'
             '0566':
               help: Enter the autonomous-community part of the deduction applicable
                 to family units formed by tax residents in EU or EEA Member States,
                 using the amount transferred from the corresponding annex boxes.
-              label: Deduction applicable to family units made up of tax residents
-                in Member States of the European Union or of the European Economic
-                Area (transfer the amounts of these same boxes...
+              label: 'Deduction applicable to family units made up of tax residents
+                of Member States of the European Union or the European Economic Area
+                (transfer the amounts of these same boxes of Annex A.3): Regional
+                portion'
             '0567':
               help: This computed field records the state part for works to improve
                 the energy efficiency of dwellings transferred from Annex A.3.
@@ -11082,18 +10974,12 @@ modelo:
             0592:
               help: Enter the sum of attributed withholdings and payments on account
                 from movable capital, matching the sum of boxes [1597].
-              label: Sum of attributed withholdings and payments on account from movable
-                capital (sum of boxes [1597])
             0593:
               help: Enter the sum of attributed withholdings and payments on account
                 from real estate capital, matching the sum of boxes [1598].
-              label: Sum of attributed withholdings and payments on account from real
-                estate capital (sum of boxes [1598])
             0594:
               help: Enter the sum of attributed withholdings and payments on account
                 from economic activities, matching the sum of boxes [1599].
-              label: Sum of attributed withholdings and payments on account from economic
-                activities (sum of boxes [1599])
             0595:
               help: This computed field records the self-assessment tax liability
                 after subtracting boxes [0588], [0589], [0590], and [0591] from [0587].
@@ -11106,7 +10992,6 @@ modelo:
             0598:
               help: This computed field records the sum of withholdings and payments
                 on account from box [0153].
-              label: Sum of withholdings and payments on account (sum of boxes [0153])
             0599:
               help: Enter the withholdings and payments on account corresponding to
                 income from economic activities.
@@ -12800,8 +12685,6 @@ modelo:
               help: Enter cadastral reference 1.
             '1190':
               help: Mark this box with an X if you do not have a cadastral reference.
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
             '1191':
               help: Enter the premiums paid.
             '1192':
@@ -12813,8 +12696,6 @@ modelo:
               help: Enter cadastral reference 2.
             '1195':
               help: Mark this box with an X if you do not have a cadastral reference.
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
             '1196':
               help: Enter the premiums paid.
             '1197':
@@ -12826,8 +12707,6 @@ modelo:
               help: Enter cadastral reference 3.
             '1200':
               help: Mark this box with an X if you do not have a cadastral reference.
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
             '1201':
               help: Enter the premiums paid.
             '1202':
@@ -13170,12 +13049,14 @@ modelo:
                 year 2023.
               label: 'Tax year 2023: pending application in future tax years'
             '1299':
-              help: 'Enter the 2024 payments and contributions, except employer contributions
-                to group long-term care insurance, not applied and whose amount is
-                requested to be reducible in the following 5 tax years: ...'
+              help: Enter the 2024 contributions, except employer contributions to
+                collective long-term care insurance, not applied and whose amount
+                is requested to be reduced over the following 5 tax years, which remain
+                pending application in future tax years.
               label: '2024 payments and contributions (except employer contributions
                 to group long-term care insurance) not applied, whose amount is requested
-                to be reducible in the following 5 tax years: ...'
+                to be reducible in the following 5 tax years: Pending application
+                in future tax years'
             '1300':
               help: Enter the taxpayer entitled to the reduction.
             '1301':
@@ -13846,13 +13727,13 @@ modelo:
             '1529':
               help: Enter the base product return.
             '1530':
-              help: 'Enter the income from other ancillary work and services carried
-                out by farmers, livestock farmers or holders of forestry activities,
+              help: Enter the gross income from other ancillary work and services
+                carried out by farmers, livestock breeders or forestry operators,
                 except livestock breeding, keeping and fattening services, including
-                poultry: ...'
+                poultry.
               label: 'Other ancillary work and services carried out by farmers, livestock
                 breeders or holders of forestry activities, except breeding, care
-                and fattening of livestock services (including poultry): Income...'
+                and fattening of livestock services (including poultry): Gross income'
             '1531':
               help: Enter the index.
             '1532':
@@ -13921,7 +13802,8 @@ modelo:
               help: Enter the reduced net return.
             '1557':
               help: Enter the training expenses incurred by taxpayers performing especially
-                qualified work directly and principally related to research and devel...
+                qualified work directly and principally related to research and development,
+                scientific or technical activities.
             '1558':
               help: Enter the sum of reduced net returns from agricultural, livestock
                 and forestry activities under objective assessment, as the sum of
@@ -13940,8 +13822,6 @@ modelo:
               help: Enter the NIF of the entity under the income attribution regime.
             '1563':
               help: Mark an "X" if you entered a NIF from another country in box [1562].
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
             '1564':
               help: Enter the taxpayer participation percentage in the entity.
             '1565':
@@ -14018,7 +13898,6 @@ modelo:
               help: Enter the 50 percent exempt gains, only for certain urban properties.
             '1590':
               help: Enter the gains exempt due to reinvestment in life annuities.
-              label: Gains exempt due to reinvestment in life annuities
             '1591':
               help: Enter the gain exempt due to reinvestment in new or recently created
                 entities.
@@ -14066,26 +13945,18 @@ modelo:
             '1605':
               help: Enter the sum of attributed net returns from economic activities,
                 as the sum of boxes [1583].
-              label: Sum of attributed net returns from economic activities (sum of
-                boxes [1583])
             '1606':
               help: Enter the sum of attributed capital gains not derived from transfers
                 to be included in the general taxable base, as the sum of boxes [1584].
-              label: Sum of attributed capital gains not derived from transfers (to
-                be included in the general taxable base) (sum of boxes [1584])
             '1607':
               help: Enter the sum of attributed capital losses not derived from transfers
                 to be included in the general taxable base, as the sum of boxes [1585].
             '1608':
               help: Enter the sum of attributed capital gains derived from transfers
                 to be included in the savings taxable base, as the sum of boxes [1595].
-              label: Sum of attributed capital gains derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1595])
             '1609':
               help: Enter the sum of attributed capital losses derived from transfers
                 to be included in the savings taxable base, as the sum of boxes [1596].
-              label: Sum of attributed capital losses derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1596])
             '1610':
               help: Enter the amount generated in 2022 and pending application for
                 investment in a habitual residence considered protected.
@@ -14122,8 +13993,6 @@ modelo:
                 number in the country of residence for non-resident entities.
             '1622':
               help: Mark an "X" if you entered a NIF from another country in box [1562].
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
             '1623':
               help: Enter the amount for "HOSTELCO 2022" applied in this return.
             '1624':
@@ -15012,19 +14881,17 @@ modelo:
             '1967':
               help: Enter the year in which the remuneration in kind is received.
             '1968':
-              help: Enter the visible value for remuneration in kind pending allocation;
-                the authoritative source label is truncated as Valu...
+              help: Enter the valuation of the non-exempt remuneration in kind pending
+                allocation.
             '1969':
-              help: Enter the visible payment-on-account amount for remuneration in
-                kind pending allocation; the authoritative source label is truncated
-                as Paym...
+              help: Enter the payments on account for the non-exempt remuneration
+                in kind pending allocation.
             '1970':
-              help: Enter the visible payment-on-account amount for remuneration in
-                kind pending allocation; the authoritative source label is truncated
-                as Paym...
+              help: Enter the payments on account passed on to the recipient of the
+                non-exempt remuneration in kind pending allocation.
             '1971':
-              help: Enter the visible amount for remuneration in kind pending allocation;
-                the authoritative source label is truncated as Amou...
+              help: 'Enter the gross amount of the non-exempt remuneration in kind
+                pending allocation: [1968] + [1969] - [1970].'
             '1972':
               help: Enter the taxpayer who holds the transferred asset.
             '1973':
@@ -15580,9 +15447,11 @@ modelo:
               label: Public aid to owners of assets forming part of the Spanish Historical
                 Heritage for their conservation or restoration. Amount imputable to
                 2025 (complete Annex C.1) (*)
-            0280:
-              label: Sum of income imputations from participation in collective investment
-                institutions established in tax havens (sum of boxes [0278])
+            0279:
+              label: Public aid for the first establishment of young farmers provided
+                for in the National Rural Development Framework, intended for the
+                acquisition of a shareholding in the capital of agricultural businesses.
+                Amount attributable to 2025 (complete Annex C.1) (*)
             0286:
               label: Computable amount ([0283] + [0284] - [0285])
             0288:
@@ -15695,11 +15564,10 @@ modelo:
             '0417':
               label: If taxpayers who are members of entities not resident in Spain
                 were affected in 2024 by merger, spin-off, or share-exchange transactions
-                carried out by those entities, governed by...
-            0419:
-              label: Sum of capital losses ([1607] + [0307])
-            '0420':
-              label: If the difference ([0418] - [0419]) is positive
+                carried out by those entities, governed by Chapter VII of Title VII
+                of the Corporate Income Tax Act (articles 48 and 49 of its Regulations),
+                and the non-resident entities have not applied a similar tax regime
+                to this one, mark this box with an "X"
             '0422':
               label: Sum of capital gains ([1608] + [0324] + [2235] + [0339] + [0354]
                 + [1814] + [1845] + [1846] + [0386] + [0387] + [0390] + [0393] + [0412])
@@ -15753,15 +15621,18 @@ modelo:
             '0443':
               label: Remaining negative net balances of movable-capital income from
                 2021, pending offset as of 1 January 2025, to be included in the savings
-                taxable base, limited to 25% of...
+                taxable base, limited to 25% of [0424] (*) (outstanding balance not
+                offset in box [0449]) (Complete Annex C.3)
             '0444':
               label: Remaining negative net balances of movable-capital income from
                 2022, pending offset as of 1 January 2025, to be included in the savings
-                taxable base, limited to 25% of...
+                taxable base, limited to 25% of [0424] (*) (outstanding balance not
+                offset in box [0450]) (Complete Annex C.3)
             '0445':
               label: Remaining negative net balances of movable-capital income from
                 2023, pending offset as of 1 January 2025, to be included in the savings
-                taxable base, limited to 25% of...
+                taxable base, limited to 25% of [0424] (*) (outstanding balance not
+                offset in box [0451]) (Complete Annex C.3)
             '0446':
               label: Negative net balances of capital gains and losses imputable to
                 2025, to be included in the savings taxable base, limited to 25% of
@@ -15769,11 +15640,13 @@ modelo:
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2024, pending offset as of 1 January 2025, to be included in the savings
-                taxable base, limited to 25% of...
+                taxable base, limited to 25% of [0424] (*) (outstanding balance not
+                offset in box [0452]) (Complete Annex C.3)
             0448:
               label: Remaining negative net balances of capital gains and losses from
                 2024, pending offset as of 1 January 2025, to be included in the savings
-                taxable base, limited to 25% of...
+                taxable base, limited to 25% of [0429] (*) (outstanding balance not
+                offset in box [0442]) (Complete Annex C.3)
             0449:
               label: Negative net balances of movable-capital income from 2021, pending
                 offset as of 1 January 2025, to be included in the savings taxable
@@ -15793,15 +15666,18 @@ modelo:
             '0453':
               label: Remaining negative net balances of capital gains and losses from
                 2021, pending offset as of 1 January 2025, to be included in the savings
-                taxable base, limited to 25% of...
+                taxable base, limited to 25% of [0429] (*) (outstanding balance not
+                offset in box [0439]) (Complete Annex C.3)
             '0454':
               label: Remaining negative net balances of capital gains and losses from
                 2022, pending offset as of 1 January 2025, to be included in the savings
-                taxable base, limited to 25% of...
+                taxable base, limited to 25% of [0429] (*) (outstanding balance not
+                offset in box [0440]) (Complete Annex C.3)
             '0455':
               label: Remaining negative net balances of capital gains and losses from
                 2023, pending offset as of 1 January 2025, to be included in the savings
-                taxable base, limited to 25% of...
+                taxable base, limited to 25% of [0429] (*) (outstanding balance not
+                offset in box [0441]) (Complete Annex C.3)
             '0460':
               label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
@@ -15884,12 +15760,12 @@ modelo:
                 portion'
             '0565':
               label: 'Deduction applicable to family units made up of tax residents
-                of EU or EEA Member States (amounts from these boxes of Annex A.4):
-                Pa...'
+                of Member States of the European Union or the European Economic Area
+                (amounts of these boxes of Annex A.4): State portion'
             '0566':
               label: 'Deduction applicable to family units made up of tax residents
-                of EU or EEA Member States (amounts from these boxes of Annex A.4):
-                Pa...'
+                of Member States of the European Union or the European Economic Area
+                (amounts of these boxes of Annex A.4): Regional portion'
             '0567':
               label: 'For energy-efficiency improvement works on dwellings (amounts
                 from these boxes of Annex A.3): State portion'
@@ -16206,7 +16082,8 @@ modelo:
             0818:
               label: For the lease of dwellings located in municipalities affected
                 by risk of depopulation in Cantabria that constitute, or will constitute,
-                the tenant's primary residence (deduction for the...
+                the tenant's primary residence (deduction for the tenant) (amount
+                from box [0646] of Annex B.12)
             0820:
               label: For childcare (nursery) expenses for taxpayers with their habitual
                 residence in municipalities affected by risk of depopulation in Cantabria
@@ -16257,7 +16134,7 @@ modelo:
             0854:
               label: For investment in the acquisition of shares and company units
                 arising from company-formation or capital-increase agreements in commercial
-                companies (amount from the...
+                companies (amount from box [1136] of Annex B.11)
             0872:
               label: For investment in shares of entities listed on the growth-companies
                 segment of the Alternative Stock Market (amount from box [1142] of
@@ -16454,15 +16331,6 @@ modelo:
               label: Amount generated in 2024 pending application
             '1186':
               label: Amount generated in 2024 pending application
-            '1190':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
-            '1195':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
-            '1200':
-              label: If you do not have a cadastral reference, mark this box with
-                an "X"
             '1210':
               label: Amount generated in 2023 pending application
             '1213':
@@ -16616,9 +16484,10 @@ modelo:
             '1298':
               label: 'FY 2024: Pending application in future years'
             '1299':
-              label: Unapplied 2025 contributions (except employer contributions to
-                group long-term-care insurance) whose amount is requested to be deductible
-                over the following 5 years:...
+              label: 'Unapplied 2025 contributions (except employer contributions
+                to group long-term-care insurance) whose amount is requested to be
+                deductible over the following 5 years: Pending application in future
+                tax years'
             '1301':
               label: 'FY 2020: Pending application at the start of the period'
             '1302':
@@ -16874,9 +16743,6 @@ modelo:
               label: Reductions for income generated over more than 2 years or obtained
                 in a markedly irregular manner (article 32.1 and Transitional Provision
                 25 of the Tax Law)
-            '1563':
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
             '1567':
               label: Applicable reductions (article 26.2 and Transitional Provision
                 25 of the Tax Law)
@@ -16891,8 +16757,6 @@ modelo:
                 - [1582] - [0384])
             '1588':
               label: Transfer value to which Transitional Provision 9 applies
-            '1590':
-              label: Gains exempt due to reinvestment in life annuities
             '1592':
               label: Portion of the capital gains eligible for reduction (Transitional
                 Provision 9)
@@ -16903,18 +16767,6 @@ modelo:
             '1600':
               label: Attribution of withholdings on capital gains and losses imputable
                 to 2025
-            '1605':
-              label: Sum of attributed net returns from economic activities (sum of
-                boxes [1583])
-            '1606':
-              label: Sum of attributed capital gains not derived from transfers (to
-                be included in the general taxable base) (sum of boxes [1584])
-            '1608':
-              label: Sum of attributed capital gains derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1595])
-            '1609':
-              label: Sum of attributed capital losses derived from transfers (to be
-                included in the savings taxable base) (sum of boxes [1596])
             '1610':
               label: 'For the investment in a primary residence classed as protected
                 housing: amount generated in 2023 pending application'
@@ -16922,9 +16774,6 @@ modelo:
               label: 'Amount of deductions for the investment in a primary residence
                 classed as protected housing (eligible for application in future years):
                 amount generated in 2024 pending application'
-            '1622':
-              label: Mark an "X" if you entered a Tax ID (NIF) from another country
-                in box [1562]
             '1623':
               label: '"Plan 2030 de Apoyo al Deporte Base II": Applied in this return'
             '1627':

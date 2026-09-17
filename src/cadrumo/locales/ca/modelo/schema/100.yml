@@ -608,6 +608,12 @@ modelo:
           irpf-anexo-b-no-catastral-flag-norcges2:
             help: Marqueu aquesta casella amb una "X" si no té referència cadastral.
             label: si no té referència cadastral, marqui amb una 'X' aquesta casella
+          irpf-anexo-b-no-catastral-flag-norcps1:
+            label: Si no teniu referència cadastral, marqueu una "X" en aquesta casella
+          irpf-anexo-b-no-catastral-flag-norcps2:
+            label: Si no teniu referència cadastral, marqueu una "X" en aquesta casella
+          irpf-anexo-b-no-catastral-flag-norcps3:
+            label: Si no teniu referència cadastral, marqueu una "X" en aquesta casella
           irpf-anexo-b-prima-seguro-credito-arrendamiento-cantps1:
             label: Primes satisfetes
           irpf-anexo-b-prima-seguro-credito-arrendamiento-cantps2:
@@ -836,6 +842,8 @@ modelo:
           irpf-centro-guarderia-nif-nifcm19:
             help: Indiqueu el NIF de la guarderia o centre d'educació infantil autoritzat.
             label: NIF de la llar d'infants o centre d'educació infantil autoritzat
+          irpf-centro-guarderia-nif-niflr10:
+            label: NIF de l'escola, centre o llar d'infants
           irpf-cesion-derechos-imagen-imputacion-contribuyente:
             label: Contribuent que ha d'efectuar l'imputació com conseqüència de la
               cessió del dret d'imatge
@@ -2674,6 +2682,8 @@ modelo:
             label: Transmissió inter vivos gratuïta (donació, liberalitat, etc..)
           irpf-ganancia-otros-transmision-onerosa:
             label: Transmissió inter vivos onerosa (venda, permuta, etc..)
+          irpf-ganancia-otros-ultimo-anio-cobro:
+            label: Darrer any de cobrament
           irpf-ganancia-otros-valor-adquisicion:
             label: Valor d'adquisició
           irpf-ganancia-otros-valor-transmision:
@@ -2690,7 +2700,7 @@ modelo:
           irpf-ganancia-premios-juegos-ingresos-cuenta:
             label: Ingressos a compte
           irpf-ganancia-premios-juegos-ingresos-cuenta-repercutidos:
-            label: Ingr.. a compte repercutits
+            label: Ingr. a compte repercutits
           irpf-ganancia-premios-juegos-metalico:
             label: En metàl·lic
           irpf-ganancia-premios-juegos-pub-importe-computable:
@@ -2698,7 +2708,7 @@ modelo:
           irpf-ganancia-premios-juegos-pub-ingresos-cuenta:
             label: Ingressos a compte
           irpf-ganancia-premios-juegos-pub-ingresos-cuenta-repercutidos:
-            label: Ingr.. a compte repercutits
+            label: Ingr. a compte repercutits
           irpf-ganancia-premios-juegos-pub-metalico:
             label: En metàl·lic
           irpf-ganancia-premios-juegos-pub-valoracion:
@@ -3046,7 +3056,7 @@ modelo:
           irpf-inmueble-referencia-catastral-principal:
             label: Referència cadastral de l'immoble principal al que està vinculat
           irpf-inmueble-situacion-clave:
-            label: Situació (clau)
+            label: Clau de situació
           irpf-inmueble-uso-mixto-flag:
             label: En el cas excepcional que l'immoble estigui, els mateixos dies,
               en part a disposició del contribuent i en part destinat a altres usos,
@@ -3188,6 +3198,10 @@ modelo:
             label: Contribuent que obté els premis
           irpf-premios-juegos-publicitarios-contribuyente-titular:
             label: Contribuent que obté els premis
+          irpf-rdto-trabajo-cesion-derechos-autor-anticipo-flag:
+            label: En el cas dels rendiments derivats de la cessió de l'explotació
+              dels drets d'autor, si opta per imputar la bestreta a compte d'aquests
+              a mesura que vagin meritant-se els drets, consigneu una 'X'
           irpf-re-agrup-interes-economico-base-imponible-imputada:
             label: Base imposable imputada
           irpf-re-agrup-interes-economico-nif:
@@ -3290,6 +3304,9 @@ modelo:
           irpf-re-atrib-retenciones-ganancias:
             label: Atribució de retencions de guanys i pèrdues patrimonials imputables
               a 2020
+          irpf-re-atrib-suma-act-eco:
+            label: Suma de rendiments nets d'activitats econòmiques, atribuïts (suma
+              de les caselles [1583])
           irpf-re-atrib-suma-cap-inmo:
             label: Suma de rendiments nets del capital immobiliari, atribuïts (suma
               de les caselles [1575] )
@@ -3309,10 +3326,20 @@ modelo:
           irpf-re-atrib-suma-gp-no-transmision-perdidas:
             label: Suma de pèrdues patrimonials no derivades de transmissions (a integrar
               en la B.I. general), atribuïdes (suma de les caselles [1585] )
+          irpf-re-atrib-suma-gp-perdidas-ahorro:
+            label: Suma de pèrdues patrimonials derivades de transmissions (a integrar
+              en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1596] )
+          irpf-re-atrib-suma-gp-transmision-ahorro:
+            label: Suma de guanys patrimonials derivades de transmissions (a integrar
+              en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1595] )
           irpf-re-iic-denominacion:
             label: Denominació de l'Institució d'Inversió Col·lectiva
           irpf-re-iic-imputacion-importe:
             label: Import de l'imputació
+          irpf-re-iic-suma-imputaciones:
+            label: Suma d'imputacions de rendes per la participació en institucions
+              d'inversió Col·lectiva constituïdes en paradisos fiscals (suma de les
+              caselles [0278])
           irpf-re-imagen-cantidad-imputar:
             label: Quantitat a imputar
           irpf-re-imagen-empleador:
@@ -3713,7 +3740,7 @@ modelo:
               label: Rendiment net
             0039:
               label: Reducció aplicable a rendiments derivats de determinats contractes
-                de assegurança (d. transit. 4.ª Llei Impost)
+                d'assegurança (d. transit. 4.ª Llei Impost)
             '0040':
               label: Rendiment net reduït
             '0041':
@@ -3915,10 +3942,6 @@ modelo:
             '0270':
               label: Suma d'imputacions de rendes en el règim de transparència fiscal
                 internacional (suma de les caselles [0269])
-            0280:
-              label: La suma de les imputacions de rendes per la participació en institucions
-                d'inversió col·lectiva constituïdes en paradisos fiscals (suma de
-                les caselles [0278])
             0286:
               label: Import computable ([0283] + [0284] - [0285])
             0288:
@@ -3981,8 +4004,6 @@ modelo:
               label: Número d'ordre de l'element
             0358:
               label: Nº total anys de cobrament
-            0359:
-              label: Darrer any de cobrament
             '0360':
               label: Referència cadastral 1
             '0361':
@@ -4024,7 +4045,7 @@ modelo:
               label: Si les entitatés no residents no han aplicat un règim fiscal
                 similar a éste, marqueu la casella
             '0420':
-              label: Si la diferencia ( [0418] - [0419] ) és positiva
+              label: Si la diferència ( [0418] - [0419] ) és positiva
             '0422':
               label: Suma de guanys patrimonials ( [1608] + [0324] + [0339] + [0354]
                 + [0386] + [0387] + [0390] + [0393] + [0412] )
@@ -4072,15 +4093,21 @@ modelo:
             '0443':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2016, pendents de compensació a 1 de gener de 2020, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0449]) (Empleneu
+                l'annex C.2)
             '0444':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2017, pendents de compensació a 1 de gener de 2020, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0450]) (Empleneu
+                l'annex C.2)
             '0445':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2018, pendents de compensació a 1 de gener de 2020, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0451]) (Empleneu
+                l'annex C.2)
             '0446':
               label: Saldos nets negatius dels guanys i pèrdues patrimonials imputables
                 a 2020, integrats a la base imposable de l'estalvi, amb el límit del
@@ -4088,11 +4115,15 @@ modelo:
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2019, pendents de compensació a 1 de gener de 2020, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0452]) (Empleneu
+                l'annex C.2)
             0448:
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2019, pendents de compensació a 1 de gener de 2020, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0442]) (Empleneu
+                l'annex C.2)
             0449:
               label: Saldos nets negatius de rendiments del capital mobiliari, de
                 2016, pendents de compensació a 1 de gener de 2020, a integrar en
@@ -4112,15 +4143,21 @@ modelo:
             '0453':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2016, pendents de compensació a 1 de gener de 2020, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0439]) (Empleneu
+                l'annex C.2)
             '0454':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2017, pendents de compensació a 1 de gener de 2020, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0440]) (Empleneu
+                l'annex C.2)
             '0455':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2018, pendents de compensació a 1 de gener de 2020, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0441]) (Empleneu
+                l'annex C.2)
             '0456':
               label: 'Fill/Filla 1 (*): NIF/NIE'
             '0457':
@@ -4267,13 +4304,15 @@ modelo:
               label: Suma de deduccions autonòmiques (traslladéu l'import d'aquesta
                 mateixa casella de l'annex B.1, B.2, B.3, B.4, B.5 o B.6, segons correspongui)
             '0565':
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.2): Part estatal'
             '0566':
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.2): Part autonòmica'
             '0572':
               label: 'Import de les deduccions a les quals s''ha perdut el dret en
                 2020: Part estatal'
@@ -4329,7 +4368,7 @@ modelo:
               label: Suma de retencions i ingressos a compte atribuïts del capital
                 immobiliari (suma de les caselles [1598])
             0594:
-              label: Suma de retencions i ingressos a compte atribuïts de activitats
+              label: Suma de retencions i ingressos a compte atribuïts d'activitats
                 econòmiques (suma de les caselles [1599])
             0595:
               label: Quota resultant de l'autoliquidació ([0587] - [0588] - [0589]
@@ -4531,9 +4570,9 @@ modelo:
               label: '"175 Aniversario de la construcción del Gran Teatre del Liceu":
                 Aplicat en aquesta declaració'
             0758:
-              label: 'Per inversió en beneficis (art. 37è del TRLIS, D.T. 24a LIS)
+              label: 'Per inversió en beneficis (art. 37º del TRLIS, D.T. 24ª LIS)
                 (només si existeix un pla especial d''inversió aprovat per l''Administració
-                que permeti invertir en aquest exercici): Aplicat en aquesta...'
+                que permeti invertir en aquest exercici): Aplicat en aquesta declaració'
             0759:
               label: 'Deducció per inversions en territorios de África Occidental
                 (art.º 27.1.a) bis de la Llei 19/1994): Aplicat en aquesta declaració'
@@ -4613,12 +4652,13 @@ modelo:
                 Aplicat en aquesta declaració'
             0818:
               label: Per contractes d'arrendament d'habitatges situats en zones de
-                Cantòbria en risc de despoblament i que constitueixin o vagin a constituir
-                l'habitatge habitual de l'arrendatari (deducció per a...
+                Cantàbria en risc de despoblament i que constitueixin o vagin a constituir
+                l'habitatge habitual de l'arrendatari (deducció per a l'arrendatari)
+                (traslladeu l'import de la casella [0646] de l'annex B.8)
             0819:
               label: Per contractes d'arrendament d'habitatges situats en zones de
                 Cantàbria en risc de despoblament i que constitueixin o vagin a constituir
-                l'habitatge habitual de l'arrendatari (deducció per a e...
+                l'habitatge habitual de l'arrendatari (deducció per a l'arrendador)
             0820:
               label: Per despeses de guarderia per a contribuents que tinguin la seva
                 residència habitual en zones en risc de despoblament
@@ -4699,7 +4739,8 @@ modelo:
             0854:
               label: Per inversió en l'adquisició d'accions i participacions socials
                 com a conseqüència d'acords de constitució de societats o ampliació
-                de capital en les societats mercantils (es trasllada...
+                de capital en les societats mercantils (aquest import es trasllada
+                a la casella [1136] de l'annex B.7)
             0863:
               label: Per a treballadors per despeses de defensa jurídica de la relació
                 laboral
@@ -4859,7 +4900,8 @@ modelo:
             '1016':
               label: Per inversió en l'adquisició d'accions o participacions socials
                 com a conseqüència d'acords de constitució o ampliació de capital
-                en societats mercantils (es trasllada aquest import a la...
+                en societats mercantils (aquest import es trasllada a la casella [1136]
+                de l'annex B.7)
             '1019':
               label: Per arrendament de habitatge habitual (es trasllada este import
                 a la casella [1130] del annex B.6)
@@ -4932,8 +4974,6 @@ modelo:
             '1072':
               label: Per quantitats invertides en obres d'adequació d'habitatge habitual
                 per a persones amb discapacitat
-            '1076':
-              label: NIF de l'Escola, Centre o Llar d'infants Infantil
             '1077':
               label: Per adquisició de vehicles elèctrics nous
             '1078':
@@ -5031,15 +5071,6 @@ modelo:
             '1178':
               label: Import total de les quantitatés invertidas amb dret a deducció
                 (suma de les caselles [1150] + [1152])
-            '1190':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casilla
-            '1195':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casilla
-            '1200':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casilla
             '1202':
               label: Primes satisfetes
             '1203':
@@ -5410,7 +5441,7 @@ modelo:
               label: Reducció de carácter general (20% o 35% del import de la casella
                 [1474], si aquesta és major que 0)
             '1476':
-              label: Reducció per a activitats econòmiques desenvolupades en el terme
+              label: Reducció per a activitats econòmiques desenvolupades al terme
                 municipal de Lorca (Múrcia)
             '1479':
               label: Rendiment net de l'activitat
@@ -5464,8 +5495,8 @@ modelo:
             '1550':
               label: Diferència ([1548 - [1549])
             '1551':
-              label: Reducció agricultores jóvenes (disposició adicional sexta de
-                la Llei del Impost)
+              label: Reducció agricultors joves (disposició addicional sisena de la
+                Llei de l'Impost)
             '1553':
               label: Rendiment net de l'activitat
             '1554':
@@ -5501,15 +5532,6 @@ modelo:
                 9ª)
             '1593':
               label: Reduccions aplicables (D.T. 9ª)
-            '1605':
-              label: Suma de rendiments nets de activitats econòmiques, atribuïts
-                (suma de les caselles [1583])
-            '1608':
-              label: Suma de guanys patrimonials derivades de transmissions (a integrar
-                en la B.I. del ahorro), atribuïdes (suma de les caselles [1595] )
-            '1609':
-              label: Suma de pèrdues patrimonials derivades de transmissions (a integrar
-                en la B.I. del ahorro), atribuïdes (suma de les caselles [1596] )
             '1622':
               label: Marqueu una "X" si a la casella [1562] heu consignat un NIF d'un
                 altre país
@@ -5580,18 +5602,10 @@ modelo:
             label: Exercici 2020
         '2021':
           casilla:
-            0028:
-              label: Interessos d'actius financers amb dret a la bonificació transitòria
-                de l'impost sobre societats
-            0039:
-              label: Reducció per rendiments de determinats contractes d'assegurança
-                segons la disposició transitòria 4a
             '0043':
               label: Import total acumulat del capital diferit percebut el 2015, 2016,
                 2017, 2018, 2019 i 2020 el rendiment del qual es va aplicar la DT
                 4a
-            '0065':
-              label: Clau de situació
             '0070':
               label: Habitatge habitual el 2021
             '0076':
@@ -5630,9 +5644,6 @@ modelo:
               label: Rendiment net ([0102] - [0104] - [0107] - [0109] - [0110] - [0111]
                 - [0112] - [0113] - [0114] - [0115] - [0116] - [0157] - [0117] - [0131]
                 - [0132] - [0146] - [0147] - [0148])
-            '0155':
-              label: Suma de rendes immobiliàries imputades (suma de les caselles
-                [0089])
             '0157':
               label: Despesa deduïble corresponent a lloguers de locals a determinats
                 empresaris en els mesos de gener, febrer i març de 2021 (Reial decret
@@ -5675,15 +5686,8 @@ modelo:
             0279:
               label: Ajuts públics per a la primera instal·lació de joves agricultors
                 previstos en el Marc Nacional de Desenvolupament Rural destinats a
-                l'adquisició d'una participació en el capital d'empreses agr...
-            0280:
-              label: Suma d'imputacions de rendes per la participació en institucions
-                d'inversió Col·lectiva constituïdes en paradisos fiscals (suma de
-                les caselles [0278])
-            0285:
-              label: Ingr. a compte repercutidos
-            0295:
-              label: Ingr. a compte repercutidos
+                l'adquisició d'una participació en el capital d'empreses agrícoles.
+                Import imputable a 2021 (empleneu l'Annex C.1) (*)
             0299:
               label: Subvencions per a l'adquisició d'habitatges de protecció oficial
                 o de preu taxat. Import imputable a 2021 (empleneu l'annex C.1) (*)
@@ -5709,28 +5713,6 @@ modelo:
               label: Import global de les transmissions efectuades en 2021
             '0322':
               label: Pèrdues patrimonials imputables a 2021
-            0359:
-              label: Último any de cobrament
-            '0365':
-              label: Ganancia patrimonial pendent d'imputació
-            '0366':
-              label: Pérdida patrimonial pendent d'imputació
-            0369:
-              label: Ganancia patrimonial pendent d'imputació
-            '0370':
-              label: Pérdida patrimonial pendent d'imputació
-            '0373':
-              label: Ganancia patrimonial pendent d'imputació
-            '0374':
-              label: Pérdida patrimonial pendent d'imputació
-            '0377':
-              label: Ganancia patrimonial pendent d'imputació
-            0378:
-              label: Pérdida patrimonial pendent d'imputació
-            0380:
-              label: Ganancia patrimonial pendent d'imputació
-            0381:
-              label: Pérdida patrimonial pendent d'imputació
             0392:
               label: Import del guany patrimonial que correspon imputar a 2021
             0393:
@@ -5748,8 +5730,6 @@ modelo:
             '0400':
               label: Suma de imputació a 2021 de guanys patrimonials acollides a ajornament
                 per reinversió(suma de les caselles [0399] )
-            '0420':
-              label: Si la diferència ( [0418] - [0419] ) és positiva
             '0426':
               label: Contribucions empresarials (excepte les derivades de contribucions
                 empresarials a assegurances col·lectives de dependència) (Empleneu
@@ -5805,15 +5785,21 @@ modelo:
             '0443':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2017, pendents de compensació a 1 de gener de 2021, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0449]) (Empleneu
+                l'annex C.2)
             '0444':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2018, pendents de compensació a 1 de gener de 2021, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0450]) (Empleneu
+                l'annex C.2)
             '0445':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2019, pendents de compensació a 1 de gener de 2021, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0451]) (Empleneu
+                l'annex C.2)
             '0446':
               label: Saldos nets negatius dels guanys i pèrdues patrimonials imputables
                 a 2021, integrats a la base imposable de l'estalvi, amb el límit del
@@ -5821,11 +5807,15 @@ modelo:
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2020, pendents de compensació a 1 de gener de 2021, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0452]) (Empleneu
+                l'annex C.2)
             0448:
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2020, pendents de compensació a 1 de gener de 2021, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0442]) (Empleneu
+                l'annex C.2)
             0449:
               label: Saldos nets negatius de rendiments del capital mobiliari, de
                 2017, pendents de compensació a 1 de gener de 2021, a integrar en
@@ -5845,15 +5835,21 @@ modelo:
             '0453':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2017, pendents de compensació a 1 de gener de 2021, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0439]) (Empleneu
+                l'annex C.2)
             '0454':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2018, pendents de compensació a 1 de gener de 2021, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0440]) (Empleneu
+                l'annex C.2)
             '0455':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2019, pendents de compensació a 1 de gener de 2021, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0441]) (Empleneu
+                l'annex C.2)
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
@@ -5932,13 +5928,15 @@ modelo:
               label: 'Per incentius i estímuls a la inversió empresarial (traslladéu
                 els imports d''aquestes mateixes caselles de l''annex A.5): part autonòmica'
             '0565':
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.3): Part estatal'
             '0566':
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.3): Part autonòmica'
             '0567':
               label: 'Per obres de millora de l''eficiència energètica d''habitatges
                 (traslladeu l''import d''aquestes mateixes casillas de l''annex A.2):
@@ -5961,9 +5959,6 @@ modelo:
             0579:
               label: 'Import de les deduccions autonòmiques a les quals s''ha perdut
                 el dret en 2021: Part autonòmica'
-            0594:
-              label: Suma de retencions i ingressos a compte atribuïts d'activitats
-                econòmiques (suma de les caselles [1599])
             '0600':
               label: Suma de retencions i ingressos a compte atribuïts de guanys i
                 pèrdues patrimonials imputables a 2021 (suma de les caselles [1600])
@@ -6089,6 +6084,17 @@ modelo:
               label: 'Reserva per a inversions a les Canàries 2020: any de la dotació'
             0802:
               label: 'Reserva per a inversions a Canàries 2021: any de la dotació'
+            0818:
+              label: Per contractes d'arrendament d'habitatges situats en zones de
+                Cantàbria en risc de despoblament i que constitueixin o vagin a constituir
+                l'habitatge habitual de l'arrendatari (deducció per a l'arrendatari)
+                (traslladeu l'import de la casella [0646] de l'annex B.9)
+            0819:
+              label: Per contractes d'arrendament d'habitatges situats en zones de
+                Cantàbria en risc de despoblament i que constitueixin o vagin a constituir
+                l'habitatge habitual de l'arrendatari (deducció per a l'arrendador)
+                (només aplicable als contribuents morts abans del 31 de desembre de
+                2021)
             0823:
               label: Per inversions o donacions a entitats de l'Economia Social establertes
                 a Cantàbria (trasllade l'import de la casella [1179] de l'annex B.8)
@@ -6279,8 +6285,6 @@ modelo:
               label: Per inversions realitzades en entitatés cotizadas en el Mercat
                 Alternativo Bursátil (es trasllada este import a la casella [1142]
                 del annex B.8)
-            '1076':
-              label: NIF de l'escola, centre o guarderia infantil
             '1078':
               label: Import satisfet en 2019 i/o 2020 pendent d'aplicació (per a inversions
                 en cualquier tipus de habitatge o edifici on es estigui situat)
@@ -6316,15 +6320,6 @@ modelo:
             '1186':
               label: Import satisfet en 2019 i/o 2020 pendent d'aplicació en exercicis
                 futurs
-            '1190':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
-            '1195':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
-            '1200':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
             '1206':
               label: Import satisfet en 2021
             '1207':
@@ -6660,12 +6655,6 @@ modelo:
                 en els 4 exercicis següents
             '1403':
               label: 'Despesa 5: NIF de qui va realitzar l''obra o servei'
-            '1476':
-              label: Reducció per a activitats econòmiques desenvolupades al terme
-                municipal de Lorca (Múrcia)
-            '1551':
-              label: Reducció agricultors joves (disposició addicional sisena de la
-                Llei de l'Impost)
             '1556':
               label: Per adquisició o rehabilitació d'habitatge habitual en zones
                 rurals en risc de despoblament per a contribuents de fins a 35 anys,
@@ -6675,17 +6664,6 @@ modelo:
             '1600':
               label: Atribució de retencions de guanys i pèrdues patrimonials imputables
                 a 2021
-            '1605':
-              label: Suma de rendiments nets d'activitats econòmiques, atribuïts (suma
-                de les caselles [1583])
-            '1608':
-              label: Suma de guanys patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1595]
-                )
-            '1609':
-              label: Suma de pèrdues patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1596]
-                )
             '1610':
               label: Import generat en 2021
             '1611':
@@ -6872,15 +6850,9 @@ modelo:
                 de previsió social empresarial i mutualitats de previsió social (excepte
                 a assegurances col·lectives de dependència), que derivi d'una decisió
                 del treballador
-            0028:
-              label: Interessos d'actius financers amb dret a la bonificació transitòria
-                de l'impost sobre societats
             '0037':
               label: 'Despeses fiscalment deduïbles: exclusivament administració i
                 dipòsit de valors negociables'
-            0039:
-              label: Reducció per rendiments de determinats contractes d'assegurança
-                segons la disposició transitòria 4a
             '0043':
               label: Import total acumulat del capital diferit percebut el 2016, 2017,
                 2018, 2019, 2020 i 2021 el rendiment del qual es va aplicar la DT
@@ -6888,8 +6860,6 @@ modelo:
             '0044':
               label: Import total dels capitals diferits corresponents a assegurances
                 de vida percebuts el 2022, el rendiment dels quals aplica la D.T.4a
-            '0065':
-              label: Clau de situació
             '0070':
               label: Habitatge habitual el 2022
             '0076':
@@ -6924,9 +6894,6 @@ modelo:
             '0144':
               label: Import de les millores realitzades el 2022 a l'immoble accessori
                 (desglossament a l'annex D; emplenament voluntari)
-            '0155':
-              label: Suma de rendes immobiliàries imputades (suma de les caselles
-                [0089])
             '0157':
               label: Reducció per a activitats econòmiques desenvolupades a l'illa
                 de la Palma (Canàries)
@@ -6957,10 +6924,11 @@ modelo:
               label: Ajudes públiques als titulars de béns integrants del Patrimoni
                 Històric Espanyol destinades a la seva conservació o rehabilitació.
                 Import imputable a 2022 (empleneu l'annex C.1)
-            0280:
-              label: Suma d'imputacions de rendes per la participació en institucions
-                d'inversió Col·lectiva constituïdes en paradisos fiscals (suma de
-                les caselles [0278])
+            0279:
+              label: Ajuts públics per a la primera instal·lació de joves agricultors
+                previstos en el Marc Nacional de Desenvolupament Rural destinats a
+                l'adquisició d'una participació en el capital d'empreses agrícoles.
+                Import imputable a 2022 (empleneu l'Annex C.1) (*)
             0286:
               label: Import computable ([0283] + [0284] - [0285])
             0299:
@@ -7009,8 +6977,6 @@ modelo:
             '0400':
               label: Suma de imputació a 2022 de guanys patrimonials acollides a ajornament
                 per reinversió(suma de les caselles [0399] )
-            '0420':
-              label: Si la diferència ( [0418] - [0419] ) és positiva
             '0422':
               label: Suma de guanys patrimonials ([1608] + [0324] + [0339] + [0354]
                 + [1814] + [1845] + [1846] + [0386] + [0387] + [0390] + [0393] + [0412])
@@ -7076,15 +7042,21 @@ modelo:
             '0443':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2018, pendents de compensació a 1 de gener de 2022, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0449]) (Empleneu
+                l'annex C.2)
             '0444':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2019, pendents de compensació a 1 de gener de 2022, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0450]) (Empleneu
+                l'annex C.2)
             '0445':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2020, pendents de compensació a 1 de gener de 2022, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0451]) (Empleneu
+                l'annex C.2)
             '0446':
               label: Saldos nets negatius dels guanys i pèrdues patrimonials imputables
                 a 2022, integrats a la base imposable de l'estalvi, amb el límit del
@@ -7092,11 +7064,15 @@ modelo:
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2021, pendents de compensació a 1 de gener de 2022, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0452]) (Empleneu
+                l'annex C.2)
             0448:
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2021, pendents de compensació a 1 de gener de 2022, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0442]) (Empleneu
+                l'annex C.2)
             0449:
               label: Saldos nets negatius de rendiments del capital mobiliari, de
                 2018, pendents de compensació a 1 de gener de 2022, a integrar en
@@ -7116,15 +7092,21 @@ modelo:
             '0453':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2018, pendents de compensació a 1 de gener de 2022, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0439]) (Empleneu
+                l'annex C.2)
             '0454':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2019, pendents de compensació a 1 de gener de 2022, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0440]) (Empleneu
+                l'annex C.2)
             '0455':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2020, pendents de compensació a 1 de gener de 2022, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0441]) (Empleneu
+                l'annex C.2)
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
@@ -7207,13 +7189,15 @@ modelo:
                 mateixa casella de l''annex B.1, B.2, B.3, B.4, B.5 o B.6, segons
                 correspongui): part autonòmica'
             '0565':
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.3): Part estatal'
             '0566':
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.3): Part autonòmica'
             0568:
               label: 'Increment de les quotes líquides per pèrdua del dret a l''aplicació
                 de l''incentiu fiscal regulat a l''article 33.3.a) de la Llei de l''impost
@@ -7253,9 +7237,6 @@ modelo:
             0586:
               label: 'Quota líquida autonòmica incrementada ( [0586] = [0571] + [0569]
                 + [0583] + [0577] + [0578] + [0579] + [0581] ): Part autonòmica'
-            0594:
-              label: Suma de retencions i ingressos a compte atribuïts d'activitats
-                econòmiques (suma de les caselles [1599])
             '0600':
               label: Suma de retencions i ingressos a compte atribuïts de guanys i
                 pèrdues patrimonials imputables a 2022 (suma de les caselles [1600])
@@ -7619,15 +7600,6 @@ modelo:
                 + [1117])
             '1184':
               label: Import generat el 2022 pendent d'aplicació
-            '1190':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
-            '1195':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
-            '1200':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
             '1206':
               label: Import satisfet en 2022
             '1208':
@@ -7788,7 +7760,7 @@ modelo:
               label: 'Aportacions i contribucions del 2022 (excepte contribucions
                 empresarials a assegurances col·lectives de dependència) no aplicades,
                 l''import de les quals se sol·licita poder reduir en els 5 exercicis
-                següents: ...'
+                següents: Pendent d''aplicació en exercicis futurs'
             '1301':
               label: 'Exercici 2017: pendent d''aplicació al principi del període'
             '1302':
@@ -7969,9 +7941,6 @@ modelo:
                 futurs
             '1403':
               label: 'Despesa 5: NIF de qui va realitzar l''obra o servei'
-            '1476':
-              label: Reducció per a activitats econòmiques desenvolupades al terme
-                municipal de Lorca (Múrcia)
             '1488':
               label: 'Bestiar porcí de carn: Ingressos íntegres'
             '1491':
@@ -8015,15 +7984,12 @@ modelo:
             '1530':
               label: 'Altres treballs i serveis accessoris realitzats per agricultors,
                 ramaders o titulars d''activitats forestals, excepte serveis de cria,
-                guarda i engreix de bestiar (aus incloses): Ingressos ...'
+                guarda i engreix de bestiar (aus incloses): Ingressos íntegres'
             '1533':
               label: 'Serveis de cria, guarda i engreix de bestiar (aus incloses):
                 Ingressos íntegres'
             '1550':
               label: Diferència ([1548 - [1549] - [0160])
-            '1551':
-              label: Reducció agricultors joves (disposició addicional sisena de la
-                Llei de l'Impost)
             '1556':
               label: Per adquisició o rehabilitació de habitatge habitual en concejos
                 en risc de despoblament
@@ -8032,17 +7998,6 @@ modelo:
             '1600':
               label: Atribució de retencions de guanys i pèrdues patrimonials imputables
                 a 2022
-            '1605':
-              label: Suma de rendiments nets d'activitats econòmiques, atribuïts (suma
-                de les caselles [1583])
-            '1608':
-              label: Suma de guanys patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1595]
-                )
-            '1609':
-              label: Suma de pèrdues patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1596]
-                )
             '1610':
               label: Import generat en 2022
             '1611':
@@ -8213,15 +8168,9 @@ modelo:
               label: Rendiment net previ ([0012] - [0013] - [0014] - [0015] - [0016])
             '0025':
               label: Rendiment net reduït ([0022] - [0057] - [0023])
-            0028:
-              label: Interessos d'actius financers amb dret a la bonificació transitòria
-                de l'impost sobre societats
             '0037':
               label: 'Despeses fiscalment deduïbles: exclusivament administració i
                 dipòsit de valors negociables'
-            0039:
-              label: Reducció per rendiments de determinats contractes d'assegurança
-                segons la disposició transitòria 4a
             '0043':
               label: Import total acumulat del capital diferit percebut el 2015, 2016,
                 2017, 2018, 2019, 2020, 2021 i 2022 el rendiment del qual es va aplicar
@@ -8232,8 +8181,6 @@ modelo:
             '0057':
               label: Reducció per rendiments acollits al règim fiscal de la XXXVII
                 Copa Amèrica Barcelona
-            '0065':
-              label: Clau de situació
             '0070':
               label: Habitatge habitual el 2023
             '0076':
@@ -8270,9 +8217,6 @@ modelo:
             '0144':
               label: Import de les millores realitzades el 2023 a l'immoble accessori
                 (desglossament a l'annex D; emplenament voluntari)
-            '0155':
-              label: Suma de rendes immobiliàries imputades (suma de les caselles
-                [0089])
             '0157':
               label: Reducció per activitats econòmiques desenvolupades a l'illa de
                 La Palma (Canàries)
@@ -8312,10 +8256,11 @@ modelo:
               label: Ajudes públiques als titulars de béns integrants del Patrimoni
                 Històric Espanyol destinades a la seva conservació o rehabilitació.
                 Import imputable a 2023 (empleneu l'annex C.1)
-            0280:
-              label: Suma d'imputacions de rendes per la participació en institucions
-                d'inversió Col·lectiva constituïdes en paradisos fiscals (suma de
-                les caselles [0278])
+            0279:
+              label: Ajuts públics per a la primera instal·lació de joves agricultors
+                previstos en el Marc Nacional de Desenvolupament Rural destinats a
+                l'adquisició d'una participació en el capital d'empreses agrícoles.
+                Import imputable a 2023 (empleneu l'Annex C.1) (*)
             0286:
               label: Import computable ([0283] + [0284] - [0285])
             0299:
@@ -8380,9 +8325,11 @@ modelo:
             '0417':
               label: Si els contribuents, socis d'entitats no residents a Espanya,
                 s'han vist afectats el 2023 per operacions de fusió, escissió o bescanvi
-                de valors realitzades per aquestes entitats regulat ...
-            '0420':
-              label: Si la diferència ( [0418] - [0419] ) és positiva
+                de valors realitzades per aquestes entitats regulat pel Capítol VII
+                del Títol VII de la Llei de l'impost sobre societats (articles 48
+                i 49 del Reglament d'aquest impost) i les entitats no residents no
+                han aplicat un règim fiscal similar a aquest, marqueu amb una "X"
+                aquesta casella
             '0422':
               label: Suma de guanys patrimonials ([1608] + [0324] + [0339] + [0354]
                 + [1814] + [1845] + [1846] + [0386] + [0387] + [0390] + [0393] + [0412])
@@ -8437,15 +8384,21 @@ modelo:
             '0443':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2019, pendents de compensació a 1 de gener de 2023, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0449]) (Empleneu
+                l'annex C.3)
             '0444':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2020, pendents de compensació a 1 de gener de 2023, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0450]) (Empleneu
+                l'annex C.3)
             '0445':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2021, pendents de compensació a 1 de gener de 2023, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0451]) (Empleneu
+                l'annex C.3)
             '0446':
               label: Saldos nets negatius dels guanys i pèrdues patrimonials imputables
                 a 2023, integrats a la base imposable de l'estalvi, amb el límit del
@@ -8453,11 +8406,15 @@ modelo:
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2022, pendents de compensació a 1 de gener de 2023, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0452]) (Empleneu
+                l'annex C.3)
             0448:
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2022, pendents de compensació a 1 de gener de 2023, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0442]) (Empleneu
+                l'annex C.3)
             0449:
               label: Saldos nets negatius de rendiments del capital mobiliari, de
                 2019, pendents de compensació a 1 de gener de 2023, a integrar en
@@ -8477,15 +8434,21 @@ modelo:
             '0453':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2019, pendents de compensació a 1 de gener de 2023, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0439]) (Empleneu
+                l'annex C.3)
             '0454':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2020, pendents de compensació a 1 de gener de 2023, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0440]) (Empleneu
+                l'annex C.3)
             '0455':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2021, pendents de compensació a 1 de gener de 2023, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0441]) (Empleneu
+                l'annex C.3)
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
@@ -8549,13 +8512,15 @@ modelo:
                 mateixa casella de l''annex B.1, B.2, B.3, B.4, B.5, B.6 o B.7, segons
                 correspongui): part autonòmica'
             '0565':
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.3): Part estatal'
             '0566':
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.3): Part autonòmica'
             '0567':
               label: 'Per obres de millora de l''eficiència energètica d''habitatges
                 (traslladeu l''import d''aquestes mateixes caselles de l''annex A.3):
@@ -8588,9 +8553,6 @@ modelo:
             0586:
               label: 'Quota líquida autonòmica incrementada ([0586] = [0571] + [0569]
                 + [0583] + [0577] + [0578] + [0579] + [0581] + [0504]): Part autonòmica'
-            0594:
-              label: Suma de retencions i ingressos a compte atribuïts d'activitats
-                econòmiques (suma de les caselles [1599])
             '0600':
               label: Suma de retencions i ingressos a compte atribuïts de guanys i
                 pèrdues patrimonials imputables a 2023 (suma de les caselles [1600])
@@ -8946,15 +8908,6 @@ modelo:
               label: Import generat el 2022 pendent d'aplicació
             '1186':
               label: Import satisfet en 2020 pendent d'aplicació en exercicis futurs
-            '1190':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
-            '1195':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
-            '1200':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
             '1213':
               label: 'Exercici 2019: pendent d''aplicació al principi del període'
             '1214':
@@ -9109,7 +9062,7 @@ modelo:
               label: 'Aportacions i contribucions del 2023 (excepte contribucions
                 empresarials a assegurances col·lectives de dependència) no aplicades,
                 l''import de les quals se sol·licita poder reduir en els 5 exercicis
-                següents: ...'
+                següents: Pendent d''aplicació en exercicis futurs'
             '1301':
               label: 'Exercici 2018: pendent d''aplicació al principi del període'
             '1302':
@@ -9287,9 +9240,6 @@ modelo:
                 en els 4 exercicis següents
             '1403':
               label: 'Despesa 5: NIF de qui va realitzar l''obra o servei'
-            '1476':
-              label: Reducció per a activitats econòmiques desenvolupades al terme
-                municipal de Lorca (Múrcia)
             '1488':
               label: 'Bestiar porcí de carn: Ingressos íntegres'
             '1491':
@@ -9333,15 +9283,12 @@ modelo:
             '1530':
               label: 'Altres treballs i serveis accessoris realitzats per agricultors,
                 ramaders o titulars d''activitats forestals, excepte serveis de cria,
-                guarda i engreix de bestiar (aus incloses): Ingressos ...'
+                guarda i engreix de bestiar (aus incloses): Ingressos íntegres'
             '1533':
               label: 'Serveis de cria, guarda i engreix de bestiar (aus incloses):
                 Ingressos íntegres'
             '1550':
               label: Diferència ([1548 - [1549] - [0160])
-            '1551':
-              label: Reducció agricultors joves (disposició addicional sisena de la
-                Llei de l'Impost)
             '1556':
               label: Per adquisició o rehabilitació de habitatge habitual en concejos
                 en risc de despoblament
@@ -9350,17 +9297,6 @@ modelo:
             '1600':
               label: Atribució de retencions de guanys i pèrdues patrimonials imputables
                 a 2023
-            '1605':
-              label: Suma de rendiments nets d'activitats econòmiques, atribuïts (suma
-                de les caselles [1583])
-            '1608':
-              label: Suma de guanys patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1595]
-                )
-            '1609':
-              label: Suma de pèrdues patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1596]
-                )
             '1610':
               label: 'Per inversió en habitatge habitual que tingui la consideració
                 de protegit: import generat el 2022 pendent d''aplicació'
@@ -9541,15 +9477,9 @@ modelo:
               label: Rendiment net previ ([0012] - [0013] - [0014] - [0015] - [0016])
             '0025':
               label: Rendiment net reduït ([0022] - [0057] - [0023])
-            0028:
-              label: Interessos d'actius financers amb dret a la bonificació transitòria
-                de l'impost sobre societats
             '0037':
               label: 'Despeses fiscalment deduïbles: exclusivament administració i
                 dipòsit de valors negociables'
-            0039:
-              label: Reducció per rendiments de determinats contractes d'assegurança
-                segons la disposició transitòria 4a
             '0043':
               label: Import total acumulat del capital diferit percebut en 2015, 2016,
                 2017, 2018, 2019, 2020, 2021, 2023 i 2024 al rendiment del qual es
@@ -9560,8 +9490,6 @@ modelo:
             '0055':
               label: Reduccions per rendiments generats en més de dos anys o obtinguts
                 de manera notòriament irregular
-            '0065':
-              label: Clau de situació
             '0070':
               label: Habitatge habitual el 2024
             '0076':
@@ -9762,8 +9690,6 @@ modelo:
             '0155':
               help: Consigneu el total de rendes immobiliàries imputades sumant els
                 imports de la casella [0089].
-              label: Suma de rendes immobiliàries imputades (suma de les caselles
-                [0089])
             '0156':
               help: Consigneu el total de rendiments nets reduïts del capital immobiliari
                 sumant els imports de la casella [0154].
@@ -10141,15 +10067,17 @@ modelo:
                 institució d'inversió col·lectiva.
             0279:
               help: Consigneu els ajuts públics per a la primera instal·lació de joves
-                agricultors del Marc Nacional de Desenvolupament Rural destinats a
-                adquirir una participació en el capital d'empreses agr...
+                agricultors previstos en el Marc Nacional de Desenvolupament Rural
+                destinats a adquirir una participació en el capital d'empreses agrícoles,
+                per l'import imputable a 2024 (empleneu l'annex C.1).
+              label: Ajuts públics per a la primera instal·lació de joves agricultors
+                previstos en el Marc Nacional de Desenvolupament Rural destinats a
+                l'adquisició d'una participació en el capital d'empreses agrícoles.
+                Import imputable a 2024 (empleneu l'Annex C.1) (*)
             0280:
               help: Aquest camp totalitza les imputacions de rendes per la participació
                 en institucions d'inversió col·lectiva constituïdes en paradisos fiscals
                 sumant les caselles [0278].
-              label: Suma d'imputacions de rendes per la participació en institucions
-                d'inversió Col·lectiva constituïdes en paradisos fiscals (suma de
-                les caselles [0278])
             0281:
               help: Identifiqueu el contribuent que obté els premis inclosos en aquest
                 apartat.
@@ -10206,8 +10134,8 @@ modelo:
                 o de preu taxat. Import imputable a 2024 (empleneu l'annex C.1) (*)
             '0300':
               help: Consigneu altres subvencions o ajuts per adquirir o rehabilitar
-                l'habitatge habitual o reparar-hi defectes estructurals, amb l'import
-                imputable a 2024; el text oficial d'origen queda truncat a An...
+                l'habitatge habitual o reparar-ne defectes estructurals, per l'import
+                imputable a 2024 (empleneu l'annex C.1).
               label: Altres subvencions o ajuts destinats a l'adquisició o rehabilitació
                 de l'habitatge habitual o a la reparació de defectes estructurals
                 en aquest. Import imputable a 2024 (empleneu l'Annex C.1) (*)
@@ -10523,8 +10451,8 @@ modelo:
                 diferiment per reinversió (suma de les caselles [0399])
             '0401':
               help: Marqueu aquesta casella quan el contribuent hagi transmès inter
-                vivos les accions o participacions després de canviar la residència
-                a un altre Estat membre de la U...
+                vivos les accions o participacions després d'haver traslladat la seva
+                residència a un altre estat membre de la Unió Europea.
             '0402':
               help: Identifiqueu el contribuent titular dels valors declarats en aquesta
                 entrada de canvi de residència.
@@ -10557,22 +10485,28 @@ modelo:
               help: Aquest camp totalitza els guanys patrimonials per canvi de residència
                 fora del territori espanyol sumant la casella [0411].
             '0416':
-              help: Marqueu aquest camp quan el contribuent, com a soci d'entitats
+              help: Marqueu aquesta casella quan el contribuent, com a soci d'entitats
                 no residents a Espanya, s'hagi vist afectat el 2023 per operacions
                 de fusió, escissió o bescanvi de valors regulades en el capítol VII
-                del títol VII...
+                del títol VII de la Llei de l'impost sobre societats.
               label: Si els contribuents, socis d'entitats no residents a Espanya,
                 s'han vist afectats el 2023 per operacions de fusió, escissió o bescanvi
                 de valors regulades en el capítol VII del títol VII de la Llei de
                 l'impost sobre societats, marqueu amb una "X" aquesta casella
             '0417':
-              help: Marqueu aquest camp quan el contribuent, com a soci d'entitats
+              help: Marqueu aquesta casella quan el contribuent, com a soci d'entitats
                 no residents a Espanya, s'hagi vist afectat el 2023 per operacions
-                de fusió, escissió o bescanvi de valors realitzades per aquestes entitats
-                regulat ...
+                de fusió, escissió o bescanvi de valors fetes per aquestes entitats
+                i regulades en el capítol VII del títol VII de la Llei de l'impost
+                sobre societats, i les entitats no residents no hagin aplicat un règim
+                fiscal similar.
               label: Si els contribuents, socis d'entitats no residents a Espanya,
                 s'han vist afectats el 2023 per operacions de fusió, escissió o bescanvi
-                de valors realitzades per aquestes entitats regulat ...
+                de valors realitzades per aquestes entitats regulat pel Capítol VII
+                del Títol VII de la Llei de l'impost sobre societats (articles 48
+                i 49 del Reglament d'aquest impost) i les entitats no residents no
+                han aplicat un règim fiscal similar a aquest, marqueu amb una "X"
+                aquesta casella
             0418:
               help: Aquest camp totalitza els guanys patrimonials sumant [1606], [0290],
                 [0297], [0306] i [0400].
@@ -10582,7 +10516,6 @@ modelo:
             '0420':
               help: Aquest camp informa del saldo positiu quan [0418] menys [0419]
                 és superior a zero.
-              label: Si la diferència ( [0418] - [0419] ) és positiva
             '0421':
               help: Aquest camp informa del saldo negatiu quan [0418] menys [0419]
                 és inferior a zero.
@@ -10697,7 +10630,9 @@ modelo:
                 25 per 100.
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2020, pendents de compensació a 1 de gener de 2024, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0449]) (Empleneu
+                l'annex C.3)
             '0444':
               help: Consigneu la resta de saldos nets negatius de rendiments de capital
                 mobiliari de 2021 pendents de compensació a 1 de gener de 2024 a integrar
@@ -10705,7 +10640,9 @@ modelo:
                 25 per 100.
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2021, pendents de compensació a 1 de gener de 2024, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0450]) (Empleneu
+                l'annex C.3)
             '0445':
               help: Consigneu la resta de saldos nets negatius de rendiments de capital
                 mobiliari de 2022 pendents de compensació a 1 de gener de 2024 a integrar
@@ -10713,7 +10650,9 @@ modelo:
                 25 per 100.
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2022, pendents de compensació a 1 de gener de 2024, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0451]) (Empleneu
+                l'annex C.3)
             '0446':
               label: Saldos nets negatius de guanys i pèrdues patrimonials imputables
                 a 2024, a integrar en la base imposable de l'estalvi, amb el límit
@@ -10726,7 +10665,9 @@ modelo:
                 25 per 100.
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2023, pendents de compensació a 1 de gener de 2024, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0452]) (Empleneu
+                l'annex C.3)
             0448:
               help: Consigneu la resta de saldos nets negatius de guanys i pèrdues
                 patrimonials de 2023 pendents de compensació a 1 de gener de 2024
@@ -10734,7 +10675,9 @@ modelo:
                 del 25 per 100.
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2023, pendents de compensació a 1 de gener de 2024, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0442]) (Empleneu
+                l'annex C.3)
             0449:
               help: Consigneu els saldos nets negatius de rendiments de capital mobiliari
                 de 2020 pendents de compensació a 1 de gener de 2024 a integrar en
@@ -10770,7 +10713,9 @@ modelo:
                 del 25 per 100.
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2020, pendents de compensació a 1 de gener de 2024, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0439]) (Empleneu
+                l'annex C.3)
             '0454':
               help: Consigneu la resta de saldos nets negatius de guanys i pèrdues
                 patrimonials de 2021 pendents de compensació a 1 de gener de 2024
@@ -10778,7 +10723,9 @@ modelo:
                 del 25 per 100.
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2021, pendents de compensació a 1 de gener de 2024, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0440]) (Empleneu
+                l'annex C.3)
             '0455':
               help: Consigneu la resta de saldos nets negatius de guanys i pèrdues
                 patrimonials de 2022 pendents de compensació a 1 de gener de 2024
@@ -10786,7 +10733,9 @@ modelo:
                 del 25 per 100.
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2022, pendents de compensació a 1 de gener de 2024, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0441]) (Empleneu
+                l'annex C.3)
             '0456':
               help: Indiqueu el NIF o NIE del fill o filla 1 a les dades addicionals
                 de les anualitats per aliments.
@@ -11124,17 +11073,19 @@ modelo:
               help: Indiqueu la part estatal de la deducció aplicable a unitats familiars
                 formades per residents fiscals en estats membres de la UE o de l'EEE,
                 amb l'import traslladat de les caselles corresponents de l'annex.
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.3): Part estatal'
             '0566':
               help: Indiqueu la part autonòmica de la deducció aplicable a unitats
                 familiars formades per residents fiscals en estats membres de la UE
                 o de l'EEE, amb l'import traslladat de les caselles corresponents
                 de l'annex.
-              label: Deducció aplicable a les unitats familiars formades per residents
-                fiscals en estats membres de la Unió Europea o de l'Espai Econòmic
-                Europeu (traslladéu els imports d'aquestes mateixes caselles...
+              label: 'Deducció aplicable a les unitats familiars formades per residents
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (traslladeu els imports d''aquestes mateixes caselles de l''annex
+                A.3): Part autonòmica'
             '0567':
               help: Aquest camp calculat recull la part estatal per obres de millora
                 de l'eficiència energètica d'habitatges traslladada de l'annex A.3.
@@ -11230,8 +11181,6 @@ modelo:
             0594:
               help: Indiqueu la suma de retencions i ingressos a compte atribuïts
                 d'activitats econòmiques, coincident amb la suma de les caselles [1599].
-              label: Suma de retencions i ingressos a compte atribuïts d'activitats
-                econòmiques (suma de les caselles [1599])
             0595:
               help: Aquest camp calculat recull la quota resultant de l'autoliquidació
                 després de restar les caselles [0588], [0589], [0590] i [0591] de
@@ -12982,8 +12931,6 @@ modelo:
               help: Introduïu la referència cadastral 1.
             '1190':
               help: Marqueu aquesta casella amb una X si no teniu referència cadastral.
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
             '1191':
               help: Introduïu les primes satisfetes.
             '1192':
@@ -12995,8 +12942,6 @@ modelo:
               help: Introduïu la referència cadastral 2.
             '1195':
               help: Marqueu aquesta casella amb una X si no teniu referència cadastral.
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
             '1196':
               help: Introduïu les primes satisfetes.
             '1197':
@@ -13008,8 +12953,6 @@ modelo:
               help: Introduïu la referència cadastral 3.
             '1200':
               help: Marqueu aquesta casella amb una X si no teniu referència cadastral.
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
             '1201':
               help: Introduïu les primes satisfetes.
             '1202':
@@ -13365,14 +13308,15 @@ modelo:
                 a l'exercici 2023.
               label: 'Exercici 2023: pendent d''aplicació en exercicis futurs'
             '1299':
-              help: 'Introduïu les aportacions i contribucions del 2024, excepte les
+              help: Consigneu les aportacions i contribucions de 2024, excepte les
                 contribucions empresarials a assegurances col·lectives de dependència,
-                no aplicades i l''import de les quals se sol·licita poder reduir en
-                els 5 exercicis següents: ...'
+                no aplicades l'import de les quals se sol·licita poder reduir en els
+                5 exercicis següents i que queden pendents d'aplicació en exercicis
+                futurs.
               label: 'Aportacions i contribucions del 2024 (excepte contribucions
                 empresarials a assegurances col·lectives de dependència) no aplicades,
                 l''import de les quals se sol·licita poder reduir en els 5 exercicis
-                següents: ...'
+                següents: Pendent d''aplicació en exercicis futurs'
             '1300':
               help: Introduïu el contribuent amb dret a la reducció.
             '1301':
@@ -13919,8 +13863,6 @@ modelo:
             '1476':
               help: Introduïu la reducció per a activitats econòmiques desenvolupades
                 al terme municipal de Lorca (Múrcia).
-              label: Reducció per a activitats econòmiques desenvolupades al terme
-                municipal de Lorca (Múrcia)
             '1477':
               help: Introduïu les despeses extraordinàries per circumstàncies excepcionals.
             '1478':
@@ -14079,13 +14021,12 @@ modelo:
             '1529':
               help: Introduïu el rendiment base del producte.
             '1530':
-              help: 'Introduïu els ingressos d''altres treballs i serveis accessoris
-                realitzats per agricultors, ramaders o titulars d''activitats forestals,
-                excepte serveis de cria, guarda i engreix de bestiar, aus incloses:
-                ...'
+              help: Consigneu els ingressos íntegres d'altres treballs i serveis accessoris
+                fets per agricultors, ramaders o titulars d'activitats forestals,
+                excepte els serveis de cria, guarda i engreix de bestiar, aus incloses.
               label: 'Altres treballs i serveis accessoris realitzats per agricultors,
                 ramaders o titulars d''activitats forestals, excepte serveis de cria,
-                guarda i engreix de bestiar (aus incloses): Ingressos ...'
+                guarda i engreix de bestiar (aus incloses): Ingressos íntegres'
             '1531':
               help: Introduïu l'índex.
             '1532':
@@ -14138,8 +14079,6 @@ modelo:
             '1551':
               help: Introduïu la reducció per a agricultors joves segons la disposició
                 addicional sisena de la Llei de l'impost.
-              label: Reducció agricultors joves (disposició addicional sisena de la
-                Llei de l'Impost)
             '1552':
               help: Introduïu les despeses extraordinàries per circumstàncies excepcionals.
             '1553':
@@ -14155,9 +14094,10 @@ modelo:
             '1555':
               help: Introduïu el rendiment net reduït.
             '1557':
-              help: Introduïu les despeses de formació en què hagin incorregut els
+              help: Consigneu les despeses de formació en què hagin incorregut els
                 contribuents que desenvolupin treballs especialment qualificats, relacionats
-                directament i principalment amb activitats de recerca i desenvol...
+                directament i principalment amb activitats de recerca i desenvolupament,
+                científiques o de caràcter tècnic.
             '1558':
               help: Introduïu la suma de rendiments nets reduïts de les activitats
                 agrícoles, ramaderes i forestals en estimació objectiva, com a suma
@@ -14305,8 +14245,6 @@ modelo:
             '1605':
               help: Introduïu la suma de rendiments nets d'activitats econòmiques
                 atribuïts, com a suma de les caselles [1583].
-              label: Suma de rendiments nets d'activitats econòmiques, atribuïts (suma
-                de les caselles [1583])
             '1606':
               help: Introduïu la suma de guanys patrimonials atribuïts no derivats
                 de transmissions a integrar en la base imposable general, com a suma
@@ -14319,16 +14257,10 @@ modelo:
               help: Introduïu la suma de guanys patrimonials atribuïts derivats de
                 transmissions a integrar en la base imposable de l'estalvi, com a
                 suma de les caselles [1595].
-              label: Suma de guanys patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1595]
-                )
             '1609':
               help: Introduïu la suma de pèrdues patrimonials atribuïdes derivades
                 de transmissions a integrar en la base imposable de l'estalvi, com
                 a suma de les caselles [1596].
-              label: Suma de pèrdues patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1596]
-                )
             '1610':
               help: Introduïu l'import generat el 2022 i pendent d'aplicació per inversió
                 en habitatge habitual que tingui la consideració de protegit.
@@ -15287,19 +15219,17 @@ modelo:
             '1967':
               help: Introduïu l'any en què es percep la retribució en espècie.
             '1968':
-              help: Introduïu el valor visible de la retribució en espècie pendent
-                d'imputació; l'etiqueta font autoritzada està truncada com a Valo...
+              help: Consigneu la valoració de la retribució en espècie no exempta
+                pendent d'imputació.
             '1969':
-              help: Introduïu l'import visible de l'ingrés a compte de la retribució
-                en espècie pendent d'imputació; l'etiqueta font autoritzada està truncada
-                com a Ingr...
+              help: Consigneu els ingressos a compte de la retribució en espècie no
+                exempta pendent d'imputació.
             '1970':
-              help: Introduïu l'import visible de l'ingrés a compte de la retribució
-                en espècie pendent d'imputació; l'etiqueta font autoritzada està truncada
-                com a Ingr...
+              help: Consigneu els ingressos a compte repercutits al perceptor de la
+                retribució en espècie no exempta pendent d'imputació.
             '1971':
-              help: Introduïu l'import visible de la retribució en espècie pendent
-                d'imputació; l'etiqueta font autoritzada està truncada com a Impo...
+              help: 'Consigneu l''import íntegre de la retribució en espècie no exempta
+                pendent d''imputació: [1968] + [1969] - [1970].'
             '1972':
               help: Introduïu el contribuent titular de l'element patrimonial transmès.
             '1973':
@@ -15679,8 +15609,6 @@ modelo:
                 manera excepcional
             '0060':
               label: Suma de rendiments reduïts del capital mobiliari en base general
-            '0065':
-              label: Clau de situació
             '0070':
               label: Habitatge habitual en 2025
             '0076':
@@ -15865,10 +15793,11 @@ modelo:
               label: Ajuts públics als titulars de béns integrants del Patrimoni Històric
                 Espanyol destinats a la seva conservació o rehabilitació. Import imputable
                 a 2025 (empleneu l'Annex C.1)(*)
-            0280:
-              label: Suma d'imputacions de rendes per la participació en institucions
-                d'inversió Col·lectiva constituïdes en paradisos fiscals (suma de
-                les caselles [0278])
+            0279:
+              label: Ajuts públics per a la primera instal·lació de joves agricultors
+                previstos en el Marc Nacional de Desenvolupament Rural destinats a
+                l'adquisició d'una participació en el capital d'empreses agrícoles.
+                Import imputable a 2025 (empleneu l'Annex C.1) (*)
             0286:
               label: Import computable ([0283] + [0284] - [0285])
             0288:
@@ -15982,9 +15911,11 @@ modelo:
             '0417':
               label: Si els contribuents, socis d'entitats no residents en Espanya,
                 es hagin vist afectats en 2024 per operacions de fusió, escissió o
-                bescanvi de valors realitzades per dites entitats regulat ...
-            '0420':
-              label: Si la diferència ( [0418] - [0419] ) és positiva
+                bescanvi de valors realitzades per dites entitats regulat pel Capítol
+                VII del Títol VII de la Llei de l'impost sobre societats (articles
+                48 i 49 del Reglament d'aquest impost) i les entitats no residents
+                no han aplicat un règim fiscal similar a aquest, marqueu amb una "X"
+                aquesta casella
             '0422':
               label: Suma de guanys patrimonials ([1608] + [0324] + [2235] + [0339]
                 + [0354] + [1814] + [1845] + [1846] + [0386] + [0387] + [0390] + [0393]
@@ -16041,15 +15972,21 @@ modelo:
             '0443':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2021, pendents de compensació a 1 de gener de 2025, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0449]) (Empleneu
+                l'annex C.3)
             '0444':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2022, pendents de compensació a 1 de gener de 2025, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0450]) (Empleneu
+                l'annex C.3)
             '0445':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2023, pendents de compensació a 1 de gener de 2025, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0451]) (Empleneu
+                l'annex C.3)
             '0446':
               label: Saldos nets negatius de guanys i pèrdues patrimonials imputables
                 a 2025, a integrar en la base imposable de l'estalvi, amb el límit
@@ -16058,11 +15995,15 @@ modelo:
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2024, pendents de compensació a 1 de gener de 2025, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0424] (*) (saldo pendent no compensat a la casella [0452]) (Empleneu
+                l'annex C.3)
             0448:
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2024, pendents de compensació a 1 de gener de 2025, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0442]) (Empleneu
+                l'annex C.3)
             0449:
               label: Saldos nets negatius de rendiments del capital mobiliari, de
                 2021, pendents de compensació a 1 de gener de 2025, a integrar en
@@ -16082,15 +16023,21 @@ modelo:
             '0453':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2021, pendents de compensació a 1 de gener de 2025, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0439]) (Empleneu
+                l'annex C.3)
             '0454':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2022, pendents de compensació a 1 de gener de 2025, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0440]) (Empleneu
+                l'annex C.3)
             '0455':
               label: Resta de saldos nets negatius de guanys i pèrdues patrimonials
                 de 2023, pendents de compensació a 1 de gener de 2025, a integrar
-                en la base imposable de l'estalvi, amb el límit del 25 per ...
+                en la base imposable de l'estalvi, amb el límit del 25 per cent de
+                [0429] (*) (saldo pendent no compensat a la casella [0441]) (Empleneu
+                l'annex C.3)
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
@@ -16174,12 +16121,12 @@ modelo:
                 correspongui): Part autonòmica'
             '0565':
               label: 'Deducció aplicable a les unitats familiars formades per residents
-                fiscals en Estats membres de la Unió Europea o de l''Espai Econòmic
-                Europeu (imports d''aquesta caselles de l''annex A.4): Pa...'
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (imports d''aquestes caselles de l''annex A.4): Part estatal'
             '0566':
               label: 'Deducció aplicable a les unitats familiars formades per residents
-                fiscals en Estats membres de la Unió Europea o de l''Espai Econòmic
-                Europeu (imports d''aquesta caselles de l''annex A.4): Pa...'
+                fiscals en estats membres de la Unió Europea o de l''Espai Econòmic
+                Europeu (imports d''aquestes caselles de l''annex A.4): Part autonòmica'
             '0567':
               label: 'Per obres de millora de l''eficiència energètica d''habitatges
                 (import d''aquestes caselles de l''annex A.3): Part estatal'
@@ -16482,7 +16429,8 @@ modelo:
             0818:
               label: Per arrendament d'habitatges situats en municipis afectats per
                 risc de despoblament en Cantàbria que constitueixin o vagin a constituir
-                l'habitatge habitual de l'arrendatari (deducció per a ...
+                l'habitatge habitual de l'arrendatari (deducció per a l'arrendatari)
+                (import de la casella [0646] de l'annex B.12)
             0820:
               label: Per despeses de llar d'infants per a contribuents que tinguin
                 el seu residència habitual en municipis afectats per risc de despoblament
@@ -16536,7 +16484,8 @@ modelo:
             0854:
               label: Per inversió en l'adquisició d'accions i participacions socials
                 com conseqüència d'acords de constitució de societats o ampliació
-                de capital en les societats mercantils (import de ...
+                de capital en les societats mercantils (import de la casella [1136]
+                de l'annex B.11)
             0872:
               label: Per inversió en accions d'entitats que cotitzen en el segment
                 d'empreses en expansió del Mercat Alternatiu Borsari (import de la
@@ -16741,15 +16690,6 @@ modelo:
               label: Import generat en 2024 pendent d'aplicació
             '1186':
               label: Import generat en 2024 pendent d'aplicació
-            '1190':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
-            '1195':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
-            '1200':
-              label: Si no teniu referència cadastral, marqueu una "X" en aquesta
-                casella
             '1210':
               label: Import generat en 2023 pendent d'aplicació
             '1213':
@@ -16905,7 +16845,8 @@ modelo:
             '1299':
               label: 'Aportacions i contribucions de 2025 (excepte contribucions empresarials
                 a assegurances col·lectius de dependència) no aplicades el qual import
-                es sol·licita poder reduir en els 5 exercicis següents: ...'
+                es sol·licita poder reduir en els 5 exercicis següents: Pendent d''aplicació
+                en exercicis futurs'
             '1301':
               label: 'Exercici 2020: Pendent d''aplicació a l''inici del període'
             '1302':
@@ -17160,9 +17101,6 @@ modelo:
                 [1538])'
             '1550':
               label: Diferència ([1548] - [1549])
-            '1551':
-              label: Reducció agricultors joves (disposició addicional sisena de la
-                Llei de l'Impost)
             '1554':
               label: Reduccions de rendiments generats en més de 2 anys o obtinguts
                 de forma notòriament irregular (article 32.1 i DT 25ª de la Llei de
@@ -17189,17 +17127,6 @@ modelo:
             '1600':
               label: Atribució de retencions de guanys i pèrdues patrimonials imputables
                 a 2025
-            '1605':
-              label: Suma de rendiments nets d'activitats econòmiques, atribuïts (suma
-                de les caselles [1583])
-            '1608':
-              label: Suma de guanys patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1595]
-                )
-            '1609':
-              label: Suma de pèrdues patrimonials derivades de transmissions (a integrar
-                en la B.I. de l'estalvi), atribuïdes (suma de les caselles [1596]
-                )
             '1610':
               label: 'Per inversió en habitatge habitual que tingui la consideració
                 de protegida: Import generat en 2023 pendent d''aplicació'
