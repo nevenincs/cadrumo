@@ -8,7 +8,7 @@ related:
   - '[[2026-09-17-github-actions-adr]]'
 modified: '2026-09-17'
 body_schema: body-v2
-body_hash: 'sha256:3bc3911a03b05b433ea9af13cbc5fb62793652a3805fcd38b196681b859325ca'
+body_hash: 'sha256:8b307af60dc0ef94ca3013042896c36871171a316292995d5b900a06d6451977'
 ---
 
 # `github-actions` plan
@@ -59,12 +59,13 @@ These need explicit owner action or authorization at execution time. Plan approv
 
 Make the merge gate cheap and green: one registry compile per test run, a change-scoped test selector, and zero lint, type and import-boundary findings.
 
-- [ ] `P01.S10` - Remove the per-worker registry compile from test fixtures by reusing the published-authority lease; `src/cadrumo/conftest.py, src/cadrumo/adapters/persistence/profile/tests/`.
+- [ ] `P01.S10` - Remove every dev import from src, moving the affected tests onto src-side published-authority support so no test compiles the registry from dev; `src/cadrumo`.
 - [ ] `P01.S11` - Relax the xdist worker-restart limit for the gate test selection; `pyproject.toml, justfile`.
 - [x] `P01.S12` - Create the change-scoped test selector with owning-tests mapping, grimp reverse imports, a non-Python change-class map and a visible too-broad advisory; `dev/ci/change_scope.py, dev/ci/tests/test_change_scope.py`.
 - [ ] `P01.S13` - Bring ruff check and ruff format findings to zero; `src/, dev/`.
 - [ ] `P01.S14` - Bring ty, basedpyright strict and pyrefly findings to zero within the existing scopes; `src/, dev/`.
 - [ ] `P01.S15` - Bring import-boundary findings to zero; `src/, dev/`.
+- [ ] `P01.S22` - Convert absolute cadrumo self-imports to relative imports inside src/cadrumo and enforce relative-only imports and the no-dev-import rule in the import-boundary gate; `src/cadrumo, dev/quality`.
 
 ### Phase `P02` - Merge gate lane
 
