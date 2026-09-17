@@ -47,6 +47,10 @@ class GovernedFactSource(Protocol):
         """Resolve one typed governed-fact query."""
         ...
 
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        """Return the support envelope every resolution is gated by."""
+        ...
+
 
 @dataclass(frozen=True, slots=True, weakref_slot=True)
 class CandidateFactAuthority:
@@ -58,6 +62,10 @@ class CandidateFactAuthority:
     _resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
         default_factory=dict, init=False, repr=False, compare=False
     )
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        """Return the candidate's support envelope."""
+        return self.support
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one query against the candidate, never against the bundle."""

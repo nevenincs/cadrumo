@@ -53,6 +53,7 @@ from .schema import (
     SupportedFilingYearsCatalogue,
 )
 from .schema_exports import ExportLayoutDefinition
+from .schema_references import TemporalSupportEnvelope
 from .tax_id_format import tax_id_format_from_catalogue
 from .temporal import ModeloRevisionDirectory
 
@@ -333,9 +334,7 @@ def decode_authority_component(
             fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
             if not is_object_mapping(document):
                 raise AuthorityComponentCodecError("snapshot globals component payload must be a mapping")
-            support = SupportedFilingYearsCatalogue.model_validate(
-                document.get("supported_filing_years"), strict=False
-            )
+            support = SupportedFilingYearsCatalogue.model_validate(document.get("supported_filing_years"), strict=False)
             candidate = CandidateFactAuthority(fact_catalogue, support)
             source = _ObservedFactAuthority(candidate, fact_query_observer) if fact_query_observer else candidate
             with validating_governed_facts(source):
@@ -378,6 +377,9 @@ class _ObservedFactAuthority:
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         self.observer(query)
         return self.authority.resolve_governed_fact(query)
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        return self.authority.supported_filing_years()
 
 
 def authority_component_identity(query: AuthorityComponentQuery) -> tuple[AuthorityComponentKind, str]:
