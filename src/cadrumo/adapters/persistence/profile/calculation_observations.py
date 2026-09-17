@@ -4,7 +4,8 @@ The application owns payloads, key derivation, validation, and capability
 contracts. This module binds those contracts to encrypted secure-object storage.
 
 Core types:
-:class:`~cadrumo.core.classification.policies.SensitivityClass`.
+:class:`~cadrumo.core.classification.policies.SensitivityClass`,
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 """
 
 from __future__ import annotations
