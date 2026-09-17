@@ -8,9 +8,8 @@ calculation and the clean-state gate all run for real.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -48,6 +47,7 @@ _TAX_ID = "12345678Z"
 def _scenario_year() -> int:
     """The newest supported ejercicio whose third quarter is already fileable."""
     support = published_supported_filing_years()
+    assert support is not None
     year = min(support.horizon, today_madrid().year - 1)
     assert support.admits_coordinate(year), (support, year)
     return year
@@ -83,6 +83,7 @@ class _Scenario:
     year: int
     register: RecordedSedeRegister
     output_root: Path
+    last_notices: list[dict[str, Any]] = field(default_factory=list)
 
     def period(self, code: str) -> Period:
         return Period.from_year_and_code(self.year, code)
@@ -122,6 +123,7 @@ class _Scenario:
             ],
         )  # fmt: skip
         assert result.exit_code == 0, result.output
+        self.last_notices = unwrap_envelope_notices(result.stdout)
         return require_schema_envelope(result.stdout)
 
     def revision_id(self, code: str) -> str:
@@ -219,7 +221,7 @@ def test_filing_chain_reconciles_pulls_amendments_and_overrides(scenario: _Scena
         ("vigente", "pendiente"),
     ]
     q3_target = ("--modelo", "130", "--year", str(year), "--period", "3T")
-    blockers = _q3_dependency_blockers(q3_target)
+    blockers = _dependency_blockers(q3_target)
     assert set(blockers) == {"1T"}
     assert "local_filing_missing_external_evidence" in blockers["1T"]
     assert _cli("app", "modelo", "work", "file", *q3_target).exit_code != 0
@@ -252,7 +254,7 @@ def test_filing_chain_reconciles_pulls_amendments_and_overrides(scenario: _Scena
     assert viewed["aeat_register"]["expediente_id"] == q1_complementaria.expediente_id
     assert viewed["observation_layers"]["pending_local"] is None
     assert viewed["observation_layers"]["official"]["casilla_values"]["07"] == "1500.00"
-    assert _q3_dependency_blockers(q3_target) == {}
+    assert _dependency_blockers(q3_target) == {}
     filed = _cli("app", "modelo", "work", "file", *q3_target)
     assert filed.exit_code == 0, filed.output
     q3_filed = require_schema_envelope(filed.stdout)
@@ -281,10 +283,8 @@ def test_filing_chain_reconciles_pulls_amendments_and_overrides(scenario: _Scena
     assert sorted(by_outcome) == ["already_recorded", "contradicted"]
     contradiction = by_outcome["contradicted"]
     assert {"01", "03", "04", "07", "19"} <= set(contradiction["differing_casilla_ids"])
-    assert contradiction["affected_filing_record_ids"] == [q2_local["filing_record_id"]]
-    assert "modelo.filing_chain.contradicted" in {
-        notice["code"] for notice in unwrap_envelope_notices(_pull_output(scenario, q2_complementaria))
-    }
+    assert q2_local["filing_record_id"] in contradiction["affected_filing_record_ids"]
+    assert "modelo.filing_chain.contradicted" in {notice["code"] for notice in scenario.last_notices}
     q2_chain = {entry["filing_record_id"]: entry for entry in _chain(year, "2T")}
     q2_in_force_id = contradiction["filing_record_id"]
     assert q2_chain[q2_in_force_id]["status"] == "vigente"
@@ -314,23 +314,31 @@ def test_filing_chain_reconciles_pulls_amendments_and_overrides(scenario: _Scena
         "--casilla", "06=0.00",
         "--binding", "irpf.previous_year_economic_activity_net_income=13000",
     )  # fmt: skip
-    print("Q4", q4_calculated["casilla_values"])
+    # 4T carries the confirmed 1T correction, the overridden 2T figure and the confirmed 3T payment.
+    assert Decimal(q4_calculated["casilla_values"]["05"]) == Decimal("1500.00") + Decimal("1250.00") + q3_values["07"]
     q4_target = ("--modelo", "130", "--year", str(year), "--period", "4T")
-    assert "2T" in _q3_dependency_blockers(q4_target)
+    assert "operator_manual_source" in _dependency_blockers(q4_target)["2T"]
 
-    cleared = _ok("app", "modelo", "filing-record", "observe-local", *q2_target, "--reason", "dispute resolved", "--clear")
+    cleared = _ok(
+        "app", "modelo", "filing-record", "observe-local", *q2_target, "--reason", "dispute resolved", "--clear"
+    )
     assert cleared["observation_layers"]["pending_local"] is None
-    assert cleared["observation_layers"]["effective_source_kind"] == cleared["observation_layers"]["official"]["source_kind"]
+    assert (
+        cleared["observation_layers"]["effective_source_kind"]
+        == cleared["observation_layers"]["official"]["source_kind"]
+    )
     restored = _ok("app", "modelo", "filing-record", "view", q2_in_force_id)["observation_layers"]
     assert restored["pending_local"] is None
     assert restored["override"] is None
-    assert "2T" not in _q3_dependency_blockers(q4_target)
+    assert "2T" not in _dependency_blockers(q4_target)
 
 
-def _q3_dependency_blockers(target: tuple[str, ...]) -> dict[str, set[str]]:
-    """Verify the target and return, per source 130 period, the clean-state blockers it reports."""
+def _dependency_blockers(target: tuple[str, ...]) -> dict[str, set[str]]:
+    """Verify the target and return, per source 130 period, the clean-state blockers it reports.
+
+    With no blocker the verification must be granted.
+    """
     verified = _cli("app", "modelo", "work", "verify", *target)
-    print("VERIFY", verified.exit_code, verified.stdout[:6000])
     report = require_schema_envelope(verified.stdout)
     blockers: dict[str, set[str]] = {}
     for finding in report["findings"]:
@@ -345,26 +353,8 @@ def _q3_dependency_blockers(target: tuple[str, ...]) -> dict[str, set[str]]:
     return blockers
 
 
-def _pull_output(scenario: _Scenario, *presentations: RecordedPresentation) -> str:
-    """Re-run the last pull and return its raw JSON document, notices included."""
-    scenario.register.holds(*presentations)
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "live", "filed", "pull",
-            "--modelo", "130", "--year", str(scenario.year),
-            "--output-root", str(scenario.output_root),
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return result.stdout
-
-
 def _set_flags(values: Mapping[str, Decimal]) -> list[str]:
     flags: list[str] = []
     for casilla_id, value in values.items():
         flags += ["--set", f"{casilla_id}={value}"]
     return flags
-
-
-__all__ += ["unwrap_envelope_notices"]

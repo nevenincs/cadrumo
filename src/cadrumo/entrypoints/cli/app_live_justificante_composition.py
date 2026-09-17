@@ -12,6 +12,7 @@ from typing import cast
 from ...adapters.inbound.justificante.parser import parse_justificante_bytes
 from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ...adapters.outbound.aeat.sede.filed_observation_persistence import FilingReconciliationAdapter
 from ...adapters.outbound.aeat.sede.schema import Expediente
 from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
 from ...adapters.outbound.aeat.verify.contract import (
@@ -19,7 +20,6 @@ from ...adapters.outbound.aeat.verify.contract import (
     VerifyBrowserSessionLike,
     verify_csv,
 )
-from ...adapters.outbound.aeat.sede.filed_observation_persistence import FilingReconciliationAdapter
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository

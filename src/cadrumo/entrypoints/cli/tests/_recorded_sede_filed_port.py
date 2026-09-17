@@ -41,6 +41,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.external_constants import load_external_constants
 from ....core.period import Period
+from ....core.time.clock import now as now_utc
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
@@ -191,6 +192,8 @@ class _RecordedRegisterSession(FiledDataRegisterPort):
         presentation = next(item for item in register.presentations if item.expediente_id == declaration.expediente_id)
         register.captured_expedientes.append(presentation.expediente_id)
         key = (register.modelo, presentation.period.filing_year, presentation.period, presentation.expediente_id)
+        # Artefacts are stamped when this capture reads them, as a live capture does.
+        captured_at = now_utc()
         receipt = _stored(
             artefact_sink,
             key,
@@ -198,7 +201,7 @@ class _RecordedRegisterSession(FiledDataRegisterPort):
             source_url=_cotejo_url(presentation.csv),
             content_type="application/pdf",
             body=_justificante_pdf(register, presentation),
-            captured_at=presentation.presented_at,
+            captured_at=captured_at,
         )
         submitted = _stored(
             artefact_sink,
@@ -207,7 +210,7 @@ class _RecordedRegisterSession(FiledDataRegisterPort):
             source_url=_declarations_url(),
             content_type="application/octet-stream",
             body=_submitted_file(register, presentation),
-            captured_at=presentation.presented_at,
+            captured_at=captured_at,
         )
         period = presentation.period
         return FiledDeclaracionObservation(
