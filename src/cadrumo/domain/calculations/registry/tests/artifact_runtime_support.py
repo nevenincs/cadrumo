@@ -25,7 +25,6 @@ from ..schema import (
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
-    SupportedFilingYearsCatalogue,
 )
 from ..schema_base import EvidenceTier
 from ..schema_exports import ExportLayoutDefinition
@@ -34,6 +33,7 @@ from ..schema_references import LegalReference, PeriodSelector, SourceReference
 from ..schema_revision_members import ApplicationLinkDefinition
 from ..schema_surfaces import CasillaDefinition
 from ..schema_verification import WorkbookParityReference
+from .published_authority import published_supported_filing_years
 
 _LEGAL_ID = "ley-35-2006:art-1"
 _SOURCE_ID = "aeat-dr-130-2019-v12"
@@ -172,7 +172,7 @@ def minimal_catalogues() -> RegistryCatalogues:
         sources={source.id: source, workbook.id: workbook},
         facts=GovernedFactCatalogue(facts={tax_id_format.fact_id: tax_id_format}),
         runtime=runtime,
-        supported_filing_years=SupportedFilingYearsCatalogue(floor=2022, horizon=2026),
+        supported_filing_years=published_supported_filing_years(),
     )
 
 

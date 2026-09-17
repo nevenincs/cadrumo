@@ -1,262 +1,164 @@
-"""The continuity tier of the localization cascade must actually be REACHED.
+"""The casilla localization chain: tiers, the Spanish barrier, and the backstop.
 
-The cascade resolves a casilla's text through an ordered chain: the exact
-revision-occurrence key first, then the stable ``continuidad_id`` key shared
-across revisions, then the same chain again in Spanish. The continuity tier had
-never fired — not for one casilla, in any revision, in any locale — because
-resolution advanced on the absence of a KEY while the locale scaffold emits an
-occurrence key for every casilla in every revision. The first key always
-existed, so the chain always stopped at index zero.
+A casilla's text resolves through an ordered chain of keys, most specific
+first: the revision occurrence, the stating edition's occurrence for an
+inherited row, then the lineage-wide ``continuidad_id`` key. Catalogues store a
+value at the least specific key that yields the same text, so every tier must
+really be consulted, and a requested locale must not read a translation that
+lives below the tier where Spanish resolves.
 
-WHY A MEMBERSHIP TEST CANNOT GUARD THIS, and why these tests are shaped the way
-they are. Asserting "the chain contains a continuity key" passes today and
-passed throughout the entire period the tier was dead: the key was emitted, it
-was simply never consulted. Asserting "a casilla declares a continuidad_id"
-passes just as vacuously — one modelo carries 231 such stamps that served no
-localisation at all. **The only assertion that distinguishes a working tier from
-a dead one is that a resolution DEMONSTRABLY came from it**, so that is what is
-asserted here, through the production accessors rather than a reimplementation
-of the chain.
-
-WHY THE WITNESS IS DERIVED. Naming a casilla would pin today's catalogue: the
-witness must be a casilla whose occurrence key carries no value in some locale
-while its continuity key does, and translating that occurrence key — an ordinary
-improvement — would retire it. So the witness is searched for at runtime and its
-absence is reported as a specific, actionable red rather than a silent pass.
-
-WHAT IS NOT ASSERTED. Not a count of witnesses, nor which casillas they are:
-both are properties of the catalogue on this date rather than of the cascade.
-Not the Spanish backstop's behaviour beyond one control, because it lives in the
-outer loop and was never affected — that it kept working throughout is precisely
-why the inner defect went unseen for so long.
+The proofs run against fixture catalogues through
+:func:`~cadrumo.core.i18n.render.override_locales_root`. A proof drawn from the
+shipped catalogue would depend on it still carrying the defects the catalogue
+purity work removes (valueless keys, untranslated rows), so it would retire
+itself exactly when the catalogue becomes clean. The chains themselves are
+taken from a real bundled casilla, so the accessors are exercised on the key
+shapes production derives.
 """
 
 from __future__ import annotations
 
-from typing import NamedTuple
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+import yaml
 
-from .....core.i18n.render import lookup_translation, lookup_translation_entry
+from .....core.i18n.render import override_locales_root
 from ..modelo_localization import resolve_modelo_localization
-from ..schema_surfaces import CasillaDefinition
-from .registry_tree import bundled_modelo_components, bundled_registry_tree
+from .registry_tree import bundled_registry_tree
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Mapping
+
+    from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-
-#: Spanish is the mandatory source, so the outer-loop backstop makes it a poor
-#: place to observe the inner chain. The tier is visible only in a locale that
-#: can legitimately lack a value.
-_TARGET_LOCALES = ("en", "ca", "hu")
+_LOCALES = ("es", "en", "ca", "hu")
 
 
-class _Witness(NamedTuple):
-    """One casilla field whose text can only come from the continuity tier."""
-
-    modelo_id: str
-    revision_id: str
-    casilla_id: str
-    field: str
-    locale: str
-    keys: tuple[str, ...]
-    continuity_value: str
-
-
-def _chain_for(casilla: CasillaDefinition, field: str) -> tuple[str, ...]:
-    """The ordered key chain the production accessors resolve for this field.
-
-    ``help`` is derived from the label chain exactly as
-    :meth:`CasillaDefinition.get_help` derives it, rather than restated, so the
-    two cannot drift into testing different chains.
-    """
-    keys = tuple(casilla.localization_keys)
-    if field == "label":
-        return keys
-    return tuple(f"{key.removesuffix('.label')}.help" for key in keys)
-
-
-def _witnesses() -> list[_Witness]:
-    """Every casilla field that reaches its continuity key, derived at runtime.
-
-    A witness needs a chain of at least two keys, no value on the occurrence
-    key in the target locale, and a real value on a later key. That is the
-    exact shape the tier exists to serve.
-    """
-    found: list[_Witness] = []
-    for modelo in bundled_registry_tree()[0]:
-        for revision_id, revision in modelo.revisions.items():
-            for casilla in revision.casillas:
-                for field in ("label", "help"):
-                    keys = _chain_for(casilla, field)
-                    if len(keys) < 2:
-                        continue
-                    for locale in _TARGET_LOCALES:
-                        if lookup_translation(keys[0], locale=locale) is not None:
-                            continue
-                        later = next(
-                            (
-                                value
-                                for key in keys[1:]
-                                if (value := lookup_translation(key, locale=locale)) is not None
-                            ),
-                            None,
-                        )
-                        if later is None:
-                            continue
-                        found.append(
-                            _Witness(
-                                modelo_id=modelo.id,
-                                revision_id=revision_id,
-                                casilla_id=casilla.id,
-                                field=field,
-                                locale=locale,
-                                keys=keys,
-                                continuity_value=later,
-                            ),
-                        )
-    return found
-
-
-def _contested_chains() -> list[tuple[tuple[str, ...], str, str, str]]:
-    """Chains where occurrence and continuity BOTH carry text, and disagree.
-
-    Derived independently of the witnesses above, because the two populations
-    are disjoint by construction: a witness needs an EMPTY occurrence key and
-    this control needs a populated one. Requiring the two values to differ is
-    what makes the control discriminating — identical text would satisfy the
-    assertion under either resolution order.
-    """
-    contested: list[tuple[tuple[str, ...], str, str, str]] = []
-    for modelo in bundled_registry_tree()[0]:
-        for revision in modelo.revisions.values():
-            for casilla in revision.casillas:
-                for field in ("label", "help"):
-                    keys = _chain_for(casilla, field)
-                    if len(keys) < 2:
-                        continue
-                    for locale in ("es", *_TARGET_LOCALES):
-                        occurrence = lookup_translation(keys[0], locale=locale)
-                        continuity = next(
-                            (
-                                value
-                                for key in keys[1:]
-                                if (value := lookup_translation(key, locale=locale)) is not None
-                            ),
-                            None,
-                        )
-                        if occurrence is not None and continuity is not None and occurrence != continuity:
-                            contested.append((keys, locale, occurrence, continuity))
-    return contested
-
-
-def _casilla(witness: _Witness) -> CasillaDefinition:
-    revision = bundled_modelo_components(witness.modelo_id)[0].revisions[witness.revision_id]
-    return next(casilla for casilla in revision.casillas if casilla.id == witness.casilla_id)
-
-
-def test_the_catalogue_still_offers_a_continuity_witness() -> None:
-    """Anti-vacuity, and the honest failure when the population empties.
-
-    If every occurrence key becomes translated this reds — correctly, because
-    the reachability below can then no longer be demonstrated from the shipped
-    catalogue. That is a real state change worth an author's attention, not a
-    regression to paper over: the next step would be a synthetic proof, never
-    deleting this gate.
-    """
-    assert _witnesses(), (
-        "no casilla field in any modelo resolves through its continuity key, so the tests below "
-        "cannot demonstrate that the continuity tier is reachable. Either every occurrence key is "
-        "now translated (a real improvement — replace this witness with a synthetic proof) or the "
-        "cascade has regressed to stopping at the first EXISTING key"
-    )
-
-
-def test_the_continuity_tier_is_reached_through_the_production_accessor() -> None:
-    """The assertion this whole module exists for: the tier actually fires.
-
-    Driven through :meth:`CasillaDefinition.get_label` / ``get_help`` rather
-    than through the resolver directly, because a resolver that advanced
-    correctly while the accessors passed it a truncated chain would satisfy a
-    resolver-level test and still leave the tier dead.
-    """
-    witness = _witnesses()[0]
-    casilla = _casilla(witness)
-
-    resolved = casilla.get_label(witness.locale) if witness.field == "label" else casilla.get_help(witness.locale)
-
-    assert resolved == witness.continuity_value, (
-        f"{witness.modelo_id}/{witness.revision_id} casilla {witness.casilla_id!r} {witness.field} in "
-        f"{witness.locale!r} has no value on its occurrence key, so it must resolve through the "
-        f"continuity tier; got {resolved!r}"
-    )
-
-
-def test_the_occurrence_key_still_wins_when_it_carries_a_value() -> None:
-    """Positive control: advancing must not start overriding the specific tier.
-
-    The chain is ordered most-specific first for a reason — a revision that
-    authors its own wording must keep it. A resolver that advanced past a
-    populated key, or that consulted the tiers in the wrong order, would pass
-    the reachability test above and silently replace every revision-specific
-    label with its shared ancestor.
-    """
-    contested = _contested_chains()
-    assert contested, (
-        "no casilla field carries a value on BOTH its occurrence and its continuity key with the two "
-        "differing, so nothing here can distinguish occurrence-wins from continuity-wins and this "
-        "control is vacuous"
-    )
-    keys, locale, occurrence_value, continuity_value = contested[0]
-
-    resolved = resolve_modelo_localization(keys, locale=locale)
-
-    assert resolved == occurrence_value, (
-        f"the revision-specific value for {keys[0]!r} was replaced by its shared ancestor "
-        f"{continuity_value!r}; the chain must stay most-specific-first"
-    )
-
-
-def test_a_valueless_key_does_not_stop_the_chain() -> None:
-    """The mechanism itself, stated independently of any particular casilla.
-
-    A key present in the catalogue but carrying no value must not terminate
-    resolution. Asserted directly on the resolver with a real valueless key
-    taken from the catalogue, so it is the shipped data's own shape rather than
-    a constructed one — and it holds even if every casilla witness above is
-    later translated away.
-    """
-    witness = _witnesses()[0]
-    valueless_key = witness.keys[0]
-    present, value = lookup_translation_entry(valueless_key, locale=witness.locale)
-    assert present and value is None, f"{valueless_key!r} is no longer the present-but-valueless shape this test needs"
-
-    resolved = resolve_modelo_localization(witness.keys, locale=witness.locale)
-
-    # Equality, not merely non-None. A chain that stopped here would still
-    # return text -- the Spanish backstop in the outer loop supplies it -- so
-    # asserting "something came back" passes with the tier dead. What proves
-    # the chain advanced is that the text is the one only a later key holds.
-    assert resolved == witness.continuity_value, (
-        f"resolution stopped at {valueless_key!r}, which exists but carries no value; "
-        f"got {resolved!r} instead of the later key's {witness.continuity_value!r}"
-    )
-
-
-def test_the_spanish_backstop_still_serves_an_untranslated_locale() -> None:
-    """Control on the outer loop, which this change deliberately did not touch.
-
-    A casilla with Spanish text and no value anywhere in the requested locale's
-    chain must still resolve to the Spanish text. This is what kept the defect
-    invisible, and it must keep working.
-    """
-    casilla = next(
-        candidate
+def _chained_casilla() -> CasillaDefinition:
+    """A bundled casilla whose label chain has an occurrence and a continuity key."""
+    return next(
+        casilla
         for modelo in bundled_registry_tree()[0]
         for revision in modelo.revisions.values()
-        for candidate in revision.casillas
-        if all(lookup_translation(key, locale="hu") is None for key in _chain_for(candidate, "label"))
-        and any(lookup_translation(key, locale="es") is not None for key in _chain_for(candidate, "label"))
+        for casilla in revision.casillas
+        if len(casilla.localization_keys) >= 2
     )
 
-    assert casilla.get_label("hu") == casilla.get_label("es")
+
+def _nested(entries: Mapping[str, str | None]) -> dict[str, object]:
+    tree: dict[str, object] = {}
+    for dotted, value in entries.items():
+        node = tree
+        *parents, leaf = dotted.split(".")
+        for part in parents:
+            child = node.setdefault(part, {})
+            assert isinstance(child, dict)
+            node = child
+        node[leaf] = value
+    return tree
+
+
+@pytest.fixture
+def catalogues(tmp_path: Path) -> Iterator[dict[str, dict[str, str | None]]]:
+    """Per-locale fixture entries, written to disk on demand by :func:`_install`."""
+    entries: dict[str, dict[str, str | None]] = {locale: {} for locale in _LOCALES}
+    with override_locales_root(tmp_path):
+        yield entries
+
+
+def _install(root: Path, entries: Mapping[str, Mapping[str, str | None]]) -> None:
+    for locale, values in entries.items():
+        (root / f"{locale}.yml").write_text(
+            yaml.safe_dump(_nested(values), allow_unicode=True),
+            encoding="utf-8",
+        )
+
+
+def test_each_tier_is_reached_when_more_specific_keys_carry_nothing(
+    tmp_path: Path,
+    catalogues: dict[str, dict[str, str | None]],
+) -> None:
+    """A present-but-valueless key and an absent key both advance the chain."""
+    casilla = _chained_casilla()
+    occurrence, continuity = casilla.localization_keys[0], casilla.localization_keys[-1]
+    catalogues["es"][occurrence] = None
+    catalogues["es"][continuity] = "Base imponible"
+    catalogues["en"][continuity] = "Tax base"
+    _install(tmp_path, catalogues)
+
+    assert casilla.get_label("es") == "Base imponible"
+    assert casilla.get_label("en") == "Tax base"
+
+
+def test_the_occurrence_value_wins_over_the_lineage_value(
+    tmp_path: Path,
+    catalogues: dict[str, dict[str, str | None]],
+) -> None:
+    """A revision that states its own wording keeps it, in every locale."""
+    casilla = _chained_casilla()
+    occurrence, continuity = casilla.localization_keys[0], casilla.localization_keys[-1]
+    catalogues["es"].update({occurrence: "Base imponible del ejercicio", continuity: "Base imponible"})
+    catalogues["en"].update({occurrence: "Base for the year", continuity: "Tax base"})
+    _install(tmp_path, catalogues)
+
+    assert casilla.get_label("es") == "Base imponible del ejercicio"
+    assert casilla.get_label("en") == "Base for the year"
+
+
+def test_a_translation_below_the_spanish_tier_is_not_served(
+    tmp_path: Path,
+    catalogues: dict[str, dict[str, str | None]],
+) -> None:
+    """The barrier: a lineage translation must not stand in for edition-specific Spanish.
+
+    Spanish resolves on the occurrence key, so its text differs from the
+    lineage text; the English lineage value translates that other text.
+    """
+    casilla = _chained_casilla()
+    occurrence, continuity = casilla.localization_keys[0], casilla.localization_keys[-1]
+    catalogues["es"].update({occurrence: "Base imponible del ejercicio", continuity: "Base imponible"})
+    catalogues["en"][continuity] = "Tax base"
+    _install(tmp_path, catalogues)
+
+    assert casilla.get_label("en") == "Base imponible del ejercicio"
+    assert resolve_modelo_localization(casilla.localization_keys, locale="en") == "Base imponible del ejercicio"
+
+
+def test_the_spanish_backstop_serves_an_untranslated_locale(
+    tmp_path: Path,
+    catalogues: dict[str, dict[str, str | None]],
+) -> None:
+    """A locale with no value at or above the Spanish tier renders the Spanish text."""
+    casilla = _chained_casilla()
+    catalogues["es"][casilla.localization_keys[-1]] = "Base imponible"
+    _install(tmp_path, catalogues)
+
+    assert casilla.get_label("hu") == "Base imponible"
+
+
+def test_help_follows_the_label_chain(
+    tmp_path: Path,
+    catalogues: dict[str, dict[str, str | None]],
+) -> None:
+    """Help derives its chain from the label chain, so it inherits the same tiers."""
+    casilla = _chained_casilla()
+    continuity_help = f"{casilla.localization_keys[-1].removesuffix('.label')}.help"
+    catalogues["es"][continuity_help] = "Importe sobre el que se aplica el tipo."
+    _install(tmp_path, catalogues)
+
+    assert casilla.get_help("ca") == "Importe sobre el que se aplica el tipo."
+    assert casilla.get_help("es") == "Importe sobre el que se aplica el tipo."
+
+
+def test_an_unresolvable_chain_returns_nothing(
+    tmp_path: Path,
+    catalogues: dict[str, dict[str, str | None]],
+) -> None:
+    """No tier and no Spanish text: the optional resolver reports absence."""
+    _install(tmp_path, catalogues)
+
+    assert resolve_modelo_localization(_chained_casilla().localization_keys, locale="en") is None
