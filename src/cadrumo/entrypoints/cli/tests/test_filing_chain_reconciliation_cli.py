@@ -263,6 +263,69 @@ def test_filing_chain_reconciles_pulls_amendments_and_overrides(scenario: _Scena
     assert [item["outcome"] for item in q3_pulled["reconciliations"]] == ["confirmed"]
     assert q3_pulled["reconciliations"][0]["filing_record_id"] == q3_filed["filing_record_id"]
 
+    # 6. AEAT holds a different 2T complementaria than the local one: AEAT wins, visibly.
+    q2_confirmed_id = outcomes["2T"]["filing_record_id"]
+    q2_local = _ok(
+        "app", "modelo", "work", "amend",
+        "--from-filing-record", q2_confirmed_id,
+        "--kind", "complementaria",
+        "--reason", "second-quarter income under-declared",
+        *_set_flags(
+            _quarter_values(ingresos="20500.00", gastos="8000.00", prior_payments="1200.00", payment="1300.00")
+        ),
+    )  # fmt: skip
+    q2_aeat_values = _quarter_values(ingresos="20750.00", gastos="8000.00", prior_payments="1200.00", payment="1350.00")
+    q2_complementaria = scenario.presentation("2T", 5, q2_aeat_values, month=8, tipo_solicitud="complementaria")
+    contradicted = scenario.pull(q2_original_entry, q2_complementaria, period="2T")
+    by_outcome = {item["outcome"]: item for item in contradicted["reconciliations"]}
+    assert sorted(by_outcome) == ["already_recorded", "contradicted"]
+    contradiction = by_outcome["contradicted"]
+    assert {"01", "03", "04", "07", "19"} <= set(contradiction["differing_casilla_ids"])
+    assert contradiction["affected_filing_record_ids"] == [q2_local["filing_record_id"]]
+    assert "modelo.filing_chain.contradicted" in {
+        notice["code"] for notice in unwrap_envelope_notices(_pull_output(scenario, q2_complementaria))
+    }
+    q2_chain = {entry["filing_record_id"]: entry for entry in _chain(year, "2T")}
+    q2_in_force_id = contradiction["filing_record_id"]
+    assert q2_chain[q2_in_force_id]["status"] == "vigente"
+    assert (q2_chain[q2_in_force_id]["origin"], q2_chain[q2_in_force_id]["confirmation"]) == ("aeat", "confirmada")
+    assert q2_chain[q2_local["filing_record_id"]]["confirmation"] == "discrepante"
+
+    # 7. An audited operator override sits above the official 2T value; clearing it restores AEAT's.
+    q2_target = ("--modelo", "130", "--year", str(year), "--period", "2T")
+    overridden = _ok(
+        "app", "modelo", "filing-record", "observe-local", *q2_target,
+        "--reason", "AEAT figure disputed", "--set", "07=1250.00",
+    )  # fmt: skip
+    for layers in (
+        overridden["observation_layers"],
+        _ok("app", "modelo", "filing-record", "view", q2_in_force_id)["observation_layers"],
+    ):
+        assert layers["official"]["casilla_values"]["07"] == "1350.00"
+        assert layers["pending_local"]["casilla_values"]["07"] == "1250.00"
+        assert layers["effective_source_kind"] == "operator_manual"
+        assert layers["override"]["reason"] == "AEAT figure disputed"
+        assert layers["override"]["replaced_values"]["07"] == "1350.00"
+    q4_work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="130", filing_year=year, period="4T", revision=scenario.revision_id("4T")
+    )
+    q4_calculated = _ok(
+        "app", "modelo", "work", "calculate", q4_work_unit_id,
+        "--casilla", "06=0.00",
+        "--binding", "irpf.previous_year_economic_activity_net_income=13000",
+    )  # fmt: skip
+    print("Q4", q4_calculated["casilla_values"])
+    q4_target = ("--modelo", "130", "--year", str(year), "--period", "4T")
+    assert "2T" in _q3_dependency_blockers(q4_target)
+
+    cleared = _ok("app", "modelo", "filing-record", "observe-local", *q2_target, "--reason", "dispute resolved", "--clear")
+    assert cleared["observation_layers"]["pending_local"] is None
+    assert cleared["observation_layers"]["effective_source_kind"] == cleared["observation_layers"]["official"]["source_kind"]
+    restored = _ok("app", "modelo", "filing-record", "view", q2_in_force_id)["observation_layers"]
+    assert restored["pending_local"] is None
+    assert restored["override"] is None
+    assert "2T" not in _q3_dependency_blockers(q4_target)
+
 
 def _q3_dependency_blockers(target: tuple[str, ...]) -> dict[str, set[str]]:
     """Verify the target and return, per source 130 period, the clean-state blockers it reports."""
@@ -280,6 +343,21 @@ def _q3_dependency_blockers(target: tuple[str, ...]) -> dict[str, set[str]]:
     if not blockers:
         assert report["granted_verificado_completo"] is True, report
     return blockers
+
+
+def _pull_output(scenario: _Scenario, *presentations: RecordedPresentation) -> str:
+    """Re-run the last pull and return its raw JSON document, notices included."""
+    scenario.register.holds(*presentations)
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "live", "filed", "pull",
+            "--modelo", "130", "--year", str(scenario.year),
+            "--output-root", str(scenario.output_root),
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    return result.stdout
 
 
 def _set_flags(values: Mapping[str, Decimal]) -> list[str]:
