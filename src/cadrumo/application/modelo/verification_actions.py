@@ -69,7 +69,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.casilla_membership import casillas_by_id, row_template_casilla_ids
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.calculations.registry.ids import (
@@ -79,7 +79,7 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
 )
-from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -1529,7 +1529,12 @@ def _append_required_casilla_findings(
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind != InputKind.MANUAL or not casilla.required:
             continue
-        if _detail_row_template_casilla_is_satisfied(work_unit=work_unit, target=target, casilla=casilla):
+        if _detail_row_template_casilla_is_satisfied(
+            work_unit=work_unit,
+            target=target,
+            casilla=casilla,
+            revision=snapshot.revision,
+        ):
             resolved_casilla_ids.append(casilla.id)
             continue
         if casilla.id in revision_keys:
@@ -1781,10 +1786,21 @@ def _detail_row_template_casilla_is_satisfied(
     work_unit: WorkUnit,
     target: CalculationRevision,
     casilla: CasillaDefinition,
+    revision: ModeloRevision,
 ) -> bool:
-    if str(work_unit.modelo) != Modelo("349").value or not casilla.section:
+    """Return whether a per-row template casilla is answered by its row source.
+
+    A casilla whose section names a record that a row-set binding produces is
+    one field of each emitted row, not a scalar the operator types once; its
+    completeness belongs to the row source. Modelo 349 additionally proves its
+    rows are present, since its operador and rectificacion records are the
+    return's whole content.
+    """
+    if not casilla.section:
         return False
     section = str(casilla.section[0])
+    if str(work_unit.modelo) != Modelo("349").value:
+        return casilla.id in row_template_casilla_ids(revision)
     if section == "operador":
         return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)
     if section != "rectificacion":

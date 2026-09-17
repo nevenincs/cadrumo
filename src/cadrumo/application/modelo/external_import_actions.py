@@ -49,6 +49,7 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import normalize_decimal_separators
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.modelo import Modelo
+from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -707,6 +708,7 @@ def _build_external_import_observation_payload(
     cleaned_reference: str,
     expected_tax_id: str | None,
     filing_record_id: str,
+    source_headers: tuple[ObservedHeaderFact, ...],
 ) -> ObservationEnvelopePayload | None:
     """Build the CSV observation envelope when that evidence channel applies."""
     if evidence_kind is not ExternalEvidenceKind.AEAT_CSV_REGISTER:
@@ -719,6 +721,7 @@ def _build_external_import_observation_payload(
             observations=revision.observations,
         ),
         source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
+        source_headers=source_headers,
         captured_at=occurred_at,
         stamped_revision_id=work_unit.revision_id,
         source_metadata={
@@ -799,13 +802,16 @@ def import_external_filing_evidence[CasillaKey](
     observation_repository: CalculationObservationRepositoryProtocol,
     expected_tax_id: str | None = None,
     clock: datetime | None = None,
+    source_headers: tuple[ObservedHeaderFact, ...] = (),
 ) -> ModeloRecord:
     """Persist an externally-filed return and return its current :class:`ModeloRecord`.
 
     The target :class:`WorkUnit` supplies the bucket, modelo, filing year,
     period, and registry revision used to validate imported casillas.
     Justificante-bound evidence requires stored receipt metadata matching that
-    target; CSV-register evidence binds the imported file itself to the target.
+    target; CSV-register evidence binds the imported file itself to the target,
+    and ``source_headers`` carries the register's typed header facts, such as
+    the Modelo 303 declaration type its carry ingress requires.
 
     The service writes a ``PRESENTADO``
     :class:`CalculationRevision` containing the imported
@@ -900,6 +906,7 @@ def import_external_filing_evidence[CasillaKey](
         cleaned_reference=cleaned_reference,
         expected_tax_id=expected_tax_id,
         filing_record_id=state.new_filing_id,
+        source_headers=source_headers,
     )
     # One unit of work: the imported revision, the filing catalogue, the advanced
     # work-unit pointers, and the ``modelo.filing.imported`` event commit

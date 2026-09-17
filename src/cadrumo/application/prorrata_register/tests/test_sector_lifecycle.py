@@ -51,6 +51,10 @@ def _provisional_entry(*, ejercicio: int, sector_id: str, percentage: Decimal) -
     )
 
 
+#: The year-end Modelo 303 coordinate whose rules produced a settled definitive.
+_YEAR_END_REF = RegistrySnapshotRef(modelo="303", revision_id="2025", modelo_year=2025, period="4T")
+
+
 def test_settle_sector_definitive_derives_percentage_from_its_own_volumes() -> None:
     """A sector's definitive is the con/total ratio of ITS OWN annual volumes (art. 105.Cuatro)."""
     entry = _provisional_entry(ejercicio=2025, sector_id="comercio", percentage=Decimal("85"))
@@ -58,6 +62,7 @@ def test_settle_sector_definitive_derives_percentage_from_its_own_volumes() -> N
         entry,
         con_derecho_volume=Decimal("90000.00"),
         sin_derecho_volume=Decimal("10000.00"),
+        producing_snapshot_ref=_YEAR_END_REF,
     )
     # 90000 / 100000 = 90% (art. 102.Uno + 102.Dos round-up); volumes preserved.
     assert settled.definitive_percentage == Decimal("90")
@@ -65,6 +70,8 @@ def test_settle_sector_definitive_derives_percentage_from_its_own_volumes() -> N
     assert settled.definitive_volume_sin_derecho == Decimal("10000.00")
     # The provisional applied in-year is preserved for the regularización compare.
     assert settled.provisional_percentage == Decimal("85")
+    # The next year's carried seed must be able to cite what produced it.
+    assert _YEAR_END_REF in settled.source_registry_snapshot_refs
 
 
 def test_sector_provisional_carries_its_own_prior_definitive() -> None:
@@ -73,6 +80,7 @@ def test_sector_provisional_carries_its_own_prior_definitive() -> None:
         _provisional_entry(ejercicio=2025, sector_id="comercio", percentage=Decimal("85")),
         con_derecho_volume=Decimal("90000.00"),
         sin_derecho_volume=Decimal("10000.00"),
+        producing_snapshot_ref=_YEAR_END_REF,
     )
     register = ProrrataRegister(entries=(settled,))
     seed = seed_sector_carried_definitive_from_register(register, ejercicio=2026, sector_id="comercio")
@@ -95,11 +103,13 @@ def test_two_sectors_carry_distinct_prior_definitives() -> None:
         _provisional_entry(ejercicio=2025, sector_id="comercio", percentage=Decimal("85")),
         con_derecho_volume=Decimal("90000.00"),
         sin_derecho_volume=Decimal("10000.00"),
+        producing_snapshot_ref=_YEAR_END_REF,
     )
     arrendamiento_2025 = settle_sector_definitive(
         _provisional_entry(ejercicio=2025, sector_id="arrendamiento", percentage=Decimal("25")),
         con_derecho_volume=Decimal("30000.00"),
         sin_derecho_volume=Decimal("70000.00"),
+        producing_snapshot_ref=_YEAR_END_REF,
     )
     register = ProrrataRegister(entries=(comercio_2025, arrendamiento_2025))
 
@@ -157,6 +167,7 @@ def test_sector_seed_does_not_read_whole_entity_definitive() -> None:
         ),
         con_derecho_volume=Decimal("50000.00"),
         sin_derecho_volume=Decimal("50000.00"),
+        producing_snapshot_ref=_YEAR_END_REF,
     )
     register = ProrrataRegister(entries=(whole_entity_2025,))
     assert seed_sector_carried_definitive_from_register(register, ejercicio=2026, sector_id="comercio") is None

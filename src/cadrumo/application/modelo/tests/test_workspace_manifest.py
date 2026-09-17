@@ -403,10 +403,13 @@ def test_inspection_manifest_never_reaches_filing_grade_content() -> None:
     manifest = _inspection_manifest()
 
     for entry in manifest.entries:
-        assert "materializ" not in entry.path
-        assert "verification" not in entry.path
-        assert "filed_at" not in entry.path
-        assert "calculation" not in entry.path
+        # Field names only: a variant coordinate such as ``kind=non_calculation``
+        # names a tag value, not a field the inspection could expose.
+        field_names = ".".join(segment for segment in entry.path.split(".") if "=" not in segment)
+        assert "materializ" not in field_names
+        assert "verification" not in field_names
+        assert "filed_at" not in field_names
+        assert "calculation" not in field_names
 
 
 def test_inspection_manifest_is_stable_across_regeneration() -> None:

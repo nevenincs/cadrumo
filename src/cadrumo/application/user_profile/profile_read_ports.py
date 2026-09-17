@@ -8,7 +8,7 @@ the application only sees the stable mapping and absence semantics.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -28,4 +28,8 @@ class ProfileReadPorts:
     path_values: ProfilePathValuesReadPort
 
 
-__all__ = ["ProfilePathValuesReadPort", "ProfileReadPorts"]
+type ProfileReadPortsFactory = Callable[[str], ProfileReadPorts]
+"""Compose the profile-read capabilities for one profile bucket."""
+
+
+__all__ = ["ProfilePathValuesReadPort", "ProfileReadPorts", "ProfileReadPortsFactory"]

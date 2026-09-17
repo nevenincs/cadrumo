@@ -34,6 +34,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
     general_prorrata_register_regime,
 )
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva.prorrata import ProrrataInputs, compute_prorrata_definitiva_anual
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 
@@ -91,6 +92,7 @@ def settle_sector_definitive(
     *,
     con_derecho_volume: Decimal,
     sin_derecho_volume: Decimal,
+    producing_snapshot_ref: RegistrySnapshotRef,
 ) -> ProrrataRegisterEntry:
     """Compute a sector's year-end definitive from its own volumes and settle it.
 
@@ -106,6 +108,8 @@ def settle_sector_definitive(
         entry: The sector's ``(ejercicio, sector_id)`` register entry to settle.
         con_derecho_volume: The sector's annual con-derecho operations volume.
         sin_derecho_volume: The sector's annual sin-derecho operations volume.
+        producing_snapshot_ref: The registry coordinate whose rules produced the
+            definitive percentage; the next year's carried seed must cite it.
 
     Returns:
         A copy of ``entry`` with the definitive percentage and both volume inputs
@@ -124,6 +128,9 @@ def settle_sector_definitive(
             "definitive_percentage": definitiva.percentage,
             "definitive_volume_con_derecho": con_derecho_volume,
             "definitive_volume_sin_derecho": sin_derecho_volume,
+            "source_registry_snapshot_refs": tuple(
+                dict.fromkeys((*entry.source_registry_snapshot_refs, producing_snapshot_ref))
+            ),
         },
     )
 

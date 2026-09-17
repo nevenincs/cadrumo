@@ -59,9 +59,7 @@ def _engine_filing_years() -> tuple[int, ...]:
     supported_years = published_supported_filing_years()
     assert supported_years is not None, "the bundled registry declares no supported filing years"
     with _indexed_authority_for_test().operation() as operation:
-        authored_start_years = {
-            metadata.valid_from.year for metadata in operation.modelo_directory("100").revisions
-        }
+        authored_start_years = {metadata.valid_from.year for metadata in operation.modelo_directory("100").revisions}
     return tuple(year for year in supported_years.years if year in authored_start_years)
 
 

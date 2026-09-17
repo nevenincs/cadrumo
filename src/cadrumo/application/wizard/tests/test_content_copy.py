@@ -77,7 +77,9 @@ def test_format_hints_attach_to_exactly_the_mapped_pages(*, registry_setup_flow:
         for item in section.items:
             if isinstance(item, FlowPage) and item.format_hint is not None:
                 hinted[item.id] = item.format_hint.ref
-    declared = {page: fields["format_hint"] for page, fields in wizard_page_declarations().items() if "format_hint" in fields}
+    declared = {
+        page: fields["format_hint"] for page, fields in wizard_page_declarations().items() if "format_hint" in fields
+    }
     assert hinted == dict(PAGE_FORMAT_HINTS) | declared
 
 
