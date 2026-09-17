@@ -320,6 +320,13 @@ _LEGITIMATE_IDENTICAL_CONTINUITY_LABELS: dict[tuple[str, str], IdenticalTranslat
     ("en", "modelo.schema.131.casilla.continuidad.irpf-pf-modulos-total.label"): IdenticalTranslation(
         IdenticalTranslationClass.SHARED_WORD, "English 'Total' is the same word as the Spanish."
     ),
+    ("ca", "modelo.schema.190.casilla.continuidad.payee-nif.label"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        "NIF stays untranslated and 'del perceptor' is the correct Catalan, as for Modelo 180.",
+    ),
+    ("ca", "modelo.schema.190.casilla.continuidad.payee-ceuta-melilla-clave.label"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD, "Catalan names both cities and joins them with 'o' exactly as Spanish."
+    ),
     ("ca", "modelo.schema.180.casilla.continuidad.payee-nif.label"): IdenticalTranslation(
         IdenticalTranslationClass.ACRONYM,
         "NIF stays untranslated and 'del perceptor' is the correct Catalan, as the catalogue renders it elsewhere.",

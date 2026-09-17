@@ -10,7 +10,7 @@ import typer
 
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
-from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys
 from ._signal import locale_signal
 from ._status import CatalogueStatusRecord, catalogue_status
@@ -97,6 +97,93 @@ def _echo_placeholder_mismatch(mismatch: LocalePlaceholderMismatch) -> None:
         f"{variant.locale_file}={sorted(variant.placeholders)!r}" for variant in mismatch.variants
     )
     typer.echo(f"placeholder mismatch key={mismatch.key} {rendered_variants}")
+
+
+@app.command("casilla-audit")
+def casilla_audit(
+    as_json: Annotated[bool, typer.Option("--json", help="Emit the counts as JSON.")] = False,
+) -> None:
+    """Report delta-keying purity of the Modelo casilla catalogue; exit 1 when impure."""
+    from .modelo_casilla_catalogue import ModeloCasillaCatalogue
+
+    findings = ModeloCasillaCatalogue.published(LOCALES_DIR).findings()
+    counts = findings.counts()
+    if as_json:
+        typer.echo(json.dumps(counts, indent=2, sort_keys=True))
+    else:
+        for family, value in counts.items():
+            typer.echo(f"{family}: {value}")
+    if not findings.pure:
+        raise typer.Exit(code=1)
+
+
+@app.command("casilla-collapse")
+def casilla_collapse(
+    apply: Annotated[bool, typer.Option("--apply", help="Write the plan through the catalogue authority.")] = False,
+    resume: Annotated[bool, typer.Option("--resume", help="Finish an interrupted, already verified install.")] = False,
+) -> None:
+    """Collapse the casilla catalogue to its delta-keyed form, proving resolution is unchanged.
+
+    Null leaves, orphan keys and help derived from the label are deleted; every
+    other edit leaves each resolved label and help text identical in every locale.
+    """
+    from .modelo_casilla_catalogue import (
+        CollapseVerificationError,
+        ModeloCasillaCatalogue,
+        resume_install,
+    )
+
+    if resume:
+        try:
+            resume_install()
+        except CollapseVerificationError as exc:
+            typer.echo(f"refused: {exc}", err=True)
+            raise typer.Exit(code=1) from exc
+        typer.echo("installed")
+        return
+    if PENDING_CASILLA_INSTALL_DIR.exists():
+        typer.echo(f"refused: an install is pending at {PENDING_CASILLA_INSTALL_DIR}; run with --resume", err=True)
+        raise typer.Exit(code=1)
+    catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    result = catalogue.collapse_plan()
+    changed = sum(
+        1 for coordinate, text in catalogue.resolution(result.working).items() if result.baseline[coordinate] != text
+    )
+    for reason, count in sorted(result.plan.reasons.items()):
+        typer.echo(f"{reason}: {count}")
+    if changed:
+        typer.echo(f"refused: the plan changes {changed} resolved texts", err=True)
+        raise typer.Exit(code=1)
+    if not apply:
+        return
+    try:
+        written = catalogue.apply(result, LOCALES_DIR)
+    except CollapseVerificationError as exc:
+        typer.echo(f"refused: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"written: {written}")
+
+
+@app.command("casilla-author")
+def casilla_author(
+    manifest: Annotated[Path, typer.Argument(help="JSON object mapping locale codes to casilla-key values.")],
+) -> None:
+    """Install authored casilla values after proving they are the only source of change."""
+    from .modelo_casilla_catalogue import CollapseVerificationError, ModeloCasillaCatalogue
+
+    payload = json.loads(manifest.read_text(encoding=UTF_8_ENCODING))
+    if not isinstance(payload, dict) or not all(
+        isinstance(values, dict) and all(isinstance(key, str) and isinstance(text, str) for key, text in values.items())
+        for values in payload.values()
+    ):
+        typer.echo("refused: the manifest must map locales to string key/value objects", err=True)
+        raise typer.Exit(code=1)
+    try:
+        changed = ModeloCasillaCatalogue.published(LOCALES_DIR).author(payload, LOCALES_DIR)
+    except CollapseVerificationError as exc:
+        typer.echo(f"refused: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"changed: {changed}")
 
 
 @app.command("status")

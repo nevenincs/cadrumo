@@ -1,0 +1,634 @@
+"""Delta-keyed maintenance of the Modelo casilla locale surface.
+
+The registry stores Modelo editions as deltas: an edition states only the rows
+that changed, and inherited rows resolve their text through the key chain the
+loader enrols on every casilla -- the row's own occurrence key, the key of the
+edition that stated it, then its lineage (``continuidad_id``) key. The casilla
+locale catalogue follows the same discipline:
+
+- a value is stored once, at the least specific key of the chains that read it
+  that still yields the same resolved text in every locale;
+- a key no chain reads, a null leaf, and a value whose removal changes no
+  resolution are all delete targets;
+- help text generated from the label carries nothing of its own and is removed;
+- a translation is authored only for Spanish text that has none; Spanish text
+  already translated elsewhere in the same lineage is carried, not retyped.
+
+Everything here reads the published authority and the runtime resolution rule
+(:func:`~cadrumo.domain.calculations.registry.modelo_localization.modelo_localization_source`)
+through the ``cadrumo`` package only, so the check measures exactly what
+operators are served. Writes go through :class:`~dev.locales.manager.LocaleManager`.
+"""
+
+from __future__ import annotations
+
+import re
+import shutil
+import time
+from collections import Counter, defaultdict
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Final
+
+import yaml
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.modelo_localization import modelo_localization_source
+
+from ._casilla_keys import is_casilla_key
+from ._paths import LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR
+from .manager import LocaleManager, _flatten_raw_locale_leaves, discover_locale_codes
+
+__all__ = [
+    "CasillaOccurrence",
+    "CatalogueFindings",
+    "CollapsePlan",
+    "CollapseResult",
+    "CollapseVerificationError",
+    "ModeloCasillaCatalogue",
+    "casilla_occurrences",
+    "load_casilla_values",
+    "resume_install",
+]
+
+SOURCE_LOCALE: Final = "es"
+_FIELDS: Final = ("label", "help")
+#: Help renderings generated from the label; they state nothing the label does not.
+_DERIVED_HELP: Final = (
+    re.compile(r"^Indique o revise «.*» para completar esta autoliquidación\.$", re.S),
+    re.compile(r"^Consulte la información correspondiente a la casilla: .*$", re.S),
+    re.compile(r"^Información fiscal sobre .*de la casilla .*$", re.S),
+    re.compile(r"^Información de la casilla\b.*$", re.S),
+    re.compile(r"^Dato del modelo \S+, ejercicio \S+.*$", re.S),
+)
+#: Scaffold renderings standing in for a label that was never authored.
+_PLACEHOLDER: Final = re.compile(r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci", re.IGNORECASE)
+
+
+@dataclass(frozen=True, slots=True)
+class CasillaOccurrence:
+    """One casilla in one materialised edition, with its published key chain."""
+
+    modelo: str
+    revision: str
+    casilla: str
+    number: str
+    continuidad_id: str | None
+    inherited_from: str | None
+    label_chain: tuple[str, ...]
+
+    def chain(self, field_name: str) -> tuple[str, ...]:
+        """Return the ordered chain for ``label`` or ``help``."""
+        if field_name == "label":
+            return self.label_chain
+        return tuple(f"{key.removesuffix('.label')}.help" for key in self.label_chain)
+
+
+def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
+    """Enumerate every casilla occurrence of the published generation."""
+    found: list[CasillaOccurrence] = []
+    with bundled_indexed_authority().operation() as operation:
+        for modelo_id in operation.modelo_ids():
+            for metadata in operation.modelo_directory(modelo_id).revisions:
+                revision = operation.revision(modelo_id, str(metadata.id))
+                found.extend(
+                    CasillaOccurrence(
+                        modelo=str(modelo_id),
+                        revision=str(metadata.id),
+                        casilla=str(casilla.id),
+                        number=str(casilla.number),
+                        continuidad_id=None if casilla.continuidad_id is None else str(casilla.continuidad_id),
+                        inherited_from=None if casilla.inherited_from is None else str(casilla.inherited_from),
+                        label_chain=tuple(casilla.localization_keys),
+                    )
+                    for casilla in revision.casillas
+                )
+    return tuple(found)
+
+
+type Values = dict[str, dict[str, str | None]]
+"""``values[locale][key]`` for every casilla leaf present in a catalogue."""
+
+
+def load_casilla_values(locales_dir: Path = LOCALES_DIR) -> Values:
+    """Read every casilla leaf of every locale's Modelo schema shards."""
+    values: Values = {}
+    for locale in sorted(discover_locale_codes(locales_dir)):
+        leaves: dict[str, str | None] = {}
+        for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
+            raw = yaml.safe_load(shard.read_text(encoding="utf-8")) or {}
+            for key, value in _flatten_raw_locale_leaves(raw).items():
+                if is_casilla_key(key):
+                    leaves[key] = None if value is None else str(value)
+        values[locale] = leaves
+    return values
+
+
+type Coordinate = tuple[int, str, str]
+"""``(occurrence index, field, locale)``."""
+
+
+@dataclass(slots=True)
+class CatalogueFindings:
+    """Measured state of the casilla surface; every tuple is sorted."""
+
+    orphan_keys: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    null_leaves: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    redundant_values: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    lineage_lifts: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, empty lineage keys that could carry text now stored per edition."""
+    derived_help: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    placeholders: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    unresolved_spanish: tuple[str, ...] = ()
+    untranslated: dict[str, int] = field(default_factory=dict)
+    translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, lineages whose one Spanish text is translated more than one way."""
+
+    def counts(self) -> dict[str, object]:
+        """Summarise every finding family as counts."""
+
+        def total(family: Mapping[str, tuple[str, ...]]) -> dict[str, int]:
+            return {locale: len(keys) for locale, keys in sorted(family.items()) if keys}
+
+        return {
+            "orphan_keys": total(self.orphan_keys),
+            "null_leaves": total(self.null_leaves),
+            "redundant_values": total(self.redundant_values),
+            "lineage_lifts": total(self.lineage_lifts),
+            "derived_help": total(self.derived_help),
+            "placeholders": total(self.placeholders),
+            "unresolved_spanish": len(self.unresolved_spanish),
+            "untranslated": dict(sorted(self.untranslated.items())),
+            "translation_drift": total(self.translation_drift),
+        }
+
+    @property
+    def pure(self) -> bool:
+        """Whether the surface carries no delete target and no Spanish gap."""
+        return not any(
+            (
+                any(self.orphan_keys.values()),
+                any(self.null_leaves.values()),
+                any(self.redundant_values.values()),
+                any(self.lineage_lifts.values()),
+                any(self.derived_help.values()),
+                any(self.placeholders.values()),
+                any(self.translation_drift.values()),
+                self.unresolved_spanish,
+            )
+        )
+
+
+@dataclass(slots=True)
+class CollapsePlan:
+    """Catalogue edits that keep every resolved text except the named repairs."""
+
+    removals: dict[str, dict[str, str]] = field(default_factory=lambda: defaultdict(dict))
+    """Per locale, each key to delete and why."""
+    settings: dict[str, dict[str, tuple[str, str]]] = field(default_factory=lambda: defaultdict(dict))
+    """Per locale, each key to write with its value and why."""
+    _displaced: dict[str, dict[str, str]] = field(default_factory=lambda: defaultdict(dict))
+
+    @property
+    def reasons(self) -> Counter[str]:
+        """Count the scheduled edits by kind and reason."""
+        counts: Counter[str] = Counter()
+        for removals in self.removals.values():
+            counts.update(f"remove:{reason}" for reason in removals.values())
+        for settings in self.settings.values():
+            counts.update(f"set:{reason}" for _value, reason in settings.values())
+        return counts
+
+    def remove(self, locale: str, key: str, reason: str) -> None:
+        """Schedule deletion of one leaf; dropping a value this plan assigned cancels the assignment."""
+        if key in self.settings[locale]:
+            del self.settings[locale][key]
+            displaced = self._displaced[locale].pop(key, None)
+            if displaced is not None:
+                self.removals[locale][key] = displaced
+            return
+        self.removals[locale].setdefault(key, reason)
+
+    def assign(self, locale: str, key: str, value: str, reason: str) -> None:
+        """Schedule one leaf value, remembering any removal it replaces."""
+        displaced = self.removals[locale].pop(key, None)
+        if displaced is not None:
+            self._displaced[locale][key] = displaced
+        self.settings[locale][key] = (value, reason)
+
+
+class ModeloCasillaCatalogue:
+    """The casilla surface as the runtime resolves it, with delta-keyed edits."""
+
+    def __init__(self, occurrences: tuple[CasillaOccurrence, ...], values: Values) -> None:
+        """Index every key by the coordinates whose chains read it."""
+        self.occurrences = occurrences
+        self.values = values
+        self.locales = tuple(sorted(values))
+        self.dependents: dict[str, list[tuple[int, str]]] = defaultdict(list)
+        for index, occurrence in enumerate(occurrences):
+            for field_name in _FIELDS:
+                for key in occurrence.chain(field_name):
+                    self.dependents[key].append((index, field_name))
+
+    @classmethod
+    def published(cls, locales_dir: Path = LOCALES_DIR) -> ModeloCasillaCatalogue:
+        """Build the view from the published generation and the on-disk catalogue."""
+        return cls(casilla_occurrences(), load_casilla_values(locales_dir))
+
+    # -- resolution -------------------------------------------------------
+
+    def lookup_for(self, values: Values) -> Callable[[str, str], str | None]:
+        """Return a runtime-shaped lookup over ``values``."""
+
+        def lookup(key: str, locale: str) -> str | None:
+            return values.get(locale, {}).get(key)
+
+        return lookup
+
+    def resolve(self, index: int, field_name: str, locale: str, values: Values | None = None) -> str | None:
+        """Resolve one coordinate with the runtime selection rule."""
+        view = self.values if values is None else values
+        chain = self.occurrences[index].chain(field_name)
+        source = modelo_localization_source(chain, locale=locale, lookup=self.lookup_for(view))
+        return None if source is None else view[source[1]][source[0]]
+
+    def resolution(self, values: Values | None = None) -> dict[Coordinate, str | None]:
+        """Resolve every coordinate."""
+        return {
+            (index, field_name, locale): self.resolve(index, field_name, locale, values)
+            for index in range(len(self.occurrences))
+            for field_name in _FIELDS
+            for locale in self.locales
+        }
+
+    # -- findings ---------------------------------------------------------
+
+    def findings(self) -> CatalogueFindings:
+        """Measure every delete target and gap on the current catalogue."""
+        found = CatalogueFindings()
+        plan = self.collapse_plan(include_redundant=True)
+        for locale in self.locales:
+            leaves = self.values[locale]
+            found.orphan_keys[locale] = tuple(sorted(key for key in leaves if key not in self.dependents))
+            found.null_leaves[locale] = tuple(
+                sorted(key for key, value in leaves.items() if value is None and key in self.dependents)
+            )
+            found.derived_help[locale] = tuple(
+                sorted(key for key, value in leaves.items() if value is not None and _is_derived_help(key, value))
+            )
+            found.placeholders[locale] = tuple(
+                sorted(key for key, value in leaves.items() if value is not None and _PLACEHOLDER.search(value))
+            )
+            found.redundant_values[locale] = tuple(
+                sorted(key for key, reason in plan.plan.removals.get(locale, {}).items() if reason == "redundant")
+            )
+            found.lineage_lifts[locale] = tuple(sorted(plan.plan.settings.get(locale, {})))
+        found.unresolved_spanish = tuple(
+            sorted(
+                f"{occurrence.modelo}/{occurrence.revision}/{occurrence.casilla}"
+                for index, occurrence in enumerate(self.occurrences)
+                if self.resolve(index, "label", SOURCE_LOCALE) is None
+            )
+        )
+        found.untranslated = {
+            locale: sum(
+                1
+                for index in range(len(self.occurrences))
+                if self.resolve(index, "label", locale) is not None
+                and _served_locale(self, index, "label", locale) != locale
+            )
+            for locale in self.locales
+            if locale != SOURCE_LOCALE
+        }
+        found.translation_drift = self.translation_drift()
+        return found
+
+    def translation_drift(self, values: Values | None = None) -> dict[str, tuple[str, ...]]:
+        """Return, per locale, the lineages rendering one Spanish text more than one way.
+
+        A lineage is the continuity key when the casilla declares one, else the
+        casilla identity within its modelo. Divergent Spanish text is a genuine
+        edition difference and is not drift.
+        """
+        groups: dict[tuple[str, str, str], list[int]] = defaultdict(list)
+        for index, occurrence in enumerate(self.occurrences):
+            lineage = occurrence.continuidad_id or f"casilla:{occurrence.casilla}"
+            spanish = self.resolve(index, "label", SOURCE_LOCALE, values)
+            if spanish is not None:
+                groups[(occurrence.modelo, lineage, spanish)].append(index)
+        drift: dict[str, tuple[str, ...]] = {}
+        for locale in self.locales:
+            if locale == SOURCE_LOCALE:
+                continue
+            drift[locale] = tuple(
+                sorted(
+                    f"{modelo}/{lineage}"
+                    for (modelo, lineage, _spanish), members in groups.items()
+                    if len(
+                        {
+                            text
+                            for index in members
+                            if _served_locale(self, index, "label", locale, values) == locale
+                            and (text := self.resolve(index, "label", locale, values)) is not None
+                        }
+                    )
+                    > 1
+                )
+            )
+        return drift
+
+    # -- collapse ---------------------------------------------------------
+
+    def collapse_plan(self, *, include_redundant: bool = True) -> CollapseResult:
+        """Compute removals and lineage lifts that preserve every resolved text.
+
+        Derived help, null leaves and orphan keys are removed first; they are
+        delete targets whatever they resolve to. Lineage lifts then place a
+        value on a continuity key when every chain reading that key already
+        resolves to it in that locale, which changes no resolution. Finally
+        every remaining value is tested for redundancy most-specific first: it
+        is dropped when removing it changes no coordinate that reads its key.
+        """
+        working: Values = {locale: dict(leaves) for locale, leaves in self.values.items()}
+        plan = CollapsePlan()
+        for locale in self.locales:
+            for key, value in list(working[locale].items()):
+                if key not in self.dependents:
+                    plan.remove(locale, key, "orphan")
+                elif value is None:
+                    plan.remove(locale, key, "null")
+                elif _is_derived_help(key, value):
+                    plan.remove(locale, key, "derived-help")
+                else:
+                    continue
+                del working[locale][key]
+        baseline = self.resolution(working)
+        # A stale lineage value blocks a lift until the redundancy pass removes
+        # it, and a lift makes more occurrence values redundant, so the two
+        # passes alternate until neither changes the catalogue.
+        lifted_keys: dict[str, set[str]] = defaultdict(set)
+        progressing = True
+        while progressing:
+            lifted = self._lift_to_lineage(working, baseline, plan, lifted_keys)
+            removed = self._remove_redundant(working, baseline, plan) if include_redundant else 0
+            progressing = bool(lifted or removed)
+        return CollapseResult(plan=plan, working=working, baseline=baseline)
+
+    def _remove_redundant(
+        self,
+        working: Values,
+        baseline: Mapping[Coordinate, str | None],
+        plan: CollapsePlan,
+    ) -> int:
+        """Drop every value whose removal changes no resolution; return how many."""
+        removed = 0
+        # Spanish goes first: removing a Spanish value lowers the Spanish tier,
+        # which is what lets a translation move down to the shared key. The
+        # pass repeats to a fixed point because each removal can enable another.
+        changed = True
+        while changed:
+            changed = False
+            for locale in (SOURCE_LOCALE, *[loc for loc in self.locales if loc != SOURCE_LOCALE]):
+                for key in sorted(working[locale], key=_specificity):
+                    value = working[locale].pop(key)
+                    if self._unchanged(key, locale, working, baseline):
+                        plan.remove(locale, key, "redundant")
+                        removed += 1
+                        changed = True
+                    else:
+                        working[locale][key] = value
+        return removed
+
+    def _affected_locales(self, locale: str) -> tuple[str, ...]:
+        return self.locales if locale == SOURCE_LOCALE else (locale,)
+
+    def _unchanged(self, key: str, locale: str, working: Values, baseline: Mapping[Coordinate, str | None]) -> bool:
+        return all(
+            self.resolve(index, field_name, affected, working) == baseline[(index, field_name, affected)]
+            for index, field_name in self.dependents.get(key, ())
+            for affected in self._affected_locales(locale)
+        )
+
+    def _lift_to_lineage(
+        self,
+        working: Values,
+        baseline: Mapping[Coordinate, str | None],
+        plan: CollapsePlan,
+        lifted_keys: dict[str, set[str]],
+    ) -> int:
+        """Place agreed text on empty lineage keys where no resolution changes; return how many.
+
+        A key this plan already lifted once is never lifted again: if the
+        redundancy pass dropped it, lifting it back would only cycle.
+        """
+        lifted = 0
+        lineage_keys = sorted(key for key in self.dependents if ".casilla.continuidad." in key)
+        for locale in (SOURCE_LOCALE, *[loc for loc in self.locales if loc != SOURCE_LOCALE]):
+            for key in lineage_keys:
+                if working[locale].get(key) is not None or key in lifted_keys[locale]:
+                    continue
+                texts = {baseline[(index, field_name, locale)] for index, field_name in self.dependents[key]}
+                if len(texts) != 1:
+                    continue
+                (text,) = texts
+                if text is None:
+                    continue
+                working[locale][key] = text
+                if self._unchanged(key, locale, working, baseline):
+                    plan.assign(locale, key, text, "lineage-lift")
+                    lifted_keys[locale].add(key)
+                    lifted += 1
+                else:
+                    del working[locale][key]
+        return lifted
+
+    # -- application ------------------------------------------------------
+
+    def apply(
+        self,
+        result: CollapseResult,
+        locales_dir: Path = LOCALES_DIR,
+        pending_dir: Path = PENDING_CASILLA_INSTALL_DIR,
+    ) -> dict[str, int]:
+        """Install ``result`` into ``locales_dir`` only after a staged copy proves it.
+
+        The plan is written into a staged copy kept at ``pending_dir``, and that
+        copy must resolve every coordinate exactly as ``result.baseline`` does.
+        The changed Modelo schema shards are then copied into place, and the
+        staged copy is discarded only when every shard is installed. An
+        interrupted install leaves ``pending_dir`` behind: planning refuses while
+        it exists, because a partly installed catalogue is not a baseline, and
+        :func:`resume_install` finishes the verified install instead.
+
+        Raises:
+            CollapseVerificationError: An install is already pending, the staged
+                catalogue resolves differently, or a shard could not be installed.
+        """
+        if pending_dir.exists():
+            raise CollapseVerificationError(f"an install is pending at {pending_dir}; resume it first")
+        staged = pending_dir / "locales"
+        shutil.copytree(locales_dir, staged)
+        try:
+            written = self._write_plan(result.plan, staged)
+            proof = ModeloCasillaCatalogue(self.occurrences, load_casilla_values(staged))
+            changed = sum(1 for coordinate, text in proof.resolution().items() if result.baseline[coordinate] != text)
+        except BaseException:
+            shutil.rmtree(pending_dir)
+            raise
+        if changed:
+            shutil.rmtree(pending_dir)
+            raise CollapseVerificationError(f"the staged catalogue resolves {changed} texts differently")
+        resume_install(locales_dir, pending_dir)
+        return written
+
+    def author(
+        self,
+        manifest: Mapping[str, Mapping[str, str]],
+        locales_dir: Path = LOCALES_DIR,
+        pending_dir: Path = PENDING_CASILLA_INSTALL_DIR,
+    ) -> dict[str, int]:
+        """Install authored casilla values, proving they are the only source of change.
+
+        Every coordinate whose resolved text differs afterwards must be served
+        by one of the manifest's keys in its own locale, or, for a Spanish
+        change, by a manifest key read through the Spanish fallback. Any other
+        change means the manifest reached text it did not declare, and the
+        install is refused. Returns how many coordinates changed per locale.
+
+        Raises:
+            CollapseVerificationError: An install is pending, a key is not a
+                casilla key any chain reads, or a change is not attributable.
+        """
+        unknown = sorted(
+            f"{locale}:{key}"
+            for locale, values in manifest.items()
+            for key in values
+            if locale not in self.locales or key not in self.dependents
+        )
+        if unknown:
+            raise CollapseVerificationError(f"manifest names keys no casilla chain reads: {unknown[:5]}")
+        if pending_dir.exists():
+            raise CollapseVerificationError(f"an install is pending at {pending_dir}; resume it first")
+        before = self.resolution()
+        staged = pending_dir / "locales"
+        shutil.copytree(locales_dir, staged)
+        try:
+            manager = LocaleManager(src_dir=staged, locales_dir=staged)
+            for locale, values in sorted(manifest.items()):
+                if values:
+                    manager.set_locale_values(locale, dict(values))
+            proof = ModeloCasillaCatalogue(self.occurrences, load_casilla_values(staged))
+            after = proof.resolution()
+            changed: dict[str, int] = defaultdict(int)
+            unattributed: list[Coordinate] = []
+            for coordinate, text in after.items():
+                if before[coordinate] == text:
+                    continue
+                index, field_name, locale = coordinate
+                source = modelo_localization_source(
+                    self.occurrences[index].chain(field_name), locale=locale, lookup=proof.lookup_for(proof.values)
+                )
+                if source is None or source[0] not in manifest.get(source[1], {}):
+                    unattributed.append(coordinate)
+                changed[locale] += 1
+        except BaseException:
+            shutil.rmtree(pending_dir)
+            raise
+        if unattributed:
+            shutil.rmtree(pending_dir)
+            raise CollapseVerificationError(f"{len(unattributed)} changed texts are not served by the manifest")
+        resume_install(locales_dir, pending_dir)
+        return dict(changed)
+
+    def _write_plan(self, plan: CollapsePlan, locales_dir: Path) -> dict[str, int]:
+        manager = LocaleManager(src_dir=locales_dir, locales_dir=locales_dir)
+        written: dict[str, int] = {}
+        for locale in self.locales:
+            settings: dict[str, str | None] = {
+                key: value for key, (value, _reason) in plan.settings.get(locale, {}).items()
+            }
+            removals = sorted(set(plan.removals.get(locale, {})) - set(settings))
+            if settings:
+                manager.set_locale_values(locale, settings)
+            if removals:
+                manager.remove_locale_values(locale, removals)
+            written[locale] = len(settings) + len(removals)
+        return written
+
+
+class CollapseVerificationError(RuntimeError):
+    """A collapse could not be proven lossless or installed as proven."""
+
+
+_INSTALL_ATTEMPTS: Final = 60
+_INSTALL_BACKOFF_SECONDS: Final = 0.5
+
+
+def resume_install(locales_dir: Path = LOCALES_DIR, pending_dir: Path = PENDING_CASILLA_INSTALL_DIR) -> None:
+    """Install a verified staged catalogue and discard it once every shard is in place.
+
+    Raises:
+        CollapseVerificationError: No install is pending, or a shard could not be written.
+    """
+    staged = pending_dir / "locales"
+    if not staged.is_dir():
+        raise CollapseVerificationError(f"no install is pending at {pending_dir}")
+    failed = _install_shards(staged, locales_dir)
+    if failed:
+        raise CollapseVerificationError(f"verified shards could not be installed, resume again: {failed}")
+    shutil.rmtree(pending_dir)
+
+
+def _install_shards(staged: Path, locales_dir: Path) -> tuple[str, ...]:
+    """Copy every changed Modelo schema shard from ``staged``; return the ones that failed."""
+    failed: list[str] = []
+    for source in sorted(staged.glob("*/modelo/schema/*.yml")):
+        relative = source.relative_to(staged)
+        target = locales_dir / relative
+        payload = source.read_bytes()
+        if target.is_file() and target.read_bytes() == payload:
+            continue
+        for _attempt in range(_INSTALL_ATTEMPTS):
+            try:
+                target.write_bytes(payload)
+                break
+            except OSError:
+                time.sleep(_INSTALL_BACKOFF_SECONDS)
+        else:
+            failed.append(relative.as_posix())
+    return tuple(failed)
+
+
+@dataclass(slots=True)
+class CollapseResult:
+    """A collapse plan with the evidence it was computed against."""
+
+    plan: CollapsePlan
+    working: Values
+    baseline: Mapping[Coordinate, str | None]
+
+
+def _specificity(key: str) -> tuple[int, str]:
+    """Order occurrence keys before lineage keys so the shared value survives."""
+    return (1 if ".casilla.continuidad." in key else 0, key)
+
+
+def _is_derived_help(key: str, value: str) -> bool:
+    return key.endswith(".help") and any(pattern.match(value) for pattern in _DERIVED_HELP)
+
+
+def _served_locale(
+    catalogue: ModeloCasillaCatalogue,
+    index: int,
+    field_name: str,
+    locale: str,
+    values: Values | None = None,
+) -> str | None:
+    source = modelo_localization_source(
+        catalogue.occurrences[index].chain(field_name),
+        locale=locale,
+        lookup=catalogue.lookup_for(catalogue.values if values is None else values),
+    )
+    return None if source is None else source[1]

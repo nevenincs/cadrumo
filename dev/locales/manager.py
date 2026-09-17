@@ -21,6 +21,7 @@ from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.logging import get_logger
 from cadrumo.core.product_identity import normalise_product_identity_references
 
+from ._casilla_keys import is_casilla_key
 from ._revision_drift import RevisionMoveCandidate, classify_revision_moves
 from ._subtree_move import (
     LocaleMoveConflict,
@@ -165,6 +166,25 @@ class StrictUniqueKeyLoader(yaml.CSafeLoader):
             value = self.construct_object(value_node, deep=deep)
             mapping[key] = value
         return mapping
+
+
+def _parse_raw_locale(source: IO[str] | str) -> dict[str, object]:
+    """Parse catalogue YAML keeping every scalar leaf so the audit can report its type."""
+    loader = StrictUniqueKeyLoader(source)
+    try:
+        data = loader.get_single_data()
+    finally:
+        loader.dispose()
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        raise LocaleError("Locale catalogue root must be a mapping of string keys")
+    root: dict[str, object] = {}
+    for key, value in data.items():
+        if not isinstance(key, str):
+            raise LocaleError("Locale catalogue root must be a mapping of string keys")
+        root[key] = value
+    return root
 
 
 def _parse_locale(source: IO[str] | str) -> dict[str, LocaleNode]:
@@ -458,7 +478,7 @@ class LocaleManager:
             source = locale_catalogue_source(self.locales_dir, locale)
             if source is None:
                 continue
-            leaves_by_locale[f"{locale}.yml"] = _flatten_raw_locale_leaves(self.load_locale(source))
+            leaves_by_locale[f"{locale}.yml"] = _flatten_raw_locale_leaves(self._load_raw_locale(source))
         return leaves_by_locale
 
     def _audit_namespace_prefixes(self) -> tuple[str, ...]:
@@ -491,6 +511,18 @@ class LocaleManager:
             return merged
         with open(path, encoding=UTF_8_ENCODING) as f:
             return _parse_locale(f)
+
+    def _load_raw_locale(self, path: Path) -> dict[str, object]:
+        """Load a catalogue for auditing without refusing non-string leaves."""
+        if path.is_dir():
+            merged: dict[str, object] = {}
+            for shard_file in sorted(path.rglob("*.yml")):
+                with open(shard_file, encoding=UTF_8_ENCODING) as f:
+                    shard: dict[str, Any] = dict(_parse_raw_locale(f))
+                merged.update(_deep_merge_dicts(dict(merged), shard))
+            return merged
+        with open(path, encoding=UTF_8_ENCODING) as f:
+            return _parse_raw_locale(f)
 
     def _build_nested_dict(
         self,
@@ -1012,7 +1044,7 @@ def _audit_locale_file(
         locale_file=locale_file,
         codebase_missing=codebase_missing,
         codebase_extra=codebase_extra,
-        inter_locale_missing=tuple(sorted(all_locale_keys - keys)),
+        inter_locale_missing=tuple(sorted(key for key in all_locale_keys - keys if not is_casilla_key(key))),
         scalar_violations=violations,
         revision_moves=moves.candidates,
         move_accounted_missing=moves.accounted_missing,
@@ -1222,8 +1254,12 @@ def _flatten_raw_locale_leaves(value: object, prefix: str = "") -> dict[str, obj
 
 
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
-    """Return whether a dotted locale key belongs to a dynamic namespace."""
-    return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
+    """Return whether a dotted locale key belongs to a namespace governed outside key-set parity.
+
+    Dynamic namespaces are one such family; delta-keyed casilla leaves are the
+    other, and their presence is checked by the Modelo casilla catalogue.
+    """
+    return is_casilla_key(key) or any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
 
 
 def _is_test_module(path: Path) -> bool:
