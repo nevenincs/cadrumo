@@ -5,6 +5,9 @@ descriptor-selected SQLite generation and loads typed components through one
 leased :class:`PinnedAuthorityOperation`.  The eager
 :class:`ValidatedRegistryAuthority` remains only for development validation and
 the paired pre-cutover JSON benchmark.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations
@@ -197,6 +200,9 @@ class ValidatedRegistryAuthority:
 
         This boundary accepts models, catalogues, identity, and optional
         published evidence only. It has no authoring-root or validator input.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
         """
         authority = cls(
             modelos=modelos,

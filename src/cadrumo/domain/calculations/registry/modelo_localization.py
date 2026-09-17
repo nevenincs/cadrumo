@@ -10,7 +10,6 @@ from typing import Final, Literal, cast
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import MissingTranslationError, lookup_translation
-from ....core.modelo import Modelo
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .ids import RevisionId
@@ -40,9 +39,6 @@ stops a caller asking for a casilla key that can never resolve."""
 _PLAIN_SEGMENT: Final = re.compile(r"^[A-Za-z0-9_-]+$")
 _ENCODED_PREFIX: Final[str] = "x-"
 _SOURCE_LOCALE: Final[str] = "es"
-_MODEL_SCOPED_CONSTRUCTS: Final[frozenset[tuple[str, str]]] = frozenset(
-    {(Modelo("303").value, "modelo-303-iva-autoliquidacion")},
-)
 
 
 def encode_modelo_locale_segment(value: str) -> str:
@@ -76,15 +72,28 @@ def construct_locale_key(
     construct_id: str,
     field: Literal["title"] = "title",
 ) -> str:
-    """Derive the presentation key for one construct at its declared ownership scope."""
-    if (modelo_id, construct_id) in _MODEL_SCOPED_CONSTRUCTS:
-        return (
-            f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.construct."
-            f"{encode_modelo_locale_segment(construct_id)}.field.{field}"
-        )
+    """Derive the edition-scoped presentation key for one construct."""
     return (
         f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.revision."
         f"{encode_modelo_locale_segment(revision_id)}.construct."
+        f"{encode_modelo_locale_segment(construct_id)}.field.{field}"
+    )
+
+
+def construct_lineage_locale_key(
+    modelo_id: str,
+    construct_id: str,
+    field: Literal["title"] = "title",
+) -> str:
+    """Derive the modelo-wide key a construct's title shares across the editions that keep its id.
+
+    A construct id is the identity keyed-family inheritance carries from one
+    edition to the next, so it plays the role ``continuidad_id`` plays for a
+    casilla: the tier below the edition key where text every edition agrees on
+    is stored once.
+    """
+    return (
+        f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.construct."
         f"{encode_modelo_locale_segment(construct_id)}.field.{field}"
     )
 
@@ -203,7 +212,10 @@ def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: 
         return dict(construct)
     return {
         **construct,
-        "localization_key": construct_locale_key(modelo_id, revision_id, construct_id),
+        "localization_keys": (
+            construct_locale_key(modelo_id, revision_id, construct_id),
+            construct_lineage_locale_key(modelo_id, construct_id),
+        ),
     }
 
 
@@ -352,6 +364,7 @@ __all__ = [
     "casilla_alias_locale_key",
     "casilla_continuity_locale_key",
     "casilla_occurrence_locale_key",
+    "construct_lineage_locale_key",
     "construct_locale_key",
     "encode_modelo_locale_segment",
     "modelo_locale_key",

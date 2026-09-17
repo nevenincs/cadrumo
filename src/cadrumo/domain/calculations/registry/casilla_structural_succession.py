@@ -105,7 +105,11 @@ def endpoint_source_context_failures(
 
 
 def structural_succession_failures(modelo: ModeloDefinition) -> tuple[str, ...]:
-    """Validate ownership, exact endpoints, lifecycle and the independently declared edge."""
+    """Validate ownership, exact endpoints, lifecycle and the independently declared edge.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
+    """
     if not any(revision.casilla_structural_successions for revision in modelo.revisions.values()):
         return ()
     # Local imports keep the schema's own after-validator free of import cycles.
@@ -183,7 +187,11 @@ def structural_succession_failures(modelo: ModeloDefinition) -> tuple[str, ...]:
 
 
 def validated_structural_targets(modelo: ModeloDefinition, revision_id: str) -> frozenset[str]:
-    """Only valid relationship membership resolves a successor's origin totality."""
+    """Only valid relationship membership resolves a successor's origin totality.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
+    """
     if not modelo.revisions[revision_id].casilla_structural_successions:
         return frozenset[str]()
     if structural_succession_failures(modelo):

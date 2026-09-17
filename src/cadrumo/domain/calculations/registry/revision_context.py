@@ -68,7 +68,11 @@ two stay in lock-step rather than one drifting to a bare ``object``.
 
 
 def collect_export_field_ids(revision: ModeloRevision) -> set[str]:
-    """Collect field identifiers declared by every export layout."""
+    """Collect field identifiers declared by every export layout.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     return {field.id for layout in revision.export_layouts for record in layout.records for field in record.fields}
 
 
@@ -118,7 +122,11 @@ class RevisionValidationContext:
 
 
 def build_revision_validation_context(revision: ModeloRevision) -> RevisionValidationContext:
-    """Build lookup indexes needed to validate one modelo revision."""
+    """Build lookup indexes needed to validate one modelo revision.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     ids_by_kind = collect_record_id_lists(revision)
     formula_by_id = records_by_id(revision.formulas)
     binding_by_id = records_by_id(revision.bindings)

@@ -38,9 +38,9 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     m100 = modelos_by_id["100"]
     rev100 = m100.revisions["2024"]
     casilla_100_01 = next(c for c in rev100.casillas if c.id == "0001")
-    assert casilla_100_01.get_label("en") == "Taxpayer obtaining yield"
+    assert casilla_100_01.get_label("en") == "Taxpayer who obtains the income"
     assert casilla_100_01.get_label("ca") == "Contribuent que obté els rendiments"
-    assert casilla_100_01.get_label("hu") == "Jövedelmet megszerző adózó"
+    assert casilla_100_01.get_label("hu") == "A jövedelmet szerző adózó"
     assert casilla_100_01.get_help("en") == "Selector for the taxpayer obtaining the business yield."
 
     # Verify Modelo 200 (revision 2024)

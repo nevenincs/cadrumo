@@ -408,6 +408,9 @@ def iva_compensation_annual_partition_requirement(
     dependency treatment comes directly from the revision classification and
     stays empty only when that classification is absent; consumers must not
     reconstruct or default it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     bindings = _iva_compensation_annual_partition_bindings(revision)
     if not bindings:

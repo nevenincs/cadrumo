@@ -153,7 +153,11 @@ def resolve_refund_eligibility_policy(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> RefundEligibilityPolicy:
-    """Resolve the dated refund-period policy, failing closed if absent."""
+    """Resolve the dated refund-period policy, failing closed if absent.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_policy(coordinate)
@@ -165,7 +169,11 @@ def resolve_refund_eligibility_policy_for_period(
     *,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> RefundEligibilityPolicy:
-    """Resolve refund eligibility at a concrete filing-period coordinate."""
+    """Resolve refund eligibility at a concrete filing-period coordinate.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     effective_date = period.end_date if period.has_date_span() else date(period.filing_year, 12, 31)
     return resolve_refund_eligibility_policy(effective_date=effective_date, authority=authority)
 

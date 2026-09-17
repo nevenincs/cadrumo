@@ -209,6 +209,9 @@ def relation_prefill_bindings_for_period(
     The binding's own ``applicability`` is what scopes it now; the relation's
     ``target_periods`` moved there in the same change that folded the relation
     into the provider, so period scoping has one home rather than two.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     return tuple(
         (binding, binding.provider)
@@ -479,6 +482,9 @@ def relation_prefill_values_as_binding_values(
     receive a pre-resolved map and need to merge it with ordinary binding
     inputs; it deliberately accepts only the active provider binding ids and
     never translates a retired relation id.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     active_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=period)}
     unknown = sorted(set(values).difference(active_ids))

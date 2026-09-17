@@ -182,6 +182,9 @@ def periodic_carry_bindings_for_period(
     temporal member yields a source anchor for it, so a member that cannot
     interpret a cadence (the expanding span against a monthly code) simply does
     not cover it rather than being assumed to.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     schedule_periods = tuple(
         dict.fromkeys(period_code for schedule in revision.filing_schedules for period_code in schedule.periods)

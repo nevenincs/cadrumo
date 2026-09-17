@@ -563,6 +563,9 @@ def invoice_ledger_screen_bindings(
     Binding IDs are returned in a stable conceptual order (three IVA output
     tiers, domestic input IVA, then three recargo tiers).  The IDs are merely
     selected outputs; the selector is the authority used to identify them.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     if modelo not in _INVOICE_LEDGER_SCREEN_MODELOS:
         return ()
@@ -629,7 +632,11 @@ def invoice_ledger_screen_binding_ids(
     *,
     modelo: str,
 ) -> tuple[BindingId, ...]:
-    """Return the selected revision's stable invoice-screen binding IDs."""
+    """Return the selected revision's stable invoice-screen binding IDs.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     return tuple(item.binding_id for item in invoice_ledger_screen_bindings(revision, modelo=modelo))
 
 

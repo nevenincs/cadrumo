@@ -573,6 +573,9 @@ def binding_export_selector(
         RegistryValidationError: When ``revision`` declares no export layouts
             at all, or when the export projection ``binding`` declares is
             malformed or incomplete.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     if not revision.export_layouts:
         raise RegistryValidationError(

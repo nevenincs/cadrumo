@@ -40,7 +40,11 @@ def bound_casilla_binding_ids(casilla: CasillaDefinition) -> tuple[BindingId, ..
 
 
 def casillas_by_binding(revision: ModeloRevision) -> Mapping[BindingId, tuple[CasillaId, ...]]:
-    """Return every binding id mapped to its declaration-ordered target casillas."""
+    """Return every binding id mapped to its declaration-ordered target casillas.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     mapping: dict[BindingId, list[CasillaId]] = {}
     for casilla in revision.casillas:
         for binding_id in bound_casilla_binding_ids(casilla):
@@ -88,6 +92,9 @@ def binding_consumers(revision: ModeloRevision) -> Mapping[BindingId, tuple[Bind
     field or record. Bindings with no entry at all are
     returned as an empty tuple rather than omitted, so an orphan is a value in
     the mapping rather than a missing key a caller has to infer.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     consumers: dict[BindingId, list[BindingConsumerRef]] = {binding.id: [] for binding in revision.bindings}
 

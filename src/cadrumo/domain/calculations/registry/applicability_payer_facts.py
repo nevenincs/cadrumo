@@ -172,7 +172,11 @@ def resolve_payer_fact_catalogue(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[PayerFactProjection, ...]:
-    """Resolve the selected dated payer-applicability entity set."""
+    """Resolve the selected dated payer-applicability entity set.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
@@ -185,7 +189,11 @@ def resolve_payer_fact(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> PayerFactValue:
-    """Resolve a raw applicability token through mechanics or the dated fact."""
+    """Resolve a raw applicability token through mechanics or the dated fact.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     if isinstance(value, PayerFactProjection):
         return value
     if isinstance(value, PayerFact):
@@ -203,7 +211,11 @@ def resolve_payer_fact(
 
 
 def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFactValue) -> bool:
-    """Return whether ``profile`` positively declares the supplied payer fact."""
+    """Return whether ``profile`` positively declares the supplied payer fact.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     if isinstance(fact, PayerFactProjection):
         value = getattr(profile, fact.profile_key, None)
         if not isinstance(value, bool):

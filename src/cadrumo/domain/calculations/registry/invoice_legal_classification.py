@@ -286,7 +286,11 @@ def resolve_invoice_legal_classification_catalogue(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceLegalClassificationCatalogue:
-    """Resolve the dated invoice class and operation-date vocabulary."""
+    """Resolve the dated invoice class and operation-date vocabulary.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
@@ -299,7 +303,11 @@ def require_invoice_class(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceClass:
-    """Return an invoice-class token only when fact 0141 declares it."""
+    """Return an invoice-class token only when fact 0141 declares it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_invoice_legal_classification_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -312,7 +320,11 @@ def require_invoice_operation_date_role(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceOperationDateRole:
-    """Return an operation-date role only when fact 0141 declares it."""
+    """Return an operation-date role only when fact 0141 declares it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_invoice_legal_classification_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -324,7 +336,11 @@ def invoice_class_ordinaria(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceClass:
-    """Return the registry-declared ordinary invoice-class token."""
+    """Return the registry-declared ordinary invoice-class token.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_invoice_legal_classification_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -336,7 +352,11 @@ def invoice_class_simplificada(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceClass:
-    """Return the registry-declared simplified invoice-class token."""
+    """Return the registry-declared simplified invoice-class token.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_invoice_legal_classification_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -348,7 +368,11 @@ def invoice_class_rectificativa(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceClass:
-    """Return the registry-declared corrective invoice-class token."""
+    """Return the registry-declared corrective invoice-class token.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_invoice_legal_classification_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -360,7 +384,11 @@ def operation_performed_role(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceOperationDateRole:
-    """Return the registry-declared performed-operation date role."""
+    """Return the registry-declared performed-operation date role.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_invoice_legal_classification_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -372,7 +400,11 @@ def advance_payment_received_role(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceOperationDateRole:
-    """Return the registry-declared advance-payment date role."""
+    """Return the registry-declared advance-payment date role.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_invoice_legal_classification_catalogue(
         effective_date=effective_date,
         authority=authority,

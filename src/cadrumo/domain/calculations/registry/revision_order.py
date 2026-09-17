@@ -68,6 +68,9 @@ def revision_windows_intersect(left: ModeloRevision, right: ModeloRevision) -> b
     revision's own window is well formed (``valid_to`` not before
     ``valid_from``); a schema-invalid inverted window is not defended against
     here, because the schema is the owner of that invariant.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     if left.valid_to is not None and left.valid_to < right.valid_from:
         return False
@@ -89,12 +92,19 @@ def revisions_coexist(left: ModeloRevision, right: ModeloRevision) -> bool:
     is it a real temporal succession". :func:`revisions_overlap` answers only
     the selector half and reports successive editions of a stable period
     vocabulary as overlapping.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     return revision_windows_intersect(left, right) and revisions_overlap(left, right)
 
 
 def ordered_revisions(modelo: ModeloDefinition) -> tuple[ModeloRevision, ...]:
-    """Return a modelo's revisions in validity order, ties broken by id."""
+    """Return a modelo's revisions in validity order, ties broken by id.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
+    """
     return tuple(
         sorted(modelo.revisions.values(), key=lambda revision: (revision.valid_from, revision.id)),
     )

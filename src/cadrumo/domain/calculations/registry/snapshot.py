@@ -3,6 +3,9 @@
 This module is the canonical home for building a validated snapshot and for
 the small reference/review projections shared by registry authority consumers.
 Implementation-only helpers remain private below those public boundaries.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations
@@ -159,7 +162,11 @@ def _install_cross_domain_snapshot_checks() -> None:
 
 
 def validate_materialized_export_record_families(revision: ModeloRevision) -> None:
-    """Refuse unresolved or mixed field families before a revision enters a snapshot."""
+    """Refuse unresolved or mixed field families before a revision enters a snapshot.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     failures = [
         f"export record {record.id!r}: {failure}"
         for layout in revision.export_layouts
@@ -196,6 +203,9 @@ def build_validated_snapshot(
     A lower rung is a narrower claim, never a weaker check of the same claim: a
     caller asking when a modelo is due is not making a filing assertion, and
     forcing it to would make a scheduling question unanswerable rather than safe.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
     """
     _install_cross_domain_snapshot_checks()
     revision = select_revision(
@@ -383,6 +393,10 @@ def check_snapshot_filing_capability(
     declares none inline but derives one is capable and is not refused. There is no
     allowance, allowlist or per-modelo exemption: a modelo the application cannot
     file is a capability that has not been built yet, never a settled state.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     if revision.export_layouts:
         return
@@ -439,6 +453,10 @@ def check_snapshot_filing_review_tier(
     Snapshot construction owns the review boundary. Consumers that need to
     classify a successful filing snapshot must call this check rather than
     repeat the revision and legal-reference status predicates.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     _check_snapshot_revision_review_status(modelo, revision)
     _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids, filing_date=filing_date)
@@ -500,6 +518,9 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
     Do NOT widen :data:`SUBSTANTIVE_LAW_KINDS` to admit ``orden`` (or narrow
     it further) without re-running that severity probe -- a carve-out here is
     exactly where this gate can go quietly vacuous.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     if reference.kind not in SUBSTANTIVE_LAW_KINDS:
         return RevisionLegalApplicabilityWindow.from_revision(revision).overlaps(reference)
@@ -986,7 +1007,12 @@ def collect_snapshot_ref_ids(
     include_constructs: bool = True,
     include_parameters: bool = True,
 ) -> tuple[set[str], set[str]]:
-    """Return the complete reference closure carried by a registry snapshot."""
+    """Return the complete reference closure carried by a registry snapshot.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     return _collect_snapshot_ref_ids(
         modelo,
         revision,

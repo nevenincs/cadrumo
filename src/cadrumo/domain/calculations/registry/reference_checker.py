@@ -3,6 +3,9 @@
 ``IdReferenceChecker`` collects all typed-ID sets from a
 :class:`RegistrySnapshot` and accumulates dangling-reference diagnostics
 used by the per-section reference walkers.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations

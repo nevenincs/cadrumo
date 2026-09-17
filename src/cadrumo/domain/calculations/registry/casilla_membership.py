@@ -84,6 +84,9 @@ def row_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     Such a casilla is written once per emitted row, never typed once as a
     scalar, so its completeness belongs to the row source. The record is named
     by the casilla's leading section and by the row-set binding's provider.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     records = {
         str(record)

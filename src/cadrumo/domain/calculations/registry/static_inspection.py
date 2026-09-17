@@ -237,7 +237,12 @@ class RegistryRevisionInspection(RegistryModel):
         sources: Mapping[SourceRefId, SourceReference],
         legal_ref_ids: frozenset[LegalRefId],
     ) -> RegistryRevisionInspection:
-        """Project one loaded revision without creating a filing snapshot."""
+        """Project one loaded revision without creating a filing snapshot.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+        """
         # Keep this projection on the exact same nested legal/source union as
         # ``RegistrySnapshot``. The import is local because ``snapshot`` also
         # depends on this inspection module; the call itself only occurs after

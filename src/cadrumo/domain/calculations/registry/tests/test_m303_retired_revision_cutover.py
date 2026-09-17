@@ -196,4 +196,5 @@ def test_m303_retired_revision_is_refused_and_cannot_reenter_source_surfaces() -
         construct = next(
             item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
         )
-        assert construct.localization_key == construct_key
+        # The title is shared through the construct's modelo-wide lineage key.
+        assert construct.localization_keys[-1] == construct_key

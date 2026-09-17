@@ -255,7 +255,11 @@ def resolve_bienes_inversion_catalogue(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> BienInversionCatalogue:
-    """Resolve the selected transaction-date LIVA capital-goods vocabulary."""
+    """Resolve the selected transaction-date LIVA capital-goods vocabulary.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
@@ -268,7 +272,11 @@ def require_bien_inversion_kind(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> BienInversionKind:
-    """Validate one value against the dated capital-goods kind vocabulary."""
+    """Validate one value against the dated capital-goods kind vocabulary.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_bienes_inversion_catalogue(effective_date=effective_date, authority=authority).require_kind(value)
 
 
@@ -278,7 +286,11 @@ def require_bien_inversion_disposal_regime(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> BienInversionDisposalRegime:
-    """Validate one value against the dated disposal-regime vocabulary."""
+    """Validate one value against the dated disposal-regime vocabulary.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_bienes_inversion_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -290,7 +302,11 @@ def bien_inversion_disposal_regime_choices(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[BienInversionDisposalRegime, ...]:
-    """Return disposal-regime choices in registry order."""
+    """Return disposal-regime choices in registry order.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_bienes_inversion_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -302,7 +318,11 @@ def minimum_bien_inversion_acquisition_year(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> int:
-    """Return the registry-declared minimum capital-goods acquisition year."""
+    """Return the registry-declared minimum capital-goods acquisition year.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_bienes_inversion_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -316,7 +336,11 @@ def is_bien_inversion_kind(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> bool:
-    """Test a capital-goods kind against a named registry projection."""
+    """Test a capital-goods kind against a named registry projection.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     catalogue = resolve_bienes_inversion_catalogue(effective_date=effective_date, authority=authority)
     token = catalogue.require_kind(value)
     if projection == _KIND_REAL_ESTATE_KEY:
@@ -333,7 +357,11 @@ def is_bien_inversion_disposal_regime(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> bool:
-    """Test a disposal regime against a named registry projection."""
+    """Test a disposal regime against a named registry projection.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     catalogue = resolve_bienes_inversion_catalogue(effective_date=effective_date, authority=authority)
     token = catalogue.require_disposal_regime(value)
     if projection == _DISPOSAL_REGIME_SUBJECT_NOT_EXEMPT_KEY:
