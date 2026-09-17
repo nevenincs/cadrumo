@@ -70,8 +70,7 @@ Two extras need a further provisioning step after the pip install:
 - The `browser` extra drives a Chromium build for live AEAT reads. Download
   the exact build the installed extra launches with:
 
-  ```bash
-  aeat config provision browser
+  ```{cli-sequence} provision-browser
   ```
 
   It does nothing when that build is already present. With the browser
