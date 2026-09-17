@@ -39,7 +39,6 @@ _PACKAGING = Path(__file__).resolve().parents[1]
 # change too — a selector can be renamed freely, but the executed set cannot
 # drift without this failing.
 _EXPECTED_EXECUTION: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
-    "quick": (("dev.packaging.smoke_core", ()),),
     "portable": (
         ("dev.packaging.smoke_core", ()),
         ("dev.packaging.smoke_pip_core", ()),
@@ -112,16 +111,6 @@ def test_only_the_developer_lane_skips_the_shared_cohort() -> None:
             assert takes_cohort is expected, f"{lane.name}/{form.name} cohort wiring is wrong"
 
 
-def test_quick_profile_is_exactly_the_single_core_probe() -> None:
-    """The per-push quick profile proves one install surface and nothing else.
-
-    The quick profile exists to keep the per-push wall inside the ten-minute
-    budget; growing it must be a conscious decision against that budget, so
-    the set is pinned to exactly one form of the core lane.
-    """
-    assert PROFILES["quick"] == ("core/uv-venv",)
-
-
 def test_portable_profile_matches_the_host_portable_aggregate() -> None:
     """The portable profile carries the host-portable forms, no host-specific ones."""
     assert set(PROFILES["portable"]) == {
@@ -180,7 +169,6 @@ def test_aggregates_route_through_the_campaign_driver() -> None:
     justfile = _JUSTFILE.read_text(encoding="utf-8")
     assert "dev.packaging.campaign --profile portable" in justfile
     assert "dev.packaging.campaign --profile ci" in justfile
-    assert "dev.packaging.campaign --profile quick" in justfile
 
 
 def test_a_lane_with_a_behavioural_proof_names_a_real_reference_form() -> None:
